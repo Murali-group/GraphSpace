@@ -1,0 +1,9 @@
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+div.content {
+    margin-top: 50px;
+    padding: 40px 15px;
+}

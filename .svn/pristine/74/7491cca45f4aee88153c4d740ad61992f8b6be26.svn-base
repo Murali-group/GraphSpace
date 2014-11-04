@@ -1,0 +1,10 @@
+<div class="help_links">
+    <a href="{% url 'help' %}">Getting Started</a>
+    <a href="{% url 'help_tutorials' %}">Tutorials</a>
+    <a href="{% url 'help_graphs' %}">Graphs</a>
+    <a href="{% url 'help_restapi' %}">REST API</a>
+    <a href="{% url 'help_jsonref' %}">JSON Reference</a>
+    <a href="{% url 'help_about' %}">About</a>
+</div>
+
+<hr>

@@ -1,0 +1,28 @@
+/* For base.html */
+
+/* skeleton of the webpage */
+html, body { 
+    height: 100%; 
+    width: 100%; 
+    padding: 0; 
+    margin: 0; 
+}
+
+/* container for the content to be viewed on the pages 
+(Graphs, Groups and Help) */
+div.content_container {
+	/* should occupy entire page */
+	width: 100%;
+	height: 100%;
+	margin-top: auto;
+}
+
+/* content of the pages. This div will house any content
+served through GraphSpace */
+div.content {
+	/* should occupy entire parent div (content_container) */
+	width: 100%;
+	height: 100%;
+    margin-top: 20px;
+    padding: 40px 15px;
+}

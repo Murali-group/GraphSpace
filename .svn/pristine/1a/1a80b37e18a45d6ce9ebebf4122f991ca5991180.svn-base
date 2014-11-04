@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link href={% static "graphs/css/pager.css" %} rel="stylesheet">
+
+{% if uid != None %}
+<div class="graph_links">
+    <a href="{% url 'groups' %}">Owner of</a>
+    <a href="{% url 'groups_member' %}">Member of</a>
+    <a href="{% url 'public_groups' %}">Public Groups</a>
+    <a href="{% url 'all_groups' %}">All Groups</a>
+</div>
+{% else %}
+<div class="graph_links">
+    <a href="{% url 'public_groups' %}">Public Groups</a>
+</div>
+{% endif %}
+
+<hr> <!-- temporary divider -->
+
+<!-- pagination of list of groups. based on: http://www.tummy.com/articles/django-pagination/ -->
+<div class="pager">
+    {% if graph_list != None %}
+    {% if has_previous %}
+    <span class="page">
+        <a href="?page={{ previous_page_number }}">&lt; Prev</a>
+    </span>
+    {% endif %}
+    
+    {% if show_first %}
+        <span class="page"><a href="?page=1">1</a></span>
+        <span class="ellipsis">...</span>
+    {% endif %}
+
+    {% for p in page_numbers %}
+        {% if p == current_page.number %}
+            <span class="current">{{ current_page.number }}</span>
+        {% else %}
+            <span class="page"><a href="?page={{ p }}">{{ p }}</a></span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if show_last %}
+        <span class="ellipsis">...</span>
+        <span class="page"><a href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a></span>
+    {% endif %}
+
+    {% if has_next %}
+        <span class="page"><a href="?page={{ next_page_number }}">Next &gt;</a></span> 
+    {% endif %}
+    {% endif %}
+</div>
+
+<table>
+
+{% if group_list != None %}
+{% if current_page != None %}
+    <tr>
+        <td>Group ID</td>
+        <td>Description</td>
+        <td>Owner</td>
+        <!--<td>Graphs</td>-->
+        <td>Visibility</td>
+    </tr>
+{% for g in current_page %}
+    <tr> 
+        <td><a href="{% url 'graphs_in_group' group_id=g.0%}">{{g.0}}</a></td>
+        <td>{{ g.1 }}</td>
+        <td>{{ g.2 }}</td>
+        {% if g.3 == 1 %}
+        <td>Public</td>
+        {% else %}
+        <td>Private</td>
+        {% endif %}
+    </tr>
+{% endfor %}
+{% endif %}
+{% else %}
+    <p>No groups to list.</p>
+{% endif %}
+</table>
+{% endblock %}

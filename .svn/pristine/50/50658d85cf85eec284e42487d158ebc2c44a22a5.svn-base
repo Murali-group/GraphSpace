@@ -1,0 +1,41 @@
+/* For graphs_in_group.html */
+
+/* layout settings for the overall container div */
+.graphs_container {
+	height: 100%;
+	width: 100%;
+	position: relative;
+}
+
+/* links located on the top of the Graphs page */
+.graph_links {
+	margin: 30px 25% 20px 10%;
+
+	padding: 10px;
+	overflow: hidden;
+
+	/* temporary div area indicator */
+	background-color: rgb(250, 235, 199);
+}
+
+/* table of graph results */
+.results_table {
+	margin: 20px 25% 20px 10%;
+	padding: 20px;
+
+	/* temporary div area indicator */
+	background-color: rgb(250, 235, 199);
+
+	overflow: hidden;
+}
+
+/* name of the group */
+.group_name {
+	margin-left: 10%;
+
+	font-size: 2.75em;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-weight: normal;
+
+	padding: 5px 15px 2px 15px;
+}

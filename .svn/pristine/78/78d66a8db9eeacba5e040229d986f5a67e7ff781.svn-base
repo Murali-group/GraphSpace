@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+<h2 class="heading"> Register </h2>
+
+<form method="post" class="register_form" role="form">
+	<div class="register_fields">
+	    {% for field in register_form %}
+	    <div class="form-group">
+	    	<span class="field_label">{{ field.label }}:</span>
+	        {{ field }}
+	    </div>
+	    {% endfor %}
+        <button type="submit" name="register" class="btn btn-success">Register</button>
+	</div> <!-- end register_fields -->
+</form>
+{% endblock %} <!-- end content block -->
+
+{% block css-js-footer %}
+<!-- load stylesheets -->
+<!-- stylesheet for elements specified in this html(register.html) -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/register.css' %}">
+
+{% endblock %}
