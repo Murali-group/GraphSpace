@@ -8,6 +8,29 @@ import json
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
 
+def is_admin(username):
+	con = None
+	try:
+		con = lite.connect('test.db')
+
+		cur = con.cursor()
+		cur.execute('select admin from user where user_id = ?', (username,))
+
+		data = cur.fetchone()[0]
+
+		if data == None:
+			return None
+		else:
+			if data == 1:
+				return True
+			return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
 
 def user_exists(username, password):
 	con = None
@@ -300,6 +323,31 @@ def create_group(username, group):
 		if con:
 			con.close()
 
+#Gets all information about the group that user belongs to
+def info_groups_for_user(username):
+	con = None
+	try:
+		con = lite.connect('test.db')
+
+		cur = con.cursor()
+		cur.execute('select group_id, description, owner_id, public from group_to_user where user_id=?', (username, ))
+
+		data = cur.fetchall()
+
+		cleaned_data=[]
+		for groups in data:
+			groups = str(groups[0])
+			cleaned_data.append(groups)
+
+		return cleaned_data
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
 #Get all groups a user belongs to
 def groups_for_user(username):
 	con = None

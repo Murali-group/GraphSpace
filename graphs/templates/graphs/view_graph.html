@@ -43,11 +43,10 @@
             </div>
           </div>
         </div>
-<div class="csweb_container">
-
-
+<div class="container-fluid csweb_container">
+    
     <!-- cytoscapeweb -->
-    <div class="csweb" id="csweb">
+    <div class="col-md-12 csweb" id="csweb">
     </div>
 
         <!-- side menu must be on top for 'float' to work properly -->
@@ -113,6 +112,7 @@
                         <a href={{url}}>{{ o }}</a>
                     {% endwith %}
                     {% endfor %}
+                </p>
                 <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
             </div>
         </div>
@@ -132,7 +132,6 @@
             </div>
         </div>
     </div> <!-- end class = side_menu -->
-
 </div>
 
 {% endblock %}
@@ -144,6 +143,9 @@
 
 <!-- jQuery UI style sheet -->
 <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
+
+<link rel="stylesheet" href="{% static 'graphs/font-awesome/css/font-awesome.css' %}">
+
 
 <!-- JSON support for IE (needed to use JS API) -->
 <script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>

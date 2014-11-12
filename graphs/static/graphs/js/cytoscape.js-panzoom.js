@@ -17,7 +17,7 @@
     // icon class names
     sliderHandleIcon: 'fa fa-minus',
     zoomInIcon: 'fa fa-plus',
-    zoomOutIcon: 'fa fa-minus',
+    zoomOutIcon: 'fa fa-minus zoom',
     resetIcon: 'fa fa-expand'
   };
   
@@ -53,12 +53,14 @@
           /////////////////////////
 
           var $zoomIn = $('<div class="ui-cytoscape-panzoom-zoom-in ui-cytoscape-panzoom-zoom-button"><span class="icon '+ options.zoomInIcon +'"></span></div>');
+          // var $zoomIn = $('<span class="icon '+ options.zoomInIcon +' id="zoom_in"></span>');
           $panzoom.append( $zoomIn );
           
           var $zoomOut = $('<div class="ui-cytoscape-panzoom-zoom-out ui-cytoscape-panzoom-zoom-button"><span class="icon ' + options.zoomOutIcon + '"></span></div>');
           $panzoom.append( $zoomOut );
           
           var $reset = $('<div class="ui-cytoscape-panzoom-reset ui-cytoscape-panzoom-zoom-button"><span class="icon ' + options.resetIcon + '"></span></div>');
+          // var $reset = $('<span class="icon ' + options.resetIcon + '"></span>');
           $panzoom.append( $reset );
           
           var $slider = $('<div class="ui-cytoscape-panzoom-slider"></div>');

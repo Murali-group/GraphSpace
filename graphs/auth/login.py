@@ -58,7 +58,8 @@ def login(request):
 		else:
 			#there is no one logged in.
 			uid = None
-		
+			context['Error'] = "Not logged in!"
+
 		if uid is not None:
 			context['uid'] = request.session['uid']
 			context['admin'] = request.session['admin']

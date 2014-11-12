@@ -2,13 +2,17 @@
 {% block content %}
 {% load staticfiles %}
 <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
+<link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
 
+<div class="container graphs">
 {% if uid != None %}
 <div class="graph_links">
-    <a href="{% url 'groups' %}">Owner of</a>
-    <a href="{% url 'groups_member' %}">Member of</a>
-    <a href="{% url 'public_groups' %}">Public Groups</a>
-    <a href="{% url 'all_groups' %}">All Groups</a>
+    <button class="btn btn-primary"><a style='color:white' href="{% url 'groups' %}">Owner of</a></button>
+    <button class="btn btn-primary"><a style='color:white' href="{% url 'groups_member' %}">Member of</a></button>
+    <button class="btn btn-primary"><a style='color:white' href="{% url 'public_groups' %}">Public Groups</a></button>
+    {% if admin == 1 %}
+        <button class="btn btn-primary"><a style='color:white' href="{% url 'all_groups' %}">All Groups</a></button>
+    {% endif %}
 </div>
 {% else %}
 <div class="graph_links">
@@ -51,16 +55,16 @@
     {% endif %}
 </div>
 
-<table>
+<table class="table table-hover">
 
 {% if group_list != None %}
 {% if current_page != None %}
     <tr>
-        <td>Group ID</td>
-        <td>Description</td>
-        <td>Owner</td>
+        <th>Group ID</th>
+        <th>Description</th>
+        <th>Owner</th>
         <!--<td>Graphs</td>-->
-        <td>Visibility</td>
+        <th>Visibility</th>
     </tr>
 {% for g in current_page %}
     <tr> 
@@ -79,4 +83,5 @@
     <p>No groups to list.</p>
 {% endif %}
 </table>
+</div>
 {% endblock %}

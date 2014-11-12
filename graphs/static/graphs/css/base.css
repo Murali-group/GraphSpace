@@ -6,6 +6,7 @@ html, body {
     width: 100%; 
     padding: 0; 
     margin: 0; 
+    background-color: #eee;
 }
 
 /* container for the content to be viewed on the pages 

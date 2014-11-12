@@ -7,7 +7,7 @@ from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
 from graphs.util.search import search
 from graphs.auth.login import login
-from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, delete_graph, get_all_graphs, create_group, groups_for_user, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
+from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
 
 from forms import LoginForm, SearchForm, RegisterForm
 
@@ -41,6 +41,9 @@ def index(request):
 
     if context['Error'] != None:
         return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
+
+    if request.session['uid'] != None:
+        return _graphs_page(request, 'my graphs')
     return render(request, 'graphs/index.html', context)
 
 def view_graph(request, uid, gid):
@@ -60,11 +63,18 @@ def view_graph(request, uid, gid):
     #handle login
     context = login(request)
 
+    if request.session['uid'] == None:
+        return HttpResponse("Not logged in yet!")
+
     try:
-        graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+        if is_admin(request.session['uid']) or db_session.query(graph.c.graph_id).filter(graph.c.user_id == request.session['uid']).one() != None:
+            graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+        else:
+            return HttpResponse("Not Authorized to view this!")
+
     except NoResultFound:
         print uid, gid
-        raise Http404
+        return HttpResponse("You are not Authorized to view this!")
 
     layout_to_view = None
 
@@ -194,9 +204,21 @@ def _graphs_page(request, view_type):
     #handle login
     context = login(request)
 
+
+    if context['Error']:
+        return HttpResponse(context['Error'])
+
     #check for authentication
     uid = request.session['uid']
     if uid is not None:
+
+        if 'search' in request.GET:
+            context = search_result(request)
+            return render(request, 'graphs/graphs.html', context)
+
+        if 'tags' in request.GET:
+            context['tags'] = request.GET.get('tags')
+            
         # render information for this particular user.
         if view_type == 'shared':
             #how are shared graphs indicated in the database? 
@@ -209,7 +231,6 @@ def _graphs_page(request, view_type):
             # graph_list = db_session.query(graph.c.graph_id, graph.c.modified, 
             #         graph.c.user_id, graph.c.public
             #         ).all()
-
 
             graph_list =  get_shared_graphs(uid, request.GET.get('tags'))
         elif view_type == 'public':
@@ -241,8 +262,7 @@ def _graphs_page(request, view_type):
     context['search_form'] = SearchForm(placeholder='Search...')
 
     if request.method =='GET' and 'search' in request.GET:
-        # add the search word to request.GET to have it retrievable from another view.
-        return HttpResponseRedirect('/result/?search=%s' % request.GET.get('search'))
+        return HttpResponseRedirect('/graphs/?search=%s' % request.GET.get('search'))
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
@@ -313,18 +333,23 @@ def _groups_page(request, view_type):
             #List the groups uid is a member of.
             #TODO: fix the query to display 'member of' list of groups
             # currently displays public groups
-            group_list = db_session.query(group.c.group_id, group.c.name, 
-                    group.c.owner_id, group.c.public
-                    ).limit(20).all()
+            # group_list = db_session.query(group.c.group_id, group.c.name, 
+            #         group.c.owner_id, group.c.public
+            #         ).filter(group.c.limit(20).all()
+            group_list = groups_for_user(uid)
         # TODO: what is the meaning of a public group? Should we do away with this concept?
         elif view_type == 'public':
             group_list = db_session.query(group.c.group_id, group.c.name, 
                     group.c.owner_id, group.c.public
                     ).filter(group.c.public == 1).all()
         elif view_type == 'all':
-            # uid must be an admin to be able to see this page.
-            group_list = db_session.query(group.c.group_id, group.c.name, 
-                    group.c.owner_id, group.c.public).all()
+            if is_admin(uid) == 1:
+                # uid must be an admin to be able to see this page.
+                group_list = db_session.query(group.c.group_id, group.c.name, 
+                        group.c.owner_id, group.c.public).all()
+            else:
+                return HttpResponse("Not Authorized to see this page!")
+
         #groups of logged in user(my groups)
         else:
             # List all groups that uid either owns or is a member of and also public groups.
@@ -346,6 +371,8 @@ def _groups_page(request, view_type):
                 group.c.name, group.c.owner_id, group.c.public
                 ).filter(group.c.public == 1).all()
         context['group_list'] = group_list
+
+    print context['group_list']
 
     pager_context = pager(request, group_list)
 
@@ -674,7 +701,9 @@ def search_result(request):
 
     context['footer'] = True
 
-    return render(request, 'graphs/result.html', context)
+    # return render(request, 'graphs/result.html', context)
+    # return render(request, 'graphs/graphs.html', context)
+    return context
 
 def logout(request):
     '''

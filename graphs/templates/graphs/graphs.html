@@ -2,67 +2,104 @@
 {% block content %}
 {% load staticfiles %}
 
-<div class="graphs_container">
-<!-- side menu must be on top for 'float' to work properly -->
-<div class="side_menu">
-    <!-- div classes are used to style these menu items,
-         ids are used for accordion jQuery functions. -->
+<!-- <div class="graphs_container">
+ -->
+<div class="container graphs">
     
-    <!-- the search box. specific functionality to be determined.
-         Based on Bootstrap CSS API -->
-    <div class="search_box">
-        <form method="get" role="form"> 
-            <div class="input-group">
-                <!--<input class="form-control" type="text" name="search">-->
-                {{ search_form }}
-                <span class="input-group-btn">
-                    <button class="btn btn-info" type="submit">Search</button>
-                </span>
+    <div class="row">
+        <div class="col-xs-6 col-sm-9">
+            <div class="graph_links">
+                {% if uid != None %}
+                    <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs</a></button>
+                    <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me</a></button>
+                    <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs</a></button>
+                    <!-- All Graphs is for admin mode. Specific functionality to be added. -->
+                    {% if admin == 1 %}
+                    <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                    {% endif %}
+                {% else %}
+                <!-- A user is not logged in. display a link for public graphs -->
+                <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs</a></button>
+                {% endif %}
             </div>
-        </form>
-    </div>
 
-    <!-- Tags menu -->
-    <div id="accordion_tags" class="accordion">
-        <h3>Tags</h3>
-        <div class="accordion_content">
-            <p id="tag_content"></p>
-            <form method="get" role="form"> 
-            <div class="input-group">
-                <input class="form-control" type="text" name="tags" placeholder="Enter tag">
-                <span class="input-group-btn">
-                    <button class="btn btn-info" type="submit">Search</button>
-                </span>
+            <div class="pagination pagination-centered">
+                    {% if graph_list != None %}
+                       <!--  {% if has_previous %}
+                            <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
+                        {% else %}
+                            <li><a href="?page=1">Prev</a></li>
+                        {% endif %}
+                        {% if show_first %}
+                            <li><a href="?page=1">1</a></li>
+                        {% endif %} -->
+                        {% if search_word %}
+                            {% for p in page_numbers %}
+                                {% if p == current_page.number %}
+                                   <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                {% else %}
+                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% endif %}
+                        {% elif tags != None %}
+                            {% for p in page_numbers %}
+                                {% if p == current_page.number %}
+                                   <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                {% else %}
+                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% endif %}
+                        {% else %}
+                           {% for p in page_numbers %}
+                                {% if p == current_page.number %}
+                                   <li class='active'><a href="{% url 'graphs' %}?page={{ p }}">{{ p }}</a></li>
+                                {% else %}
+                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% endif %}
+                        {% endif %}
+
+                    {% endif %}
             </div>
-        </form>
         </div>
-    </div>
-</div> <!-- end class = side_menu -->
 
-{% if uid != None %}
-<!-- A user is logged in. display relevant links for Graphs page -->
-<div class="graph_links">
-    <!-- using Bootstrap button API -->
-    <div class="btn-group">
-        <a href="{% url 'graphs' %}">My Graphs</a>
-        <a href="{% url 'shared_graphs' %}">Shared with me</a>
-        <a href="{% url 'public_graphs' %}">Public Graphs</a>
-        <!-- All Graphs is for admin mode. Specific functionality to be added. -->
-        {% if admin == 1 %}
-        <a href="{% url 'all_graphs' %}">All Graphs</a>
-        {% endif %}
+        <div class="col-xs-6 col-sm-3 side" id="sidebar">
+            <div id="search_box_panel_accordion" class="panel-group">
+              <div id="search_box_panel" class="panel panel-default">
+                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">
+                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">Search</a></h3>
+                </div>
+                <div class="panel-collapse collapse in" id="collapse_search_box">
+                <div class="panel-body">
+                  <form method="get" role="form">
+                     <div class="input-group">
+                        {{ search_form }}
+                        <span class="input-group-btn">
+                            <button class="btn btn-info" type="submit">Search</button>
+                        </span>
+                    </div>
+                  </form>
+                  <br/>
+                </div>
+              </div>
+            </div>
+            </div>
+        </div>
+
     </div>
-</div>
-{% else %}
-<!-- A user is not logged in. display a link for public graphs -->
-<div class="graph_links">
-    <a href="{% url 'public_graphs' %}">Public Graphs</a>
-</div>
-{% endif %}
 
 <!-- pagination of list of graphs.
      See util/paginator.py for details. -->
-<div class="pager">
+<!-- <div class="pager">
     {% if graph_list != None %}
     {% if has_previous %}
     <span class="page">
@@ -92,71 +129,101 @@
         <span class="page"><a href="?page={{ next_page_number }}">Next &gt;</a></span> 
     {% endif %}
     {% endif %}
-</div>
+</div> -->
 
 <!-- list of graphs from database displayed in table form -->
-<div class="results_table">
-<table>
-{% if graph_list != None %}
-    <!-- list search results -->
-    {% if search_result %}
-        {% if current_page != None %}
-        <tr>
-            <td>Graph ID</td>
-            <td>Tags</td>
-            <td>User ID</td>
-            <td>Node ID</td>
-            <td>Node Label</td>
-        </tr>
-        {% for g in current_page %}
-        <tr> 
-            <td><a href="{% url 'view_graph' uid=g.1 gid=g.0 %}">{{ g.0 }}</a></td>
-            <td></td>
-            <td>{{ g.1 }}</td>
-            <td>{{ g.2 }}</td>
-            <td>{{ g.3 }}</td>
-        </tr>
-        {% endfor %}
-        {% endif %}
-
-    <!-- list graphs -->
-    {% else %}
-        {% if current_page != None %}
-        <tr>
-            <td>Graph ID</td>
-            <td>Tags</td>
-            <td>Modified</td>
-            <td>Owner</td>
-            <td>Visibility</td>
-        </tr>
-        {% for g in current_page %}
-        <tr> 
-            <td><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></td>
-            <td>
-                {% for tag in g.1 %}
-                     {% with "http://localhost:8000/graphs/"|add:"?tags="|add:tag as url %}
-                        <a href={{url}}>{{ tag }}</a>
-                    {% endwith %}
-
+<div class="row">
+    <div class="col-xs-6 col-sm-9">
+        <div class="results_table">
+        <table class='table table-hover'>
+        {% if graph_list != None %}
+            <!-- list search results -->
+            {% if search_result %}
+                {% if current_page != None %}
+                <tr>
+                    <td>Graph ID</td>
+                    <!-- <td>Tags</td> -->
+                    <td>User ID</td>
+                    <td>Node ID</td>
+                    <td>Node Label</td>
+                </tr>
+                {% for g in current_page %}
+                <tr> 
+                    <td><a href="{% url 'view_graph' uid=g.1 gid=g.0 %}">{{ g.0 }}</a></td>
+                    <!-- <td></td> -->
+                    <td>{{ g.1 }}</td>
+                    <td>{{ g.2 }}</td>
+                    <td>{{ g.3 }}</td>
+                </tr>
                 {% endfor %}
-            </td>
-            <td>{{ g.2 }}</td>
-            <td>{{ g.3 }}</td>
-            {% if g.4 == 1 %}
-            <td>Public</td>
+                {% endif %}
+
+            <!-- list graphs -->
             {% else %}
-            <td>Private</td>
+                {% if current_page != None %}
+                <tr>
+                    <th>Graph ID</th>
+                    <th>Tags</th>
+                    <th>Modified</th>
+                    <th>Owner</th>
+                    <th>Visibility</th>
+                </tr>
+                {% for g in current_page %}
+                <tr> 
+                    <td><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></td>
+                    <td>
+                        {% for tag in g.1 %}
+                             {% with "http://localhost:8000/graphs/"|add:"?tags="|add:tag as url %}
+                                <a href={{url}}>{{ tag }}</a>
+                            {% endwith %}
+
+                        {% endfor %}
+                    </td>
+                    <td>{{ g.2 }}</td>
+                    <td>{{ g.3 }}</td>
+                    {% if g.4 == 1 %}
+                    <td>Public</td>
+                    {% else %}
+                    <td>Private</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                {% endif %}
             {% endif %}
-        </tr>
-        {% endfor %}
+        {% else %}
+            <p>No graphs to list</p>
         {% endif %}
-    {% endif %}
-{% else %}
-    <p>No graphs to list</p>
-{% endif %}
-</table>
-</div> <!-- end results_table -->
+        </table>
+        </div> <!-- end results_table -->
+    </div>
+
+    <div class="col-xs-6 col-sm-3 side">
+
+    <div id="tag_panel_accordion" class="panel-group">
+      <div id="tag_panel" class="panel panel-default">
+        <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">
+          <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">Tags</a></h3>
+        </div>
+        <div class="panel-collapse collapse in" id="collapse_tags">
+          <div class="panel-body">
+            <p id="tag_content"></p>
+                    <form method="get" role="form"> 
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="tags" placeholder="Enter tag">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-info" type="submit">Search</button>
+                    </div>
+                </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
 </div> <!-- end graphs_container -->
+</div>
+<!-- </div> -->
 {% endblock %} <!-- end content block -->
 
 {% block css-js-footer %}
