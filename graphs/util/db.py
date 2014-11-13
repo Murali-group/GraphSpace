@@ -633,7 +633,7 @@ def get_public_graph_info(tags):
 				graph_list.insert(1, cleanedtags)
 				cleaned_graph.append(tuple(graph_list))
 
-		if cleaned_graph != None:
+		if len(cleaned_graph) > 0:
 			return cleaned_graph
 		else:
 			return None
@@ -684,7 +684,27 @@ def get_all_graph_info(tags):
 		if con:
 			con.close()
 
+def is_public_graph(username, graph):
+	con = None
+	try:
+		con = lite.connect('test.db')
 
+		cur = con.cursor()
+		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
+		public = cur.fetchone()[0]
+		
+		if public == 1:
+			return True
+		else:
+			return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
 def get_all_groups_for_this_graph(graph):
 	global SERVER_URL
 	con = None

@@ -7,7 +7,7 @@ from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
 from graphs.util.search import search
 from graphs.auth.login import login
-from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, info_groups_for_user, get_all_tags, get_group_members, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
+from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, is_public_graph, info_groups_for_user, get_all_tags, get_group_members, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
 
 from forms import LoginForm, SearchForm, RegisterForm
 
@@ -268,15 +268,15 @@ def _graphs_page(request, view_type):
         if len(graph_list) != 0:
             context['graph_list'] = graph_list
         else:
-            context['graph_list'] = []
+            context['graph_list'] = None
 
     #show public graphs if there is no logged in user
     else:
         graph_list = get_public_graph_info(request.GET.get('tags'))
         context['graph_list'] = graph_list
 
-    if len(graph_list) == 0:
-        context['graph_list'] = None
+    # if len(graph_list) == 0:
+    #     context['graph_list'] = None
 
     # if context['search_result'] == True:
     #     return redirect('/result/' + context['search_word'])
@@ -285,7 +285,11 @@ def _graphs_page(request, view_type):
     context['search_form'] = SearchForm(placeholder='Search...')
 
     if request.method =='GET' and 'search' in request.GET:
-        return HttpResponseRedirect('/graphs/?search=%s' % request.GET.get('search'))
+        context = search_result(request)
+        context['all_tags'] = get_all_tags()
+        context['base_url'] = "http://localhost:8000/graphs/public/"
+
+        # return HttpResponseRedirect('/graphs/?search=%s' % request.GET.get('search'))
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
@@ -709,8 +713,14 @@ def search_result(request):
             graphnames = []
             for graphs in result:
                 graphnames.append(graphs[0])
-                if graphs[1] == request.session['uid'] or is_admin(request.session['uid']):
-                    display_results.append(graphs[0])
+                if request.session['uid']:
+                    if graphs[1] == request.session['uid'] or is_admin(request.session['uid']):
+                        display_results.append(graphs[0])
+                else:
+                    is_public = is_public_graph(graphs[1], graphs[0])
+                    if is_public:
+                        display_results.append(graphs[0])
+
 
             for name in graphnames:
                 graph_in_groups = get_all_groups_for_this_graph(name)
