@@ -264,6 +264,9 @@ def _graphs_page(request, view_type):
             graph_list = get_graph_info(uid, request.GET.get('tags'))
             context['base_url'] = "http://localhost:8000/graphs/"
 
+        if graph_list != None:
+            if len(graph_list) == 0:
+                graph_list = None
         #add the list to context
         # if graph_list != 0:
         #     context['graph_list'] = graph_list
@@ -398,9 +401,11 @@ def _groups_page(request, view_type):
         group_list = db_session.query(group.c.group_id, 
                 group.c.name, group.c.owner_id, group.c.public
                 ).filter(group.c.public == 1).all()
-        context['group_list'] = group_list
 
-    print context['group_list']
+        if len(group_list) == 0:
+            context['group_list'] = None
+        else:
+            context['group_list'] = group_list
 
     pager_context = pager(request, group_list)
 
