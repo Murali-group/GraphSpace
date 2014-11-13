@@ -3,64 +3,102 @@
 {% load staticfiles %}
 
 <div class="container graphs">
-<!-- side menu must be on top for 'float' to work properly -->
-<div class="side_menu">
-    <!-- div classes are used to style these menu items,
-         ids are used for accordion jQuery functions. -->
+    <div class="row">
+        <div class="col-xs-6 col-sm-9">
+            <div class="graph_links">
+                <h1 style="text-align: center;">{{group_id}}</h1>
+                <!-- list of graphs from database displayed in table form -->
+                <div class="results_table">
 
-    <!-- Description menu -->
-    <div id="accordion_description" class="accordion">
-        <h3>Description</h3>
-        <div class="accordion_content">
-            {{ group_description}} </br>
-        </div>
-    </div>
-
-    <!-- Owner menu -->
-    <div id="accordion_owner" class="accordion">
-        <h3>Owner</h3>
-        <div class="accordion_content">
-            <a href="#user_address">{{ group_owner}}</a>
-        </div>
-    </div>
-
-    <!-- Members menu -->
-    <div id="accordion_members" class="accordion">
-        <h3>Members</h3>
-        <div class="accordion_content">
-        <p>
-            {% for member in group_members %}
-                {{ member }}, 
-            {% endfor %}
-        </p>
-        </div>
-    </div>
-    
-    <!-- the search box. specific functionality to be determined.
-         Based on Bootstrap CSS API
-
-         TODO: Use Django form instead.
-     -->
-   <!--  <div class="search_box">
-        <form method="get" action="#TBD"> 
-            <div class="input-group"> -->
-                <!--<input class="form-control" type="text" name="search">-->
-                <!-- {{ search_form }}
-                <span class="input-group-btn">
-                    <button class="btn btn-info" type="submit">Search</button>
-                </span>
+                <table class="table table-hover">
+                {% if graph_data != None %}
+                {% if current_page != None %}
+                    <tr>
+                        <td>Graph ID</td>
+                        <td>Modified</td>
+                        <td>Owner</td>
+                        <td>Visibility</td>
+                    </tr>
+                {% for g in current_page %}
+                    <tr> 
+                        <td><a href="{% url 'view_graph' uid=g.2 gid=g.0 %}">{{g.0}}</a></td>
+                        <td>{{ g.1 }}</td>
+                        <td>{{ g.2 }}</td>
+                        {% if g.3 == 1 %}
+                        <td>Public</td>
+                        {% else %}
+                        <td>Private</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                {% endif %}
+                {% else %}
+                    <p>No graphs in this group.</p>
+                {% endif %}
+                </table>
+                </div> <!-- end results_table -->
             </div>
-        </form>
-    </div> -->
-
-    <!-- Tags menu -->
-    <!-- <div id="accordion_tags" class="accordion">
-        <h3>Tags</h3>
-        <div class="accordion_content">
-            under construction
         </div>
-    </div> -->
-</div> <!-- end class = side_menu -->
+        <!-- side menu must be on top for 'float' to work properly -->
+        <div class="col-xs-3 col-sm-3" style="margin-top: 10px;">
+            <!-- div classes are used to style these menu items,
+                 ids are used for accordion jQuery functions. -->
+
+            <!-- Description menu -->
+            <div id="accordion_description" class="accordion">
+                <h3>Description</h3>
+                <div class="accordion_content">
+                    {{ group_description}} </br>
+                </div>
+            </div>
+
+            <!-- Owner menu -->
+            <div id="accordion_owner" class="accordion">
+                <h3>Owner</h3>
+                <div class="accordion_content">
+                    <a href="#user_address">{{ group_owner}}</a>
+                </div>
+            </div>
+
+            <!-- Members menu -->
+            <div id="accordion_members" class="accordion">
+                <h3>Members</h3>
+                <div class="accordion_content">
+                <p>
+                    {% for member in group_members %}
+                        {{ member }}, 
+                    {% endfor %}
+                </p>
+                </div>
+            </div>
+            
+            <!-- the search box. specific functionality to be determined.
+                 Based on Bootstrap CSS API
+
+                 TODO: Use Django form instead.
+             -->
+           <!--  <div class="search_box">
+                <form method="get" action="#TBD"> 
+                    <div class="input-group"> -->
+                        <!--<input class="form-control" type="text" name="search">-->
+                        <!-- {{ search_form }}
+                        <span class="input-group-btn">
+                            <button class="btn btn-info" type="submit">Search</button>
+                        </span>
+                    </div>
+                </form>
+            </div> -->
+
+            <!-- Tags menu -->
+            <!-- <div id="accordion_tags" class="accordion">
+                <h3>Tags</h3>
+                <div class="accordion_content">
+                    under construction
+                </div>
+            </div> -->
+        </div> <!-- end class = side_menu -->
+    </div>
+
 
 {% if uid != None %}
 <!-- A user is logged in. -->
@@ -102,41 +140,6 @@
     {% endif %}
 </div>
 
-<div class="group_name">
-    <p>{{ group_id }}</p>
-</div>
-
-<!-- list of graphs from database displayed in table form -->
-<div class="results_table">
-
-<table>
-{% if graph_data != None %}
-{% if current_page != None %}
-    <tr>
-        <td>Graph ID</td>
-        <td>Modified</td>
-        <td>Owner</td>
-        <td>Visibility</td>
-    </tr>
-{% for g in current_page %}
-    <tr> 
-        <td><a href="{% url 'view_graph' uid=g.2 gid=g.0 %}">{{g.0}}</a></td>
-        <td>{{ g.1 }}</td>
-        <td>{{ g.2 }}</td>
-        {% if g.3 == 1 %}
-        <td>Public</td>
-        {% else %}
-        <td>Private</td>
-        {% endif %}
-    </tr>
-{% endfor %}
-{% endif %}
-{% else %}
-    <p>No graphs in this group.</p>
-{% endif %}
-</table>
-</div> <!-- end results_table -->
-</div> <!-- end graphs_container -->
 {% endblock %} <!-- end content block -->
 
 {% block css-js-footer %}

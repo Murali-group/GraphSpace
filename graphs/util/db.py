@@ -32,6 +32,31 @@ def is_admin(username):
 		if con:
 			con.close()
 
+def get_all_tags():
+	con = None
+	try:
+		con = lite.connect('test.db')
+
+		cur = con.cursor()
+		cur.execute('select tag_id from graph_tag')
+
+		data = cur.fetchall()
+
+		if data == None:
+			return None
+		else:
+			cleaned_data = []
+			for tag in data:
+				cleaned_data.append(tag[0])
+			return cleaned_data
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
 def user_exists(username, password):
 	con = None
 	try:
@@ -145,6 +170,9 @@ def delete_graph(username, graphname):
 		cur = con.cursor()
 
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
+		cur.execute('delete from graph_to_tag where graph_id=?', (graphname, ))
+		cur.execute('delete from edge where head_graph_id =?', (graphname, ))
+		cur.execute('delete from node where graph_id = ?', (graphname, ))
 		con.commit()
 
 	except lite.Error, e:
@@ -325,19 +353,19 @@ def create_group(username, group):
 
 #Gets all information about the group that user belongs to
 def info_groups_for_user(username):
+
+	groups = groups_for_user(username)
 	con = None
 	try:
+		cleaned_data = []
+
 		con = lite.connect('test.db')
-
 		cur = con.cursor()
-		cur.execute('select group_id, description, owner_id, public from group_to_user where user_id=?', (username, ))
 
-		data = cur.fetchall()
-
-		cleaned_data=[]
-		for groups in data:
-			groups = str(groups[0])
-			cleaned_data.append(groups)
+		for group in groups:
+			cur.execute('select name, description, owner_id, public from \"group\" where group_id=?', (group, ))
+			data = cur.fetchone()
+			cleaned_data.append(data)
 
 		return cleaned_data
 
@@ -494,7 +522,8 @@ def get_shared_graphs(user, tags):
 
 		cur = con.cursor()
 		if tags:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
+			# cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (tags, user))
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
 		graphs = cur.fetchall()
@@ -583,7 +612,7 @@ def get_public_graph_info(tags):
 
 		cur = con.cursor()
 		if tags:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public=?', (1, ))
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.public=? and gt.tag_id', (1, tags))
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.public=? and gt.graph_id = g.graph_id', (1, ))
 		graphs = cur.fetchall()

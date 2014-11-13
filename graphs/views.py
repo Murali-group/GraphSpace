@@ -7,7 +7,7 @@ from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
 from graphs.util.search import search
 from graphs.auth.login import login
-from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
+from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, info_groups_for_user, get_all_tags, get_group_members, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
 
 from forms import LoginForm, SearchForm, RegisterForm
 
@@ -53,7 +53,7 @@ def view_graph(request, uid, gid):
         @param uid - owner of the graph to view
         @param gid - graph id of the graph to view
     '''
-    
+    print uid
     #create a new db session
     db_session = db.new_session()
 
@@ -67,7 +67,14 @@ def view_graph(request, uid, gid):
         return HttpResponse("Not logged in yet!")
 
     try:
-        if is_admin(request.session['uid']) or db_session.query(graph.c.graph_id).filter(graph.c.user_id == request.session['uid']).one() != None:
+        user_is_member = None
+        graph_in_groups = get_all_groups_for_this_graph(gid)
+        for group in graph_in_groups:
+            members = get_group_members(group)
+            if request.session['uid'] in members:
+                user_is_member = True
+
+        if is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
         else:
             return HttpResponse("Not Authorized to view this!")
@@ -82,7 +89,7 @@ def view_graph(request, uid, gid):
         layout_to_view = json.dumps({"json": getLayout(request.GET.get('layout'), gid, uid)}) 
     else:
         layout_to_view = json.dumps(None)
-       
+   
     context['layout_to_view'] = layout_to_view
     context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
     
@@ -204,6 +211,9 @@ def _graphs_page(request, view_type):
     #handle login
     context = login(request)
 
+    context['all_tags'] = get_all_tags()
+
+
 
     if context['Error']:
         return HttpResponse(context['Error'])
@@ -214,6 +224,16 @@ def _graphs_page(request, view_type):
 
         if 'search' in request.GET:
             context = search_result(request)
+            context['all_tags'] = get_all_tags()
+
+            if view_type == 'shared':
+                context['base_url'] = "http://localhost:8000/graphs/shared/"
+            elif view_type == 'public':
+                context['base_url'] = "http://localhost:8000/graphs/public/"
+            elif view_type == 'all':
+                context['base_url'] = "http://localhost:8000/graphs/all/"
+            else:
+                context['base_url'] = "http://localhost:8000/graphs/"
             return render(request, 'graphs/graphs.html', context)
 
         if 'tags' in request.GET:
@@ -231,15 +251,18 @@ def _graphs_page(request, view_type):
             # graph_list = db_session.query(graph.c.graph_id, graph.c.modified, 
             #         graph.c.user_id, graph.c.public
             #         ).all()
-
+            context['base_url'] = "http://localhost:8000/graphs/shared/"
             graph_list =  get_shared_graphs(uid, request.GET.get('tags'))
         elif view_type == 'public':
             graph_list = get_public_graph_info(request.GET.get('tags'))
+            context['base_url'] = "http://localhost:8000/graphs/public/"
         elif view_type == 'all':
             graph_list = get_all_graph_info(request.GET.get('tags'))
+            context['base_url'] = "http://localhost:8000/graphs/all/"
         # show the graphs owned by the logged in user ("My Graphs")
         else:
             graph_list = get_graph_info(uid, request.GET.get('tags'))
+            context['base_url'] = "http://localhost:8000/graphs/"
 
         #add the list to context
         if len(graph_list) != 0:
@@ -336,7 +359,7 @@ def _groups_page(request, view_type):
             # group_list = db_session.query(group.c.group_id, group.c.name, 
             #         group.c.owner_id, group.c.public
             #         ).filter(group.c.limit(20).all()
-            group_list = groups_for_user(uid)
+            group_list = info_groups_for_user(uid)
         # TODO: what is the meaning of a public group? Should we do away with this concept?
         elif view_type == 'public':
             group_list = db_session.query(group.c.group_id, group.c.name, 
@@ -655,6 +678,7 @@ def search_result(request):
                                 edge.c.head_id, edge.c.label).filter(
                                 edge.c.head_id == head_node_ids[0][0], 
                                 edge.c.tail_id == tail_node_ids[0][0]).all()
+
             else:
                 # assume the given words are ids of nodes.
                 # query for the edges using given node names
@@ -662,6 +686,7 @@ def search_result(request):
                                 edge.c.head_id, edge.c.label).filter(
                                 edge.c.head_id == head_node, 
                                 edge.c.tail_id == tail_node).all()
+
             # notify renderer to display edge results
             context['nodes'] = False
             
@@ -671,6 +696,7 @@ def search_result(request):
                         node.c.node_id, node.c.label).filter(
                         or_(node.c.node_id.like("%" + search_word + "%"), 
                         node.c.label.like("%" + search_word + "%"))).all()
+
             # notify renderer to display edge results
             context['nodes'] = True
 
@@ -678,7 +704,34 @@ def search_result(request):
             context['search_result'] = True
             # context['graph_list'] contains graphs to list
             # set it as result
-            context['graph_list'] = result
+
+            display_results = []
+            graphnames = []
+            for graphs in result:
+                graphnames.append(graphs[0])
+                if graphs[1] == request.session['uid'] or is_admin(request.session['uid']):
+                    display_results.append(graphs[0])
+
+            for name in graphnames:
+                graph_in_groups = get_all_groups_for_this_graph(name)
+                for group in graph_in_groups:
+                    members = get_group_members(group)
+                    if request.session['uid'] in members:
+                        if display_results.count(name) == 0:
+                            display_results.append(name)
+
+            actual_results = []
+
+            for graph in result:
+                if graph[0] in display_results:
+                    actual_results.append(graph)
+
+
+            if len(actual_results) == 0:
+                context['graph_list'] = None
+            else:
+                print actual_results
+                context['graph_list'] = actual_results
         else:
             context['search_result'] = False
             context['graph_list'] = None

@@ -24,7 +24,14 @@ function searchValues(names) {
   for (var i = 0; i < splitNames.length; i++) {
     splitNames[i] = splitNames[i].trim();
     window.cy.$("#" + splitNames[i]).select();
+    // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+    $("#search").val("");
   }
+
+}
+
+function unselectTerm(term) {
+  $("#" + term).unselect();
 }
 
 /* 
@@ -144,6 +151,7 @@ $(document).ready(function() {
     } // end ready: function()
     });
 
+
     //setup popup dialog for displaying dialog when nodes/edges
     //are clicked for information.
     $('#dialog').dialog({ autoOpen: false });
@@ -157,6 +165,11 @@ $(document).ready(function() {
     $('#accordion_export').accordion({
         collapsible: true,
         active: false 
+    });
+
+    $("#accordion_search").accordion({
+        collapsible: true,
+        active: true
     });
 
     $('#accordion_owner').accordion({

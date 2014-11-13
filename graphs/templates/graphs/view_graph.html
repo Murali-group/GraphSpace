@@ -44,7 +44,6 @@
           </div>
         </div>
 <div class="container-fluid csweb_container">
-    
     <!-- cytoscapeweb -->
     <div class="col-md-12 csweb" id="csweb">
     </div>
@@ -62,16 +61,24 @@
             </div>
         </div>
 
-        <div class="search_box">
-            <form> 
-                <div class="input-group">
-                    <input class="form-control" type="text" name="search" id="search" placeholder="Search">
-                    <span class="input-group-btn">
-                        <button class="btn btn-info" name="search_button" id="search_button">Search</button>
-                    </span>
+        <div id="accordion_search" class="accordion">
+            <h3>Search</h3>
+            <div class="accordion_content">
+                <div class="search_box">
+                    <form> 
+                        <div class="input-group">
+                            <input class="form-control" type="text" name="search" id="search" placeholder="Search">
+                            <span class="input-group-btn">
+                                <button class="btn btn-info" name="search_button" id="search_button">Search</button>
+                            </span>
+                        </div>
+                    </form>
                 </div>
-            </form>
+                <div id="search_terms"></div>
+            </div>
         </div>
+
+        
 
         <!-- Export menu -->
         <div id="accordion_export" class="accordion">
@@ -123,11 +130,13 @@
             <h3>Layouts</h3>
             <div class="accordion_content">
             {% for o in layouts %}
-                    {% with "http://localhost:8000/graphs/"|add:uid|add:"/"|add:graph_id|add:"/?layout="|add:o as url %}
-                        <a href={{url}}>{{ o }}</a>
+                    {% with layout_urls|add:o as url %}
+                        <button class="btn btn-primary"><a style="color: white;"href={{url}}>{{ o }}</a></button>
                     {% endwith %}
                     {% endfor %}
+
                     <br><br>
+
                 <button class="btn btn-success" data-toggle="modal" data-target="#layout_modal">Save Layout</button>
             </div>
         </div>

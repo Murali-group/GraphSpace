@@ -9,6 +9,16 @@
     <div class="row">
         <div class="col-xs-6 col-sm-9">
             <div class="graph_links">
+                {% if search_word %}
+                <ul class="nav nav-pills">
+                    <li><a href="{{ base_url }}">Clear Search for "{{ search_word}}"</a></li>    
+                </ul>
+                {% endif %}
+                {% if tags %}
+                    <ul class="nav nav-pills">
+                        <li><a href="{{ base_url }}">Clear Search for "{{ tags}}"</a></li>    
+                    </ul>
+                {% endif %}
                 {% if uid != None %}
                     <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs</a></button>
                     <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me</a></button>
@@ -207,7 +217,7 @@
         <div class="panel-collapse collapse in" id="collapse_tags">
           <div class="panel-body">
             <p id="tag_content"></p>
-                    <form method="get" role="form"> 
+                <form method="get" role="form"> 
                     <div class="form-group">
                         <input class="form-control" type="text" name="tags" placeholder="Enter tag">
                     </div>
@@ -215,6 +225,11 @@
                         <button class="btn btn-info" type="submit">Search</button>
                     </div>
                 </form>
+                {% for tag in all_tags %}
+                    {% with base_url|add:"?tags="|add:tag as tag_url %}
+                    <button class="btn btn-success" style="margin: 2px;"><a href="{{tag_url}}" style="color: white;">{{ tag }}</a></button>
+                    {% endwith %}
+                {% endfor %}
           </div>
         </div>
       </div>

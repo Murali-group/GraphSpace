@@ -150,3 +150,7 @@
   background-color: #fff;
   cursor: default;
 }
+
+.nav-pills {
+  padding: 10px;
+}
