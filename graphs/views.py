@@ -265,10 +265,11 @@ def _graphs_page(request, view_type):
             context['base_url'] = "http://localhost:8000/graphs/"
 
         #add the list to context
-        if len(graph_list) != 0:
-            context['graph_list'] = graph_list
-        else:
-            context['graph_list'] = None
+        # if graph_list != 0:
+        #     context['graph_list'] = graph_list
+        # else:
+        #     context['graph_list'] = None
+        context['graph_list'] = graph_list
 
     #show public graphs if there is no logged in user
     else:
