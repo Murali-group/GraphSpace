@@ -131,7 +131,7 @@
             <div class="accordion_content">
             {% for o in layouts %}
                     {% with layout_urls|add:o as url %}
-                        <button class="btn btn-primary"><a style="color: white;"href={{url}}>{{ o }}</a></button>
+                        <button class="btn btn-primary" style="margin: 2px;"><a style="color: white;"href={{url}}>{{ o }}</a></button>
                     {% endwith %}
                     {% endfor %}
 
