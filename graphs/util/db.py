@@ -38,7 +38,11 @@ def get_all_tags():
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
+<<<<<<< HEAD
 		cur.execute('select tag_id from graph_tag limit 10')
+=======
+		cur.execute('select tag_id from graph_tag')
+>>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 
 		data = cur.fetchall()
 
@@ -614,7 +618,11 @@ def get_public_graph_info(tags):
 		if tags:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.public=? and gt.tag_id', (1, tags))
 		else:
+<<<<<<< HEAD
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public=?', (1, ))
+=======
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.public=? and gt.graph_id = g.graph_id', (1, ))
+>>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 		graphs = cur.fetchall()
 		
 		cleaned_graph = []
@@ -768,6 +776,24 @@ def sendForgotEmail(email):
 				return None
 
 			data = cur.fetchone()
+<<<<<<< HEAD
+=======
+
+			# msg = MIMEText("Please go to the following url to reset your password: http://localhost:8000/reset?id=" + data[0])
+			# msg["Subject"] = 'GraphSpace Reset Password'
+			# msg["From"] = 'GraphSpace Admin'
+			# msg["To"] = email
+
+			# smtpserver = smtplib.SMTP(host='smtp.gmail.com', port=587)
+			# smtpserver.ehlo()
+			# smtpserver.starttls()
+			# smtpserver.ehlo
+			# smtpserver.login("graphspacevt@gmail.com", "vtresearch")
+			# header = 'To: ' + email + '\nFrom: ' + 'GraphSpace Admin\n' + 'Subject: Password Reset \n'
+			# msg = header + 'Please go to the following url to reset your password: http://localhost:8000/reset?id=' + data[0] + '\n\n' 
+			# smtpserver.sendmail("graphspacevt@gmail.com", [email], msg)
+			# smtpserver.close()
+>>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 			mail_title = 'Password Reset!'
 			message = 'Please go to the following url to reset your password: http://localhost:8000/reset?id=' + data[0]
 			emailFrom = "GraphSpace Admin"
