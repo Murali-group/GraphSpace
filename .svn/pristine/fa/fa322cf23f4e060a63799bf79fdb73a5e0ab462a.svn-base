@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+{% load staticfiles %}
+<html>
+        
+    <head>
+        <title>GraphSpace Development</title>
+        
+        <!-- jQuery 1.11.1 
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
+
+        <!--jQuery UI, needed for side menu
+        <script src="http://holmes.cs.vt.edu/js/jquery-ui-1.10.3.custom.min.js"></script>-->
+
+        <!-- JSON support for IE (needed to use JS API)
+        <script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>-->
+        
+        <!-- Flash embedding utility (needed to embed Cytoscape Web) 
+        <script type="text/javascript" src="{% static 'graphs/AC_OETags.min.js' %}"></script>-->
+        
+        <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) 
+        <script type="text/javascript" src="{% static 'graphs/cytoscapeweb.min.js' %}"></script>-->
+    <script type="text/javascript">
+        var graph_json = {{ graph|safe }}
+    </script>
+
+    </head>
+        
+    <body>
+
+        <div id="dialog"></div>
+        <!--<p>{{query|safe}}</p>-->
+        <!--<div id="cytoscapeweb">
+            Cytoscape Web will replace the contents of this div with your graph.
+        </div>-->
+
+    <!--#######################################-->
+
+        <div id="qtip"></div>
+    
+
+        <div class="fill">
+            <div id="cytoscapeweb" class="csweb">
+                Loading graph ... 
+            </div>
+            
+            <div class="accordion" data-toggle="collapse" data-parent="#graph_details_panel_accordion" href="#collapse_graph_details">
+                <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#graph_details_panel_accordion" href="#collapse_graph_details">Graph Details</a></h3>
+                <div class="panel-collapse collapse in" id="collapse_graph_details">
+                    <div class="panel-body" id="graph-description">
+                        <div id="graph_details_panel" style="overflow-x: auto;">
+                        </div>
+                    </div>
+                </div>
+    
+
+                <br/>
+            </div>
+        </div>
+
+
+        <!-- jQuery 1.11.1 -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+        <!--jQuery UI, needed for side menu -->
+        <script src="http://holmes.cs.vt.edu/js/jquery-ui-1.10.3.custom.min.js"></script>
+
+        <!-- JSON support for IE (needed to use JS API) -->
+        <script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
+        
+        <!-- Flash embedding utility (needed to embed Cytoscape Web) -->
+        <script type="text/javascript" src="{% static 'graphs/AC_OETags.min.js' %}"></script>
+        
+        <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+        <script type="text/javascript" src="{% static 'graphs/cytoscapeweb.min.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
+
+        <!-- jQuery UI style sheet -->
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css"/>
+
+        <link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}"/>
+
+    <!--#######################################-->
+    </body>    
+</html>

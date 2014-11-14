@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+{% load staticfiles %}
+<html>
+        
+    <head>
+            <title>Cytoscape Web example</title>
+            
+            <!-- JSON support for IE (needed to use JS API) -->
+            <script type="text/javascript" src={% static "graphs/json2.min.js" %}></script>
+            
+            <!-- Flash embedding utility (needed to embed Cytoscape Web) -->
+            <script type="text/javascript" src={% static "graphs/AC_OETags.min.js" %}></script>
+            
+            <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+            <script type="text/javascript" src={% static "graphs/cytoscapeweb.min.js" %}></script>
+            
+            <script type="text/javascript">
+                // From Cytoscape Tutorial for displaying networks
+                window.onload=function() {
+                    // id of Cytoscape Web container div
+                    var div_id = "cytoscapeweb";
+                    
+                    // network JSON object
+                    var networ_json = {{ query|safe }};
+                    
+                    //var networ_json = { data: { 
+                    //    nodes: [ { id: "1", label: "label1" }, { id: "2", label: "label2" } ],
+                    //    edges: [ { id: "2to1", target: "1", source: "2", label: "edge_label"}]
+                    //}, metadata: {}};
+
+                   
+                    // initialization options
+                    var options = {
+                        // where you have the Cytoscape Web SWF
+                        swfPath: "/static/graphs/CytoscapeWeb",
+                        // where you have the Flash installer SWF
+                        flashInstallerPath: "/static/graphs/playerProductInstall"
+                    };
+                    
+                    //define data schema
+                    networ_json.graph.dataSchema = {
+                           nodes : [
+                              { name : "label",           type : "string" },
+                              { name : "popup",           type : "string" },
+                              { name : "tooltip",         type : "string" },
+                              { name : "color",           type : "string" },
+                              { name : "size",            type : "string" },
+                              { name : "shape",           type : "string" },
+                              { name : "graph_id",        type : "string" },
+                              { name : "go_function_id",  type : "string" },
+                              { name : "borderWidth",     type : "double" },
+                              { name : "labelFontWeight", type : "string" }, 
+                              { name : "k",               type : "number" }
+                           ],
+                           edges : [
+                              { name : "width", type : "double" },
+                              { name : "label", type : "string" },
+                              { name : "popup", type : "string" },
+                              { name : "color", type : "string" },
+                              { name : "style", type : "string" },
+                              { name : "graph_id",        type : "string" },
+                              { name : "labelFontWeight", type : "string" },
+                              { name : "k", type: "number" }
+                           ]
+                        };
+                    
+                    // init and draw
+                    var vis = new org.cytoscapeweb.Visualization(div_id, options);
+                    //vis.addDataField(dataSchema);
+                    //console.log(vis.dataSchema());
+                    vis.draw({ network: networ_json.graph, 
+                    
+                    visualStyle: {
+                    nodes: {
+                        color: { passthroughMapper: { attrName: 'color' } },
+                        size:  { passthroughMapper: { attrName: 'size'  } },
+                        shape: { passthroughMapper: { attrName: 'shape' } },
+                        labelFontWeight: { passthroughMapper: { attrName: 'labelFontWeight' } },
+                        borderWidth: { passthroughMapper: { attrName: 'borderWidth' } }
+                    },
+                    edges: {
+                        width: { passthroughMapper: { attrName: 'width' } },
+                        color: { passthroughMapper: { attrName: 'color' } },
+                        style: { passthroughMapper: { attrName: 'style' } }
+                    }
+                }
+            });
+                };
+            </script>
+            
+            <style>
+                /* The Cytoscape Web container must have its dimensions set. */
+                html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
+                #cytoscapeweb { width: 100%; height: 100%; }
+            </style>
+        </head>
+        
+        <body>
+            <div id="dialog"></div>
+            <!--<p>{{query|safe}}</p>-->
+            <div id="cytoscapeweb">
+                Cytoscape Web will replace the contents of this div with your graph.
+            </div>
+        </body>
+        
+    </html>

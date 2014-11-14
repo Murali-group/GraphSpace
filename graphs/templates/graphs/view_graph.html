@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block cytoscapeweb %}
+
+<script type="text/javascript">
+    var graph_json = {{ graph|safe }};
+    var layout = {{ layout_to_view|safe }};
+    window.cy;
+</script>
+
+<div id="dialog"></div>
+<!--<p>{{query|safe}}</p>-->
+<!--<div id="cytoscapeweb">
+    Cytoscape Web will replace the contents of this div with your graph.
+</div>-->
+
+<!--#######################################-->
+
+ <!-- Create Modal -->
+        <div class="modal fade" id="layout_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+              </div>
+              <div class="modal-body">
+
+                <form method="post" id="layout_form" class="layout_form" role="form">
+                    <div class="layout_fields">
+                       <div class="control-group">
+                            <label for="layout_name">Layout Name</label>
+                            <input id="layout_name" class="form-control" type="text" name="layout_name" autocomplete="off"/>
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <button name="save_layout" id="save_layout" class="btn btn-success">Save Layout</button>
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        </div>
+                    </div> 
+                </form>
+
+              </div>
+            </div>
+          </div>
+        </div>
+<div class="container-fluid csweb_container">
+    <!-- cytoscapeweb -->
+    <div class="col-md-12 csweb" id="csweb">
+    </div>
+
+        <!-- side menu must be on top for 'float' to work properly -->
+    <div class="side_menu">
+        <!-- div classes are used to style these menu items,
+             ids are used for accordian jQuery functions. -->
+
+        <!-- Graph Details menu -->
+        <div id="accordion_graph_details" class="accordion">
+            <h3>Graph Details</h3>
+            <div class="accordion_content">
+                {{ description|safe }} </br>
+            </div>
+        </div>
+
+        <div id="accordion_search" class="accordion">
+            <h3>Search</h3>
+            <div class="accordion_content">
+                <div class="search_box">
+                    <form> 
+                        <div class="input-group">
+                            <input class="form-control" type="text" name="search" id="search" placeholder="Search">
+                            <span class="input-group-btn">
+                                <button class="btn btn-info" name="search_button" id="search_button">Search</button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+                <div id="search_terms"></div>
+            </div>
+        </div>
+
+        
+
+        <!-- Export menu -->
+        <div id="accordion_export" class="accordion">
+            <h3>Export</h3>
+            <div class="accordion_content">
+
+                <!-- There seems to be an issue with adobe flash used with Cytoscape Web. 
+                 https://groups.google.com/forum/#!msg/cytoscapeweb-discuss/548wkpC3iE8/TAwyrA2MO-cJ-->
+                <button class="btn btn-default" id="export" onClick="export_graph('{{ graph_id }}');">PNG</button>
+                <!--<button class="btn btn-default" onClick="export_graph('pdf', '/download/pdf/{{ gid }}');">PDF</button>
+                <button class="btn btn-default" onClick="export_graph('svg', '/download/svg/{{ gid }}');">SVG</button>
+                <br/>-->
+                
+                <hr/>
+                <!-- View JSON function to be added -->
+                <form>
+                <button class="btn btn-default" name="view_json" type="submit">View JSON</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Owner menu -->
+        <div id="accordion_owner" class="accordion">
+            <h3>Owner</h3>
+            <div class="accordion_content">
+                <a href="#user_profile">{{ owner }}</a>
+            </div>
+        </div>
+
+        <!-- Sharing menu -->
+        <div id="accordion_sharing" class="accordion">
+            <h3>Sharing</h3>
+            <div class="accordion_content">
+                <p>{{ shared }}</p>
+                <p>Groups shared with: 
+                    {% for o in shared_groups %}
+                    {% with "http://localhost:8000/groups/"|add:o as url %}
+                        <a href={{url}}>{{ o }}</a>
+                    {% endwith %}
+                    {% endfor %}
+                </p>
+                <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
+            </div>
+        </div>
+
+
+        <!-- Layouts menu -->
+        <!-- <div id="accordion_layouts" class="accordion">
+            <h3>Layouts</h3>
+            <div class="accordion_content">
+            {% for o in layouts %}
+                    {% with layout_urls|add:o as url %}
+                        <button class="btn btn-primary" style="margin: 2px;"><a style="color: white;"href={{url}}>{{ o }}</a></button>
+                    {% endwith %}
+                    {% endfor %}
+
+                    <br><br>
+
+                
+            </div>
+        </div> -->
+
+
+         <div id="accordion_layouts" class="accordion">
+            <h3>Layouts</h3>
+            <div class="accordion_content">
+                <!-- <div class="panel-collapse collapse in" id="collapse_graph_layouts"> -->
+                    <!-- <div class="panel-body" id="graph-layouts"> -->
+                        <div>
+                          <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button>
+                        </div>
+                        <hr/>
+
+                        <div class="tabbable">
+                            <ul class="nav nav-tabs" id="layout-tabs">
+                              <!--<li><a href="#graph" data-toggle="tab">Graph</a></li>-->
+                              <li><a href="#builtin" data-toggle="tab">Auto</a></li>
+                              <li class="active"><a href="#custom" data-toggle="tab">Manual</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane" id="builtin">
+                                    <br/>
+                                    <ul class="nav nav-pills">
+                                    <li id="ldf"><a id="layout-force-directed" href="?layout=default_concentric">Concentric</a></li>
+                                    <li id="lc"><a id="layout-circle" href="?layout=default_breadthfirst">Breadth First</a></li>
+                                    <li id="lr"><a id="layout-radial" href="?layout=default_circle">Circle</a></li>
+                                    <li id="lt"><a id="layout-tree" href="?layout=default_cose">Cose</a></li>
+                                    <!-- <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_cola">Cola</a></li>
+                                    <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_arbor">Arbor</a></li>
+                                    <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_springy">Springy</a></li> -->
+                                    </ul>
+                                </div>
+
+                                <div class="active tab-pane" id="custom">
+                                    <br/>
+                                    <div class="tabbable">
+                                    <ul class="nav nav-pills">
+                                      {% for o in layouts %}
+                                        {% with layout_urls|add:o as url %}
+                                            <li style="background-color: ##bdc3c7;"><a href={{url}}>{{ o }}</a></li>
+                                        {% endwith %}
+                                      {% endfor %}
+                                      
+                                    </ul>
+                                    <br/>
+                                    <div id="alert-div">
+                                    </div>
+                            </div>
+                        </div>
+                    <!-- </div> -->
+                <!-- </div> -->
+            </div>
+        </div>
+
+       
+    </div> <!-- end class = side_menu -->
+</div>
+
+{% endblock %}
+
+{% block css-js-footer %}
+
+<!--jQuery UI, needed for side menu -->
+<script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+
+<!-- jQuery UI style sheet -->
+<link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
+
+<link rel="stylesheet" href="{% static 'graphs/font-awesome/css/font-awesome.css' %}">
+
+
+<!-- JSON support for IE (needed to use JS API) -->
+<script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
+
+<!-- Flash embedding utility (needed to embed Cytoscape Web) -->
+<script type="text/javascript" src="{% static 'graphs/AC_OETags.min.js' %}"></script>
+
+<!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+<script type="text/javascript" src="{% static 'graphs/js/cytoscape.min.js' %}"></script>
+
+<!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+<script type="text/javascript" src="{% static 'graphs/js/cytoscape.js-panzoom.js' %}"></script>
+
+<!-- stylesheet for view_graph page -->
+<link rel="stylesheet" href="{% static 'graphs/css/cytoscape.js-panzoom.css' %}">
+
+<!-- cytoscape web wrapper for viewing graph -->
+<script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
+
+
+
+<!-- stylesheet for view_graph page -->
+<link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}">
+
+
+
+<!-- stylesheet for side menus -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
+
+<script type="text/javascript" src="{% static 'graphs/js/jsPDF/jspdf.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jsPDF/libs/png_support/zlib.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jsPDF/libs/png_support/png.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jsPDF/jspdf.plugin.addimage.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jsPDF/jspdf.plugin.png_support.js' %}"></script>
+
+
+
+{% if search_result %}
+<script>$(document).ready(function() {
+    window.cy.on('load', function(){
+      window.cy.$("#{{ result_id }}").select(); 
+    });
+  });
+</script>
+
+{% endif %}
+
+{% endblock %}

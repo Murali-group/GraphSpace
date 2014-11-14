@@ -1,0 +1,50 @@
+GraphSpace
+    1. Database setup with SQLAlchemy
+        - Might change over to Django ORM later on. But currently there is no issue.
+        - Eventually might have to migrate all data from old db to new db.
+
+    2. Cytoscape Web for displaying graphs
+        - Generate popup dialog when the user clicks on nodes/edges if popup data are available
+
+    3. Graph JSON object
+        - All dada are already on the database. There is no additional data being inserted to the JSON object.
+
+    4. GUI (implementation based on bootstrap/Jquery UI)
+        - Main Page
+            - Introduction
+            - User login/logout (week of June 16th, about 3 days)
+                - how to manage secure login (hashed passwords)
+        - Graphs Page (week of June 16th, about 2 days)
+            - View lists of graphs viewable by the user
+            - Layout (auto/manual)
+                - Change/save/load Graph layout for graph viewing
+            - Graph details associated with each graph (week of June 23rd)
+        - Groups Page (week of June 23rd)
+            - view list of groups
+            - create Group
+            - delete Group
+            - group information
+        - Help Page
+            - Update the contents. Some of the contents seems out of date or incorrect.
+                - instruction for using REST API not correct.
+        - Admin Page
+            - for site administrators
+            - how much 'power' should the Admin have?
+            - what can they do with this page?
+                - manage db?
+        - Tags
+            - should be part of graph JSON object
+        - Search (Early July)
+            - Search criterion
+        - Filtering (Early July)
+            - use of 'k' values for displaying parts of graphs
+    5. REST API (described in wiki)
+        - already implemented?
+
+    6. URL processing
+        - whether to include user email address in the URL
+            - hashing
+            - provide user nicknames
+            - just use user email
+
+

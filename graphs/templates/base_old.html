@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<!-- Base template for web pages used in GraphSpace. Every pages in 
+     GraphSpace are based on this htmll template. -->
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.ico">
+
+    <title>GraphSpace</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'graphs/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this base template -->
+    <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+
+    <!-- Came with Bootstrap template -->
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <!-- menubar provided by Bootstrap -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% url 'graphs.views.index' %}">GraphSpace</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="{% url 'graphs' %}">Graphs</a></li>
+                    <li><a href="{% url 'groups' %}">Groups</a></li>
+                    <li><a href="{% url 'help' %}">Help</a></li>
+                    <!-- menu item to indicate login status. WILL BE REMOVED -->
+                    {% if uid != None %} 
+                    <li><a href="#">Welcome, {{ uid }}</a></li>
+                    {% else %}
+                    <li><a href="{% url 'register' %}">Create Account</a></li>
+                    {% endif %}
+                </ul>
+
+                <!-- display login form if not logged in -->
+                {% if uid == None %}
+                <form method="post" class="navbar-form navbar-right" role="form">
+                    {% for field in login_form %}
+                    <div class="form-group">
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+
+                    <!-- TODO: this button is not integrated into LoginForm. This may be integrated. -->
+                    <button type="submit" name="signin" class="btn btn-success">Sign in</button>
+                </form>
+                {% else %}
+                <div class="navbar-form navbar-right">
+                    <a href="{% url 'graphs.views.logout' %}"><button class="btn btn-success">Sign out  <span class="glyphicon glyphicon-log-out"></span></button></a>
+                </div>
+                {% endif %}
+
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+
+    <!-- main content on each page -->
+    <div class="content_container">
+        <div class="content">
+            {% if not draw_graph %}
+                <!-- load content (Graphs, Groups, Help pages) -->
+                {% block content %}
+                {% endblock %}
+            {% else %}
+                <!-- load cytoscape web for viewing graphs -->
+                {% block cytoscapeweb %}
+                {% endblock %}
+            {% endif %}
+        </div>
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="{% static 'graphs/js/bootstrap.min.js' %}"></script>
+
+    <!-- css and javascripts needed for cytoscape web and side menu -->
+    {% if draw_graph or footer %}
+        {% block css-js-footer %}
+        {% endblock %}
+    {% endif %}
+</body>
+</html>
+

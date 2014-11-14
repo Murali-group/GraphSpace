@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+	{% if uid != None %}
+		{{ message }}
+	{% else %}
+	    <div class="container">
+
+			<div class="content">
+
+				<div class="jumbotron">
+
+					<h1>Welcome to GraphSpace!</h1>
+
+					<big>The interactive graph sharing website.</big>
+
+					<br/>
+
+					<h3>This is still under construction, so please don't mind the bugs.  In fact, report them to <b>divit52@vt.edu</b> :)</h3>
+
+					<!-- To learn about how you can use GraphSpace, check out
+
+					<a href="help/getting-started">getting started</a> -->
+
+					<br/>
+
+					<!--For example graphs with code check out the
+
+					<a href="help/demos">demos page</a>
+
+					<br/>-->
+
+
+					If you don't have an account right now, you can check out the 
+
+					<a href="../graphs/">public graphs</a> 
+
+					and
+
+					<a href="../groups/">public groups</a> 
+
+
+
+				</div>
+
+			</div>
+
+		</div>
+	{% endif %}
+{% endblock %}
+

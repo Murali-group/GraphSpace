@@ -1,0 +1,30 @@
+/*for view_graph.html */
+
+body {
+    background-color: white;
+}
+/*css for parent div element*/ 
+.csweb_container {
+    /* the containser should occupy the entire page */
+    height: 100%;
+    width: 100%;
+    background-color: #fff; 
+    /*position: relative;*/
+}
+
+/* for cytoscape web component within csweb_container */
+.csweb {
+    /* the width takes up 75% of the page. */
+    width: 75%;
+    height: 100%;
+    /*padding-top: 25px;*/
+    float:left;
+}
+
+.side_menu {
+	float:right;
+}
+
+.ui-cytoscape-panzoom {
+    top: 20%;
+}

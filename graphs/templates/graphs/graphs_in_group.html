@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+<div class="container graphs">
+    <div class="row">
+        <div class="col-xs-6 col-sm-9">
+            <div class="graph_links">
+                <h1 style="text-align: center;">{{group_id}}</h1>
+                <!-- list of graphs from database displayed in table form -->
+                <div class="results_table">
+
+                <table class="table table-hover">
+                {% if graph_data != None %}
+                {% if current_page != None %}
+                    <tr>
+                        <td>Graph ID</td>
+                        <td>Modified</td>
+                        <td>Owner</td>
+                        <td>Visibility</td>
+                    </tr>
+                {% for g in current_page %}
+                    <tr> 
+                        <td><a href="{% url 'view_graph' uid=g.2 gid=g.0 %}">{{g.0}}</a></td>
+                        <td>{{ g.1 }}</td>
+                        <td>{{ g.2 }}</td>
+                        {% if g.3 == 1 %}
+                        <td>Public</td>
+                        {% else %}
+                        <td>Private</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                {% endif %}
+                {% else %}
+                    <p>No graphs in this group.</p>
+                {% endif %}
+                </table>
+                </div> <!-- end results_table -->
+            </div>
+        </div>
+        <!-- side menu must be on top for 'float' to work properly -->
+        <div class="col-xs-3 col-sm-3" style="margin-top: 10px;">
+            <!-- div classes are used to style these menu items,
+                 ids are used for accordion jQuery functions. -->
+
+            <!-- Description menu -->
+            <div id="accordion_description" class="accordion">
+                <h3>Description</h3>
+                <div class="accordion_content">
+                    {{ group_description}} </br>
+                </div>
+            </div>
+
+            <!-- Owner menu -->
+            <div id="accordion_owner" class="accordion">
+                <h3>Owner</h3>
+                <div class="accordion_content">
+                    <a href="#user_address">{{ group_owner}}</a>
+                </div>
+            </div>
+
+            <!-- Members menu -->
+            <div id="accordion_members" class="accordion">
+                <h3>Members</h3>
+                <div class="accordion_content">
+                <p>
+                    {% for member in group_members %}
+                        {{ member }}, 
+                    {% endfor %}
+                </p>
+                </div>
+            </div>
+            
+            <!-- the search box. specific functionality to be determined.
+                 Based on Bootstrap CSS API
+
+                 TODO: Use Django form instead.
+             -->
+           <!--  <div class="search_box">
+                <form method="get" action="#TBD"> 
+                    <div class="input-group"> -->
+                        <!--<input class="form-control" type="text" name="search">-->
+                        <!-- {{ search_form }}
+                        <span class="input-group-btn">
+                            <button class="btn btn-info" type="submit">Search</button>
+                        </span>
+                    </div>
+                </form>
+            </div> -->
+
+            <!-- Tags menu -->
+            <!-- <div id="accordion_tags" class="accordion">
+                <h3>Tags</h3>
+                <div class="accordion_content">
+                    under construction
+                </div>
+            </div> -->
+        </div> <!-- end class = side_menu -->
+    </div>
+
+
+{% if uid != None %}
+<!-- A user is logged in. -->
+{% else %}
+<!-- A user is not logged in. -->
+{% endif %}
+
+<!-- pagination of list of graphs.
+     See util/paginator.py for details. -->
+<div class="pager">
+    {% if graph_list != None %}
+    {% if has_previous %}
+    <span class="page">
+        <a href="?page={{ previous_page_number }}">&lt; Prev</a>
+    </span>
+    {% endif %}
+    
+    {% if show_first %}
+        <span class="page"><a href="?page=1">1</a></span>
+        <span class="ellipsis">...</span>
+    {% endif %}
+
+    {% for p in page_numbers %}
+        {% if p == current_page.number %}
+            <span class="current">{{ current_page.number }}</span>
+        {% else %}
+            <span class="page"><a href="?page={{ p }}"?>{{ p }}</a></span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if show_last %}
+        <span class="ellipsis">...</span>
+        <span class="page"><a href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a></span>
+    {% endif %}
+
+    {% if has_next %}
+        <span class="page"><a href="?page={{ next_page_number }}">Next &gt;</a></span> 
+    {% endif %}
+    {% endif %}
+</div>
+
+{% endblock %} <!-- end content block -->
+
+{% block css-js-footer %}
+<!-- load javascripts -->
+<!-- javascript for side menu -->
+<script type="text/javascript" src="{% static 'graphs/js/graphs_in_group.js' %}"></script>
+
+<!--jQuery UI, needed for side menu -->
+<script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+
+<!-- JSON support for IE (needed to use JS API) -->
+<script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
+
+<!-- load stylesheets -->
+<!-- jQuery UI style sheet -->
+<link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
+
+<!-- stylesheet for pager -->
+<link href="{% static 'graphs/css/pager.css' %}" rel="stylesheet">
+
+<!-- stylesheet for elements specified in this html(graphs_in_group.html) -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs_in_group.css' %}">
+
+<!-- stylesheet for side menues -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
+
+{% endblock %}

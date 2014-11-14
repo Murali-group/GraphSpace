@@ -1,0 +1,312 @@
+2014-06-09 15:42:47,136 INFO sqlalchemy.engine.base.Engine SELECT CAST('test plain returns' AS VARCHAR(60)) AS anon_1
+2014-06-09 15:42:47,136 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,137 INFO sqlalchemy.engine.base.Engine SELECT CAST('test unicode returns' AS VARCHAR(60)) AS anon_1
+2014-06-09 15:42:47,137 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,138 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("user")
+2014-06-09 15:42:47,138 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("graph_tag")
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("user_group")
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("graph")
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("password_reset")
+2014-06-09 15:42:47,139 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("group_to_user")
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("node")
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("group_to_graph")
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("usergroup_user")
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("tag_graph")
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,140 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("graph_to_tag")
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("usergroup_graph")
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("layout")
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("edge")
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("graph_grouptograph")
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,141 INFO sqlalchemy.engine.base.Engine PRAGMA table_info("user_grouptouser")
+2014-06-09 15:42:47,142 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,142 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE user (
+	user_id VARCHAR NOT NULL, 
+	password VARCHAR NOT NULL, 
+	activated INTEGER NOT NULL, 
+	activate_code VARCHAR, 
+	public INTEGER, 
+	unlisted INTEGER, 
+	admin INTEGER, 
+	PRIMARY KEY (user_id)
+)
+
+
+2014-06-09 15:42:47,142 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,142 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,143 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE graph_tag (
+	tag_id VARCHAR NOT NULL, 
+	PRIMARY KEY (tag_id)
+)
+
+
+2014-06-09 15:42:47,143 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,143 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,144 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE user_group (
+	group_id VARCHAR NOT NULL, 
+	name VARCHAR NOT NULL, 
+	owner_id VARCHAR NOT NULL, 
+	description VARCHAR NOT NULL, 
+	public INTEGER, 
+	unlisted INTEGER, 
+	PRIMARY KEY (group_id), 
+	FOREIGN KEY(owner_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,144 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,144 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,144 INFO sqlalchemy.engine.base.Engine CREATE INDEX user_group_idx_owner_id ON user_group (owner_id)
+2014-06-09 15:42:47,145 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,145 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,146 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE graph (
+	graph_id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	json VARCHAR NOT NULL, 
+	created TIMESTAMP NOT NULL, 
+	modified TIMESTAMP NOT NULL, 
+	public INTEGER, 
+	unlisted INTEGER, 
+	PRIMARY KEY (graph_id, user_id), 
+	FOREIGN KEY(user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,146 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,146 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,146 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_idx_user_id ON graph (user_id)
+2014-06-09 15:42:47,147 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,147 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,147 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_idx_id_user_id_modified_public ON graph (graph_id, user_id, modified, public)
+2014-06-09 15:42:47,147 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,148 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,148 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_idx_modified_user_id_id_public ON graph (modified, user_id, graph_id, public)
+2014-06-09 15:42:47,148 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,148 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,149 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_idx_user_id_modified_id_public ON graph (user_id, graph_id, modified, public)
+2014-06-09 15:42:47,149 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,149 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,150 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE password_reset (
+	pwreset_id INTEGER NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	code VARCHAR NOT NULL, 
+	created TIMESTAMP NOT NULL, 
+	PRIMARY KEY (pwreset_id), 
+	FOREIGN KEY(user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,150 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,150 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,151 INFO sqlalchemy.engine.base.Engine CREATE INDEX password_reset_idx_user_id ON password_reset (user_id)
+2014-06-09 15:42:47,151 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,151 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,152 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE group_to_user (
+	group_id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	PRIMARY KEY (group_id, user_id), 
+	FOREIGN KEY(group_id) REFERENCES user_group (group_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,152 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,152 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,153 INFO sqlalchemy.engine.base.Engine CREATE INDEX group_to_user_idx_user_id ON group_to_user (user_id)
+2014-06-09 15:42:47,153 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,153 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,153 INFO sqlalchemy.engine.base.Engine CREATE INDEX group_to_user_idx_group_id ON group_to_user (group_id)
+2014-06-09 15:42:47,153 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,154 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,154 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE node (
+	node_id VARCHAR NOT NULL, 
+	label VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	graph_id VARCHAR NOT NULL, 
+	PRIMARY KEY (node_id, user_id, graph_id), 
+	FOREIGN KEY(user_id) REFERENCES graph (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,155 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,155 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,155 INFO sqlalchemy.engine.base.Engine CREATE INDEX node_idx_graph_id_user_id ON node (graph_id, user_id)
+2014-06-09 15:42:47,155 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,156 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,156 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE group_to_graph (
+	group_id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	graph_id VARCHAR NOT NULL, 
+	PRIMARY KEY (group_id, user_id, graph_id), 
+	FOREIGN KEY(group_id) REFERENCES user_group (group_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES graph (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,157 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,157 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,157 INFO sqlalchemy.engine.base.Engine CREATE INDEX group_to_graph_idx_graph_id_user_id_group_id ON group_to_graph (graph_id, user_id, group_id)
+2014-06-09 15:42:47,157 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,158 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,158 INFO sqlalchemy.engine.base.Engine CREATE INDEX group_to_graph_idx_group_id ON group_to_graph (group_id)
+2014-06-09 15:42:47,158 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,158 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,159 INFO sqlalchemy.engine.base.Engine CREATE INDEX group_to_graph_idx_graph_id_user_id ON group_to_graph (graph_id, user_id)
+2014-06-09 15:42:47,159 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,159 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,159 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE usergroup_user (
+	group_id VARCHAR, 
+	user_id VARCHAR, 
+	FOREIGN KEY(group_id) REFERENCES user_group (group_id), 
+	FOREIGN KEY(user_id) REFERENCES user (user_id)
+)
+
+
+2014-06-09 15:42:47,159 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,160 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,160 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE tag_graph (
+	graph_id VARCHAR, 
+	tag_id VARCHAR, 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id), 
+	FOREIGN KEY(tag_id) REFERENCES graph_tag (tag_id)
+)
+
+
+2014-06-09 15:42:47,160 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,160 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,161 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE graph_to_tag (
+	graph_id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	tag_id VARCHAR NOT NULL, 
+	PRIMARY KEY (graph_id, user_id, tag_id), 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES graph (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(tag_id) REFERENCES graph_tag (tag_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,161 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,161 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,162 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_to_tag_idx_tag_id ON graph_to_tag (tag_id)
+2014-06-09 15:42:47,162 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,162 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,162 INFO sqlalchemy.engine.base.Engine CREATE INDEX graph_to_tag_idx_graph_id_user_id ON graph_to_tag (graph_id, user_id)
+2014-06-09 15:42:47,162 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,163 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,163 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE usergroup_graph (
+	group_id VARCHAR, 
+	graph_id VARCHAR, 
+	FOREIGN KEY(group_id) REFERENCES user_group (group_id), 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id)
+)
+
+
+2014-06-09 15:42:47,163 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,163 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,164 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE layout (
+	layout_id INTEGER NOT NULL, 
+	layout_name VARCHAR NOT NULL, 
+	owner_id VARCHAR NOT NULL, 
+	graph_id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	json VARCHAR NOT NULL, 
+	public INTEGER, 
+	unlisted INTEGER, 
+	PRIMARY KEY (layout_id), 
+	FOREIGN KEY(owner_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES graph (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,164 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,165 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,165 INFO sqlalchemy.engine.base.Engine CREATE INDEX layout_idx_owner_id ON layout (owner_id)
+2014-06-09 15:42:47,165 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,165 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,166 INFO sqlalchemy.engine.base.Engine CREATE INDEX layout_idx_graph_id_user_id ON layout (graph_id, user_id)
+2014-06-09 15:42:47,166 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,166 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,167 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE edge (
+	head_user_id VARCHAR NOT NULL, 
+	head_graph_id VARCHAR NOT NULL, 
+	head_id VARCHAR NOT NULL, 
+	tail_user_id VARCHAR NOT NULL, 
+	tail_graph_id VARCHAR NOT NULL, 
+	tail_id VARCHAR NOT NULL, 
+	label VARCHAR, 
+	directed INTEGER, 
+	PRIMARY KEY (head_user_id, head_graph_id, head_id, tail_user_id, tail_graph_id, tail_id), 
+	FOREIGN KEY(head_user_id) REFERENCES node (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(head_graph_id) REFERENCES node (graph_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(head_id) REFERENCES node (node_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(tail_user_id) REFERENCES node (user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(tail_graph_id) REFERENCES node (graph_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	FOREIGN KEY(tail_id) REFERENCES node (node_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+
+2014-06-09 15:42:47,168 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,168 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,168 INFO sqlalchemy.engine.base.Engine CREATE INDEX edge_idx_head_id_head_user_id_head_graph_id ON edge (head_id, head_user_id, head_graph_id)
+2014-06-09 15:42:47,168 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,169 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,169 INFO sqlalchemy.engine.base.Engine CREATE INDEX edge_idx_tail_id_tail_user_id_tail_graph_id ON edge (tail_id, tail_user_id, tail_graph_id)
+2014-06-09 15:42:47,169 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,169 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,170 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE graph_grouptograph (
+	graph_id VARCHAR, 
+	graph_user_id VARCHAR, 
+	grouptograph_user_id VARCHAR, 
+	grouptograph_graph_id VARCHAR, 
+	FOREIGN KEY(graph_id) REFERENCES graph (graph_id), 
+	FOREIGN KEY(graph_user_id) REFERENCES graph (user_id), 
+	FOREIGN KEY(grouptograph_user_id) REFERENCES group_to_graph (user_id), 
+	FOREIGN KEY(grouptograph_graph_id) REFERENCES group_to_graph (graph_id)
+)
+
+
+2014-06-09 15:42:47,170 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,170 INFO sqlalchemy.engine.base.Engine COMMIT
+2014-06-09 15:42:47,171 INFO sqlalchemy.engine.base.Engine 
+CREATE TABLE user_grouptouser (
+	user_id VARCHAR, 
+	group_id VARCHAR, 
+	FOREIGN KEY(user_id) REFERENCES user (user_id), 
+	FOREIGN KEY(group_id) REFERENCES group_to_user (group_id)
+)
+
+
+2014-06-09 15:42:47,171 INFO sqlalchemy.engine.base.Engine ()
+2014-06-09 15:42:47,171 INFO sqlalchemy.engine.base.Engine COMMIT
