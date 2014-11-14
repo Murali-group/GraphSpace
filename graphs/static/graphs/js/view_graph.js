@@ -30,7 +30,6 @@ function searchValues(names) {
 
 }
 
-<<<<<<< HEAD
 function splitTerms(term) {
   return term.split("_");
 }
@@ -46,13 +45,10 @@ function getQueryVariable(variable)
        return(false);
 }
 
-=======
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 function unselectTerm(term) {
   $("#" + term).unselect();
 }
 
-<<<<<<< HEAD
 function queryForIDs(names) {
   $.post("query/", {
     query: names
@@ -61,8 +57,6 @@ function queryForIDs(names) {
   });
 }
 
-=======
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 /* 
 This function is executed when the page finishes loading.
 
@@ -73,19 +67,15 @@ $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
     // $('.csweb').cytoscape({
-<<<<<<< HEAD
     var searchTerms = getQueryVariable("search");
     if (searchTerms) {
       console.log(splitTerms(searchTerms));
     }
-=======
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 
     var graph_layout = {
       name: 'concentric',
       padding: 10
     };
-<<<<<<< HEAD
 
     var query = getQueryVariable("layout");
     if (query == "default_breadthfirst") {
@@ -134,13 +124,6 @@ $(document).ready(function() {
           positions: JSON.parse(layout.json)
         };
       }
-=======
-    if (layout != null) {
-      graph_layout = {
-        name: 'preset',
-        positions: JSON.parse(layout.json)
-      };
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
     }
 
     window.cy = cytoscape( options = {
@@ -270,17 +253,10 @@ $(document).ready(function() {
     });
 
     $('#accordion_layouts').accordion({
-<<<<<<< HEAD
         collapsible: true,
         heightStyle: "fill"
     });
 
-
-=======
-        collapsible: true
-    });
-
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
     $("#save_layout").click(function(e) {
       e.preventDefault();
 
@@ -305,16 +281,8 @@ $(document).ready(function() {
         "public": 0,
         "unlisted": 0
       }, function (data) {
-<<<<<<< HEAD
         var layoutUrl = location.pathname + "?layout=" + layoutName;
         location.replace(layoutUrl);
-=======
-        // $("#layout_name").val("");
-        // $("#layout_modal").modal('hide');
-        var layoutUrl = location.pathname + "?layout=" + layoutName;
-        location.replace(layoutUrl);
-        // console.log(data);
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
       });
 
     });

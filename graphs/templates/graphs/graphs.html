@@ -35,22 +35,16 @@
 
             <div class="pagination pagination-centered">
                     {% if graph_list != None %}
-<<<<<<< HEAD
-                        {% if has_previous %}
-=======
-                       <!--  {% if has_previous %}
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
+                         {% if has_previous %}
                             <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
                         {% else %}
                             <li><a href="?page=1">Prev</a></li>
                         {% endif %}
                         {% if show_first %}
                             <li><a href="?page=1">1</a></li>
-<<<<<<< HEAD
                         {% endif %}
-=======
-                        {% endif %} -->
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
+
+                        
                         {% if search_word %}
                             {% for p in page_numbers %}
                                 {% if p == current_page.number %}
@@ -151,11 +145,7 @@
 
 <!-- list of graphs from database displayed in table form -->
 <div class="row">
-<<<<<<< HEAD
     <div class="col-xs-9 col-sm-9">
-=======
-    <div class="col-xs-6 col-sm-9">
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
         <div class="results_table">
         <table class='table table-hover'>
         {% if graph_list != None %}
@@ -219,11 +209,7 @@
         </div> <!-- end results_table -->
     </div>
 
-<<<<<<< HEAD
-    <div class="col-xs-9 col-sm-3 side">
-=======
     <div class="col-xs-6 col-sm-3 side">
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 
     <div id="tag_panel_accordion" class="panel-group">
       <div id="tag_panel" class="panel panel-default">

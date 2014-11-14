@@ -63,9 +63,6 @@ def view_graph(request, uid, gid):
     #handle login
     context = login(request)
 
-<<<<<<< HEAD
-
-
     try:
 
         if is_public_graph(uid, gid):
@@ -85,23 +82,6 @@ def view_graph(request, uid, gid):
                 graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
             else:
                 return HttpResponse("Not Authorized to view this!")
-=======
-    if request.session['uid'] == None:
-        return HttpResponse("Not logged in yet!")
-
-    try:
-        user_is_member = None
-        graph_in_groups = get_all_groups_for_this_graph(gid)
-        for group in graph_in_groups:
-            members = get_group_members(group)
-            if request.session['uid'] in members:
-                user_is_member = True
-
-        if is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-            graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
-        else:
-            return HttpResponse("Not Authorized to view this!")
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 
     except NoResultFound:
         print uid, gid
@@ -110,14 +90,10 @@ def view_graph(request, uid, gid):
     layout_to_view = None
 
     if (len(request.GET.get('layout', '')) > 0):
-<<<<<<< HEAD
         if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
             layout_to_view = json.dumps({"json": getLayout(request.GET.get('layout'), gid, uid)}) 
         else: 
             layout_to_view = json.dumps(None)
-=======
-        layout_to_view = json.dumps({"json": getLayout(request.GET.get('layout'), gid, uid)}) 
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
     else:
         layout_to_view = json.dumps(None)
    
@@ -137,7 +113,10 @@ def view_graph(request, uid, gid):
 
     json_data = json.loads(context['graph'])
     #add sidebar information to the context for display
-    context['description'] = json_data['metadata']['description']
+    if 'description' in json_data['metadata']:
+        context['description'] = json_data['metadata']['description']
+    else:
+        context['description'] = ""
 
     # id of the owner of this graph
     context['owner'] = uid
@@ -651,7 +630,6 @@ def register(request):
 
     return render(request, 'graphs/register.html', context)
 
-<<<<<<< HEAD
 # def search_result(request):
 #     '''
 #         Perform search and display search results.
@@ -806,8 +784,6 @@ def register(request):
 #     # return render(request, 'graphs/graphs.html', context)
 #     return context
 
-=======
->>>>>>> 6a222f3b86d9c1b92e1b2636da6219167c7cc0d3
 def search_result(request):
     '''
         Perform search and display search results.
