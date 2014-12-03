@@ -730,10 +730,9 @@ def retrieveIDs(request):
 
     if request.POST:
         db_session = data_connection.new_session()
-
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==request.POST['uid'], graph.c.graph_id==request.POST['gid']).one()
-        print convert_json(graph_to_view[0])['graph']
-        # print find_element(request.POST['searchTerms'], convert_json(graph_to_view[0]))
+        json_data =  json.loads(convert_json(graph_to_view[0]))
+        return HttpResponse(find_element(request.POST['searchTerms'], json_data, data_connection))
 
 
 def logout(request):

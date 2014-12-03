@@ -27,7 +27,16 @@ function searchValues(names) {
   	"gid": decodeURIComponent(path[3]),
   	"searchTerms": splitNames[0]
   }, function (data) {
-  	console.log(data);
+  		  	console.log(window.cy.json());
+
+  	if (data != "None") {
+  		window.cy.$("#" + data.toUpperCase()).select();
+	  	window.cy.$("#" + data.toLowerCase()).select();
+	    $("#search_terms").append('<button class="btn btn-primary terms" id="' + data  + '" value="' + data + '"">' + data + '</button>');
+  	}
+
+    // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+    // $("#search").val("");
   });
   // for (var i = 0; i < splitNames.length; i++) {
   //   splitNames[i] = splitNames[i].trim();
@@ -307,4 +316,7 @@ $(document).ready(function() {
       }
     });
 
+    $(".terms").click(function(e) {
+    	console.log('testing');
+    });
 });

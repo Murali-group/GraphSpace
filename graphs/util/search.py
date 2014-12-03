@@ -132,8 +132,10 @@ def search(request, context, json, db):
     # add search form to the context
     context['search_form'] = search_form
 
-def find_element(search_word, json):
-
+def find_element(search_word, json, db):
+    # create new db session
+    db_session = db.new_session()
+    
     # search for edge
     if ':' in search_word:
         # the user is searching for an edge
@@ -142,16 +144,12 @@ def find_element(search_word, json):
         head_node = search_nodes[1]
         tail_node = search_nodes[0]
 
-        # print 'head:', head_node
-        # print 'tail:', tail_node
 
         # match the head node label to the 
         # corresponding node id if possible
         for node in json['graph']['nodes']:
-            print node
             if node['data']['label'] == unicode(head_node):
                 head_node = node['data']['id']
-                print "head_node:", head_node
                 break
 
         # match the tail node label to the 
@@ -159,12 +157,8 @@ def find_element(search_word, json):
         for node in json['graph']['nodes']:
             if node['data']['label'] == tail_node:
                 tail_node = node['data']['id']
-                print "tail_node:", tail_node
                 break
 
-
-        # create new db session
-        db_session = db.new_session()
         # get edge table
         edge = db.meta.tables['edge']
 
@@ -173,14 +167,9 @@ def find_element(search_word, json):
                     and_(head_node == edge.c.head_id, tail_node == edge.c.tail_id),
                     and_(head_node == edge.c.tail_id, tail_node == edge.c.head_id))).all()
 
-        # print 'result:', result
-
         # refine search result by removing duplicates
         result = list(set(result))
 
-        # print 'result:', result
-        # print 'result[0][0]:', result[0][0]
-        # print 'result:', result
         result_id = None
         # find the corresponding edge id
         # there may be more than 1 result
@@ -188,7 +177,8 @@ def find_element(search_word, json):
             # match result to json data
             for e in json['graph']['edges']:
                 if 'label' in e['data']:
-                    if r[0] == e['data']['label']:
+                    if r[0] in e['data']['label']:
+                        print 'tesitng'
                         if 'id' in e['data']:
                             result_id = e['data']['id']
                             break
@@ -197,6 +187,7 @@ def find_element(search_word, json):
                 else:
                     result_id = None
         
+        print result_id
     # search for node
     else:
         # the user is searching for a node
@@ -228,6 +219,8 @@ def find_element(search_word, json):
                 break
             else:
                 result_id = None
+
+    return result_id
         ############################
 
         # For now, use Cytoscape Web API to search for a node in a graph
