@@ -5,14 +5,13 @@ from django.views import generic
 
 from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
-from graphs.util.search import search
+from graphs.util.search import search, find_element
+from graphs.util import db
 from graphs.auth.login import login
-from graphs.util.db import sendForgotEmail,retrieveResetInfo, updateInfo, insert_graph, user_exists, get_graph, is_public_graph, info_groups_for_user, get_all_tags, get_group_members, delete_graph, get_all_graphs, create_group, groups_for_user, is_admin, remove_user_from_group, get_all_groups, get_group_by_id, remove_group, add_user_to_group, share_with_group, unshare_with_group, get_shared_graphs, get_all_groups_for_this_graph, saveLayout, getLayout, getLayouts, get_graph_info, get_public_graph_info, get_all_graph_info
-
 from forms import LoginForm, SearchForm, RegisterForm
 
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 import sqlalchemy, sqlalchemy.orm
 import models
@@ -23,7 +22,7 @@ import bcrypt
 from graphs.util.json_converter import convert_json
 
 #get database
-db = db_init.db
+data_connection = db_init.db
 
 #get tables from the database
 graph = db_init.graph
@@ -53,9 +52,8 @@ def view_graph(request, uid, gid):
         @param uid - owner of the graph to view
         @param gid - graph id of the graph to view
     '''
-    print uid
     #create a new db session
-    db_session = db.new_session()
+    db_session = data_connection.new_session()
 
     # context contains all the elements we want to render on the web
     # page. we fill in the various elements of context before calling
@@ -65,20 +63,20 @@ def view_graph(request, uid, gid):
 
     try:
 
-        if is_public_graph(uid, gid):
+        if db.is_public_graph(uid, gid):
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
         else:
             if request.session['uid'] == None:
                 return HttpResponse("Not Authorized to view this!")
         
             user_is_member = None
-            graph_in_groups = get_all_groups_for_this_graph(gid)
+            graph_in_groups = db.get_all_groups_for_this_graph(gid)
             for group in graph_in_groups:
-                members = get_group_members(group)
+                members = db.get_group_members(group)
                 if request.session['uid'] in members:
                     user_is_member = True
 
-            if is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
+            if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
                 graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
             else:
                 return HttpResponse("Not Authorized to view this!")
@@ -91,27 +89,24 @@ def view_graph(request, uid, gid):
 
     if (len(request.GET.get('layout', '')) > 0):
         if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
-            layout_to_view = json.dumps({"json": getLayout(request.GET.get('layout'), gid, uid)}) 
+            layout_to_view = json.dumps({"json": db.getLayout(request.GET.get('layout'), gid, uid)}) 
         else: 
             layout_to_view = json.dumps(None)
     else:
         layout_to_view = json.dumps(None)
-   
+
     context['layout_to_view'] = layout_to_view
     context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
     
-    #query[0] points to actual graph data
     # for Cytoscape.js
     context['graph'] = convert_json(graph_to_view[0]) 
-    # for Cytoscape Web
-    # context['graph'] = graph_to_view[0]
 
-    shared_groups = get_all_groups_for_this_graph(graph_to_view[2])
-
+    shared_groups = db.get_all_groups_for_this_graph(graph_to_view[2])
 
     context['draw_graph'] = True
 
     json_data = json.loads(context['graph'])
+
     #add sidebar information to the context for display
     if 'description' in json_data['metadata']:
         context['description'] = json_data['metadata']['description']
@@ -131,15 +126,14 @@ def view_graph(request, uid, gid):
     # graph id
     context['graph_id'] = gid
 
-    layouts = getLayouts(uid, gid)
+    layouts = db.getLayouts(uid, gid)
     context['layouts'] = layouts
 
     # search the graph, if performed
-    search(request, context, json_data, db)
+    search(request, context, json_data, data_connection)
 
     # redirect if the user wishes to view the json data
     if request.method == "GET" and 'view_json' in request.GET:
-        print redirect
         return HttpResponseRedirect("/json/%s/%s" % (uid, gid))
 
     return render(request, 'graphs/view_graph.html', context)
@@ -148,9 +142,8 @@ def view_json(request, uid, gid):
     '''
         View json structure of a graph.
     '''
-    print 'view json'
     #create a new db session
-    db_session = db.new_session()
+    db_session = data_connection.new_session()
 
     context = {}
 
@@ -158,7 +151,7 @@ def view_json(request, uid, gid):
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     except NoResultFound:
         print uid, gid
-        return HttpResponseNotFound('<h1>Graph not found</h1>')
+        return HttpResponse('<h1>Graph not found</h1>')
 
     json_data = convert_json(graph_to_view[0])
     
@@ -171,8 +164,10 @@ def view_json(request, uid, gid):
     # graph id
     context['graph_id'] = gid
 
-
-    return render(request, 'graphs/view_json.html', context)
+    if request:
+        return render(request, 'graphs/view_json.html', context)
+    else:
+        return HttpResponse(json_data)
 
 def graphs(request):
     '''Render the My Graphs page'''
@@ -212,7 +207,7 @@ def _graphs_page(request, view_type):
     '''
     
     #get new session from the database
-    db_session = db.new_session()
+    db_session = data_connection.new_session()
     
     #context of the view to be passed in for rendering
     context = {}
@@ -221,9 +216,7 @@ def _graphs_page(request, view_type):
     #handle login
     context = login(request)
 
-    context['all_tags'] = get_all_tags()
-
-
+    context['all_tags'] = db.get_all_tags()
 
     if context['Error']:
         return HttpResponse(context['Error'])
@@ -234,7 +227,7 @@ def _graphs_page(request, view_type):
 
         if 'search' in request.GET:
             context = search_result(request)
-            context['all_tags'] = get_all_tags()
+            context['all_tags'] = db.get_all_tags()
 
             if view_type == 'shared':
                 context['base_url'] = "http://localhost:8000/graphs/shared/"
@@ -262,48 +255,35 @@ def _graphs_page(request, view_type):
             #         graph.c.user_id, graph.c.public
             #         ).all()
             context['base_url'] = "http://localhost:8000/graphs/shared/"
-            graph_list =  get_shared_graphs(uid, request.GET.get('tags'))
+            graph_list =  db.get_shared_graphs(uid, request.GET.get('tags'))
         elif view_type == 'public':
-            graph_list = get_public_graph_info(request.GET.get('tags'))
+            graph_list = db.get_public_graph_info(request.GET.get('tags'))
             context['base_url'] = "http://localhost:8000/graphs/public/"
         elif view_type == 'all':
-            graph_list = get_all_graph_info(request.GET.get('tags'))
+            graph_list = db.get_all_graph_info(request.GET.get('tags'))
             context['base_url'] = "http://localhost:8000/graphs/all/"
         # show the graphs owned by the logged in user ("My Graphs")
         else:
-            graph_list = get_graph_info(uid, request.GET.get('tags'))
+            graph_list = db.get_graph_info(uid, request.GET.get('tags'))
             context['base_url'] = "http://localhost:8000/graphs/"
 
         if graph_list != None:
             if len(graph_list) == 0:
                 graph_list = None
-        #add the list to context
-        # if graph_list != 0:
-        #     context['graph_list'] = graph_list
-        # else:
-        #     context['graph_list'] = None
+
         context['graph_list'] = graph_list
 
     #show public graphs if there is no logged in user
     else:
-        graph_list = get_public_graph_info(request.GET.get('tags'))
+        graph_list = db.get_public_graph_info(request.GET.get('tags'))
         context['graph_list'] = graph_list
-
-    # if len(graph_list) == 0:
-    #     context['graph_list'] = None
-
-    # if context['search_result'] == True:
-    #     return redirect('/result/' + context['search_word'])
-        # return search_result(request, context)
 
     context['search_form'] = SearchForm(placeholder='Search...')
 
     if request.method =='GET' and 'search' in request.GET:
         context = search_result(request)
-        context['all_tags'] = get_all_tags()
+        context['all_tags'] = db.get_all_tags()
         context['base_url'] = "http://localhost:8000/graphs/public/"
-
-        # return HttpResponseRedirect('/graphs/?search=%s' % request.GET.get('search'))
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
@@ -314,6 +294,8 @@ def _graphs_page(request, view_type):
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
             context.update(pager_context)
+
+
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
@@ -358,7 +340,7 @@ def _groups_page(request, view_type):
     '''
 
     #get new session from the database
-    db_session = db.new_session()
+    db_session = data_connection.new_session()
     
     #context of the view to be passed in for rendering
     context = {}
@@ -371,21 +353,13 @@ def _groups_page(request, view_type):
     uid = request.session['uid']
     if uid is not None:
         if view_type == 'member':
-            #List the groups uid is a member of.
-            #TODO: fix the query to display 'member of' list of groups
-            # currently displays public groups
-            # group_list = db_session.query(group.c.group_id, group.c.name, 
-            #         group.c.owner_id, group.c.public
-            #         ).filter(group.c.limit(20).all()
-            group_list = info_groups_for_user(uid)
-        # TODO: what is the meaning of a public group? Should we do away with this concept?
+            group_list = db.info_db.groups_for_user(uid)
         elif view_type == 'public':
             group_list = db_session.query(group.c.group_id, group.c.name, 
                     group.c.owner_id, group.c.public
                     ).filter(group.c.public == 1).all()
         elif view_type == 'all':
-            if is_admin(uid) == 1:
-                # uid must be an admin to be able to see this page.
+            if db.is_admin(uid) == 1:
                 group_list = db_session.query(group.c.group_id, group.c.name, 
                         group.c.owner_id, group.c.public).all()
             else:
@@ -405,9 +379,7 @@ def _groups_page(request, view_type):
             context['group_list'] = None
 
     #show public groups if there is no logged in user
-    # what to show if Public Groups page is removed?
     else:
-        print 'not logged in, displaying public groups'
         group_list = db_session.query(group.c.group_id, 
                 group.c.name, group.c.owner_id, group.c.public
                 ).filter(group.c.public == 1).all()
@@ -419,7 +391,6 @@ def _groups_page(request, view_type):
 
     pager_context = pager(request, group_list)
 
-    #context['login_form'] = login_form
     if type(pager_context) is dict:
         context.update(pager_context)
 
@@ -444,7 +415,7 @@ def graphs_in_group(request, group_id):
     context['group_id'] = group_id
 
     #create a new db session
-    db_session = db.new_session()
+    db_session = data_connection.new_session()
 
     # add search form
     search_form = SearchForm()
@@ -472,7 +443,7 @@ def graphs_in_group(request, group_id):
         else:
             context['graph_data'] = None
 
-        group_information = get_group_by_id(group_id)
+        group_information = db.get_group_by_id(group_id)
 
         context['group_owner'] = group_information[0][2]
 
@@ -571,9 +542,6 @@ def register(request):
         Register a new user.
     '''
 
-    #handle login from register page.
-    # context = login(request)
-
     #if the form has been submitted
     if request.method == 'POST' and 'user_id' in request.POST and 'password' in request.POST:
         # RegisterForm is bound to POST data
@@ -630,160 +598,6 @@ def register(request):
 
     return render(request, 'graphs/register.html', context)
 
-# def search_result(request):
-#     '''
-#         Perform search and display search results.
-
-#         This function searches for nodes and edges stored
-#         in the database.
-#     '''
-
-#     # start building page context
-#     context = login(request)
-
-#     search_form = SearchForm(request.GET, placeholder='Search...')
-
-#     # make sure the submitted for is valid. 
-#     if search_form.is_valid():
-#         # retrieve the search word from url
-#         # search_word = request.GET.get('search').upper()
-#         search_word = request.GET.get('search')
-#         # add the search_word to the context
-#         context['search_word'] = search_word
-#         # notify renderer to display search results via context
-#         context['search_result'] = True
-
-#         # create new session
-#         db_session = db.new_session()
-
-#         # get tables to query from
-#         node = db.meta.tables['node']
-#         edge = db.meta.tables['edge']
-
-#         # searching for edges
-#         if ':' in search_word:
-#             search_nodes = search_word.split(':')
-#             head_node = search_nodes[1]
-#             tail_node = search_nodes[0]
-
-#             print head_node
-#             print tail_node
-
-#             # see if node names provided are labels of nodes
-#             head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).limit(1)
-#             tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).limit(1)
-
-#             # print 'head_node_ids:', head_node_ids
-#             # print 'tail_node_ids:', tail_node_ids
-
-#             try:
-#                 # filter nodes that have node id equal to node label
-#                 set(head_node_ids).remove(head_node)
-#                 set(tail_node_ids).remove(tail_node) 
-#             except:
-#                 head_node_ids = set(head_node_ids)
-#                 tail_node_ids = set(tail_node_ids)
-
-#             # remove duplicate entries
-#             head_node_ids = list(head_node_ids)
-#             tail_node_ids = list(tail_node_ids)
-
-#             # print 'head_node_ids:', head_node_ids
-#             # print 'tail_node_ids:', tail_node_ids
-
-#             # query for edges
-#             if len(head_node_ids) != 0 and len(tail_node_ids) != 0:
-#                 # query for edges with matching head and tail node.
-#                 result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-#                                 edge.c.head_id, edge.c.label).filter(
-#                                 edge.c.head_id == head_node_ids[0][0], 
-#                                 edge.c.tail_id == tail_node_ids[0][0]).all()
-
-#             else:
-#                 # assume the given words are ids of nodes.
-#                 # query for the edges using given node names
-#                 result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-#                                 edge.c.head_id, edge.c.label).filter(
-#                                 edge.c.head_id == head_node, 
-#                                 edge.c.tail_id == tail_node).all()
-
-#             # notify renderer to display edge results
-#             context['nodes'] = False
-            
-#         # searching for nodes
-#         else:
-#             result = db_session.query(node.c.graph_id, node.c.user_id,
-#                         node.c.node_id, node.c.label).filter(
-#                         or_(node.c.node_id.like("%" + search_word + "%"), 
-#                         node.c.label.like("%" + search_word + "%"))).all()
-
-#             # notify renderer to display edge results
-#             context['nodes'] = True
-
-#         if len(result) != 0:
-#             context['search_result'] = True
-#             # context['graph_list'] contains graphs to list
-#             # set it as result
-
-#             display_results = []
-#             graphnames = []
-#             for graphs in result:
-#                 graphnames.append(graphs[0])
-#                 if request.session['uid']:
-#                     if graphs[1] == request.session['uid'] or is_admin(request.session['uid']):
-#                         display_results.append(graphs[0])
-#                 else:
-#                     is_public = is_public_graph(graphs[1], graphs[0])
-#                     if is_public:
-#                         display_results.append(graphs[0])
-
-
-#             for name in graphnames:
-#                 graph_in_groups = get_all_groups_for_this_graph(name)
-#                 for group in graph_in_groups:
-#                     members = get_group_members(group)
-#                     if request.session['uid'] in members:
-#                         if display_results.count(name) == 0:
-#                             display_results.append(name)
-
-#             actual_results = []
-
-#             for graph in result:
-#                 if graph[0] in display_results:
-#                     actual_results.append(graph)
-
-
-#             if len(actual_results) == 0:
-#                 context['graph_list'] = None
-#             else:
-#                 print actual_results
-#                 context['graph_list'] = actual_results
-#         else:
-#             context['search_result'] = False
-#             context['graph_list'] = None
-
-#     else:
-#         print 'not searching'
-#         context['search_result'] = False
-#         # An unbound form
-#         search_form = SearchForm(placeholder='Search...')
-
-#     # add search form to the context
-#     context['search_form'] = search_form
-
-#     # add pagination
-#     if context['graph_list'] != None:
-#         pager_context = pager(request, context['graph_list'])
-
-#         if type(pager_context) is dict:
-#             context.update(pager_context)
-
-#     context['footer'] = True
-
-#     # return render(request, 'graphs/result.html', context)
-#     # return render(request, 'graphs/graphs.html', context)
-#     return context
-
 def search_result(request):
     '''
         Perform search and display search results.
@@ -800,7 +614,6 @@ def search_result(request):
     # make sure the submitted for is valid. 
     if search_form.is_valid():
         # retrieve the search word from url
-        # search_word = request.GET.get('search').upper()
         search_word = request.GET.get('search')
         # add the search_word to the context
         context['search_word'] = search_word
@@ -808,11 +621,14 @@ def search_result(request):
         context['search_result'] = True
 
         # create new session
-        db_session = db.new_session()
+        db_session = data_connection.new_session()
 
         # get tables to query from
-        node = db.meta.tables['node']
-        edge = db.meta.tables['edge']
+        node = data_connection.meta.tables['node']
+        edge = data_connection.meta.tables['edge']
+        search_graph = data_connection.meta.tables['graph']
+        search_group_to_graph = data_connection.meta.tables['group_to_graph']
+        search_group_to_user = data_connection.meta.tables['group_to_user']
 
         # searching for edges
         if ':' in search_word:
@@ -820,15 +636,9 @@ def search_result(request):
             head_node = search_nodes[1]
             tail_node = search_nodes[0]
 
-            print head_node
-            print tail_node
-
             # see if node names provided are labels of nodes
             head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).limit(1)
             tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).limit(1)
-
-            # print 'head_node_ids:', head_node_ids
-            # print 'tail_node_ids:', tail_node_ids
 
             try:
                 # filter nodes that have node id equal to node label
@@ -841,9 +651,6 @@ def search_result(request):
             # remove duplicate entries
             head_node_ids = list(head_node_ids)
             tail_node_ids = list(tail_node_ids)
-
-            # print 'head_node_ids:', head_node_ids
-            # print 'tail_node_ids:', tail_node_ids
 
             # query for edges
             if len(head_node_ids) != 0 and len(tail_node_ids) != 0:
@@ -866,58 +673,41 @@ def search_result(request):
             
         # searching for nodes
         else:
-            result = db_session.query(node.c.graph_id, node.c.user_id,
-                        node.c.node_id, node.c.label).filter(
-                        or_(node.c.node_id.like("%" + search_word + "%"), 
-                        node.c.label.like("%" + search_word + "%"))).all()
+            if context['uid'] != None:
+                #search graph that user owns
+                owner_result_name = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+                
+                owner_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
 
-            # notify renderer to display edge results
+                #search graphs that are public
+                public_result = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                
+                public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+
+                group_result = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == search_group_to_user.c.user_id).filter(search_group_to_user.c.user_id == context['uid']).all()
+
+                group_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == search_group_to_user.c.user_id).filter(search_group_to_user.c.user_id == context['uid']).all()
+
+                result = list(set(owner_result_name + public_result + group_result + owner_result_label + public_result_label + group_result_label))
+            # notify renderer to display node results
             context['nodes'] = True
 
         if len(result) != 0:
             context['search_result'] = True
-            # context['graph_list'] contains graphs to list
-            # set it as result
-
-            display_results = []
-            graphnames = []
-            for graphs in result:
-                graphnames.append(graphs[0])
-                if request.session['uid']:
-                    if graphs[1] == request.session['uid'] or is_admin(request.session['uid']):
-                        display_results.append(graphs[0])
-                else:
-                    is_public = is_public_graph(graphs[1], graphs[0])
-                    if is_public:
-                        display_results.append(graphs[0])
-
-
-            for name in graphnames:
-                graph_in_groups = get_all_groups_for_this_graph(name)
-                for group in graph_in_groups:
-                    members = get_group_members(group)
-                    if request.session['uid'] in members:
-                        if display_results.count(name) == 0:
-                            display_results.append(name)
-
-            actual_results = []
-
-            for graph in result:
-                if graph[0] in display_results:
-                    actual_results.append(graph)
-
-
-            if len(actual_results) == 0:
-                context['graph_list'] = None
-            else:
-                print actual_results
-                context['graph_list'] = actual_results
+            print result
+            context['graph_list'] = result
+           
         else:
             context['search_result'] = False
             context['graph_list'] = None
 
     else:
-        print 'not searching'
         context['search_result'] = False
         # An unbound form
         search_form = SearchForm(placeholder='Search...')
@@ -934,19 +724,25 @@ def search_result(request):
 
     context['footer'] = True
 
-    # return render(request, 'graphs/result.html', context)
-    # return render(request, 'graphs/graphs.html', context)
     return context
+
+def retrieveIDs(request):
+
+    if request.POST:
+        db_session = data_connection.new_session()
+
+        graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==request.POST['uid'], graph.c.graph_id==request.POST['gid']).one()
+        print convert_json(graph_to_view[0])['graph']
+        # print find_element(request.POST['searchTerms'], convert_json(graph_to_view[0]))
+
 
 def logout(request):
     '''
         Log the user out and display logout page.
     '''
     context = {}
-    print 'logging out'
     
     try:
-        print 'delete uid'
         del request.session['uid']
     except KeyError:
         # TODO: should something be done here?
@@ -959,11 +755,8 @@ def forgot(request):
     '''
         Email user the link to reset their password
     '''
-    # context = forgot_password(request)
-    # print context
-    # return HttpResponseRedirect('/index/')
 
-    emailId = sendForgotEmail(request.POST['forgot_email'])
+    emailId = db.sendForgotEmail(request.POST['forgot_email'])
 
     if emailId == None:
         return HttpResponse(json.dumps({"Error": "Email does not exist!"}), content_type="application/json");
@@ -975,7 +768,7 @@ def reset(request):
         Allow user to reset their password
     '''
     id = request.GET.get('id')
-    email = retrieveResetInfo(id)
+    email = db.retrieveResetInfo(id)
 
     if email == None:
         return HttpResponse(json.dumps({"Error": "Unrecognized ID"}), content_type="application/json");
@@ -993,7 +786,7 @@ def resetPassword(request):
                     request.POST['pass'], 
                     bcrypt.gensalt())
 
-    status = updateInfo(request.POST['user_id'] , hashed_pw)
+    status = db.updateInfo(request.POST['user_id'] , hashed_pw)
 
     if status == None:
         return HttpResponse(json.dumps({"Error": "Email not found!"}), content_type="application/json");
@@ -1001,7 +794,7 @@ def resetPassword(request):
     return HttpResponse("Password Updated!")
 
 def save_layout(request, uid, gid):
-    return HttpResponse(saveLayout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, uid, request.POST['points'], request.POST['public'], request.POST['unlisted']))
+    return HttpResponse(db.saveLayout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, uid, request.POST['points'], request.POST['public'], request.POST['unlisted']))
 
 def download(request):
     if request.POST:
@@ -1012,76 +805,6 @@ def download(request):
 
 ##### END VIEWS #####
 
-###### TEST VIEWS #####
-def cyto(request):
-    '''cytoscape web test page'''
-    query = s.query(graph.c.json).filter(graph.c.user_id=='ategge@vt.edu').all()
-    
-    result = []
-    for q in query:
-        result.append(q)
-    context = {'query':result[4][0]}
-    #context = {}
-    return render(request, 'graphs/cyto.html', context)
-
-#test graphs page as class based view
-# class GraphsView(generic.ListView):
-#     template_name = 'graphs/graphs.html'
-#     context_object_name = 'context'
-
-#     def get_queryset(self):
-#         return s.query(graph.c.graph_id, graph.c.modified, 
-#                     graph.c.user_id, graph.c.public
-#                     ).filter(graph.c.public == 1).limit(20).all()
-
-#     def get_context_data(self, **kwargs):
-#         context = login(self.request)
-#         uid = self.request.session['uid']
-#         if uid is not None:
-#             if view_type == 'shared':
-#                 #how are shared graphs indicated in the database?
-#                 #show public graphs for now.
-#                 graph_list = s.query(graph.c.graph_id, graph.c.modified, 
-#                         graph.c.user_id, graph.c.public
-#                         ).filter(graph.c.public == 1).limit(20).all()
-#             elif view_type == 'public':
-#                 graph_list = s.query(graph.c.graph_id, graph.c.modified, 
-#                         graph.c.user_id, graph.c.public
-#                         ).filter(graph.c.public == 1).all()
-#             elif view_type == 'all':
-#                 graph_list = s.query(graph.c.graph_id, graph.c.modified, 
-#                         graph.c.user_id, graph.c.public).all()
-#             #graphs of logged in user(my graphs)
-#             else:
-#                 graph_list = s.query(graph.c.graph_id, graph.c.modified, 
-#                         graph.c.user_id, graph.c.public
-#                         ).filter(graph.c.user_id == uid).all()
-
-#             #add the list to context
-#             if len(graph_list) != 0:
-#                 context['graph_list'] = graph_list
-#             else:
-#                 context['graph_list'] = None
-
-#             form = LoginForm(request.POST)
-#         #show public graphs if there is no logged in user
-#         else:
-#             print 'not logged in, displaying public graphs'
-#             form = LoginForm()
-#             graph_list = s.query(graph.c.graph_id, 
-#                     graph.c.modified, graph.c.user_id, graph.c.public
-#                     ).filter(graph.c.public == 1).all()
-#             context['graph_list'] = graph_list
-
-#         pager_context = pager(self.request, graph_list)
-
-#         context['form'] = form
-#         if type(pager_context) is dict:
-#             context.update(pager_context)
-
-#         return context
-##### END TEST VIEW #####
-
 ##### REST API #####
 def upload_graph(request, user_id, graphname):
 
@@ -1090,10 +813,10 @@ def upload_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if user_exists(user_id, request.POST['password']) == None:
+        if db.user_exists(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        graph_exists = insert_graph(user_id, graphname, request.FILES['graphname'].read())
+        graph_exists = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
         if graph_exists != None:
             return HttpResponse("Graph with " + graphname + " exists under " + user_id)
         else:
@@ -1106,10 +829,10 @@ def retrieve_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if user_exists(user_id, request.POST['password']) == None:
+        if db.user_exists(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        jsonData = get_graph(user_id, graphname)
+        jsonData = db.get_graph(user_id, graphname)
         if jsonData != None:
             return HttpResponse(jsonData)
         else:
@@ -1121,12 +844,12 @@ def remove_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if user_exists(user_id, request.POST['password']) == None:
+        if db.user_exists(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
   
-        jsonData = get_graph(user_id, graphname)
+        jsonData = db.get_graph(user_id, graphname)
         if jsonData != None:
-            delete_graph(user_id, graphname)
+            db.delete_graph(user_id, graphname)
             return HttpResponse("Successfully deleted " + graphname + " owned by " + user_id)
         else:
             return HttpResponse("No such graph exists!")
@@ -1137,43 +860,40 @@ def view_all_graphs(request, user_id):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if user_exists(user_id, request.POST['password']) == None:
+        if db.user_exists(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = get_all_graphs(user_id)
+        data = db.get_all_graphs(user_id)
         return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json");
 
 
 def get_groups(request):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = get_all_groups()
-
+        data = db.get_all_groups()
         return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
 
 #too much work, come back later
 def get_group(request, groupname):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = get_group_by_id(groupname)
-
+        data = db.get_group_by_id(groupname)
         return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
 
 
 def delete_group(request, groupname):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = remove_group(request.POST['username'], groupname)
-
+        data = db.remove_group(request.POST['username'], groupname)
         return HttpResponse(json.dumps({"Response": data}), content_type="application/json");
 
 
@@ -1181,10 +901,10 @@ def add_group(request, groupname):
     if request.method == 'POST':
 
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        group_created = create_group(request.POST['username'], groupname)
+        group_created = db.create_group(request.POST['username'], groupname)
         
         if group_created != None:
             return HttpResponse("Group created")
@@ -1195,19 +915,19 @@ def add_group(request, groupname):
 def get_group_for_user(request, user_id):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        group = groups_for_user(user_id)
+        group = db.groups_for_user(user_id)
         return HttpResponse(json.dumps({"User": user_id, "Groups": group}), content_type="application/json");
 
 def add_user(request, groupname, user_id):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = add_user_to_group(user_id, request.POST['username'], groupname)
+        data = db.add_user_to_group(user_id, request.POST['username'], groupname)
 
         if data == None:
             return  HttpResponse(json.dumps({"Response": "Group doesn't exist!"}), content_type="application/json");
@@ -1218,28 +938,26 @@ def add_user(request, groupname, user_id):
 def remove_user(request, groupname, user_id):
     if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        group = remove_user_from_group(user_id, request.POST['username'], groupname)
+        group = db.remove_user_from_group(user_id, request.POST['username'], groupname)
         return HttpResponse(json.dumps({"Response": group}), content_type="application/json");
 
 def share_graph(request, graphname, groupname):
      if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        print graphname
-        print groupname
-        result = share_with_group(request.POST['username'], graphname, groupname)
+        result = db.share_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json");
 
 def unshare_graph(request, graphname, groupname):
      if request.method == 'POST':
 
-        if user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.user_exists(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        result = unshare_with_group(request.POST['username'], graphname, groupname)
+        result = db.unshare_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json");

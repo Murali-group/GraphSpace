@@ -12,6 +12,9 @@ urlpatterns = patterns('',
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),
 
+        # id of nodes/edges
+        url(r'^retrieveIDs/$', views.retrieveIDs, name='retrieveIDs'),
+        
         # graphs page
         url(r'^graphs/$', views.graphs, name='graphs'),
         url(r'^graphs/shared/$', views.shared_graphs, name='shared_graphs'),
@@ -72,13 +75,5 @@ urlpatterns = patterns('',
         url(r'^api/groups/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user, name='remove_user'),
         url(r'^api/groups/(?P<groupname>.+)/get/$', views.get_group, name='get_group'), # needs more work
         url(r'^api/users/(?P<user_id>.+)/groups/$', views.get_group_for_user, name='get_group_for_user'),
-
-
-        ########## Pages set up for testing ###########
-        #cytoscape test page
-        url(r'^cyto/$', views.cyto, name='cyto'),
-        # url(r'^graphstest/$', views.GraphsView.as_view(), name='graphstest'),
-        # url(r'^graph/$', views.view_graph, name='view_graph'),
-        ########## End test pages ##########
         )
 

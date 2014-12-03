@@ -553,7 +553,6 @@ def get_shared_graphs(user, tags):
 				graph_list.insert(1, "")
 				cleaned_graph.append(tuple(graph_list))
 
-		print cleaned_graph
 		if cleaned_graph != None:
 			return cleaned_graph
 		else:
@@ -833,15 +832,7 @@ def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unliste
 	try:
 		con = lite.connect('test.db')
 
-		cur = con.cursor()
-		print layout_id
-		print layout_name
-		print owner
-		print graph
-		print user
-		print json
-		print public
-		print unlisted		
+		cur = con.cursor()	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, owner, json, 0, 0))
 		con.commit()
@@ -893,7 +884,6 @@ def getLayouts(uid, gid):
 			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
-		print cleaned_data
 		return cleaned_data
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]

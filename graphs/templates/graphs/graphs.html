@@ -35,7 +35,7 @@
 
             <div class="pagination pagination-centered">
                     {% if graph_list != None %}
-                         {% if has_previous %}
+                        {% if has_previous %}
                             <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
                         {% else %}
                             <li><a href="?page=1">Prev</a></li>
@@ -43,29 +43,33 @@
                         {% if show_first %}
                             <li><a href="?page=1">1</a></li>
                         {% endif %}
-
+                        
                         
                         {% if search_word %}
                             {% for p in page_numbers %}
                                 {% if p == current_page.number %}
                                    <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                    <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
                         {% elif tags != None %}
                             {% for p in page_numbers %}
                                 {% if p == current_page.number %}
                                    <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                    <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?tags={{ tags }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
                         {% else %}
                            {% for p in page_numbers %}
@@ -77,8 +81,10 @@
                             {% endfor %}
                             {% if has_next %}
                                 <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
-                        {% endif %}
+                        {% endif %}                        
 
                     {% endif %}
             </div>
@@ -161,7 +167,10 @@
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    <td><a href="{% url 'view_graph' uid=g.1 gid=g.0 %}">{{ g.0 }}</a></td>
+                    {% url 'view_graph' uid=g.1 gid=g.0 as the_url %}
+                    {% with the_url|add:"?search=" as final_url %}
+                        <td><a href="{{final_url|add:g.2}}">{{ g.0 }}</a></td>
+                    {%endwith %}
                     <!-- <td></td> -->
                     <td>{{ g.1 }}</td>
                     <td>{{ g.2 }}</td>
