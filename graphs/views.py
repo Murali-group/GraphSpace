@@ -832,6 +832,7 @@ def search_result(request):
 
             try:
                 # filter nodes that have node id equal to node label
+                #What?
                 set(head_node_ids).remove(head_node)
                 set(tail_node_ids).remove(tail_node) 
             except:
@@ -866,10 +867,11 @@ def search_result(request):
             
         # searching for nodes
         else:
+            # TODO: FIX INDEX INTERACTION
             result = db_session.query(node.c.graph_id, node.c.user_id,
-                        node.c.node_id, node.c.label).filter(
-                        or_(node.c.node_id.like("%" + search_word + "%"), 
-                        node.c.label.like("%" + search_word + "%"))).all()
+                        node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).all()
+                        # or_(node.c.node_id.like("%" + search_word + "%"), 
+                        # node.c.label.like("%" + search_word + "%"))).all()
 
             # notify renderer to display edge results
             context['nodes'] = True
