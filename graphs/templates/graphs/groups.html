@@ -9,14 +9,9 @@
 <div class="graph_links">
     <button class="btn btn-primary"><a style='color:white' href="{% url 'groups' %}">Owner of</a></button>
     <button class="btn btn-primary"><a style='color:white' href="{% url 'groups_member' %}">Member of</a></button>
-    <button class="btn btn-primary"><a style='color:white' href="{% url 'public_groups' %}">Public Groups</a></button>
     {% if admin == 1 %}
         <button class="btn btn-primary"><a style='color:white' href="{% url 'all_groups' %}">All Groups</a></button>
     {% endif %}
-</div>
-{% else %}
-<div class="graph_links">
-    <a href="{% url 'public_groups' %}">Public Groups</a>
 </div>
 {% endif %}
 

@@ -131,9 +131,11 @@
             <div class="accordion_content">
                 <!-- <div class="panel-collapse collapse in" id="collapse_graph_layouts"> -->
                     <!-- <div class="panel-body" id="graph-layouts"> -->
+                    {% if uid != None %}
                         <div>
                           <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button>
                         </div>
+                    {% endif %}
                         <hr/>
 
                         <div class="tabbable">

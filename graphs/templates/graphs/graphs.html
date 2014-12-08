@@ -20,22 +20,44 @@
                     </ul>
                 {% endif %}
                 {% if uid != None %}
-                    <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs</a></button>
-                    <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me</a></button>
-                    <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs</a></button>
-                    <!-- All Graphs is for admin mode. Specific functionality to be added. -->
-                    {% if admin == 1 %}
-                    <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                    {% if search_word %}
+                        {% url 'graphs' as the_url %}
+                        {% with the_url|add:"?search="|add:search_word as final_url %}
+                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                        {% endwith %}
+                        {% url 'shared_graphs' as the_url %}
+                        {% with the_url|add:"?search="|add:search_word as final_url %}
+                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                        {% endwith %}
+                        {% url 'public_graphs' as the_url %}
+                        {% with the_url|add:"?search="|add:search_word as final_url %}
+                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                        {% endwith %}
+                    {% else %}
+                        <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs<br>{{ my_graphs }}</a></button>
+                        <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me<br>{{ shared_graphs }}</a></button>
+                        <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                        <!-- All Graphs is for admin mode. Specific functionality to be added. -->
+                        {% if admin == 1 %}
+                        <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                        {% endif %}
                     {% endif %}
                 {% else %}
-                <!-- A user is not logged in. display a link for public graphs -->
-                <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs</a></button>
+                    {% if search_word %}
+                        <!-- A user is not logged in. display a link for public graphs -->
+                        {% url 'public_graphs' as the_url %}
+                        {% with the_url|add:"?search="|add:search_word as final_url %}
+                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >Public Graphs<br>{{ public_graphs }}</a></button>
+                        {% endwith %}
+                    {% else %}
+                        <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                    {% endif %}
                 {% endif %}
             </div>
 
             <div class="pagination pagination-centered">
                     {% if graph_list != None %}
-                         {% if has_previous %}
+                        {% if has_previous %}
                             <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
                         {% else %}
                             <li><a href="?page=1">Prev</a></li>
@@ -43,29 +65,33 @@
                         {% if show_first %}
                             <li><a href="?page=1">1</a></li>
                         {% endif %}
-
+                        
                         
                         {% if search_word %}
                             {% for p in page_numbers %}
                                 {% if p == current_page.number %}
                                    <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                    <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
                         {% elif tags != None %}
                             {% for p in page_numbers %}
                                 {% if p == current_page.number %}
                                    <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                    <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?tags={{ tags }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
                         {% else %}
                            {% for p in page_numbers %}
@@ -77,8 +103,10 @@
                             {% endfor %}
                             {% if has_next %}
                                 <li><a href="?page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% else %}
+                                <li><a href="?page=1">Next</a></li>
                             {% endif %}
-                        {% endif %}
+                        {% endif %}                        
 
                     {% endif %}
             </div>
@@ -145,10 +173,10 @@
 
 <!-- list of graphs from database displayed in table form -->
 <div class="row">
-    <div class="col-xs-9 col-sm-9">
+    <div class="col-sm-9">
         <div class="results_table">
         <table class='table table-hover'>
-        {% if graph_list != None %}
+        {% if graph_list != None and graph_list|length > 0 %}
             <!-- list search results -->
             {% if search_result %}
                 {% if current_page != None %}
@@ -161,11 +189,14 @@
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    <td><a href="{% url 'view_graph' uid=g.1 gid=g.0 %}">{{ g.0 }}</a></td>
+                    {% url 'view_graph' uid=g.1 gid=g.0 as the_url %}
+                    {% with the_url|add:"?search=" as final_url %}
+                        <td><div class="test"><a href="{{final_url|add:g.2}}">{{ g.0 }}</a></div></td>
+                    {%endwith %}
                     <!-- <td></td> -->
-                    <td>{{ g.1 }}</td>
-                    <td>{{ g.2 }}</td>
-                    <td>{{ g.3 }}</td>
+                    <td><div class="test">{{ g.1 }}</div></td>
+                    <td><div class="test">{{ g.2 }}</div></td>
+                    <td><div class="test">{{ g.3 }}</div></td>
                 </tr>
                 {% endfor %}
                 {% endif %}
@@ -174,29 +205,29 @@
             {% else %}
                 {% if current_page != None %}
                 <tr>
-                    <th>Graph ID</th>
-                    <th>Tags</th>
-                    <th>Modified</th>
-                    <th>Owner</th>
-                    <th>Visibility</th>
+                    <th class="col-sm-2">Graph ID</th>
+                    <th class="col-sm-2">Tags</th>
+                    <th class="col-sm-2">Modified</th>
+                    <th class="col-sm-2">Owner</th>
+                    <th class="col-sm-2">Visibility</th>
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    <td><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></td>
-                    <td>
+                    <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
+                    <td><div class="test">
                         {% for tag in g.1 %}
                              {% with "http://localhost:8000/graphs/"|add:"?tags="|add:tag as url %}
                                 <a href={{url}}>{{ tag }}</a>
                             {% endwith %}
 
-                        {% endfor %}
+                        {% endfor %}</div>
                     </td>
-                    <td>{{ g.2 }}</td>
-                    <td>{{ g.3 }}</td>
+                    <td><div class="test">{{ g.2 }}</div></td>
+                    <td><div class="test">{{ g.3 }}</div></td>
                     {% if g.4 == 1 %}
-                    <td>Public</td>
+                    <td><div class="test">Public</div></td>
                     {% else %}
-                    <td>Private</td>
+                    <td><div class="test">Private</div></td>
                     {% endif %}
                 </tr>
                 {% endfor %}

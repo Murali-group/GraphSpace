@@ -39,6 +39,10 @@
 	overflow: hidden;
 }
 
+.test {
+  width: 125px;
+  word-wrap: break-word;
+}
 .search_box_container {
 	float:right;
 	width: ;

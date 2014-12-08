@@ -16,12 +16,12 @@ def is_admin(username):
 		cur = con.cursor()
 		cur.execute('select admin from user where user_id = ?', (username,))
 
-		data = cur.fetchone()[0]
+		data = cur.fetchone()
 
 		if data == None:
 			return None
 		else:
-			if data == 1:
+			if data[0] == 1:
 				return True
 			return None
 
@@ -32,15 +32,27 @@ def is_admin(username):
 		if con:
 			con.close()
 
-def get_all_tags():
+def get_all_tags(username, view_type):
 	con = None
 	try:
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
-		cur.execute('select tag_id from graph_tag limit 10')
+		if view_type == 'public':
+			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
+		elif view_type == 'shared':
+			if username:
+				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g, group_to_graph as gg where gt.graph_id = g.graph_id and g.graph_id=gg.graph_id and gg.user_id=?limit 10', (username, ))
+			else: 
+				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
+		else:
+			if username:
+				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where gt.graph_id = g.graph_id and g.user_id=? limit 10', (username, ))
+			else:
+				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
 
 		data = cur.fetchall()
+		print 'TESTING' + str(data)
 
 		if data == None:
 			return None
@@ -65,11 +77,12 @@ def user_exists(username, password):
 		cur = con.cursor()
 		cur.execute('select password from user where user_id = ?', (username,))
 
-		data = cur.fetchone()[0]
+		data = cur.fetchone()
 
 		if data == None:
 			return None
 		else:
+			data = data[0]
 			if bcrypt.hashpw(password, data) != data:
 				return None
 			else:
@@ -251,7 +264,7 @@ def get_group_by_id(group):
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
-		cur.execute('select description, owner_id from \"group\" where group_id=?', (group, ));
+		cur.execute('select description, owner_id, name, group_id from \"group\" where group_id=?', (group, ));
 
 		data = cur.fetchall()
 
@@ -259,7 +272,7 @@ def get_group_by_id(group):
 
 		for row in data:
 			members = get_group_members(group)
-			tuple_list = (str(row[0]), members, str(row[1]))
+			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
 			cleaned_data.append(tuple_list)
 
 		return cleaned_data
@@ -331,15 +344,15 @@ def create_group(username, group):
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
-		cur.execute('select group_id from \"group\" where group_id=?', (group, ));
+		cur.execute('select group_id from \"group\" where group_id=? and owner_id=?', (group, username));
 
 		data = cur.fetchone()
 
 		if data == None:
-			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (group, group, username, "", 0, 1))
-			cur.execute('insert into group_to_user values(?, ?)', (username, group, ))
+			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (username + '_' + group, group, username, "", 0, 1))
+			cur.execute('insert into group_to_user values(?, ?)', (username + '_' + group, username))
 			con.commit()
-			return "Created!"
+			return username + '_' + group
 		else:
 			return None
 
@@ -363,9 +376,10 @@ def info_groups_for_user(username):
 		cur = con.cursor()
 
 		for group in groups:
-			cur.execute('select name, description, owner_id, public from \"group\" where group_id=?', (group, ))
+			cur.execute('select group_id, description, owner_id, public from \"group\" where group_id=?', (group, ))
 			data = cur.fetchone()
-			cleaned_data.append(data)
+			if data != None:
+				cleaned_data.append(data)
 
 		return cleaned_data
 
@@ -410,14 +424,15 @@ def add_user_to_group(username, owner, group):
 		cur = con.cursor()
 		cur.execute('select user_id from user where user_id=?', (username, ))
 
-		data = cur.fetchone()[0]
+		data = cur.fetchone()
 		if data == None:
 			return "User does not exist!"
 
 		cur.execute('select group_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
-		isOwner = cur.fetchone()[0]
+		isOwner = cur.fetchone()
 
 		if isOwner != None:
+			isOwner = isOwner[0]
 			cur.execute('insert into group_to_user values(?, ?)', (username, group, ))
 			con.commit();
 			return "User added!"
@@ -439,13 +454,15 @@ def remove_user_from_group(username, owner, group):
 
 		cur = con.cursor()
 		cur.execute('select user_id from user where user_id=?', (username, ))
-		data = cur.fetchone()[0]
+		data = cur.fetchone()
 		if data == None:
 			return "User does not exist!"
 
+		data = data[0]
 		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group, ))
-		isOwner = cur.fetchone()[0]
+		isOwner = cur.fetchone()
 		if isOwner != None:
+			isOwner = isOwner[0]
 			cur.execute('delete from group_to_user where user_id=? and group_id=?', (username, group, ))
 			con.commit();
 			return "User removed!"
@@ -466,20 +483,26 @@ def share_with_group(owner, graph, group):
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
-		cur.execute('select * from graph where user_id=? and graph_id=?', (owner, graph, ))
+		cur.execute('select * from graph where user_id=? and graph_id=?', (owner, graph))
 		data = cur.fetchone()
+		if data == None:
+			return 'Graph does not exist'
 		isOwner = data[0]
 		cur.execute('select public from "group" where group_id=?', (group, ))
-		isPublic = cur.fetchone()[0]
+		isPublic = cur.fetchone()
+		if isPublic == None:
+			isPublic = 0
+		else:
+			isPublic = isPublic[0]
 		if isOwner != None:
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 			isMember = cur.fetchone()
 			if isMember != None:
-				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, graph, owner, ))
+				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
 				con.commit()
 				return "Graph successfully shared!"
 			elif int(isPublic) == 1:
-				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, graph, owner, ))
+				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
 				cur.execute('update graph set public=1 where user_id=? and graph_id=?', (owner, graph))
 				con.commit()
 			else:
@@ -501,11 +524,13 @@ def unshare_with_group(owner, graph, group):
 
 		cur = con.cursor()
 		cur.execute('select user_id from graph where user_id=? and graph_id=?', (owner, graph, ))
-		isOwner = cur.fetchone()[0]
+		isOwner = cur.fetchone()
 		if isOwner != None:
+			isOwner = isOwner[0]
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
-			isMember = cur.fetchone()[0]
+			isMember = cur.fetchone()
 			if isMember != None:
+				isMember = isMember[0]
 				cur.execute('delete from group_to_graph where group_id=? and graph_id=? and user_id=?', (group, graph, owner))
 				con.commit()
 				return "Graph successfully unshared!"
@@ -535,6 +560,9 @@ def get_shared_graphs(user, tags):
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
 		graphs = cur.fetchall()
 
+		if graphs == None:
+			return None
+
 		cleaned_graph = []
 		for graph in graphs:
 			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
@@ -553,7 +581,6 @@ def get_shared_graphs(user, tags):
 				graph_list.insert(1, "")
 				cleaned_graph.append(tuple(graph_list))
 
-		print cleaned_graph
 		if cleaned_graph != None:
 			return cleaned_graph
 		else:
@@ -580,6 +607,9 @@ def get_graph_info(username, tags):
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id=?', (username, ))
 
 		graphs = cur.fetchall()
+
+		if graphs == None:
+			return None
 		
 		cleaned_graph = []
 		for graph in graphs:
@@ -619,10 +649,15 @@ def get_public_graph_info(tags):
 
 		cur = con.cursor()
 		if tags:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.public=? and gt.tag_id', (1, tags))
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.graph_id=gt.graph_id and g.public=? and gt.tag_id=?', (1, tags))
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public=?', (1, ))
+
 		graphs = cur.fetchall()
+		print len(graphs)
+
+		if graphs == None:
+			return None
 		
 		cleaned_graph = []
 		for graph in graphs:
@@ -662,6 +697,8 @@ def get_all_graph_info(tags):
 		cur = con.cursor()
 		cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g')
 		graphs = cur.fetchall()
+		if graphs == None:
+			return None
 		cleaned_graph = []
 		for graph in graphs:
 			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
@@ -698,7 +735,12 @@ def is_public_graph(username, graph):
 
 		cur = con.cursor()
 		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
-		public = cur.fetchone()[0]
+		public = cur.fetchone()
+
+		if public == None:
+			return None
+
+		public = public[0]
 		
 		if public == 1:
 			return True
@@ -721,6 +763,9 @@ def get_all_groups_for_this_graph(graph):
 		cur = con.cursor()
 		cur.execute('select group_id from group_to_graph where graph_id=?', (graph, ))
 		graphs = cur.fetchall()
+
+		if graphs == None:
+			return None
 		
 		cleaned_graphs = []
 		if graphs != None:
@@ -802,6 +847,10 @@ def retrieveResetInfo(hash):
 
 		data = cur.fetchone()
 
+
+		if data == None:
+			return None
+
 		accountToReset = data[0]
 		return accountToReset
 	except lite.Error, e:
@@ -833,15 +882,7 @@ def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unliste
 	try:
 		con = lite.connect('test.db')
 
-		cur = con.cursor()
-		print layout_id
-		print layout_name
-		print owner
-		print graph
-		print user
-		print json
-		print public
-		print unlisted		
+		cur = con.cursor()	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, owner, json, 0, 0))
 		con.commit()
@@ -865,7 +906,12 @@ def getLayout(layout_name, layout_graph, layout_owner):
 		if cur.rowcount == 0:
 			return None
 
-		data = cur.fetchone()[0]
+		data = cur.fetchone()
+
+		if data == None:
+			return None
+
+		data = data[0]
 		return str(data)
 
 	except lite.Error, e:
@@ -887,13 +933,16 @@ def getLayouts(uid, gid):
 			return None
 
 		data = cur.fetchall()
+
+		if data == None:
+			return None
+
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
 			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
-		print cleaned_data
 		return cleaned_data
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]

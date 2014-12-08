@@ -20,13 +20,35 @@ function fireEvent(obj,evt){
 }
 
 function searchValues(names) {
+  var path = window.location.pathname.split('/');
   var splitNames = names.split(",");
-  for (var i = 0; i < splitNames.length; i++) {
-    splitNames[i] = splitNames[i].trim();
-    window.cy.$("#" + splitNames[i]).select();
-    // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
-    $("#search").val("");
-  }
+  $.post("../../../retrieveIDs/", {
+  	"uid": decodeURIComponent(path[2]),
+  	"gid": decodeURIComponent(path[3]),
+  	"searchTerms": splitNames[0]
+  }, function (data) {
+  		  	console.log(window.cy.json());
+
+  	if (data != "None") {
+  		window.cy.$("#" + data.toUpperCase()).select();
+	  	window.cy.$("#" + data.toLowerCase()).select();
+	    $("#search_terms").append('<button class="btn btn-primary terms" id="' + data  + '" value="' + data + '"">' + data + '</button>');
+  	}
+
+    // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+    // $("#search").val("");
+  });
+  // for (var i = 0; i < splitNames.length; i++) {
+  //   splitNames[i] = splitNames[i].trim();
+  //   $.post("id/", {
+  //   	"names": splitNames
+  //   }, function (data) {
+
+  //   });
+  //   // window.cy.$("#" + splitNames[i]).select();
+  //   // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+  //   // $("#search").val("");
+  // }
 
 }
 
@@ -294,4 +316,7 @@ $(document).ready(function() {
       }
     });
 
+    $(".terms").click(function(e) {
+    	console.log('testing');
+    });
 });
