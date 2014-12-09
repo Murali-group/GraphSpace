@@ -52,7 +52,6 @@ def get_all_tags(username, view_type):
 				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
 
 		data = cur.fetchall()
-		print 'TESTING' + str(data)
 
 		if data == None:
 			return None

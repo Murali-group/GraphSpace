@@ -271,12 +271,15 @@ Index('layout_idx_graph_id_user_id', Layout.graph_id, Layout.user_id)
 Index('layout_idx_owner_id', Layout.owner_id)
 # Table: node. Columns: graph_id, user_id
 Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id)
+Index('node_index_label_graph_id', Node.label, Node.graph_id)
+Index('node_index_node_id_graph_id', Node.node_id, Node.graph_id)
 
 # not sure if needed
 # Table: edge. Columns: head_id, head_user_id, head_graph_id
-Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
+# Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
+Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head_graph_id)
 # Table: edge. Column: tail_id, tail_user_id, tail_graph_id
-Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)
+# Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)
 
 # to be removed
 # Table: password_reset. Columns: user_id

@@ -21,19 +21,26 @@ function fireEvent(obj,evt){
 
 function searchValues(names) {
   var path = window.location.pathname.split('/');
-  var splitNames = names.split(",");
   $.post("../../../retrieveIDs/", {
   	"uid": decodeURIComponent(path[2]),
   	"gid": decodeURIComponent(path[3]),
-  	"searchTerms": splitNames[0]
+  	"searchTerms": names
   }, function (data) {
-  		  	console.log(window.cy.json());
 
+    console.log(data);
   	if (data != "None") {
-  		window.cy.$("#" + data.toUpperCase()).select();
-	  	window.cy.$("#" + data.toLowerCase()).select();
-	    $("#search_terms").append('<button class="btn btn-primary terms" id="' + data  + '" value="' + data + '"">' + data + '</button>');
-  	}
+  		// window.cy.$("#" + data.toUpperCase()).select();
+	  	// window.cy.$("#" + data.toLowerCase()).select();
+      if (window.cy.$('[id="' + data + '"]').selected() == false) {
+          window.cy.$('[id="' + data + '"]').select();
+          $("#search_terms").append('<button class="btn btn-danger terms" id="' + data  + '" value="' + data + '"">' + names + " X" + '</button>');
+      }
+      // window.cy.$('[id="' + data.toUpperCase() + '"]').select();
+      // window.cy.$('[id="' + data.toLowerCase() + '"]').select();
+
+  	} else {
+      alert("Component not found!");
+    }
 
     // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
     // $("#search").val("");
@@ -68,7 +75,7 @@ function getQueryVariable(variable)
 }
 
 function unselectTerm(term) {
-  $("#" + term).unselect();
+  window.cy.$('[id="' + term + '"]').unselect();
 }
 
 function queryForIDs(names) {
@@ -91,7 +98,11 @@ $(document).ready(function() {
     // $('.csweb').cytoscape({
     var searchTerms = getQueryVariable("search");
     if (searchTerms) {
-      console.log(splitTerms(searchTerms));
+      searchTerms = splitTerms(searchTerms);
+      for (var i = 0; i < searchTerms.length; i++) {
+        // console.log(searchTerms[i]);
+        searchValues(searchTerms[i]);
+      }
     }
 
     var graph_layout = {
@@ -228,7 +239,7 @@ $(document).ready(function() {
                 return;
             }
 
-            console.log('show_popup');
+            console.log(popup);
 
             $('#dialog').html(popup);
             if (target._private.group == 'edges') {
@@ -316,7 +327,12 @@ $(document).ready(function() {
       }
     });
 
-    $(".terms").click(function(e) {
-    	console.log('testing');
+    $("#search_terms").on("click", ".terms", function(e) {
+      unselectTerm($(this).val());
+      $(this).remove();
     });
+
+    // $(".terms").click(function(e) {
+    // 	console.log('testing');
+    // });
 });

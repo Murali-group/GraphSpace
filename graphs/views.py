@@ -675,23 +675,13 @@ def search_result(request, view_type):
         # searching for edges
         if ':' in search_word:
             search_nodes = search_word.split(':')
-            head_node = search_nodes[1]
-            tail_node = search_nodes[0]
+            head_node = search_nodes[0]
+            tail_node = search_nodes[1]
 
             # see if node names provided are labels of nodes
             head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).limit(1)
             tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).limit(1)
 
-            try:
-                # filter nodes that have node id equal to node label
-                #What?
-                set(head_node_ids).remove(head_node)
-                set(tail_node_ids).remove(tail_node) 
-            except:
-                head_node_ids = set(head_node_ids)
-                tail_node_ids = set(tail_node_ids)
-
-            # remove duplicate entries
             head_node_ids = list(head_node_ids)
             tail_node_ids = list(tail_node_ids)
 
@@ -707,7 +697,6 @@ def search_result(request, view_type):
 
                     for name in public_result:
                         context['public_graphs'].append(name)
-
 
                     owner_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
                                     edge.c.head_id, edge.c.label).filter(
@@ -815,6 +804,7 @@ def search_result(request, view_type):
 
                 context['public_graphs'] = list(set(context['public_graphs']))
 
+                # result = list(set(owner_result_name + public_result))
 
                 group_result = db_session.query(node.c.graph_id, node.c.user_id,
                             node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
@@ -919,7 +909,7 @@ def retrieveIDs(request):
         db_session = data_connection.new_session()
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==request.POST['uid'], graph.c.graph_id==request.POST['gid']).one()
         json_data =  json.loads(convert_json(graph_to_view[0]))
-        return HttpResponse(find_element(request.POST['searchTerms'], json_data, data_connection))
+        return HttpResponse(find_element(request.POST['searchTerms'], request.POST['gid'], json_data, data_connection))
 
 
 def logout(request):
