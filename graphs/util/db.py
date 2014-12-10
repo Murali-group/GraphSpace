@@ -9,49 +9,71 @@ from operator import itemgetter
 from itertools import groupby
 from collections import Counter
 
+# Name of the database that is being used as the backend storage
 DB_NAME = 'test.db'
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
 
+# --------------- Edge Insertions -----------------------------------
+
 # Modifies all id's of edges to be the names of the 
 # nodes that they are attached to
-def edge_inserter(json_string):
-
+def assign_edge_ids(json_string):
+	# Convert string into JSON structure for traversal
 	cleaned_json = json.loads(json_string)
 
+	# Appending id's to all the edges using the source and target as part of its ids
+	# TODO: Change '-' character to something that can't be found in an edge
 	for edge in cleaned_json['graph']['edges']:
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
 
+	# Return JSON having all edges with ids
 	return cleaned_json
 
 # Populates the edge table with edges from jsons
 # already in the database
-def insert_all_edges():
+def insert_all_edges_from_json():
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
-		cur.execute('select user_id, graph_id, json from graph where user_id=?', ('annaritz@vt.edu', ))
-
+		# Get information from all graphs already in the database
+		# QUERY EXAMPLE: select user_id, graph_id from graph
+		cur.execute('select user_id, graph_id, json from graph')
 		data = cur.fetchall()
-		if data != None:
-			for j in data:
-				if 'data' in json.loads(j[2])['graph']:
-					cleaned_json = edge_inserter(convert_json(j[2]))
-				else:
-					cleaned_json = edge_inserter(j[2])
 
+		# If there is anything in the graph table
+		if data != None:
+			# Go through each Graph
+			for j in data:
+				# Since there are two types of JSON: one originally submitted
+				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
+				# TODO: Remove conversion by specifying it when the user creates a graph
+				if 'data' in json.loads(j[2])['graph']:
+					cleaned_json = assign_edge_ids(convert_json(j[2]))
+				else:
+					cleaned_json = assign_edge_ids(j[2])
+
+				# Go through json of the graphs, if edge is not in database, then insert it (to avoid conflicts where source and target nodes are the same).
+				# Special accomodation is done for if edge has directed property or not
+				# TODO: Remove dependency of same source and target nodes as well as directed and undirected nodes
 				for edge in cleaned_json['graph']['edges']:
+					# TODO: Write query examples
+					# QUERY EXAMPLE: select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?, (test_user@test.com, test_graph, {graph: ...})
 					cur.execute('select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?', (j[0], j[1], edge['data']['source'], j[1], j[1], edge['data']['target']))
 					sanity = cur.fetchall()
 					if sanity == None or len(sanity) == 0:
 						if 'directed' in edge['data']:
+							# A normal edge has an edge and a tail.  However, we define as edge having a source and a target. source---->target
+							# TODO: Double check Edge insertion values and write query examples
 							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
 						else:
 							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
 
+					# Update original JSON to match that with the new edge ID's
+					# TODO: Write query examples
 					cur.execute('update graph set json=? where graph_id=? and user_id=?', (json.dumps(cleaned_json), j[1], j[0]))
 					con.commit()
 
@@ -62,22 +84,25 @@ def insert_all_edges():
 		if con:
 			con.close()
 
+# --------------- End Edge Insertions --------------------------------
+
 # Checks to see if a given user is an admin
 def is_admin(username):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
-		cur.execute('select admin from user where user_id = ?', (username,))
 
+		#Execute query to check admin for username
+		# TODO: Write query examples
+		cur.execute('select admin from user where user_id = ?', (username,))
 		data = cur.fetchone()
 
-		if data == None:
-			return None
+		# If user does exist and if his admin bit is set to 1, then they are an admin
+		if data != None and data[0] == 1:
+			return True
 		else:
-			if data[0] == 1:
-				return True
+			# Return nothing otherwise
 			return None
 
 	except lite.Error, e:
@@ -92,31 +117,33 @@ def get_all_tags(username, view_type):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
-		if view_type == 'public':
+
+		# Query only the tags that is the specfic view type
+		# NOTE: Changes if a person is logged in
+		if view_type == 'public' or username == None:
+		# TODO: Write query examples
 			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
 		elif view_type == 'shared':
-			if username:
-				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g, group_to_graph as gg where gt.graph_id = g.graph_id and g.graph_id=gg.graph_id and gg.user_id=?limit 10', (username, ))
-			else: 
-				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
+		# TODO: Write query examples
+			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g, group_to_graph as gg where gt.graph_id = g.graph_id and g.graph_id=gg.graph_id and gg.user_id=?limit 10', (username, ))
 		else:
-			if username:
-				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where gt.graph_id = g.graph_id and g.user_id=? limit 10', (username, ))
-			else:
-				cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
+		# TODO: Write query examples
+			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where gt.graph_id = g.graph_id and g.user_id=? limit 10', (username, ))
 
+		# Get all the data, if there is any
 		data = cur.fetchall()
 
-		if data == None:
-			return None
-		else:
+		# If there is data, gather all of the tags for this view type and return it
+		if data != None:
 			cleaned_data = []
 			for tag in data:
 				cleaned_data.append(tag[0])
 			return cleaned_data
-
+		else:
+			# Otherwise return Noething
+			return None
+			
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
 
@@ -124,24 +151,28 @@ def get_all_tags(username, view_type):
 		if con:
 			con.close()
 
-# Checks to see if a user exists
-def user_exists(username, password):
+# Checks to see if a user/password combination exists
+def get_valid_user(username, password):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 
+		# Retrieve hashed password of the user
 		cur = con.cursor()
+		# TODO: Write query examples
 		cur.execute('select password from user where user_id = ?', (username,))
 
 		data = cur.fetchone()
 
+		#If there is no data, then user does not exist
 		if data == None:
 			return None
 		else:
-			data = data[0]
-			if bcrypt.hashpw(password, data) != data:
+			# If the hash of the passwords are not the same, then the user (theoretically) does not exist
+			if bcrypt.hashpw(password, data[0]) != data[0]:
 				return None
 			else:
+				# If everything clears 
 				return username
 
 	except lite.Error, e:
@@ -151,6 +182,9 @@ def user_exists(username, password):
 		if con:
 			con.close()
 
+# -------------------------- REST API -------------------------------
+
+# TODO: Add rest call example
 # Inserts a uniquely named graph under a username
 def insert_graph(username, graphname, graph_json):
 	con = None
@@ -158,17 +192,26 @@ def insert_graph(username, graphname, graph_json):
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
+		# TODO: Write query examples
+		# Checks to see if a user already has a graph with the same name under his account
 		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (username, graphname))
 
 		data = cur.fetchone()
 
+		# If not, add this graph to his account
 		if data == None:
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
 
+			# Checks to see if it is compatible with CytoscapeJS and converts it accordingly
+			# TODO: Delete this after Verifier is finished
 			if 'data' in graphJson:
 				graphJson = json.loads(convert_json(graph_json))
 
+			# Go through all the nodes in the JSON and if they don't have a label,
+			# Append a random label to it
+			# Used so that I can highlight the node
+			# TODO: double check this because I may need to get the id and not the label
 			nodes = graphJson['graph']['nodes']
 			rand = 1
 			for node in nodes:
@@ -177,32 +220,41 @@ def insert_graph(username, graphname, graph_json):
 					rand = rand + 1
 			rand = 0
 
+			# Inserts it into the database, all graphs inserted are private for now
+			# TODO: Verify if that is what I want
 			cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, graph_json, curTime, curTime, 0, 1))
 			con.commit()
 
 			tags = graphJson['metadata']['tags']
 
-			for tag in tags:
-				cur.execute('select tag_id from graph_tag where tag_id=?', (tag, ))
-				tagData = cur.fetchone()
-				if tagData == None:
-					cur.execute('insert into graph_tag values(?)', (tag, ))
+			#TODO: Verify that this works correctly because of refactoring and delete
+			# Insert all tags for this graph into tags database
+			insert_data_for_graph(graphname, username, tags, nodes, cur, con)
 
-				cur.execute('insert into graph_to_tag values(?,?,?)', (graphname, username, tag))
-				con.commit()
-
-			edges = graphJson['graph']['edges']
-
-			for edge in edges:
-				cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
-				con.commit()
-
-			for node in nodes:
-				cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
-				con.commit()
-
+			# If everything works, return Nothing 
 			return None
+			# for tag in tags:
+			# 	cur.execute('select tag_id from graph_tag where tag_id=?', (tag, ))
+			# 	tagData = cur.fetchone()
+			# 	if tagData == None:
+			# 		cur.execute('insert into graph_tag values(?)', (tag, ))
+
+			# 	cur.execute('insert into graph_to_tag values(?,?,?)', (graphname, username, tag))
+			# 	con.commit()
+
+			# edges = graphJson['graph']['edges']
+
+			# for edge in edges:
+			# 	cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
+			# 	con.commit()
+
+			# for node in nodes:
+			# 	cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
+			# 	con.commit()
+
+			#return None
 		else:
+			#return "Error code"
 			return 'Graph Already Exists!'
 
 	except lite.Error, e:
@@ -212,24 +264,45 @@ def insert_graph(username, graphname, graph_json):
 		if con:
 			con.close()
 
+def insert_data_for_graph(graphname, username, tags, nodes, cur, con):
+
+	# Add all tags for this graph into graph_tag and graph_to_tag tables
+	for tag in tags:
+		# TODO: Query example
+		cur.execute('select tag_id from graph_tag where tag_id=?', (tag, ))
+		tagData = cur.fetchone()
+		if tagData == None:
+			cur.execute('insert into graph_tag values(?)', (tag, ))
+
+		cur.execute('insert into graph_to_tag values(?,?,?)', (graphname, username, tag))
+
+	edges = graphJson['graph']['edges']
+
+	# Add all edges and nodes in the JSON to their respective tables
+	for edge in edges:
+		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
+
+	for node in nodes:
+		cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
+		
+	# Commit the changes
+	con.commit()
+
 #Gets the graph's json
-def get_graph(username, graphname):
+def get_graph_json(username, graphname):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Return the JSON of the graph that matches the username and the graphname
 		cur.execute('select json from graph where user_id = ? and graph_id = ?', (username, graphname))
 
-		rowData = cur.fetchone()
+		jsonData = cur.fetchone()
 
-		if rowData == None:
-			return None
-
-		data = rowData[0]
-
-		if data != None:
-			return data
+		# If there is JSON for this graph, return it
+		if jsonData and jsonData[0]:
+			return jsonData[0]
 		else:
 			return None
 
@@ -245,13 +318,16 @@ def delete_graph(username, graphname):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
 
+		# Deletes information about a graph from all the tables that reference it
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
 		cur.execute('delete from graph_to_tag where graph_id=?', (graphname, ))
 		cur.execute('delete from edge where head_graph_id =?', (graphname, ))
 		cur.execute('delete from node where graph_id = ?', (graphname, ))
+
+		#TODO: Look up a way to delete tags from graph_tags since multiple graphs can have same tags, so if one graph 
+		# with tags is deleted, don't delete tags from graph_tags since another graph_tag might use them
 		con.commit()
 
 	except lite.Error, e:

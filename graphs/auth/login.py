@@ -34,25 +34,9 @@ def login(request):
 			return context
 	# when a user is already logged in or not logged in at all.
 	else:
-		# this replacement does not handle logout properly.
-		########### Possible replacement #############
         # the user did not enter any information into the login form. 
         # in this case, there may be already be a logged-in user. 
-        
-		# if request.session['uid'] is not None:
-		# 	# there is a currently logged-in user.
-		# 	context['uid'] = request.session['uid']
-		# 	message = '%s, Welcome to Graphspace!' % request.session['uid']
-		# else:
-		# 	# there is no one logged in.
-		# 	login_form = LoginForm()
-		# 	request.session['uid'] = None
-		# 	message = 'Welcome to GraphSpace!'
-		# 	context['login_form'] = login_form
-		########### END possible replacement ############
-
-		############ Original code commented for possible revert  ##########
-		if 'uid' in request.session:
+  		if 'uid' in request.session:
             #there is a currently logged-in user.
 			uid = request.session['uid']
 		else:
@@ -74,7 +58,3 @@ def login(request):
  			context['register_form'] = RegisterForm()
  			context["Error"] = None
  			return context
-		############ END original code ############
-
-	# context['message'] = message
-	# return context

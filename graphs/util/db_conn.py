@@ -13,7 +13,6 @@ _devdb2 = 'sqlite:////data/craigy/graphspace-development/graphspace-server/graph
 
 _testdb = 'sqlite:///test.db'
 
-
 class Database(object):
     '''
         Create a database object to query from.
@@ -28,7 +27,6 @@ class Database(object):
             self.engine = create_engine(_devdb, echo=False, poolclass=NullPool)
         elif self.db == 'dev2':
             self.engine = create_engine(_devdb2, echo=False, poolclass=NullPool)
-            # print 'engine created:', _devdb2
         elif self.db == 'test':
             self.engine = create_engine(_testdb, echo=False)
             models.Base.metadata.bind = self.engine

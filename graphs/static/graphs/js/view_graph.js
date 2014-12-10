@@ -86,11 +86,6 @@ function searchValues(names) {
         }
       }
     }
-
-    // var url = $("#url").text();
-    // if (url.charAt(url.length - 1) == ',') {
-    //   $("#url").text(url.substring(0, url.length - 1));
-    // }
   });
 }
 
@@ -123,7 +118,6 @@ Consult the API: http://api.jquery.com/ready/
 $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
-    // $('.csweb').cytoscape({
 
     //The following code retrieves the specified layout
     //of a graph to be displayed.
