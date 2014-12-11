@@ -41,6 +41,7 @@ def index(request):
     if context['Error'] != None:
         return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
 
+    # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
     if request.session['uid'] != None:
         return _graphs_page(request, 'my graphs')
     return render(request, 'graphs/index.html', context)
@@ -61,40 +62,30 @@ def view_graph(request, uid, gid):
     #handle login
     context = login(request)
 
-    try:
-        # if the graph is public, or if a user is a member 
-        # of the group where this graph is shared
-        # or if he owns this graph, then allow him to view it
-        # otherwise do not allow it
-        if db.is_public_graph(uid, gid):
+    # if the graph is public, or if a user is a member 
+    # of the group where this graph is shared
+    # or if he owns this graph, then allow him to view it
+    # otherwise do not allow it
+    if db.is_public_graph(uid, gid):
+        graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+    elif request.session['uid'] == None:
+        return HttpResponse("Not Authorized to view this.")
+    else:
+        # If the user is member of group where this graph is shared
+        user_is_member = can_see_shared_graph(context['uid'], gid)
+
+        # if admin, then they can see everything
+        if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
         else:
-            if request.session['uid'] == None:
-                return HttpResponse("Not Authorized to view this.")
-        
-            user_is_member = None
-            graph_in_groups = db.get_all_groups_for_this_graph(gid)
-            for group in graph_in_groups:
-                members = db.get_group_members(group)
-                if request.session['uid'] in members:
-                    user_is_member = True
-
-            # if admin, then they can see everything
-            if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-                graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
-            else:
-                return HttpResponse("Not Authorized to view this!")
-
-    except NoResultFound:
-        print uid, gid
-        return HttpResponse("You are not Authorized to view this!")
+            return HttpResponse("Not Authorized to view this!")
 
     layout_to_view = None
 
     # if there is a layout specified, then render that layout
     if (len(request.GET.get('layout', '')) > 0):
         if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
-            layout_to_view = json.dumps({"json": db.getLayout(request.GET.get('layout'), gid, uid)}) 
+            layout_to_view = json.dumps({"json": db.get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
         else: 
             layout_to_view = json.dumps(None)
     else:
@@ -138,7 +129,7 @@ def view_graph(request, uid, gid):
     # graph id
     context['graph_id'] = gid
 
-    layouts = db.getLayouts(uid, gid)
+    layouts = db.get_all_layouts_for_graph(uid, gid)
     context['layouts'] = layouts
 
     # redirect if the user wishes to view the json data
@@ -257,7 +248,7 @@ def _graphs_page(request, view_type):
 
         # render information for this particular user.
         if view_type == 'shared':
-            graph_list =  db.get_shared_graphs(uid, request.GET.get('tags'))
+            graph_list =  db.view_shared_graphs(uid, request.GET.get('tags'))
             context['base_url'] = "http://localhost:8000/graphs/shared/"
         elif view_type == 'public':
             graph_list = db.get_public_graph_info(request.GET.get('tags'))
@@ -278,7 +269,7 @@ def _graphs_page(request, view_type):
         # Get all the graphs from different section to tell 
         # the user of the amount of graphs returned from searching
         my_graphs = db.get_graph_info(uid, request.GET.get('tags'))
-        shared_graphs = db.get_shared_graphs(uid, request.GET.get('tags'))
+        shared_graphs = db.view_shared_graphs(uid, request.GET.get('tags'))
         public_graphs = db.get_public_graph_info(request.GET.get('tags'))
 
         if my_graphs != None:
@@ -1122,7 +1113,7 @@ def resetPassword(request):
     return HttpResponse("Password Updated!")
 
 def save_layout(request, uid, gid):
-    return HttpResponse(db.saveLayout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, uid, request.POST['points'], request.POST['public'], request.POST['unlisted']))
+    return HttpResponse(db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, uid, request.POST['points'], request.POST['public'], request.POST['unlisted']))
 
 def download(request):
     if request.POST:
@@ -1144,7 +1135,7 @@ def upload_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if db.user_exists(user_id, request.POST['password']) == None:
+        if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         graph_exists = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
@@ -1162,10 +1153,10 @@ def retrieve_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if db.user_exists(user_id, request.POST['password']) == None:
+        if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        jsonData = db.get_graph(user_id, graphname)
+        jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
             return HttpResponse(jsonData)
         else:
@@ -1180,10 +1171,10 @@ def remove_graph(request, user_id, graphname):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if db.user_exists(user_id, request.POST['password']) == None:
+        if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
   
-        jsonData = db.get_graph(user_id, graphname)
+        jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
             db.delete_graph(user_id, graphname)
             return HttpResponse("Successfully deleted " + graphname + " owned by " + user_id)
@@ -1199,10 +1190,10 @@ def view_all_graphs(request, user_id):
         if request.POST['username'] != user_id:
             return HttpResponse("Usernames do not match!")
 
-        if db.user_exists(user_id, request.POST['password']) == None:
+        if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = db.get_all_graphs(user_id)
+        data = db.get_all_graphs_for_user(user_id)
         return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json");
 
 
@@ -1212,10 +1203,10 @@ def get_groups(request):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        data = db.get_all_groups()
+        data = db.get_all_groups_in_server()
         return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
 
 #too much work, come back later
@@ -1225,7 +1216,7 @@ def get_group(request, groupname):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         data = db.get_group_by_id(groupname)
@@ -1238,7 +1229,7 @@ def delete_group(request, groupname):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         data = db.remove_group(request.POST['username'], groupname)
@@ -1251,7 +1242,7 @@ def add_group(request, groupname):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         group_created = db.create_group(request.POST['username'], groupname)
@@ -1267,7 +1258,7 @@ def get_group_for_user(request, user_id):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         group = db.groups_for_user(user_id)
@@ -1279,7 +1270,7 @@ def add_user(request, groupname, user_id):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         data = db.add_user_to_group(user_id, request.POST['username'], groupname)
@@ -1296,7 +1287,7 @@ def remove_user(request, groupname, user_id):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
         group = db.remove_user_from_group(user_id, request.POST['username'], groupname)
@@ -1308,10 +1299,10 @@ def share_graph(request, graphname, groupname):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        result = db.share_with_group(request.POST['username'], graphname, groupname)
+        result = db.share_graph_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
 
 def unshare_graph(request, graphname, groupname):
@@ -1320,8 +1311,8 @@ def unshare_graph(request, graphname, groupname):
     '''
     if request.method == 'POST':
 
-        if db.user_exists(request.POST['username'], request.POST['password']) == None:
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        result = db.unshare_with_group(request.POST['username'], graphname, groupname)
+        result = db.unshare_graph_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json")

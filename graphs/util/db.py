@@ -264,6 +264,7 @@ def insert_graph(username, graphname, graph_json):
 		if con:
 			con.close()
 
+# Inserts metadata about a graph into its respective tables
 def insert_data_for_graph(graphname, username, tags, nodes, cur, con):
 
 	# Add all tags for this graph into graph_tag and graph_to_tag tables
@@ -338,29 +339,27 @@ def delete_graph(username, graphname):
 			con.close()
 
 # Get all graphs for username
-def get_all_graphs(username):
+def get_all_graphs_for_user(username):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Query for all graphs by a specific user
 		cur.execute('select graph_id from graph where user_id = ?', (username, ))
 
 		data = cur.fetchall()
 
-		if data == None:
-			return None
+		# If there are graphs for the user, return them 
+		if data != None:
+			cleaned_data = []
+			for graphs in data:
+				cleaned_data.append(str(graphs[0]))
 
-		cleaned_data=[]
-		for graphs in data:
-			graphs = str(graphs[0])
-			cleaned_data.append(graphs)
+			if len(cleaned_data) > 0:
+				return cleaned_data
 
-		if cleaned_data != None:
-			return cleaned_data
-
-		else:
-			return None
+		return None
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -369,13 +368,14 @@ def get_all_graphs(username):
 		if con:
 			con.close()
 
-# Gets all groups for a user
-def get_all_groups():
+# Gets all groups that are on the server
+def get_all_groups_in_server():
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Group is written this way because SQLITE wouldn't accept it simply as group
 		cur.execute('select * from \"group\"');
 
 		data = cur.fetchall()
@@ -385,11 +385,12 @@ def get_all_groups():
 
 		cleaned_data = []
 
-		for record in data:
+		# Return information about the group
+		for group in data:
 			cleaned_record = []
-			cleaned_record.append(record[2])
-			cleaned_record.append(record[0])
-			cleaned_record.append(record[3])
+			cleaned_record.append(group[2])
+			cleaned_record.append(group[0])
+			cleaned_record.append(group[3])
 			cleaned_data.append(cleaned_record)
 
 		return cleaned_data
@@ -402,6 +403,7 @@ def get_all_groups():
 			con.close()
 
 # Gets a group by user id
+# TODO: What does this even do?
 def get_group_by_id(group):
 	con = None
 	try:
@@ -429,6 +431,7 @@ def get_group_by_id(group):
 			con.close()
 
 # Gets all members of a group
+# TODO: What does this even do?
 def get_group_members(group):
 	con = None
 	try:
@@ -452,24 +455,35 @@ def get_group_members(group):
 		if con:
 			con.close()
 
+# See if user is a member of a group
+def can_see_shared_graph(username, graphname):
+	groups = get_all_groups_for_this_graph(graphname)
+
+	for group in groups:
+            members = db.get_group_members(group)
+            if username in members:
+                user_is_member = True
+
+    return None
+
 # Removes a group from server
 def remove_group(owner, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# If there is a group with this owner, then remove it from the server
 		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group, ));
 
 		data = cur.fetchone()
 		if data == None:
 			return "Group not found!"
 
-		val = data[0]
-
-		if val == None:
+		if data[0] == None:
 			return "Can't remove group"
 		else:
+			# Remove metadata from tables
 			cur.execute('delete from \"group\" where owner_id=? and group_id=?', (owner, group, ))
 			cur.execute('delete from group_to_user where group_id=?', (group, ))
 			con.commit();
@@ -483,18 +497,21 @@ def remove_group(owner, group):
 		if con:
 			con.close()
 
-# Inserts a uniquely named graph under a username
+# Inserts a uniquely named group under a username
 def create_group(username, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Check to see if there is a group under the username already 
 		cur.execute('select group_id from \"group\" where group_id=? and owner_id=?', (group, username));
 
 		data = cur.fetchone()
 
+		# If no group exists, insert into database
 		if data == None:
+			# TODO: Why did I append username and groupname together?
 			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (username + '_' + group, group, username, "", 0, 1))
 			cur.execute('insert into group_to_user values(?, ?)', (username + '_' + group, username))
 			con.commit()
@@ -513,6 +530,7 @@ def create_group(username, group):
 #Gets all information about the group that user belongs to
 def info_groups_for_user(username):
 
+	#Gets all groups that the user is a part of
 	groups = groups_for_user(username)
 	con = None
 	try:
@@ -521,6 +539,7 @@ def info_groups_for_user(username):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
+		# Gather all information about the groups that the user is allowed to access
 		for group in groups:
 			cur.execute('select group_id, description, owner_id, public from \"group\" where group_id=?', (group, ))
 			data = cur.fetchone()
@@ -542,8 +561,9 @@ def groups_for_user(username):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		#TODO: add what a user can see as well (ie has access to)
 		cur.execute('select group_id from group_to_user where user_id=?', (username, ))
 
 		data = cur.fetchall()
@@ -568,14 +588,15 @@ def add_user_to_group(username, owner, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
 		cur.execute('select user_id from user where user_id=?', (username, ))
 
 		data = cur.fetchone()
 		if data == None:
 			return "User does not exist!"
 
+		# If user exists and owner-group combination is in database, then add the user to the group
 		cur.execute('select group_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 		isOwner = cur.fetchone()
 
@@ -600,13 +621,16 @@ def remove_user_from_group(username, owner, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
 		cur.execute('select user_id from user where user_id=?', (username, ))
 		data = cur.fetchone()
+
+
 		if data == None:
 			return "User does not exist!"
 
+		# If user exists and they are owner of the group, delete the requested username from the group
 		data = data[0]
 		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group, ))
 		isOwner = cur.fetchone()
@@ -627,26 +651,35 @@ def remove_user_from_group(username, owner, group):
 			con.close()
 
 # Shares a graph with a group
-def share_with_group(owner, graph, group):
+def share_graph_with_group(owner, graph, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Get graph information ** MUST ALREADY EXIST IN GRAPHSPACE **
 		cur.execute('select * from graph where user_id=? and graph_id=?', (owner, graph))
 		data = cur.fetchone()
 		if data == None:
 			return 'Graph does not exist'
+
 		isOwner = data[0]
+
+		# Check to see if a group is public or not
+		# Done for members joining a public group 
+		# TODO: DELETE PUBLIC GROUP
 		cur.execute('select public from "group" where group_id=?', (group, ))
 		isPublic = cur.fetchone()
 		if isPublic == None:
 			isPublic = 0
 		else:
 			isPublic = isPublic[0]
+
+		# If there is a graph for the owner, then we add that graph to the group that a user is a part of (user or member)
 		if isOwner != None:
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 			isMember = cur.fetchone()
+			# If the query returns, it means that the owner is a member of that group
 			if isMember != None:
 				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
 				con.commit()
@@ -668,18 +701,20 @@ def share_with_group(owner, graph, group):
 			con.close()
 
 # Unshares a graph from the group
-def unshare_with_group(owner, graph, group):
+def unshare_graph_with_group(owner, graph, group):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Get the graph that the user supposedly owns
 		cur.execute('select user_id from graph where user_id=? and graph_id=?', (owner, graph, ))
 		isOwner = cur.fetchone()
 		if isOwner != None:
 			isOwner = isOwner[0]
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 			isMember = cur.fetchone()
+			# If the user has the rights to the graph/group, then carry out the unsharing of that graph from the group
 			if isMember != None:
 				isMember = isMember[0]
 				cur.execute('delete from group_to_graph where group_id=? and graph_id=? and user_id=?', (group, graph, owner))
@@ -698,53 +733,86 @@ def unshare_with_group(owner, graph, group):
 		if con:
 			con.close()
 
-# Get all shared graphs that contain certain tags for a user
-def get_shared_graphs(user, tags):
+
+# ---------------- END REST API ------------------------------
+
+
+# Get all shared graphs that contain certain tags for a user including its tags
+# def view_shared_graphs(user, tags):
+# 	graphs = []
+# 	con = None
+# 	try:
+# 		con = lite.connect(DB_NAME)
+# 		cur = con.cursor()
+
+
+# 		if tags:
+# 			all_tag_graphs = get_all_graphs_for_tags(tags)
+# 			for item in all_tag_graphs:
+# 				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (item, user))
+# 				data = cur.fetchall()
+# 				if data != None:
+# 					for thing in data:
+# 						if thing[0] in all_tag_graphs and thing not in graphs:
+# 							graphs.append(thing)
+# 		else:
+# 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
+# 			graphs = cur.fetchall()
+
+# 		if graphs == None:
+# 			return None
+
+# 		cleaned_graph = []
+# 		for graph in graphs:
+# 			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
+# 			tags = cur.fetchall()
+# 			cleanedtags = []
+
+# 			for tag in tags:
+# 				cleanedtags.append(str(tag[0]))
+
+# 			graph_list = list(graph)
+# 			if len(cleanedtags) > 0:
+# 				# for tag in tags:
+# 				graph_list.insert(1, cleanedtags)
+# 				cleaned_graph.append(tuple(graph_list))
+# 			else:
+# 				graph_list.insert(1, "")
+# 				cleaned_graph.append(tuple(graph_list))
+
+# 		if cleaned_graph != None:
+# 			return cleaned_graph
+# 		else:
+# 			return None
+
+# 	except lite.Error, e:
+# 		print 'Error %s:' % e.args[0]
+# 		return None
+
+# 	finally:
+# 		if con:
+# 			con.close()
+
+def view_shared_graphs(username, tags):
 	graphs = []
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# Get all the tags that have atleast 1 tag that relates to the graph
 		if tags:
-			all_tag_graphs = get_tag_graphs(tags)
-			for item in all_tag_graphs:
-				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (item, user))
-				data = cur.fetchall()
-				if data != None:
-					for thing in data:
-						if thing[0] in all_tag_graphs and thing not in graphs:
-							graphs.append(thing)
+			graphs = get_graphs_for_tags(cur, username, tags)
 		else:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (username, ))
 			graphs = cur.fetchall()
 
+		# If there are graphs that match the tag, return all information (including all tags) for each graph
 		if graphs == None:
 			return None
-
-		cleaned_graph = []
-		for graph in graphs:
-			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
-			tags = cur.fetchall()
-			cleanedtags = []
-
-			for tag in tags:
-				cleanedtags.append(str(tag[0]))
-
-			graph_list = list(graph)
-			if len(cleanedtags) > 0:
-				# for tag in tags:
-				graph_list.insert(1, cleanedtags)
-				cleaned_graph.append(tuple(graph_list))
-			else:
-				graph_list.insert(1, "")
-				cleaned_graph.append(tuple(graph_list))
-
-		if cleaned_graph != None:
-			return cleaned_graph
 		else:
-			return None
-
+			return build_graph_information(graphs)
+		
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
 		return None
@@ -752,6 +820,44 @@ def get_shared_graphs(user, tags):
 	finally:
 		if con:
 			con.close()
+
+def get_graphs_for_tags(cur, username, tags):
+	graphs = []
+	all_tag_graphs = get_all_graphs_for_tags(tags)
+	for item in all_tag_graphs:
+		cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (item, username))
+		data = cur.fetchall()
+		if data != None:
+			for thing in data:
+				if thing[0] in all_tag_graphs and thing not in graphs:
+					graphs.append(thing)
+
+	return graphs
+
+# Gets all information (including all tags) for each graph that is returned
+def build_graph_information(graphs):
+	cleaned_graph = []
+	for graph in graphs:
+		cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
+		tags = cur.fetchall()
+		cleanedtags = []
+
+		for tag in tags:
+			cleanedtags.append(str(tag[0]))
+
+		graph_list = list(graph)
+		if len(cleanedtags) > 0:
+			# for tag in tags:
+			graph_list.insert(1, cleanedtags)
+			cleaned_graph.append(tuple(graph_list))
+		else:
+			graph_list.insert(1, "")
+			cleaned_graph.append(tuple(graph_list))
+
+	if cleaned_graph != None:
+		return cleaned_graph
+	else:
+		return None
 
 # Gets graph information about a graph that the user owns having certain tags
 def get_graph_info(username, tags):
@@ -762,7 +868,7 @@ def get_graph_info(username, tags):
 		cur = con.cursor()
 
 		if tags:
-			all_tag_graphs = get_tag_graphs(tags)
+			all_tag_graphs = get_all_graphs_for_tags(tags)
 			for item in all_tag_graphs:
 				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.graph_id=gt.graph_id and g.user_id=? and gt.graph_id=?', (username, item))
 				data = cur.fetchall()
@@ -816,7 +922,7 @@ def get_public_graph_info(tags):
 
 		cur = con.cursor()
 		if tags:
-			all_tag_graphs = get_tag_graphs(tags)
+			all_tag_graphs = get_all_graphs_for_tags(tags)
 
 			for item in all_tag_graphs:
 				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public = ? and g.graph_id=?', (1, item))
@@ -906,8 +1012,9 @@ def is_public_graph(username, graph):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
+		# If there is a graph with the username and graph, return if it is public or not
 		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
 		public = cur.fetchone()
 
@@ -929,14 +1036,13 @@ def is_public_graph(username, graph):
 		if con:
 			con.close()
 
-# Gets all the groups that contain the graph
+# Gets all the groups that the graph is shared with
 def get_all_groups_for_this_graph(graph):
-	global SERVER_URL
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
+
 		cur.execute('select group_id from group_to_graph where graph_id=?', (graph, ))
 		graphs = cur.fetchall()
 
@@ -985,6 +1091,7 @@ def emailExists(email):
 # Emails the user to reset their password
 def sendForgotEmail(email):
 
+	# TODO: Make this more robust
 	if emailExists(email) != None:
 		con=None
 		try:
@@ -1038,14 +1145,14 @@ def retrieveResetInfo(hash):
 		if con:
 			con.close()
 
-# Updates information about a user
-def updateInfo(email, hash):
+# Updates password information about a user
+def updateInfo(username, hash):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
-		cur.execute("update user set password = ? where user_id = ?", (hash, email))
+		cur.execute("update user set password = ? where user_id = ?", (hash, username))
 
 		con.commit();
 		return "Password Updated!"
@@ -1057,11 +1164,10 @@ def updateInfo(email, hash):
 			con.close()
 
 # Saves layout of a specified graph
-def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
+def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, owner, json, 0, 0))
@@ -1074,26 +1180,21 @@ def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unliste
 		if con:
 			con.close()
 
-# Retrieves layout for a certain graph
-def getLayout(layout_name, layout_graph, layout_owner):
+# Retrieves specific layout for a certain graph
+def get_layout_for_graph(layout_name, layout_graph, layout_owner):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
-		cur.execute("select json from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, layout_graph, layout_owner))
-		
-		if cur.rowcount == 0:
-			return None
 
+		# Get JSON of layout
+		cur.execute("select json from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, layout_graph, layout_owner))
 		data = cur.fetchone()
 
 		if data == None:
 			return None
 
-		data = data[0]
-
-		return str(data)
+		return str(data[0])
 
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
@@ -1103,7 +1204,7 @@ def getLayout(layout_name, layout_graph, layout_owner):
 			con.close()
 
 # Gets all layouts for a graph
-def getLayouts(uid, gid):
+def get_all_layouts_for_graph(uid, gid):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1111,9 +1212,6 @@ def getLayouts(uid, gid):
 		cur = con.cursor()
 		cur.execute("select layout_name from layout where owner_id =? and graph_id=?", (uid, gid))
 		
-		if cur.rowcount == 0:
-			return None
-
 		data = cur.fetchall()
 
 		if data == None:
@@ -1122,6 +1220,7 @@ def getLayouts(uid, gid):
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
+			# Replace for URL
 			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
@@ -1134,7 +1233,8 @@ def getLayouts(uid, gid):
 			con.close()
 
 # Get all graphs that match the tags
-def get_tag_graphs(tags):
+def get_all_graphs_for_tags(tags):
+	# Split tags into a list
 	if tags:
 		tag_terms = tags.split(',')
 		for i in xrange(len(tag_terms)):
@@ -1144,20 +1244,27 @@ def get_tag_graphs(tags):
 		try:
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
-			tags_list = []
-			actual_graphs = []
-			for term in tag_terms:
-				cur.execute('select distinct g.graph_id from graph as g, graph_to_tag as gt where gt.tag_id=? and g.graph_id = gt.graph_id', (term, ))
+
+			graphs_for_tag_list = []
+			actual_graphs_for_tags = []
+			# Search for graphs for each tag term and append them to list
+			for tag_id in tag_terms:
+				cur.execute('select distinct g.graph_id from graph as g, graph_to_tag as gt where gt.tag_id=? and g.graph_id = gt.graph_id', (tag_id, ))
 				data = cur.fetchall()
 				if data != None:
 					for item in data:
-						tags_list.append(item[0])
+						graphs_for_tag_list.append(item[0])
 
-			accurate_tags = Counter(tags_list)
-			for graph in tags_list:
+			# Get number of times the graph names appear.
+			# If they appear the same number of times as the lenght of the tag terms
+			# it implicitly means that the graph has all of the tags that are being searched for.
+			# Those graphs that pass the length check are returned as having all of the tags
+			accurate_tags = Counter(graphs_for_tag_list)
+			for graph in graphs_for_tag_list:
 				if accurate_tags[graph] == len(tag_terms):
-					actual_graphs.append(graph)
-			return actual_graphs
+					actual_graphs_for_tags.append(graph)
+
+			return actual_graphs_for_tags
 
 		except lite.Error, e:
 			print "Error %s: " %e.args[0]
@@ -1169,7 +1276,7 @@ def get_tag_graphs(tags):
 		return None
 
 # find all tags for a user
-def get_tag_for_user(username):
+def get_all_tags_for_user(username):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1191,6 +1298,7 @@ def get_tag_for_user(username):
 		if con:
 			con.close()
 
+# Returns all of the tags for a specific graph
 def get_all_tags_for_graph(graphname, username):
 	con = None
 	try:
@@ -1215,7 +1323,7 @@ def get_all_tags_for_graph(graphname, username):
 				
 # Retrieves all graphs that match all the search and tag terms
 # def getMultiWordSearches(result, search_terms, tags):
-# 	tags_list = get_tag_graphs(tags)
+# 	tags_list = get_all_graphs_for_tags(tags)
 # 	temp = sorted(result, key=itemgetter(0))
 # 	act_result = []
 # 	for k, g in groupby(temp, key=itemgetter(0)):
@@ -1265,7 +1373,7 @@ def get_all_tags_for_graph(graphname, username):
 
 def getMultiWordSearches(result, search_terms, tags):
 	# Get all graph ids that match the tags
-	tags_list = get_tag_graphs(tags)
+	tags_list = get_all_graphs_for_tags(tags)
 	
 	temp = sorted(result, key=itemgetter(0))
 	act_result = []
