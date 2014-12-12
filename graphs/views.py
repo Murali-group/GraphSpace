@@ -80,36 +80,24 @@ def view_graph(request, uid, gid):
         else:
             return HttpResponse("Not Authorized to view this!")
 
-    layout_to_view = None
+    # Get correct layout for the graph to view
+    context = db.set_layout_context(request, context, uid, gid)
 
-    # if there is a layout specified, then render that layout
-    if (len(request.GET.get('layout', '')) > 0):
-        if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
-            layout_to_view = json.dumps({"json": db.get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
-        else: 
-            layout_to_view = json.dumps(None)
-    else:
-        layout_to_view = json.dumps(None)
-
-    # send layout information to the front-end
-    context['layout_to_view'] = layout_to_view
-    context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
-    
-    temp = json.loads(graph_to_view[0])['graph']
-
-    # for Cytoscape.js
-    if 'data' in temp:
-        context['graph'] = convert_json(graph_to_view[0])
-    else:
-        context['graph'] = graph_to_view[0]
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['draw_graph'] = True
 
     # Get all the groups that are shared for this graph
     shared_groups = db.get_all_groups_for_this_graph(graph_to_view[2])
+    context['shared_groups'] = shared_groups
 
-    context['draw_graph'] = True
+    if graph_to_view[1] == 1:
+        context['shared'] = 'Publicly Shared'
+    else:
+        context['shared'] = 'Privately Shared'
 
+    # TODO: This will eventually get deleted
     json_data = json.loads(context['graph'])
-
     #add sidebar information to the context for display
     if 'description' in json_data['metadata']:
         context['description'] = json_data['metadata']['description'] + "</table></html>"
@@ -119,18 +107,8 @@ def view_graph(request, uid, gid):
     # id of the owner of this graph
     context['owner'] = uid
 
-    if graph_to_view[1] == 1:
-        context['shared'] = 'Publicly Shared'
-    else:
-        context['shared'] = 'Privately Shared'
-
-    context['shared_groups'] = shared_groups
-
     # graph id
     context['graph_id'] = gid
-
-    layouts = db.get_all_layouts_for_graph(uid, gid)
-    context['layouts'] = layouts
 
     # redirect if the user wishes to view the json data
     if request.method == "GET" and 'view_json' in request.GET:
@@ -154,21 +132,16 @@ def view_json(request, uid, gid):
         print uid, gid
         return HttpResponse('<h1>Graph not found</h1>')
 
-    temp = json.loads(graph_to_view[0])
+    # Get correct json for CytoscapeJS
+    context['json'] = db.retrieve_cytoscape_json(graph_to_view[0])
 
-    # for Cytoscape.js adding json to the context
-    if 'data' in temp:
-        # context['json'] = convert_json(graph_to_view[0])
-        context['json'] = json.loads(convert_json(graph_to_view[0]))
-    else:
-        # context['json'] = graph_to_view[0]
-        context['json'] = temp
     # id of the owner of this graph
     context['owner'] = uid
 
     # graph id
     context['graph_id'] = gid
 
+    # If it is http request, render it in the specific page, otherwise just return the JSON
     if request:
         return render(request, 'graphs/view_json.html', context)
     else:
@@ -198,6 +171,148 @@ def all_graphs(
     '''
 
     return _graphs_page(request, 'all')
+
+# def _graphs_page(request, view_type):
+#     '''
+#         wrapper view for the following pages:
+#             graphs/
+#             graphs/shared/
+#             graphs/public/
+#             graphs/all/
+
+#         TODO: List/view contents specific to the logged in user for each
+#               page.
+#     '''
+    
+#     #get new session from the database
+#     db_session = data_connection.new_session()
+    
+#     #context of the view to be passed in for rendering
+#     context = {}
+#     graph_list = None
+
+#     #handle login
+#     context = login(request)
+
+#     if context['Error']:
+#         return HttpResponse(context['Error'])
+
+#     #check for authentication
+#     uid = request.session['uid']
+
+#     # pass the tag information to the front-end
+#     context['all_tags'] = db.get_all_tags(uid, view_type)
+#     if uid is not None:
+
+#         # adds search terms to the criteria
+#         if 'search' in request.GET:
+#             context = search_result(request, view_type)
+
+#             # Modify the url of the buttons depending on the page that the user is on
+#             if view_type == 'shared':
+#                 context['base_url'] = "http://localhost:8000/graphs/shared/"
+#             elif view_type == 'public':
+#                 context['base_url'] = "http://localhost:8000/graphs/public/"
+#             elif view_type == 'all':
+#                 context['base_url'] = "http://localhost:8000/graphs/all/"
+#             else:
+#                 context['base_url'] = "http://localhost:8000/graphs/"
+#             return render(request, 'graphs/graphs.html', context)
+
+#         # render information for this particular user.
+#         if view_type == 'shared':
+#             graph_list =  db.view_shared_graphs(uid, request.GET.get('tags'))
+#             context['base_url'] = "http://localhost:8000/graphs/shared/"
+#         elif view_type == 'public':
+#             graph_list = db.get_public_graph_info(request.GET.get('tags'))
+#             context['base_url'] = "http://localhost:8000/graphs/public/"
+#         elif view_type == 'all':
+#             graph_list = db.get_all_graph_info(request.GET.get('tags'))
+#             context['base_url'] = "http://localhost:8000/graphs/all/"
+#         # show the graphs owned by the logged in user ("My Graphs")
+#         else:
+#             graph_list = db.get_graph_info(uid, request.GET.get('tags'))
+#             context['base_url'] = "http://localhost:8000/graphs/"
+
+#         if graph_list != None and len(graph_list) == 0:
+#             graph_list = None
+
+#         # Set all information abouut graphs to the front-end
+#         context['graph_list'] = graph_list
+#         # Get all the graphs from different section to tell 
+#         # the user of the amount of graphs returned from searching
+#         my_graphs = db.get_graph_info(uid, request.GET.get('tags'))
+#         shared_graphs = db.view_shared_graphs(uid, request.GET.get('tags'))
+#         public_graphs = db.get_public_graph_info(request.GET.get('tags'))
+
+#         if my_graphs != None:
+#             context['my_graphs'] = len(my_graphs)
+#         else:
+#             context['my_graphs'] = 0
+
+#         if shared_graphs != None:
+#             context['shared_graphs'] = len(shared_graphs)
+#         else:
+#             context['shared_graphs'] = 0
+
+#         if public_graphs != None:
+#             context['public_graphs'] = len(public_graphs)
+#         else:
+#             context['public_graphs'] = 0
+
+#     #show public graphs if there is no logged in user
+#     else:
+#         graph_list = db.get_public_graph_info(request.GET.get('tags'))
+#         context['graph_list'] = graph_list
+
+#         context['my_graphs'] = 0
+#         context['shared_graphs'] = 0
+#         if graph_list != None:
+#             context['public_graphs'] = len(graph_list)
+#         else:
+#             context['public_graphs'] = 0
+
+#     # reset the search form
+#     context['search_form'] = SearchForm(placeholder='Search...')
+
+#     # modify the url of the buttons if there is a search request
+#     if request.method =='GET' and 'search' in request.GET:
+#         context = search_result(request, view_type)
+#         context['base_url'] = "http://localhost:8000/graphs/public/"
+
+#     # send tag information to the front end
+#     context['all_tags'] = db.get_all_tags(uid, view_type)
+
+#     # modify tag information 
+#     if 'tags' in request.GET:
+#             cleaned_tags = request.GET.get('tags').split(',')
+#             client_side_tags = ""
+#             for tags in xrange(len(cleaned_tags)):
+#                 cleaned_tags[tags] = cleaned_tags[tags].strip()
+#                 client_side_tags = client_side_tags + cleaned_tags[tags] + ','
+
+#             client_side_tags = client_side_tags[:len(client_side_tags) - 1]
+#             context['tags'] = client_side_tags
+#             context['tag_terms'] = cleaned_tags                
+
+#     #Divide the results of the query into pages. Currently has poor performance
+#     #because the page processes a query (which may take long)
+#     #everytime the page loads. I think that this can be improved if
+#     #I store the query result in the session such that it doesn't
+#     #process the query unnecessarily.
+#     if context['graph_list'] != None:
+#         pager_context = pager(request, context['graph_list'])
+#         if type(pager_context) is dict:
+#             context.update(pager_context)
+
+
+
+#     # indicator to include css/js footer for side menu support etc.
+#     context['footer'] = True
+
+#     return render(request, 'graphs/graphs.html', context)
+
+
 
 def _graphs_page(request, view_type):
     '''
@@ -229,113 +344,28 @@ def _graphs_page(request, view_type):
 
     # pass the tag information to the front-end
     context['all_tags'] = db.get_all_tags(uid, view_type)
-    if uid is not None:
 
-        # adds search terms to the criteria
-        if 'search' in request.GET:
-            context = search_result(request, view_type)
+    # Set the base URL's so that the links point to the correct view types
+    context['base_url'] = db.get_base_urls(view_type)
 
-            # Modify the url of the buttons depending on the page that the user is on
-            if view_type == 'shared':
-                context['base_url'] = "http://localhost:8000/graphs/shared/"
-            elif view_type == 'public':
-                context['base_url'] = "http://localhost:8000/graphs/public/"
-            elif view_type == 'all':
-                context['base_url'] = "http://localhost:8000/graphs/all/"
-            else:
-                context['base_url'] = "http://localhost:8000/graphs/"
-            return render(request, 'graphs/graphs.html', context)
-
-        # render information for this particular user.
-        if view_type == 'shared':
-            graph_list =  db.view_shared_graphs(uid, request.GET.get('tags'))
-            context['base_url'] = "http://localhost:8000/graphs/shared/"
-        elif view_type == 'public':
-            graph_list = db.get_public_graph_info(request.GET.get('tags'))
-            context['base_url'] = "http://localhost:8000/graphs/public/"
-        elif view_type == 'all':
-            graph_list = db.get_all_graph_info(request.GET.get('tags'))
-            context['base_url'] = "http://localhost:8000/graphs/all/"
-        # show the graphs owned by the logged in user ("My Graphs")
-        else:
-            graph_list = db.get_graph_info(uid, request.GET.get('tags'))
-            context['base_url'] = "http://localhost:8000/graphs/"
-
-        if graph_list != None and len(graph_list) == 0:
-            graph_list = None
-
-        # Set all information abouut graphs to the front-end
-        context['graph_list'] = graph_list
-        # Get all the graphs from different section to tell 
-        # the user of the amount of graphs returned from searching
-        my_graphs = db.get_graph_info(uid, request.GET.get('tags'))
-        shared_graphs = db.view_shared_graphs(uid, request.GET.get('tags'))
-        public_graphs = db.get_public_graph_info(request.GET.get('tags'))
-
-        if my_graphs != None:
-            context['my_graphs'] = len(my_graphs)
-        else:
-            context['my_graphs'] = 0
-
-        if shared_graphs != None:
-            context['shared_graphs'] = len(shared_graphs)
-        else:
-            context['shared_graphs'] = 0
-
-        if public_graphs != None:
-            context['public_graphs'] = len(public_graphs)
-        else:
-            context['public_graphs'] = 0
-
-    #show public graphs if there is no logged in user
-    else:
-        graph_list = db.get_public_graph_info(request.GET.get('tags'))
-        context['graph_list'] = graph_list
-
-        context['my_graphs'] = 0
-        context['shared_graphs'] = 0
-        if graph_list != None:
-            context['public_graphs'] = len(graph_list)
-        else:
-            context['public_graphs'] = 0
+    # Set all information abouut graphs to the front-end
+    context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'))
 
     # reset the search form
-    context['search_form'] = SearchForm(placeholder='Search...')
-
-    # modify the url of the buttons if there is a search request
-    if request.method =='GET' and 'search' in request.GET:
-        context = search_result(request, view_type)
-        context['base_url'] = "http://localhost:8000/graphs/public/"
-
-    # send tag information to the front end
-    context['all_tags'] = db.get_all_tags(uid, view_type)
-
-    # modify tag information 
-    if 'tags' in request.GET:
-            cleaned_tags = request.GET.get('tags').split(',')
-            client_side_tags = ""
-            for tags in xrange(len(cleaned_tags)):
-                cleaned_tags[tags] = cleaned_tags[tags].strip()
-                client_side_tags = client_side_tags + cleaned_tags[tags] + ','
-
-            client_side_tags = client_side_tags[:len(client_side_tags) - 1]
-            context['tags'] = client_side_tags
-            context['tag_terms'] = cleaned_tags                
+    # context['search_form'] = SearchForm(placeholder='Search...')
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
     #everytime the page loads. I think that this can be improved if
     #I store the query result in the session such that it doesn't
     #process the query unnecessarily.
-    if context['graph_list'] != None:
-        pager_context = pager(request, context['graph_list'])
-        if type(pager_context) is dict:
-            context.update(pager_context)
-
-
+    # if context['graph_list'] != None:
+    #     pager_context = pager(request, context['graph_list'])
+    #     if type(pager_context) is dict:
+    #         context.update(pager_context)
 
     # indicator to include css/js footer for side menu support etc.
-    context['footer'] = True
+    # context['footer'] = True
 
     return render(request, 'graphs/graphs.html', context)
 

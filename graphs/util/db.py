@@ -7,7 +7,7 @@ import json
 from graphs.util.json_converter import convert_json
 from operator import itemgetter
 from itertools import groupby
-from collections import Counter
+from collections import Counter, defaultdict
 
 # Name of the database that is being used as the backend storage
 DB_NAME = 'test.db'
@@ -182,6 +182,266 @@ def get_valid_user(username, password):
 		if con:
 			con.close()
 
+def set_layout_context(request, context, uid, gid):
+	layout_to_view = None
+
+    # if there is a layout specified, then render that layout
+	if len(request.GET.get('layout', '')) > 0:
+		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
+		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
+		else: 
+		    layout_to_view = json.dumps(None)
+	else:
+	    layout_to_view = json.dumps(None)
+
+	# send layout information to the front-end
+	context['layout_to_view'] = layout_to_view
+	context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
+	context['layouts'] = get_all_layouts_for_graph(uid, gid)
+
+	return context
+
+def retrieve_cytoscape_json(graphjson):
+	temp_json = json.loads(graphjson)['graph']
+
+    # for Cytoscape.js
+	if 'data' in temp_json:
+	    return convert_json(graphjson)
+	else:
+	    return graphjson
+
+def get_base_urls(view_type):
+    # Modify the url of the buttons depending on the page that the user is on
+    if view_type == 'shared':
+        return "http://localhost:8000/graphs/shared/"
+    elif view_type == 'public':
+        return "http://localhost:8000/graphs/public/"
+    elif view_type == 'all':
+        return "http://localhost:8000/graphs/all/"
+    else:
+        return "http://localhost:8000/graphs/"
+
+def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
+
+	# modify tag information 
+    if tag_terms and len(tag_terms) > 0:
+        cleaned_tags = tag_terms.split(',')
+        client_side_tags = ""
+        for tags in xrange(len(cleaned_tags)):
+            cleaned_tags[tags] = cleaned_tags[tags].strip()
+            if len(cleaned_tags[tags]) == 0:
+            	del cleaned_tags[tags]
+            client_side_tags = client_side_tags + cleaned_tags[tags] + ','
+
+        client_side_tags = client_side_tags[:len(client_side_tags) - 1]
+        context['tags'] = client_side_tags
+        context['tag_terms'] = cleaned_tags
+        tag_terms = cleaned_tags
+
+    # modify search information
+  #   if search_terms and len(search_terms) > 0:
+  #   	context['search_result'] = True
+  #   	cleaned_search_terms = search_terms.split(',')
+  #   	client_side_search = ""
+
+  #   	for i in xrange(len(cleaned_search_terms)):
+  #   		cleaned_search_terms[i] = cleaned_search_terms[i].strip()
+  #   		if len(cleaned_search_terms[i]) == 0:
+  #   			del cleaned_search_terms[i]
+		# 	client_side_search = client_side_search + cleaned_search_terms[i] + ','
+
+		# client_side_search = client_side_search[:len(client_side_search) - 1]
+		# context['search_word'] = client_side_search
+		# context['search_word_terms'] = cleaned_search_terms
+		# search_terms = cleaned_search_terms
+
+	# If there is no one logged in, display only public graph results
+	if uid == None:
+		context['graph_list'] = view_graphs(uid, search_terms, tag_terms, 'public')
+		context['my_graphs'] = 0
+		context['shared_graphs'] = 0
+		if context['graph_list'] == None:
+			context['public_graphs'] = 0
+		else:
+			context['public_graphs'] = len(context['graph_list'])
+	else:
+		context['graph_list'] = view_graphs(uid, search_terms, tag_terms, view_type)
+		context['my_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'my graphs'))
+		context['shared_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'shared'))
+		context['public_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'public'))
+
+	return context
+
+
+def view_graphs(uid, search_terms, tag_terms, view_type):
+	actual_graphs = []
+
+	# search_result_graphs = search_result(uid, search_terms, view_type)
+	tag_result_graphs = tag_result(uid, tag_terms, view_type)
+	return []
+
+	# if len(tag_result_graphs) > 0 and len(search_result_graphs) > 0:
+	# 	for graph in tag_result_graphs:
+	# 		if graph in search_result_graphs and not in actual_graphs:
+	# 			actual_graphs.append(graph)
+
+	# 	for graph in search_result_graphs:
+	# 		if graph in tag_result_graphs and not in actual_graphs:
+	# 			actual_graphs.append(graph)
+
+	# 	return actual_graphs
+
+	# elif len(tag_result_graphs) > 0:
+	# 	return tag_result_graphs
+	# elif len(search_result_graphs) > 0:
+	# 	return search_result_graphs
+	# else:
+	# 	if view_type == 'shared':
+	# 		graph_list = view_shared_graphs(uid)
+	# 	elif view_type == 'public':
+	# 		graph_list = view_public_graphs()
+	# 	else:
+	# 		graph_list = view_my_graphs(uid)
+
+# Gets all the graphs that match the tags for a given view type
+def tag_result(uid, tag_terms, view_type):
+	if tag_terms and len(tag_terms) > 0:
+		# Place holder that stores all the graphs
+		initial_graphs_with_tags = []	
+		con = None
+		try: 
+			con = lite.connect(DB_NAME)
+			cur = con.cursor()
+
+			# Go through all the tag terms, based on the view type and append them the initial place holder
+			for tag in tag_terms:
+				if view_type == 'my graphs':
+					cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g, graph_to_tag as gt where gt.graph_id = g.graph_id and gt.tag_id = ? and gt.user_id = ?', (tag, uid))
+					
+				elif view_type == 'shared':
+					cur.execute('select distinct g.graph_id, g.user_id, g.modified, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (tag, uid))
+					
+				else:
+					cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g, graph_to_tag as gt where gt.graph_id = g.graph_id and gt.tag_id = ? and g.public = ?', (tag, 1))
+
+				# After the current SQL is executed, collect the results
+				data = cur.fetchall()
+				for graph in data:
+					initial_graphs_with_tags.append(graph)
+
+			# After all the SQL statements have ran for all of the tags, count the number of times
+			# a graph appears in the initial list. If it appears as many times as there are 
+			# tag terms, then that graph matches all the tag terms and it should be returned
+			graph_repititions = defaultdict(int)
+
+			# Counting the number of occurences
+			for graph_tuple in initial_graphs_with_tags:
+				graph_repititions[graph_tuple] += 1
+
+			# If value appears the number of times as there are tags, 
+			# then append that to the actual list of graphs to be returned.
+			actual_graphs_for_tags = []
+			for key, value in graph_repititions.iteritems():
+				if value == len(tag_terms):
+					key_with_tags = list(key)
+					key_with_tags.insert(1, get_all_tags_for_graph(key_with_tags[0], key_with_tags[1]))
+					key_with_tags = tuple(key_with_tags)
+					actual_graphs_for_tags.append(key_with_tags)
+
+			return actual_graphs_for_tags
+
+		except lite.Error, e:
+			print 'Error %s:' % e.args[0]
+
+		finally:
+			if con:
+				con.close()
+	else:
+		return []
+
+def search_result(uid, search_terms, view_type):
+	if tag_terms and len(tag_terms) > 0:
+		intial_graphs_from_search = []
+		con = None
+		try: 
+			con = lite.connect(DB_NAME)
+			cur = con.cursor()
+
+			for search_word in search_terms:
+				if ':' in search_word:
+					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_word, view_type)
+				else:
+					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type) + find_graphs_using_names(uid, search_word, view_type)
+
+			# After all the SQL statements have ran for all of the search_terms, count the number of times
+			# a graph appears in the initial list. If it appears as many times as there are 
+			# search terms, then that graph matches all the tag terms and it should be returned
+			graph_repititions = defaultdict(int)
+
+			# Counting the number of occurences
+			for graph_tuple in intial_graphs_from_search:
+				graph_repititions[graph_tuple] += 1
+
+			# If value appears the number of times as there are tags, 
+			# then append that to the actual list of graphs to be returned.
+			actual_graphs_for_searches = []
+			for key, value in graph_repititions.iteritems():
+				if value == len(search_terms):
+					actual_graphs_for_searches.append(key)
+
+			return actual_graphs_for_searches
+
+		except lite.Error, e:
+			print 'Error %s:' % e.args[0]
+
+		finally:
+			if con:
+				con.close()
+
+	else:
+		return []
+
+def find_edges(uid, search_word, view_type):
+	initial_graphs_with_edges = []
+	node_ids = search_word.split(':')
+
+	head_node = node_ids[0]
+	tail_node = node_ids[1]
+
+	cur.execute('select n.node_id from node as n, graph as g where n.label = head_node and n.graph_id = g.graph_id')
+	head_node_data = cur.fetchall()
+	head_node_ids = []
+	for node in head_node_data:
+		head_node_ids.append(node[0])
+
+	cur.execute('select n.node_id from node as n, graph as g where n.label = tail_node and n.graph_id = g.graph_id')
+	tail_node_data = cur.fetchall()
+	tail_node_ids = []
+	for node in tail_node_data:
+		tail_node_ids.append(node[0])
+
+	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
+		for i in xrange(len(head_node_ids)):
+			for j in xrange(len(tail_node_ids)):
+				if view_type == 'public':
+					cur.execute('select e.head_graph_id, e.head_user_id, e.head_id, e.label from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[j]))
+				elif view_type == 'shared':
+					cur.execute('select e.head_graph_id, e.head_user_id, e.head_id, e.label from edge as e, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+				else:
+					cur.execute('select e.head_graph_id, e.head_user_id, e.head_id, e.label from edge as e where e.head_user_id = ? and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+
+				data = cur.fetchall()
+				for graph in data:
+					if graph not in initial_graphs_with_edges:
+						initial_graphs_with_edges = initial_graphs_with_edges + graph
+
+	return initial_graphs_with_edges
+
+def find_nodes(search_word, view_type):
+
+
+def find_graphs_using_names(search_word, view_type):
+
 # -------------------------- REST API -------------------------------
 
 # TODO: Add rest call example
@@ -227,34 +487,13 @@ def insert_graph(username, graphname, graph_json):
 
 			tags = graphJson['metadata']['tags']
 
-			#TODO: Verify that this works correctly because of refactoring and delete
 			# Insert all tags for this graph into tags database
-			insert_data_for_graph(graphname, username, tags, nodes, cur, con)
+			insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con)
 
 			# If everything works, return Nothing 
 			return None
-			# for tag in tags:
-			# 	cur.execute('select tag_id from graph_tag where tag_id=?', (tag, ))
-			# 	tagData = cur.fetchone()
-			# 	if tagData == None:
-			# 		cur.execute('insert into graph_tag values(?)', (tag, ))
-
-			# 	cur.execute('insert into graph_to_tag values(?,?,?)', (graphname, username, tag))
-			# 	con.commit()
-
-			# edges = graphJson['graph']['edges']
-
-			# for edge in edges:
-			# 	cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
-			# 	con.commit()
-
-			# for node in nodes:
-			# 	cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
-			# 	con.commit()
-
-			#return None
+	
 		else:
-			#return "Error code"
 			return 'Graph Already Exists!'
 
 	except lite.Error, e:
@@ -265,7 +504,7 @@ def insert_graph(username, graphname, graph_json):
 			con.close()
 
 # Inserts metadata about a graph into its respective tables
-def insert_data_for_graph(graphname, username, tags, nodes, cur, con):
+def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con):
 
 	# Add all tags for this graph into graph_tag and graph_to_tag tables
 	for tag in tags:
@@ -460,11 +699,11 @@ def can_see_shared_graph(username, graphname):
 	groups = get_all_groups_for_this_graph(graphname)
 
 	for group in groups:
-            members = db.get_group_members(group)
-            if username in members:
-                user_is_member = True
+	        members = db.get_group_members(group)
+	        if username in members:
+	            user_is_member = True
 
-    return None
+	return None
 
 # Removes a group from server
 def remove_group(owner, group):
@@ -809,13 +1048,13 @@ def view_shared_graphs(username, tags):
 
 		# If there are graphs that match the tag, return all information (including all tags) for each graph
 		if graphs == None:
-			return None
+			return []
 		else:
 			return build_graph_information(graphs)
 		
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
-		return None
+		return []
 
 	finally:
 		if con:
