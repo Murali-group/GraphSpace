@@ -352,20 +352,20 @@ def _graphs_page(request, view_type):
     context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'))
 
     # reset the search form
-    # context['search_form'] = SearchForm(placeholder='Search...')
+    context['search_form'] = SearchForm(placeholder='Search...')
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
     #everytime the page loads. I think that this can be improved if
     #I store the query result in the session such that it doesn't
     #process the query unnecessarily.
-    # if context['graph_list'] != None:
-    #     pager_context = pager(request, context['graph_list'])
-    #     if type(pager_context) is dict:
-    #         context.update(pager_context)
+    if context['graph_list'] != None:
+        pager_context = pager(request, context['graph_list'])
+        if type(pager_context) is dict:
+            context.update(pager_context)
 
     # indicator to include css/js footer for side menu support etc.
-    # context['footer'] = True
+    context['footer'] = True
 
     return render(request, 'graphs/graphs.html', context)
 

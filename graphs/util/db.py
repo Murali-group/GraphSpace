@@ -223,41 +223,44 @@ def get_base_urls(view_type):
 
 def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 
+	tag_list = []
+	search_list = []
+	
 	# modify tag information 
-    if tag_terms and len(tag_terms) > 0:
-        cleaned_tags = tag_terms.split(',')
-        client_side_tags = ""
-        for tags in xrange(len(cleaned_tags)):
-            cleaned_tags[tags] = cleaned_tags[tags].strip()
-            if len(cleaned_tags[tags]) == 0:
-            	del cleaned_tags[tags]
-            client_side_tags = client_side_tags + cleaned_tags[tags] + ','
+	if tag_terms and len(tag_terms) > 0:
+		cleaned_tags = tag_terms.split(',')
+		client_side_tags = ""
+		for tags in xrange(len(cleaned_tags)):
+		    cleaned_tags[tags] = cleaned_tags[tags].strip()
+		    if len(cleaned_tags[tags]) == 0:
+		    	del cleaned_tags[tags]
+		    client_side_tags = client_side_tags + cleaned_tags[tags] + ','
 
-        client_side_tags = client_side_tags[:len(client_side_tags) - 1]
-        context['tags'] = client_side_tags
-        context['tag_terms'] = cleaned_tags
-        tag_terms = cleaned_tags
+		client_side_tags = client_side_tags[:len(client_side_tags) - 1]
+		context['tags'] = client_side_tags
+		context['tag_terms'] = cleaned_tags
+		tag_list = cleaned_tags
 
     # modify search information
-  #   if search_terms and len(search_terms) > 0:
-  #   	context['search_result'] = True
-  #   	cleaned_search_terms = search_terms.split(',')
-  #   	client_side_search = ""
+	if search_terms and len(search_terms) > 0:
+		context['search_result'] = True
+		cleaned_search_terms = search_terms.split(',')
+		client_side_search = ""
 
-  #   	for i in xrange(len(cleaned_search_terms)):
-  #   		cleaned_search_terms[i] = cleaned_search_terms[i].strip()
-  #   		if len(cleaned_search_terms[i]) == 0:
-  #   			del cleaned_search_terms[i]
-		# 	client_side_search = client_side_search + cleaned_search_terms[i] + ','
+		for i in xrange(len(cleaned_search_terms)):
+			cleaned_search_terms[i] = cleaned_search_terms[i].strip()
+			if len(cleaned_search_terms[i]) == 0:
+				del cleaned_search_terms[i]
+			client_side_search = client_side_search + cleaned_search_terms[i] + ','
 
-		# client_side_search = client_side_search[:len(client_side_search) - 1]
-		# context['search_word'] = client_side_search
-		# context['search_word_terms'] = cleaned_search_terms
-		# search_terms = cleaned_search_terms
+		client_side_search = client_side_search[:len(client_side_search) - 1]
+		context['search_word'] = client_side_search
+		context['search_word_terms'] = cleaned_search_terms
+		search_list = cleaned_search_terms
 
 	# If there is no one logged in, display only public graph results
 	if uid == None:
-		context['graph_list'] = view_graphs(uid, search_terms, tag_terms, 'public')
+		context['graph_list'] = view_graphs(uid, search_terms, tag_list, 'public')
 		context['my_graphs'] = 0
 		context['shared_graphs'] = 0
 		if context['graph_list'] == None:
@@ -265,10 +268,10 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 		else:
 			context['public_graphs'] = len(context['graph_list'])
 	else:
-		context['graph_list'] = view_graphs(uid, search_terms, tag_terms, view_type)
-		context['my_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'my graphs'))
-		context['shared_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'shared'))
-		context['public_graphs'] = len(view_graphs(uid, search_terms, tag_terms, 'public'))
+		context['graph_list'] = view_graphs(uid, search_list, tag_list, view_type)
+		context['my_graphs'] = len(view_graphs(uid, search_list, tag_list, 'my graphs'))
+		context['shared_graphs'] = len(view_graphs(uid, search_list, tag_list, 'shared'))
+		context['public_graphs'] = len(view_graphs(uid, search_list, tag_list, 'public'))
 
 	return context
 
@@ -276,36 +279,30 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 def view_graphs(uid, search_terms, tag_terms, view_type):
 	actual_graphs = []
 
-	# search_result_graphs = search_result(uid, search_terms, view_type)
+	search_result_graphs = search_result(uid, search_terms, view_type)
 	tag_result_graphs = tag_result(uid, tag_terms, view_type)
-	return []
 
-	# if len(tag_result_graphs) > 0 and len(search_result_graphs) > 0:
-	# 	for graph in tag_result_graphs:
-	# 		if graph in search_result_graphs and not in actual_graphs:
-	# 			actual_graphs.append(graph)
+	if len(tag_result_graphs) > 0 and len(search_result_graphs) > 0:
+		for graph in tag_result_graphs:
+			if graph in search_result_graphs and graph not in actual_graphs:
+				actual_graphs.append(graph)
 
-	# 	for graph in search_result_graphs:
-	# 		if graph in tag_result_graphs and not in actual_graphs:
-	# 			actual_graphs.append(graph)
+		for graph in search_result_graphs:
+			if graph in tag_result_graphs and graph not in actual_graphs:
+				actual_graphs.append(graph)
 
-	# 	return actual_graphs
+		return actual_graphs
 
-	# elif len(tag_result_graphs) > 0:
-	# 	return tag_result_graphs
-	# elif len(search_result_graphs) > 0:
-	# 	return search_result_graphs
-	# else:
-	# 	if view_type == 'shared':
-	# 		graph_list = view_shared_graphs(uid)
-	# 	elif view_type == 'public':
-	# 		graph_list = view_public_graphs()
-	# 	else:
-	# 		graph_list = view_my_graphs(uid)
-
+	elif len(tag_result_graphs) > 0:
+		return tag_result_graphs
+	elif len(search_result_graphs) > 0:
+		return search_result_graphs
+	else:
+		return view_graphs_of_type(view_type, uid)
+		
 # Gets all the graphs that match the tags for a given view type
 def tag_result(uid, tag_terms, view_type):
-	if tag_terms and len(tag_terms) > 0:
+	if len(tag_terms) > 0:
 		# Place holder that stores all the graphs
 		initial_graphs_with_tags = []	
 		con = None
@@ -352,7 +349,7 @@ def tag_result(uid, tag_terms, view_type):
 
 		except lite.Error, e:
 			print 'Error %s:' % e.args[0]
-
+			return []
 		finally:
 			if con:
 				con.close()
@@ -360,7 +357,7 @@ def tag_result(uid, tag_terms, view_type):
 		return []
 
 def search_result(uid, search_terms, view_type):
-	if tag_terms and len(tag_terms) > 0:
+	if len(search_terms) > 0:
 		intial_graphs_from_search = []
 		con = None
 		try: 
@@ -369,10 +366,9 @@ def search_result(uid, search_terms, view_type):
 
 			for search_word in search_terms:
 				if ':' in search_word:
-					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_word, view_type)
+					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_word, view_type, cur)
 				else:
-					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type) + find_graphs_using_names(uid, search_word, view_type)
-
+					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type, cur) + find_graphs_using_names(uid, search_word, view_type, cur)
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
 			# search terms, then that graph matches all the tag terms and it should be returned
@@ -387,13 +383,17 @@ def search_result(uid, search_terms, view_type):
 			actual_graphs_for_searches = []
 			for key, value in graph_repititions.iteritems():
 				if value == len(search_terms):
-					actual_graphs_for_searches.append(key)
+					key_with_search = list(key)
+					key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[1]))
+					key_with_search = tuple(key_with_search)
+					actual_graphs_for_searches.append(key_with_search)
 
+			print actual_graphs_for_searches
 			return actual_graphs_for_searches
 
 		except lite.Error, e:
 			print 'Error %s:' % e.args[0]
-
+			return []
 		finally:
 			if con:
 				con.close()
@@ -401,24 +401,39 @@ def search_result(uid, search_terms, view_type):
 	else:
 		return []
 
-def find_edges(uid, search_word, view_type):
+def find_edges(uid, search_word, view_type, cur):
 	initial_graphs_with_edges = []
 	node_ids = search_word.split(':')
 
 	head_node = node_ids[0]
 	tail_node = node_ids[1]
 
-	cur.execute('select n.node_id from node as n, graph as g where n.label = head_node and n.graph_id = g.graph_id')
-	head_node_data = cur.fetchall()
+	# treat id's as labels
+	cur.execute('select n.node_id from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id', (head_node, ))
+	head_node_label_data = cur.fetchall()
 	head_node_ids = []
-	for node in head_node_data:
+	for node in head_node_label_data:
 		head_node_ids.append(node[0])
 
-	cur.execute('select n.node_id from node as n, graph as g where n.label = tail_node and n.graph_id = g.graph_id')
-	tail_node_data = cur.fetchall()
+	cur.execute('select n.node_id from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id', (tail_node, ))
+	tail_node_label_data = cur.fetchall()
 	tail_node_ids = []
-	for node in tail_node_data:
+	for node in tail_node_label_data:
 		tail_node_ids.append(node[0])
+
+	# treat id's as node_id's
+	cur.execute('select n.node_id from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id', (head_node, ))
+	head_node_id_data = cur.fetchall()
+	for node in head_node_id_data:
+		if node[0] not in head_node_ids:
+			head_node_ids.append(node[0])
+	
+	cur.execute('select n.node_id from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id', (tail_node, ))
+	tail_node_id_data = cur.fetchall()
+	for node in tail_node_id_data:
+		if node[0] not in tail_node_ids:
+			tail_node_ids.append(node[0])
+	
 
 	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
 		for i in xrange(len(head_node_ids)):
@@ -431,16 +446,65 @@ def find_edges(uid, search_word, view_type):
 					cur.execute('select e.head_graph_id, e.head_user_id, e.head_id, e.label from edge as e where e.head_user_id = ? and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
 
 				data = cur.fetchall()
-				for graph in data:
-					if graph not in initial_graphs_with_edges:
-						initial_graphs_with_edges = initial_graphs_with_edges + graph
+				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
+				
 
 	return initial_graphs_with_edges
 
-def find_nodes(search_word, view_type):
+def find_nodes(uid, search_word, view_type, cur):
+	intial_graph_with_nodes = []
+
+	if view_type == 'my graphs':
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n where n.label = ? and n.user_id = ?', (search_word, uid))
+		node_labels = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
+
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n where n.node_id = ? and n.user_id = ?', (search_word, uid))
+		node_ids = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
+
+	elif view_type == 'shared':
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n, group_to_graph as gg where n.label =? and gg.graph_id == n.graph_id and gg.user_id= ?', (search_word, uid))
+		shared_labels = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
+
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n, group_to_graph as gg where n.node_id =? and gg.graph_id == n.graph_id and gg.user_id= ?', (search_word, uid))
+		shared_ids = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
+
+	else:
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
+		public_labels = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
 
 
-def find_graphs_using_names(search_word, view_type):
+		cur.execute('select n.graph_id, n.user_id, n.node_id, n.label from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
+		public_ids = cur.fetchall()
+		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
+
+	return intial_graph_with_nodes
+
+def find_graphs_using_names(uid, search_word, view_type, cur):
+	intial_graph_names = []
+
+	if view_type == 'my graphs':
+		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
+	elif view_type == 'shared':
+		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id= ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id', (search_word, uid))
+	else:
+		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
+
+	graph_list = cur.fetchall()
+	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
+	return intial_graph_names
+
+def add_unique_to_list(listname, data):
+	for element in data:
+		if element not in listname:
+			listname.append(element)
+
+	return listname
+
 
 # -------------------------- REST API -------------------------------
 
@@ -1032,26 +1096,28 @@ def unshare_graph_with_group(owner, graph, group):
 # 		if con:
 # 			con.close()
 
-def view_shared_graphs(username, tags):
+def view_graphs_of_type(view_type, username):
 	graphs = []
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		# Get all the tags that have atleast 1 tag that relates to the graph
-		if tags:
-			graphs = get_graphs_for_tags(cur, username, tags)
+		if view_type == 'public':
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
+		elif view_type == 'shared':
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.graph_id = g.graph_id and gg.user_id=?', (username, ))
 		else:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (username, ))
-			graphs = cur.fetchall()
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
 
-		# If there are graphs that match the tag, return all information (including all tags) for each graph
-		if graphs == None:
-			return []
-		else:
-			return build_graph_information(graphs)
+		initial_graphs = cur.fetchall()
+		for graph in initial_graphs:
+			temp_list = list(graph)
+			temp_list.insert(1, get_all_tags_for_graph(graph[0], graph[2]))
+			graphs.append(tuple(temp_list))
 		
+		return graphs
+
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
 		return []
