@@ -4,9 +4,56 @@ from datetime import datetime
 import sys
 import bcrypt
 import json
+from graphs.util.json_converter import convert_json
+from operator import itemgetter
+from itertools import groupby
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
+
+def edge_inserter(json_string):
+
+	cleaned_json = json.loads(json_string)
+
+	for edge in cleaned_json['graph']['edges']:
+		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+
+	return cleaned_json
+
+
+
+def insert_all_edges():
+	con = None
+	try:
+		con = lite.connect('test.db')
+
+		cur = con.cursor()
+		cur.execute('select user_id, graph_id, json from graph where user_id=?', ('ategge@vt.edu', ))
+
+		data = cur.fetchall()
+		print data
+
+		if data != None:
+			for j in data:
+				cleaned_json = edge_inserter(convert_json(j[2]))
+				for edge in cleaned_json['graph']['edges']:
+					print edge
+					cur.execute('select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?', (j[0], j[1], edge['data']['source'], j[1], j[1], edge['data']['target']))
+					sanity = cur.fetchall()
+					if sanity == None or len(sanity) == 0:
+						if 'directed' in edge['data']:
+							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
+							con.commit()
+						else:
+							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
+							con.commit()
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
 
 def is_admin(username):
 	con = None
@@ -949,3 +996,26 @@ def getLayouts(uid, gid):
 	finally:
 		if con:
 			con.close()
+
+def getMultiWordSearches(result, search_terms):
+	temp = sorted(result, key=itemgetter(0))
+	act_result = []
+	for k, g in groupby(temp, key=itemgetter(0)):
+		local = []
+		ids = ""
+		labels = ""
+		for thing in g:
+		    local.append(thing)
+		    ids = ids + ' ' + thing[2].replace(' ', '')
+		    labels = labels + ' ' + thing[3].replace(' ', '')
+
+		local_list = list(local[0])
+		ids = ids.strip()
+		ids = ids.replace(' ', ', ')
+		local_list[2] = ids
+		labels = labels.strip()
+		labels = labels.replace(' ' , ', ')
+		local_list[3] = labels
+		act_result.append(tuple(local_list))
+
+	return act_result

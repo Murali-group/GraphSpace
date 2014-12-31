@@ -18,7 +18,8 @@ import models
 import json
 import graphs.util.db_init as db_init
 import bcrypt
-
+from operator import itemgetter
+from itertools import groupby
 from graphs.util.json_converter import convert_json
 
 #get database
@@ -33,6 +34,8 @@ group_to_graph = db_init.group_to_graph
 ##### VIEWS #####
 def index(request):
     '''Render the main page'''
+
+    # db.insert_all_edges()
 
     # handle login.
     # see graphs.auth.login for details
@@ -638,7 +641,8 @@ def register(request):
 
 def search_result(request, view_type):
     '''
-        Perform search and display search results.
+        Perform search and display search results for all the graphs.
+        Organized and split into My Graphs, Shared With Me and Public Graphs
 
         This function searches for nodes and edges stored
         in the database.
@@ -671,127 +675,95 @@ def search_result(request, view_type):
         context['my_graphs'] = []
         context['shared_graphs'] = []
         context['public_graphs'] = []
+        result = []
 
-        # searching for edges
-        if ':' in search_word:
-            search_nodes = search_word.split(':')
-            head_node = search_nodes[0]
-            tail_node = search_nodes[1]
+        #get all of the search terms
+        search_terms = search_word.split(',')
+        for i in range(len(search_terms)):
+            search_terms[i] = search_terms[i].strip()
 
-            # see if node names provided are labels of nodes
-            head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).limit(1)
-            tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).limit(1)
+        # check to see if user is logged in or not
+        if 'uid' in context and context['uid'] != None:
+            # go through all of the search terms (dictated by ',')
+            for word in search_terms:
+                # #search for edges
+                # if ':' in word:
 
-            head_node_ids = list(head_node_ids)
-            tail_node_ids = list(tail_node_ids)
+                #     search_nodes = word.split(':')
+                #     head_node = search_nodes[0]
+                #     tail_node = search_word[1]
 
-            # query for edges
-            if len(head_node_ids) != 0 and len(tail_node_ids) != 0:
+                #     # see if node names provided are labels of nodes
+                #     head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).filter(node.c.graph_id == search_graph.c.graph_id).all()
+                #     tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).filter(node.c.graph_id == search_graph.c.graph_id).all()
 
-                if 'uid' in context and context['uid'] != None:
-                    # query for edges with matching head and tail node.
-                    public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-                                    edge.c.head_id, edge.c.label).filter(
-                                    edge.c.head_id == head_node_ids[0][0], 
-                                    edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                #     # remove any duplicates
+                #     head_node_ids = list(set(head_node_ids))
+                #     tail_node_ids = list(set(tail_node_ids))
 
-                    for name in public_result:
-                        context['public_graphs'].append(name)
+                #     # if there are any nodes with matching labels in the database, then perform this search
+                #     if len(head_node_ids) != 0 and len(tail_node_ids) != 0:
+                #         for i in xrange(len(head_node_ids)):
+                #             for j in xrange(len(tail_node_ids)):
+                #                 # query for edges with matching head and tail node.
+                #                 public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+                #                                 edge.c.head_id, edge.c.label).filter(
+                #                                 edge.c.head_id == head_node_ids[i][0], 
+                #                                 edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
 
-                    owner_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-                                    edge.c.head_id, edge.c.label).filter(
-                                    edge.c.head_id == head_node_ids[0][0], 
-                                    edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+                #                 for name in public_result:
+                #                     context['public_graphs'].append(name)
 
-                    for name in owner_result:
-                        context['my_graphs'].append(name)
+                #                 owner_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+                #                                 edge.c.head_id, edge.c.label).filter(
+                #                                 edge.c.head_id == head_node_ids[i][0], 
+                #                                 edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
 
-                    group_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-                                    edge.c.head_id, edge.c.label).filter(
-                                    edge.c.head_id == head_node_ids[0][0], 
-                                    edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
+                #                 for name in owner_result:
+                #                     context['my_graphs'].append(name)
 
-                    for name in group_result:
-                        context['shared_graphs'].append(name)
+                #                 group_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+                #                                 edge.c.head_id, edge.c.label).filter(
+                #                                 edge.c.head_id == head_node_ids[i][0], 
+                #                                 edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
 
-                    result = list(set(public_result + group_result + owner_result))
+                #                 for name in group_result:
+                #                     context['shared_graphs'].append(name)
 
-                else:
-                    # query for edges with matching head and tail node.
-                    public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-                                    edge.c.head_id, edge.c.label).filter(
-                                    edge.c.head_id == head_node_ids[0][0], 
-                                    edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                #         result.append(public_result + group_result + owner_result)
 
-                    for name in public_result:
-                        context['public_graphs'].append(name)
+                #     else:
+                #         # assume the given words are ids of nodes and not of (labels).
+                #         # query for the edges using given node names
+                #         result.append(db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+                #                         edge.c.head_id, edge.c.label).filter(
+                #                         edge.c.head_id == head_node, 
+                #                         edge.c.tail_id == tail_node).all())
 
-                    context['graph_list'] = list(set(context['public_graphs']))
+                # #search for nodes
+                # else:
 
-                    if len(context['public_graphs']) > 0:
-                        context['search_result'] = True
-                    else:
-                        context['search_result'] = None
-
-                    # add search form to the context
-                    context['search_form'] = search_form
-
-
-                    # add pagination
-                    if context['graph_list'] != None and len(context['graph_list']) > 0:
-                        pager_context = pager(request, context['graph_list'])
-
-                        if type(pager_context) is dict:
-                            context.update(pager_context)
-
-                        context['public_graphs'] = len(context['graph_list'])
-
-                    else:
-                        context['graph_list'] = None
-                        context['public_graphs'] = 0
-
-                    context['footer'] = True
-                    return context
-
-            else:
-                # assume the given words are ids of nodes.
-                # query for the edges using given node names
-                result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
-                                edge.c.head_id, edge.c.label).filter(
-                                edge.c.head_id == head_node, 
-                                edge.c.tail_id == tail_node).all()
-
-            # notify renderer to display edge results
-            context['nodes'] = False
-            
-        # searching for nodes
-        else:
-
-            if 'uid' in context and context['uid'] != None:
                 #search graph that user owns
                 owner_result_name = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
                 
                 if owner_result_name != None:
                     for name in owner_result_name:
                         context['my_graphs'].append(name)
 
                 owner_result_label = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
 
                 if owner_result_label != None:
                     for label in owner_result_label:
                         context['my_graphs'].append(label)
 
-
-                context['my_graphs'] = list(set(context['my_graphs']))
-
                 #search graphs that are public
                 public_result = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
                 
                 public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
 
                 if public_result != None:
                     for name in public_result:
@@ -801,16 +773,11 @@ def search_result(request, view_type):
                     for name in public_result_label:
                         context['public_graphs'].append(name)
 
-
-                context['public_graphs'] = list(set(context['public_graphs']))
-
-                # result = list(set(owner_result_name + public_result))
-
                 group_result = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
+                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
 
                 group_result_label = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == search_group_to_user.c.user_id).filter(search_group_to_user.c.user_id == context['uid']).all()
+                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
 
                 if group_result != None:
                     for name in group_result:
@@ -820,94 +787,352 @@ def search_result(request, view_type):
                     for name in group_result_label:
                         context['shared_graphs'].append(name)
 
-                context['shared_graphs'] = list(set(context['shared_graphs']))
+            context['my_graphs'] = list(set(context['my_graphs']))
+            context['shared_graphs'] = list(set(context['shared_graphs']))
+            context['public_graphs'] = list(set(context['public_graphs']))
+            result = list(set(context['my_graphs'] + context['public_graphs'] + context['shared_graphs']))
 
+            if len(result) != 0:
+                context['search_result'] = True
 
-                result = list(set(owner_result_name + public_result + group_result + owner_result_label + public_result_label + group_result_label))
+                if view_type == 'shared':
+                    result = context['shared_graphs']
+                    result = db.getMultiWordSearches(result, search_terms)
+                elif view_type == 'public':
+                    result = context['public_graphs']
+                    result = db.getMultiWordSearches(result, search_terms)
+                else:
+                    result = context['my_graphs']
+                    result = db.getMultiWordSearches(result, search_terms)
 
+                context['graph_list'] = result
             else:
+                context['search_result'] = False
+                context['graph_list'] = None
 
-                #search graphs that are public
-                public_result = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
-                
-                public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
-                            node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+            # add search form to the context
+            context['search_form'] = search_form
 
-                if public_result != None:
-                    for name in public_result:
-                        context['public_graphs'].append(name)
+            # add pagination
+            if context['graph_list'] != None:
+                pager_context = pager(request, context['graph_list'])
 
-                if public_result_label != None:
-                    for name in public_result_label:
-                        context['public_graphs'].append(name)
+                if type(pager_context) is dict:
+                    context.update(pager_context)
 
-                context['graph_list'] = list(set(context['public_graphs']))
+            context['footer'] = True
 
-                if len(context['public_graphs']) > 0:
-                    context['search_result'] = True
+            context['my_graphs'] = len(db.getMultiWordSearches(context['my_graphs'], search_terms))
+            context['shared_graphs'] = len(db.getMultiWordSearches(context['shared_graphs'], search_terms))
+            context['public_graphs'] = len(db.getMultiWordSearches(context['public_graphs'], search_terms))
+            return context
 
-                    # add search form to the context
-                    context['search_form'] = search_form
-
-                    # add pagination
-                    if context['graph_list'] != None:
-                        pager_context = pager(request, context['graph_list'])
-
-                        if type(pager_context) is dict:
-                            context.update(pager_context)
-
-                    context['footer'] = True
-                    context['public_graphs'] = len(context['graph_list'])
-
-                    return context
-
-            # notify renderer to display node results
-            context['nodes'] = True
-
-        if len(result) != 0:
-            context['search_result'] = True
-            if view_type == 'shared':
-                result = context['shared_graphs']
-            elif view_type == 'public':
-                result = context['public_graphs']
-            else:
-                result = context['my_graphs']
-
-            context['graph_list'] = result
-           
+        # display only public results since no user is logged in
         else:
-            context['search_result'] = False
-            context['graph_list'] = None
 
-    else:
-        context['search_result'] = False
-        # An unbound form
-        search_form = SearchForm(placeholder='Search...')
+            for word in search_terms:
+                #if word is an edge
+                if ':' in word:
+                    # query for edges with matching head and tail node for only public graphs since no one is logged in.
+                            public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+                                            edge.c.head_id, edge.c.label).filter(
+                                            edge.c.head_id == head_node_ids[0][0], 
+                                            edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
 
-    # add search form to the context
-    context['search_form'] = search_form
+                            for name in public_result:
+                                context['public_graphs'].append(name)
 
-    # add pagination
-    if context['graph_list'] != None:
-        pager_context = pager(request, context['graph_list'])
+                #search graphs that are public using nodes
+                else:
 
-        if type(pager_context) is dict:
-            context.update(pager_context)
+                    public_result = db_session.query(node.c.graph_id, node.c.user_id,
+                                node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                    
+                    public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+                                node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
 
-    context['footer'] = True
+                    if public_result != None:
+                        for name in public_result:
+                            context['public_graphs'].append(name)
 
-    context['my_graphs'] = len(context['my_graphs'])
-    context['shared_graphs'] = len(context['shared_graphs'])
-    context['public_graphs'] = len(context['public_graphs'])
+                    if public_result_label != None:
+                        for name in public_result_label:
+                            context['public_graphs'].append(name)
 
-    return context
+
+                context['graph_list'].append(context['public_graphs'])
+
+            # there are public graphs that match the search criterion
+            if len(context['public_graphs']) > 0:
+                context['graph_list'] = list(set(context['graph_list']))
+                context['search_result'] = True
+
+                # add search form to the context
+                context['search_form'] = search_form
+
+                # add pagination
+                if context['graph_list'] != None:
+                    pager_context = pager(request, context['graph_list'])
+
+                    if type(pager_context) is dict:
+                        context.update(pager_context)
+
+                context['footer'] = True
+                context['public_graphs'] = len(context['graph_list'])
+                return context
+            # no public graphs were returned
+            else:
+                context['search_result'] = False
+                context['graph_list'] = None
+                return context
+
+
+
+
+
+        #searching for edges
+
+        # # searching for edges
+        # if ':' in search_word:
+        #     search_nodes = search_word.split(':')
+        #     head_node = search_nodes[0]
+        #     tail_node = search_nodes[1]
+
+        #     # see if node names provided are labels of nodes
+        #     head_node_ids = db_session.query(node.c.node_id).filter(node.c.label == head_node).filter(node.c.graph_id == search_graph.c.graph_id).all()
+        #     tail_node_ids = db_session.query(node.c.node_id).filter(node.c.label == tail_node).filter(node.c.graph_id == search_graph.c.graph_id).all()
+        #     head_node_ids = list(set(head_node_ids))
+        #     tail_node_ids = list(set(tail_node_ids))
+
+        #     # query for edges
+        #     if len(head_node_ids) != 0 and len(tail_node_ids) != 0:
+
+        #         if 'uid' in context and context['uid'] != None:
+
+        #             for i in xrange(len(head_node_ids)):
+        #                 for j in xrange(len(tail_node_ids)):
+        #                     # query for edges with matching head and tail node.
+        #                     public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+        #                                     edge.c.head_id, edge.c.label).filter(
+        #                                     edge.c.head_id == head_node_ids[i][0], 
+        #                                     edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+
+        #                     for name in public_result:
+        #                         context['public_graphs'].append(name)
+
+        #                     owner_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+        #                                     edge.c.head_id, edge.c.label).filter(
+        #                                     edge.c.head_id == head_node_ids[i][0], 
+        #                                     edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+
+        #                     for name in owner_result:
+        #                         context['my_graphs'].append(name)
+
+        #                     group_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+        #                                     edge.c.head_id, edge.c.label).filter(
+        #                                     edge.c.head_id == head_node_ids[i][0], 
+        #                                     edge.c.tail_id == tail_node_ids[j][0]).filter(edge.c.head_graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
+
+        #                     for name in group_result:
+        #                         context['shared_graphs'].append(name)
+
+        #             result = list(set(public_result + group_result + owner_result))
+
+        #         else:
+        #             # query for edges with matching head and tail node.
+        #             public_result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+        #                             edge.c.head_id, edge.c.label).filter(
+        #                             edge.c.head_id == head_node_ids[0][0], 
+        #                             edge.c.tail_id == tail_node_ids[0][0]).filter(edge.c.head_graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+
+        #             for name in public_result:
+        #                 context['public_graphs'].append(name)
+
+        #             context['graph_list'] = list(set(context['public_graphs']))
+
+        #             if len(context['public_graphs']) > 0:
+        #                 context['search_result'] = True
+        #             else:
+        #                 context['search_result'] = None
+
+        #             # add search form to the context
+        #             context['search_form'] = search_form
+
+
+        #             # add pagination
+        #             if context['graph_list'] != None and len(context['graph_list']) > 0:
+        #                 pager_context = pager(request, context['graph_list'])
+
+        #                 if type(pager_context) is dict:
+        #                     context.update(pager_context)
+
+        #                 context['public_graphs'] = len(context['graph_list'])
+
+        #             else:
+        #                 context['graph_list'] = None
+        #                 context['public_graphs'] = 0
+
+        #             context['footer'] = True
+        #             return context
+
+    #         else:
+    #             # assume the given words are ids of nodes.
+    #             # query for the edges using given node names
+    #             result = db_session.query(edge.c.head_graph_id, edge.c.head_user_id, 
+    #                             edge.c.head_id, edge.c.label).filter(
+    #                             edge.c.head_id == head_node, 
+    #                             edge.c.tail_id == tail_node).all()
+
+    #         # notify renderer to display edge results
+    #         context['nodes'] = False
+            
+    #     # searching for nodes
+    #     else:
+
+    #         if 'uid' in context and context['uid'] != None:
+    #             #search graph that user owns
+    #             owner_result_name = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+                
+    #             if owner_result_name != None:
+    #                 for name in owner_result_name:
+    #                     context['my_graphs'].append(name)
+
+    #             owner_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.user_id == context['uid']).all()
+
+    #             if owner_result_label != None:
+    #                 for label in owner_result_label:
+    #                     context['my_graphs'].append(label)
+
+
+    #             context['my_graphs'] = list(set(context['my_graphs']))
+
+    #             #search graphs that are public
+    #             public_result = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                
+    #             public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+
+    #             if public_result != None:
+    #                 for name in public_result:
+    #                     context['public_graphs'].append(name)
+
+    #             if public_result_label != None:
+    #                 for name in public_result_label:
+    #                     context['public_graphs'].append(name)
+
+
+    #             context['public_graphs'] = list(set(context['public_graphs']))
+
+    #             # result = list(set(owner_result_name + public_result))
+
+    #             group_result = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
+
+    #             # group_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+    #             #             node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == search_group_to_user.c.user_id).filter(search_group_to_user.c.user_id == context['uid']).all()
+
+    #             group_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_group_to_graph.c.graph_id).filter(search_group_to_graph.c.user_id == context['uid']).all()
+
+    #             if group_result != None:
+    #                 for name in group_result:
+    #                     context['shared_graphs'].append(name)
+
+    #             if group_result_label != None:
+    #                 for name in group_result_label:
+    #                     context['shared_graphs'].append(name)
+
+    #             context['shared_graphs'] = list(set(context['shared_graphs']))
+
+
+    #             result = list(set(owner_result_name + public_result + group_result + owner_result_label + public_result_label + group_result_label))
+
+    #         else:
+
+    #             #search graphs that are public
+    #             public_result = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.node_id.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+                
+    #             public_result_label = db_session.query(node.c.graph_id, node.c.user_id,
+    #                         node.c.node_id, node.c.label).filter(node.c.label.like("%" + search_word + "%")).filter(node.c.graph_id == search_graph.c.graph_id).filter(search_graph.c.public == 1).all()
+
+    #             if public_result != None:
+    #                 for name in public_result:
+    #                     context['public_graphs'].append(name)
+
+    #             if public_result_label != None:
+    #                 for name in public_result_label:
+    #                     context['public_graphs'].append(name)
+
+    #             context['graph_list'] = list(set(context['public_graphs']))
+
+    #             if len(context['public_graphs']) > 0:
+    #                 context['search_result'] = True
+
+    #                 # add search form to the context
+    #                 context['search_form'] = search_form
+
+    #                 # add pagination
+    #                 if context['graph_list'] != None:
+    #                     pager_context = pager(request, context['graph_list'])
+
+    #                     if type(pager_context) is dict:
+    #                         context.update(pager_context)
+
+    #                 context['footer'] = True
+    #                 context['public_graphs'] = len(context['graph_list'])
+
+    #                 return context
+
+    #         # notify renderer to display node results
+    #         context['nodes'] = True
+
+    #     if len(result) != 0:
+    #         context['search_result'] = True
+    #         if view_type == 'shared':
+    #             result = context['shared_graphs']
+    #         elif view_type == 'public':
+    #             result = context['public_graphs']
+    #         else:
+    #             result = context['my_graphs']
+    #         context['graph_list'] = result
+           
+    #     else:
+    #         context['search_result'] = False
+    #         context['graph_list'] = None
+
+    # else:
+    #     context['search_result'] = False
+    #     # An unbound form
+    #     search_form = SearchForm(placeholder='Search...')
+
+    # # add search form to the context
+    # context['search_form'] = search_form
+
+    # # add pagination
+    # if context['graph_list'] != None:
+    #     pager_context = pager(request, context['graph_list'])
+
+    #     if type(pager_context) is dict:
+    #         context.update(pager_context)
+
+    # context['footer'] = True
+
+    # context['my_graphs'] = len(context['my_graphs'])
+    # context['shared_graphs'] = len(context['shared_graphs'])
+    # context['public_graphs'] = len(context['public_graphs'])
+
+    # return context
 
 def retrieveIDs(request):
 
     if request.POST:
         db_session = data_connection.new_session()
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==request.POST['uid'], graph.c.graph_id==request.POST['gid']).one()
+        # db.edge_inserter(convert_json(graph_to_view[0]))
         json_data =  json.loads(convert_json(graph_to_view[0]))
         return HttpResponse(find_element(request.POST['searchTerms'], request.POST['gid'], json_data, data_connection))
 
