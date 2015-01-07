@@ -20,44 +20,67 @@ function fireEvent(obj,evt){
 }
 
 function searchValues(names) {
-  var path = window.location.pathname.split('/');
-  $.post("../../../retrieveIDs/", {
-  	"uid": decodeURIComponent(path[2]),
-  	"gid": decodeURIComponent(path[3]),
-  	"searchTerms": names
-  }, function (data) {
+  names = names.split(',');
 
-    console.log(data);
-  	if (data != "None") {
-  		// window.cy.$("#" + data.toUpperCase()).select();
-	  	// window.cy.$("#" + data.toLowerCase()).select();
-      if (window.cy.$('[id="' + data + '"]').selected() == false) {
-          window.cy.$('[id="' + data + '"]').select();
-          $("#search_terms").append('<button class="btn btn-danger terms" id="' + data  + '" value="' + data + '"">' + names + " X" + '</button>');
-      }
-      // window.cy.$('[id="' + data.toUpperCase() + '"]').select();
-      // window.cy.$('[id="' + data.toLowerCase() + '"]').select();
-
-  	} else {
-      alert("Component not found!");
+  $.post("../../../retrieveIDs/", {}, function() {
+    for (var i = 0; i < names.length; i++) {
+        console.log(names[i]);
+        names[i] = decodeURIComponent(names[i]);
+        names[i] = names[i].replace(/:/, '-');  
+        names[i] = names[i].trim()
+        if (window.cy.$('[id="' + names[i].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + names[i].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + names[i] + '"]').selected() == false) {
+          window.cy.$('[id="' + names[i].toUpperCase() + '"]').select();
+          window.cy.$('[id="' + names[i].toLowerCase() + '"]').select();
+          window.cy.$('[id="' + names[i] + '"]').select();
+          $("#search_terms").append('<button class="btn btn-danger terms" id="' + names[i]  + '" value="' + names[i] + '"">' + names[i] + " X" + '</button>');
+          $("#search").val("");
+        } else {
+          return alert("Component Not Found!");
+        }
     }
-
-    // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
-    // $("#search").val("");
   });
-  // for (var i = 0; i < splitNames.length; i++) {
-  //   splitNames[i] = splitNames[i].trim();
-  //   $.post("id/", {
-  //   	"names": splitNames
-  //   }, function (data) {
-
-  //   });
-  //   // window.cy.$("#" + splitNames[i]).select();
-  //   // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
-  //   // $("#search").val("");
-  // }
-
+  
 }
+
+// function searchValues(names) {
+//   var path = window.location.pathname.split('/');
+//   $.post("../../../retrieveIDs/", {
+//   	"uid": decodeURIComponent(path[2]),
+//   	"gid": decodeURIComponent(path[3]),
+//   	"searchTerms": names
+//   }, function (data) {
+
+//     console.log(data);
+//   	if (data != "None") {
+//   		// window.cy.$("#" + data.toUpperCase()).select();
+// 	  	// window.cy.$("#" + data.toLowerCase()).select();
+//       if (window.cy.$('[id="' + data + '"]').selected() == false) {
+//           window.cy.$('[id="' + data + '"]').select();
+//           $("#search_terms").append('<button class="btn btn-danger terms" id="' + data  + '" value="' + data + '"">' + names + " X" + '</button>');
+//       }
+//       // window.cy.$('[id="' + data.toUpperCase() + '"]').select();
+//       // window.cy.$('[id="' + data.toLowerCase() + '"]').select();
+
+//   	} else {
+//       alert("Component not found!");
+//     }
+
+//     // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+//     // $("#search").val("");
+//   });
+//   // for (var i = 0; i < splitNames.length; i++) {
+//   //   splitNames[i] = splitNames[i].trim();
+//   //   $.post("id/", {
+//   //   	"names": splitNames
+//   //   }, function (data) {
+
+//   //   });
+//   //   // window.cy.$("#" + splitNames[i]).select();
+//   //   // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
+//   //   // $("#search").val("");
+//   // }
+
+// }
 
 function splitTerms(term) {
   return term.split("_");
@@ -92,17 +115,12 @@ This function is executed when the page finishes loading.
 Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
-
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
     // $('.csweb').cytoscape({
     var searchTerms = getQueryVariable("search");
     if (searchTerms) {
-      searchTerms = splitTerms(searchTerms);
-      for (var i = 0; i < searchTerms.length; i++) {
-        // console.log(searchTerms[i]);
-        searchValues(searchTerms[i]);
-      }
+      searchValues(searchTerms);
     }
 
     var graph_layout = {
@@ -301,11 +319,13 @@ $(document).ready(function() {
       var nodes = window.cy.elements('node');
       var layout = {};
       for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-         var nodeLabel = nodes[i]._private.data.label;
+         var nodeLabel = nodes[i]._private.data.id;
          var nodePosition = nodes[i]._private.position;
          // layout[nodeLabel] = nodePosition;
          layout[nodeLabel] = nodePosition;
       }
+
+      console.log(JSON.stringify(layout));
 
       $.post("layout/", {
         layout_id: "1",

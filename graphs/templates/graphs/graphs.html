@@ -9,37 +9,68 @@
     <div class="row">
         <div class="col-xs-6 col-sm-9">
             <div class="graph_links">
-                {% if search_word %}
                 <ul class="nav nav-pills">
-                    <li><a href="{{ base_url }}">Clear Search for "{{ search_word}}"</a></li>    
+                    {% if search_word and tags %}
+                        <li><a href="{{ base_url|add:'?tags='|add:tags }}">Clear Search for "{{ search_word }}"</a></li>    
+                        <li><a href="{{ base_url|add:'?search='|add:search_word }}">Clear Tags for "{{ tags }}"</a></li>
+                    {% elif search_word %}
+                        <li><a href="{{ base_url }}">Clear Search for "{{ search_word }}"</a></li>
+                    {% elif tags %}
+                        <li><a href="{{ base_url }}">Clear Tags for "{{ tags }}"</a></li>
+                    {% endif %}
                 </ul>
-                {% endif %}
-                {% if tags %}
-                    <ul class="nav nav-pills">
-                        <li><a href="{{ base_url }}">Clear Search for "{{ tags}}"</a></li>    
-                    </ul>
-                {% endif %}
+                
                 {% if uid != None %}
                     {% if search_word %}
-                        {% url 'graphs' as the_url %}
-                        {% with the_url|add:"?search="|add:search_word as final_url %}
-                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
-                        {% endwith %}
-                        {% url 'shared_graphs' as the_url %}
-                        {% with the_url|add:"?search="|add:search_word as final_url %}
-                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
-                        {% endwith %}
-                        {% url 'public_graphs' as the_url %}
-                        {% with the_url|add:"?search="|add:search_word as final_url %}
-                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
-                        {% endwith %}
+                        {% if tags %}
+                            {% url 'graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'shared_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% else %}
+                            {% url 'graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'shared_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% endif %}
                     {% else %}
-                        <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs<br>{{ my_graphs }}</a></button>
-                        <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me<br>{{ shared_graphs }}</a></button>
-                        <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
-                        <!-- All Graphs is for admin mode. Specific functionality to be added. -->
-                        {% if admin == 1 %}
-                        <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                        {% if tags %}
+                            {% url 'graphs' as the_url %}
+                            {% with the_url|add:"?tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'shared_graphs' as the_url %}
+                            {% with the_url|add:"?tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                            {% endwith %}
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% else %}
+                            <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs<br>{{ my_graphs }}</a></button>
+                            <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me<br>{{ shared_graphs }}</a></button>
+                            <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            <!-- All Graphs is for admin mode. Specific functionality to be added. -->
+                            {% if admin == 1 %}
+                            <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                 {% else %}
@@ -122,9 +153,10 @@
                 <div class="panel-body">
                   <form method="get" role="form">
                      <div class="input-group">
-                        {{ search_form }}
+                        <!-- {{ search_form }} -->
+                        <input type="text" class="form-control" placeholder="Search..." id="searching">
                         <span class="input-group-btn">
-                            <button class="btn btn-info" type="submit">Search</button>
+                            <button class="btn btn-info" id="search_button" type="submit">Search</button>
                         </span>
                     </div>
                   </form>
@@ -252,10 +284,10 @@
             <p id="tag_content"></p>
                 <form method="get" role="form"> 
                     <div class="form-group">
-                        <input class="form-control" type="text" name="tags" placeholder="Enter tag">
+                        <input class="form-control" type="text" id="tags_searching" placeholder="Enter tag">
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-info" type="submit">Search</button>
+                        <button class="btn btn-info" id="tags_button" type="submit">Search</button>
                     </div>
                 </form>
                 {% for tag in all_tags %}

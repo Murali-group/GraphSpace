@@ -7,6 +7,7 @@ import json
 from graphs.util.json_converter import convert_json
 from operator import itemgetter
 from itertools import groupby
+from collections import Counter
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -18,6 +19,7 @@ def edge_inserter(json_string):
 	for edge in cleaned_json['graph']['edges']:
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
 
+	print cleaned_json
 	return cleaned_json
 
 
@@ -28,16 +30,14 @@ def insert_all_edges():
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
-		cur.execute('select user_id, graph_id, json from graph where user_id=?', ('ategge@vt.edu', ))
+		cur.execute('select user_id, graph_id, json from graph where user_id=? limit 10', ('ategge@vt.edu', ))
 
 		data = cur.fetchall()
-		print data
 
 		if data != None:
 			for j in data:
 				cleaned_json = edge_inserter(convert_json(j[2]))
 				for edge in cleaned_json['graph']['edges']:
-					print edge
 					cur.execute('select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?', (j[0], j[1], edge['data']['source'], j[1], j[1], edge['data']['target']))
 					sanity = cur.fetchall()
 					if sanity == None or len(sanity) == 0:
@@ -47,6 +47,9 @@ def insert_all_edges():
 						else:
 							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
 							con.commit()
+
+					cur.execute('update graph set json=? where graph_id=? and user_id=?', (json.dumps(cleaned_json), j[1], j[0]))
+					con.commit()
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -154,10 +157,17 @@ def insert_graph(username, graphname, graph_json):
 
 		if data == None:
 			curTime = datetime.now()
+			graphJson = json.loads(graph_json)
+			nodes = graphJson['graph']['nodes']
+			rand = 1
+			for node in nodes:
+				if len(node['data']['label']) == 0:
+					node['data']['label'] = rand
+					rand = rand + 1
+			print graphJson
 			cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, graph_json, curTime, curTime, 0, 1))
 			con.commit()
 
-			graphJson = json.loads(graph_json)
 			tags = graphJson['metadata']['tags']
 
 			for tag in tags:
@@ -176,7 +186,7 @@ def insert_graph(username, graphname, graph_json):
 				con.commit()
 
 			nodes = graphJson['graph']['data']['nodes']
-
+			rand = 0
 			for node in nodes:
 				cur.execute('insert into node values(?,?,?,?)', (node['id'], node['label'], username, graphname))
 				con.commit()
@@ -594,6 +604,7 @@ def unshare_with_group(owner, graph, group):
 			con.close()
 
 def get_shared_graphs(user, tags):
+	graphs = []
 	con = None
 	try:
 		con = lite.connect('test.db')
@@ -601,10 +612,17 @@ def get_shared_graphs(user, tags):
 		cur = con.cursor()
 		if tags:
 			# cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (tags, user))
+			all_tag_graphs = get_tag_graphs(tags)
+			for item in all_tag_graphs:
+				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (item, user))
+				data = cur.fetchall()
+				if data != None:
+					for thing in data:
+						if thing[0] in all_tag_graphs and thing not in graphs:
+							graphs.append(thing)
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, group_to_graph as gg where gg.group_id = gu.group_id and gg.graph_id=g.graph_id and gu.user_id=?', (user, ))
-		graphs = cur.fetchall()
+			graphs = cur.fetchall()
 
 		if graphs == None:
 			return None
@@ -641,18 +659,24 @@ def get_shared_graphs(user, tags):
 			con.close()
 
 def get_graph_info(username, tags):
+	graphs = []
 	con = None
 	try:
 		con = lite.connect('test.db')
-
 		cur = con.cursor()
 
 		if tags:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.user_id=? and gt.tag_id=? and g.graph_id = gt.graph_id', (username, tags))
+			all_tag_graphs = get_tag_graphs(tags)
+			for item in all_tag_graphs:
+				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.graph_id=gt.graph_id and g.user_id=? and gt.graph_id=?', (username, item))
+				data = cur.fetchall()
+				if data != None:
+					for thing in data:
+						if thing[0] in all_tag_graphs and thing not in graphs:
+							graphs.append(thing)
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id=?', (username, ))
-
-		graphs = cur.fetchall()
+			graphs = cur.fetchall()
 
 		if graphs == None:
 			return None
@@ -690,21 +714,29 @@ def get_graph_info(username, tags):
 
 def get_public_graph_info(tags):
 	con = None
+	graphs = []
 	try:
 		con = lite.connect('test.db')
 
 		cur = con.cursor()
 		if tags:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, graph_to_tag as gt where g.graph_id=gt.graph_id and g.public=? and gt.tag_id=?', (1, tags))
+			all_tag_graphs = get_tag_graphs(tags)
+			print all_tag_graphs
+			for item in all_tag_graphs:
+				cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public = ? and g.graph_id=?', (1, item))
+				data = cur.fetchall()
+				if data != None:
+					for thing in data:
+						if thing[0] in all_tag_graphs and thing not in graphs:
+							graphs.append(thing)
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public=?', (1, ))
-
-		graphs = cur.fetchall()
-		print len(graphs)
+			graphs = cur.fetchall()
 
 		if graphs == None:
 			return None
 		
+		print graphs
 		cleaned_graph = []
 		for graph in graphs:
 			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
@@ -931,6 +963,7 @@ def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unliste
 		cur = con.cursor()	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, owner, json, 0, 0))
+		print json
 		con.commit()
 		return "Layout Updated!"
 	except lite.Error, e:
@@ -939,7 +972,6 @@ def saveLayout(layout_id, layout_name, owner, graph, user, json, public, unliste
 	finally:
 		if con:
 			con.close()
-
 
 def getLayout(layout_name, layout_graph, layout_owner):
 	con=None
@@ -958,6 +990,7 @@ def getLayout(layout_name, layout_graph, layout_owner):
 			return None
 
 		data = data[0]
+		print data
 		return str(data)
 
 	except lite.Error, e:
@@ -997,25 +1030,115 @@ def getLayouts(uid, gid):
 		if con:
 			con.close()
 
-def getMultiWordSearches(result, search_terms):
+def get_tag_graphs(tags):
+	if tags:
+		tag_terms = tags.split(',')
+		for i in xrange(len(tag_terms)):
+			tag_terms[i] = tag_terms[i].strip()
+
+		con=None
+		try:
+			con = lite.connect('test.db')
+			cur = con.cursor()
+			tags_list = []
+			for term in tag_terms:
+				cur.execute('select distinct g.graph_id from graph as g, graph_to_tag as gt where gt.tag_id=? and g.graph_id = gt.graph_id', (term, ))
+				data = cur.fetchall()
+				if data != None:
+					for item in data:
+						tags_list.append(item[0])
+
+			accurate_tags = Counter(tags_list)
+			for graph in tags_list:
+				if accurate_tags[graph] != len(tag_terms):
+					tags_list.remove(graph)
+			return tags_list
+
+		except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+		finally:
+			if con:
+				con.close()
+	else:
+		return None
+
+
+# def getMultiWordSearches(result, search_terms, tags):
+# 	tags_list = get_tag_graphs(tags)
+# 	temp = sorted(result, key=itemgetter(0))
+# 	act_result = []
+# 	for k, g in groupby(temp, key=itemgetter(0)):
+# 		local = []
+# 		ids = ""
+# 		labels = ""
+# 		for thing in g:
+# 		    local.append(thing)
+# 		    ids = ids + ' ' + thing[2].replace(' ', '')
+# 		    labels = labels + ' ' + thing[3].replace(' ', '')
+
+# 		local_list = list(local[0])
+# 		ids = ids.strip()
+# 		ids = ids.replace(' ', ', ')
+# 		local_list[2] = ids
+# 		labels = labels.strip()
+# 		labels = labels.replace(' ' , ', ')
+# 		local_list[3] = labels
+# 		act_result.append(tuple(local_list))
+
+# 	if tags:
+# 		if len(tags_list) == 0:
+# 			return tags_list
+# 		else:
+# 			for item in act_result:
+# 				if tags_list and item[0] not in tags_list:
+# 					act_result.remove(item)
+
+# 	return act_result
+
+def getMultiWordSearches(result, search_terms, tags):
+	tags_list = get_tag_graphs(tags)
 	temp = sorted(result, key=itemgetter(0))
 	act_result = []
 	for k, g in groupby(temp, key=itemgetter(0)):
 		local = []
-		ids = ""
-		labels = ""
+		ids = []
+		labels = []
 		for thing in g:
 		    local.append(thing)
-		    ids = ids + ' ' + thing[2].replace(' ', '')
-		    labels = labels + ' ' + thing[3].replace(' ', '')
+		    ids.append(thing[2])
+		    labels.append(thing[3])
+
+		id_string = ""
+		for d in ids:
+			if len(id_string) == 0:
+				id_string = d
+			else:
+				id_string = id_string + ',' + d
+
+		label_string = ""
+		for d in labels:
+			if len(labels) == 0:
+				label_string = d
+			else:
+				label_string = label_string + ', ' + d
 
 		local_list = list(local[0])
-		ids = ids.strip()
-		ids = ids.replace(' ', ', ')
-		local_list[2] = ids
-		labels = labels.strip()
-		labels = labels.replace(' ' , ', ')
-		local_list[3] = labels
+		if '-' in label_string[2:]:
+			local_list[2] = label_string[2:]
+			local_list[2] = local_list[2].replace('-', ':')
+			local_list[2] = local_list[2].replace(', ', ',')
+		else:
+			local_list[2] = id_string
+		local_list[3] = label_string[2:]
 		act_result.append(tuple(local_list))
+
+	if tags:
+		if len(tags_list) == 0:
+			return tags_list
+		else:
+			for item in act_result:
+				if tags_list and item[0] not in tags_list:
+					act_result.remove(item)
 
 	return act_result
