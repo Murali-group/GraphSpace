@@ -1,3 +1,5 @@
+//Exports the specified graph to an image
+//Appears in side window 
 function export_graph(graphname) {
     var png = window.cy.png();
 
@@ -7,6 +9,7 @@ function export_graph(graphname) {
     fireEvent(download, 'click')
 }
 
+//This is needed to launch events in Mozilla browser
 function fireEvent(obj,evt){
   var fireOnThis = obj;
   if(document.createEvent ) {
@@ -19,73 +22,76 @@ function fireEvent(obj,evt){
   }
 }
 
+//Function to search through graph elements in order to highlight the 
+//appropriate one
 function searchValues(names) {
-  names = names.split(',');
+  //split paths
+  paths = document.URL.split('/')
+  var searchUrl = document.URL
 
-  $.post("../../../retrieveIDs/", {}, function() {
-    for (var i = 0; i < names.length; i++) {
-        console.log(names[i]);
-        names[i] = decodeURIComponent(names[i]);
-        names[i] = names[i].replace(/:/, '-');  
-        names[i] = names[i].trim()
-        if (window.cy.$('[id="' + names[i].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + names[i].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + names[i] + '"]').selected() == false) {
-          window.cy.$('[id="' + names[i].toUpperCase() + '"]').select();
-          window.cy.$('[id="' + names[i].toLowerCase() + '"]').select();
-          window.cy.$('[id="' + names[i] + '"]').select();
-          $("#search_terms").append('<button class="btn btn-danger terms" id="' + names[i]  + '" value="' + names[i] + '"">' + names[i] + " X" + '</button>');
-          $("#search").val("");
-        } else {
-          return alert("Component Not Found!");
-        }
+  if ($("#url").val().length > 0) {
+    searchUrl = $("#url").val();
+  }
+
+  if (searchUrl.indexOf("layout") == -1 && searchUrl.indexOf("search") == -1) {
+    searchUrl += '?search=';
+  } else {
+    if (searchUrl.indexOf('search') == -1) {
+      searchUrl += '&search=';
+    } else {
+      searchUrl += ','
     }
+  }
+
+  //posts to server requesting the id's from the labels
+  //so cytoscape will recognize the correct element
+  $.post("../../../retrieveIDs/", {
+    'values': names,
+    "gid": decodeURIComponent(paths[paths.length - 2]),
+    "uid": decodeURIComponent(paths[paths.length - 3]) 
+  }, function (data) {
+    names = names.split(',');
+    //Done to clean up information provided
+    for (var i = 0; i < names.length; i++) {
+      searchUrl += encodeURIComponent(names[i]) + ',';
+      names[i] = decodeURIComponent(names[i]);
+      names[i] = names[i].replace(/:/, '-');  
+      names[i] = names[i].trim()
+    }
+    //It selects those nodes that have labels as their ID's
+    labels = JSON.parse(data)['Labels'];
+    for (var i = 0; i < names.length; i++) {
+      if (window.cy.$('[id="' + names[i].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + names[i].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + names[i] + '"]').selected() == false) {
+        window.cy.$('[id="' + names[i].toUpperCase() + '"]').select();
+        window.cy.$('[id="' + names[i].toLowerCase() + '"]').select();
+        window.cy.$('[id="' + names[i] + '"]').select();
+        $("#search_terms").append('<button class="btn btn-danger terms" id="' + names[i]  + '" value="' + names[i] + '"">' + names[i] + " X" + '</button>');
+        $("#search").val("");
+      }
+    }
+
+    //For everthing else, we get correct id's from server and proceed to highlight those id's 
+    //by correlating labels to id's
+    for (var j = 0; j < labels.length; j++) {
+      if (window.cy.$('[id="' + labels[j].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j] + '"]').selected() == false) {
+        window.cy.$('[id="' + labels[j].toUpperCase() + '"]').select();
+        window.cy.$('[id="' + labels[j].toLowerCase() + '"]').select();
+        window.cy.$('[id="' + labels[j] + '"]').select();
+        $("#search_terms").append('<button class="btn btn-danger terms" id="' + labels[j]  + '" value="' + labels[j] + '"">' + labels[j] + " X" + '</button>');
+        $("#search").val("");
+      }
+    }
+
+    $("#url").text(searchUrl);
   });
-  
 }
 
-// function searchValues(names) {
-//   var path = window.location.pathname.split('/');
-//   $.post("../../../retrieveIDs/", {
-//   	"uid": decodeURIComponent(path[2]),
-//   	"gid": decodeURIComponent(path[3]),
-//   	"searchTerms": names
-//   }, function (data) {
-
-//     console.log(data);
-//   	if (data != "None") {
-//   		// window.cy.$("#" + data.toUpperCase()).select();
-// 	  	// window.cy.$("#" + data.toLowerCase()).select();
-//       if (window.cy.$('[id="' + data + '"]').selected() == false) {
-//           window.cy.$('[id="' + data + '"]').select();
-//           $("#search_terms").append('<button class="btn btn-danger terms" id="' + data  + '" value="' + data + '"">' + names + " X" + '</button>');
-//       }
-//       // window.cy.$('[id="' + data.toUpperCase() + '"]').select();
-//       // window.cy.$('[id="' + data.toLowerCase() + '"]').select();
-
-//   	} else {
-//       alert("Component not found!");
-//     }
-
-//     // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
-//     // $("#search").val("");
-//   });
-//   // for (var i = 0; i < splitNames.length; i++) {
-//   //   splitNames[i] = splitNames[i].trim();
-//   //   $.post("id/", {
-//   //   	"names": splitNames
-//   //   }, function (data) {
-
-//   //   });
-//   //   // window.cy.$("#" + splitNames[i]).select();
-//   //   // // $("#search_terms").append('<button class="btn btn-primary" class="terms" value="' + splitNames[i] + '"">' + splitNames[i] + '</button>');
-//   //   // $("#search").val("");
-//   // }
-
-// }
-
+//Small function to split terms based on the '_' character
 function splitTerms(term) {
   return term.split("_");
 }
 
+//Gets query variables from the url
 function getQueryVariable(variable)
 {
        var query = window.location.search.substring(1);
@@ -97,32 +103,23 @@ function getQueryVariable(variable)
        return(false);
 }
 
+//Unselects a specified term from graph
 function unselectTerm(term) {
   window.cy.$('[id="' + term + '"]').unselect();
 }
 
-function queryForIDs(names) {
-  $.post("query/", {
-    query: names
-  }, function (data) {
-    return data
-  });
-}
-
 /* 
 This function is executed when the page finishes loading.
-
 Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
     // $('.csweb').cytoscape({
-    var searchTerms = getQueryVariable("search");
-    if (searchTerms) {
-      searchValues(searchTerms);
-    }
 
+    //The following code retrieves the specified layout
+    //of a graph to be displayed.
+    //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
       name: 'concentric',
       padding: 10
@@ -177,6 +174,8 @@ $(document).ready(function() {
       }
     }
 
+    //Renders the cytoscape element on the page
+    //with the given options
     window.cy = cytoscape( options = {
       container: document.getElementById('csweb'),
 
@@ -234,6 +233,7 @@ $(document).ready(function() {
           autodisableForMobile: true, // disable the panzoom completely for mobile (since we don't really need it with gestures like pinch to zoom)
 
       });
+      //Adding in the panzoom functionality 
       this.panzoom(defaults);
       // make the selection states of the elements mutable
       this.elements().selectify();
@@ -257,8 +257,6 @@ $(document).ready(function() {
                 return;
             }
 
-            console.log(popup);
-
             $('#dialog').html(popup);
             if (target._private.group == 'edges') {
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
@@ -268,6 +266,13 @@ $(document).ready(function() {
             $('#dialog').dialog('open');
         }
       });
+
+
+      //If ther are any terms to be searched for, highlight those terms, if found
+      var searchTerms = getQueryVariable("search");
+      if (searchTerms) {
+        searchValues(searchTerms);
+      }
 
     } // end ready: function()
     });
@@ -308,25 +313,28 @@ $(document).ready(function() {
         heightStyle: "fill"
     });
 
+    //When save layout button is clicked
     $("#save_layout").click(function(e) {
       e.preventDefault();
 
+      //Replaces all spaces with '_' character for ease of saving
       var layoutName = $("#layout_name").val();
       if (layoutName && layoutName.length > 0) {
         layoutName = layoutName.replace(" ", "_");
       }
 
+      //When save is clicked, it gets location of all the nodes and saves it
+      //so that nodes can be placed in this location later on
       var nodes = window.cy.elements('node');
       var layout = {};
       for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-         var nodeLabel = nodes[i]._private.data.id;
+         var nodeId = nodes[i]._private.data.id;
          var nodePosition = nodes[i]._private.position;
-         // layout[nodeLabel] = nodePosition;
-         layout[nodeLabel] = nodePosition;
+         layout[nodeId] = nodePosition;
       }
 
-      console.log(JSON.stringify(layout));
-
+      //Posts information to the server regarding the current display of the graph,
+      //including position
       $.post("layout/", {
         layout_id: "1",
         layout_name: layoutName,
@@ -340,6 +348,7 @@ $(document).ready(function() {
 
     });
 
+    //Searches for the element inside the graph
     $("#search_button").click(function(e) {
       e.preventDefault();
       if ($("#search").val().length > 0) {
@@ -347,12 +356,9 @@ $(document).ready(function() {
       }
     });
 
+    //Unhighlights terms when the buttons in the search box is clicked on
     $("#search_terms").on("click", ".terms", function(e) {
       unselectTerm($(this).val());
       $(this).remove();
     });
-
-    // $(".terms").click(function(e) {
-    // 	console.log('testing');
-    // });
 });

@@ -75,13 +75,27 @@
                     {% endif %}
                 {% else %}
                     {% if search_word %}
-                        <!-- A user is not logged in. display a link for public graphs -->
-                        {% url 'public_graphs' as the_url %}
-                        {% with the_url|add:"?search="|add:search_word as final_url %}
-                            <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >Public Graphs<br>{{ public_graphs }}</a></button>
-                        {% endwith %}
+                        {% if tags %}
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% else %}
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% endif %}
                     {% else %}
-                        <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                        {% if tags %}
+                        here
+                            {% url 'public_graphs' as the_url %}
+                            {% with the_url|add:"?tags="|add:tags as final_url %}
+                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            {% endwith %}
+                        {% else %}
+                            <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             </div>
