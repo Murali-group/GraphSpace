@@ -40,8 +40,13 @@ def pager(request, content, page_size=25, adjacent_pages=3):
 
     # context of the paginator to be displayed on the webpage
     context['paginator'] = paginator
-    context['has_next'] = current_page.has_next()
-    context['has_previous'] = current_page.has_previous()
+    if page_numbers == 1:
+        context['has_next'] = None
+        context['has_previous'] = None
+    else:
+        context['has_next'] = current_page.has_next()
+        context['has_previous'] = current_page.has_previous()
+        
     context['page_numbers'] = page_numbers 
     context['show_last'] = paginator.num_pages not in page_numbers
     context['current_page'] = current_page

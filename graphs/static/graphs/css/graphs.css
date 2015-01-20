@@ -43,6 +43,7 @@
   width: 125px;
   word-wrap: break-word;
 }
+
 .search_box_container {
 	float:right;
 	width: ;
@@ -157,4 +158,8 @@
 
 .nav-pills {
   padding: 10px;
+}
+
+#search_box_panel_accordion {
+  margin-top: -175px;
 }

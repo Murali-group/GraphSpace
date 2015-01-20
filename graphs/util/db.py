@@ -712,7 +712,6 @@ def get_graph_info(username, tags):
 
 			graph_list = list(graph)
 			if len(cleanedtags) > 0:
-				# for tag in tags:
 				graph_list.insert(1, cleanedtags)
 				cleaned_graph.append(tuple(graph_list))
 			else:
@@ -1070,6 +1069,7 @@ def get_tag_graphs(tags):
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 			tags_list = []
+			actual_graphs = []
 			for term in tag_terms:
 				cur.execute('select distinct g.graph_id from graph as g, graph_to_tag as gt where gt.tag_id=? and g.graph_id = gt.graph_id', (term, ))
 				data = cur.fetchall()
@@ -1079,9 +1079,9 @@ def get_tag_graphs(tags):
 
 			accurate_tags = Counter(tags_list)
 			for graph in tags_list:
-				if accurate_tags[graph] != len(tag_terms):
-					tags_list.remove(graph)
-			return tags_list
+				if accurate_tags[graph] == len(tag_terms):
+					actual_graphs.append(graph)
+			return actual_graphs
 
 		except lite.Error, e:
 			print "Error %s: " %e.args[0]
@@ -1092,50 +1092,146 @@ def get_tag_graphs(tags):
 	else:
 		return None
 
+# find all tags for a user
+def get_tag_for_user(username):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		tags_list = []
+		cur.execute('select distinct tag_id from graph_to_tag where username = ?', (username, ))
+		data = cur.fetchall()
+		if data != None:
+			for item in data:
+				tags_list.append(item)
+
+		return tags_list
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def get_all_tags_for_graph(graphname, username):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		tags_list = []
+		cur.execute('select distinct tag_id from graph_to_tag where user_id = ? and graph_id=?', (username, graphname))
+		data = cur.fetchall()
+		if data != None:
+			for item in data:
+				tags_list.append(str(item[0]))
+
+		return tags_list
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+				
 # Retrieves all graphs that match all the search and tag terms
+# def getMultiWordSearches(result, search_terms, tags):
+# 	tags_list = get_tag_graphs(tags)
+# 	temp = sorted(result, key=itemgetter(0))
+# 	act_result = []
+# 	for k, g in groupby(temp, key=itemgetter(0)):
+# 		local = []
+# 		ids = []
+# 		labels = []
+# 		for thing in g:
+# 		    local.append(thing)
+# 		    ids.append(thing[2])
+# 		    labels.append(thing[3])
+
+# 		id_string = ""
+# 		for d in ids:
+# 			if len(id_string) == 0:
+# 				id_string = d
+# 			else:
+# 				id_string = id_string + ',' + d
+
+# 		label_string = ""
+# 		for d in labels:
+# 			if len(labels) == 0:
+# 				label_string = d
+# 			else:
+# 				label_string = label_string + ', ' + d
+
+# 		local_list = list(local[0])
+# 		if '-' in label_string[2:]:
+# 			local_list[2] = label_string[2:]
+# 			local_list[2] = local_list[2].replace('-', ':')
+# 			local_list[2] = local_list[2].replace(', ', ',')
+# 		else:
+# 			local_list[2] = id_string
+# 		local_list[3] = label_string[2:]
+
+# 		if len(ids) == len(search_terms) and Counter(labels) == Counter(search_terms):
+# 				act_result.append(tuple(local_list))
+
+# 	if tags:
+# 		if len(tags_list) == 0:
+# 			return tags_list
+# 		else:
+# 			for item in act_result:
+# 				if tags_list and item[0] not in tags_list:
+# 					act_result.remove(item)
+
+# 	return act_result
+
 def getMultiWordSearches(result, search_terms, tags):
+	# Get all graph ids that match the tags
 	tags_list = get_tag_graphs(tags)
+	
 	temp = sorted(result, key=itemgetter(0))
 	act_result = []
 	for k, g in groupby(temp, key=itemgetter(0)):
+		print k
 		local = []
 		ids = []
 		labels = []
 		for thing in g:
 		    local.append(thing)
-		    ids.append(thing[2])
-		    labels.append(thing[3])
-
+		    if '(' in thing[2]:
+			    label = thing[2].split('(')[1]
+			    label = label[:len(label) - 1]
+			    if label not in labels:
+			    	labels.append(label)
+			    	ids.append(str(thing[2]))
+		
 		id_string = ""
-		for d in ids:
-			if len(id_string) == 0:
-				id_string = d
-			else:
-				id_string = id_string + ',' + d
+		for name in ids:
+			id_string += name + ','
+
+		id_string = id_string[:len(id_string) - 1]
+		local = local[0]
+		local = list(local)
+		local[2] = id_string
 
 		label_string = ""
-		for d in labels:
-			if len(labels) == 0:
-				label_string = d
-			else:
-				label_string = label_string + ', ' + d
+		for label in labels:
+			label_string = label_string + label  + ','
 
-		local_list = list(local[0])
-		if '-' in label_string[2:]:
-			local_list[2] = label_string[2:]
-			local_list[2] = local_list[2].replace('-', ':')
-			local_list[2] = local_list[2].replace(', ', ',')
-		else:
-			local_list[2] = id_string
-		local_list[3] = label_string[2:]
-		act_result.append(tuple(local_list))
+		local.append(label_string[:len(label_string) - 1])
+		if len(ids) == len(search_terms) or len(ids) == 0:
+			act_result.append(tuple(local))
 
 	if tags:
 		if len(tags_list) == 0:
 			return tags_list
 		else:
+			result = []
 			for item in act_result:
-				if tags_list and item[0] not in tags_list:
-					act_result.remove(item)
+				if tags_list and item[0] in tags_list:
+					result.append(item)
 
+			act_result = result
 	return act_result

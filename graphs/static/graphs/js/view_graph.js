@@ -27,10 +27,14 @@ function fireEvent(obj,evt){
 function searchValues(names) {
   //split paths
   paths = document.URL.split('/')
-  var searchUrl = document.URL
+  if (document.URL.indexOf('search') > -1) {
+      var searchUrl = document.URL.substring(0, document.URL.indexOf('?search'));
+  } else {
+    searchUrl = document.URL;
+  }
 
-  if ($("#url").val().length > 0) {
-    searchUrl = $("#url").val();
+  if ($("#url").text().length > 0) {
+    searchUrl = $("#url").text();
   }
 
   if (searchUrl.indexOf("layout") == -1 && searchUrl.indexOf("search") == -1) {
@@ -38,8 +42,6 @@ function searchValues(names) {
   } else {
     if (searchUrl.indexOf('search') == -1) {
       searchUrl += '&search=';
-    } else {
-      searchUrl += ','
     }
   }
 
@@ -53,36 +55,42 @@ function searchValues(names) {
     names = names.split(',');
     //Done to clean up information provided
     for (var i = 0; i < names.length; i++) {
-      searchUrl += encodeURIComponent(names[i]) + ',';
+      if (names[i].indexOf(' ') > -1) {
+        searchUrl += encodeURIComponent(names[i]) + ',';
+      } else {
+        searchUrl += names[i] + ',';
+      }
       names[i] = decodeURIComponent(names[i]);
       names[i] = names[i].replace(/:/, '-');  
       names[i] = names[i].trim()
     }
+
+    var temp = "";
     //It selects those nodes that have labels as their ID's
     labels = JSON.parse(data)['Labels'];
-    for (var i = 0; i < names.length; i++) {
-      if (window.cy.$('[id="' + names[i].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + names[i].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + names[i] + '"]').selected() == false) {
-        window.cy.$('[id="' + names[i].toUpperCase() + '"]').select();
-        window.cy.$('[id="' + names[i].toLowerCase() + '"]').select();
-        window.cy.$('[id="' + names[i] + '"]').select();
-        $("#search_terms").append('<button class="btn btn-danger terms" id="' + names[i]  + '" value="' + names[i] + '"">' + names[i] + " X" + '</button>');
-        $("#search").val("");
-      }
-    }
 
     //For everthing else, we get correct id's from server and proceed to highlight those id's 
     //by correlating labels to id's
     for (var j = 0; j < labels.length; j++) {
-      if (window.cy.$('[id="' + labels[j].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j] + '"]').selected() == false) {
-        window.cy.$('[id="' + labels[j].toUpperCase() + '"]').select();
-        window.cy.$('[id="' + labels[j].toLowerCase() + '"]').select();
-        window.cy.$('[id="' + labels[j] + '"]').select();
-        $("#search_terms").append('<button class="btn btn-danger terms" id="' + labels[j]  + '" value="' + labels[j] + '"">' + labels[j] + " X" + '</button>');
-        $("#search").val("");
+      if (labels[j].length > 0) {
+        if (window.cy.$('[id="' + labels[j].toUpperCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j].toLowerCase() + '"]').selected() == false || window.cy.$('[id="' + labels[j] + '"]').selected() == false) {
+          window.cy.$('[id="' + labels[j].toUpperCase() + '"]').select();
+          window.cy.$('[id="' + labels[j].toLowerCase() + '"]').select();
+          window.cy.$('[id="' + labels[j] + '"]').select();
+          $("#search_terms").append('<button class="btn btn-danger terms" id="' + labels[j]  + '" value="' + labels[j] + '"">' + names[j] + " X" + '</button>');
+          $("#search").val("");
+          temp += labels[j] + ',';
+          var origText = $("#url").text();
+          $("#url").attr('href', searchUrl + temp).text("Direct Link to Highlighted Elements");
+          $(".test").css("height", $(".test").height + 30);
+        }
       }
     }
 
-    $("#url").text(searchUrl);
+    // var url = $("#url").text();
+    // if (url.charAt(url.length - 1) == ',') {
+    //   $("#url").text(url.substring(0, url.length - 1));
+    // }
   });
 }
 
@@ -258,6 +266,9 @@ $(document).ready(function() {
             }
 
             $('#dialog').html(popup);
+            if (target._private.data.popup != null && target._private.data.popup.length > 0) {
+              $("#dialog").html("<p>" + target._private.data.popup + "</p>");
+            }
             if (target._private.group == 'edges') {
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
@@ -348,7 +359,8 @@ $(document).ready(function() {
 
     });
 
-    //Searches for the element inside the graph
+    //Searches for the element inside the grap
+
     $("#search_button").click(function(e) {
       e.preventDefault();
       if ($("#search").val().length > 0) {
@@ -359,6 +371,21 @@ $(document).ready(function() {
     //Unhighlights terms when the buttons in the search box is clicked on
     $("#search_terms").on("click", ".terms", function(e) {
       unselectTerm($(this).val());
+      var toRemove  = encodeURIComponent($(this).val()) + ',';
+      var origText = $("#url").text();
+      origText = origText.replace(toRemove, '');
+      $("#url").text(origText);
       $(this).remove();
+      var toSearchFor = origText.indexOf('search=')
+      var nextVal = origText.substring(toSearchFor).replace('search=', '');
+      if ($(".terms").length == 0) {
+        $("#url").text("");
+      }
+    });
+
+    $(".layout_links").click(function (e) {
+      e.preventDefault();
+      $("#layout_link").attr('href', $(this).attr('id')).text("Direct Link to Layout");
+      $("#layout_link").width(20);
     });
 });

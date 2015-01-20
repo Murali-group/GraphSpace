@@ -43,6 +43,7 @@
             </div>
           </div>
         </div>
+        
 <div class="container-fluid csweb_container">
     <!-- cytoscapeweb -->
     <div class="col-md-12 csweb" id="csweb">
@@ -63,8 +64,9 @@
 
         <div id="accordion_search" class="accordion">
             <h3>Search</h3>
-            <div class="accordion_content">
+            <div class="accordion_content test">
                 <div class="search_box">
+                    <a id='url'></a><br><br>
                     <form> 
                         <div class="input-group">
                             <input class="form-control" type="text" name="search" id="search" placeholder="Search">
@@ -73,13 +75,11 @@
                             </span>
                         </div>
                     </form>
-                    <p id='url'></p>
                 </div>
                 <div id="search_terms"></div>
             </div>
         </div>
 
-    
         <!-- Export menu -->
         <div id="accordion_export" class="accordion">
             <h3>Export</h3>
@@ -140,7 +140,7 @@
 
                         <div class="tabbable">
                             <ul class="nav nav-tabs" id="layout-tabs">
-                              <!--<li><a href="#graph" data-toggle="tab">Graph</a></li>-->
+                              <a id='layout_link' href=""></a><br><br>
                               <li><a href="#builtin" data-toggle="tab">Auto</a></li>
                               <li class="active"><a href="#custom" data-toggle="tab">Manual</a></li>
                             </ul>
@@ -149,9 +149,9 @@
                                     <br/>
                                     <ul class="nav nav-pills">
                                     <li id="ldf"><a id="layout-force-directed" href="?layout=default_concentric">Concentric</a></li>
-                                    <li id="lc"><a id="layout-circle" href="?layout=default_breadthfirst">Breadth First</a></li>
+                                    <li id="lc"><a id="layout-circle" href="?layout=default_breadthfirst">Tree</a></li>
                                     <li id="lr"><a id="layout-radial" href="?layout=default_circle">Circle</a></li>
-                                    <li id="lt"><a id="layout-tree" href="?layout=default_cose">Cose</a></li>
+                                    <li id="lt"><a id="layout-tree" href="?layout=default_cose">Cosine Spring Embedder</a></li>
                                     <!-- <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_cola">Cola</a></li>
                                     <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_arbor">Arbor</a></li>
                                     <li id="lcse"><a id="layout-compound-spring-embedder" href="?layout=default_springy">Springy</a></li> -->
@@ -164,7 +164,8 @@
                                     <ul class="nav nav-pills">
                                       {% for o in layouts %}
                                         {% with layout_urls|add:o as url %}
-                                            <li style="background-color: ##bdc3c7;"><a href={{url}}>{{ o }}</a></li>
+                                        <li><button class="btn btn-default layout_links" id="{{url}}" style="float: right;" >{{o}}
+                                        </button></li>
                                         {% endwith %}
                                       {% endfor %}
                                       

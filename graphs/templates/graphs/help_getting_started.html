@@ -3,67 +3,21 @@
 
 {% include 'graphs/help_menu.html' %}
 
-Welcome to GraphSpace!
+    <li class="active"><a href="http://holmes.cs.vt.edu/help/tutorial-upload" style="text-align:center">Uploading</a></li>
+    <li ><a href="http://holmes.cs.vt.edu/help/tutorial-filtering" style="text-align:center">Filtering</a></li>
+  <br/>
 
-This page should help familiarize you with GraphSpace's interface and basic features.
+  
+  <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="http://holmes.cs.vt.edu/register">here</a>, as well as a Unix machine. You will need <pre>libwww-perl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install libwww-perl</pre> if it is a Debian based machine such as Ubuntu.</p>
 
-
-<h4>What is a graph?</h4>
-
-A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing vertices (also known as nodes or points) and edges which connect the vertices.
-
-<br/>
-
-Graphs are used to represent many different things such as computer networks, biological pathways, and many more.
-
-<br/>
-
-GraphSpace allows people to store and share graphs, regardless of what those graphs represent.
-
-
-<ul>
-<li><a href="#view">I want to find and view graphs that are shared with me</a>
-<li><a href="#upload">I want to upload graphs</a>
-<li><a href="#sharing">I want to share my graphs</a>
-</ul>
-
-<h3 id="view">Finding and viewing graphs</h3>
-
-Notice the bar at the top of the screen. On the left hand side, right next to the big "GraphSpace" logo, are links to your graphs and groups.
-
-<br/>
-
-On your graphs page, you will see buttons at the top of the page called "My Graphs", "Shared with me" and "Public graphs".
-
-<ul>
-
-<li><b>My Graphs</b> will show graphs that you own (you have uploaded).</li>
-
-<li><b>Shared with me</b> will show graphs that have been shared with you through groups.</li>
-
-<li><b>Public graphs</b> will show graphs that have been made publicly available on GraphSpace.</li>
-
-</ul>
-
-You can also look at groups, which are collections of graphs shared by members of the group. Click on groups in the navigation bar. You should see the following categories for groups
-
-<ul>
-
-<li><b>Owner of</b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members.</li>
-
-<li><b>Member of</b> are groups that you have been added to. You can view or add graphs to these groups.</li>
-
-<li><b>Public groups</b> are groups that have been made publicly available. You can view graphs within them, but can only add your own graphs to them if you are a member.</li>
-
-</ul>
-
-
-<h3 id="upload">Uploading graphs</h3>
-
-GraphSpace represents graphs using a JSON format. Below is an example of a very simple graph.
+<p>We will use a graph with two nodes and one edge connecting the nodes in this tutorial. GraphSpace uses a JSON format to store graphs. The JSON code representing the graph is shown below.</p>
 
 <pre>
 {
+   "metadata" : {
+      "name" : "foo graph",
+      "tags" : ["foo", "bar"]
+   },
    "graph" : {
       "data" : {
          "edges" : [
@@ -78,15 +32,15 @@ GraphSpace represents graphs using a JSON format. Below is an example of a very 
 }
 </pre>
 
-Copy and paste this graph into a file, and then upload it using the following command (on Linux):
+<p>Save the code above into a file called <pre>graph.json</pre>. Now, open a terminal and navigate to the location of the file. Execute the following command, where <pre>[username]</pre> is the email address you used to sign up for GraphSpace, and <pre>[password]</pre> is your GraphSpace password.</p>
 
 <pre>
-PUT -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graph/[graphname] < [graph file]
+lwp-request -m PUT -C [username]:[password] http://http://holmes.cs.vt.edu/api/users/[username]/graphs/tutorial < graph.json
 </pre>
 
+<p>Now go to your <a href="http://http://holmes.cs.vt.edu/graphs">graphs page</a> and you should see a graph called 'tutorial' in the list.</p>
 
-<h3 id="sharing">Sharing graphs</h3>
+<p>For a more detailed reference on all of the functions of the GraphSpace API, look at the <a href="http://holmes.cs.vt.edu/help/rest">REST API help page</a>.</p>
 
-To share one of your graphs, navigate to that graph and expand the Sharing panel on the right hand side. You can either make the graph public to everyone, or click on "Edit" to change the groups that the graph is shared with. Choose any groups you belong to in order to share the graph with those groups.
 
 {% endblock %}
