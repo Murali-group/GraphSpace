@@ -166,7 +166,7 @@
                 <tr> 
                     {% url 'view_graph' uid=g.3 gid=g.0 as the_url%}
                     {% with the_url|add:"?search=" as final_url %}
-                        <td><div class="test"><a href="{{final_url|add:g.6}}">{{ g.0 }}</a></div></td>
+                        <td><div class="test"><a href="{{final_url|add:g.5}}">{{ g.0 }}</a></div></td>
                     {%endwith %}
                     <td><div class="test">
                         {% for tag in g.1 %}
@@ -175,8 +175,8 @@
                     </td>                    
                     <td><div class="test">{{ g.2 }}</div></td>
                     <td><div class="test">{{ g.4 }}</div></td>
-                    <td><div class="test">{{ g.3 }}</div></td>
-                    {% if g.5 == 1 %}
+                    <td><div class="test">{{ g.5 }}</div></td>
+                    {% if g.6 == 1 %}
                         <td><div class="test">Public</div></td>
                     {% else %}
                         <td><div class="test">Private</div></td>
