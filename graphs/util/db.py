@@ -387,12 +387,12 @@ def search_result(uid, search_terms, view_type):
 			graph_mappings = defaultdict(list)
 			# Counting the number of occurences
 			for graph_tuple in intial_graphs_from_search:
-				graph_repititions[graph_tuple[0]] += 1
+				graph_repititions[graph_tuple[0] + graph_tuple[4]] += 1
 
 			for graph_tuple in intial_graphs_from_search:
-				graph_list = graph_mappings.get(graph_tuple[0], [])
+				graph_list = graph_mappings.get(graph_tuple[0] + graph_tuple[4], [])
 				graph_list.append(graph_tuple)
-				graph_mappings[graph_tuple[0]] = graph_list
+				graph_mappings[graph_tuple[0] + graph_tuple[4]] = graph_list
 
 			# If value appears the number of times as there are tags, 
 			# then append that to the actual list of graphs to be returned.
@@ -400,11 +400,21 @@ def search_result(uid, search_terms, view_type):
 			for key, value in graph_repititions.iteritems():
 				if value == len(search_terms):
 					key_tuples = graph_mappings[key]
+					ids_and_labels = []
 					for key_tuple in key_tuples:
 						key_with_search = list(key_tuple)
-						key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
-						key_with_search = tuple(key_with_search)
-						actual_graphs_for_searches.append(key_with_search)
+						ids_and_labels.append(str(key_tuple[1]))
+
+					id_string = ""
+					for ids in ids_and_labels:
+						id_string = id_string + ids + ', '
+					id_string = id_string[:len(id_string) - 2]
+					key_with_search = list(key_tuples[0])
+					key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
+					key_with_search[2] = id_string
+					key_with_search = tuple(key_with_search)
+					actual_graphs_for_searches.append(key_with_search)
+
 
 			return actual_graphs_for_searches
 

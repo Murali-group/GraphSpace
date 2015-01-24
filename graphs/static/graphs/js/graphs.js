@@ -95,19 +95,7 @@ $(document).ready(function() {
 
    function modifyQueryTerms(termType, queryTerm) {
       var url = document.URL;
-      // if (url.indexOf('page=') > -1) {
-      //    if (url.indexOf('&') > -1) {
-      //       if (url.indexOf('page=') < url.indexOf('&')) {
-      //          url = url.slice(0, url.indexOf('page')) + url.slice(url.indexOf('&'));
-      //          console.log(url);
-      //          return;
-      //       } else {
-      //          url = url.slice(0, url.indexOf('page=') -1);
-      //       }
-      //    } else {
-      //       url = url.slice(0, url.indexOf('page') - 1);
-      //    }
-      // }
+
       var searchIndex = url.indexOf(termType);
       var endSearchIndex = url.substring(searchIndex).indexOf('&');
 
