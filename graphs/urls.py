@@ -56,9 +56,6 @@ urlpatterns = patterns('',
         url(r'^reset$', views.reset, name='reset'),
         url(r'^reset/$', views.resetPassword, name='resetPassword'),
 
-        # search result page
-        url(r'^result/$', views.search_result, name='result'),
-
         #REST API for graphs
         url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),
         url(r'^api/users/graphs/(?P<graphname>.+)/unshare/(?P<groupname>.+)/$', views.unshare_graph, name='unshare_graph'),

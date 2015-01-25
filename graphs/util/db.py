@@ -349,7 +349,6 @@ def tag_result(uid, tag_terms, view_type):
 				if value == len(tag_terms):
 					key_tuples = graph_mappings[key]
 					for key_tuple in key_tuples:
-						print key_tuple
 						key_with_tag = list(key_tuple)
 						key_with_tag.insert(1, get_all_tags_for_graph(key_with_tag[0], key_with_tag[2]))
 						key_with_tag = tuple(key_with_tag)
@@ -380,6 +379,7 @@ def search_result(uid, search_terms, view_type):
 				else:
 					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type, cur) + find_graphs_using_names(uid, search_word, view_type, cur)
 
+			print intial_graphs_from_search
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
 			# search terms, then that graph matches all the tag terms and it should be returned
@@ -401,17 +401,23 @@ def search_result(uid, search_terms, view_type):
 				if value == len(search_terms):
 					key_tuples = graph_mappings[key]
 					ids_and_labels = []
+					labels = []
 					for key_tuple in key_tuples:
 						key_with_search = list(key_tuple)
 						ids_and_labels.append(str(key_tuple[1]))
-
+						labels.append(str(key_tuple[2]))
 					id_string = ""
 					for ids in ids_and_labels:
 						id_string = id_string + ids + ', '
 					id_string = id_string[:len(id_string) - 2]
+					label_string = ""
+					for label in labels:
+						label_string = label_string + label + ','
+					label_string = label_string[:len(label_string) - 1]
 					key_with_search = list(key_tuples[0])
 					key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
 					key_with_search[2] = id_string
+					key_with_search[3] = label_string
 					key_with_search = tuple(key_with_search)
 					actual_graphs_for_searches.append(key_with_search)
 
@@ -436,31 +442,31 @@ def find_edges(uid, search_word, view_type, cur):
 	tail_node = node_ids[1]
 
 	# treat id's as labels
-	cur.execute('select n.node_id from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id', (head_node, ))
+	cur.execute('select n.node_id from node as n where n.label = ?', (head_node, ))
 	head_node_label_data = cur.fetchall()
 	head_node_ids = []
 	for node in head_node_label_data:
-		head_node_ids.append(node[0])
+		head_node_ids.append(str(node[0]))
 
-	cur.execute('select n.node_id from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id', (tail_node, ))
+	cur.execute('select n.node_id from node as n where n.label = ?', (tail_node, ))
 	tail_node_label_data = cur.fetchall()
 	tail_node_ids = []
 	for node in tail_node_label_data:
-		tail_node_ids.append(node[0])
+		tail_node_ids.append(str(node[0]))
 
 	# treat id's as node_id's
-	cur.execute('select n.node_id from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id', (head_node, ))
+	cur.execute('select n.node_id from node as n where n.node_id = ?', (head_node, ))
 	head_node_id_data = cur.fetchall()
 	for node in head_node_id_data:
-		if node[0] not in head_node_ids:
-			head_node_ids.append(node[0])
-	
-	cur.execute('select n.node_id from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id', (tail_node, ))
+		head_node_ids.append(str(node[0]))
+
+	cur.execute('select n.node_id from node as n where n.node_id = ?', (tail_node, ))
 	tail_node_id_data = cur.fetchall()
 	for node in tail_node_id_data:
-		if node[0] not in tail_node_ids:
-			tail_node_ids.append(node[0])
-	
+		tail_node_ids.append(str(node[0]))
+
+	head_node_ids = list(set(head_node_ids))
+	tail_node_ids = list(set(tail_node_ids))
 
 	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
 		for i in xrange(len(head_node_ids)):
@@ -468,9 +474,9 @@ def find_edges(uid, search_word, view_type, cur):
 				if view_type == 'public':
 					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[j]))
 				elif view_type == 'shared':
-					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[j]))
 				else:
-					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e where e.head_user_id = ? and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
 
 				data = cur.fetchall()
 				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
@@ -478,7 +484,7 @@ def find_edges(uid, search_word, view_type, cur):
 	actual_graph_with_edges = []
 	for graph in initial_graphs_with_edges:
 		graph_list = list(graph)
-		graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
+		graph_list[1] = graph_list[2] + ' (' + head_node + '-' + tail_node + ')'
 		actual_graph_with_edges.append(tuple(graph_list))
 
 	return actual_graph_with_edges
@@ -527,11 +533,11 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	actual_graph_names = []
 
 	if view_type == 'my graphs':
-		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
 	elif view_type == 'shared':
-		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id= ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id= ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id', (search_word, uid))
 	else:
-		cur.execute('select g.graph_id, g.user_id, g.modified, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
 
 	graph_list = cur.fetchall()
 	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
@@ -539,6 +545,7 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	for graph in intial_graph_names:
 		graph_list = list(graph)
 		graph_list.insert(1, "")
+		graph_list.insert(1,"")
 		actual_graph_names.append(tuple(graph_list))
 		
 	return actual_graph_names

@@ -81,7 +81,8 @@ function searchValues(names) {
           $("#search").val("");
           temp += labels[j] + ',';
           var origText = $("#url").text();
-          $("#url").attr('href', searchUrl + temp).text("Direct Link to Highlighted Elements");
+          $("#url").attr('href', searchUrl + temp);
+          $("#url").text("Direct Link to Highlighted Elements");
           $(".test").css("height", $(".test").height + 30);
         }
       }
@@ -379,7 +380,8 @@ $(document).ready(function() {
 
     $(".layout_links").click(function (e) {
       e.preventDefault();
-      $("#layout_link").attr('href', $(this).attr('id')).text("Direct Link to Layout");
+      $("#layout_link").attr('href', $(this).attr('id'));
+      $("#layout_link").text("Direct Link to Layout");
       $("#layout_link").width(20);
     });
 });
