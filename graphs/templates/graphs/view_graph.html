@@ -157,8 +157,13 @@
                                     <ul class="nav nav-pills">
                                       {% for o in layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <li><button class="btn btn-default layout_links" id="{{url}}" style="float: right;" >{{o}}
-                                        </button></li>
+                                        <a class="list-group-item layout_156" href="{{url}}">
+                                            <button class="btn btn-default layout_links" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
+                                              <span class="glyphicon glyphicon-link"></span>
+                                            </button>
+                                            {{o}}
+                                            <div style="clear: both;"></div>
+                                          </a>
                                         {% endwith %}
                                       {% endfor %}
                                       

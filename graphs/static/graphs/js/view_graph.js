@@ -28,13 +28,13 @@ function searchValues(names) {
   //split paths
   paths = document.URL.split('/')
   if (document.URL.indexOf('search') > -1) {
-      var searchUrl = document.URL.substring(0, document.URL.indexOf('?search'));
+      var searchUrl = document.URL.substring(0, document.URL.indexOf('search') - 1);
   } else {
     searchUrl = document.URL;
   }
 
   if ($("#url").text().length > 0) {
-    searchUrl = $("#url").text();
+    searchUrl = $("#url").attr('href');
   }
 
   if (searchUrl.indexOf("layout") == -1 && searchUrl.indexOf("search") == -1) {
@@ -80,7 +80,6 @@ function searchValues(names) {
           $("#search_terms").append('<button class="btn btn-danger terms" id="' + labels[j]  + '" value="' + labels[j] + '"">' + names[j] + " X" + '</button>');
           $("#search").val("");
           temp += labels[j] + ',';
-          var origText = $("#url").text();
           $("#url").attr('href', searchUrl + temp);
           $("#url").text("Direct Link to Highlighted Elements");
           $(".test").css("height", $(".test").height + 30);
@@ -384,4 +383,6 @@ $(document).ready(function() {
       $("#layout_link").text("Direct Link to Layout");
       $("#layout_link").width(20);
     });
+
+    $(".layout_links").tooltip();
 });

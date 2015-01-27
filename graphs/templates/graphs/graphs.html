@@ -77,7 +77,6 @@
                         {% endif %}
                     {% else %}
                         {% if tags %}
-                        here
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
                                 <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
