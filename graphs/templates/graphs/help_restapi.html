@@ -14,7 +14,7 @@ Graphs are represented in <a href="http://json.org">JSON</a> format.
 To execute the examples from the command line you will need an HTTP client. On Debian systems you can install by running
 
 <pre>
-sudo apt-get install libwww-perl
+sudo apt-get install curl
 </pre>
 
 Also, you will need a user account on graphspace.
@@ -24,21 +24,41 @@ Finally, you can save the following graph to a file as an example.
 
 <pre>
 {
-   "metadata" : {
-      "name" : "foo graph",
-      "tags" : ["foo", "bar"]
-   },
-   "graph" : {
-      "data" : {
-         "edges" : [
-            { "source" : "2", "target" : "1", "id" : "2-1" }
-         ],
-         "nodes" : [
-            { "label" : "A", "id" : "1" },
-            { "label" : "B", "id" : "2" }
-         ]
-      }
-   }
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P43146",
+                    "label": "DCC"
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P08107",
+                    "label": "HSPA1B"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "id": "P43146-P08107",
+                    "source": "P43146",
+                    "target": "P08107",
+                    "directed": "true",
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "description": "This is a tutorial graph",
+        "tags": [
+            "tutorial"
+        ]
+    }
 }
 </pre>
 
@@ -78,58 +98,68 @@ Below is a list of the different API calls.
 
 <h3 id="add_graph">Add graph</h3>
 
-There are two options for adding a graph to graphspace. A POST request to create a graph with an automatically generated id, and a PUT request to add a graph with a chosen name.
+In order to add a graph to the server, make the following POST request where [email] is your email and [password] is your password.
 
 <pre>
-POST -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graphs < [graph file]
+curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
 </pre>
 
-<pre>
-PUT -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graph/[graphname] < [graph file]
-</pre>
 
 Example successful response:
 
 <pre>
 {
-       "url" : "http://localhost:5000/users/craigy@vt.edu/graphs/866377352",
-          "id" : "866377352"
+       Graph inserted into GraphSpace!
 }
 </pre>
-
-<!-- Example failed response:
-
-<pre>
-</pre> -->
-
 
 <h3 id="get_graph">Get graph</h3>
 
 To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graph/[graphname]
+curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
 
 <pre>
 {
-   "metadata" : {
-      "name" : "foo graph",
-      "tags" : ["foo", "bar"]
-   },
-   "graph" : {
-      "data" : {
-         "edges" : [
-            { "source" : "2", "target" : "1", "id" : "2-1" }
-         ],
-         "nodes" : [
-            { "label" : "A", "id" : "1" },
-            { "label" : "B", "id" : "2" }
-         ]
-      }
-   }
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P43146",
+                    "label": "DCC"
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P08107",
+                    "label": "HSPA1B"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "id": "P43146-P08107",
+                    "source": "P43146",
+                    "target": "P08107",
+                    "directed": "true",
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "description": "This is a tutorial graph",
+        "tags": [
+            "tutorial"
+        ]
+    }
 }
 </pre>
 
@@ -147,14 +177,14 @@ Example failed response:
 To remove a graph use the following command. You can only remove a graph that belongs to you.
 
 <pre>
-lwp-request -m DELETE -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graph/[graphname]
+curl -X POST "http://localhost:8000/api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
 
 <pre>
 {
-       "success" : "Successfully deleted graph 866377352 owned by craigy@vt.edu."
+       Successfully deleted edge_test7 owned by divit52@vt.edu
 }
 </pre>
 
@@ -172,7 +202,7 @@ Example failed response:
 }
 </pre>
 
-
+<!-- 
 <h3 id="get_user_graphs">Get user graphs</h3>
 
 Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
@@ -191,7 +221,7 @@ Example response:
       }
    ]
 }
-</pre>
+</pre> -->
 
 <h2 id="groups">Groups</h2>
 
@@ -200,7 +230,7 @@ Example response:
 Get the ids of all groups on the server. The result is a JSON object containing a list of all groups, including their descriptions and owners.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/groups
+curl -X POST "http://localhost:8000/api/groups/get/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -222,7 +252,7 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/groups/[groupid]
+curl -X POST "http://localhost:8000/api/groups/[groups]/get/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -251,7 +281,7 @@ Example response:
 To remove a group use the following command. You can only remove a group that you are the owner of.
 
 <pre>
-lwp-request -m DELETE -C [username]:[password] http://[% request.uri_base %]/api/groups/[groupid]
+curl -X POST "http://localhost:8000/api/groups/delete/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
@@ -282,7 +312,7 @@ Example failed response:
 To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
 
 <pre>
-POST -C [username]:[password] http://[% request.uri_base %]/api/groups/[groupid]
+curl -X POST "http://localhost:8000/api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -299,8 +329,7 @@ Example response:
 Get groups a user belongs to. The result is a JSON object with a list of group ids.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/groups
-</pre>
+curl -X POST "http://localhost:8000/api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"</pre>
 
 Example response:
 
@@ -319,7 +348,7 @@ Example response:
 Add a user to a group. You can only add a user to a group that you belong to.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/groups/[groupname]/adduser/[username]
+curl -X POST "http://localhost:8000/api/groups/[groupname]/adduser/[member_email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
@@ -340,7 +369,7 @@ Example successful response:
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
 <pre>
-POST -C [username]:[password] http://[% request.uri_base %]/api/groups/[groupname]/removeuser/[username]
+curl -X POST "http://localhost:8000/api/groups/demo/removeuser/craigy@vt.edu/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
 Example successful response:
@@ -362,7 +391,7 @@ Example successful response:
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graphs/[graphname]/share/[groupname]
+curl -X POST "http://localhost:8000/api/users/graphs/demo/share/Crosstalk/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
 Example successful response:
@@ -378,7 +407,7 @@ Example successful response:
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graphs/[graphname]/unshare/[groupname]
+curl -X POST "http://localhost:8000/api/users/graphs/demo/unshare/Crosstalk/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
 Example successful response:

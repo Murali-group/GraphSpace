@@ -3,177 +3,59 @@
 
 {% include 'graphs/help_menu.html' %}
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>GraphSpace</title>
-    <meta name="description" content="network visualization" />
-    <meta name="author" content="Naveed Massjouni" />
-
-    <link rel="stylesheet" href="http://holmes.cs.vt.edu/css/jquery.qtip.min.css" />
-    <link rel="stylesheet" href="http://holmes.cs.vt.edu/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
-    <!--<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/smoothness/jquery-ui.css" />-->
-    <!--<link rel="stylesheet" href="http://holmes.cs.vt.edu/css/jquery-ui.css" />-->
-    <!--<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />-->
-    <link rel="stylesheet" href="http://holmes.cs.vt.edu/css/bootstrap.min.css" />
-    <!--<link rel="stylesheet" href="http://holmes.cs.vt.edu/css/slider.css">-->
-    <link rel="stylesheet" href="http://holmes.cs.vt.edu/css/gs.css" />
-
-    <script src="http://holmes.cs.vt.edu/js/jquery-1.10.2.min.js"></script>
-    <!--<script src="http://holmes.cs.vt.edu/js/jquery-ui-1.10.3.custom.min.js"></script>-->
-    <!--<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>-->
-    <!--<script src="http://holmes.cs.vt.edu/js/jquery-ui.min.js"></script>-->
-    <!--<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>-->
-    <script src="http://holmes.cs.vt.edu/js/bootstrap.min.js"></script>
-    <script src="http://holmes.cs.vt.edu/js/jquery-ui-1.10.3.custom.min.js"></script>
-    <script src="http://holmes.cs.vt.edu/js/jquery.qtip.min.js"></script>
-    <script src="http://holmes.cs.vt.edu/js/jquery.highlight.js"></script>
-    <!--<script src="http://holmes.cs.vt.edu/js/bootstrap-slider.js"></script>-->
-
-    <script>
-    $(function() {
-        $('.accordion').accordion({
-            autoHeight: false,
-            collapsible: true
-        });
-        $('.dropdown-toggle').dropdown()
-    });
-    </script>
-
-    <style>
-    .badge {
-        word-break: break-all;
-        word-wrap: break-word;
-        white-space: normal;
-    }
-    </style>
-
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-49123411-1', 'vt.edu');
-      ga('send', 'pageview');
-    </script> 
-  </head>
-
-  <body class="body">
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="row">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="http://holmes.cs.vt.edu">GraphSpace</a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li >
-              <a href="http://holmes.cs.vt.edu/graphs">Graphs</a>
-            </li>
-            <li >
-              <a href="http://holmes.cs.vt.edu/groups">Groups</a>
-            </li>
-            <!-- -->
-            <li class="active">
-              <a href="http://holmes.cs.vt.edu/help">Help</a>
-            </li>
-            
-          </ul>
-          
-          <form class="nav navbar-right navbar-form form-inline" role="form" action="http://holmes.cs.vt.edu/login" method="post">
-            <div class="form-group">
-              <input style="width:40%;" type="text" placeholder="Email" class="form-control" name="username"/>
-              <input style="width:40%;" type="password" placeholder="Password" class="form-control" name="password"/>
-              <button type="submit" class="btn btn-default">Sign in</button>
-            </div>
-          </form>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="http://holmes.cs.vt.edu/register">Create account</a></li>
-            <li><a href="http://holmes.cs.vt.edu/reset_password">Forgot password</a></li>
-          </ul>
-          
-        </div><!--/.navbar-collapse -->
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-<div class="content">
-<div class="row">
-<div class="col-xs-12 col-sm-12">
-
   
-    <ul class="nav nav-pills">
-    <li class="active"><a href="http://holmes.cs.vt.edu/help/tutorial-upload" style="text-align:center">Uploading</a></li>
-    <li ><a href="http://holmes.cs.vt.edu/help/tutorial-filtering" style="text-align:center">Filtering</a></li>
-  </ul>
-
-  <br/>
-
-  
-  <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="http://holmes.cs.vt.edu/register">here</a>, as well as a Unix machine. You will need <pre>libwww-perl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install libwww-perl</pre> if it is a Debian based machine such as Ubuntu.</p>
+  <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="http://localhost:8000/index/">here</a>, as well as a Unix machine. You will need <pre>curl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install curl</pre> if it is a Debian based machine such as Ubuntu.</p>
 
 <p>We will use a graph with two nodes and one edge connecting the nodes in this tutorial. GraphSpace uses a JSON format to store graphs. The JSON code representing the graph is shown below.</p>
 
 <pre>
 {
-   "metadata" : {
-      "name" : "foo graph",
-      "tags" : ["foo", "bar"]
-   },
-   "graph" : {
-      "data" : {
-         "edges" : [
-            { "source" : "2", "target" : "1", "id" : "2-1" }
-         ],
-         "nodes" : [
-            { "label" : "A", "id" : "1" },
-            { "label" : "B", "id" : "2" }
-         ]
-      }
-   }
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P43146",
+                    "label": "DCC"
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P08107",
+                    "label": "HSPA1B"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "id": "P43146-P08107",
+                    "source": "P43146",
+                    "target": "P08107",
+                    "directed": "true",
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "description": "This is a tutorial graph",
+        "tags": [
+            "tutorial"
+        ]
+    }
 }
 </pre>
 
 <p>Save the code above into a file called <pre>graph.json</pre>. Now, open a terminal and navigate to the location of the file. Execute the following command, where <pre>[username]</pre> is the email address you used to sign up for GraphSpace, and <pre>[password]</pre> is your GraphSpace password.</p>
 
 <pre>
-lwp-request -m PUT -C [username]:[password] http://http://holmes.cs.vt.edu/api/users/[username]/graphs/tutorial < graph.json
+curl -X POST "http://localhost:8000/api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
 </pre>
 
 <p>Now go to your <a href="http://http://holmes.cs.vt.edu/graphs">graphs page</a> and you should see a graph called 'tutorial' in the list.</p>
-
 <p>For a more detailed reference on all of the functions of the GraphSpace API, look at the <a href="http://holmes.cs.vt.edu/help/rest">REST API help page</a>.</p>
 
-  
 
-  
-
-</div>
-</div>
-</div>
-      <footer class="footer">
-        <p>
-          <br/>
-          
-          Powered by <a href="http://perldancer.org">Dancer</a>
-          1.3118
-          <br/>
-          <a href="http://cytoscapeweb.cytoscape.org">Cytoscape Web</a>
-        </p>
-      </footer>
-
-</div>
-
-
-  </body>
-
-
-</html>
 {% endblock %}
