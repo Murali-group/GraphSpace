@@ -34,6 +34,8 @@ group_to_graph = db_init.group_to_graph
 def index(request):
     '''Render the main page'''
 
+    db.insert_all_edges_from_json()
+
     # handle login.
     # see graphs.auth.login for details
     context = login(request)
@@ -72,7 +74,7 @@ def view_graph(request, uid, gid):
         return HttpResponse("Not Authorized to view this.")
     else:
         # If the user is member of group where this graph is shared
-        user_is_member = db.can_see_shared_graph(context['uid'], gid)
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
 
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
@@ -286,6 +288,8 @@ def _groups_page(request, view_type):
             group_list = db_session.query(group.c.group_id, group.c.description, 
                     group.c.owner_id, group.c.public
                     ).filter(group.c.owner_id == uid).all()
+
+        print group_list
 
         #add the group list to context to display on the page.
         if len(group_list) != 0:
@@ -519,24 +523,25 @@ def retrieveIDs(request):
         Used when highlighting elements of the graph.
     '''
 
-    #Grab node table
-    node = data_connection.meta.tables['node']
-    label_values = []
-
     #Grab id's of the nodes to highlight given the label of the nodes
     if request.POST:
+        id_values = []
         db_session = data_connection.new_session()
-        values = request.POST['values'].split(',')
-        for val in values:
-            data_labels = db_session.query(node.c.node_id).filter(node.c.label == val).filter(node.c.graph_id==request.POST['gid']).filter(node.c.user_id==request.POST['uid']).all()
-            data_ids = db_session.query(node.c.node_id).filter(node.c.node_id == val).filter(node.c.graph_id==request.POST['gid']).filter(node.c.user_id==request.POST['uid']).all()
-            if len(data_labels) > 0:
-                label_values.append(str(data_labels[0][0]))
-            if len(data_ids) > 0:
-                if str(data_ids[0][0]) not in label_values:
-                    label_values.append(str(data_ids[0][0]))
+        element_values = request.POST['values'].split(',')
+        for element in element_values:
+            element_id = None
+            # Find an edge
+            if ':' in element:
+                element_id = db.find_edge(request.POST['uid'], request.POST['gid'], element.strip())
+            else:
+                element_id = db.find_node(request.POST['uid'], request.POST['gid'], element.strip())
 
-    return HttpResponse(json.dumps({"Labels": label_values}))
+            if element_id != None and len(element_id) > 0:
+                id_values.append(element_id)
+                
+        return HttpResponse(json.dumps({"Labels": id_values}))
+    else:
+        return HttpResponseNotFound('<h1>Page not found</h1>')
 
 def logout(request):
     '''

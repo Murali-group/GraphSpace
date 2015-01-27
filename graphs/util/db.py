@@ -20,16 +20,16 @@ DB_NAME = 'test.db'
 # Modifies all id's of edges to be the names of the 
 # nodes that they are attached to
 def assign_edge_ids(json_string):
-	# Convert string into JSON structure for traversal
-	cleaned_json = json.loads(json_string)
+	# # Convert string into JSON structure for traversal
+	# cleaned_json = json.loads(json_string)
 
 	# Appending id's to all the edges using the source and target as part of its ids
 	# TODO: Change '-' character to something that can't be found in an edge
-	for edge in cleaned_json['graph']['edges']:
+	for edge in json_string['graph']['edges']:
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
 
 	# Return JSON having all edges with ids
-	return cleaned_json
+	return json_string
 
 # Populates the edge table with edges from jsons
 # already in the database
@@ -37,24 +37,25 @@ def insert_all_edges_from_json():
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
-
+		con.text_factory = str
 		cur = con.cursor()
 		# Get information from all graphs already in the database
 		# QUERY EXAMPLE: select user_id, graph_id from graph
-		cur.execute('select user_id, graph_id, json from graph')
+		cur.execute('select user_id, graph_id, json from graph where user_id= ?', ('dsingh5270@gmail.com', ))
 		data = cur.fetchall()
 
 		# If there is anything in the graph table
 		if data != None:
 			# Go through each Graph
 			for j in data:
+				cleaned_json = json.loads(j[2])
 				# Since there are two types of JSON: one originally submitted
 				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
 				# TODO: Remove conversion by specifying it when the user creates a graph
-				if 'data' in json.loads(j[2])['graph']:
-					cleaned_json = assign_edge_ids(convert_json(j[2]))
+				if 'data' in cleaned_json['graph']:
+					cleaned_json = assign_edge_ids(json.loads(convert_json(j[2])))
 				else:
-					cleaned_json = assign_edge_ids(j[2])
+					cleaned_json = assign_edge_ids(cleaned_json)
 
 				# Go through json of the graphs, if edge is not in database, then insert it (to avoid conflicts where source and target nodes are the same).
 				# Special accomodation is done for if edge has directed property or not
@@ -72,10 +73,11 @@ def insert_all_edges_from_json():
 						else:
 							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
 
-					# Update original JSON to match that with the new edge ID's
-					# TODO: Write query examples
-					cur.execute('update graph set json=? where graph_id=? and user_id=?', (json.dumps(cleaned_json), j[1], j[0]))
-					con.commit()
+				cleaned_json_string = json.dumps(cleaned_json, sort_keys=True, indent=4)
+				# Update original JSON to match that with the new edge ID's
+				# TODO: Write query examples
+				cur.execute('update graph set json=? where graph_id=? and user_id=?', (cleaned_json_string, j[1], j[0]))
+				con.commit()
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -182,6 +184,7 @@ def get_valid_user(username, password):
 		if con:
 			con.close()
 
+# Sets the context of the layout to be viewed
 def set_layout_context(request, context, uid, gid):
 	layout_to_view = None
 
@@ -201,6 +204,7 @@ def set_layout_context(request, context, uid, gid):
 
 	return context
 
+# Gets the JSON of the graph that you want to see
 def retrieve_cytoscape_json(graphjson):
 	temp_json = json.loads(graphjson)['graph']
 
@@ -210,6 +214,7 @@ def retrieve_cytoscape_json(graphjson):
 	else:
 	    return graphjson
 
+# Assigns urls to the blue buttons viewed at the graphs/ page
 def get_base_urls(view_type):
     # Modify the url of the buttons depending on the page that the user is on
     if view_type == 'shared':
@@ -221,6 +226,7 @@ def get_base_urls(view_type):
     else:
         return "http://localhost:8000/graphs/"
 
+# Gets the graphs that are associated with a certain view from the user
 def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 
 	tag_list = []
@@ -230,6 +236,9 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 	if tag_terms and len(tag_terms) > 0:
 		cleaned_tags = tag_terms.split(',')
 		client_side_tags = ""
+		# Goes through each tag, making it a string
+		# so the url will contain those tags as a part
+		# of the query string
 		for tags in xrange(len(cleaned_tags)):
 		    cleaned_tags[tags] = cleaned_tags[tags].strip()
 		    if len(cleaned_tags[tags]) == 0:
@@ -238,6 +247,7 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 
 		client_side_tags = client_side_tags[:len(client_side_tags) - 1]
 		context['tags'] = client_side_tags
+		# This is for the side menu, each tag has its own button
 		context['tag_terms'] = cleaned_tags
 		tag_list = cleaned_tags
 
@@ -246,11 +256,15 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 		context['search_result'] = True
 		cleaned_search_terms = search_terms.split(',')
 		client_side_search = ""
-
+		# Goes through each search term, making it a string
+		# so the url will contain those searches as a part
+		# of the query string
 		for i in xrange(len(cleaned_search_terms)):
 			cleaned_search_terms[i] = cleaned_search_terms[i].strip()
+			# Deleted no length search terms
 			if len(cleaned_search_terms[i]) == 0:
 				del cleaned_search_terms[i]
+			# This is for the side menu, each search item has its own button
 			client_side_search = client_side_search + cleaned_search_terms[i] + ','
 
 		client_side_search = client_side_search[:len(client_side_search) - 1]
@@ -275,30 +289,34 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 
 	return context
 
-
+# Retrieves the graphs that fit the search/tag criteria as well as the viewtype
 def view_graphs(uid, search_terms, tag_terms, view_type):
 	actual_graphs = []
 
+	# Graphs that match the searches
 	search_result_graphs = search_result(uid, search_terms, view_type)
+	# Graphs that match the tag results
 	tag_result_graphs = tag_result(uid, tag_terms, view_type)
 
-	print "View Type %s - Search is: %s" % (view_type, search_result_graphs)
-	print "Tag is: %s" % (tag_result_graphs)
-
+	# If there are graphs that fit search and tag criteria
 	if len(search_terms) > 0 and len(tag_terms) > 0:
 		tag_graphs = [x[0] for x in tag_result_graphs]
 		actual = [x[0] for x in actual_graphs]
 
+		# If it is not already part of final graphs returned, add it in
 		for graph in search_result_graphs:
 			if graph[0] in tag_graphs and graph[0] not in actual:
 				actual_graphs.append(graph)
 
 		return actual_graphs
 
+	# If there are only tag terms
 	elif len(tag_terms) > 0:
 		return tag_result_graphs
+	# If there are only search terms
 	elif len(search_terms) > 0:
 		return search_result_graphs
+	# Just display the graphs
 	else:
 		return view_graphs_of_type(view_type, uid)
 		
@@ -349,6 +367,7 @@ def tag_result(uid, tag_terms, view_type):
 				if value == len(tag_terms):
 					key_tuples = graph_mappings[key]
 					for key_tuple in key_tuples:
+						# Insert all tags for the graph in the first index
 						key_with_tag = list(key_tuple)
 						key_with_tag.insert(1, get_all_tags_for_graph(key_with_tag[0], key_with_tag[2]))
 						key_with_tag = tuple(key_with_tag)
@@ -365,6 +384,7 @@ def tag_result(uid, tag_terms, view_type):
 	else:
 		return []
 
+# Returns the graphs that match the search terms and the view type
 def search_result(uid, search_terms, view_type):
 	if len(search_terms) > 0:
 		intial_graphs_from_search = []
@@ -373,9 +393,11 @@ def search_result(uid, search_terms, view_type):
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 
+			# If it is an edge
 			for search_word in search_terms:
 				if ':' in search_word:
 					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_word, view_type, cur)
+				# If it is a node or possibly a graph_id (name of the graph)
 				else:
 					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type, cur) + find_graphs_using_names(uid, search_word, view_type, cur)
 
@@ -397,10 +419,12 @@ def search_result(uid, search_terms, view_type):
 			# then append that to the actual list of graphs to be returned.
 			actual_graphs_for_searches = []
 			for key, value in graph_repititions.iteritems():
-				if value == len(search_terms):
+				if value >= len(search_terms):
 					key_tuples = graph_mappings[key]
 					ids_and_labels = []
 					labels = []
+					# Gather all the id's and labels that are part of the same graph 
+					# that is being searched for and make them into one tuple
 					for key_tuple in key_tuples:
 						key_with_search = list(key_tuple)
 						ids_and_labels.append(str(key_tuple[1]))
@@ -411,9 +435,11 @@ def search_result(uid, search_terms, view_type):
 					id_string = id_string[:len(id_string) - 2]
 					label_string = ""
 					for label in labels:
+						label = label.replace('-', ':')
 						label_string = label_string + label + ','
 					label_string = label_string[:len(label_string) - 1]
 					key_with_search = list(key_tuples[0])
+					# Append all tags for the graph
 					key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
 					key_with_search[2] = id_string
 					key_with_search[3] = label_string
@@ -433,6 +459,7 @@ def search_result(uid, search_terms, view_type):
 	else:
 		return []
 
+# Finds graphs that have the edges that are being searched for
 def find_edges(uid, search_word, view_type, cur):
 	initial_graphs_with_edges = []
 	node_ids = search_word.split(':')
@@ -467,6 +494,9 @@ def find_edges(uid, search_word, view_type, cur):
 	head_node_ids = list(set(head_node_ids))
 	tail_node_ids = list(set(tail_node_ids))
 
+	# If there are any graphs that fit the criteria, 
+	# return the graphs that are under the type of graphs
+	# that the user wants to see (his/her graphs, or public etc)
 	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
 		for i in xrange(len(head_node_ids)):
 			for j in xrange(len(tail_node_ids)):
@@ -483,11 +513,69 @@ def find_edges(uid, search_word, view_type, cur):
 	actual_graph_with_edges = []
 	for graph in initial_graphs_with_edges:
 		graph_list = list(graph)
+		# Appending the nodes that are being searched for
 		graph_list[1] = graph_list[2] + ' (' + head_node + '-' + tail_node + ')'
 		actual_graph_with_edges.append(tuple(graph_list))
 
 	return actual_graph_with_edges
 
+def find_edge(uid, gid, edge_to_find):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		head_node = edge_to_find.split(':')[0]
+		tail_node = edge_to_find.split(':')[1]
+
+		head_node = find_node(uid, gid, head_node)
+		tail_node = find_node(uid, gid, tail_node)
+
+		if tail_node != None and head_node != None:
+			cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (tail_node, head_node, uid, gid))
+			data = cur.fetchall()
+			if data != None and len(data) > 0:
+				return data[0][0]
+			else:
+				return None
+		else:
+			return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+
+def find_node(uid, gid, node_to_find):
+	id_of_node = None
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select node_id from node where node_id= ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
+		id_data = cur.fetchall()
+		if id_data != None and len(id_data) > 0:
+			return id_data[0][0]
+		else:
+			cur.execute('select node_id from node where label = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
+			label_data = cur.fetchall()
+			if label_data != None and len(label_data) > 0:
+				return label_data[0][0]
+			else:
+				return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+# Finds the nodes that are being searched for
 def find_nodes(uid, search_word, view_type, cur):
 	intial_graph_with_nodes = []
 
@@ -526,6 +614,7 @@ def find_nodes(uid, search_word, view_type, cur):
 
 	return actual_graph_with_nodes
 
+# Finds graphs that have the matching graph name and user_id (username)
 def find_graphs_using_names(uid, search_word, view_type, cur):
 	intial_graph_names = []
 	actual_graph_names = []
@@ -542,12 +631,16 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 
 	for graph in intial_graph_names:
 		graph_list = list(graph)
+		# Appened nothing so that the table will be displayed properly
 		graph_list.insert(1, "")
 		graph_list.insert(1,"")
 		actual_graph_names.append(tuple(graph_list))
 		
 	return actual_graph_names
 
+# Adds all unique items to the specified list
+# Also checks to see if the length is > 0 for each item
+# inserted into the list
 def add_unique_to_list(listname, data):
 	for element in data:
 		if element not in listname and len(element) > 0:
@@ -582,6 +675,9 @@ def insert_graph(username, graphname, graph_json):
 			if 'data' in graphJson:
 				graphJson = json.loads(convert_json(graph_json))
 
+			# Attach ID's to each edge for traversing the element
+			graphJson = assign_edge_ids(graphJson)
+
 			# Go through all the nodes in the JSON and if they don't have a label,
 			# Append a random label to it
 			# Used so that I can highlight the node
@@ -594,15 +690,18 @@ def insert_graph(username, graphname, graph_json):
 					rand = rand + 1
 			rand = 0
 
+			print graphJson
+
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
-			cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, graph_json, curTime, curTime, 0, 1))
-			con.commit()
+			cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
 
 			tags = graphJson['metadata']['tags']
 
 			# Insert all tags for this graph into tags database
 			insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con)
+			# Commit the changes
+			con.commit()
 
 			# If everything works, return Nothing 
 			return None
@@ -638,9 +737,6 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con)
 
 	for node in nodes:
 		cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
-		
-	# Commit the changes
-	con.commit()
 
 #Gets the graph's json
 def get_graph_json(username, graphname):
@@ -784,7 +880,6 @@ def get_group_by_id(group):
 			con.close()
 
 # Gets all members of a group
-# TODO: What does this even do?
 def get_group_members(group):
 	con = None
 	try:
@@ -809,13 +904,14 @@ def get_group_members(group):
 			con.close()
 
 # See if user is a member of a group
-def can_see_shared_graph(username, graphname):
+def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	groups = get_all_groups_for_this_graph(graphname)
 
 	for group in groups:
 	        members = get_group_members(group)
-	        if username in members:
-	            user_is_member = True
+	        print members
+	        if logged_in_user in members:
+	            return True
 
 	return None
 
