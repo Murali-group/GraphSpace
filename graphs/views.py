@@ -74,7 +74,7 @@ def view_graph(request, uid, gid):
         return HttpResponse("Not Authorized to view this.")
     else:
         # If the user is member of group where this graph is shared
-        user_is_member = db.can_see_shared_graph(context['uid'], gid)
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
 
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:

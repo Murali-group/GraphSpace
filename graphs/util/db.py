@@ -602,7 +602,6 @@ def find_nodes(uid, search_word, view_type, cur):
 		public_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
 
-
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
 		public_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
@@ -881,7 +880,6 @@ def get_group_by_id(group):
 			con.close()
 
 # Gets all members of a group
-# TODO: What does this even do?
 def get_group_members(group):
 	con = None
 	try:
@@ -906,13 +904,14 @@ def get_group_members(group):
 			con.close()
 
 # See if user is a member of a group
-def can_see_shared_graph(username, graphname):
+def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	groups = get_all_groups_for_this_graph(graphname)
 
 	for group in groups:
 	        members = get_group_members(group)
-	        if username in members:
-	            user_is_member = True
+	        print members
+	        if logged_in_user in members:
+	            return True
 
 	return None
 
