@@ -282,7 +282,7 @@ def view_graphs(uid, search_terms, tag_terms, view_type):
 	search_result_graphs = search_result(uid, search_terms, view_type)
 	tag_result_graphs = tag_result(uid, tag_terms, view_type)
 
-	print "Search is: %s" % (search_result_graphs)
+	print "View Type %s - Search is: %s" % (view_type, search_result_graphs)
 	print "Tag is: %s" % (tag_result_graphs)
 
 	if len(search_terms) > 0 and len(tag_terms) > 0:
@@ -379,7 +379,6 @@ def search_result(uid, search_terms, view_type):
 				else:
 					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_word, view_type, cur) + find_graphs_using_names(uid, search_word, view_type, cur)
 
-			print intial_graphs_from_search
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
 			# search terms, then that graph matches all the tag terms and it should be returned
@@ -514,7 +513,6 @@ def find_nodes(uid, search_word, view_type, cur):
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
 		public_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
-
 
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.node_id = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
 		public_ids = cur.fetchall()
@@ -815,7 +813,7 @@ def can_see_shared_graph(username, graphname):
 	groups = get_all_groups_for_this_graph(graphname)
 
 	for group in groups:
-	        members = db.get_group_members(group)
+	        members = get_group_members(group)
 	        if username in members:
 	            user_is_member = True
 
