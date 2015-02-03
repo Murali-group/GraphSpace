@@ -106,6 +106,39 @@ function getQueryVariable(variable)
        return(false);
 }
 
+// Returns all the id's that are not <= k value
+function showOnlyK() {
+  var maxVal = parseInt($("#input_k").val());
+
+  var newJSON = {
+    "nodes": new Array(),
+    "edges": new Array()
+  };
+
+  // List of node ids that should remain in the graph
+  var nodeNames = Array();
+
+  for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+    var edge_data = graph_json.graph['edges'][i];
+    if (edge_data['data']['k'] <= maxVal) {
+      newJSON['edges'].push(edge_data);
+      nodeNames.push(edge_data['data']['source']);
+      nodeNames.push(edge_data['data']['target']);
+    }
+  }
+
+  console.log(nodeNames);
+
+  for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+    var node_data = graph_json.graph['nodes'][i];
+    if (nodeNames.indexOf(node_data['data']['id']) > -1) {
+      newJSON['nodes'].push(node_data);
+    }
+  }
+
+  window.cy.load(newJSON);
+}
+
 //Unselects a specified term from graph
 function unselectTerm(term) {
   window.cy.$('[id="' + term + '"]').unselect();
@@ -272,6 +305,7 @@ $(document).ready(function() {
         }
       });
 
+          // this.remove(this.$('[id="' + 'B4E0X2,L7RRS6,P04049'+ '"]'));
 
       //If ther are any terms to be searched for, highlight those terms, if found
       var searchTerms = getQueryVariable("search");
@@ -281,7 +315,6 @@ $(document).ready(function() {
 
     } // end ready: function()
     });
-
 
     //setup popup dialog for displaying dialog when nodes/edges
     //are clicked for information.
@@ -314,6 +347,11 @@ $(document).ready(function() {
     });
 
     $('#accordion_layouts').accordion({
+        collapsible: true,
+        heightStyle: "fill"
+    });
+
+    $('#accordion_filters').accordion({
         collapsible: true,
         heightStyle: "fill"
     });
@@ -385,4 +423,12 @@ $(document).ready(function() {
     });
 
     $(".layout_links").tooltip();
+
+    $('#input_k').click(function() {
+      $("#input_k").keypress(function (e) {
+        if (e.keyCode == 13)
+        showOnlyK($("#input_k").val());
+      });
+    });
+
 });

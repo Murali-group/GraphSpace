@@ -34,7 +34,7 @@ group_to_graph = db_init.group_to_graph
 def index(request):
     '''Render the main page'''
 
-    db.insert_all_edges_from_json()
+    # db.insert_all_edges_from_json()
 
     # handle login.
     # see graphs.auth.login for details
@@ -111,6 +111,9 @@ def view_graph(request, uid, gid):
 
     # graph id
     context['graph_id'] = gid
+
+    if 'k' in json_data['graph']['edges'][0]['data']:
+        context['filters'] = True
 
     # redirect if the user wishes to view the json data
     if request.method == "GET" and 'view_json' in request.GET:
@@ -288,8 +291,6 @@ def _groups_page(request, view_type):
             group_list = db_session.query(group.c.group_id, group.c.description, 
                     group.c.owner_id, group.c.public
                     ).filter(group.c.owner_id == uid).all()
-
-        print group_list
 
         #add the group list to context to display on the page.
         if len(group_list) != 0:

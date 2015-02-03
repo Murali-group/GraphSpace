@@ -41,13 +41,14 @@ def insert_all_edges_from_json():
 		cur = con.cursor()
 		# Get information from all graphs already in the database
 		# QUERY EXAMPLE: select user_id, graph_id from graph
-		cur.execute('select user_id, graph_id, json from graph where user_id= ?', ('dsingh5270@gmail.com', ))
+		cur.execute('select user_id, graph_id, json from graph')
 		data = cur.fetchall()
 
 		# If there is anything in the graph table
 		if data != None:
 			# Go through each Graph
 			for j in data:
+				print 'Processing %s of %s', (j[1], j[0])
 				cleaned_json = json.loads(j[2])
 				# Since there are two types of JSON: one originally submitted
 				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
@@ -681,7 +682,7 @@ def insert_graph(username, graphname, graph_json):
 
 			# Checks to see if it is compatible with CytoscapeJS and converts it accordingly
 			# TODO: Delete this after Verifier is finished
-			if 'data' in graphJson:
+			if 'data' in graphJson['graph']:
 				graphJson = json.loads(convert_json(graph_json))
 
 			# Attach ID's to each edge for traversing the element
@@ -698,8 +699,6 @@ def insert_graph(username, graphname, graph_json):
 					node['data']['label'] = rand
 					rand = rand + 1
 			rand = 0
-
-			print graphJson
 
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
