@@ -540,7 +540,7 @@ def retrieveIDs(request):
             if element_id != None and len(element_id) > 0:
                 id_values.append(element_id)
                 
-        return HttpResponse(json.dumps({"Labels": id_values}))
+        return HttpResponse(json.dumps({"IDS": id_values}))
     else:
         return HttpResponseNotFound('<h1>Page not found</h1>')
 

@@ -157,8 +157,8 @@
                                     <ul class="nav nav-pills">
                                       {% for o in layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_156" href="{{url}}">
-                                            <button class="btn btn-default layout_links" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
+                                        <a class="list-group-item layout_buttons" href="{{url}}">
+                                            <button class="btn btn-default layout_links" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
                                             {{o}}
@@ -184,13 +184,13 @@
             <h3>Filters</h3>
             <div class="accordion_content">
                  Number of highly probable paths 
-                <input class="form-control" id="input_k" style="width: 4em;" size="4" maxlength="4">
+                <input class="form-control" id="input_k" style="width: 4em;" value="0" size="4" maxlength="4" readonly>
                 <br>
                 <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
                 </div>
                 <br>
                  Max highly probable paths 
-                 <input class="form-control" id="input_max" style="width: 4em;" size="4" maxlength="4">
+                 <input class="form-control" id="input_max" value="0" style="width: 4em;" size="4" maxlength="4" readonly>
                  <br>
                  <div id="slider_max" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
                  </div>
