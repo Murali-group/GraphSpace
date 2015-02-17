@@ -49,12 +49,20 @@ urlpatterns = patterns('',
         # register page
         url(r'^register/$', views.register, name='register'),
 
+        # Change name of layout
+        url(r'^changeLayoutName/$', views.changeLayoutName, name='changeLayoutName'),
+
+        # Delete layout
+        url(r'^deleteLayout/$', views.deleteLayout, name='deleteLayout'),
+
+        # Make Layout public
+        url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
         # forgot endpoint
-        url(r'^forgot/$', views.forgot, name='forgot'),
+        url(r'^forgot/$', views.sendResetEmail, name='forgot'),
 
         # reset endpoint
-        url(r'^reset$', views.reset, name='reset'),
-        url(r'^reset/$', views.resetPassword, name='resetPassword'),
+        url(r'^reset/$', views.resetLink, name='reset'),
+        url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
 
         #REST API for graphs
         url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),

@@ -34,7 +34,15 @@ group_to_graph = db_init.group_to_graph
 def index(request):
     '''Render the main page'''
 
+
+    #####################
+    # UNCOMMENT THESE ON INITIAL START UP TO POPULATE TABLES
+    #####################
+    # db.add_everyone_to_password_reset()
+
     # db.insert_all_edges_from_json()
+    #####################
+
 
     # handle login.
     # see graphs.auth.login for details
@@ -90,7 +98,7 @@ def view_graph(request, uid, gid):
     context['draw_graph'] = True
 
     # Get all the groups that are shared for this graph
-    shared_groups = db.get_all_groups_for_this_graph(graph_to_view[2])
+    shared_groups = db.get_all_groups_for_this_graph(uid, graph_to_view[2])
     context['shared_groups'] = shared_groups
 
     if graph_to_view[1] == 1:
@@ -559,24 +567,25 @@ def logout(request):
     # redirect to the main page after logout.
     return HttpResponseRedirect('/index/')
 
-def forgot(request):
+def sendResetEmail(request):
     '''
-        Email user the link to reset their password
+        Sends an email to the requester.
     '''
-
     emailId = db.sendForgotEmail(request.POST['forgot_email'])
 
+    # If email is not found, throw an error
     if emailId == None:
         return HttpResponse(json.dumps({"Error": "Email does not exist!"}), content_type="application/json");
 
     return HttpResponse(json.dumps({"Success": "Email has been sent!"}), content_type="application/json");
 
-def reset(request):
+def resetLink(request):
     '''
-        Allow user to reset their password
+        Directs the user to a link that
+        allows them to change their password
     '''
-    id = request.GET.get('id')
-    email = db.retrieveResetInfo(id)
+    code = request.GET.get('id')
+    email = db.retrieveResetInfo(code)
 
     if email == None:
         return HttpResponse(json.dumps({"Error": "Unrecognized ID"}), content_type="application/json");
@@ -587,22 +596,18 @@ def reset(request):
 
 def resetPassword(request):
     '''
-        Reset their password
+        Resets the password of the user.
     '''
-    # hash the password using bcrypt library
-    hashed_pw = bcrypt.hashpw(
-                    request.POST['pass'], 
-                    bcrypt.gensalt())
+    resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
 
-    status = db.updateInfo(request.POST['user_id'] , hashed_pw)
+    if resetInfo == None:
+        return HttpResponse(json.dumps({"Error": "Password Update not successful!"}), content_type="application/json");
 
-    if status == None:
-        return HttpResponse(json.dumps({"Error": "Email not found!"}), content_type="application/json");
+    return HttpResponse(json.dumps({"Success": "Password updated for " + request.POST['email']}), content_type="application/json");
 
-    return HttpResponse("Password Updated!")
 
 def save_layout(request, uid, gid):
-    return HttpResponse(db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, uid, request.POST['points'], request.POST['public'], request.POST['unlisted']))
+    return HttpResponse(db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted']))
 
 def download(request):
     if request.POST:
@@ -610,6 +615,35 @@ def download(request):
             response =  HttpResponse(request.POST['image'], content_type='application/octet-stream')
             response['Content-Disposition'] = 'attachment; filename="foo.png"'
             return response
+
+def changeLayoutName(request):
+
+    uid = request.POST['uid']
+    gid = request.POST['gid']
+    old_layout_name = request.POST['old_layout_name']
+    new_layout_name = request.POST['new_layout_name']
+    loggedIn = request.POST['loggedIn']
+
+    db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
+    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+
+def deleteLayout(request):
+    uid = request.POST['owner']
+    gid = request.POST['gid']
+    layoutToDelete = request.POST['layout']
+    loggedIn = request.POST['user_id']
+
+    db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
+    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
+
+def makeLayoutPublic(request):
+    uid = request.POST['owner']
+    gid = request.POST['gid']
+    layoutToMakePpublic = request.POST['layout']
+    loggedIn = request.POST['user_id']
+
+    db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
+    return HttpResponse(json.dumps({"Success": "Layout made public!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
 
 ##### END VIEWS #####
 
@@ -627,9 +661,9 @@ def upload_graph(request, user_id, graphname):
         if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse("Username/Password is not recognized!")
 
-        graph_exists = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
-        if graph_exists != None:
-            return HttpResponse("Graph with " + graphname + " exists under " + user_id)
+        graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+        if graph_errors != None:
+            return HttpResponse(graph_errors)
         else:
             return HttpResponse("Graph inserted into GraphSpace!")
 

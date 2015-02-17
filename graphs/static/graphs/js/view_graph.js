@@ -56,7 +56,8 @@ function searchValues(labels) {
           //Otherwise just highlight the nodes themselves
           window.cy.$('[id="' + ids[j] + '"]').select();
           window.cy.$('[id="' + ids[j] + '"]').unselectify();
-          $("#search_terms").append('<button class="btn btn-danger terms" id="' + ids[j]  + '" value="' + ids[j] + '"">' + labels[j] + " X" + '</button>');
+          // $("#search_terms").append('<button class="btn btn-danger terms" id="' + ids[j]  + '" value="' + ids[j] + '"">' + labels[j] + " X" + '</button>');
+          $("#search_terms").append('<li><button class="terms"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</button></li>');
           $("#search").val("");
         }
       }
@@ -65,10 +66,10 @@ function searchValues(labels) {
     var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
     var layout = getQueryVariable('layout');
     if (layout) {
-      linkToGraph += '?layout=' + layout + '&search=';
-    } else {
-      linkToGraph += '?search=';
+      linkToGraph += '?layout=' + layout;
     }
+
+    var terms = getHighlightedTerms();
 
     linkToGraph += getHighlightedTerms();
 
@@ -136,12 +137,42 @@ function getQueryVariable(variable)
 }
 
 // Returns all the id's that are not <= k value
-function showOnlyK(graph_layout) {
+function showOnlyK() {
   var maxVal = parseInt($("#input_k").val());
 
   window.cy.elements().show();
   hideList = window.cy.filter('[k > ' + maxVal+ ']');
   hideList.hide();
+}
+
+function applyMax(graph_layout) {
+  var maxVal = parseInt($("#input_max").val());
+
+  var newJSON = {
+    "nodes": new Array(),
+    "edges": new Array()
+  };
+
+  // List of node ids that should remain in the graph
+  var nodeNames = Array();
+
+  for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+    var edge_data = graph_json.graph['edges'][i];
+    if (edge_data['data']['k'] <= maxVal) {
+      newJSON['edges'].push(edge_data);
+      nodeNames.push(edge_data['data']['source']);
+      nodeNames.push(edge_data['data']['target']);
+    }
+  }
+
+  for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+    var node_data = graph_json.graph['nodes'][i];
+    if (nodeNames.indexOf(node_data['data']['id']) > -1) {
+      newJSON['nodes'].push(node_data);
+    }
+  }
+
+  window.cy.load(newJSON);
 }
 
 //Unselects a specified term from graph
@@ -232,7 +263,9 @@ $(document).ready(function() {
           'background-color': 'data(color)', 
           'font-size': 10,
           'border-color': '#000000',
-          'border-width': 1
+          'border-width': 1,
+          'width': 'data(width)',
+          'height': 'data(height)'
         })
       .selector('edge')
         .css({
@@ -360,12 +393,12 @@ $(document).ready(function() {
 
     $('#accordion_layouts').accordion({
         collapsible: true,
-        heightStyle: "fill"
+        heightStyle: "content"
     });
 
     $('#accordion_filters').accordion({
         collapsible: true,
-        heightStyle: "fill"
+        heightStyle: "content"
     });
 
     //When save layout button is clicked
@@ -394,6 +427,7 @@ $(document).ready(function() {
         layout_id: "1",
         layout_name: layoutName,
         points: JSON.stringify(layout),
+        loggedIn: $("#loggedIn").text(),
         "public": 0,
         "unlisted": 0
       }, function (data) {
@@ -427,7 +461,7 @@ $(document).ready(function() {
       }
     });
 
-    $(".layout_links").click(function (e) {
+    $(".highlight").click(function (e) {
       e.preventDefault();
       var searchTerms = getHighlightedTerms();
       if (searchTerms.length > 0) {
@@ -437,8 +471,52 @@ $(document).ready(function() {
       }
 
       $("#layout_link").attr('href', linkHref);
-      $("#layout_link").text("Direct Link to Layout");
+      $("#layout_link").text("Link to this graph with highlighted elements");
       $("#layout_link").width(20);
+    });
+
+    $(".change").click(function (e) {
+      e.preventDefault();
+      $("#change_modal").modal('toggle');
+      $("#change_layout").val($(this).val());
+    });
+
+    $("#change_layout").click(function (e) {
+      var paths = document.URL.split('/')
+      var new_layout_name = $("#new_layout_name").val();
+
+      if (new_layout_name.length == 0) {
+        return alert("Enter a new layout name!");
+      } else {
+        $.post('../../../changeLayoutName/', {
+          "gid": decodeURIComponent(paths[paths.length - 2]),
+          "uid": decodeURIComponent(paths[paths.length - 3]),
+          "loggedIn": $("#loggedIn").text(),
+          "old_layout_name": $(this).val(),
+          "new_layout_name": new_layout_name
+        }, function (data) {
+          window.location.href = data.url; 
+        });
+      }
+    });
+
+    $(".remove").click(function (e) {
+      e.preventDefault();
+
+      var paths = document.URL.split('/')
+      var publicLayout = $(this).val();
+      var userId = $("#loggedIn").text();
+      var ownerId = decodeURIComponent(paths[paths.length - 3])
+      var gid = decodeURIComponent(paths[paths.length - 2])
+
+      $.post('../../../deleteLayout/', {
+        'gid': gid,
+        'owner': ownerId,
+        'layout': publicLayout,
+        'user_id': userId
+      }, function (data) {
+        window.location.href = data.url;
+      })
     });
 
     $(".layout_links").tooltip();
@@ -458,36 +536,73 @@ $(document).ready(function() {
 
     });
 
+    $(".public").click(function (e) {
+      e.preventDefault();
+
+      var paths = document.URL.split('/')
+      var publicLayout = $(this).val();
+      var userId = $("#loggedIn").text();
+      var ownerId = decodeURIComponent(paths[paths.length - 3])
+      var gid = decodeURIComponent(paths[paths.length - 2])
+
+      $.post('../../../makeLayoutPublic/', {
+        'gid': gid,
+        'owner': ownerId,
+        'layout': publicLayout,
+        'user_id': userId
+      }, function (data) {
+        alert(data);
+      });
+
+    });
+
     $("#input_k").val(getLargestK(graph_json.graph));
     $("#input_max").val(getLargestK(graph_json.graph));
-
-    $("#slider").slider({
-              value: getLargestK(graph_json.graph),
-              min: 0,
-              max: getLargestK(graph_json.graph),
-              step: 1,
-              slide: function (event, ui) {
-                $("#input_k").val(ui.value);
-                m_val = ui.value;
-                if (m_val < 0) {
-                  m_val = 0;
-                  $(this).slider({ value: 0 });
-                }
-              },
-              change: function (event, ui) {
-                  if (event.originalEvent) {
-                    showOnlyK(graph_layout);
-                  }
-                }});
 
     $("#slider_max").slider({
       step:1,
       min: 0,
       max: getLargestK(graph_json.graph),
-      slide: function(event, ui) {
-        var value = $( "#slider_max" ).slider( "value" );
-        $("#input_max").val(value);
-      }
+      value: getLargestK(graph_json.graph),
+      slide: function (event, ui) {
+          $("#input_max").val(ui.value);
+          m_val = ui.value;
+          if (m_val < 0) {
+            m_val = 0;
+            $(this).slider({ value: 0 });
+          } else {
+            $(this).slider({value: m_val});
+            $("#slider").slider({max: m_val});
+            $("#input_k").val($("#slider").slider('value'));
+          }
+        },
+        change: function (event, ui) {
+            if (event.originalEvent) {
+              applyMax(graph_json.graph)
+            }
+          }
     });
+
+    $("#slider").slider({
+      value: $("#slider_max").slider('value'),
+      max: $("#slider_max").slider('value'),
+      min: 0,
+      step: 1,
+      slide: function (event, ui) {
+        $("#input_k").val(ui.value);
+        m_val = ui.value;
+        if (m_val < 0) {
+          m_val = 0;
+          $(this).slider({ value: 0 });
+        }
+      },
+      change: function (event, ui) {
+          if (event.originalEvent) {
+            showOnlyK();
+          }
+          console.log($("#slider_max").slider('value'));
+        }});
+
+    
 
 });

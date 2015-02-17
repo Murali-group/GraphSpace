@@ -89,9 +89,10 @@ $(document).ready(function() {
 
 		$.post("/forgot/", forgotRequest, function (data) {
 
-			if (data.error) {
-				alert(data.error);
+			if (data.Error) {
+				alert(data.Error);
 			} else {
+				alert(data.Success);
 				window.location.href = "/index/";
 			}
 		});

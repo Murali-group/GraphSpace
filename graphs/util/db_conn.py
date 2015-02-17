@@ -5,7 +5,7 @@ import sqlalchemy
 import graphs.models as models
 
 # database locations
-_originaldb = 'sqlite:////data/craigy/graphspace-production/graphspace-server/graphspace.db'
+_originaldb = 'sqlite:///graphspace.db'
 
 _devdb = 'sqlite:////usr/local/yijaeil/graphspace-server/graphspace_live_backup.db'
 

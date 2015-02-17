@@ -5,7 +5,7 @@
 from graphs.util.db_conn import Database
 
 #connect to database
-db = Database('test')
+db = Database('prod')
 
 #get tables from database
 graph = db.meta.tables['graph']

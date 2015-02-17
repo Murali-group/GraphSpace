@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from graphs.forms import LoginForm, RegisterForm
-
+from graphs.util import db
 
 def login(request):
 	'''
@@ -16,6 +16,17 @@ def login(request):
 	register_form = RegisterForm();
 
 	if request.method == 'POST':
+		if db.need_to_reset_password(request.POST['user_id']):
+			login_form = LoginForm()
+			context['login_form'] = login_form
+			context['register_form'] = register_form
+			context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
+			message = 'Information you have given does not match our records. Please try again.'
+			context['message'] = message
+			request.session['uid'] = None
+			db.sendForgotEmail(request.POST['user_id'])
+			return context
+
 		user = authenticate(username=request.POST['user_id'], password=request.POST['pw'])
 		login_form = LoginForm(request.POST)
 		if user is not None:

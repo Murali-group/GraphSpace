@@ -8,9 +8,11 @@ from graphs.util.json_converter import convert_json
 from operator import itemgetter
 from itertools import groupby
 from collections import Counter, defaultdict
+import random
+import string
 
 # Name of the database that is being used as the backend storage
-DB_NAME = 'test.db'
+DB_NAME = 'graphspace.db'
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -88,6 +90,167 @@ def insert_all_edges_from_json():
 			con.close()
 
 # --------------- End Edge Insertions --------------------------------
+
+# Adds all users to password reset table (cold-start)
+# Only use this once so we know crypto algorithm used 
+# for forgot password functionalities
+def add_everyone_to_password_reset():
+	con = None
+	try: 
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select user_id from user')
+
+		user_data = cur.fetchall()
+
+		for user in user_data:
+			add_user_to_password_reset(user[0])
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+# Validates the JSON that is uploaded to make sure
+# it has the following properties
+# node:
+# label,
+# shape,
+# color,
+# height,
+# width
+# id have to be unique
+
+# edge:
+# (dont need an id) - I auto generate one
+# label
+# color
+# source
+# target
+# directed
+# width
+def validate_json(jsonString):
+
+	edge_properties = ['color', 'source', 'target', 'directed', 'width']
+	node_properties = ['label', 'color', 'shape', 'height', 'width', 'id']
+
+
+	cleaned_json = json.loads(jsonString)
+	# Since there are two types of JSON: one originally submitted
+	# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
+	# TODO: Remove conversion by specifying it when the user creates a graph
+	if 'data' in cleaned_json['graph']:
+		cleaned_json = assign_edge_ids(json.loads(convert_json(jsonString)))
+	else:
+		cleaned_json = assign_edge_ids(cleaned_json)
+
+	edges = cleaned_json['graph']['edges']
+	nodes = cleaned_json['graph']['nodes']
+
+	jsonErrors = ""
+	edgeError = propertyInJSON(edges, edge_properties)
+	nodeError = propertyInJSON(nodes, node_properties)
+	nodeUniqueIDError = checkUniqueID(nodes)
+	nodeCheckShape = checkShapes(nodes)
+
+	if len(edgeError) > 0:
+		jsonErrors += edgeError + '\n'
+	if len(nodeError) > 0:
+		jsonErrors += nodeError + '\n'
+	if len(nodeUniqueIDError) > 0:
+		jsonErrors += nodeUniqueIDError + '\n'
+	if len(nodeCheckShape) > 0:
+		jsonErrors += nodeCheckShape + '\n'
+
+	return jsonErrors
+
+def checkUniqueID(elements):
+	id_map = []
+
+	for element in elements:
+		if element['data']['id'] not in id_map:
+			id_map.append(element['data']['id'])
+		else:
+			return "Error: " + element['data']['id'] + " for a node is duplicated!"
+
+	return ""
+
+def checkShapes(elements):
+	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"]
+
+	for element in elements:
+		if element['data']['shape'] not in allowed_shapes:
+			return "Error: illegal shape: " + element['data']['shape'] + ' for a node'
+
+	return ""
+
+def propertyInJSON(elements, properties):
+	for element in elements:
+		element_data = element['data']
+		for element_property in properties:
+			if element_property not in element_data:
+				return "Error: Property " + element_property +  " not in JSON for an edge"
+
+	return ""
+
+# Adds specified user to password_reset table
+def add_user_to_password_reset(email):
+	con = None
+	try: 
+		if emailExists(email) != None:
+			con = lite.connect(DB_NAME)
+			cur = con.cursor()
+
+			cur.execute('select user_id from password_reset where user_id=?', (email, ))
+
+			user_data = cur.fetchall()
+
+			print user_data
+
+			# If user isn't already in password_reset table, add them with a new code
+			if len(user_data) == 0:
+
+				code = id_generator()
+				cur.execute('insert into password_reset values(?,?,?,?)', (None, email, code, datetime.now()))
+
+				con.commit()
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+# Checks to see if a user needs to reset their password
+def need_to_reset_password(email):
+	con = None
+	try: 
+		if emailExists(email) != None:
+			con = lite.connect(DB_NAME)
+			cur = con.cursor()
+
+			cur.execute('select user_id from password_reset where user_id = ?', (email, ))
+
+			user_exists = cur.fetchall()
+
+			if len(user_exists) > 0:
+				return True
+			else:
+				return False
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
 
 # Checks to see if a given user is an admin
 def is_admin(username):
@@ -201,7 +364,14 @@ def set_layout_context(request, context, uid, gid):
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
-	context['layouts'] = get_all_layouts_for_graph(uid, gid)
+	# context['layouts'] = get_all_layouts_for_graph(uid, gid)
+	if 'uid' in context:
+		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
+		context['shared_layouts'] = get_shared_layouts_for_graph(uid, gid, context['uid'])
+	else:
+		context['my_layouts'] = []
+		context['shared_layouts'] = []
+	context['public_layouts'] = get_public_layouts_for_graph(uid, gid)
 
 	return context
 
@@ -677,6 +847,10 @@ def insert_graph(username, graphname, graph_json):
 
 		# If not, add this graph to his account
 		if data == None:
+			validationErrors = validate_json(graph_json)
+			if len(validationErrors) > 0:
+				return validationErrors
+
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
 
@@ -715,7 +889,7 @@ def insert_graph(username, graphname, graph_json):
 			return None
 	
 		else:
-			return 'Graph Already Exists!'
+			return 'Graph ' + graphname + ' already exists for ' + username + '!'
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -913,7 +1087,7 @@ def get_group_members(group):
 
 # See if user is a member of a group
 def can_see_shared_graph(logged_in_user, graph_owner, graphname):
-	groups = get_all_groups_for_this_graph(graphname)
+	groups = get_all_groups_for_this_graph(graph_owner, graphname)
 
 	for group in groups:
 	        members = get_group_members(group)
@@ -1438,14 +1612,15 @@ def is_public_graph(username, graph):
 		if con:
 			con.close()
 
+# TODO: DEFINE SHARED LAYOUT LOGIC
 # Gets all the groups that the graph is shared with
-def get_all_groups_for_this_graph(graph):
+def get_all_groups_for_this_graph(uid, graph):
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select group_id from group_to_graph where graph_id=?', (graph, ))
+		cur.execute('select group_id from group_to_graph where graph_id=? and user_id=?', (graph, uid))
 		graphs = cur.fetchall()
 
 		if graphs == None:
@@ -1457,7 +1632,7 @@ def get_all_groups_for_this_graph(graph):
 				cleaned_graphs.append(str(graph[0]))
 			return cleaned_graphs
 		else:
-			return None
+			return Nonef
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1493,21 +1668,21 @@ def emailExists(email):
 # Emails the user to reset their password
 def sendForgotEmail(email):
 
-	# TODO: Make this more robust
 	if emailExists(email) != None:
 		con=None
 		try:
 			con = lite.connect(DB_NAME)
-
 			cur = con.cursor()
-			cur.execute("select password from user where user_id = ?", [email])
+
+			add_user_to_password_reset(email)
+			cur.execute("select code from password_reset where user_id = ?", [email])
 
 			if cur.rowcount == 0:
 				return None
 
 			data = cur.fetchone()
-			mail_title = 'Password Reset!'
-			message = 'Please go to the following url to reset your password: http://localhost:8000/reset?id=' + data[0]
+			mail_title = 'Password Reset Information for GraphSpace!'
+			message = 'Please go to the following url to reset your password: http://localhost:8000/reset/?id=' + data[0]
 			emailFrom = "GraphSpace Admin"
 			send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
 			return "Email Sent!"
@@ -1521,13 +1696,13 @@ def sendForgotEmail(email):
 		return None
 
 # Retrieves the reset information for a user
-def retrieveResetInfo(hash):
+def retrieveResetInfo(code):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
-		cur.execute("select * from user where password = ?", [hash])
+		cur.execute("select user_id from password_reset where code = ?", (code, ))
 
 		if cur.rowcount == 0:
 			return None
@@ -1548,13 +1723,14 @@ def retrieveResetInfo(hash):
 			con.close()
 
 # Updates password information about a user
-def updateInfo(username, hash):
+def resetPassword(username, password):
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
-
 		cur = con.cursor()
-		cur.execute("update user set password = ? where user_id = ?", (hash, username))
+
+		cur.execute("update user set password = ? where user_id = ?", (bcrypt.hashpw(password, bcrypt.gensalt()), username))
+		cur.execute('delete from password_reset where user_id=?', (username, ))
 
 		con.commit();
 		return "Password Updated!"
@@ -1565,6 +1741,39 @@ def updateInfo(username, hash):
 		if con:
 			con.close()
 
+# Changes the name of a layout
+def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('update layout set layout_name = ? where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (new_layout_name, uid, gid, loggedIn, old_layout_name))
+		con.commit()
+
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+# Makes a layout public
+def makeLayoutPublic(uid, gid, public_layout, loggedIn):
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+		con.commit()
+
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
 # Saves layout of a specified graph
 def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
 	con=None
@@ -1572,15 +1781,32 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()	
 
-		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, owner, json, 0, 0))
+		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, user, json, 0, 0))
 		con.commit()
-		return "Layout Updated!"
+		return "Layout Saved!"
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
 		return None
 	finally:
 		if con:
 			con.close()
+
+def deleteLayout(uid, gid, layoutToDelete, loggedIn):
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
+		con.commit()
+
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
 
 # Retrieves specific layout for a certain graph
 def get_layout_for_graph(layout_name, layout_graph, layout_owner):
@@ -1592,6 +1818,8 @@ def get_layout_for_graph(layout_name, layout_graph, layout_owner):
 		# Get JSON of layout
 		cur.execute("select json from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, layout_graph, layout_owner))
 		data = cur.fetchone()
+
+		print data
 
 		if data == None:
 			return None
@@ -1613,6 +1841,77 @@ def get_all_layouts_for_graph(uid, gid):
 
 		cur = con.cursor()
 		cur.execute("select layout_name from layout where owner_id =? and graph_id=?", (uid, gid))
+		
+		data = cur.fetchall()
+
+		if data == None:
+			return None
+
+		cleaned_data = []
+		for graphs in data:
+			graphs = str(graphs[0])
+			# Replace for URL
+			graphs = graphs.replace(" ", "%20")
+			cleaned_data.append(graphs)
+
+		return cleaned_data
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+# Gets my layouts for a graph
+def get_my_layouts_for_graph(uid, gid, loggedIn):
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+
+		cur = con.cursor()
+		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=?", (uid, gid, loggedIn))
+		
+		data = cur.fetchall()
+		print data
+
+		if data == None:
+			return None
+
+		cleaned_data = []
+		for graphs in data:
+			graphs = str(graphs[0])
+			# Replace for URL
+			graphs = graphs.replace(" ", "%20")
+			cleaned_data.append(graphs)
+
+		return cleaned_data
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+def get_shared_layouts_for_graph(uid, gid, loggedIn):
+	# Get all shared groups for this graph
+	all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+	shared_graphs = []
+	# Get all members of the shared groups
+	for group in all_groups_for_graph:
+		members = get_group_members(group)
+		if loggedIn in members:
+			for member in members:
+				shared_graphs += get_my_layouts_for_graph(uid, gid, loggedIn)
+
+	return shared_graphs
+
+def get_public_layouts_for_graph(uid, gid):
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+
+		cur = con.cursor()
+		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and public=1", (uid, gid))
 		
 		data = cur.fetchall()
 
