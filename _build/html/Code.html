@@ -1562,6 +1562,42 @@ collection from resulting in persistence operations.</li>
 <div class="section" id="forms-py">
 <h2>forms.py<a class="headerlink" href="#forms-py" title="Permalink to this headline">¶</a></h2>
 <p>Pre-made HTML forms to send to the front-end. Located at GraphSpace/graphs/forms.py</p>
+<span class="target" id="module-graphs.forms"></span><p>See <a class="reference external" href="https://docs.djangoproject.com/en/dev/topics/forms/">https://docs.djangoproject.com/en/dev/topics/forms/</a> for details.</p>
+<dl class="class">
+<dt id="graphs.forms.LoginForm">
+<em class="property">class </em><tt class="descclassname">graphs.forms.</tt><tt class="descname">LoginForm</tt><big>(</big><em>data=None</em>, <em>files=None</em>, <em>auto_id=u'id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em><big>)</big><a class="reference internal" href="_modules/graphs/forms.html#LoginForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.forms.LoginForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Login Form used to show login fields in GraphSpace webpages. 
+This form is located within the top navbar.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="graphs.forms.RegisterForm">
+<em class="property">class </em><tt class="descclassname">graphs.forms.</tt><tt class="descname">RegisterForm</tt><big>(</big><em>data=None</em>, <em>files=None</em>, <em>auto_id=u'id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em><big>)</big><a class="reference internal" href="_modules/graphs/forms.html#RegisterForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.forms.RegisterForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register form to help create an account for a new user.</p>
+<dl class="method">
+<dt id="graphs.forms.RegisterForm.clean">
+<tt class="descname">clean</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/graphs/forms.html#RegisterForm.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.forms.RegisterForm.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form validation to check if two passwords provided are 
+equivalent.</p>
+<p><a class="reference external" href="https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute">https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="graphs.forms.RegisterForm.clean_user_id">
+<tt class="descname">clean_user_id</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/graphs/forms.html#RegisterForm.clean_user_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.forms.RegisterForm.clean_user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form validation to check if the user id already exist
+in the database.</p>
+<p><a class="reference external" href="https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute">https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute</a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="graphs.forms.SearchForm">
+<em class="property">class </em><tt class="descclassname">graphs.forms.</tt><tt class="descname">SearchForm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/graphs/forms.html#SearchForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.forms.SearchForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search form used to perform search on GraphSpace</p>
+</dd></dl>
+
 </div>
 <div class="section" id="utils-db-py">
 <h2>Utils - db.py<a class="headerlink" href="#utils-db-py" title="Permalink to this headline">¶</a></h2>
@@ -2946,10 +2982,85 @@ error raised if you don&#8217;t create a new session for every new page load or 
 <div class="section" id="utils-json-converter-py">
 <h2>Utils - json_converter.py<a class="headerlink" href="#utils-json-converter-py" title="Permalink to this headline">¶</a></h2>
 <p>Converts graphs from CytoscapeWeb to CytoscapeJS. Located at GraphSpace/graphs/util/json_converter.py</p>
+<span class="target" id="module-graphs.util.json_converter"></span><dl class="function">
+<dt id="graphs.util.json_converter.convert_json">
+<tt class="descclassname">graphs.util.json_converter.</tt><tt class="descname">convert_json</tt><big>(</big><em>original_json</em><big>)</big><a class="reference internal" href="_modules/graphs/util/json_converter.html#convert_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.util.json_converter.convert_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts original_json that&#8217;s used in Cytoscape Web
+such that it is compatible with the new Cytoscape.js</p>
+<p>See: <a class="reference external" href="http://cytoscape.github.io/cytoscape.js/">http://cytoscape.github.io/cytoscape.js/</a></p>
+<p>Original json structure used for Cytoscape Web:
+{</p>
+<blockquote>
+<div><p>&#8220;metadata&#8221;: {</p>
+<p>},</p>
+<dl class="docutils">
+<dt>&#8220;graph&#8221;: {</dt>
+<dd><dl class="first docutils">
+<dt>&#8220;data&#8221;: {</dt>
+<dd><dl class="first docutils">
+<dt>&#8220;nodes&#8221;: [ </dt>
+<dd>{ &#8220;id&#8221;: &#8220;node1&#8221;, &#8220;label&#8221;: &#8220;n1&#8221;, ... },
+{ &#8220;id&#8221;: &#8220;node2&#8221;, &#8220;label&#8221;: &#8220;n2&#8221;, ... },
+...</dd>
+</dl>
+<p>],
+&#8220;edges&#8221;: [</p>
+<blockquote>
+<div>{ &#8220;id&#8221;: &#8220;edge1&#8221;, &#8220;label&#8221;: &#8220;e1&#8221;, ... },
+{ &#8220;id&#8221;: &#8220;edge2&#8221;, &#8220;label&#8221;: &#8220;e2&#8221;, ... },
+...</div></blockquote>
+<p class="last">]</p>
+</dd>
+</dl>
+<p class="last">}</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>New json structure:
+{</p>
+<blockquote>
+<div><p>&#8220;metadata&#8221;: {</p>
+<p>},</p>
+<dl class="docutils">
+<dt>&#8220;graph&#8221;: {</dt>
+<dd><dl class="first docutils">
+<dt>&#8220;nodes&#8221;: [</dt>
+<dd>{&#8220;data&#8221;: {&#8220;id&#8221;: &#8220;node1&#8221;, &#8220;label&#8221;: &#8220;n1&#8221;, ...}},
+{&#8220;data&#8221;: {&#8220;id&#8221;: &#8220;node2&#8221;, &#8220;label&#8221;: &#8220;n2&#8221;, ...}},
+...</dd>
+</dl>
+<p>],
+&#8220;edges&#8221;: [</p>
+<blockquote>
+<div>{&#8220;data&#8221;: {&#8220;id&#8221;: &#8220;edge1&#8221;, &#8220;label&#8221;: &#8220;e1&#8221;, ...}},
+{&#8220;data&#8221;: {&#8220;id&#8221;: &#8220;edge2&#8221;, &#8220;label&#8221;: &#8220;e2&#8221;, ...}},
+...</div></blockquote>
+<p class="last">]</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</dd></dl>
+
 </div>
 <div class="section" id="utils-paginator-py">
 <h2>Utils - paginator.py<a class="headerlink" href="#utils-paginator-py" title="Permalink to this headline">¶</a></h2>
 <p>Paginates all graphs that are retrieved. Located at GraphSpace/graphs/util/paginator.py</p>
+<span class="target" id="module-graphs.util.paginator"></span><dl class="function">
+<dt id="graphs.util.paginator.pager">
+<tt class="descclassname">graphs.util.paginator.</tt><tt class="descname">pager</tt><big>(</big><em>request</em>, <em>content</em>, <em>page_size=25</em>, <em>adjacent_pages=3</em><big>)</big><a class="reference internal" href="_modules/graphs/util/paginator.html#pager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphs.util.paginator.pager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds pagination context variables for use in displaying first, adjacent and
+last page links in addition to those created by the object_list generic
+view.</p>
+<p>context - context to be displayed on the page
+content - content to be paginated</p>
+<p>based on the following article:
+www.tummy.com/articles/django-pagination/</p>
+</dd></dl>
+
 </div>
 </div>
 

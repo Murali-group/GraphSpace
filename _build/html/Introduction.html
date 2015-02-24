@@ -54,14 +54,71 @@
             
   <div class="section" id="introduction-to-graphspace">
 <h1>Introduction to GraphSpace<a class="headerlink" href="#introduction-to-graphspace" title="Permalink to this headline">¶</a></h1>
-<p>This will contain a brief overview of how the entire system of GraphSpace works for newcomers.</p>
+<p>This will contain a brief overview of how the entire system of GraphSpace works for developers.</p>
+<div class="section" id="current-location-soon-to-be-moved">
+<h2>Current Location (Soon to be moved)<a class="headerlink" href="#current-location-soon-to-be-moved" title="Permalink to this headline">¶</a></h2>
+<p>The repository for GraphSpace (Python version) is currently <a class="reference external" href="https://github.com/DSin52/GraphSpace.git">https://github.com/DSin52/GraphSpace.git</a>.</p>
+<p>This is a private repository, so please ask <a class="reference external" href="mailto:divit52&#37;&#52;&#48;vt&#46;edu">divit52<span>&#64;</span>vt<span>&#46;</span>edu</a> to add you as a collaborator or if any issues come up.</p>
+<p>** This location will eventually get changed to Murali&#8217;s Github account **</p>
+</div>
+<div class="section" id="up-and-running">
+<h2>Up and Running<a class="headerlink" href="#up-and-running" title="Permalink to this headline">¶</a></h2>
+<p>This repository should have everything but the database.</p>
+<p>In order to get the most current database (holmes&#8217; version: (/data/craigy/graphspace-production/graphspace-server/graphspace.db), simply cp it to directory where graphspace is running.</p>
+<p>Next, navigate to the top-most directory of this project.</p>
+<p>There should be a script called alter_table.py.
+This script is a conversion script which changes the previous schema of GraphSpace to the new schema (retaining all data).  It has two comands, &#8216;alter&#8217; and &#8216;drop&#8217;.</p>
+<p>Invoke the following commands to create a database compatible with the new schema:</p>
+<p>Command to create new tables with updated schema and transfer data:</p>
+<p>python alter_table.py graphspace.db alter</p>
+<p>Command to delete:</p>
+<p>python alter_table.py graphspace.db drop</p>
+<p>You should now have a database with the updated schema.</p>
+<p>Now, we have to sync the database with Django to construct permission tables:</p>
+<p>python manage.py syncdb</p>
+<p>In order to start the server, simply run:</p>
+<p>python manage.py runserver</p>
+<p>It should run on port 8000 by default</p>
+<p><strong>Note</strong></p>
+<p>If you want to change the database name, you have to change it in the following two places:</p>
+<p>graphs/util/db_conn.py: Change the url of the database to contain the name of the database (for example: &#8216;sqlite:///graphspace.db&#8217;)</p>
+<p>graphs/util/db.py: change DB_NAME (for example: &#8216;graphspace.db&#8217;)</p>
+<p>graphs/util/db_init.py: Change the following: db = Database(&#8216;prod&#8217;) to the file location path in db_conn.py (see above)</p>
+</div>
 <div class="section" id="using-the-web-application">
 <h2>Using the Web Application<a class="headerlink" href="#using-the-web-application" title="Permalink to this headline">¶</a></h2>
-<p>This will tell you how to use the web application.</p>
+<p>The GraphSpace server is laid out into the following folders:</p>
+<p>/graphs contains most of the Python code, for handling urls, database accesses, views etc.</p>
+<p>/graphs/static/ contains CSS and JavaScript libraries.</p>
+<p>/graphs/templates/ contains html and Django templates.</p>
+<p>/graphs/auth/ contains codes related to authentication (user login).</p>
+<p>/graphs/util/ contains utilities such as in-graph search, database connection, json converter, paginator etc.</p>
+<p>/graphspace contains settings and other scripts that comes with Django.</p>
+</div>
+<div class="section" id="working-on-graphspace">
+<h2>Working on GraphSpace<a class="headerlink" href="#working-on-graphspace" title="Permalink to this headline">¶</a></h2>
+<p>It is strongly recommended to take time to read and try the Django tutorial to grasp the usage of it. The Django version used here is 1.6.</p>
+</div>
+<div class="section" id="django-documentation">
+<h2>Django Documentation<a class="headerlink" href="#django-documentation" title="Permalink to this headline">¶</a></h2>
+<p>You will also want to get familiar with SQLALchemy, for accessing and querying from databases. GraphSpace is using SQLAlchemy version 0.9.</p>
+</div>
+<div class="section" id="sqlalchemy-documentation">
+<h2>SQLAlchemy Documentation<a class="headerlink" href="#sqlalchemy-documentation" title="Permalink to this headline">¶</a></h2>
+<p>/graphs contains all the files necessary. To describe few important ones:</p>
+<p>views.py - functions defined in this file model the view of the site.</p>
+<p>urls.py - defines how the URLs are handled.</p>
+<p>models.py - defines the database model used in GraphSpace. Due to some constrains in Django ORM, we used third party ORM called SQLALchemy.</p>
+<p>Once you get familiar with Django by going through its tutorial and some of its documentation, you will start to see how all these files work together. I recommend to get familiar with views, templates, forms, and url handling, which can be found in the documentation. (their documentation is pretty good) You may also want to look at middleware but it is not used as extensively because we replaced Django&#8217;s ORM with SQLAlchemy.</p>
+<p>I strongly recommend to start with merging the databases, so that the GraphSpace can run on a single database instead of couple. Currently it runs on 2~3 databases, one being &#8220;test.db&#8221; to support user login, and others being the backup copy of the live database. To make database access easier, I wrote a simple module for it. It is located at /graphs/util/db_conn.py</p>
+<p>One change I made when I implemented the database model with SQLALchemy is to rename the &#8220;id&#8221; column of every table to be &#8220;tablename_id&#8221;. For example, &#8220;id&#8221; column in &#8220;user&#8221; table would be &#8220;user_id&#8221;. In the live version, most tables have just &#8220;id&#8221; column. You will want to watch out for this when merging the databases. This also means that you will need to change some of the queries used in views.py and possibly in other modules to have correct column names. Most of the queries are performed on the backup version of the live database, so the queries use the column &#8220;id&#8221; instead of something like &#8220;user_id&#8221;.</p>
+<p>Many of the implemented functionality are basic. For example, when you search for a node or an edge, the search is performed on the entire database without considering permissions. Details are described in the TODO list below.
+The overall look of the GraphSpace is modeled after the Perl version of the GraphSpace. If you compare them, there won&#8217;t be too much of a difference.</p>
 </div>
 <div class="section" id="using-the-rest-api">
 <h2>Using the REST API<a class="headerlink" href="#using-the-rest-api" title="Permalink to this headline">¶</a></h2>
-<p>This will tell you hwo to use the REST API</p>
+<p>In order to use the REST API, install curl (linux).  Follow the REST API section within the HELP section in GraphSpace.  If you get wierd responses, simply pipe it to a txt file for easier tracing of the logs:</p>
+<p>curl [command] &gt; output.txt</p>
 </div>
 </div>
 
@@ -74,7 +131,12 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction to GraphSpace</a><ul>
+<li><a class="reference internal" href="#current-location-soon-to-be-moved">Current Location (Soon to be moved)</a></li>
+<li><a class="reference internal" href="#up-and-running">Up and Running</a></li>
 <li><a class="reference internal" href="#using-the-web-application">Using the Web Application</a></li>
+<li><a class="reference internal" href="#working-on-graphspace">Working on GraphSpace</a></li>
+<li><a class="reference internal" href="#django-documentation">Django Documentation</a></li>
+<li><a class="reference internal" href="#sqlalchemy-documentation">SQLAlchemy Documentation</a></li>
 <li><a class="reference internal" href="#using-the-rest-api">Using the REST API</a></li>
 </ul>
 </li>

@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>graphs.forms &mdash; GraphSpace Documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GraphSpace Documentation 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for graphs.forms</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">See https://docs.djangoproject.com/en/dev/topics/forms/ for details.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">import</span> <span class="nn">graphs.util.db_init</span> <span class="kn">as</span> <span class="nn">db_init</span>
+<span class="kn">import</span> <span class="nn">graphs.util.db_conn</span> <span class="kn">as</span> <span class="nn">db_conn</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm.exc</span> <span class="kn">import</span> <span class="n">NoResultFound</span><span class="p">,</span> <span class="n">MultipleResultsFound</span> 
+
+<div class="viewcode-block" id="LoginForm"><a class="viewcode-back" href="../../Code.html#graphs.forms.LoginForm">[docs]</a><span class="k">class</span> <span class="nc">LoginForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		Login Form used to show login fields in GraphSpace webpages. </span>
+<span class="sd">		This form is located within the top navbar.</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="c"># attrs to specify extra html attributes</span>
+	<span class="n">user_id</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;placeholder&#39;</span><span class="p">:</span> <span class="s">&#39;Email&#39;</span><span class="p">,</span> <span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="s">&#39;13&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;email&#39;</span><span class="p">}))</span>
+	<span class="n">pw</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">PasswordInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;placeholder&#39;</span><span class="p">:</span> <span class="s">&#39;Password&#39;</span><span class="p">,</span> <span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="s">&#39;13&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;pw&#39;</span><span class="p">}))</span>
+</div>
+<div class="viewcode-block" id="SearchForm"><a class="viewcode-back" href="../../Code.html#graphs.forms.SearchForm">[docs]</a><span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		Search form used to perform search on GraphSpace</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">			Initialize the form. A keyword argument &#39;placeholder&#39; may be </span>
+<span class="sd">			given.</span>
+
+<span class="sd">			This can be customized to specify additional parameters if it </span>
+<span class="sd">			needs to. </span>
+<span class="sd">		&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="s">&#39;placeholder&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;placeholder&#39;</span><span class="p">)</span>
+			<span class="c"># must be called after &#39;placeholder&#39; is popped from kwargs</span>
+			<span class="nb">super</span><span class="p">(</span><span class="n">SearchForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;search&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;placeholder&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span><span class="p">,</span> <span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;search&#39;</span><span class="p">})</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">super</span><span class="p">(</span><span class="n">SearchForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;search&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;search&#39;</span><span class="p">})</span>
+	
+	<span class="n">search</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RegisterForm"><a class="viewcode-back" href="../../Code.html#graphs.forms.RegisterForm">[docs]</a><span class="k">class</span> <span class="nc">RegisterForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		Register form to help create an account for a new user.</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="n">user_id</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Email&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+				<span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="s">&#39;25&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;user_id&#39;</span><span class="p">}))</span>
+	<span class="n">password</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Password&#39;</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">PasswordInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="s">&#39;25&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;password&#39;</span><span class="p">}))</span>
+	<span class="n">verify_password</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Verify Password&#39;</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">PasswordInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;class&#39;</span><span class="p">:</span> <span class="s">&#39;form-control&#39;</span><span class="p">,</span> <span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="s">&#39;25&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;verify_password&#39;</span><span class="p">}))</span>
+
+<div class="viewcode-block" id="RegisterForm.clean_user_id"><a class="viewcode-back" href="../../Code.html#graphs.forms.RegisterForm.clean_user_id">[docs]</a>	<span class="k">def</span> <span class="nf">clean_user_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">			Form validation to check if the user id already exist</span>
+<span class="sd">			in the database.</span>
+
+<span class="sd">			https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+		<span class="c"># using test database to store login information</span>
+		<span class="n">db</span> <span class="o">=</span> <span class="n">db_conn</span><span class="o">.</span><span class="n">Database</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+		<span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">]</span>
+		<span class="n">cleaned_data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">RegisterForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+		<span class="n">user_id</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="p">[</span><span class="s">&quot;user_id&quot;</span><span class="p">]</span>
+		<span class="n">db_session</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">new_session</span><span class="p">()</span>
+
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="c"># query for user id to see if it exists</span>
+			<span class="n">check_user</span> <span class="o">=</span> <span class="n">db_session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+		<span class="k">except</span> <span class="n">NoResultFound</span><span class="p">:</span>
+			<span class="c"># good to create new user</span>
+			<span class="k">return</span> <span class="n">user_id</span>
+		<span class="k">except</span> <span class="n">MultipleResultsFound</span><span class="p">:</span>
+			<span class="c"># should not happen</span>
+			<span class="k">raise</span> <span class="n">MultipleResultsFound</span><span class="p">(</span><span class="s">&quot;this should not happen.&quot;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="RegisterForm.clean"><a class="viewcode-back" href="../../Code.html#graphs.forms.RegisterForm.clean">[docs]</a>	<span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">			Form validation to check if two passwords provided are </span>
+<span class="sd">			equivalent.</span>
+
+<span class="sd">			https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+		<span class="n">cleaned_data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">RegisterForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+		<span class="n">pw</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;password&quot;</span><span class="p">)</span>
+		<span class="n">vpw</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;verify_password&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">pw</span> <span class="ow">and</span> <span class="n">vpw</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">pw</span> <span class="o">!=</span> <span class="n">vpw</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">forms</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s">&quot;Passwords do not match.&quot;</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">cleaned_data</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Divit Singh.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

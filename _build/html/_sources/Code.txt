@@ -25,6 +25,8 @@ forms.py
 --------------------------------------
 Pre-made HTML forms to send to the front-end. Located at GraphSpace/graphs/forms.py
 
+.. automodule:: graphs.forms
+	:members:
 
 Utils - db.py
 --------------------------------------
@@ -51,8 +53,13 @@ Utils - json_converter.py
 ---------------------------------------
 Converts graphs from CytoscapeWeb to CytoscapeJS. Located at GraphSpace/graphs/util/json_converter.py
 
+.. automodule:: graphs.util.json_converter
+	:members:
+
 Utils - paginator.py
 ---------------------------------------
 Paginates all graphs that are retrieved. Located at GraphSpace/graphs/util/paginator.py
 
+.. automodule:: graphs.util.paginator
+	:members:
 

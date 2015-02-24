@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>graphs.util.paginator &mdash; GraphSpace Documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="GraphSpace Documentation 0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for graphs.util.paginator</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">django.core.paginator</span> <span class="kn">import</span> <span class="n">Paginator</span><span class="p">,</span> <span class="n">EmptyPage</span><span class="p">,</span> <span class="n">PageNotAnInteger</span>
+
+<div class="viewcode-block" id="pager"><a class="viewcode-back" href="../../../Code.html#graphs.util.paginator.pager">[docs]</a><span class="k">def</span> <span class="nf">pager</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">page_size</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">adjacent_pages</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Adds pagination context variables for use in displaying first, adjacent and</span>
+<span class="sd">        last page links in addition to those created by the object_list generic</span>
+<span class="sd">        view.</span>
+
+<span class="sd">        context - context to be displayed on the page</span>
+<span class="sd">        content - content to be paginated</span>
+
+<span class="sd">        based on the following article:</span>
+<span class="sd">        www.tummy.com/articles/django-pagination/</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">page_size</span><span class="p">)</span>
+
+    <span class="n">page</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;page&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">current_page</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PageNotAnInteger</span><span class="p">:</span>
+        <span class="c">#If page is not an integer, deliver first page.</span>
+        <span class="n">current_page</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">EmptyPage</span><span class="p">:</span>
+        <span class="c">#If page is out of range, deliver lastpage of results.</span>
+        <span class="n">current_page</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span><span class="p">)</span>
+
+
+    <span class="n">startPage</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_page</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">endPage</span> <span class="o">=</span> <span class="n">current_page</span><span class="o">.</span><span class="n">number</span> <span class="o">+</span> <span class="n">adjacent_pages</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">endPage</span> <span class="o">&gt;</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span><span class="p">:</span> 
+        <span class="n">endPage</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">+</span> <span class="mi">1</span>
+    
+    <span class="n">page_numbers</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">startPage</span><span class="p">,</span> <span class="n">endPage</span><span class="p">)]</span>    
+
+    <span class="c"># context of the paginator to be displayed on the webpage</span>
+    <span class="n">context</span><span class="p">[</span><span class="s">&#39;paginator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">paginator</span>
+    <span class="k">if</span> <span class="n">page_numbers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;has_next&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;has_previous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;has_next&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_page</span><span class="o">.</span><span class="n">has_next</span><span class="p">()</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;has_previous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_page</span><span class="o">.</span><span class="n">has_previous</span><span class="p">()</span>
+        
+    <span class="n">context</span><span class="p">[</span><span class="s">&#39;page_numbers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">page_numbers</span> 
+    <span class="n">context</span><span class="p">[</span><span class="s">&#39;show_last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">page_numbers</span>
+    <span class="n">context</span><span class="p">[</span><span class="s">&#39;current_page&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_page</span>
+    <span class="k">if</span> <span class="n">endPage</span> <span class="o">==</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">context</span><span class="p">[</span><span class="s">&#39;page_numbers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">endPage</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">context</span><span class="p">[</span><span class="s">&#39;page_numbers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">-</span> <span class="n">adjacent_pages</span><span class="p">,</span> <span class="n">endPage</span><span class="p">)</span>
+            <span class="n">context</span><span class="p">[</span><span class="s">&#39;pages_range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">-</span> <span class="n">adjacent_pages</span><span class="p">,</span> <span class="n">endPage</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;pages_range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">current_page</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">paginator</span><span class="o">.</span><span class="n">num_pages</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;next_page_number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_page</span><span class="o">.</span><span class="n">next_page_number</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">EmptyPage</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">try</span><span class="p">:</span>    
+        <span class="n">context</span><span class="p">[</span><span class="s">&#39;previous_page_number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_page</span><span class="o">.</span><span class="n">previous_page_number</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">EmptyPage</span><span class="p">:</span>
+        <span class="k">pass</span>
+    
+    <span class="k">return</span> <span class="n">context</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Divit Singh.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
