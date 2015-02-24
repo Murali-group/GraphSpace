@@ -2,8 +2,6 @@
 {% block content %}
 {% load staticfiles %}
 
-<!-- <div class="graphs_container">
- -->
 <div class="container graphs">
     
     <div class="row">
@@ -14,51 +12,51 @@
                         {% if tags %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                               <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% else %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% endif %}
                     {% else %}
                         {% if tags %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}" >My Graphs<br>{{ my_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Shared with me<br>{{ shared_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% else %}
-                            <button class="btn btn-primary"><a style='color:white' href="{% url 'graphs' %}">My Graphs<br>{{ my_graphs }}</a></button>
-                            <button class="btn btn-primary"><a style='color:white' href="{% url 'shared_graphs' %}">Shared with me<br>{{ shared_graphs }}</a></button>
-                            <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            <a style='color:white' href="{% url 'graphs' %}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                            <a style='color:white' href="{% url 'shared_graphs' %}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                            <a style='color:white' href="{% url 'public_graphs' %}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             <!-- All Graphs is for admin mode. Specific functionality to be added. -->
                             {% if admin == 1 %}
-                            <button class="btn btn-primary"><a style='color:white' href="{% url 'all_graphs' %}">All Graphs</a></button>
+                            <a style='color:white' href="{% url 'all_graphs' %}"><button class="btn btn-primary">All Graphs</button></a>
                             {% endif %}
                         {% endif %}
                     {% endif %}
@@ -67,22 +65,22 @@
                         {% if tags %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% else %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% endif %}
                     {% else %}
                         {% if tags %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <button class="btn btn-primary"><a style='color:white' href="{{ final_url }}">Public Graphs<br>{{ public_graphs }}</a></button>
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% else %}
-                            <button class="btn btn-primary"><a style='color:white' href="{% url 'public_graphs' %}">Public Graphs<br>{{ public_graphs }}</a></button>
+                            <a style='color:white' href="{% url 'public_graphs' %}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                         {% endif %}
                     {% endif %}
                 {% endif %}

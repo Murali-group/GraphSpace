@@ -10,7 +10,6 @@ from graphs.auth.login import login
 from forms import LoginForm, SearchForm, RegisterForm
 
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import or_, and_
 
 import sqlalchemy, sqlalchemy.orm
 import models
@@ -32,8 +31,10 @@ group_to_graph = db_init.group_to_graph
 
 ##### VIEWS #####
 def index(request):
-    '''Render the main page'''
+    '''Render the main page
 
+        :param request: HTTP GET Request
+    '''
 
     #####################
     # UNCOMMENT THESE ON INITIAL START UP TO POPULATE TABLES
@@ -58,10 +59,11 @@ def index(request):
 
 def view_graph(request, uid, gid):
     '''
-        View a graph with Cytoscape Web.
+        View a graph with CytoscapeJS.
 
-        @param uid - owner of the graph to view
-        @param gid - graph id of the graph to view
+        :param request: HTTP GET Request
+        :param uid: Owner of the graph to view
+        :param gid: Graph id of the graph to view
     '''
     #create a new db session
     db_session = data_connection.new_session()
@@ -132,6 +134,10 @@ def view_graph(request, uid, gid):
 def view_json(request, uid, gid):
     '''
         View json structure of a graph.
+
+        :param request: HTTP GET Request
+        :param uid: email of the user that owns this graph
+        :param gid: name of graph that the user owns
     '''
     #create a new db session
     db_session = data_connection.new_session()
@@ -161,26 +167,38 @@ def view_json(request, uid, gid):
         return HttpResponse(context['json'])
 
 def graphs(request):
-    '''Render the My Graphs page'''
+    '''
+        Render the My Graphs page
+
+        :param request: HTTP GET Request
+    '''
 
     return _graphs_page(request, 'my graphs')
     
 def shared_graphs(request):
-    '''Render the graphs/shared/ page showing all graphs that are shared with a user'''
+    '''
+        Render the graphs/shared/ page showing all graphs that are shared with a user
+
+        :param request: HTTP GET Request
+    '''
     
     return _graphs_page(request, 'shared') 
 
 def public_graphs(request):
-    '''Render the graphs/public/ page showing all graphs that are public'''
+    '''
+        Render the graphs/public/ page showing all graphs that are public
+
+        :param request: HTTP GET Request
+    '''
 
     return _graphs_page(request, 'public')
 
 def all_graphs(
     request):
     '''
-        Render the graphs/all/ page showing all graphs.
+        Render the graphs/all/ page showing all graphs. Admin feature [NOT CURRENTLY SUPPORTED]
 
-        Admin feature
+        :param request: HTTP GET Request
     '''
 
     return _graphs_page(request, 'all')
@@ -193,8 +211,8 @@ def _graphs_page(request, view_type):
             graphs/public/
             graphs/all/
 
-        TODO: List/view contents specific to the logged in user for each
-              page.
+        :param request: HTTP GET Request
+        :param view_type: Type of view for graph (Ex: my graphs, shared, public)
     '''
     
     #get new session from the database
@@ -241,31 +259,43 @@ def _graphs_page(request, view_type):
     return render(request, 'graphs/graphs.html', context)
 
 def groups(request):
-    ''' Render the Owner Of page, showing groups that are owned by the user. '''
+    ''' 
+        Render the Owner Of page, showing groups that are owned by the user. 
+
+        :param request: HTTP GET Request
+
+    '''
     return _groups_page(request, 'owner of')
 
 def groups_member(request):
-    ''' Render the Member Of page, showing the groups that the user belong to .'''
+    '''
+        Render the Member Of page, showing the groups that the user belong to .
+
+        :param request: HTTP GET Request
+
+    '''
     return _groups_page(request, 'member')
 
 def all_groups(request):
     ''' 
-        Render the All Groups page, showing all groups in the database.
+        Render the All Groups page, showing all groups in the database.Admin feature [NOT CURRENTLY SUPPORTED].
 
-        Admin feature.
+        :param request: HTTP GET Request
+
     '''
     return _groups_page(request, 'all')
 
 def _groups_page(request, view_type):
     '''
-        wrapper view for the following pages:
+        Wrapper view for the following pages:
             groups/
             groups/member/
             groups/public/
             groups/all/
 
-        TODO: List/view contents specific to the logged in user for each
-                  page.
+        :param request: HTTP GET Request
+        :param view_type: Type of view for the group (Example: My Groups, member, public, all)
+
     '''
 
     #get new session from the database
@@ -283,7 +313,7 @@ def _groups_page(request, view_type):
     if uid is not None:
         # Get groups that the user is a member of
         if view_type == 'member':
-            group_list = db.info_groups_for_user(uid)
+            group_list = db.get_all_groups_with_member(context['uid'])
 
         # if admin, then they can view this
         elif view_type == 'all':
@@ -296,9 +326,7 @@ def _groups_page(request, view_type):
         #groups of logged in user(my groups)
         else:
             # List all groups that uid either owns or is a member of and also public groups.
-            group_list = db_session.query(group.c.group_id, group.c.description, 
-                    group.c.owner_id, group.c.public
-                    ).filter(group.c.owner_id == uid).all()
+            group_list = db.get_groups_of_user(context['uid'])
 
         #add the group list to context to display on the page.
         if len(group_list) != 0:
@@ -311,6 +339,9 @@ def _groups_page(request, view_type):
         if type(pager_context) is dict:
             context.update(pager_context)
 
+        context['my_groups'] = len(db.get_groups_of_user(context['uid']))
+        context['member_groups'] = len(db.get_all_groups_with_member(context['uid']))
+
         return render(request, 'graphs/groups.html', context)
 
     #No public groups anymore
@@ -319,14 +350,18 @@ def _groups_page(request, view_type):
 
 def graphs_in_group(request, group_id):
     '''
-        groups/group_name page, where group_name is the name of the
+        Groups/group_name page, where group_name is the name of the
         group to view the graphs that belong to the group.
 
         This is the view displayed when the user clicks a group listed
         on the /groups page.
 
-        group names that are not allowed: 'all', 'member' and 'public'.
+        Group names that are not allowed: 'all', 'member' and 'public'.
         they are preoccupied.
+
+        :param request: HTTP GET Request
+        :param group_id: Name of group to get
+
     '''
 
     #handle login
@@ -408,6 +443,9 @@ def help(request):
 
         help/
         help/getting_started
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -418,6 +456,9 @@ def help(request):
 def help_tutorials(request):
     '''
         Render the help/tutorials page.
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -428,6 +469,9 @@ def help_tutorials(request):
 def help_graphs(request):
     '''
         Render the help/graphs page.
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -438,6 +482,9 @@ def help_graphs(request):
 def help_restapi(request):
     '''
         Render the help/restapi page.
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -448,6 +495,9 @@ def help_restapi(request):
 def help_jsonref(request):
     '''
         Render the help/jsonref page.
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -458,6 +508,9 @@ def help_jsonref(request):
 def help_about(request):
     '''
         Render the help/about page.
+
+        :param request: HTTP GET Request
+
     '''
 
     #handle login
@@ -468,6 +521,11 @@ def help_about(request):
 def register(request):
     '''
         Register a new user.
+
+        :param request: HTTP POST Request containing:
+
+        {"user_id": <user_id>, "password": <password>}
+
     '''
 
     #if the form has been submitted
@@ -528,8 +586,15 @@ def register(request):
 
 def retrieveIDs(request):
     '''
-        This retrieves ID's of the nodes.
+        Retrieves ID's of the nodes.
         Used when highlighting elements of the graph.
+
+        :param request: HTTP POST Request containing
+
+        {uid: <user_id>, gid: <graph_id>, values: [labels/id's of edges/nodes return id for]}
+
+        :return JSON: {"IDS": [ids of nodes/edges in database]}
+
     '''
 
     #Grab id's of the nodes to highlight given the label of the nodes
@@ -555,6 +620,9 @@ def retrieveIDs(request):
 def logout(request):
     '''
         Log the user out and display logout page.
+
+        :param request: HTTP GET Request
+
     '''
     context = {}
     
@@ -570,6 +638,13 @@ def logout(request):
 def sendResetEmail(request):
     '''
         Sends an email to the requester.
+
+        :param request: HTTP POST Request containing:
+
+        {"forgot_email": <user_id>}
+
+        :returns JSON: {"Error|Success": "Email does not exist! | "Email has been sent!"}
+
     '''
     emailId = db.sendForgotEmail(request.POST['forgot_email'])
 
@@ -582,7 +657,11 @@ def sendResetEmail(request):
 def resetLink(request):
     '''
         Directs the user to a link that
-        allows them to change their password
+        allows them to change their password.
+
+        :param HTTP GET Request
+        :return JSON: {"email": <user_id> | "Error": "Unrecognized ID"}
+
     '''
     code = request.GET.get('id')
     email = db.retrieveResetInfo(code)
@@ -597,6 +676,13 @@ def resetLink(request):
 def resetPassword(request):
     '''
         Resets the password of the user.
+
+        :param request: HTTP POST Request containing
+
+        {"email": <user_id>, "password": "password"}
+
+        :return JSON: {"Error|Success": "Password Update not successful! | Password updated for <user_id>!"}
+
     '''
     resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
 
@@ -607,9 +693,22 @@ def resetPassword(request):
 
 
 def save_layout(request, uid, gid):
+    '''
+        Saves a layout for a graph.
+
+        :param HTTP POST Request
+
+    '''
     return HttpResponse(db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted']))
 
 def download(request):
+    '''
+        Download the graph as an image.
+
+        :param HTTP GET Request
+
+    '''
+
     if request.POST:
         if request.POST['image']:
             response =  HttpResponse(request.POST['image'], content_type='application/octet-stream')
@@ -617,7 +716,15 @@ def download(request):
             return response
 
 def changeLayoutName(request):
+    '''
+        Changes the name of the layout
 
+        :param request: Incoming HTTP POST Request containing:
+
+        {"uid": <username>,"gid": <name of graph>, "old_layout_name": <name of old layout>, "new_layout_name": <new name of layout>"}
+
+        :return JSON:  {"Success": <message>}
+    '''
     uid = request.POST['uid']
     gid = request.POST['gid']
     old_layout_name = request.POST['old_layout_name']
@@ -628,6 +735,15 @@ def changeLayoutName(request):
     return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def deleteLayout(request):
+    '''
+        Deletes layout of a graph
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"owner": <owner of graph>,"gid": <name of graph>, "layout": <name of layout to delete>, "user_id": <layout that user belongs to>"}
+
+        :return JSON:  {"Success": <message>}
+    '''
     uid = request.POST['owner']
     gid = request.POST['gid']
     layoutToDelete = request.POST['layout']
@@ -637,6 +753,15 @@ def deleteLayout(request):
     return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
 
 def makeLayoutPublic(request):
+    '''
+        Makes a layout of graph public
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"owner": <owner of graph>,"gid": <name of graph>, "layout": <name of layout to delete>, "user_id": <layout that user belongs to>"}
+
+        :return JSON:  {"Success": <message>}
+    '''
     uid = request.POST['owner']
     gid = request.POST['gid']
     layoutToMakePpublic = request.POST['layout']
@@ -645,6 +770,28 @@ def makeLayoutPublic(request):
     db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
     return HttpResponse(json.dumps({"Success": "Layout made public!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
 
+def create_group(request, groupname):
+    '''
+        Allows group creation from the GUI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"owner": <owner of group>, "groupname": < name of group>}
+
+        :return JSON: {"Upload": <message>, "Group Name | Error": <message> }
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        group_created = db.create_group(request.POST['username'], groupname)
+        
+        # If there isn't already a group name that exists with the same name under account
+        # add it to account
+        if group_created != None:
+            return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Upload": "Fail", "Error": "Group name already exists for this account"}), content_type="application/json")
+
 ##### END VIEWS #####
 
 ##### REST API #####
@@ -652,69 +799,104 @@ def makeLayoutPublic(request):
 def upload_graph(request, user_id, graphname):
     '''
         Uploads a graph for a user
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+        
+        :return response: JSON Response: {"Success|Error": <message>}
+
     '''
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse("Usernames do not match!")
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
         if graph_errors != None:
-            return HttpResponse(graph_errors)
+            return HttpResponse(json.dumps({"Error": graph_errors}), content_type="application/json")
         else:
-            return HttpResponse("Graph inserted into GraphSpace!")
+            return HttpResponse(json.dumps({"Success": "Graph inserted into GraphSpace!"}), content_type="application/json")
 
 def retrieve_graph(request, user_id, graphname):
     '''
         Retrieves the json of a specified graph
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+        
+        :return response: JSON Response: {"Graph|Error": <message>}
     '''
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse("Usernames do not match!")
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
-            return HttpResponse(jsonData)
+            return HttpResponse(json.dumps({"Graph": jsonData}), content_type="application/json")
         else:
-            return HttpResponse("Graph not found!")
+            return HttpResponse(json.dumps({"Error": "No Such Graph Exists"}), content_type="application/json")
 
 def remove_graph(request, user_id, graphname):
     '''
         Removes a graph from the server
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+        
+        :return response: JSON Response: {"Success|Error": <message>}
+
     '''
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse("Usernames do not match!")
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
   
         jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
             db.delete_graph(user_id, graphname)
-            return HttpResponse("Successfully deleted " + graphname + " owned by " + user_id)
+            return HttpResponse(json.dumps({"Success": "Successfully deleted " + graphname + " owned by " + user_id}), content_type="application/json")
         else:
-            return HttpResponse("No such graph exists!")
+            return HttpResponse(json.dumps({"Error": "No Such Graph Exists"}), content_type="application/json")
 
-def view_all_graphs(request, user_id):
+def view_all_graphs_for_user(request, user_id):
     '''
         View all graphs for a user
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :return response: JSON Response: {"Graphs|Error": <message>}
     '''
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse("Usernames do not match!")
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         data = db.get_all_graphs_for_user(user_id)
         return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json");
@@ -723,119 +905,254 @@ def view_all_graphs(request, user_id):
 def get_groups(request):
     '''
         Get all groups that are on this server
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :return response: JSON Response: {"Groups|Error": <message>}
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         data = db.get_all_groups_in_server()
         return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
 
-#too much work, come back later
 def get_group(request, groupname):
     '''
         Get all members of this group 
+
+        :param request: Incoming HTTP POST Request containing: {"username": <username>,"password": <password>}
+        :param groupname: Name of group to get from server
+        :return response: JSON Response: {"Groups|Error": <message>}
+
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
-        data = db.get_group_by_id(groupname)
+        data = db.get_group(groupname)
         return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
 
 
 def delete_group(request, groupname):
     '''
-        Deletes a group from the server
+        Deletes a group from the server.
+        
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+        :param groupname: Name of group to delete from server
+
+        :return response: JSON Response: {"Success|Failure": <message>}
+
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         data = db.remove_group(request.POST['username'], groupname)
-        return HttpResponse(json.dumps({"Response": data}), content_type="application/json");
+        return HttpResponse(json.dumps({"Success": data}), content_type="application/json");
 
 
 def add_group(request, groupname):
     '''
-        Adds a group to the server 
+        Adds a group to the server.  If groupname already exists under a user account, then it will fail, otherwise a group name is created under the user's account.
+
+        :param request: Incoming HTTP POST Request containing:
+        
+        {"username": <username>,"password": <password>}
+
+        :param group: Name of group to add to server
+        :return response: JSON Response: {Upload: "Success|Failure", "Group Name|Error": group | error}
     '''
+
+    # If request is a POST request, add it to the server
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
-        group_created = db.create_group(request.POST['username'], groupname)
-        
-        if group_created != None:
-            return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created}), content_type="application/json")
-        else:
-            return HttpResponse(json.dumps({"Upload": "Fail", "Error": "Group name already exists for this account"}), content_type="application/json")
+        return create_group(request, groupname)
 
 def get_group_for_user(request, user_id):
     '''
-        Gets all groups that a user is a part of
+        Gets all groups that a user is a part of.  
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Email of the user to get the groups for
+        :return JSON Response: {"User": <user_id>, "Groups": <name of groups for the user>}
+
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         group = db.groups_for_user(user_id)
         return HttpResponse(json.dumps({"User": user_id, "Groups": group}), content_type="application/json")
 
-def add_user(request, groupname, user_id):
+def add_user_to_group(request, groupname, user_id):
     '''
-        Adds user to a group
+        Adds specified user to a group.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}    
+
+        :param groupname: Name of group to add user to
+        :param user_id: Email of user to add to the group
+        :return JSON Response: {"Response": <response>}
     '''
+
     if request.method == 'POST':
 
+        # Check to see if the user/password is acceptable
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
+        # Adds user to group
         data = db.add_user_to_group(user_id, request.POST['username'], groupname)
 
+        # If nothing is returned, that means that something went wrong
         if data == None:
-            return  HttpResponse(json.dumps({"Response": "Group doesn't exist or user has already been added!"}), content_type="application/json")
+            return  HttpResponse(json.dumps({"Error": "Group doesn't exist or user has already been added!"}), content_type="application/json")
 
         return HttpResponse(json.dumps({"Response": data}), content_type="application/json")
 
 
-def remove_user(request, groupname, user_id):
+def remove_user_from_group(request, groupname, user_id):
     '''
         Removes user from group
+
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}    
+        :param groupname: Name of group to remove user from
+        :param user_id: Email of user to remove
+
     '''
+
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         group = db.remove_user_from_group(user_id, request.POST['username'], groupname)
         return HttpResponse(json.dumps({"Response": group}), content_type="application/json")
 
 def share_graph(request, graphname, groupname):
     '''
-        Share a graph with group
+        Share a graph with group.
+
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param graphname: Name of graph to unshare_graph
+        :param groupname: Name of group to unshare graph with
+
+        :return JSON: {"Response": <message>}
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         result = db.share_graph_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
 
 def unshare_graph(request, graphname, groupname):
     '''
-        Unshare a graph from a group
+        Unshare a graph from a group.
+
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param graphname: Name of graph to unshare_graph
+        :param groupname: Name of group to unshare graph with
+
+        :return JSON: {"Response": <message>}
     '''
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse("Username/Password is not recognized!")
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         result = db.unshare_graph_with_group(request.POST['username'], graphname, groupname)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+
+def get_tags_for_user(request, username):
+    '''
+        Get all tags that a user has under their name
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param username: Name of user to get tags from
+
+        :return JSON: {"Response": <message>}
+    '''
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        result = db.get_all_tags_for_user(username)
+        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+
+def get_all_tags_for_graph(request, username, graphname):
+    '''
+        Get all tags that a user has under their graph
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param graphname: Name of graph to get tags from
+        :param username: Name of user to get graph of
+
+        :return JSON: {"Response": <message>}
+    '''
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+
+        result = db.get_all_tags_for_graph(graphname, username)
+        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+
+def get_all_graphs_for_tags(request, tag):
+    '''
+        Get all graphs associated with these tags
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param tag: Name of tag to get graphs of 
+
+        :return JSON: {"Response": <message>}
+    '''
+    
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        result = db.get_all_graphs_for_tags(tag)
+        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

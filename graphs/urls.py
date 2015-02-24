@@ -37,7 +37,8 @@ urlpatterns = patterns('',
         # url(r'^groups/public/$', views.public_groups, name='public_groups'),
         url(r'^groups/all/$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
-        
+        url(r'^add/(?P<groupname>.+)/$', views.create_group, name='create_group'),
+
         # help page
         url(r'^help/$', views.help, name='help'),
         url(r'^help/tutorials/$', views.help_tutorials, name='help_tutorials'),
@@ -64,20 +65,24 @@ urlpatterns = patterns('',
         url(r'^reset/$', views.resetLink, name='reset'),
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
 
+        # tags
+        url(r'^api/tags/user/(?P<username>.+)/(?P<graphname>.+)/$', views.get_all_tags_for_graph, name='get_all_tags_for_graph'),
+        url(r'^api/tags/user/(?P<username>.+)/$', views.get_tags_for_user, name='get_tags_for_user'),
+
         #REST API for graphs
         url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),
         url(r'^api/users/graphs/(?P<graphname>.+)/unshare/(?P<groupname>.+)/$', views.unshare_graph, name='unshare_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/add/(?P<graphname>.+)/$', views.upload_graph, name='upload_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/get/(?P<graphname>.+)/$', views.retrieve_graph, name='retrieve_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/delete/(?P<graphname>.+)/$', views.remove_graph, name='remove_graph'),
-        url(r'^api/users/(?P<user_id>.+)/graphs/$', views.view_all_graphs, name='view_all_graphs'),
+        url(r'^api/users/(?P<user_id>.+)/graphs/$', views.view_all_graphs_for_user, name='view_all_graphs_for_user'),
 
         #REST API for groups
         url(r'^api/groups/get/$', views.get_groups, name='get_groups'),
         url(r'^api/groups/delete/(?P<groupname>.+)/$', views.delete_group, name='delete_group'),
         url(r'^api/groups/add/(?P<groupname>.+)/$', views.add_group, name='add_group'),
-        url(r'^api/groups/(?P<groupname>.+)/adduser/(?P<user_id>.+)/$', views.add_user, name='add_user'),
-        url(r'^api/groups/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user, name='remove_user'),
+        url(r'^api/groups/(?P<groupname>.+)/adduser/(?P<user_id>.+)/$', views.add_user_to_group, name='add_user_to_group'),
+        url(r'^api/groups/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user_from_group, name='remove_user_from_group'),
         url(r'^api/groups/(?P<groupname>.+)/get/$', views.get_group, name='get_group'), # needs more work
         url(r'^api/users/(?P<user_id>.+)/groups/$', views.get_group_for_user, name='get_group_for_user'),
         )

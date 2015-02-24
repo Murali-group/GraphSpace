@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load staticfiles %}
 
 {% include 'graphs/help_menu.html' %}
 
@@ -90,6 +91,12 @@ Below is a list of the different API calls.
 <li><a href="#remove_user_from_group">Remove user from group</a></li>
 <li><a href="#share_graph">Share a graph with a group</a></li>
 <li><a href="#unshare_graph">Unshare a graph with a group</a></li>
+</ul>
+</li>
+<li><h4><a href="#tags">Tags</a></h4>
+<ul>
+<li><a href="#tag_for_user">Get Tags for User</a></li>
+<li><a href="#tag_for_graph">Get Tags for Graph</a></li>
 </ul>
 </li>
 </ul>
@@ -202,26 +209,22 @@ Example failed response:
 }
 </pre>
 
-<!-- 
+
 <h3 id="get_user_graphs">Get user graphs</h3>
 
 Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
 
 <pre>
-GET -C [username]:[password] http://[% request.uri_base %]/api/users/[username]/graphs
+curl -X POST "http://localhost:8000/api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
 
 <pre>
 {
-   "graphs" : [
-      {
-         "id" : "158148980"
-      }
-   ]
+  "Graphs" : ["graph1", "graph2"]
 }
-</pre> -->
+</pre>
 
 <h2 id="groups">Groups</h2>
 
@@ -275,6 +278,21 @@ Example response:
 }
 </pre>
 
+<h3 id="create_group">Create group</h3>
+
+To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
+
+<pre>
+curl -X POST "http://localhost:8000/api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example response:
+
+<pre>
+{
+   "success" : "Created group newgroup."
+}
+</pre>
 
 <h3 id="remove_group">Remove group</h3>
 
@@ -305,24 +323,6 @@ Example failed response:
        "error" : "No such group exists"
 }
 </pre>
-
-
-<h3 id="create_group">Create group</h3>
-
-To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
-
-<pre>
-curl -X POST "http://localhost:8000/api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
-</pre>
-
-Example response:
-
-<pre>
-{
-   "success" : "Created group newgroup."
-}
-</pre>
-
 
 <h3 id="get_user_groups">Get groups a user belongs to</h3>
 
@@ -391,14 +391,14 @@ Example successful response:
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/graphs/demo/share/Crosstalk/" -F "username=dsingh5270@gmail.com" -F "password=test"
+curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/share/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
 
 <pre>
 {
-   "success" : "Shared graph 491850553 owned by craigy@vt.edu with group Test."
+   "success" : "Shared graph owned by craigy@vt.edu with group Test."
 }
 </pre>
 
@@ -407,15 +407,46 @@ Example successful response:
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/graphs/demo/unshare/Crosstalk/" -F "username=dsingh5270@gmail.com" -F "password=test"
+curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/unshare/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example successful response:
 
 <pre>
 {
-   "success" : "Unshared graph 491850553 owned by craigy@vt.edu with group Test."
+   "Success" : "Unshared graph 491850553 owned by craigy@vt.edu with group Test."
 }
 </pre>
+
+<h3 id='tag_for_user'>Get Tags for User</h3>
+
+Get all the tags that a user has for their graphs.
+<pre>
+curl -X POST "http://localhost:8000/api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example successful response:
+
+<pre>
+{"Response": ["ISMB-2014-Crosstalk"]}
+</pre>
+
+<h3 id='tag_for_graph'>Get Tags for a Graph</h3>
+
+Get all the tags that are attached to a certain graph.
+<pre>
+curl -X POST "http://localhost:8000/api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example successful response:
+<pre>
+{"Response": ["ISMB-2014-Crosstalk"]}
+</pre>
+{% endblock %}
+
+{% block css-js-footer %}
+<!-- load stylesheets -->
+<!-- stylesheet for elements specified in this html(register.html) -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/register.css' %}">
 
 {% endblock %}

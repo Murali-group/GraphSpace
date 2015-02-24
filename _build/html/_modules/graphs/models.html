@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>graphs.models &mdash; GraphSpace Documentation 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GraphSpace Documentation 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for graphs.models</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This code produces almost the same schema as the original schema used in</span>
+<span class="sd">the current live version of GraphSpace (as of June 28, 2014). </span>
+
+<span class="sd">There are two differences:</span>
+
+<span class="sd">    1. The schema produced by this code does not specify data lengths.</span>
+<span class="sd">        ex. VARCHAR instead of VARCHAR(x)</span>
+
+<span class="sd">    2. Tables in the original schema contain a column named &#39;id&#39;. &#39;id&#39; is</span>
+<span class="sd">       a built-in function in Python so it is not a good practice to use</span>
+<span class="sd">       it as a variable. Thus &#39;id&#39; columns are renamed as &#39;tablename_id&#39;.</span>
+<span class="sd">       ex. &#39;id&#39; for user table would be &#39;user_id&#39;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Table</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">ForeignKeyConstraint</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">backref</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.types</span> <span class="kn">import</span> <span class="n">TIMESTAMP</span>
+
+<span class="kn">import</span> <span class="nn">bcrypt</span>
+
+<span class="c"># Construct a base class for declarative class definitions.</span>
+<span class="c"># The new base class will be given a metaclass that produces appropriate Table objects</span>
+<span class="c"># and makes the appropriate mapper() calls based on the information provided</span>
+<span class="c"># declarativly in the class and any subclasses of the class.</span>
+<span class="c"># (Taken from SQLAlchemy API reference)</span>
+<span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+
+<span class="c">#======================== Junction Tables ==========================</span>
+<span class="c"># Junction tables for specifying many to many relationships.</span>
+
+<span class="c"># This table stores group-user pairs. A group may contain many users and a user </span>
+<span class="c"># may belong to many groups. The name of the table is &#39;group_to_user&#39;. </span>
+<span class="c"># It has two columns, &#39;user_id&#39; and &#39;group_id&#39;, which together constitute the </span>
+<span class="c"># primary key. &#39;user_id&#39; is a foreign key referring to the &#39;user_id&#39; column in </span>
+<span class="c"># the &#39;user&#39; table. &#39;group_id&#39; is a foreign key referring to the &#39;group_id&#39; column </span>
+<span class="c"># in the &#39;group&#39; table.</span>
+<span class="n">group_to_user</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s">&#39;group_to_user&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;group_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;group.group_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        
+<span class="c"># For each graph, this table stores the groups that the graph belongs to. </span>
+<span class="c"># Note that a graph may belong to multiple groups. </span>
+<span class="n">group_to_graph</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s">&#39;group_to_graph&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;group_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;group.group_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;graph_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="c"># We need to specify this foreign key constraint outside the column </span>
+            <span class="c"># definitions since (graph_id, user_id) is a composite primary key </span>
+            <span class="c"># in the graph table.</span>
+            <span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="s">&#39;graph_id&#39;</span><span class="p">,</span> <span class="s">&#39;user_id&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;graph.graph_id&#39;</span><span class="p">,</span> <span class="s">&#39;graph.user_id&#39;</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+<span class="c"># For each graph, this table stores tags that the graph has. A graph can have i</span>
+<span class="c"># many tags, and a tag can belong to many graphs.</span>
+<span class="n">graph_to_tag</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s">&#39;graph_to_tag&#39;</span><span class="p">,</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;graph_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">Column</span><span class="p">(</span><span class="s">&#39;tag_id&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;graph_tag.tag_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            
+            <span class="c"># Composite foreign key definition for Graph table. </span>
+            <span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="s">&#39;graph_id&#39;</span><span class="p">,</span> <span class="s">&#39;user_id&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;graph.graph_id&#39;</span><span class="p">,</span> <span class="s">&#39;graph.user_id&#39;</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<span class="c">#=================== End of Junction Tables ===================</span>
+
+<span class="c"># ================== Table Definitions ===================</span>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../Code.html#graphs.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;The class representing the schema of the user table.&#39;&#39;&#39;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;user&#39;</span>
+
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># column to tell whether the user account has been activated.</span>
+    <span class="n">activated</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># activate code to activate the user&#39;s account</span>
+    <span class="n">activate_code</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ??? TODO: does any query use this field?</span>
+    <span class="n">public</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ???</span>
+    <span class="n">unlisted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Is the user an administrator?</span>
+    <span class="n">admin</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># one to many relationships. TODO: add cascades</span>
+    <span class="c"># at most one user can create a graph layout</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Layout&quot;</span><span class="p">)</span>
+    <span class="c"># each group has at most one user who created it. See the owner_id column in the &#39;Group&#39; class.</span>
+    <span class="n">owned_groups</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Group&quot;</span><span class="p">)</span>
+    <span class="c"># each graph has at most one creator.</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Graph&quot;</span><span class="p">)</span> 
+    <span class="c"># ??? </span>
+    <span class="n">password_reset</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;PasswordReset&quot;</span><span class="p">)</span>
+       
+<span class="c"># TODO: change name to Group here and in the db.</span></div>
+<span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;group&#39;</span>
+    
+    <span class="n">group_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># TODO: describe the difference bewteen group_id and name.</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Each group has one owner, who must be in the user table. The foreign key </span>
+    <span class="c"># statement corresponds to the owned_groups relationship in the &#39;User&#39; class.</span>
+    <span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">public</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">unlisted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># This line creates the many-to-many relationship between the User class and the i</span>
+    <span class="c"># Group class through the group_to_user junction table. Specifically, </span>
+    <span class="c"># it links the &#39;User&#39; class to the current class using the group_to_user junction </span>
+    <span class="c"># table; this is a many to one relationship from &#39;User&#39; to &#39;group_to_user&#39;. </span>
+    <span class="c"># The backref argument establishes the many to one relationship from &#39;Group&#39; </span>
+    <span class="c"># to &#39;group_to_user&#39;. An equivalent way to link the two classes is to instead </span>
+    <span class="c"># add the following line to User:</span>
+    <span class="c"># groups = relationship(&#39;Group&#39;, secondary=group_to_user, backref=&#39;user&#39;)</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;User&#39;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="n">group_to_user</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s">&#39;group&#39;</span><span class="p">)</span>
+    <span class="c"># specifies many-to-many relationship with Graph table</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Graph&#39;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="n">group_to_graph</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s">&#39;group&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Graph</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;graph&#39;</span>
+
+    <span class="c"># The graph_id and user_id together specify the primary key.     </span>
+    <span class="n">graph_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="c">#id</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">json</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">TIMESTAMP</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">modified</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">TIMESTAMP</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">public</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">unlisted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+   
+    <span class="c"># specify one to many relationships</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Layout&quot;</span><span class="p">)</span>
+    <span class="c"># Each node can belong to at most one graph. See the &#39;Node&#39; class for details.</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Node&quot;</span><span class="p">)</span>
+    
+    <span class="c">#specify many to many relationship with GraphTag</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;GraphTag&quot;</span><span class="p">,</span> <span class="n">secondary</span><span class="o">=</span><span class="n">graph_to_tag</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s">&#39;graph&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GraphTag"><a class="viewcode-back" href="../../Code.html#graphs.models.GraphTag">[docs]</a><span class="k">class</span> <span class="nc">GraphTag</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Table of tags that are assigned to each graph to categorize them.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;graph_tag&#39;</span>
+    <span class="n">tag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="c">#id</span>
+</div>
+<div class="viewcode-block" id="Layout"><a class="viewcode-back" href="../../Code.html#graphs.models.Layout">[docs]</a><span class="k">class</span> <span class="nc">Layout</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Table of Layouts to specify how the graphs are viewed on GraphSpace.</span>
+<span class="sd">        User created layouts will be stored in this table.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;layout&#39;</span>
+
+    <span class="n">layout_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># A descriptive name for the layout, provided by the owner_id when creating the i</span>
+    <span class="c"># layout in GraphSpace.</span>
+    <span class="n">layout_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># The id of the user who created the layout. The foreign key constraint ensures </span>
+    <span class="c"># this person is present in the &#39;user&#39; table. Not that owner_id need not be the </span>
+    <span class="c"># same as user_id since (graph_id, user_id) uniquely identify the graph. </span>
+    <span class="c"># In other words, the owner_id can be the person other than the one who created </span>
+    <span class="c"># the graph (user_id). An implicit rule is that owner_id must belong to some </span>
+    <span class="c"># group that this graph belongs to. However, the database does not enforce this </span>
+    <span class="c"># constraint explicitly. </span>
+    <span class="c"># TODO: Add a database constraint that checks this rule.</span>
+    <span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># id of the graph that the layout is for</span>
+    <span class="n">graph_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># id of the user who owns the graph specified by graph_id</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># graph layout data in JSON format</span>
+    <span class="n">json</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="c"># ???</span>
+    <span class="n">public</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ???</span>
+    <span class="n">unlisted</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># SQLAlchemy&#39;s way of creating a multi-column foreign key constraint.</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">(</span><span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">],</span> <span class="p">[</span><span class="n">Graph</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="p">{})</span>
+</div>
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../Code.html#graphs.models.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Table of nodes used in graphs. Same node can be in many graphs, but they are </span>
+<span class="sd">        considered to be distinct.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;node&#39;</span>
+
+    <span class="c"># The primary key contains three columns: node_id, graph_id, and user_id. The same node may appear in different graphs but we consider them to be distinct.</span>
+    <span class="n">node_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ???</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">graph_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c"># Foregin key contraint to idientify the graph that this node belong to</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">(</span><span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="n">user_id</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">],</span> <span class="p">[</span><span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">graph_id</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="p">{})</span>
+
+    <span class="c"># one to many relationship with Edge, since a node can have many edges.</span>
+    <span class="n">heads</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Edge&quot;</span><span class="p">,</span> <span class="n">foreign_keys</span><span class="o">=</span><span class="s">&quot;[Edge.head_user_id, Edge.head_graph_id, Edge.head_id]&quot;</span><span class="p">)</span>
+    <span class="n">tails</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&quot;Edge&quot;</span><span class="p">,</span> <span class="n">foreign_keys</span><span class="o">=</span><span class="s">&quot;[Edge.tail_user_id, Edge.tail_user_id, Edge.tail_id]&quot;</span><span class="p">)</span>
+</div>
+<span class="k">class</span> <span class="nc">PasswordReset</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;password_reset&#39;</span>
+
+    <span class="n">pwreset_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">autoincrement</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">TIMESTAMP</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="c">#no relationship specified</span>
+
+<div class="viewcode-block" id="Edge"><a class="viewcode-back" href="../../Code.html#graphs.models.Edge">[docs]</a><span class="k">class</span> <span class="nc">Edge</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Table of edges that are used on graphs.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;edge&#39;</span>
+
+    <span class="c"># 3 column primary keys are used to determine which two nodes that this edge connect.</span>
+    <span class="c"># each edge connects a head node to a tail node.</span>
+    <span class="c"># head node</span>
+    <span class="n">head_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">head_graph_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">head_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># tail node</span>
+    <span class="n">tail_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">tail_graph_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">tail_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">primary_key</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># label of this edge</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c"># inicates whether this edge is directed or not.</span>
+    <span class="n">directed</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c"># Foreign key contraints to determine each node.</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="n">head_user_id</span><span class="p">,</span> <span class="n">head_graph_id</span><span class="p">,</span> <span class="n">head_id</span><span class="p">],</span> <span class="p">[</span><span class="n">Node</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">node_id</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span>
+            <span class="n">ForeignKeyConstraint</span><span class="p">([</span><span class="n">tail_user_id</span><span class="p">,</span> <span class="n">tail_graph_id</span><span class="p">,</span> <span class="n">tail_id</span><span class="p">],</span> <span class="p">[</span><span class="n">Node</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">node_id</span><span class="p">],</span> <span class="n">ondelete</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s">&quot;CASCADE&quot;</span><span class="p">),</span> <span class="p">{})</span>
+    <span class="c">#no relationship specified</span>
+
+<span class="c">#Create indices</span>
+<span class="c"># Table: group. Columns: owner_id</span></div>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_idx_owner_id&#39;</span><span class="p">,</span> <span class="n">Group</span><span class="o">.</span><span class="n">owner_id</span><span class="p">)</span>
+<span class="c"># Table: graph. Columns: user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_idx_user_id&#39;</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="c"># Table: graph. Columns: user_id, modified, public</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_idx_user_id_modified_id_public&#39;</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">modified</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">public</span><span class="p">)</span>
+<span class="c"># Table: graph. Columns: modified, user_id, graph_id, public</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_idx_modified_user_id_id_public&#39;</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">modified</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">public</span><span class="p">)</span>
+<span class="c"># Table: graph. Columns: graph_id, user_id, modified, public</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_idx_id_user_id_modified_public&#39;</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">modified</span><span class="p">,</span> <span class="n">Graph</span><span class="o">.</span><span class="n">public</span><span class="p">)</span>
+<span class="c"># Table: graph_to_tag. Columns: graph_id, user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_to_tag_idx_graph_id_user_id&#39;</span><span class="p">,</span> <span class="n">graph_to_tag</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">graph_to_tag</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="c"># Table: graph_to_tag. Columns: tag_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;graph_to_tag_idx_tag_id&#39;</span><span class="p">,</span> <span class="n">graph_to_tag</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">tag_id</span><span class="p">)</span>
+<span class="c"># Table: group_to_graph. Columns: graph_id, user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_to_graph_idx_graph_id_user_id&#39;</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="c"># Table: group_to_graph. Columns: group_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_to_graph_idx_group_id&#39;</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">group_id</span><span class="p">)</span>
+<span class="c"># Table: group_to_graph. Columns: graph_id, user_id, group_id.</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_to_graph_idx_graph_id_user_id_group_id&#39;</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">group_to_graph</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">group_id</span><span class="p">)</span>
+<span class="c"># Table: group_to_user. Columns: group_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_to_user_idx_group_id&#39;</span><span class="p">,</span> <span class="n">group_to_user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">group_id</span><span class="p">)</span>
+<span class="c"># Table: group_to_user. Columns: user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;group_to_user_idx_user_id&#39;</span><span class="p">,</span> <span class="n">group_to_user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="c"># Table: layout. Columns: graph_id, user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;layout_idx_graph_id_user_id&#39;</span><span class="p">,</span> <span class="n">Layout</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Layout</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="c"># Table: layout. Columns: owner_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;layout_idx_owner_id&#39;</span><span class="p">,</span> <span class="n">Layout</span><span class="o">.</span><span class="n">owner_id</span><span class="p">)</span>
+<span class="c"># Table: node. Columns: graph_id, user_id</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;node_idx_graph_id_user_id&#39;</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;node_index_label_graph_id&#39;</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">graph_id</span><span class="p">)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;node_index_node_id_graph_id&#39;</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">graph_id</span><span class="p">)</span>
+
+<span class="c"># not sure if needed</span>
+<span class="c"># Table: edge. Columns: head_id, head_user_id, head_graph_id</span>
+<span class="c"># Index(&#39;edge_idx_head_id_head_user_id_head_graph_id&#39;, Edge.head_id, Edge.head_user_id, Edge.head_graph_id)</span>
+<span class="n">Index</span><span class="p">(</span><span class="s">&#39;edge_idx_head_id_tail_id_graph_id&#39;</span><span class="p">,</span> <span class="n">Edge</span><span class="o">.</span><span class="n">head_id</span><span class="p">,</span> <span class="n">Edge</span><span class="o">.</span><span class="n">tail_id</span><span class="p">,</span> <span class="n">Edge</span><span class="o">.</span><span class="n">head_graph_id</span><span class="p">)</span>
+<span class="c"># Table: edge. Column: tail_id, tail_user_id, tail_graph_id</span>
+<span class="c"># Index(&#39;edge_idx_tail_id_tail_user_id_tail_graph_id&#39;, Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)</span>
+
+<span class="c"># to be removed</span>
+<span class="c"># Table: password_reset. Columns: user_id</span>
+<span class="c"># Index(&#39;password_reset_idx_user_id&#39;, PasswordReset.user_id)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GraphSpace Documentation 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Divit Singh.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -27,3 +27,8 @@ div.content {
     margin-top: 20px;
     padding: 40px 15px;
 }
+
+.graphs  {
+	background-color: white;
+	position: relative;
+}

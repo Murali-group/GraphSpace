@@ -1,18 +1,47 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load staticfiles %}
+
 <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
 <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
 
 <div class="container graphs">
+
 {% if uid != None %}
 <div class="graph_links">
-    <button class="btn btn-primary"><a style='color:white' href="{% url 'groups' %}">Owner of</a></button>
-    <button class="btn btn-primary"><a style='color:white' href="{% url 'groups_member' %}">Member of</a></button>
+    <a style='color:white' href="{% url 'groups' %}"><button class="btn btn-primary">Owner of<br>{{my_groups}}</button></a>
+    <a style='color:white' href="{% url 'groups_member' %}"><button class="btn btn-primary">Member of<br>{{member_groups}}</button></a>
     {% if admin == 1 %}
-        <button class="btn btn-primary"><a style='color:white' href="{% url 'all_groups' %}">All Groups</a></button>
+        <button class="btn btn-primary"><a style='color:white' href="{% url 'all_groups' %}">All Groups<br>{{all_groups}}</a></button>
     {% endif %}
 </div>
+<br>
+<!-- <button id="group_modal" data-toggle="modal" data-target="#groupModal" class="btn btn-default">Create Group</button> -->
+<p id="username" style="display: none;">{{uid}}</p>
+<!-- Create Modal -->
+    <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Create Group</h4>
+          </div>
+          <div class="modal-body">
+
+            <form id="group_form" class="register_form" role="form">
+                <div class="register_fields">
+                    <div class="control-group">
+                        <label for="group_name">Group Name:</label>
+                        <input id="group_name" class="form-control" maxlength="32" type="text" name="group_name" autocomplete="off"/>
+                    </div>
+                </div>
+                <br>
+                <button name="create_group" id="create_group" class="btn btn-default">Create Group</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 {% endif %}
 
 <hr> <!-- temporary divider -->
@@ -58,19 +87,32 @@
         <th>Group ID</th>
         <th>Description</th>
         <th>Owner</th>
-        <!--<td>Graphs</td>-->
+        <td>Graphs</td>
         <th>Visibility</th>
+        <th>Listed</th>
+        <th></th>
     </tr>
 {% for g in current_page %}
     <tr> 
-        <td><a href="{% url 'graphs_in_group' group_id=g.0%}">{{g.0}}</a></td>
+        <td><a href="{% url 'graphs_in_group' group_id=g.6%}">{{g.0}}</a></td>
         <td>{{ g.1 }}</td>
         <td>{{ g.2 }}</td>
-        {% if g.3 == 1 %}
+        <td>{{ g.3 }}</td>
+        {% if g.4 == 1 %}
         <td>Public</td>
         {% else %}
         <td>Private</td>
         {% endif %}
+        {% if g.5 == 1 %}
+        <td>Yes</td>
+        {% else %}
+        <td>No</td>
+        {% endif %}
+       <!--  {% if g.2 == uid %}
+            <td><button class="btn btn-default delete" id="{{ g.0 }}_{{ g.2 }}">Delete</button></td>
+        {% else %}
+            <td><button class="btn btn-default remove" id="{{ g.0 }}_{{ g.2 }}">Unfollow group</button></td>
+        {% endif %} -->
     </tr>
 {% endfor %}
 {% endif %}
@@ -79,4 +121,30 @@
 {% endif %}
 </table>
 </div>
+{% endblock %}
+
+{% block css-js-footer %}
+<!-- load javascripts -->
+<!-- javascript for side menu -->
+<script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>
+
+<!--jQuery UI, needed for side menu -->
+<script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+
+<!-- JSON support for IE (needed to use JS API) -->
+<script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
+
+<!-- load stylesheets -->
+<!-- jQuery UI style sheet -->
+<link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
+
+<!-- stylesheet for pager -->
+<link href="{% static 'graphs/css/pager.css' %}" rel="stylesheet">
+
+<!-- stylesheet for elements specified in this html(graphs.html) -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs.css' %}">
+
+<!-- stylesheet for side menues -->
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
+
 {% endblock %}

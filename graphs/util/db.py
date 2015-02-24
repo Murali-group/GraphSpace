@@ -19,11 +19,14 @@ DB_NAME = 'graphspace.db'
 
 # --------------- Edge Insertions -----------------------------------
 
-# Modifies all id's of edges to be the names of the 
-# nodes that they are attached to
+
 def assign_edge_ids(json_string):
-	# # Convert string into JSON structure for traversal
-	# cleaned_json = json.loads(json_string)
+	'''
+		Modifies all id's of edges to be the names of the nodes that they are attached to.
+
+		:param json_string: JSON of graph
+		:return json_string: JSON of graph having id's for all edges
+	'''
 
 	# Appending id's to all the edges using the source and target as part of its ids
 	# TODO: Change '-' character to something that can't be found in an edge
@@ -36,6 +39,10 @@ def assign_edge_ids(json_string):
 # Populates the edge table with edges from jsons
 # already in the database
 def insert_all_edges_from_json():
+	'''
+		Inserts all edges from the JSON into the database
+
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -91,10 +98,13 @@ def insert_all_edges_from_json():
 
 # --------------- End Edge Insertions --------------------------------
 
-# Adds all users to password reset table (cold-start)
-# Only use this once so we know crypto algorithm used 
-# for forgot password functionalities
 def add_everyone_to_password_reset():
+	'''
+		Adds all users to password reset table (cold-start).
+		Only use this once so we know crypto algorithm used 
+		for forgot password functionalities
+
+	'''
 	con = None
 	try: 
 		con = lite.connect(DB_NAME)
@@ -114,25 +124,34 @@ def add_everyone_to_password_reset():
 		if con:
 			con.close()
 
-# Validates the JSON that is uploaded to make sure
-# it has the following properties
-# node:
-# label,
-# shape,
-# color,
-# height,
-# width
-# id have to be unique
-
-# edge:
-# (dont need an id) - I auto generate one
-# label
-# color
-# source
-# target
-# directed
-# width
 def validate_json(jsonString):
+	'''
+		JSON Validator. Tells if the graph being inserted is 
+		valid (CytoscapeJS will render it properly).  If not, 
+		it throws an Error
+
+		:param jsonString: JSON of the graph
+		:return Errors | None: [Errors of JSON]
+	'''
+
+	# Validates the JSON that is uploaded to make sure
+	# it has the following properties
+	# node:
+	# label,
+	# shape,
+	# color,
+	# height,
+	# width
+	# id have to be unique
+
+	# edge:
+	# (dont need an id) - I auto generate one
+	# label
+	# color
+	# source
+	# target
+	# directed
+	# width
 
 	edge_properties = ['color', 'source', 'target', 'directed', 'width']
 	node_properties = ['label', 'color', 'shape', 'height', 'width', 'id']
@@ -151,11 +170,13 @@ def validate_json(jsonString):
 	nodes = cleaned_json['graph']['nodes']
 
 	jsonErrors = ""
+	# Combines edge and node Errors
 	edgeError = propertyInJSON(edges, edge_properties)
 	nodeError = propertyInJSON(nodes, node_properties)
 	nodeUniqueIDError = checkUniqueID(nodes)
 	nodeCheckShape = checkShapes(nodes)
 
+	# If any of the above errors has > 0 length, we have an error
 	if len(edgeError) > 0:
 		jsonErrors += edgeError + '\n'
 	if len(nodeError) > 0:
@@ -168,6 +189,13 @@ def validate_json(jsonString):
 	return jsonErrors
 
 def checkUniqueID(elements):
+	'''
+		Checks to see if all of the elements in the json 
+		have unique ids
+
+		:param elements: JSON of nodes or edges
+		:return Error | None: <ID for node has been dupliated!>
+	'''
 	id_map = []
 
 	for element in elements:
@@ -179,6 +207,12 @@ def checkUniqueID(elements):
 	return ""
 
 def checkShapes(elements):
+	'''
+		Checks to see if the shapes for node are valid shapes
+
+		:param elements: JSON of nodes
+		:return Error: <message>
+	'''
 	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"]
 
 	for element in elements:
@@ -188,6 +222,15 @@ def checkShapes(elements):
 	return ""
 
 def propertyInJSON(elements, properties):
+	'''
+		Checks to see if the elements in the graph JSON (nodes and edges)
+		adhere to the properties of CytoscapeJS (ie unique ids, valid shapes)
+
+		:param elements: JSON of the elements (nodes or edges)
+		:param properties: set of properties that element JSON should following
+		:return Error|None: <Property x not in JSON for element | node>
+	'''
+
 	for element in elements:
 		element_data = element['data']
 		for element_property in properties:
@@ -196,10 +239,18 @@ def propertyInJSON(elements, properties):
 
 	return ""
 
-# Adds specified user to password_reset table
 def add_user_to_password_reset(email):
+	'''
+		Adds a specific user to password_reset table.
+		If email is in this, it automatically sends email to change 
+		password for that account the next time the user logs on
+
+		:param email: Email of the user for GraphSpace
+	'''
+
 	con = None
 	try: 
+		# If email is an account on GraphSpace
 		if emailExists(email) != None:
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
@@ -208,12 +259,11 @@ def add_user_to_password_reset(email):
 
 			user_data = cur.fetchall()
 
-			print user_data
-
 			# If user isn't already in password_reset table, add them with a new code
 			if len(user_data) == 0:
 
 				code = id_generator()
+				# Generate a random code - used as the GET path to reset that user's password
 				cur.execute('insert into password_reset values(?,?,?,?)', (None, email, code, datetime.now()))
 
 				con.commit()
@@ -225,14 +275,22 @@ def add_user_to_password_reset(email):
 		if con:
 			con.close()
 
-# Checks to see if a user needs to reset their password
 def need_to_reset_password(email):
+	'''
+		Checks to see if a user needs to reset their password.
+		If email is in password_reset email, they do, otherwise, not.
+
+		:param email: Email of the user in GraphSpace
+	'''
+
 	con = None
 	try: 
+		# If email is in database
 		if emailExists(email) != None:
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 
+			# If email is in password_reset table
 			cur.execute('select user_id from password_reset where user_id = ?', (email, ))
 
 			user_exists = cur.fetchall()
@@ -250,10 +308,22 @@ def need_to_reset_password(email):
 			con.close()
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
+	'''
+		Generates an unique alphanumeric ID of specific size.
+
+		:param size: Size of random string
+		:param chars: Subset of characters to generate random string of
+		:return string: Random string that adhere to the parameter properties
+	'''
 	return ''.join(random.choice(chars) for _ in range(size))
 
-# Checks to see if a given user is an admin
 def is_admin(username):
+	'''
+		Checks to see if a given user is an admin
+
+		:param username: Email of the user in GraphSpace
+		:return boolean: True or False
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -278,8 +348,14 @@ def is_admin(username):
 		if con:
 			con.close()
 
-# Gets all tags for a given view type
 def get_all_tags(username, view_type):
+	'''
+		Gets all tags for a given view_type and a username
+
+		:param username: Email of the user in GraphSpace
+		:param view_type: Type of view to filter (shared, public, owned)
+		:return Tags: [] or None 
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -317,8 +393,14 @@ def get_all_tags(username, view_type):
 		if con:
 			con.close()
 
-# Checks to see if a user/password combination exists
 def get_valid_user(username, password):
+	'''
+		Checks to see if a user/password combination exists.
+		
+		:param username: Email of the user in GraphSpace
+		:param password: Password of the user
+		:return username: <Username> | None if wrong information
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -348,8 +430,16 @@ def get_valid_user(username, password):
 		if con:
 			con.close()
 
-# Sets the context of the layout to be viewed
 def set_layout_context(request, context, uid, gid):
+	'''
+		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
+
+		:param request: HTTP Request of graph to view
+		:param context: Dictionary containing all the variables to send to the front-end
+		:param uid: The owner of the graph
+		:param gid: Graph name to view
+		:return context: Filled in dictionary with all variables to send to the front-end
+	'''
 	layout_to_view = None
 
     # if there is a layout specified, then render that layout
@@ -375,30 +465,51 @@ def set_layout_context(request, context, uid, gid):
 
 	return context
 
-# Gets the JSON of the graph that you want to see
 def retrieve_cytoscape_json(graphjson):
+	'''
+		Converts JSON to CytoscapeJS standards
+
+		:param graphjson: JSON of graph to render on CytoscapeJS
+		:return JSON: CytoscapeJS-compatible graphname
+	'''
+
 	temp_json = json.loads(graphjson)['graph']
 
-    # for Cytoscape.js
+    # for Cytoscape.js, if data is in properties, then we need to convert (main difference)
 	if 'data' in temp_json:
 	    return convert_json(graphjson)
 	else:
 	    return graphjson
 
-# Assigns urls to the blue buttons viewed at the graphs/ page
 def get_base_urls(view_type):
-    # Modify the url of the buttons depending on the page that the user is on
-    if view_type == 'shared':
-        return "http://localhost:8000/graphs/shared/"
-    elif view_type == 'public':
-        return "http://localhost:8000/graphs/public/"
-    elif view_type == 'all':
-        return "http://localhost:8000/graphs/all/"
-    else:
-        return "http://localhost:8000/graphs/"
+	'''
+		Assigns urls to the blue buttons viewed at the graphs/ page
 
-# Gets the graphs that are associated with a certain view from the user
+		:param view_type: Type of view (shared, public etc)
+		:return URL: Link to the specified view_type
+	'''
+
+	# Modify the url of the buttons depending on the page that the user is on
+	if view_type == 'shared':
+	    return "http://localhost:8000/graphs/shared/"
+	elif view_type == 'public':
+	    return "http://localhost:8000/graphs/public/"
+	elif view_type == 'all':
+	    return "http://localhost:8000/graphs/all/"
+	else:
+	    return "http://localhost:8000/graphs/"
+
 def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
+	'''
+		Gets the graphs that are associated with a certain view from the user
+		
+		:param context: Dictionary containing values to pass to front-end
+		:param view_type: Type of view to render
+		:param uid: Owner of the graph
+		:param search_terms: Criteria that to filter graphs 
+		:param tag_terms: Only display graphs with these tags
+		:return context: Dictionary containing values to pass to front-end
+	'''
 
 	tag_list = []
 	search_list = []
@@ -460,8 +571,15 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 
 	return context
 
-# Retrieves the graphs that fit the search/tag criteria as well as the viewtype
 def view_graphs(uid, search_terms, tag_terms, view_type):
+	'''
+		Gets the graphs that are associated with a certain view from the user
+		
+		:param uid: Owner of the graph
+		:param search_terms: Criteria that to filter graphs 
+		:param tag_terms: Only display graphs with these tags
+		:return context: Dictionary containing values to pass to front-end
+	'''
 	actual_graphs = []
 
 	if search_terms:
@@ -494,8 +612,15 @@ def view_graphs(uid, search_terms, tag_terms, view_type):
 	else:
 		return view_graphs_of_type(view_type, uid)
 		
-# Gets all the graphs that match the tags for a given view type
 def tag_result(uid, tag_terms, view_type):
+	'''
+		Gets all graphs that contain the specified tags for a user and a view_type.
+
+		:param uid: Owner of graph
+		:param tag_terms: Tags that all graphs must contain
+		:param view_type: Type of view to display the graphs in (shared, public)
+		:return Graphs: [graphs]
+	'''
 	if len(tag_terms) > 0:
 		# Place holder that stores all the graphs
 		initial_graphs_with_tags = []	
@@ -558,8 +683,17 @@ def tag_result(uid, tag_terms, view_type):
 	else:
 		return []
 
-# Returns the graphs that match the search terms and the view type
 def search_result(uid, search_terms, view_type):
+	'''
+		Returns the graphs that match the search terms and the view type.
+
+		:param uid: Owner of the graph
+		:param search_terms: Terms to search for
+		:param view_type: Type of view to render the graphs for
+		:return Graphs: [graphs]
+	'''
+
+	# Make into list if it is not a lsit
 	if not isinstance(search_terms, list):
 		search_terms = search_terms.split(',')
 
@@ -623,7 +757,7 @@ def search_result(uid, search_terms, view_type):
 					key_with_search = tuple(key_with_search)
 					actual_graphs_for_searches.append(key_with_search)
 
-
+			# Return whole dictionary of matchin graphs
 			return actual_graphs_for_searches
 
 		except lite.Error, e:
@@ -636,8 +770,17 @@ def search_result(uid, search_terms, view_type):
 	else:
 		return []
 
-# Finds graphs that have the edges that are being searched for
 def find_edges(uid, search_word, view_type, cur):
+	'''
+		Finds graphs that have the edges that are being searched for.
+
+		:param uid: Owner of the graph
+		:param search_word: Edge being searched for
+		:param view_type: Type of view to limit the graphs to
+		:param cur: Database cursor
+		:return Edges: [Edges]
+	'''
+
 	initial_graphs_with_edges = []
 	node_ids = search_word.split(':')
 
@@ -696,9 +839,16 @@ def find_edges(uid, search_word, view_type, cur):
 
 	return actual_graph_with_edges
 
-# Finds the id of the edge inside graph
-# Used for highlighting !!!!!!
 def find_edge(uid, gid, edge_to_find):
+	'''
+		Finds the id of the edge inside graph
+		Used for highlighting elements inside the graph
+
+		:param uid: Owner of graph
+		:param gid: Name of graph that is being viewed
+		:param edge_to_find: Edge that is being searched for
+		:return ID: [ID of edge]
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -707,12 +857,15 @@ def find_edge(uid, gid, edge_to_find):
 		head_node = edge_to_find.split(':')[0]
 		tail_node = edge_to_find.split(':')[1]
 
+		# Find node id's that are being searched for (source and target nodes)
 		head_node = find_node(uid, gid, head_node)
 		tail_node = find_node(uid, gid, tail_node)
 
+		# If both nodes exist, find label between them
 		if tail_node != None and head_node != None:
 			cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (tail_node, head_node, uid, gid))
 			data = cur.fetchall()
+			# If something exists, return the ids of the paents
 			if data != None and len(data) > 0:
 				return data[0][0]
 			else:
@@ -727,15 +880,24 @@ def find_edge(uid, gid, edge_to_find):
 		if con:
 			con.close()
 
-# Finds the id of the node inside graph
-# Used for highlighting !!!!!!
 def find_node(uid, gid, node_to_find):
+	'''
+		Finds the id of the node inside graph
+		Used for highlighting elements inside the graph
+
+		:param uid: Owner of graph
+		:param gid: Name of graph that is being viewed
+		:param node_to_find: Node that is being searched for
+		:return ID: [ID of node]
+	'''
+
 	id_of_node = None
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
+		# Get the id of the node (could be id or a label) and return it if they exist
 		cur.execute('select node_id from node where node_id= ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
 		id_data = cur.fetchall()
 		if id_data != None and len(id_data) > 0:
@@ -755,8 +917,16 @@ def find_node(uid, gid, node_to_find):
 		if con:
 			con.close()
 
-# Finds the nodes that are being searched for
 def find_nodes(uid, search_word, view_type, cur):
+	'''
+		Finds graphs that have the nodes that are being searched for.
+
+		:param uid: Owner of the graph
+		:param search_word: Node being searched for
+		:param view_type: Type of view to limit the graphs to
+		:param cur: Database cursor
+		:return Nodes: [Nodes]
+	'''
 	intial_graph_with_nodes = []
 
 	if view_type == 'my graphs':
@@ -769,11 +939,11 @@ def find_nodes(uid, search_word, view_type, cur):
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 
 	elif view_type == 'shared':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.label =? and gg.graph_id == n.graph_id and gg.user_id= ?', (search_word, uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.label =? and gg.graph_id == n.graph_id and n.user_id= ? and n.user_id == gg.user_id', (search_word, uid))
 		shared_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.node_id =? and gg.graph_id == n.graph_id and gg.user_id= ?', (search_word, uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.node_id =? and gg.graph_id == n.graph_id and n.user_id= ? and n.user_id == gg.user_id', (search_word, uid))
 		shared_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
 
@@ -794,8 +964,17 @@ def find_nodes(uid, search_word, view_type, cur):
 
 	return actual_graph_with_nodes
 
-# Finds graphs that have the matching graph name and user_id (username)
 def find_graphs_using_names(uid, search_word, view_type, cur):
+	'''	
+		Finds graphs that have the matching graph name.
+
+		:param uid: Owner of the graph
+		:param search_word: Graph names being searched for
+		:param view_type: Type of view to limit the graphs to
+		:param cur: Database cursor
+		:return Graphs: [Graphs]
+	'''
+
 	intial_graph_names = []
 	actual_graph_names = []
 
@@ -807,6 +986,7 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
 
 	graph_list = cur.fetchall()
+	# Get all unique graphs
 	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
 
 	for graph in intial_graph_names:
@@ -818,10 +998,17 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 		
 	return actual_graph_names
 
-# Adds all unique items to the specified list
-# Also checks to see if the length is > 0 for each item
-# inserted into the list
+
 def add_unique_to_list(listname, data):
+	'''
+		Adds all unique items to the specified list
+		Also checks to see if the length is > 0 for each item
+		inserted into the list
+
+		:param listname: List to put unique elements in
+		:param data: Possible duplicate data to search through
+		:return listname: [Unique elements]
+	'''
 	for element in data:
 		if element not in listname and len(element) > 0:
 			listname.append(element)
@@ -831,9 +1018,16 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-# TODO: Add rest call example
-# Inserts a uniquely named graph under a username
 def insert_graph(username, graphname, graph_json):
+	'''
+		# TODO: Add rest call example
+		Inserts a uniquely named graph under a username.
+
+		:param username: Email of user in GraphSpace
+		:param graphname: Name of graph to insert
+		:param graph_json: JSON of graph
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -898,9 +1092,19 @@ def insert_graph(username, graphname, graph_json):
 		if con:
 			con.close()
 
-# Inserts metadata about a graph into its respective tables
 def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con):
+	'''
+		Inserts metadata about a graph into its respective tables.
 
+		:param graphJson: JSON of graph
+		:param graphname: Name of graph
+		:username: Name of user
+		:param: Tags of graph
+		:param Nodes: Nodes to insert into nodes table
+		:param cur: Database cursor
+		:param con: Database connection
+	'''
+	
 	# Add all tags for this graph into graph_tag and graph_to_tag tables
 	for tag in tags:
 		# TODO: Query example
@@ -920,8 +1124,14 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con)
 	for node in nodes:
 		cur.execute('insert into node values(?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
 
-#Gets the graph's json
 def get_graph_json(username, graphname):
+	'''
+		Get the JSON of the graph to view.
+
+		:param username: Email of user in GraphSpace
+		:param password: Password of the user
+		:return JSON: JSON of graph to view
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -945,8 +1155,13 @@ def get_graph_json(username, graphname):
 		if con:
 			con.close()
 
-# Deletes graph from database
 def delete_graph(username, graphname):
+	'''
+		Deletes graph from database.
+
+		:param username: Email of user in GraphSpace
+		:param password: Password of the user
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -954,12 +1169,10 @@ def delete_graph(username, graphname):
 
 		# Deletes information about a graph from all the tables that reference it
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-		cur.execute('delete from graph_to_tag where graph_id=?', (graphname, ))
-		cur.execute('delete from edge where head_graph_id =?', (graphname, ))
-		cur.execute('delete from node where graph_id = ?', (graphname, ))
+		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
+		cur.execute('delete from edge where head_graph_id =? and head_id=?', (graphname, username))
+		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
 
-		#TODO: Look up a way to delete tags from graph_tags since multiple graphs can have same tags, so if one graph 
-		# with tags is deleted, don't delete tags from graph_tags since another graph_tag might use them
 		con.commit()
 
 	except lite.Error, e:
@@ -969,8 +1182,14 @@ def delete_graph(username, graphname):
 		if con:
 			con.close()
 
-# Get all graphs for username
 def get_all_graphs_for_user(username):
+	'''
+		Gets all graphs for username
+
+		:param username: Email of user in GraphSpace
+		:return Graphs: [graphs]
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -990,7 +1209,7 @@ def get_all_graphs_for_user(username):
 			if len(cleaned_data) > 0:
 				return cleaned_data
 
-		return None
+		return []
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -999,8 +1218,11 @@ def get_all_graphs_for_user(username):
 		if con:
 			con.close()
 
-# Gets all groups that are on the server
 def get_all_groups_in_server():
+	'''
+		Gets all groups that are in the server
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1010,6 +1232,8 @@ def get_all_groups_in_server():
 		cur.execute('select * from \"group\"');
 
 		data = cur.fetchall()
+
+		print data
 
 		if data == None:
 			return None
@@ -1033,20 +1257,116 @@ def get_all_groups_in_server():
 		if con:
 			con.close()
 
-# Gets a group by user id
-# TODO: What does this even do?
-def get_group_by_id(group):
+def get_groups_of_user(user_id):
+	'''
+		Get all groups that the user owns
+
+		:param user_id: Email of user of GraphSpace
+		:return Groups: [group information]
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# Get all groups that the user owns
+		cur.execute('select * from \"group\" where owner_id=?', (user_id, ))
+
+		data = cur.fetchall()
+	
+		# Clean up the data
+		return get_cleaned_group_data(data, cur)
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+def get_cleaned_group_data(data, cur):
+	'''
+		Get all information about group (including number of graphs group has)
+
+		:param data: Information about group
+		:param cur: Database cursor
+		:return Groups: [gorup information + graphs in group information]
+	'''
+
+	cleaned_data = []
+
+	# Go through and create an index including the number of graphs that a group has 
+	for group_name in data:
+		cleaned_group = []
+		cleaned_group.append(group_name[1])
+		cleaned_group.append(group_name[3])
+		cleaned_group.append(group_name[2])
+		cur.execute('select count(*) from group_to_graph where group_id=? and user_id=?', (group_name[0], group_name[2]))
+		new_data = cur.fetchall()
+		cleaned_group.append(new_data[0][0])
+		cleaned_group.append(group_name[4])
+		cleaned_group.append(group_name[5])
+		cleaned_group.append(group_name[0])
+		cleaned_group = tuple(cleaned_group)
+
+		cleaned_data.append(cleaned_group)
+
+	return cleaned_data
+
+def get_all_groups_with_member(user_id):
+	'''
+		Get all groups that has the user as a member in that group.
+
+		:param user_id: Member to be searched for in all groups
+		:return Groups: [Groups that user_id is a member of]
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 
+		cur = con.cursor()
+
+		# Get all groups that user is a member of
+		cur.execute('select group_id from group_to_user where user_id=?', (user_id, ))
+
+		group_names = cur.fetchall()
+
+		# Get information about those groups
+		cleaned_data = []
+		for group_name in group_names:
+			cur.execute('select * from \"group\" where group_id=?', (group_name[0], ))
+			data = cur.fetchall()
+			cleaned_data += get_cleaned_group_data(data, cur)
+
+		return list(set(cleaned_data))
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+def get_group_by_id(group):
+	'''
+		Gets a group information by group id ( REST API option).
+	
+		:param group: ID of group to be searched for
+		:return Group: [Information about group (see REST API in Help section)]
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		# Get information about group
 		cur = con.cursor()
 		cur.execute('select description, owner_id, name, group_id from \"group\" where group_id=?', (group, ));
 
 		data = cur.fetchall()
 
 		cleaned_data = []
-
+		# Get members of the group 
 		for row in data:
 			members = get_group_members(group)
 			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
@@ -1061,8 +1381,50 @@ def get_group_by_id(group):
 		if con:
 			con.close()
 
-# Gets all members of a group
+def get_group(group):
+	'''
+		Gets all information about a certain group (used for groups page exclusively).
+
+		:param group: ID of group
+		:return Group: [information of group]
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		cur = con.cursor()
+		cur.execute('select description, owner_id, name, group_id from \"group\" where group_id=?', (group, ));
+
+		data = cur.fetchall()
+
+		cleaned_data = {}
+		# Get group members and graphs in group etc
+		for row in data:
+			cleaned_data['users'] = get_group_members(group)
+			cleaned_data['owner'] = str(row[1])
+			cleaned_data['group_id'] = str(row[3])
+			cleaned_data['description'] = str(row[0])
+			cur.execute('select graph_id from group_to_graph where group_id=?', (group, ))
+			graph_data = cur.fetchall()
+			cleaned_data['graphs'] = graph_data[0]
+
+		return cleaned_data
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+
 def get_group_members(group):
+	'''
+		Get all members of a group.
+
+		:param group: Group ID
+		:return Members: [Members of group]
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1072,6 +1434,7 @@ def get_group_members(group):
 
 		data = cur.fetchall()
 
+		# Get all members and clean up the data
 		cleaned_data = []
 		for member in data:
 			cleaned_data.append(str(member[0]))
@@ -1085,20 +1448,34 @@ def get_group_members(group):
 		if con:
 			con.close()
 
-# See if user is a member of a group
 def can_see_shared_graph(logged_in_user, graph_owner, graphname):
+	'''
+		See if user is allowed to see a graph.
+
+		:param logged_in_user: User that is currently logged in
+		:param graph_owner: Owner of graph being viewed
+		:param graphname: Name of graph being viewed
+		:return boolean: True if can see it, false otherwise
+	'''
+
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
 
 	for group in groups:
 	        members = get_group_members(group)
-	        print members
 	        if logged_in_user in members:
 	            return True
 
 	return None
 
-# Removes a group from server
 def remove_group(owner, group):
+	'''
+		Removes a group from server.
+
+		:param owner: Owner of group
+		:param group: Group ID
+		:return <result
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1128,8 +1505,15 @@ def remove_group(owner, group):
 		if con:
 			con.close()
 
-# Inserts a uniquely named group under a username
 def create_group(username, group):
+	'''
+		Inserts a uniquely named group under a username.
+
+		:param owner: Owner of group
+		:param group: Group ID
+		:return <result>
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1143,10 +1527,10 @@ def create_group(username, group):
 		# If no group exists, insert into database
 		if data == None:
 			# TODO: Why did I append username and groupname together?
-			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (username + '_' + group, group, username, "", 0, 1))
-			cur.execute('insert into group_to_user values(?, ?)', (username + '_' + group, username))
+			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (cleanGroupName(group), group, username, "", 0, 1))
+			# cur.execute('insert into group_to_user values(?, ?)', (cleanGroupName(group), username))
 			con.commit()
-			return username + '_' + group
+			return group
 		else:
 			return None
 
@@ -1158,43 +1542,31 @@ def create_group(username, group):
 		if con:
 			con.close()
 
-#Gets all information about the group that user belongs to
-def info_groups_for_user(username):
+def cleanGroupName(groupName):
+	'''
+		Cleans group name (gets rid of spaces and _ characters)
 
-	#Gets all groups that the user is a part of
-	groups = groups_for_user(username)
-	con = None
-	try:
-		cleaned_data = []
+		:param groupName: Name of group
+		:return group: cleaned group name
+	'''
+	groupName = groupName.replace(' ', '')
+	groupName = groupName.replace('-', '')
+	return groupName
 
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		# Gather all information about the groups that the user is allowed to access
-		for group in groups:
-			cur.execute('select group_id, description, owner_id, public from \"group\" where group_id=?', (group, ))
-			data = cur.fetchone()
-			if data != None:
-				cleaned_data.append(data)
-
-		return cleaned_data
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
-# Get all groups a user belongs to
 def groups_for_user(username):
+	'''
+		Get all groups user belongs to or owns.
+
+		:param username: Email of user
+		:return Groups: [groups]
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
 		#TODO: add what a user can see as well (ie has access to)
+		# Get groups that the user is a member of
 		cur.execute('select group_id from group_to_user where user_id=?', (username, ))
 
 		data = cur.fetchall()
@@ -1204,6 +1576,17 @@ def groups_for_user(username):
 			groups = str(groups[0])
 			cleaned_data.append(groups)
 
+		# Get all the groups that the user owns as well
+		cur.execute('select group_id from \"group\" where owner_id=?', (username, ))
+
+		data = cur.fetchall()
+
+		for groups in data:
+			groups = str(groups[0])
+			cleaned_data.append(groups)
+
+		cleaned_data = list(set(cleaned_data))
+
 		return cleaned_data
 
 	except lite.Error, e:
@@ -1214,8 +1597,15 @@ def groups_for_user(username):
 		if con:
 			con.close()
 
-# Adds a user to a group 
 def add_user_to_group(username, owner, group):
+	'''
+		Adds a user to a group.
+
+		:param username: Username to add to group
+		:param owner: Owner of the group
+		:param group: Group ID
+		:return <Status>
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1227,17 +1617,19 @@ def add_user_to_group(username, owner, group):
 		if data == None:
 			return "User does not exist!"
 
-		# If user exists and owner-group combination is in database, then add the user to the group
+		# If user exists and the owner of the group is issuing the request, then add the user to the group
 		cur.execute('select group_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
+		isMember = cur.fetchone()
+
+		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group))
 		isOwner = cur.fetchone()
 
-		if isOwner != None:
-			isOwner = isOwner[0]
-			cur.execute('insert into group_to_user values(?, ?)', (username, group, ))
+		if isMember != None or isOwner != None:
+			cur.execute('insert into group_to_user values(?, ?)', (group, username))
 			con.commit();
 			return "User added!"
 		else:
-			return "Add yourself to the group first!"
+			return "Become the owner/member of this group first!"
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1247,8 +1639,15 @@ def add_user_to_group(username, owner, group):
 		if con:
 			con.close()
 
-# Removes a user from the group
 def remove_user_from_group(username, owner, group):
+	'''
+		Removes user from group.
+
+		:param username: User to remove
+		:param owner: Owner of group
+		:param group: Group ID
+		:return <status>
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1281,8 +1680,15 @@ def remove_user_from_group(username, owner, group):
 		if con:
 			con.close()
 
-# Shares a graph with a group
 def share_graph_with_group(owner, graph, group):
+	'''
+		Shares a graph with group.
+		
+		:param owner: Owner of group
+		:param graph: Graph to share 
+		:param group: Group ID
+		:return <status>
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1296,29 +1702,17 @@ def share_graph_with_group(owner, graph, group):
 
 		isOwner = data[0]
 
-		# Check to see if a group is public or not
-		# Done for members joining a public group 
-		# TODO: DELETE PUBLIC GROUP
-		cur.execute('select public from "group" where group_id=?', (group, ))
-		isPublic = cur.fetchone()
-		if isPublic == None:
-			isPublic = 0
-		else:
-			isPublic = isPublic[0]
-
 		# If there is a graph for the owner, then we add that graph to the group that a user is a part of (user or member)
 		if isOwner != None:
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 			isMember = cur.fetchone()
+			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id = ?', (owner, group))
+			isOwner = cur.fetchone()
 			# If the query returns, it means that the owner is a member of that group
-			if isMember != None:
+			if isMember != None or isOwner != None:
 				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
 				con.commit()
 				return "Graph successfully shared!"
-			elif int(isPublic) == 1:
-				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
-				cur.execute('update graph set public=1 where user_id=? and graph_id=?', (owner, graph))
-				con.commit()
 			else:
 				return "You are not a member of this group!"
 		else:
@@ -1331,8 +1725,15 @@ def share_graph_with_group(owner, graph, group):
 		if con:
 			con.close()
 
-# Unshares a graph from the group
 def unshare_graph_with_group(owner, graph, group):
+	'''
+		Graph to unshare with group.
+
+		:param owner: Owner of group
+		:param graph: Graph to unshare 
+		:param group: Group ID
+		:return <status>
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1340,21 +1741,24 @@ def unshare_graph_with_group(owner, graph, group):
 
 		# Get the graph that the user supposedly owns
 		cur.execute('select user_id from graph where user_id=? and graph_id=?', (owner, graph, ))
-		isOwner = cur.fetchone()
-		if isOwner != None:
-			isOwner = isOwner[0]
+		graph_owner = cur.fetchone()
+		cur.execute('select user_id from group_to_graph where graph_id=? and user_id=?', (graph, owner))
+		graph_in_group = cur.fetchone()
+		if graph_owner != None and graph_in_group != None:
+			graph_owner = graph_owner[0]
 			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
 			isMember = cur.fetchone()
+			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id=?', (owner, group))
+			isOwner = cur.fetchone()
 			# If the user has the rights to the graph/group, then carry out the unsharing of that graph from the group
-			if isMember != None:
-				isMember = isMember[0]
+			if isMember != None or isOwner != None:
 				cur.execute('delete from group_to_graph where group_id=? and graph_id=? and user_id=?', (group, graph, owner))
 				con.commit()
 				return "Graph successfully unshared!"
 			else:
 				return "You are not a member of this group!"
 		else:
-			return "You don't own this graph!"
+			return "You don't own this graph or graph isn't shared with the group yet!"
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1368,6 +1772,13 @@ def unshare_graph_with_group(owner, graph, group):
 # ---------------- END REST API ------------------------------
 
 def view_graphs_of_type(view_type, username):
+	'''
+		View graphs of this type.
+
+		:param view_type: Type of view (shared, public)
+		:param username: Name of user
+		:return Graphs: [graphs]
+	'''
 	graphs = []
 	con = None
 	try:
@@ -1398,6 +1809,14 @@ def view_graphs_of_type(view_type, username):
 			con.close()
 
 def get_graphs_for_tags(cur, username, tags):
+	'''
+		Returns graphs that match the tags.
+
+		:param cur: Database cursor
+		:param username: Name of User
+		:param tags: tags to match graphs to
+		:return Graphs: [graphs]
+	'''
 	graphs = []
 	all_tag_graphs = get_all_graphs_for_tags(tags)
 	for item in all_tag_graphs:
@@ -1410,10 +1829,16 @@ def get_graphs_for_tags(cur, username, tags):
 
 	return graphs
 
-# Gets all information (including all tags) for each graph that is returned
 def build_graph_information(graphs):
+	'''
+		Gets all information (including all tags) for each graph that is returned.
+		
+		:param graphs: Graphs to get information for
+		:return Graphs: [graph information]
+	'''
 	cleaned_graph = []
 	for graph in graphs:
+		#Get all tags for graph
 		cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
 		tags = cur.fetchall()
 		cleanedtags = []
@@ -1423,7 +1848,7 @@ def build_graph_information(graphs):
 
 		graph_list = list(graph)
 		if len(cleanedtags) > 0:
-			# for tag in tags:
+			# Insert at second location
 			graph_list.insert(1, cleanedtags)
 			cleaned_graph.append(tuple(graph_list))
 		else:
@@ -1435,8 +1860,15 @@ def build_graph_information(graphs):
 	else:
 		return None
 
-# Gets graph information about a graph that the user owns having certain tags
 def get_graph_info(username, tags):
+	'''
+		Gets graph information about a graph that the user owns having certain tags.
+
+		:param username: Email of user
+		:param tags: Tags of graph to filter
+		:return Graph: [graph information]
+	'''
+
 	graphs = []
 	con = None
 	try:
@@ -1489,8 +1921,14 @@ def get_graph_info(username, tags):
 		if con:
 			con.close()
 
-# Get all public graphs that contain the following tags
 def get_public_graph_info(tags):
+	'''
+		Get all public graphs that contain the following tags.
+
+		:param tags: Tags to match the graphs to
+		:return Graphs: [graphs with tags]
+	'''
+
 	con = None
 	graphs = []
 	try:
@@ -1543,8 +1981,14 @@ def get_public_graph_info(tags):
 		if con:
 			con.close()
 
-# Gets all the information about a graph that user owns that matches the tags
 def get_all_graph_info(tags):
+	'''
+		Gets all the information about a graph that user owns that matches the tags.
+
+		:param tags: Tags that the user owns
+		:return Graphs: [graphs with tags]
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1583,8 +2027,15 @@ def get_all_graph_info(tags):
 		if con:
 			con.close()
 
-# Checks to see if a given graph for a user is public
 def is_public_graph(username, graph):
+	'''
+		Checks to see if a given graph for a user is public.
+
+		:param username: Email of user
+		:param graph: Graph of user
+		:return boolean: True if public graph
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1612,9 +2063,15 @@ def is_public_graph(username, graph):
 		if con:
 			con.close()
 
-# TODO: DEFINE SHARED LAYOUT LOGIC
-# Gets all the groups that the graph is shared with
 def get_all_groups_for_this_graph(uid, graph):
+	'''
+		Gets all the groups that the graph is shared with.
+
+		:param uid: User of the graph
+		:param graph: Name of graph
+		:return Groups: [groups]
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1642,8 +2099,14 @@ def get_all_groups_for_this_graph(uid, graph):
 		if con:
 			con.close()
 
-# Checks to see if a user's email exists
 def emailExists(email):
+	'''
+		Checks to see if a user's email exists.
+
+		:param email: Email of user
+		:return boolean: True if user exists
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1665,8 +2128,12 @@ def emailExists(email):
 		if con:
 			con.close()
 
-# Emails the user to reset their password
 def sendForgotEmail(email):
+	'''
+		Emails the user to reset their password.
+
+		:param email of user
+	'''
 
 	if emailExists(email) != None:
 		con=None
@@ -1695,8 +2162,14 @@ def sendForgotEmail(email):
 	else:
 		return None
 
-# Retrieves the reset information for a user
 def retrieveResetInfo(code):
+	'''
+		Retrieves the reset information for a user (for comparing which user it is).
+
+		:param code: Code that the user has to match to HTTP GET request
+		:return account: Account associated with the code 
+	'''
+
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1722,8 +2195,15 @@ def retrieveResetInfo(code):
 		if con:
 			con.close()
 
-# Updates password information about a user
 def resetPassword(username, password):
+	'''
+		Updates password information about a user.
+
+		:param username: Email of user
+		:param password: Password of user
+
+	'''
+
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1743,6 +2223,16 @@ def resetPassword(username, password):
 
 # Changes the name of a layout
 def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
+	'''
+		Changes the name of the layout.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param old_layout_name: Old name of layout
+		:param new_layout_name: New name of layout
+		:param loggedIn: User making those changes
+	'''
+
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1760,6 +2250,14 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 
 # Makes a layout public
 def makeLayoutPublic(uid, gid, public_layout, loggedIn):
+	'''
+		Makes a layout public.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param public_layout: Name of layout
+		:param loggedIn: Use rmaking those changes
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1776,6 +2274,18 @@ def makeLayoutPublic(uid, gid, public_layout, loggedIn):
 			con.close()
 # Saves layout of a specified graph
 def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
+	'''
+		Saves layout of specific graph.
+
+		:param layout_id: Id of layout to save
+		:param layout_name: Name of layout to save
+		:param owner: Owner of the graph
+		:param graph: Name of the graph
+		:param user: user making those changes
+		:param json: JSON of the graph
+		:param public: Is layout public or not
+		:param unlisted: Possible deprecated
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1792,6 +2302,14 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 			con.close()
 
 def deleteLayout(uid, gid, layoutToDelete, loggedIn):
+	'''
+		Deletes layout from graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param layoutToDelete: name of layout to delete
+		:param loggedIn: User that is deleting the graph
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1808,8 +2326,16 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 			con.close()
 
 
-# Retrieves specific layout for a certain graph
 def get_layout_for_graph(layout_name, layout_graph, layout_owner):
+	'''
+		Retrieves specific layout for a certain graph.
+
+		:param layout_name: Name of layout
+		:param layout_graph: Name of graph
+		:param layout_owner: Owner of layout
+		:return Layout: [layout]
+	'''
+
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1833,8 +2359,14 @@ def get_layout_for_graph(layout_name, layout_graph, layout_owner):
 		if con:
 			con.close()
 
-# Gets all layouts for a graph
 def get_all_layouts_for_graph(uid, gid):
+	'''
+		Get all layouts for graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:return Layouts: [layouts of graph]
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
@@ -1864,15 +2396,23 @@ def get_all_layouts_for_graph(uid, gid):
 
 # Gets my layouts for a graph
 def get_my_layouts_for_graph(uid, gid, loggedIn):
+	'''
+		Get my layouts for this graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param loggedIn: Current user of graphspace
+		:return Layouts: [my layouts of graph]
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 
+		# Get my layouts
 		cur = con.cursor()
 		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=?", (uid, gid, loggedIn))
 		
 		data = cur.fetchall()
-		print data
 
 		if data == None:
 			return None
@@ -1893,6 +2433,14 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 			con.close()
 
 def get_shared_layouts_for_graph(uid, gid, loggedIn):
+	'''
+		Get shared layouts for this graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param loggedIn: Current user of graphspace
+		:return Layouts: [shared layouts of graph]
+	'''
 	# Get all shared groups for this graph
 	all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
 	shared_graphs = []
@@ -1906,10 +2454,18 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 	return shared_graphs
 
 def get_public_layouts_for_graph(uid, gid):
+	'''
+		Get public layouts for this graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:return Layouts: [public layouts of graph]
+	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 
+		# Get public layouts
 		cur = con.cursor()
 		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and public=1", (uid, gid))
 		
@@ -1918,6 +2474,7 @@ def get_public_layouts_for_graph(uid, gid):
 		if data == None:
 			return None
 
+		# Replace any spaces with html equivalent
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
@@ -1933,8 +2490,14 @@ def get_public_layouts_for_graph(uid, gid):
 		if con:
 			con.close()
 
-# Get all graphs that match the tags
 def get_all_graphs_for_tags(tags):
+	'''
+		Get all graphs that match the tags.
+
+		:param tags: [List of tags to match]
+		:return Graphs: [graphs that contain these tags]
+	'''
+
 	# Split tags into a list
 	if tags:
 		tag_terms = tags.split(',')
@@ -1978,17 +2541,25 @@ def get_all_graphs_for_tags(tags):
 
 # find all tags for a user
 def get_all_tags_for_user(username):
+	'''
+		Return all tags that a user has for their graphs.
+
+		:param username: Email of user in GraphSpace
+		:return Tags: [tags]
+	'''
+
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
+		# Get tags that the user has and return them
 		tags_list = []
-		cur.execute('select distinct tag_id from graph_to_tag where username = ?', (username, ))
+		cur.execute('select distinct tag_id from graph_to_tag where user_id = ?', (username, ))
 		data = cur.fetchall()
 		if data != None:
 			for item in data:
-				tags_list.append(item)
+				tags_list.append(item[0])
 
 		return tags_list
 
@@ -1999,14 +2570,22 @@ def get_all_tags_for_user(username):
 		if con:
 			con.close()
 
-# Returns all of the tags for a specific graph
 def get_all_tags_for_graph(graphname, username):
+	'''
+		Returns all of the tags for a specific graph.
+	
+		:param graphname: Name of graph to search for
+		:param username: Email of user in GraphSpace
+		:return Tags: [tags of graph]
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
 		tags_list = []
+
+		# Get tags for specified graph and return it
 		cur.execute('select distinct tag_id from graph_to_tag where user_id = ? and graph_id=?', (username, graphname))
 		data = cur.fetchall()
 		if data != None:
