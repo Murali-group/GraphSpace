@@ -751,7 +751,9 @@ def search_result(uid, search_terms, view_type):
 					label_string = label_string[:len(label_string) - 1]
 					key_with_search = list(key_tuples[0])
 					# Append all tags for the graph
-					key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
+					#TODO: TOO SLOW FIXX
+					key_with_search.insert(1, "")
+					# key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
 					key_with_search[2] = id_string
 					key_with_search[3] = label_string
 					key_with_search = tuple(key_with_search)
@@ -819,16 +821,17 @@ def find_edges(uid, search_word, view_type, cur):
 	# that the user wants to see (his/her graphs, or public etc)
 	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
 		for i in xrange(len(head_node_ids)):
-			for j in xrange(len(tail_node_ids)):
-				if view_type == 'public':
-					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[j]))
-				elif view_type == 'shared':
-					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[j]))
-				else:
-					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+			if view_type == 'public':
+				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[i]))
+			elif view_type == 'shared':
+				# TOO SLOW FIXX
+				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[i]))
+			else:
+				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[i]))
 
-				data = cur.fetchall()
-				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
+			data = cur.fetchall()
+			print data
+			initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
 				
 	actual_graph_with_edges = []
 	for graph in initial_graphs_with_edges:
@@ -939,14 +942,13 @@ def find_nodes(uid, search_word, view_type, cur):
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 
 	elif view_type == 'shared':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.label =? and gg.graph_id == n.graph_id and n.user_id= ? and n.user_id == gg.user_id', (search_word, uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.label=?', (uid, search_word))
 		shared_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.node_id =? and gg.graph_id == n.graph_id and n.user_id= ? and n.user_id == gg.user_id', (search_word, uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.node_id=?', (uid, search_word))
 		shared_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
-
 	else:
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.label = ? and n.graph_id = g.graph_id and g.public = 1', (search_word, ))
 		public_labels = cur.fetchall()
@@ -981,6 +983,7 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	if view_type == 'my graphs':
 		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
 	elif view_type == 'shared':
+		# TOO SLOW FIX
 		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id= ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id', (search_word, uid))
 	else:
 		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
@@ -1493,6 +1496,7 @@ def remove_group(owner, group):
 		else:
 			# Remove metadata from tables
 			cur.execute('delete from \"group\" where owner_id=? and group_id=?', (owner, group, ))
+			cur.execute('delete from group_to_graph where user_id=? and group_id=?', (owner, group))
 			cur.execute('delete from group_to_user where group_id=?', (group, ))
 			con.commit();
 			return "Group removed!"
@@ -1788,14 +1792,16 @@ def view_graphs_of_type(view_type, username):
 		if view_type == 'public':
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public = 1')
 		elif view_type == 'shared':
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.graph_id = g.graph_id and gg.user_id=?', (username, ))
+			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id', (username, ))
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
 
 		initial_graphs = cur.fetchall()
 		for graph in initial_graphs:
 			temp_list = list(graph)
-			temp_list.insert(1, get_all_tags_for_graph(graph[0], graph[2]))
+			temp_list.insert(1, "")
+			# TOO SLOW FIXX
+			# temp_list.insert(1, get_all_tags_for_graph(graph[0], graph[2]))
 			graphs.append(tuple(temp_list))
 		
 		return graphs
