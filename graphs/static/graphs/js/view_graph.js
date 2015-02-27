@@ -432,8 +432,8 @@ $(document).ready(function() {
         "public": 0,
         "unlisted": 0
       }, function (data) {
-        var layoutUrl = location.pathname + "?layout=" + layoutName;
-        location.replace(layoutUrl);
+        var layoutUrl = window.location.pathname + "?layout=" + layoutName;
+        window.location.replace(layoutUrl);
       });
 
     });
