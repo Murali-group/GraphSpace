@@ -59,7 +59,7 @@ class RegisterForm(forms.Form):
 			https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute
 		'''
 		# using test database to store login information
-		db = db_conn.Database('test')
+		db = db_conn.Database('prod')
 		user = db.meta.tables['user']
 		cleaned_data = super(RegisterForm, self).clean()
 		user_id = cleaned_data["user_id"]

@@ -13,6 +13,7 @@ import string
 
 # Name of the database that is being used as the backend storage
 DB_NAME = 'graphspace.db'
+URL_PATH = 'http://ec2-54-152-211-210.compute-1.amazonaws.com/'
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -453,7 +454,7 @@ def set_layout_context(request, context, uid, gid):
 
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
-	context['layout_urls'] = "http://localhost:8000/graphs/" + uid + "/" + gid + "/?layout="
+	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "/?layout="
 	# context['layouts'] = get_all_layouts_for_graph(uid, gid)
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
@@ -491,13 +492,13 @@ def get_base_urls(view_type):
 
 	# Modify the url of the buttons depending on the page that the user is on
 	if view_type == 'shared':
-	    return "http://localhost:8000/graphs/shared/"
+	    return URL_PATH + "graphs/shared/"
 	elif view_type == 'public':
-	    return "http://localhost:8000/graphs/public/"
+	    return URL_PATH + "graphs/public/"
 	elif view_type == 'all':
-	    return "http://localhost:8000/graphs/all/"
+	    return URL_PATH + "graphs/all/"
 	else:
-	    return "http://localhost:8000/graphs/"
+	    return URL_PATH + "graphs/"
 
 def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 	'''
@@ -2155,7 +2156,7 @@ def sendForgotEmail(email):
 
 			data = cur.fetchone()
 			mail_title = 'Password Reset Information for GraphSpace!'
-			message = 'Please go to the following url to reset your password: http://localhost:8000/reset/?id=' + data[0]
+			message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + data[0]
 			emailFrom = "GraphSpace Admin"
 			send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
 			return "Email Sent!"

@@ -1,5 +1,6 @@
 $(document).ready(function() {
 
+	var URL_PATH = 'http://ec2-54-152-211-210.compute-1.amazonaws.com/';
 
 	$("#reset_pw").click(function (e) {
 		e.preventDefault();
@@ -18,7 +19,7 @@ $(document).ready(function() {
 					return alert(data.Error);
 				} else {
 					alert(data.Success);
-					window.location.href = "http://localhost:8000/index/";
+					window.location.href = URL PATH + 'index/';
 				}
 			});
 		}

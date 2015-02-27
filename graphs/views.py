@@ -552,7 +552,7 @@ def register(request):
             admin = 0
 
             # user table is on a separate database
-            db = Database('test')
+            db = Database('prod')
             user = db.meta.tables['user']
 
             # build insert statement to insert the new user

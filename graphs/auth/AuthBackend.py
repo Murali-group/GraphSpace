@@ -15,12 +15,11 @@ class AuthBackend(object):
         # using test database for hashing, because the original
         # hash algorithm used in Perl version of GraphSpace
         # is not accessible in Python.
-        self.db = Database('test')
+        self.db = Database('prod')
     
     def authenticate(self, username=None, password=None):
         # check the username/password and return a User
         try:
-            print 'username: ' + username
             User = self.db.meta.tables['user']
             user = self.db.session.query(User).filter(User.c.user_id==username).one()
             hashed_pw = user.password
