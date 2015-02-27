@@ -243,6 +243,7 @@ $(document).ready(function() {
           name: 'preset',
           positions: JSON.parse(layout.json)
         };
+        console.log(JSON.parse(layout.json));
       }
     }
 
@@ -551,7 +552,7 @@ $(document).ready(function() {
         'layout': publicLayout,
         'user_id': userId
       }, function (data) {
-        alert(data);
+        window.location.reload();
       });
 
     });

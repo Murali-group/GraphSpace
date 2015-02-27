@@ -2455,7 +2455,8 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 		members = get_group_members(group)
 		if loggedIn in members:
 			for member in members:
-				shared_graphs += get_my_layouts_for_graph(uid, gid, loggedIn)
+				if loggedIn != member:
+					shared_graphs += get_my_layouts_for_graph(uid, gid, member)
 
 	return shared_graphs
 
@@ -2591,7 +2592,7 @@ def get_all_tags_for_graph(graphname, username):
 
 		tags_list = []
 
-		# Get tags for specified graph and return it
+		# Get all tags for specified graph and return it
 		cur.execute('select distinct tag_id from graph_to_tag where user_id = ? and graph_id=?', (username, graphname))
 		data = cur.fetchall()
 		if data != None:
