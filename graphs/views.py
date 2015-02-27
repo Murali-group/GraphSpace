@@ -29,6 +29,8 @@ user = db_init.user
 group = db_init.group
 group_to_graph = db_init.group_to_graph
 
+URL_PATH = 'http://localhost:8000/'
+
 ##### VIEWS #####
 def index(request):
     '''Render the main page
@@ -732,7 +734,7 @@ def changeLayoutName(request):
     loggedIn = request.POST['loggedIn']
 
     db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/" + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def deleteLayout(request):
     '''
@@ -750,7 +752,7 @@ def deleteLayout(request):
     loggedIn = request.POST['user_id']
 
     db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
+    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''
@@ -768,7 +770,7 @@ def makeLayoutPublic(request):
     loggedIn = request.POST['user_id']
 
     db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout made public!", "url": "http://localhost:8000/graphs/" + uid + '/' + gid + '/'}), content_type="application/json")
+    return HttpResponse(json.dumps({"Success": "Layout made public!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
 
 def create_group(request, groupname):
     '''
