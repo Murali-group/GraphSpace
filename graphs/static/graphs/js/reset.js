@@ -19,7 +19,7 @@ $(document).ready(function() {
 					return alert(data.Error);
 				} else {
 					alert(data.Success);
-					window.location.href = URL PATH + 'index/';
+					window.location.href = URL_PATH + 'index/';
 				}
 			});
 		}

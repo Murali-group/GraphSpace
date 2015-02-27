@@ -161,7 +161,7 @@
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    {% with "http://ec2-54-152-211-210.compute-1.amazonaws.com/graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                    {% with "http://localhost:8000/graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
                         <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
                     {%endwith %}
                     <td><div class="test">

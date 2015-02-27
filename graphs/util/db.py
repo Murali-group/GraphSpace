@@ -12,8 +12,8 @@ import random
 import string
 
 # Name of the database that is being used as the backend storage
-DB_NAME = 'graphspace.db'
-URL_PATH = 'http://ec2-54-152-211-210.compute-1.amazonaws.com/'
+DB_NAME = '/Users/Divit/Documents/GRA/GraphSpace/graphspace.db'
+URL_PATH = 'http://localhost:8000/'
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -822,17 +822,16 @@ def find_edges(uid, search_word, view_type, cur):
 	# that the user wants to see (his/her graphs, or public etc)
 	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
 		for i in xrange(len(head_node_ids)):
-			if view_type == 'public':
-				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[i]))
-			elif view_type == 'shared':
-				# TOO SLOW FIXX
-				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[i]))
-			else:
-				cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[i]))
+			for j in xrange(len(tail_node_ids)):
+				if view_type == 'public':
+					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[j]))
+				elif view_type == 'shared':
+					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[j]))
+				else:
+					cur.execute('select e.head_graph_id, e.head_id, e.label, g.modified, e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
 
-			data = cur.fetchall()
-			print data
-			initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
+				data = cur.fetchall()
+				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
 				
 	actual_graph_with_edges = []
 	for graph in initial_graphs_with_edges:
