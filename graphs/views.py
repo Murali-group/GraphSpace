@@ -734,7 +734,7 @@ def changeLayoutName(request):
     loggedIn = request.POST['loggedIn']
 
     db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/" + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def deleteLayout(request):
     '''
@@ -752,7 +752,7 @@ def deleteLayout(request):
     loggedIn = request.POST['user_id']
 
     db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
+    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + '/graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''
