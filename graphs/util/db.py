@@ -1601,6 +1601,58 @@ def groups_for_user(username):
 		if con:
 			con.close()
 
+def get_all_groups_for_user_with_sharing_info(owner, graphname):
+	'''
+		Gets all groups that a user owns or is a member of,
+		and indicates whether the specified graph is shared with that group
+
+		:param owner: Owner of graph
+		:param grpahname: Name of graph
+		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
+	'''
+	group_info = []
+	groups = get_groups_of_user(owner)
+
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# For all groups user is a part of, indicate whether specified graph is shared with that group
+		for group in groups:
+			cur.execute('select * from group_to_graph where group_id = ? and user_id = ? and graph_id = ?', (group[6], owner, graphname))
+			is_shared = cur.fetchone()
+
+			if is_shared == None:
+				group_info.append({"group_name": group[0], "group_id": group[6], "graph_shared": False})
+			else:
+				group_info.append({"group_name": group[0], "group_id": group[6], "graph_shared": True})
+
+		return group_info
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+def updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_not_to_share_with):
+	'''
+		Shares specified graph with all groups to share with.  Unshares specified graph with all groups to unshare with.
+		:param owner: Owner of graph
+		:param grpahname: Name of graph
+		:param groups_to_share_with: Groups to share with
+		:param groups_not_to_share_with: Groups not to share with
+	'''
+	for group in groups_to_share_with:
+		print group
+		share_graph_with_group(owner, gid, group)
+
+	for group in groups_not_to_share_with:
+		unshare_graph_with_group(owner, gid, group)
+
 def add_user_to_group(username, owner, group):
 	'''
 		Adds a user to a group.

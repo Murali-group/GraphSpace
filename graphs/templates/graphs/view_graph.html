@@ -69,11 +69,11 @@
         </div>
 
 <!-- Share Groups Modal -->
-<div class="modal fade" id="share_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="share_group_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Select all groups to share layout with</h4>
+                <h4 class="modal-title" id="changeLabelModal">Select all groups to share graph with</h4>
               </div>
               <div class="modal-body">
                     <div class="group_body">
@@ -81,7 +81,7 @@
                         </ul>
                     </div>
                     <div class="form-group">
-                        <button type="button" value="" class="btn btn-success">Share Layout</button>
+                        <button type="button" id="share_graph_with_selected_groups" class="btn btn-success">Share Graph</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     </div>
 
@@ -176,6 +176,8 @@
                     {% endwith %}
                     {% endfor %}
                 </p>
+                <br>
+                <button class="btn btn-default" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with groups</button>
                 <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
             </div>
         </div>
@@ -319,6 +321,9 @@
 
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/arbor.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/springy.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/springyui.js' %}"></script>
 
 <!-- jQuery UI style sheet -->
 <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
@@ -359,7 +364,6 @@
 <script type="text/javascript" src="{% static 'graphs/js/jsPDF/libs/png_support/png.js' %}"></script>
 <script type="text/javascript" src="{% static 'graphs/js/jsPDF/jspdf.plugin.addimage.js' %}"></script>
 <script type="text/javascript" src="{% static 'graphs/js/jsPDF/jspdf.plugin.png_support.js' %}"></script>
-
 
 
 {% if search_result %}

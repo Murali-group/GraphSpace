@@ -60,6 +60,9 @@ urlpatterns = patterns('',
         # Get all groups for a graph
         url(r'^getGroupsForGraph/$', views.getGroupsForGraph, name='getGroupsForGraph'),
 
+        # Shares graphs with specified groups
+        url(r'^shareGraphWithGroups/$', views.shareGraphWithGroups, name='shareGraphWithGroups'),
+
         # Make Layout public
         url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
         # forgot endpoint

@@ -727,14 +727,15 @@ def changeLayoutName(request):
 
         :return JSON:  {"Success": <message>}
     '''
-    uid = request.POST['uid']
-    gid = request.POST['gid']
-    old_layout_name = request.POST['old_layout_name']
-    new_layout_name = request.POST['new_layout_name']
-    loggedIn = request.POST['loggedIn']
+    if request.method == 'POST':
+        uid = request.POST['uid']
+        gid = request.POST['gid']
+        old_layout_name = request.POST['old_layout_name']
+        new_layout_name = request.POST['new_layout_name']
+        loggedIn = request.POST['loggedIn']
 
-    db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+        db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
+        return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def deleteLayout(request):
     '''
@@ -746,13 +747,14 @@ def deleteLayout(request):
 
         :return JSON:  {"Success": <message>}
     '''
-    uid = request.POST['owner']
-    gid = request.POST['gid']
-    layoutToDelete = request.POST['layout']
-    loggedIn = request.POST['user_id']
+    if request.method == 'POST':
+        uid = request.POST['owner']
+        gid = request.POST['gid']
+        layoutToDelete = request.POST['layout']
+        loggedIn = request.POST['user_id']
 
-    db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + '/graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
+        db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
+        return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + '/graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''
@@ -764,13 +766,14 @@ def makeLayoutPublic(request):
 
         :return JSON:  {"Success": <message>}
     '''
-    uid = request.POST['owner']
-    gid = request.POST['gid']
-    layoutToMakePpublic = request.POST['layout']
-    loggedIn = request.POST['user_id']
+    if request.method == 'POST':
+        uid = request.POST['owner']
+        gid = request.POST['gid']
+        layoutToMakePpublic = request.POST['layout']
+        loggedIn = request.POST['user_id']
 
-    db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
-    return HttpResponse(json.dumps({"Success": "Layout made public!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
+        db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
+        return HttpResponse(json.dumps({"Success": "Layout made public!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
 
 
 def getGroupsForGraph(request):
@@ -779,15 +782,33 @@ def getGroupsForGraph(request):
 
         :param request:Incoming HTTP POST Request containing:
 
-        {"gid": <name of graph>, "owner": <owner of the graph (user)}
+        {"gid": <name of graph>, "owner": <owner of the graph>}
 
         :return JSON: {"Groups": [list of groups]}
     '''
-    owner = request.POST['owner']
-    gid = request.POST['gid']
-    
-    return HttpResponse(json.dumps({"Groups": db.get_all_groups_for_this_graph(owner, gid)}), content_type="application/json")
+    if request.method == 'POST':
+        owner = request.POST['owner']
+        gid = request.POST['gid']
+        
+        return HttpResponse(json.dumps({"Group_Information": db.get_all_groups_for_user_with_sharing_info(owner, gid)}), content_type="application/json")
 
+def shareGraphWithGroups(request):
+    '''
+        Shares graph with specified groups.
+        Unshares graph with specified groups.
+
+        :param request:Incoming HTTP POST Request containing:
+        {"gid": <name of graph>, "owner": <owner of the graph>, "groups_to_share_with": [group_ids], "groups_not_to_share_with": [group_ids]}
+        :return TBD
+    '''
+    if request.method == 'POST':
+        owner = request.POST['owner']
+        gid = request.POST['gid']
+        groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
+        groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
+
+        db.updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_not_to_share_with)
+        return HttpResponse("Done")
 
 def create_group(request, groupname):
     '''
