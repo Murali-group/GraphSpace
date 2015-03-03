@@ -2388,8 +2388,6 @@ def get_all_layouts_for_graph(uid, gid):
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
-			# Replace for URL
-			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
 		return cleaned_data
@@ -2426,8 +2424,6 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
-			# Replace for URL
-			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
 		return cleaned_data
@@ -2485,8 +2481,6 @@ def get_public_layouts_for_graph(uid, gid):
 		cleaned_data = []
 		for graphs in data:
 			graphs = str(graphs[0])
-			# Replace for URL
-			graphs = graphs.replace(" ", "%20")
 			cleaned_data.append(graphs)
 
 		return cleaned_data

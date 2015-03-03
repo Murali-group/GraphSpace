@@ -57,7 +57,8 @@ function searchValues(labels) {
           window.cy.$('[id="' + ids[j] + '"]').select();
           window.cy.$('[id="' + ids[j] + '"]').unselectify();
           // $("#search_terms").append('<button class="btn btn-danger terms" id="' + ids[j]  + '" value="' + ids[j] + '"">' + labels[j] + " X" + '</button>');
-          $("#search_terms").append('<li><button class="terms"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</button></li>');
+          // $("#search_terms").append('<li><button class="terms"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</button></li>');
+          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
           $("#search").val("");
         }
       }
@@ -84,9 +85,9 @@ function getHighlightedTerms() {
   var highlightedTerms = new Array();
   var linkToGraph = ""
   // Go through all of the highlighted terms
-  $(".terms").each(function (index) {
-    if (highlightedTerms.indexOf($(this).val()) == -1) {
-      highlightedTerms.push($(this).val());
+  $(".search").each(function (index) {
+    if (highlightedTerms.indexOf($(this).attr('id')) == -1) {
+      highlightedTerms.push($(this).attr('id'));
     }
   });
 
@@ -448,8 +449,8 @@ $(document).ready(function() {
     });
 
     //Unhighlights terms when the buttons in the search box is clicked on
-    $("#search_terms").on("click", ".terms", function(e) {
-      unselectTerm($(this).val());
+    $("#search_terms").on("click", ".search", function(e) {
+      unselectTerm($(this).attr('id'));
       var toRemove  = encodeURIComponent($(this).val()) + ',';
       var origText = $("#url").text();
       origText = origText.replace(toRemove, '');
@@ -457,7 +458,7 @@ $(document).ready(function() {
       $(this).remove();
       var toSearchFor = origText.indexOf('search=')
       var nextVal = origText.substring(toSearchFor).replace('search=', '');
-      if ($(".terms").length == 0) {
+      if ($(".search").length == 0) {
         $("#url").text("");
       }
     });
