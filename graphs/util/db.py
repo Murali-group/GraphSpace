@@ -1330,7 +1330,7 @@ def get_all_groups_with_member(user_id):
 		cur = con.cursor()
 
 		# Get all groups that user is a member of
-		cur.execute('select group_id from group_to_user where user_id=?', (user_id, ))
+		cur.execute('select gu.group_id from group_to_user as gu, "group" as g where gu.user_id=? and gu.group_id = g.group_id and g.owner_id != gu.user_id', (user_id, ))
 
 		group_names = cur.fetchall()
 

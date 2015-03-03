@@ -36,6 +36,7 @@ def alter(con, cur):
 	cur.execute('insert into layout (layout_id, layout_name, owner_id, graph_id, user_id, json, public, unlisted) select * from tmp_layout')
 	cur.execute('insert into node (node_id, label, user_id, graph_id) select * from tmp_node')
 	cur.execute('insert into user (user_id, password, activated, activate_code, public, unlisted, admin) select * from tmp_user')
+	cur.execute('insert into "group" (group_id, name, owner_id, description, public, unlisted) select * from tmp_group')
 
 	# Commit changes to the database (only needed for insertions)
 	con.commit()
