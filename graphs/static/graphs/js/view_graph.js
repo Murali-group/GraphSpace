@@ -42,22 +42,16 @@ function searchValues(labels) {
     //It selects those nodes that have labels as their ID's
     ids = JSON.parse(data)['IDS'];
 
+    console.log(ids);
     //For everthing else, we get correct id's from server and proceed to highlight those id's 
     //by correlating labels to id's
     for (var j = 0; j < ids.length; j++) {
       if (ids[j].length > 0) {
         if (window.cy.$(window.cy.$('[id="' + ids[j] + '"]').selected() == false)) {
-          // If it's an edge, highlight both the edge and the connecting nodes
-          if (ids[j].indexOf('-') > -1) {
-            var node_ids = ids[j].split('-');
-            searchValues(node_ids[0]);
-            searchValues(node_ids[1]);
-          }
-          //Otherwise just highlight the nodes themselves
+          // Select the specified element and don't allow the user to unselect it until button is clicked again
           window.cy.$('[id="' + ids[j] + '"]').select();
           window.cy.$('[id="' + ids[j] + '"]').unselectify();
-          // $("#search_terms").append('<button class="btn btn-danger terms" id="' + ids[j]  + '" value="' + ids[j] + '"">' + labels[j] + " X" + '</button>');
-          // $("#search_terms").append('<li><button class="terms"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</button></li>');
+          // Append a new button for every search term
           $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
           $("#search").val("");
         }
@@ -441,7 +435,7 @@ $(document).ready(function() {
       });
     });
 
-    //Searches for the element inside the grap
+    //Searches for the element inside the graph
 
     $("#search_button").click(function(e) {
       e.preventDefault();
