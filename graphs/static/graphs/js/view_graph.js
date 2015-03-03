@@ -194,7 +194,7 @@ $(document).ready(function() {
     //of a graph to be displayed.
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
-      name: 'concentric',
+      name: 'cose',
       padding: 10
     };
 
@@ -244,7 +244,6 @@ $(document).ready(function() {
           name: 'preset',
           positions: JSON.parse(layout.json)
         };
-        console.log(JSON.parse(layout.json));
       }
     }
 
@@ -344,12 +343,13 @@ $(document).ready(function() {
             }
             $('#dialog').dialog('open');
 
-            if (target._private.data.hasOwnProperty('target') && target._private.data.hasOwnProperty('source')) {
-              var edgeId = target._private.data.id.replace('-', ':');
-              searchValues(edgeId);
-            } else {
-              searchValues(target._private.data.label);
-            }
+            //DEPRECATED DUE TO USER INTERFACE ISSUES
+            // if (target._private.data.hasOwnProperty('target') && target._private.data.hasOwnProperty('source')) {
+            //   var edgeId = target._private.data.id.replace('-', ':');
+            //   searchValues(edgeId);
+            // } else {
+            //   searchValues(target._private.data.label);
+            // }
         }
       });
 
@@ -416,11 +416,14 @@ $(document).ready(function() {
       //When save is clicked, it gets location of all the nodes and saves it
       //so that nodes can be placed in this location later on
       var nodes = window.cy.elements('node');
-      var layout = {};
+      var layout = [];
       for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-         var nodeId = nodes[i]._private.data.id;
-         var nodePosition = nodes[i]._private.position;
-         layout[nodeId] = nodePosition;
+         var nodeData = {
+          'x': nodes[i]._private.position.x,
+          'y': nodes[i]._private.position.y,
+          'id': nodes[i]._private.data.id
+         };
+         layout.push(nodeData);
       }
 
       //Posts information to the server regarding the current display of the graph,
@@ -436,7 +439,6 @@ $(document).ready(function() {
         var layoutUrl = window.location.pathname + "?layout=" + layoutName;
         window.location.replace(layoutUrl);
       });
-
     });
 
     //Searches for the element inside the grap

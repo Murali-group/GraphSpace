@@ -2351,12 +2351,10 @@ def get_layout_for_graph(layout_name, layout_graph, layout_owner):
 		cur.execute("select json from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, layout_graph, layout_owner))
 		data = cur.fetchone()
 
-		print data
-
 		if data == None:
 			return None
 
-		return str(data[0])
+		return cytoscapePresetLayout(json.loads(str(data[0])))
 
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
@@ -2364,6 +2362,30 @@ def get_layout_for_graph(layout_name, layout_graph, layout_owner):
 	finally:
 		if con:
 			con.close()
+
+def cytoscapePresetLayout(csWebJson):
+	'''
+		Converts CytoscapeWeb preset layouts to be
+		the standards of CytoscapeJS JSON. See http://js.cytoscape.org/#layouts/preset
+		for more details.
+
+		:param csWebJson: A CytoscapeWeb compatible layout json containing coordinates of the nodes
+		:return csJson: A CytoscapeJS compatible layout json containing coordinates of the nodes
+	'''
+
+	csJson = {}
+
+	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]
+	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
+
+	for node_position in csWebJson:
+		csJson[str(node_position['id'])] = {
+			'x': node_position['x'],
+			'y': node_position['y']
+		};
+
+	return json.dumps(csJson)
+
 
 def get_all_layouts_for_graph(uid, gid):
 	'''
