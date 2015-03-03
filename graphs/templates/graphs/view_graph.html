@@ -67,6 +67,28 @@
             </div>
           </div>
         </div>
+
+<!-- Share Groups Modal -->
+<div class="modal fade" id="share_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title" id="changeLabelModal">Select all groups to share layout with</h4>
+              </div>
+              <div class="modal-body">
+                    <div class="group_body">
+                        <ul class="list-group checked-list-box">
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" value="" class="btn btn-success">Share Layout</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
         
 <div class="container-fluid csweb_container">
     <!-- cytoscapeweb -->
@@ -213,9 +235,13 @@
                                             <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
                                               <span class="glyphicon glyphicon-remove"></span>
                                             </button>
-                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip" data-toggle="tooltip" title="Make Layout Public" style="float: right;">
+                                            <!-- <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip" data-toggle="tooltip" title="Make Layout Public" style="float: right;">
+                                              <span class="glyphicon glyphicon-eye-close"></span>
+                                            </button> -->
+                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip" data-toggle="modal" data-target="#share_modal" title="Make Layout Public" style="float: right;">
                                               <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
+                                            
                                             <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
                                               <span class="glyphicon glyphicon-pencil"></span>
                                             </button>

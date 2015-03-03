@@ -772,6 +772,23 @@ def makeLayoutPublic(request):
     db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
     return HttpResponse(json.dumps({"Success": "Layout made public!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
 
+
+def getGroupsForGraph(request):
+    '''
+        Returns all the groups that are associated with request.
+
+        :param request:Incoming HTTP POST Request containing:
+
+        {"gid": <name of graph>, "owner": <owner of the graph (user)}
+
+        :return JSON: {"Groups": [list of groups]}
+    '''
+    owner = request.POST['owner']
+    gid = request.POST['gid']
+    
+    return HttpResponse(json.dumps({"Groups": db.get_all_groups_for_this_graph(owner, gid)}), content_type="application/json")
+
+
 def create_group(request, groupname):
     '''
         Allows group creation from the GUI.

@@ -540,6 +540,26 @@ $(document).ready(function() {
 
     });
 
+    // PLACEHOLDER UNTIL BUG IS CLARIFIED
+    // $(".public").click(function (e) {
+    //   e.preventDefault();
+
+    //   var paths = document.URL.split('/')
+    //   var publicLayout = $(this).val();
+    //   var userId = $("#loggedIn").text();
+    //   var ownerId = decodeURIComponent(paths[paths.length - 3])
+    //   var gid = decodeURIComponent(paths[paths.length - 2])
+
+    //   $.post('../../../makeLayoutPublic/', {
+    //     'gid': gid,
+    //     'owner': ownerId,
+    //     'layout': publicLayout,
+    //     'user_id': userId
+    //   }, function (data) {
+    //     window.location.reload();
+    //   });
+    // });
+
     $(".public").click(function (e) {
       e.preventDefault();
 
@@ -549,13 +569,20 @@ $(document).ready(function() {
       var ownerId = decodeURIComponent(paths[paths.length - 3])
       var gid = decodeURIComponent(paths[paths.length - 2])
 
-      $.post('../../../makeLayoutPublic/', {
+      $.post('../../../getGroupsForGraph/', {
         'gid': gid,
         'owner': ownerId,
-        'layout': publicLayout,
-        'user_id': userId
       }, function (data) {
-        window.location.reload();
+        var group_options = "";
+        if (data['Groups'].length > 0) {
+          for (var i = 0; i < data['Groups'].length; i++) {
+            group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Groups'][i] + '">' + data['Groups'][i] + '</label></li>';
+          }
+          group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="public">Make public</label></li>';
+        } else {
+          group_options = '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="public">Make public</label></li>';
+        }
+        $(".checked-list-box").html(group_options);
       });
 
     });
@@ -605,7 +632,10 @@ $(document).ready(function() {
             showOnlyK();
           }
           console.log($("#slider_max").slider('value'));
-        }});
+        }
+    });
+
+
 
     
 

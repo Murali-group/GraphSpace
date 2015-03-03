@@ -57,6 +57,9 @@ urlpatterns = patterns('',
         # Delete layout
         url(r'^deleteLayout/$', views.deleteLayout, name='deleteLayout'),
 
+        # Get all groups for a graph
+        url(r'^getGroupsForGraph/$', views.getGroupsForGraph, name='getGroupsForGraph'),
+
         # Make Layout public
         url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
         # forgot endpoint
