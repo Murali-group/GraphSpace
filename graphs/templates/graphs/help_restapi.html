@@ -25,30 +25,38 @@ Finally, you can save the following graph to a file as an example.
 
 <pre>
 {
+    {
     "graph": {
         "nodes": [
             {
                 "data": {
                     "shape": "ellipse",
                     "id":"P43146",
-                    "label": "DCC"
+                    "label": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "color": "yellow"
                 }
             }, 
             {
                 "data": {
                     "shape": "ellipse",
                     "id":"P08107",
-                    "label": "HSPA1B"
+                    "label": "HSPA1B",
+                    "height": 50,
+                    "width": 50,
+                    "color": "yellow"
                 }
             }
         ],
         "edges": [
             {
                 "data": {
-                    "id": "P43146-P08107",
                     "source": "P43146",
                     "target": "P08107",
                     "directed": "true",
+                    "color": "black",
+                    "width": 2
                 }
             }
         ]
@@ -60,6 +68,7 @@ Finally, you can save the following graph to a file as an example.
             "tutorial"
         ]
     }
+}
 }
 </pre>
 

@@ -1841,6 +1841,7 @@ def view_graphs_of_type(view_type, username):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
+		# Select graphs depending on view type.
 		if view_type == 'public':
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public = 1')
 		elif view_type == 'shared':
@@ -1848,14 +1849,16 @@ def view_graphs_of_type(view_type, username):
 		else:
 			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
 
+		# Go through each graph and retrieve all tags associated with that graph
 		initial_graphs = cur.fetchall()
 		for graph in initial_graphs:
 			temp_list = list(graph)
 			temp_list.insert(1, "")
-			# TOO SLOW FIXX
+			# TODO: FIX SLOW QUERY
 			# temp_list.insert(1, get_all_tags_for_graph(graph[0], graph[2]))
 			graphs.append(tuple(temp_list))
 		
+		# Return the graph information (including tags) as a list of rows
 		return graphs
 
 	except lite.Error, e:

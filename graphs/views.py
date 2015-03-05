@@ -41,7 +41,7 @@ def index(request):
     #####################
     # UNCOMMENT THESE ON INITIAL START UP TO POPULATE TABLES
     #####################
-    db.add_everyone_to_password_reset()
+    # db.add_everyone_to_password_reset()
 
     # db.insert_all_edges_from_json()
     #####################
