@@ -1148,6 +1148,7 @@ def get_graph_json(username, graphname):
 
 		# If there is JSON for this graph, return it
 		if jsonData and jsonData[0]:
+			print jsonData[0]
 			return jsonData[0]
 		else:
 			return None

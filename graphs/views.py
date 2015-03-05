@@ -887,7 +887,7 @@ def retrieve_graph(request, user_id, graphname):
 
         jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
-            return HttpResponse(json.dumps({"Graph": jsonData}), content_type="application/json")
+            return HttpResponse(jsonData)
         else:
             return HttpResponse(json.dumps({"Error": "No Such Graph Exists"}), content_type="application/json")
 
