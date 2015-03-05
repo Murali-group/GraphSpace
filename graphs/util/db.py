@@ -1501,7 +1501,7 @@ def remove_group(owner, group):
 			cur.execute('delete from group_to_graph where user_id=? and group_id=?', (owner, group))
 			cur.execute('delete from group_to_user where group_id=?', (group, ))
 			con.commit();
-			return "Group removed!"
+			return "Successfully deleted " + group + "owned by " + owner + "."
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
