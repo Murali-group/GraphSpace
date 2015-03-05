@@ -147,7 +147,6 @@ def validate_json(jsonString):
 
 	# edge:
 	# (dont need an id) - I auto generate one
-	# label
 	# color
 	# source
 	# target
@@ -172,8 +171,8 @@ def validate_json(jsonString):
 
 	jsonErrors = ""
 	# Combines edge and node Errors
-	edgeError = propertyInJSON(edges, edge_properties)
-	nodeError = propertyInJSON(nodes, node_properties)
+	edgeError = propertyInJSON(edges, edge_properties, 'edge')
+	nodeError = propertyInJSON(nodes, node_properties, 'node')
 	nodeUniqueIDError = checkUniqueID(nodes)
 	nodeCheckShape = checkShapes(nodes)
 
@@ -222,13 +221,14 @@ def checkShapes(elements):
 
 	return ""
 
-def propertyInJSON(elements, properties):
+def propertyInJSON(elements, properties, elementType):
 	'''
 		Checks to see if the elements in the graph JSON (nodes and edges)
 		adhere to the properties of CytoscapeJS (ie unique ids, valid shapes)
 
 		:param elements: JSON of the elements (nodes or edges)
 		:param properties: set of properties that element JSON should following
+		:param elementType: Type of element it is (either node or edge)
 		:return Error|None: <Property x not in JSON for element | node>
 	'''
 
@@ -236,7 +236,7 @@ def propertyInJSON(elements, properties):
 		element_data = element['data']
 		for element_property in properties:
 			if element_property not in element_data:
-				return "Error: Property " + element_property +  " not in JSON for an edge"
+				return "Error: Property " + element_property +  " not in JSON for " + elementType
 
 	return ""
 
@@ -1090,6 +1090,7 @@ def insert_graph(username, graphname, graph_json):
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
+		return e.args[0]
 
 	finally:
 		if con:

@@ -25,7 +25,6 @@ Finally, you can save the following graph to a file as an example.
 
 <pre>
 {
-    {
     "graph": {
         "nodes": [
             {
@@ -69,10 +68,7 @@ Finally, you can save the following graph to a file as an example.
         ]
     }
 }
-}
 </pre>
-
-</p>
 
 <h3>API calls</h3>
 
@@ -120,6 +116,35 @@ In order to add a graph to the server, make the following POST request where [em
 curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
 </pre>
 
+<p><b>The following properties are required for a <em>node</em> to have:</b>
+  
+  <ul>
+    <li>label</li>
+    <li>shape</li>
+    <li>color</li>
+    <li>height</li>
+    <li>width</li>
+    <li>id (each node id has to be unique)</li>
+  </ul>
+
+
+
+<br>
+<br>
+
+<b>The following properties are required for a <em>edge</em> to have:</b>
+  
+  <ul>
+    <li>color</li>
+    <li>source</li>
+    <li>target</li>
+    <li>directed</li>
+    <li>width</li>
+  </ul>
+
+</p>
+
+
 
 Example successful response:
 
@@ -127,6 +152,12 @@ Example successful response:
 {
        Graph inserted into GraphSpace!
 }
+</pre>
+
+If JSON fails validation, it should give some sort of error as to why it failed
+
+<pre>
+{"Error": "Property color not in JSON for an edge"}
 </pre>
 
 <h3 id="get_graph">Get graph</h3>
