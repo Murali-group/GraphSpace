@@ -146,11 +146,11 @@ curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F
 
 
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
-       Graph inserted into GraphSpace!
+  "Success": "Graph inserted into GraphSpace!"
 }
 </pre>
 
@@ -168,7 +168,7 @@ To get the JSON for an existing graph use the following GET command. You can onl
 curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
@@ -234,7 +234,7 @@ To remove a graph use the following command. You can only remove a graph that be
 curl -X POST "http://localhost:8000/api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
@@ -349,11 +349,11 @@ To remove a group use the following command. You can only remove a group that yo
 curl -X POST "http://localhost:8000/api/groups/delete/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
-       "success" : "Successfully deleted group owned by craigy@vt.edu."
+       "Success" : "Successfully deleted group owned by craigy@vt.edu."
 }
 </pre>
 
@@ -398,11 +398,11 @@ Add a user to a group. You can only add a user to a group that you belong to.
 curl -X POST "http://localhost:8000/api/groups/[groupname]/adduser/[member_email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
-   "success" : "Successfully added user test@test.com to group newgroup."
+   "Success" : "Successfully added user test@test.com to group newgroup."
 }
 </pre>
 
@@ -419,11 +419,11 @@ Remove a user from a group. You can remove yourself from any group, but you must
 curl -X POST "http://localhost:8000/api/groups/demo/removeuser/craigy@vt.edu/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
-   "success" : "Successfully removed user test@test.com from group newgroup."
+   "Success" : "Successfully removed user test@test.com from group newgroup."
 }
 </pre>
 
@@ -441,11 +441,11 @@ Share a graph with a group, effectively giving all members in the group read per
 curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/share/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
-   "success" : "Shared graph owned by craigy@vt.edu with group Test."
+   "Success" : "Shared graph owned by craigy@vt.edu with group Test."
 }
 </pre>
 
@@ -457,7 +457,7 @@ Unshare a graph with a group, effectively removing read permission from all memb
 curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/unshare/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {
@@ -472,7 +472,7 @@ Get all the tags that a user has for their graphs.
 curl -X POST "http://localhost:8000/api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 
 <pre>
 {"Response": ["ISMB-2014-Crosstalk"]}
@@ -485,7 +485,7 @@ Get all the tags that are attached to a certain graph.
 curl -X POST "http://localhost:8000/api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example successful response:
+Example Successful response:
 <pre>
 {"Response": ["ISMB-2014-Crosstalk"]}
 </pre>
