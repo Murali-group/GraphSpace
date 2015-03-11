@@ -123,6 +123,14 @@ function isHexaColor(sNum){
          && ! isNaN( parseInt(sNum.substring(1), 16) ) && sNum.substring(0,1) == '#' ;
 }
 
+//Appends # character if string is hex
+function addCharacterToHex(sNum) {
+  if (sNum.length == 6 && ! isNaN( parseInt(sNum, 16) )) {
+    return '#' + sNum;
+  } else {
+    return sNum
+  }
+}
 //Small function to split terms based on the '_' character
 function splitTerms(term) {
   return term.split("_");
@@ -364,11 +372,17 @@ $(document).ready(function() {
           nodeData['shape'] = 'ellipse';
         }
 
-        if (!isHexaColor(nodeData['color'])) {
-          nodeData['color'] = 'yellow';
+        if (nodeData['color'] == undefined) {
+          nodeData['color'] = "yellow";
+        } else {
+          nodeData['color'] = addCharacterToHex(nodeData['color']);
+          if (!isHexaColor(nodeData['color'])) {
+            nodeData['color'] = "yellow";
+          }
         }
       }
-      
+      console.log(graph_json['graph']);
+
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
