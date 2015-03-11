@@ -70,14 +70,20 @@ GraphSpace represents graphs using a JSON format. Below is an example of a very 
                 "data": {
                     "shape": "ellipse",
                     "id":"P43146",
-                    "label": "DCC"
+                    "label": "DCC",
+                    "color": "yellow",
+                    "height": 50,
+                    "width": 50
                 }
             }, 
             {
                 "data": {
                     "shape": "ellipse",
                     "id":"P08107",
-                    "label": "HSPA1B"
+                    "label": "HSPA1B",
+                    "color": "yellow",
+                    "height": 50,
+                    "width": 50                
                 }
             }
         ],
@@ -88,6 +94,8 @@ GraphSpace represents graphs using a JSON format. Below is an example of a very 
                     "source": "P43146",
                     "target": "P08107",
                     "directed": "true",
+                    "color": "black",
+                    "width": 3
                 }
             }
         ]

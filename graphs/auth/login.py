@@ -27,6 +27,7 @@ def login(request):
 		# 	db.sendForgotEmail(request.POST['user_id'])
 		# 	return context
 
+		print 'testing'
 		user = authenticate(username=request.POST['user_id'], password=request.POST['pw'])
 		login_form = LoginForm(request.POST)
 		if user is not None:

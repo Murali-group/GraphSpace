@@ -234,13 +234,20 @@ def propertyInJSON(elements, properties, elementType):
 	'''
 
 	for element in elements:
+		met_all_properties = []
+
 		element_data = element['data']
 		for element_property in properties:
 			if element_property not in element_data:
 				return "Error: Property " + element_property +  " not in JSON for " + elementType
+		
+			met_all_properties.append(element_property)
+
+		if len(met_all_properties) == len(properties):
 			hexChecker = all(c in string.hexdigits for c in element_data['color'])
 			if hexChecker:
 				return "Error: Please add #to all colors that are HEX for " + elementType + " e.g. 000 should be #000"
+
 
 	return ""
 
