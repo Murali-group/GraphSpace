@@ -3,10 +3,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import sqlalchemy
 import graphs.models as models
+from django.conf import settings
 
 # database locations
-_originaldb = 'sqlite:///graphspace.db'
+_originaldb = settings.DATABASE_LOCATION
 
+#TESTING PATHS (RELATIVE TO CS VT SERVER PATHS)
 _devdb = 'sqlite:////usr/local/yijaeil/graphspace-server/graphspace_live_backup.db'
 
 _devdb2 = 'sqlite:////data/craigy/graphspace-development/graphspace-server/graphspace_old.db'

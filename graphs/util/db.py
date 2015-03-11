@@ -10,10 +10,11 @@ from itertools import groupby
 from collections import Counter, defaultdict
 import random
 import string
+from django.conf import settings
 
 # Name of the database that is being used as the backend storage
-DB_NAME = '/home/sudosingh/Documents/GraphSpace/graphspace.db'
-URL_PATH = 'http://localhost:8000/'
+DB_NAME = settings.DB_FULL_PATH
+URL_PATH = settings.URL_PATH
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -96,60 +97,6 @@ def insert_all_edges_from_json():
 	finally:
 		if con:
 			con.close()
-
-
-def addHeightWidthColorProperties():
-	'''
-		Inserts all edges from the JSON into the database
-
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		con.text_factory = str
-		cur = con.cursor()
-		
-		# Get information from all graphs already in the database
-		# QUERY EXAMPLE: select user_id, graph_id from graph
-		cur.execute('select user_id, graph_id, json from graph')
-		data = cur.fetchall()
-
-		cleaned_json = json.loads(j[2])
-
-		# If there is anything in the graph table
-		if data != None:
-			# Go through each Graph
-			for j in data:
-
-				# Since there are two types of JSON: one originally submitted
-				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-				# TODO: Remove conversion by specifying it when the user creates a graph
-				if 'data' in cleaned_json['graph']:
-					cleaned_json = json.loads(convert_json(j[2]))
-
-				node_inserter = json_value['graph']['nodes']
-				for node_data in node_inserter:
-					node_data['data']['height'] = 50
-					node_data['data']['width'] = 50
-					if isPropertyHex(node_data['data']['color']):
-						temp = "#"
-						node_data['data']['color'] = temp + node_data['data']['color']
-
-				edge_inserter = json_value['graph']['edges']
-				for edge_data in edge_inserter:
-					if isPropertyHex(node_data['data']['color']):
-						temp = "#"
-						node_data['data']['color'] = temp + node_data['data']['color']
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def isPropertyHex(property):
-	return all(c in string.hexdigits for c in element_data['color'])
 
 # --------------- End Edge Insertions --------------------------------
 

@@ -8,6 +8,7 @@ from graphs.util.paginator import pager
 from graphs.util import db
 from graphs.auth.login import login
 from forms import LoginForm, SearchForm, RegisterForm
+from django.conf import settings
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -16,6 +17,7 @@ import models
 import json
 import graphs.util.db_init as db_init
 import bcrypt
+import os
 from operator import itemgetter
 from itertools import groupby
 from graphs.util.json_converter import convert_json
@@ -29,7 +31,7 @@ user = db_init.user
 group = db_init.group
 group_to_graph = db_init.group_to_graph
 
-URL_PATH = 'http://localhost:8000/'
+URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 def index(request):
@@ -43,7 +45,6 @@ def index(request):
     #####################
     # db.add_everyone_to_password_reset()
 
-    db.addHeightWidthColorProperties()
     # db.insert_all_edges_from_json()
     #####################
 

@@ -101,6 +101,9 @@ function getHighlightedTerms() {
   return linkToGraph
 }
 
+
+// Gets the largest K value elements from the graph
+// and only renders those values
 function getLargestK(graph_json) {
   var edges = graph_json['edges'];
 
@@ -112,6 +115,12 @@ function getLargestK(graph_json) {
     }
   }
   return largestK;
+}
+
+// Checks to see if color is Hex
+function isHexaColor(sNum){
+  return (typeof sNum === "string") && sNum.length === 7
+         && ! isNaN( parseInt(sNum.substring(1), 16) ) && sNum.substring(0,1) == '#' ;
 }
 
 //Small function to split terms based on the '_' character
@@ -140,6 +149,8 @@ function showOnlyK() {
   hideList.hide();
 }
 
+//Gets all nodes and edges up do the max value set
+//and only renders them
 function applyMax(graph_layout) {
   var maxVal = parseInt($("#input_max").val());
 
@@ -324,6 +335,42 @@ $(document).ready(function() {
       this.panzoom(defaults);
       // make the selection states of the elements mutable
       this.elements().selectify();
+
+      // DONE SO OLD GRAPHS WILL DISPLAY
+      //If the nodes in graphs already in database don't have width or height
+      // or unrecognized shape, have a default value
+      for (var i = 0; i < graph_json['graph']['nodes'].length; i++) {
+        var nodeData = graph_json['graph']['nodes'][i]['data'];
+        if (nodeData['height'] == undefined) {
+          nodeData['height'] = 50
+        }
+
+        if (nodeData['width'] == undefined) {
+          nodeData['width'] = 50
+        }
+
+        //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+        var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
+
+        if (acceptedShapes.indexOf(nodeData['shape']) == -1) {
+          nodeData['shape'] = 'ellipse';
+        }
+
+        if (!isHexaColor(nodeData['color'])) {
+          nodeData['color'] = 'yellow';
+        }
+      }
+      
+      // DONE SO OLD GRAPHS WILL DISPLAY
+      //If the EDGES in graphs already in database don't have color have a default value
+      for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
+        var edgeData = graph_json['graph']['edges'][i]['data'];
+
+        if (edgeData['color'] == undefined) {
+          edgeData['color'] = "black";
+        }
+      }
+
       // load the graph to display
       this.load(graph_json.graph);
 
