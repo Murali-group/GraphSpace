@@ -327,7 +327,7 @@ def _groups_page(request, view_type):
                 group_list = db_session.query(group.c.group_id, group.c.name, 
                         group.c.owner_id, group.c.public).all()
             else:
-                context['Error'] = "Not Authorized to see this group's contents! Please contact group's owner!"
+                context['Error'] = "Not Authorized to see this group's contents! Please contact group's owner to add you to the group!"
                 return render(request, 'graphs/error.html', context)
 
         #groups of logged in user(my groups)
@@ -390,7 +390,7 @@ def graphs_in_group(request, group_id):
             group_list = db.groups_for_user(context['uid'])
 
             if group_id not in group_list:
-                context['Error'] = "You need to be a member of a group to see its contents!  Please contact group's owner!"
+                context['Error'] = "You need to be a member of a group to see its contents!  Please contact group's owner to add you to the group!"
                 return render(request, 'graphs/error.html', context)
 
             # query for graphs that belong to this group
