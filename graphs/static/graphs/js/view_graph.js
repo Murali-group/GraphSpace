@@ -188,7 +188,7 @@ $(document).ready(function() {
     //of a graph to be displayed.
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
-      name: 'cose',
+      name: 'arbor',
       padding: 10
     };
 
@@ -206,6 +206,11 @@ $(document).ready(function() {
     } else if (query == "default_circle") {
        graph_layout = {
         name: "circle",
+        padding: 10
+      }
+    } else if (query == "default_dagre") {
+       graph_layout = {
+        name: "dagre",
         padding: 10
       }
     } else if (query == 'default_cose') {
@@ -227,9 +232,23 @@ $(document).ready(function() {
       }
     }  else if (query == "default_springy") {
       graph_layout = {
-        name: "springy",
-        padding: 30,
-        fit: true,
+        name: 'springy',
+
+        animate: true, // whether to show the layout as it's running
+        maxSimulationTime: 4000, // max length in ms to run the layout
+        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+        fit: true, // whether to fit the viewport to the graph
+        padding: 30, // padding on fit
+        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+        random: false, // whether to use random initial positions
+        infinite: false, // overrides all other options for a forces-all-the-time mode
+        ready: undefined, // callback on layoutready
+        stop: undefined, // callback on layoutstop
+
+        // springy forces
+        stiffness: 400,
+        repulsion: 400,
+        damping: 0.5
       }
     } else {
       if (layout != null) {
@@ -243,7 +262,7 @@ $(document).ready(function() {
     //Renders the cytoscape element on the page
     //with the given options
     window.cy = cytoscape( options = {
-      container: document.getElementById('csweb'),
+      container: document.getElementById('csjs'),
 
       style: cytoscape.stylesheet()
       .selector('node')
@@ -255,7 +274,7 @@ $(document).ready(function() {
           'color': '#000000',
           'text-outline-width': 0,
           'background-color': 'data(color)', 
-          'font-size': 10,
+          'font-size': 15,
           'border-color': '#000000',
           'border-width': 1,
           'width': 'data(width)',
@@ -335,14 +354,6 @@ $(document).ready(function() {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
             $('#dialog').dialog('open');
-
-            //DEPRECATED DUE TO USER INTERFACE ISSUES
-            // if (target._private.data.hasOwnProperty('target') && target._private.data.hasOwnProperty('source')) {
-            //   var edgeId = target._private.data.id.replace('-', ':');
-            //   searchValues(edgeId);
-            // } else {
-            //   searchValues(target._private.data.label);
-            // }
         }
       });
 
@@ -678,12 +689,6 @@ $(document).ready(function() {
           if (event.originalEvent) {
             showOnlyK();
           }
-          console.log($("#slider_max").slider('value'));
         }
     });
-
-
-
-    
-
 });

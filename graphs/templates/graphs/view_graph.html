@@ -5,7 +5,7 @@
 <script type="text/javascript">
     var graph_json = {{ graph|safe }};
     var layout = {{ layout_to_view|safe }};
-    window.cy;
+    // window.cy;
 </script>
 
 <div id="dialog"></div>
@@ -92,7 +92,7 @@
         
 <div class="container-fluid csweb_container">
     <!-- cytoscapeweb -->
-    <div class="col-md-12 csweb" id="csweb">
+    <div class="col-md-12 csweb" id="csjs">
     </div>
 
         <!-- side menu must be on top for 'float' to work properly -->
@@ -209,6 +209,8 @@
                             <li id="lc"><a id="layout-circle" href="?layout=default_breadthfirst">Tree</a></li>
                             <li id="lr"><a id="layout-radial" href="?layout=default_circle">Circle</a></li>
                             <li id="lt"><a id="layout-tree" href="?layout=default_cose">Cosine Spring Embedder</a></li>
+                            <li id="lt"><a id="layout-tree" href="?layout=default_arbor">Arbor</a></li>
+                            <li id="lt"><a id="layout-tree" href="?layout=default_cola">Cola</a></li>
                             </ul>
                         </div>
 
@@ -321,9 +323,6 @@
 
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'graphs/js/arbor.js' %}"></script>
-<script type="text/javascript" src="{% static 'graphs/js/springy.js' %}"></script>
-<script type="text/javascript" src="{% static 'graphs/js/springyui.js' %}"></script>
 
 <!-- jQuery UI style sheet -->
 <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
@@ -338,7 +337,7 @@
 <script type="text/javascript" src="{% static 'graphs/AC_OETags.min.js' %}"></script>
 
 <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
-<script type="text/javascript" src="{% static 'graphs/js/cytoscape.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/cytoscape_updated.js' %}"></script>
 
 <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
 <script type="text/javascript" src="{% static 'graphs/js/cytoscape.js-panzoom.js' %}"></script>

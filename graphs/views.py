@@ -43,6 +43,7 @@ def index(request):
     #####################
     # db.add_everyone_to_password_reset()
 
+    db.addHeightWidthColorProperties()
     # db.insert_all_edges_from_json()
     #####################
 
