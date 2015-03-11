@@ -54,8 +54,8 @@ def index(request):
     context = login(request)
 
     if context['Error'] != None:
-        return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
-
+        # return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
+        return render(request, 'graphs/index.html', context)
     # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
     if request.session['uid'] != None:
         return _graphs_page(request, 'my graphs')
@@ -85,7 +85,8 @@ def view_graph(request, uid, gid):
     if db.is_public_graph(uid, gid):
         graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
-        return HttpResponse("Not Authorized to view this.")
+        context['Error'] = "Not Authorized to view this."
+        return render(request, 'graphs/error.html', context)
     else:
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
@@ -153,7 +154,8 @@ def view_json(request, uid, gid):
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     except NoResultFound:
         print uid, gid
-        return HttpResponse('<h1>Graph not found</h1>')
+        context['Error'] = "Graph not found"
+        return render(request, 'graphs/error.html', context)
 
     # Get correct json for CytoscapeJS
     context['json'] = db.retrieve_cytoscape_json(graph_to_view[0])
@@ -230,7 +232,7 @@ def _graphs_page(request, view_type):
     context = login(request)
 
     if context['Error']:
-        return HttpResponse(context['Error'])
+        return render(request, 'graphs/error.html', context)
 
     #check for authentication
     uid = request.session['uid']
@@ -325,7 +327,8 @@ def _groups_page(request, view_type):
                 group_list = db_session.query(group.c.group_id, group.c.name, 
                         group.c.owner_id, group.c.public).all()
             else:
-                return HttpResponse("Not Authorized to see this page!")
+                context['Error'] = "Not Authorized to see this page!"
+                return render(request, 'graphs/error.html', context)
 
         #groups of logged in user(my groups)
         else:
@@ -350,7 +353,8 @@ def _groups_page(request, view_type):
 
     #No public groups anymore
     else:
-        return HttpResponse("Need to log in to access this page!")
+        context['Error'] = "Need to log in to access this page!"
+        return render(request, 'graphs/error.html', context)
 
 def graphs_in_group(request, group_id):
     '''
@@ -380,66 +384,71 @@ def graphs_in_group(request, group_id):
 
     # if the group name is not one of the designated names, display graphs
     # that belong to the group
-    if group_id != 'all' or group_id != 'member':
+    if "uid" in context:
+        if group_id != 'all' or group_id != 'member':
 
-        group_list = db.groups_for_user(context['uid'])
+            group_list = db.groups_for_user(context['uid'])
 
-        if group_id not in group_list:
-            return HttpResponse("Not allowed to see this!")
+            if group_id not in group_list:
+                context['Error'] = "You need to be a member of a group to see its contents!"
+                return render(request, 'graphs/error.html', context)
 
-        # query for graphs that belong to this group
-        graphs_of_this_group = db_session.query(group_to_graph.c.user_id, 
-                                        group_to_graph.c.graph_id).filter(
-                                                    group_to_graph.c.group_id==group_id
-                                                    ).subquery()
+            # query for graphs that belong to this group
+            graphs_of_this_group = db_session.query(group_to_graph.c.user_id, 
+                                            group_to_graph.c.graph_id).filter(
+                                                        group_to_graph.c.group_id==group_id
+                                                        ).subquery()
 
-        # query the graph table for specific information of each and every graph
-        # that belong to the group
-        graph_data = db_session.query(graph.c.graph_id, graph.c.modified, 
-                                      graph.c.user_id, graph.c.public).filter(
-                                            graph.c.graph_id==graphs_of_this_group.c.graph_id
-                                            ).all()
+            # query the graph table for specific information of each and every graph
+            # that belong to the group
+            graph_data = db_session.query(graph.c.graph_id, graph.c.modified, 
+                                          graph.c.user_id, graph.c.public).filter(
+                                                graph.c.graph_id==graphs_of_this_group.c.graph_id
+                                                ).all()
 
 
-        # include the graph data to the context
-        if len(graph_data) != 0:
-            context['graph_data'] = graph_data
+            # include the graph data to the context
+            if len(graph_data) != 0:
+                context['graph_data'] = graph_data
+            else:
+                context['graph_data'] = None
+
+            group_information = db.get_group_by_id(group_id)
+
+            # pass the group_id to the context for display
+            context['group_id'] = group_information[0][4]
+
+            context['group_owner'] = group_information[0][2]
+
+            context['group_description'] = group_information[0][0]
+
+            context['group_members'] = group_information[0][1]
+
+            #Divide the results of the query into pages. Currently has poor performance
+            #because the page processes a query (which may take long)
+            #everytime the page loads. I think that this can be improved if
+            #I store the query result in the session such that it doesn't
+            #process the query unnecessarily.
+            pager_context = pager(request, graph_data)
+            if type(pager_context) is dict:
+                context.update(pager_context)
+
+            # indicator to include css/js footer for side menu support etc.
+            context['footer'] = True
+
+            return render(request, 'graphs/graphs_in_group.html', context)
+        # if the group name is one of the designated names, display
+        # appropriate vies for each
         else:
-            context['graph_data'] = None
-
-        group_information = db.get_group_by_id(group_id)
-
-        # pass the group_id to the context for display
-        context['group_id'] = group_information[0][4]
-
-        context['group_owner'] = group_information[0][2]
-
-        context['group_description'] = group_information[0][0]
-
-        context['group_members'] = group_information[0][1]
-
-        #Divide the results of the query into pages. Currently has poor performance
-        #because the page processes a query (which may take long)
-        #everytime the page loads. I think that this can be improved if
-        #I store the query result in the session such that it doesn't
-        #process the query unnecessarily.
-        pager_context = pager(request, graph_data)
-        if type(pager_context) is dict:
-            context.update(pager_context)
-
-        # indicator to include css/js footer for side menu support etc.
-        context['footer'] = True
-
-        return render(request, 'graphs/graphs_in_group.html', context)
-    # if the group name is one of the designated names, display
-    # appropriate vies for each
+            if group_id == 'all':
+                return all_groups(request)
+            elif group_id == 'member':
+                return groups_member(request)
+            else:
+                return public_groups(request)
     else:
-        if group_id == 'all':
-            return all_groups(request)
-        elif group_id == 'member':
-            return groups_member(request)
-        else:
-            return public_groups(request)
+        context['Error'] = "Please log in to view groups"
+        return render(request, 'graphs/error.html', context)
 
 def help(request):
     '''

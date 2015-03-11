@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+<div class="container">
+<div class="content">
+
+<div class="row">
+<div class="col-sm-12 col-xs-12 value">
+
+  <h4>{{ Error }}</h4>
+
+</div>
+</div>
+
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/error.css' %}">
+
+{% endblock %}
