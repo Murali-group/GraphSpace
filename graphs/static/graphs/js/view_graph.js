@@ -101,6 +101,9 @@ function getHighlightedTerms() {
   return linkToGraph
 }
 
+
+// Gets the largest K value elements from the graph
+// and only renders those values
 function getLargestK(graph_json) {
   var edges = graph_json['edges'];
 
@@ -112,6 +115,12 @@ function getLargestK(graph_json) {
     }
   }
   return largestK;
+}
+
+// Checks to see if color is Hex
+function isHexaColor(sNum){
+  return (typeof sNum === "string") && sNum.length === 7
+         && ! isNaN( parseInt(sNum.substring(1), 16) ) && sNum.substring(0,1) == '#' ;
 }
 
 //Small function to split terms based on the '_' character
@@ -140,6 +149,8 @@ function showOnlyK() {
   hideList.hide();
 }
 
+//Gets all nodes and edges up do the max value set
+//and only renders them
 function applyMax(graph_layout) {
   var maxVal = parseInt($("#input_max").val());
 
@@ -188,7 +199,7 @@ $(document).ready(function() {
     //of a graph to be displayed.
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
-      name: 'cose',
+      name: 'arbor',
       padding: 10
     };
 
@@ -206,6 +217,11 @@ $(document).ready(function() {
     } else if (query == "default_circle") {
        graph_layout = {
         name: "circle",
+        padding: 10
+      }
+    } else if (query == "default_dagre") {
+       graph_layout = {
+        name: "dagre",
         padding: 10
       }
     } else if (query == 'default_cose') {
@@ -227,9 +243,23 @@ $(document).ready(function() {
       }
     }  else if (query == "default_springy") {
       graph_layout = {
-        name: "springy",
-        padding: 30,
-        fit: true,
+        name: 'springy',
+
+        animate: true, // whether to show the layout as it's running
+        maxSimulationTime: 4000, // max length in ms to run the layout
+        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+        fit: true, // whether to fit the viewport to the graph
+        padding: 30, // padding on fit
+        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+        random: false, // whether to use random initial positions
+        infinite: false, // overrides all other options for a forces-all-the-time mode
+        ready: undefined, // callback on layoutready
+        stop: undefined, // callback on layoutstop
+
+        // springy forces
+        stiffness: 400,
+        repulsion: 400,
+        damping: 0.5
       }
     } else {
       if (layout != null) {
@@ -243,7 +273,7 @@ $(document).ready(function() {
     //Renders the cytoscape element on the page
     //with the given options
     window.cy = cytoscape( options = {
-      container: document.getElementById('csweb'),
+      container: document.getElementById('csjs'),
 
       style: cytoscape.stylesheet()
       .selector('node')
@@ -255,7 +285,7 @@ $(document).ready(function() {
           'color': '#000000',
           'text-outline-width': 0,
           'background-color': 'data(color)', 
-          'font-size': 10,
+          'font-size': 15,
           'border-color': '#000000',
           'border-width': 1,
           'width': 'data(width)',
@@ -305,6 +335,42 @@ $(document).ready(function() {
       this.panzoom(defaults);
       // make the selection states of the elements mutable
       this.elements().selectify();
+
+      // DONE SO OLD GRAPHS WILL DISPLAY
+      //If the nodes in graphs already in database don't have width or height
+      // or unrecognized shape, have a default value
+      for (var i = 0; i < graph_json['graph']['nodes'].length; i++) {
+        var nodeData = graph_json['graph']['nodes'][i]['data'];
+        if (nodeData['height'] == undefined) {
+          nodeData['height'] = 50
+        }
+
+        if (nodeData['width'] == undefined) {
+          nodeData['width'] = 50
+        }
+
+        //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+        var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
+
+        if (acceptedShapes.indexOf(nodeData['shape']) == -1) {
+          nodeData['shape'] = 'ellipse';
+        }
+
+        if (!isHexaColor(nodeData['color'])) {
+          nodeData['color'] = 'yellow';
+        }
+      }
+      
+      // DONE SO OLD GRAPHS WILL DISPLAY
+      //If the EDGES in graphs already in database don't have color have a default value
+      for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
+        var edgeData = graph_json['graph']['edges'][i]['data'];
+
+        if (edgeData['color'] == undefined) {
+          edgeData['color'] = "black";
+        }
+      }
+
       // load the graph to display
       this.load(graph_json.graph);
 
@@ -335,14 +401,6 @@ $(document).ready(function() {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
             $('#dialog').dialog('open');
-
-            //DEPRECATED DUE TO USER INTERFACE ISSUES
-            // if (target._private.data.hasOwnProperty('target') && target._private.data.hasOwnProperty('source')) {
-            //   var edgeId = target._private.data.id.replace('-', ':');
-            //   searchValues(edgeId);
-            // } else {
-            //   searchValues(target._private.data.label);
-            // }
         }
       });
 
@@ -678,12 +736,6 @@ $(document).ready(function() {
           if (event.originalEvent) {
             showOnlyK();
           }
-          console.log($("#slider_max").slider('value'));
         }
     });
-
-
-
-    
-
 });

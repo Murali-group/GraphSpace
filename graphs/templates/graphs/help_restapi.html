@@ -54,7 +54,7 @@ Finally, you can save the following graph to a file as an example.
                     "source": "P43146",
                     "target": "P08107",
                     "directed": "true",
-                    "color": "black",
+                    "color": "#000000",
                     "width": 2
                 }
             }
@@ -127,8 +127,6 @@ curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F
     <li>id (each node id has to be unique)</li>
   </ul>
 
-
-
 <br>
 <br>
 
@@ -144,6 +142,7 @@ curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F
 
 </p>
 
+<b>When using HEX value to specify color, be sure to prepend with '#' character e.g. '#000000'</b><br><br>
 
 
 Example Successful response:
@@ -201,7 +200,7 @@ Example Successful response:
                     "source": "P4314611",
                     "target": "P0810711",
                     "directed": "true",
-                    "color": "black",
+                    "color": "#000000",
                     "width": 2
                 }
             }

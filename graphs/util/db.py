@@ -10,10 +10,11 @@ from itertools import groupby
 from collections import Counter, defaultdict
 import random
 import string
+from django.conf import settings
 
 # Name of the database that is being used as the backend storage
-DB_NAME = '/Users/Divit/Documents/GRA/GraphSpace/graphspace.db'
-URL_PATH = 'http://localhost:8000/'
+DB_NAME = settings.DB_FULL_PATH
+URL_PATH = settings.URL_PATH
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
@@ -237,6 +238,9 @@ def propertyInJSON(elements, properties, elementType):
 		for element_property in properties:
 			if element_property not in element_data:
 				return "Error: Property " + element_property +  " not in JSON for " + elementType
+			hexChecker = all(c in string.hexdigits for c in element_data['color'])
+			if hexChecker:
+				return "Error: Please add #to all colors that are HEX for " + elementType + " e.g. 000 should be #000"
 
 	return ""
 
@@ -445,7 +449,7 @@ def set_layout_context(request, context, uid, gid):
 
     # if there is a layout specified, then render that layout
 	if len(request.GET.get('layout', '')) > 0:
-		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
+		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
 		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
 		else: 
 		    layout_to_view = json.dumps(None)
