@@ -85,7 +85,7 @@ def view_graph(request, uid, gid):
     if db.is_public_graph(uid, gid):
         graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
-        context['Error'] = "Not Authorized to view this graph, please contact graph's owner for permission."
+        context['Error'] = "Not Authorized to view this graph, create an accoutn and contact graph's owner for permission."
         return render(request, 'graphs/error.html', context)
     else:
         # If the user is member of group where this graph is shared
