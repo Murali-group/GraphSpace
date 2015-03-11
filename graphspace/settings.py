@@ -29,8 +29,9 @@ TEMPLATE_DEBUG = True
 ALLOWED_HOSTS = []
 
 # GLOBAL VALUES FOR DATABASE AND PATHS
-DB_FULL_PATH = "sqlite:////graphspace.db"
+DB_FULL_PATH = '/home/sudosingh/Documents/GraphSpace/graphspace.db'
 URL_PATH = "http://localhost:8000/"
+DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
 # Application definition
 
