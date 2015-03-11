@@ -390,13 +390,12 @@ $(document).ready(function() {
         if (edgeData['color'] == undefined) {
           edgeData['color'] = "black";
         } else {
-          edgeData['color'] = addCharacterToHex(edgeData['color']);
-          if (!isHexaColor(edgeData['color'])) {
-            edgeData['color'] = "yellow";
+          if (isHexaColor(addCharacterToHex(edgeData['color']))) {
+            edgeData['color'] = addCharacterToHex(edgeData['color']);
           }
         }
       }
-      
+
       console.log(graph_json['graph']);
 
       // load the graph to display
