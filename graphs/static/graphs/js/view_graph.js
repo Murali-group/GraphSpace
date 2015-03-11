@@ -381,7 +381,6 @@ $(document).ready(function() {
           }
         }
       }
-      console.log(graph_json['graph']);
 
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the EDGES in graphs already in database don't have color have a default value
@@ -390,8 +389,15 @@ $(document).ready(function() {
 
         if (edgeData['color'] == undefined) {
           edgeData['color'] = "black";
+        } else {
+          edgeData['color'] = addCharacterToHex(edgeData['color']);
+          if (!isHexaColor(edgeData['color'])) {
+            edgeData['color'] = "yellow";
+          }
         }
       }
+      
+      console.log(graph_json['graph']);
 
       // load the graph to display
       this.load(graph_json.graph);

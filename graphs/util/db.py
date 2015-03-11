@@ -243,10 +243,10 @@ def propertyInJSON(elements, properties, elementType):
 		
 			met_all_properties.append(element_property)
 
-		if len(met_all_properties) == len(properties):
-			hexChecker = all(c in string.hexdigits for c in element_data['color'])
-			if hexChecker:
-				return "Error: Please add #to all colors that are HEX for " + elementType + " e.g. 000 should be #000"
+		# if len(met_all_properties) == len(properties):
+		# 	hexChecker = all(c in string.hexdigits for c in element_data['color'])
+		# 	if hexChecker:
+		# 		return "Error: Please add #to all colors that are HEX for " + elementType + " e.g. 000 should be #000"
 
 
 	return ""
@@ -1186,7 +1186,7 @@ def delete_graph(username, graphname):
 		# Deletes information about a graph from all the tables that reference it
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
 		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-		cur.execute('delete from edge where head_graph_id =? and head_id=?', (graphname, username))
+		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
 		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
 
 		con.commit()
