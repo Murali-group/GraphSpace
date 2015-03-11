@@ -85,7 +85,7 @@ def view_graph(request, uid, gid):
     if db.is_public_graph(uid, gid):
         graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
-        context['Error'] = "Not Authorized to view this."
+        context['Error'] = "Not Authorized to view this graph, please contact graph's owner for permission."
         return render(request, 'graphs/error.html', context)
     else:
         # If the user is member of group where this graph is shared
@@ -95,8 +95,8 @@ def view_graph(request, uid, gid):
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
         else:
-            return HttpResponse("Not Authorized to view this!")
-
+            context['Error'] = "Not Authorized to view this graph, please contact graph's owner for permission."
+            return render(request, 'graphs/error.html', context)
     # Get correct layout for the graph to view
     context = db.set_layout_context(request, context, uid, gid)
 
@@ -154,7 +154,7 @@ def view_json(request, uid, gid):
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     except NoResultFound:
         print uid, gid
-        context['Error'] = "Graph not found"
+        context['Error'] = "Graph not found, please make sure you have the correct graph name"
         return render(request, 'graphs/error.html', context)
 
     # Get correct json for CytoscapeJS
@@ -327,7 +327,7 @@ def _groups_page(request, view_type):
                 group_list = db_session.query(group.c.group_id, group.c.name, 
                         group.c.owner_id, group.c.public).all()
             else:
-                context['Error'] = "Not Authorized to see this page!"
+                context['Error'] = "Not Authorized to see this group's contents! Please contact group's owner!"
                 return render(request, 'graphs/error.html', context)
 
         #groups of logged in user(my groups)
@@ -353,7 +353,7 @@ def _groups_page(request, view_type):
 
     #No public groups anymore
     else:
-        context['Error'] = "Need to log in to access this page!"
+        context['Error'] = "Need to log in to access this group's page and also be a part of this group!"
         return render(request, 'graphs/error.html', context)
 
 def graphs_in_group(request, group_id):
@@ -390,7 +390,7 @@ def graphs_in_group(request, group_id):
             group_list = db.groups_for_user(context['uid'])
 
             if group_id not in group_list:
-                context['Error'] = "You need to be a member of a group to see its contents!"
+                context['Error'] = "You need to be a member of a group to see its contents!  Please contact group's owner!"
                 return render(request, 'graphs/error.html', context)
 
             # query for graphs that belong to this group
@@ -447,7 +447,7 @@ def graphs_in_group(request, group_id):
             else:
                 return public_groups(request)
     else:
-        context['Error'] = "Please log in to view groups"
+        context['Error'] = "Please log in to view groups page"
         return render(request, 'graphs/error.html', context)
 
 def help(request):
