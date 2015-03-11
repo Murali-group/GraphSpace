@@ -200,39 +200,47 @@ $(document).ready(function() {
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
       name: 'arbor',
-      padding: 10
+      padding: 10,
+      fit:true
     };
 
     var query = getQueryVariable("layout");
     if (query == "default_breadthfirst") {
       graph_layout = {
         name: "breadthfirst",
-        padding: 10
+        padding: 10,
+        fit: true
       }
     } else if (query == "default_concentric") {
        graph_layout = {
         name: "concentric",
+        fit: true,
         padding: 10
       }
     } else if (query == "default_circle") {
        graph_layout = {
         name: "circle",
-        padding: 10
+        padding: 10,
+        fit: true
       }
     } else if (query == "default_dagre") {
        graph_layout = {
         name: "dagre",
+        fit: true,
         padding: 10
       }
     } else if (query == 'default_cose') {
       graph_layout = {
         name: "cose",
         padding: 10,
+        fit: true,
         idealEdgeLength: 250,
       }
     } else if (query == "default_cola") {
       graph_layout = {
-        name: "cola",
+        name: "cola",        
+        fit: true,
+        nodeSpacing: function( node ){ return 10; },
         padding: 10
       }
     }  else if (query == "default_arbor") {
