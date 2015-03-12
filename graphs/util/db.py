@@ -1364,6 +1364,37 @@ def get_all_groups_with_member(user_id):
 		if con:
 			con.close()
 
+def change_description(username, groupId, groupOwner, desc):
+	'''
+		Changes description of group.
+
+		:param username: person who is requesting the change
+		:param groupId: ID of group to change description 
+		:param groupOwner: Owner of the group
+		:param desc: Description to change to
+		:return Error: <error>
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		cur = con.cursor()
+
+		if username != groupOwner:
+			return "You can only change description of group that you own!"
+
+		cur.execute('update "group" set description = ? where owner_id = ? and group_id = ?', (desc, groupOwner, groupId))
+		con.commit()
+
+		return None
+		
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return e.args[0]
+
+	finally:
+		if con:
+			con.close()
 def get_group_by_id(group):
 	'''
 		Gets a group information by group id ( REST API option).
@@ -1660,7 +1691,6 @@ def updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_no
 		:param groups_not_to_share_with: Groups not to share with
 	'''
 	for group in groups_to_share_with:
-		print group
 		share_graph_with_group(owner, gid, group)
 
 	for group in groups_not_to_share_with:
@@ -1740,6 +1770,39 @@ def remove_user_from_group(username, owner, group):
 			return "User removed!"
 		else:
 			return "Can't delete user from a group you are not the owner of!"
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+def remove_user_through_ui(username, owner, group):
+	'''
+		Removes user from group through UI.
+
+		:param username: User to remove
+		:param owner: Owner of group
+		:param group: Group ID
+		:return <status>
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select user_id from user where user_id=?', (username, ))
+		data = cur.fetchone()
+
+
+		if data == None:
+			return "User does not exist!"
+
+		cur.execute('delete from group_to_user where user_id=? and group_id=?', (username, group, ))
+		con.commit();
+		return None
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]

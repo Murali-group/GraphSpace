@@ -827,7 +827,7 @@ def create_group(request, groupname):
 
         :param request: Incoming HTTP POST Request containing:
 
-        {"owner": <owner of group>, "groupname": < name of group>}
+        {"owner": <owner of group>, "groupname": < name of group>, "username": User who submitted the request}
 
         :return JSON: {"Upload": <message>, "Group Name | Error": <message> }
     '''
@@ -842,6 +842,78 @@ def create_group(request, groupname):
             return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Upload": "Fail", "Error": "Group name already exists for this account"}), content_type="application/json")
+
+def delete_group_through_ui(request):
+    '''
+        Allows group creation from the GUI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"groupOwner": <owner of group>, "groupName": < name of group>, "username": User who submitted the request}
+
+        :return JSON: {"Delete": <message>}
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        if request.POST['username'] == request.POST['groupOwner']:
+            db.remove_group(request.POST['groupOwner'], request.POST['groupName'])
+            return HttpResponse(json.dumps({"Delete": request.POST['groupName'] + " deleted for " + request.POST['groupOwner']}), content_type="application/json")
+
+def unsubscribe_from_group(request):
+    '''
+        Allows group creation from the GUI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"groupOwner": <owner of group>, "groupName": < name of group>, "username": User who submitted the request}
+
+        :return JSON: {"Unsubscribe | Error": <message>}
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        result = db.remove_user_through_ui(request.POST['username'], request.POST['groupOwner'], request.POST['groupName'])
+        if result != None:
+            return HttpResponse(json.dumps({"Error": result}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Unsubscribe": " You are no longer following " + request.POST['groupName'] + " owned by " + request.POST['groupOwner']}), content_type="application/json")
+
+def change_description_through_ui(request):
+    '''
+        Allows user to change description of group through UI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"groupOwner": <owner of group>, "groupId": < ID of group>, "username": User who submitted the request, "description": <description>}
+
+        :return JSON: {"Changed | Error": <message>}
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        result = db.change_description(request.POST['username'], request.POST['groupId'], request.POST['groupOwner'], request.POST['description'])
+        if result != None:
+            return HttpResponse(json.dumps({"Error": result}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Changed": "Changed description"}), content_type="application/json")
+
+def add_member_through_ui(request):
+    '''
+        Allows user to add members to a group through UI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"groupOwner": <owner of group>, "groupId": < ID of group>, "member": "member to add"}
+
+        :return JSON: {"Message": <message>}
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
+        return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
+        
 
 ##### END VIEWS #####
 

@@ -1,8 +1,62 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load staticfiles %}
+<script type="text/javascript" src="{% static 'graphs/js/graphs_in_group.js' %}"></script>
 
 <div class="container graphs">
+<p id="username" style="display: none;">{{uid}}</p>
+<p id="groupId" style="display: none;">{{group_id}}</p>
+<p id="groupOwner" style="display: none;">{{group_owner}}</p>
+
+<!-- Description Modal -->
+    <div class="modal fade" id="descModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Change Description</h4>
+          </div>
+          <div class="modal-body">
+
+            <form id="group_form" class="register_form" role="form">
+                <div class="register_fields">
+                    <div class="control-group">
+                        <textarea id = "desc" rows="4" cols="60"></textarea>
+                    </div>
+                </div>
+                <br>
+                <button name="create_group" id="change_desc" class="btn btn-default">Add Description</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Description Modal -->
+    <div class="modal fade" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Add Member to Group</h4>
+          </div>
+          <div class="modal-body">
+
+            <form id="group_form" class="register_form" role="form">
+                <div class="register_fields">
+                    <div class="control-group">
+                        <label for="group_name">Member Name:</label>
+                        <input id="member_name" class="form-control" maxlength="32" type="text" name="member_name" autocomplete="off"/>
+                    </div>
+                </div>
+                <br>
+                <button id="add_member" class="btn btn-default">Add Member</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row">
         <div class="col-xs-6 col-sm-9">
             <div class="graph_links">
@@ -48,7 +102,10 @@
             <div id="accordion_description" class="accordion">
                 <h3>Description</h3>
                 <div class="accordion_content">
-                    {{ group_description}} </br>
+                    {{ group_description}} <br><br>
+                    {% if group_owner == uid %}
+                        <button class="btn btn-default" data-toggle="modal" data-target="#descModal" id="change_desc">Change Description</button>
+                    {% endif %}
                 </div>
             </div>
 
@@ -64,6 +121,11 @@
             <div id="accordion_members" class="accordion">
                 <h3>Members</h3>
                 <div class="accordion_content">
+                {% if group_owner == uid %}
+                <button class="btn btn-default" id="launch_member_modal" data-toggle="modal" data-target="#memberModal" >Add Members</button>
+                <br>
+                <br>
+                {% endif %}
                 <p>
                     {% for member in group_members %}
                         {{ member }}, 
@@ -71,31 +133,7 @@
                 </p>
                 </div>
             </div>
-            
-            <!-- the search box. specific functionality to be determined.
-                 Based on Bootstrap CSS API
 
-                 TODO: Use Django form instead.
-             -->
-           <!--  <div class="search_box">
-                <form method="get" action="#TBD"> 
-                    <div class="input-group"> -->
-                        <!--<input class="form-control" type="text" name="search">-->
-                        <!-- {{ search_form }}
-                        <span class="input-group-btn">
-                            <button class="btn btn-info" type="submit">Search</button>
-                        </span>
-                    </div>
-                </form>
-            </div> -->
-
-            <!-- Tags menu -->
-            <!-- <div id="accordion_tags" class="accordion">
-                <h3>Tags</h3>
-                <div class="accordion_content">
-                    under construction
-                </div>
-            </div> -->
         </div> <!-- end class = side_menu -->
     </div>
 
@@ -145,7 +183,6 @@
 {% block css-js-footer %}
 <!-- load javascripts -->
 <!-- javascript for side menu -->
-<script type="text/javascript" src="{% static 'graphs/js/graphs_in_group.js' %}"></script>
 
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
@@ -161,7 +198,7 @@
 <link href="{% static 'graphs/css/pager.css' %}" rel="stylesheet">
 
 <!-- stylesheet for elements specified in this html(graphs_in_group.html) -->
-<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs_in_group.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs.css' %}">
 
 <!-- stylesheet for side menues -->
 <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">

@@ -39,6 +39,12 @@ urlpatterns = patterns('',
         url(r'^groups/all/$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)/$', views.create_group, name='create_group'),
+        url(r'^delete/group/$', views.delete_group_through_ui, name='delete_group_through_ui'),
+        url(r'^unsubscribe/group/$', views.unsubscribe_from_group, name='unsubscribe_from_group'),
+
+        url(r'^changeDescription/$', views.change_description_through_ui, name='change_description_through_ui'),
+        
+        url(r'^addMember/$', views.add_member_through_ui, name='add_member_through_ui'),
 
         # help page
         url(r'^help/$', views.help, name='help'),

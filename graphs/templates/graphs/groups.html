@@ -4,6 +4,7 @@
 
 <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
 <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
+<script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>
 
 <div class="container graphs">
 
@@ -16,7 +17,7 @@
     {% endif %}
 </div>
 <br>
-<!-- <button id="group_modal" data-toggle="modal" data-target="#groupModal" class="btn btn-default">Create Group</button> -->
+<button id="group_modal" data-toggle="modal" data-target="#groupModal" class="btn btn-default">Create Group</button>
 <p id="username" style="display: none;">{{uid}}</p>
 <!-- Create Modal -->
     <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -108,11 +109,11 @@
         {% else %}
         <td>No</td>
         {% endif %}
-       <!--  {% if g.2 == uid %}
-            <td><button class="btn btn-default delete" id="{{ g.0 }}_{{ g.2 }}">Delete</button></td>
+        {% if g.2 == uid %}
+            <td><button class="btn btn-default delete" id="{{ g.6 }}concat_val_buffer{{ g.2 }}">Delete</button></td>
         {% else %}
-            <td><button class="btn btn-default remove" id="{{ g.0 }}_{{ g.2 }}">Unfollow group</button></td>
-        {% endif %} -->
+            <td><button class="btn btn-default remove" id="{{ g.6 }}concat_val_buffer{{ g.2 }}">Unfollow group</button></td>
+        {% endif %}
     </tr>
 {% endfor %}
 {% endif %}
@@ -126,7 +127,6 @@
 {% block css-js-footer %}
 <!-- load javascripts -->
 <!-- javascript for side menu -->
-<script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>
 
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
