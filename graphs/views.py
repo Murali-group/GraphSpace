@@ -913,6 +913,22 @@ def add_member_through_ui(request):
     if request.method == 'POST':
         result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
         return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
+
+def remove_member_through_ui(request):
+    '''
+        Allows user to remove members from a group through UI.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"groupOwner": <owner of group>, "groupId": < ID of group>, "member": "member to remove"}
+
+        :return JSON: {"Message": <message>}
+    '''
+
+    # If request is a POST request, add it to the server
+    if request.method == 'POST':
+        result = db.remove_user_from_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
+        return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
         
 
 ##### END VIEWS #####

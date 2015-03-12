@@ -122,15 +122,50 @@
                 <h3>Members</h3>
                 <div class="accordion_content">
                 {% if group_owner == uid %}
-                <button class="btn btn-default" id="launch_member_modal" data-toggle="modal" data-target="#memberModal" >Add Members</button>
-                <br>
-                <br>
+                    <button class="btn btn-default" id="launch_member_modal" data-toggle="modal" data-target="#memberModal" >Add Members</button>
+                    <br>
+                    <br>
+                    <table id="users_tbl" class="table">
+                      <thead>
+                        <tr>
+                          <th>Username</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          {% for member in group_members %}
+                          <tr>
+                            <td>
+                              {{ member}}
+                            </td>
+                            <td>
+                              
+                              <div>
+                                <button id="{{member}}" class="btn btn-default removeMember"><span class="glyphicon glyphicon-remove"></span></button>
+                              </div>
+                              
+                            </td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                    </table>
+                {% else %}
+                    <table id="users_tbl" class="table">
+                      <thead>
+                        <tr>
+                          <th>Username</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          {% for member in group_members %}
+                          <tr>
+                            <td>
+                              {{ member}}
+                            </td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                    </table>
                 {% endif %}
-                <p>
-                    {% for member in group_members %}
-                        {{ member }}, 
-                    {% endfor %}
-                </p>
                 </div>
             </div>
 

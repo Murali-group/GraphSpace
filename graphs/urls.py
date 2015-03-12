@@ -45,6 +45,7 @@ urlpatterns = patterns('',
         url(r'^changeDescription/$', views.change_description_through_ui, name='change_description_through_ui'),
         
         url(r'^addMember/$', views.add_member_through_ui, name='add_member_through_ui'),
+        url(r'^removeMember/$', views.remove_member_through_ui, name='remove_member_through_ui'),
 
         # help page
         url(r'^help/$', views.help, name='help'),

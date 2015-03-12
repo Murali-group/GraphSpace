@@ -68,4 +68,28 @@ $(document).ready(function() {
       });
    });
 
+   $(".removeMember").click(function(e) {
+    e.preventDefault();
+
+    var member = $(this).attr('id');
+
+    var groupId= $("#groupId").text();
+
+    var groupOwner = $("#groupOwner").text();
+
+    $.post("../../removeMember/", {
+        "member": member,
+        "groupId": groupId,
+        "groupOwner": groupOwner
+      }, function (data) {
+          if (data.Message) {
+            if(data.Message == 'User removed from group!') {
+              location.reload();          
+            } else {
+              return alert(data.Message);
+            }
+        }   
+      });
+   });
+
 });

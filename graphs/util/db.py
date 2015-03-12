@@ -1767,7 +1767,7 @@ def remove_user_from_group(username, owner, group):
 			isOwner = isOwner[0]
 			cur.execute('delete from group_to_user where user_id=? and group_id=?', (username, group, ))
 			con.commit();
-			return "User removed!"
+			return "User removed from group!"
 		else:
 			return "Can't delete user from a group you are not the owner of!"
 
