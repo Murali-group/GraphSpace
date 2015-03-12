@@ -61,10 +61,11 @@ $(document).ready(function() {
         "groupId": groupId,
         "groupOwner": groupOwner
       }, function (data) {
-          if (data.Message) {
-            alert(data.Message);
-            location.reload();          
-        }   
+          if(data.Message == 'User added!') {
+              location.reload();          
+            } else {
+              return alert(data.Message);
+          }
       });
    });
 
