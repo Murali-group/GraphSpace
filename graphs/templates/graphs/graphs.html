@@ -12,51 +12,103 @@
                         {% if tags %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% if view_type == 'my graphs' %}
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                               <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% if view_type == 'shared' %}
+                                   <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
-                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% if view_type == "public" %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                         {% else %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% if view_type == 'my graphs' %}
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% if view_type == 'shared' %}
+                                   <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
-                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% if view_type == 'public' %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                         {% endif %}
                     {% else %}
                         {% if tags %}
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <a style='color:white' href="{{ final_url }}" ><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% if view_type == 'my graphs' %}
+                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% if view_type == 'shared' %}
+                                   <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
                             {% with the_url|add:"?tags="|add:tags as final_url %}
-                                <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% if view_type == 'public' %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                                {% endif %}
                             {% endwith %}
                         {% else %}
-                            <a style='color:white' href="{% url 'graphs' %}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
-                            <a style='color:white' href="{% url 'shared_graphs' %}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
-                            <a style='color:white' href="{% url 'public_graphs' %}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                            {% if view_type == 'my graphs' %}
+                                <a style='color:white' href="{% url 'graphs' %}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
+                            {% else %}
+                                <a style='color:white' href="{% url 'graphs' %}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
+                            {% endif %}
+                            {% if view_type == 'shared' %}
+                                <a style='color:white' href="{% url 'shared_graphs' %}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
+                            {% else %}
+                                <a style='color:white' href="{% url 'shared_graphs' %}"><button class="btn btn-primary">Shared with me<br>{{ shared_graphs }}</button></a>
+                            {% endif %}
+                            {% if view_type == 'public' %}
+                                <a style='color:white' href="{% url 'public_graphs' %}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
+                            {% else %}
+                                <a style='color:white' href="{% url 'public_graphs' %}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
+                            {% endif %}
                             <!-- All Graphs is for admin mode. Specific functionality to be added. -->
                             {% if admin == 1 %}
-                            <a style='color:white' href="{% url 'all_graphs' %}"><button class="btn btn-primary">All Graphs</button></a>
+                                {% if view_type == 'all' %}
+                                    <a style='color:white' href="{% url 'all_graphs' %}"><button class="btn btn-default">All Graphs</button></a>
+                                {% else %}
+                                    <a style='color:white' href="{% url 'all_graphs' %}"><button class="btn btn-primary">All Graphs</button></a>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     {% endif %}
@@ -161,7 +213,7 @@
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    {% with "http://localhost:8000/graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                    {% with "{{url}}"|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
                         <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
                     {%endwith %}
                     <td><div class="test">
@@ -195,7 +247,7 @@
                     <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
                     <td><div class="test">
                         {% for tag in g.1 %}
-                             {% with "http://localhost:8000/graphs/"|add:"?tags="|add:tag as url %}
+                             {% with "{{url}}"|add:"graphs/"|add:"?tags="|add:tag as url %}
                                  <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
                             {% endwith %}
 
@@ -213,7 +265,7 @@
                 {% endif %}
             {% endif %}
         {% else %}
-            <p>No graphs to list</p>
+            <p>{{message}}</p>
         {% endif %}
         </table>
         </div> <!-- end results_table -->
@@ -239,9 +291,10 @@
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     <strong>Search tips:</strong><br>
                     <ul>   
-                      <li>All graphs returned contain all filtered terms!</li>
+                      <li>Graphs returned match all search terms</li>
                       <li>Search for graphs, nodes, and edges.</li>
-                      <li>Edge Searching Syntax - head:tail</li>
+                      <li>Edge searching syntax - head:tail</li>
+                      <li>Edge searching example: Example: AKT1:JUN</li>
                     </ul>
                   </div>
                    <ul class="nav nav-pills">

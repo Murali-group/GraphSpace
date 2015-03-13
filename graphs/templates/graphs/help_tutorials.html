@@ -4,7 +4,7 @@
 {% include 'graphs/help_menu.html' %}
 
   
-  <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="http://localhost:8000/index/">here</a>, as well as a Unix machine. You will need <pre>curl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install curl</pre> if it is a Debian based machine such as Ubuntu.</p>
+  <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="{{url}}index/">here</a>, as well as a Unix machine. You will need <pre>curl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install curl</pre> if it is a Debian based machine such as Ubuntu.</p>
 
 <p>We will use a graph with two nodes and one edge connecting the nodes in this tutorial. GraphSpace uses a JSON format to store graphs. The JSON code representing the graph is shown below.</p>
 
@@ -51,11 +51,11 @@
 <p>Save the code above into a file called <pre>graph.json</pre>. Now, open a terminal and navigate to the location of the file. Execute the following command, where <pre>[username]</pre> is the email address you used to sign up for GraphSpace, and <pre>[password]</pre> is your GraphSpace password.</p>
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
+curl -X POST "{{url}}api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
 </pre>
 
-<p>Now go to your <a href="http://http://holmes.cs.vt.edu/graphs">graphs page</a> and you should see a graph called 'tutorial' in the list.</p>
-<p>For a more detailed reference on all of the functions of the GraphSpace API, look at the <a href="http://holmes.cs.vt.edu/help/rest">REST API help page</a>.</p>
+<p>Now go to your <a href="{{url}}graphs">graphs page</a> and you should see a graph called 'tutorial' in the list.</p>
+<p>For a more detailed reference on all of the functions of the GraphSpace API, look at the <a href="{{url}}help/rest">REST API help page</a>.</p>
 
 
 {% endblock %}

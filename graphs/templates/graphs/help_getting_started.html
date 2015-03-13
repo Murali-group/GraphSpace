@@ -113,12 +113,12 @@ GraphSpace represents graphs using a JSON format. Below is an example of a very 
 Copy and paste this graph into a file, and then upload it using the following command (on Linux):
 
 <pre>
-curl -X POST "http://ec2-54-152-211-210.compute-1.amazonaws.com/api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
+curl -X POST "{{url}}api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
 </pre>
 
 
 <h3 id="sharing">Sharing graphs</h3>
-
-To share one of your graphs, refer to the <a href='http://ec2-54-152-211-210.compute-1.amazonaws.com/help/restapi/'>REST API</a>.
-
+{% with url|add:"help/restapi/" as final_url %}
+    To share one of your graphs, refer to the <a href='{{final_url}}'>REST API</a>.
+{% endwith %}
 {% endblock %}

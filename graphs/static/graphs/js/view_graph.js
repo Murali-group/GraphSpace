@@ -396,8 +396,6 @@ $(document).ready(function() {
         }
       }
 
-      console.log(graph_json['graph']);
-
       // load the graph to display
       this.load(graph_json.graph);
 
@@ -440,6 +438,8 @@ $(document).ready(function() {
 
     } // end ready: function()
     });
+
+    window.cy.boxSelectionEnabled(true);
 
     //setup popup dialog for displaying dialog when nodes/edges
     //are clicked for information.

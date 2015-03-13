@@ -85,7 +85,7 @@ def view_graph(request, uid, gid):
     if db.is_public_graph(uid, gid):
         graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
-        context['Error'] = "Not Authorized to view this graph, create an account and contact graph's owner for permission."
+        context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
         return render(request, 'graphs/error.html', context)
     else:
         # If the user is member of group where this graph is shared
@@ -95,7 +95,7 @@ def view_graph(request, uid, gid):
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
         else:
-            context['Error'] = "Not Authorized to view this graph, please contact graph's owner for permission."
+            context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
             return render(request, 'graphs/error.html', context)
     # Get correct layout for the graph to view
     context = db.set_layout_context(request, context, uid, gid)
@@ -154,7 +154,7 @@ def view_json(request, uid, gid):
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     except NoResultFound:
         print uid, gid
-        context['Error'] = "Graph not found, please make sure you have the correct graph name"
+        context['Error'] = "Graph not found, please make sure you have the correct URL."
         return render(request, 'graphs/error.html', context)
 
     # Get correct json for CytoscapeJS
@@ -231,6 +231,9 @@ def _graphs_page(request, view_type):
     #handle login
     context = login(request)
 
+    #Send view_type to front end to tell the user (through button color) where they are
+    context['view_type'] = view_type
+
     if context['Error']:
         return render(request, 'graphs/error.html', context)
 
@@ -249,6 +252,9 @@ def _graphs_page(request, view_type):
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
+    if len(context['graph_list']) == 0:
+        context = constructGraphMessage(context, view_type, request.GET.get('search'), request.GET.get('tags'))
+
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
     #everytime the page loads. I think that this can be improved if
@@ -263,6 +269,48 @@ def _graphs_page(request, view_type):
     context['footer'] = True
 
     return render(request, 'graphs/graphs.html', context)
+
+def constructGraphMessage(context, view_type, search, tags):
+    if view_type == 'shared':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given tag criteria."
+        else:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given search and tag criteria."
+
+    elif view_type == 'public':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or upload your own graphs."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or upload your own graphs with the given search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or upload your own graphs with the given tag criteria."
+        else:
+            context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or upload your own graphs with the given search and tag criteria."
+
+    elif view_type == 'all':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no graphs available."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no graphs available that match the search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no graphs available that match the tag criteria."
+        else:
+            context['message'] = "It appears that there are no graphs available that match the search and tag criteria."
+    else:
+        if search == None and tags == None:
+            context['message'] = "It appears that you currently have no graphs uploaded. Please upload graphs in order to see them here."
+        elif search != None and tags == None:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please upload graphs with the given search criteria in order to see them here."
+        elif tags != None and search == None:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please upload graphs with the given tag criteria in order to see them here."
+        else:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please upload graphs with the given search and tag criteria in order to see them here."
+
+    return context
 
 def groups(request):
     ''' 
@@ -300,19 +348,22 @@ def _groups_page(request, view_type):
             groups/all/
 
         :param request: HTTP GET Request
-        :param view_type: Type of view for the group (Example: My Groups, member, public, all)
+        :param view_type: Type of view for the group (Example: owner of, member, public, all)
 
     '''
 
     #get new session from the database
     db_session = data_connection.new_session()
-    
+
     #context of the view to be passed in for rendering
     context = {}
     group_list = None
 
     #handle login
     context = login(request)
+
+    #Send view_type to front end to tell the user (through button color) where they are
+    context['view_type'] = view_type
 
     #check for authentication
     uid = request.session['uid']
@@ -327,7 +378,7 @@ def _groups_page(request, view_type):
                 group_list = db_session.query(group.c.group_id, group.c.name, 
                         group.c.owner_id, group.c.public).all()
             else:
-                context['Error'] = "Not Authorized to see this group's contents! Please contact group's owner to add you to the group!"
+                context['Error'] = "You are not authorized to see this group's contents! Please contact group's owner to add you to the group!"
                 return render(request, 'graphs/error.html', context)
 
         #groups of logged in user(my groups)
@@ -349,11 +400,17 @@ def _groups_page(request, view_type):
         context['my_groups'] = len(db.get_groups_of_user(context['uid']))
         context['member_groups'] = len(db.get_all_groups_with_member(context['uid']))
 
+        if view_type == 'owner of' and context['my_groups'] == 0:
+            context['message'] = "It appears that you are not an owner of any group.  Please create a group in order to own a group."
+        elif view_type == 'member' and context['member_groups'] == 0 :
+            context['message'] = "It appears as if you are not a member of any group. Please join a group in order for them to appear here."
+        else:
+            context['message'] = "It appears as if there are currently no groups on GraphSpace."
         return render(request, 'graphs/groups.html', context)
 
     #No public groups anymore
     else:
-        context['Error'] = "Need to log in to access this group's page and also be a part of this group!"
+        context['Error'] = "You need to be logged in and also be a member of this group in order to see this group's contents!"
         return render(request, 'graphs/error.html', context)
 
 def graphs_in_group(request, group_id):
@@ -682,7 +739,7 @@ def resetLink(request):
     if email == None:
         return HttpResponse(json.dumps({"Error": "Unrecognized ID"}), content_type="application/json");
 
-    context = {"email": email}
+    context = {"email": email, "url": URL_PATH}
 
     return render(request, 'graphs/reset.html', context)
 

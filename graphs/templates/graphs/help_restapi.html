@@ -114,7 +114,7 @@ Below is a list of the different API calls.
 In order to add a graph to the server, make the following POST request where [email] is your email and [password] is your password.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
+curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
 </pre>
 
 <p><b>The following properties are required for a <em>node</em> to have:</b>
@@ -165,7 +165,7 @@ If JSON fails validation, it should give some sort of error as to why it failed
 To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -231,7 +231,7 @@ Example failed response:
 To remove a graph use the following command. You can only remove a graph that belongs to you.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -262,7 +262,7 @@ Example failed response:
 Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -280,7 +280,7 @@ Example response:
 Get the ids of all groups on the server. The result is a JSON object containing a list of all groups, including their descriptions and owners.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/get/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/get/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -302,7 +302,7 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/[groups]/get/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[groups]/get/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -330,7 +330,7 @@ Example response:
 To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -346,7 +346,7 @@ Example response:
 To remove a group use the following command. You can only remove a group that you are the owner of.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/delete/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/delete/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -376,7 +376,7 @@ Example failed response:
 Get groups a user belongs to. The result is a JSON object with a list of group ids.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"</pre>
+curl -X POST "{{url}}api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"</pre>
 
 Example response:
 
@@ -395,7 +395,7 @@ Example response:
 Add a user to a group. You can only add a user to a group that you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/[groupname]/adduser/[member_email]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[groupname]/adduser/[member_email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -416,7 +416,7 @@ Example Successful response:
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
 <pre>
-curl -X POST "http://localhost:8000/api/groups/demo/removeuser/craigy@vt.edu/" -F "username=dsingh5270@gmail.com" -F "password=test"
+curl -X POST "{{url}}api/groups/demo/removeuser/craigy@vt.edu/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
 Example Successful response:
@@ -438,7 +438,7 @@ Example Successful response:
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/share/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -454,7 +454,7 @@ Example Successful response:
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/graphs/[graph name]/unshare/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graph name]/unshare/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -469,7 +469,7 @@ Example Successful response:
 
 Get all the tags that a user has for their graphs.
 <pre>
-curl -X POST "http://localhost:8000/api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
@@ -482,7 +482,7 @@ Example Successful response:
 
 Get all the tags that are attached to a certain graph.
 <pre>
-curl -X POST "http://localhost:8000/api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:

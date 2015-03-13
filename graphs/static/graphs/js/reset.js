@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-	var URL_PATH = 'http://ec2-54-152-211-210.compute-1.amazonaws.com/';
+	var URL_PATH = $("#url").text();
 
 	$("#reset_pw").click(function (e) {
 		e.preventDefault();

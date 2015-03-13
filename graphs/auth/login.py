@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from graphs.forms import LoginForm, RegisterForm
 from graphs.util import db
+from django.conf import settings
 
 def login(request):
 	'''
@@ -14,6 +15,7 @@ def login(request):
 	message = ''
 	login_form = LoginForm();
 	register_form = RegisterForm();
+	URL_PATH = settings.URL_PATH
 
 	if request.method == 'POST':
 		# if db.need_to_reset_password(request.POST['user_id']):
@@ -22,19 +24,18 @@ def login(request):
 		# 	context['register_form'] = register_form
 		# 	context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
 		# 	message = 'Information you have given does not match our records. Please try again.'
-		# 	context['message'] = message
 		# 	request.session['uid'] = None
+	    #   context['url'] = URL_PATH
 		# 	db.sendForgotEmail(request.POST['user_id'])
 		# 	return context
 
-		print 'testing'
 		user = authenticate(username=request.POST['user_id'], password=request.POST['pw'])
 		login_form = LoginForm(request.POST)
 		if user is not None:
 			message = '%s, Welcome to GraphSpace!' % user.user_id
 			request.session['uid'] = user.user_id
 			request.session['admin'] = user.admin
-			context = {'message': message, 'login_form': login_form, 'user': user, 'uid': user.user_id, 'admin': user.admin, "Error": None}
+			context = {'login_form': login_form, 'user': user, 'uid': user.user_id, 'admin': user.admin, "Error": None, "url": URL_PATH}
 			return context
 		else:
 			login_form = LoginForm()
@@ -42,7 +43,7 @@ def login(request):
 			context['register_form'] = register_form
 			context['Error'] = "User/Password not recognized!"
 			message = 'Information you have given does not match our records. Please try again.'
-			context['message'] = message
+			context['url'] = URL_PATH
 			return context
 	# when a user is already logged in or not logged in at all.
 	else:
@@ -54,6 +55,7 @@ def login(request):
 		else:
 			#there is no one logged in.
 			uid = None
+			context['url'] = URL_PATH
 			context['Error'] = "Not logged in!"
 
 		if uid is not None:
@@ -61,12 +63,12 @@ def login(request):
 			context['admin'] = request.session['admin']
 			context['Error'] = None
 			message = 'Welcome to GraphSpace, %s!' % request.session['uid']
-			context["message"] = message
+			context['url'] = URL_PATH
 			return context
 		else:
 			request.session['uid'] = None
- 			context['message'] = 'Welcome to GraphSpace!'
  			context['login_form'] = login_form
  			context['register_form'] = RegisterForm()
+			context['url'] = URL_PATH
  			context["Error"] = None
  			return context

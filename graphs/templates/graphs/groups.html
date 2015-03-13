@@ -10,8 +10,13 @@
 
 {% if uid != None %}
 <div class="graph_links">
-    <a style='color:white' href="{% url 'groups' %}"><button class="btn btn-primary">Owner of<br>{{my_groups}}</button></a>
-    <a style='color:white' href="{% url 'groups_member' %}"><button class="btn btn-primary">Member of<br>{{member_groups}}</button></a>
+    {% if view_type == 'member' %}
+        <a style='color:white' href="{% url 'groups' %}"><button class="btn btn-primary">Owner of<br>{{my_groups}}</button></a>
+        <a style='color:white' href="{% url 'groups_member' %}"><button class="btn btn-default">Member of<br>{{member_groups}}</button></a>
+    {% elif view_type == 'owner of' %}
+        <a style='color:white' href="{% url 'groups' %}"><button class="btn btn-default">Owner of<br>{{my_groups}}</button></a>
+        <a style='color:white' href="{% url 'groups_member' %}"><button class="btn btn-primary">Member of<br>{{member_groups}}</button></a>
+    {% endif %}
     {% if admin == 1 %}
         <button class="btn btn-primary"><a style='color:white' href="{% url 'all_groups' %}">All Groups<br>{{all_groups}}</a></button>
     {% endif %}
@@ -118,7 +123,7 @@
 {% endfor %}
 {% endif %}
 {% else %}
-    <p>No groups to list.</p>
+    <p>{{message}}</p>
 {% endif %}
 </table>
 </div>
