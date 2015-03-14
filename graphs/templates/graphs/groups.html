@@ -100,7 +100,7 @@
     </tr>
 {% for g in current_page %}
     <tr> 
-        <td><a href="{% url 'graphs_in_group' group_id=g.6%}">{{g.0}}</a></td>
+        <td><a href="{% url 'graphs_in_group' group_owner=g.2 group_id=g.6%}">{{g.0}}</a></td>
         <td>{{ g.1 }}</td>
         <td>{{ g.2 }}</td>
         <td>{{ g.3 }}</td>

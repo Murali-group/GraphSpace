@@ -682,9 +682,9 @@ $(document).ready(function() {
         if (data['Group_Information'].length > 0) {
           for (var i = 0; i < data['Group_Information'].length; i++) {
             if (data['Group_Information'][i]['graph_shared'] == true) {
-              group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '">' + data['Group_Information'][i]['group_id'] + '</label></li>';
+              group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
             } else {
-              group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '">' + data['Group_Information'][i]['group_id'] + '</label></li>';
+              group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
             }
           }
         } else {
@@ -702,14 +702,15 @@ $(document).ready(function() {
 
       var groups_to_share_with = [];
       var groups_not_to_share_with = [];
-      var checked = $(".list-group-item :checked").each(function () {
+      var checked = $(".groups :checked").each(function () {
         groups_to_share_with.push($(this).val());
       });
-      var checked = $(".list-group-item :not(:checked)").each(function () {
+      var checked = $(".groups :not(:checked)").each(function () {
         if ($(this).val().length > 0) {
           groups_not_to_share_with.push($(this).val());
         }
       });
+
       $.post('../../../shareGraphWithGroups/', {
         'gid': gid,
         'owner': ownerId,

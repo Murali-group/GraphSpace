@@ -48,18 +48,18 @@ def index(request):
     # db.insert_all_edges_from_json()
     #####################
 
-
     # handle login.
     # see graphs.auth.login for details
     context = login(request)
 
-    if context['Error'] != None:
-        # return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
+    if context['Error'] == None:
+        # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
+        if request.session['uid'] != None:
+            return _graphs_page(request, 'my graphs')
+
         return render(request, 'graphs/index.html', context)
-    # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
-    if request.session['uid'] != None:
-        return _graphs_page(request, 'my graphs')
-    return render(request, 'graphs/index.html', context)
+    else:
+        return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
 
 def view_graph(request, uid, gid):
     '''
@@ -106,7 +106,12 @@ def view_graph(request, uid, gid):
 
     # Get all the groups that are shared for this graph
     shared_groups = db.get_all_groups_for_this_graph(uid, graph_to_view[2])
-    context['shared_groups'] = shared_groups
+
+    format_shared_groups = []
+    for shared_group in shared_groups:
+        format_shared_groups.append(shared_group[0] + ' owned by ' + shared_group[1])
+
+    context['shared_groups'] = format_shared_groups
 
     if graph_to_view[1] == 1:
         context['shared'] = 'Publicly Shared'
@@ -283,13 +288,13 @@ def constructGraphMessage(context, view_type, search, tags):
 
     elif view_type == 'public':
         if search == None and tags == None:
-            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or upload your own graphs."
+            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or <a href='/../help/restapi/#add_graph'>upload</a> your own graphs."
         elif search != None and tags == None:
-            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or upload your own graphs with the given search criteria."
+            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or <a href='/../help/restapi/#add_graph'>upload</a> your own graphs with the given search criteria."
         elif tags != None and search == None:
-            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or upload your own graphs with the given tag criteria."
+            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or <a href='/../help/restapi/#add_graph'>upload</a> your own graphs with the given tag criteria."
         else:
-            context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or upload your own graphs with the given search and tag criteria."
+            context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or <a href='/../help/restapi/#add_graph'>upload</a> your own graphs with the given search and tag criteria."
 
     elif view_type == 'all':
         if search == None and tags == None:
@@ -302,13 +307,13 @@ def constructGraphMessage(context, view_type, search, tags):
             context['message'] = "It appears that there are no graphs available that match the search and tag criteria."
     else:
         if search == None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded. Please upload graphs in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded. Please <a href='/../help/restapi/#add_graph'>upload</a> graphs in order to see them here."
         elif search != None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please upload graphs with the given search criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please <a href='/../help/restapi/#add_graph'>upload</a> graphs with the given search criteria in order to see them here."
         elif tags != None and search == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please upload graphs with the given tag criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please <a href='/../help/restapi/#add_graph'>upload</a> graphs with the given tag criteria in order to see them here."
         else:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please upload graphs with the given search and tag criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please <a href='/../help/restapi/#add_graph'>upload</a> graphs with the given search and tag criteria in order to see them here."
 
     return context
 
@@ -413,7 +418,7 @@ def _groups_page(request, view_type):
         context['Error'] = "You need to be logged in and also be a member of this group in order to see this group's contents!"
         return render(request, 'graphs/error.html', context)
 
-def graphs_in_group(request, group_id):
+def graphs_in_group(request, group_owner, group_id):
     '''
         Groups/group_name page, where group_name is the name of the
         group to view the graphs that belong to the group.
@@ -454,7 +459,7 @@ def graphs_in_group(request, group_id):
             graphs_of_this_group = db_session.query(group_to_graph.c.user_id, 
                                             group_to_graph.c.graph_id).filter(
                                                         group_to_graph.c.group_id==group_id
-                                                        ).subquery()
+                                                        ).filter(group.c.owner_id == group_owner).subquery()
 
             # query the graph table for specific information of each and every graph
             # that belong to the group
@@ -470,7 +475,7 @@ def graphs_in_group(request, group_id):
             else:
                 context['graph_data'] = None
 
-            group_information = db.get_group_by_id(group_id)
+            group_information = db.get_group_by_id(group_owner, group_id)
 
             # pass the group_id to the context for display
             context['group_id'] = group_information[0][4]

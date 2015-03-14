@@ -1161,7 +1161,6 @@ def get_graph_json(username, graphname):
 
 		# If there is JSON for this graph, return it
 		if jsonData and jsonData[0]:
-			print jsonData[0]
 			return jsonData[0]
 		else:
 			return None
@@ -1250,8 +1249,6 @@ def get_all_groups_in_server():
 		cur.execute('select * from \"group\"');
 
 		data = cur.fetchall()
-
-		print data
 
 		if data == None:
 			return None
@@ -1345,14 +1342,14 @@ def get_all_groups_with_member(user_id):
 		cur = con.cursor()
 
 		# Get all groups that user is a member of
-		cur.execute('select gu.group_id from group_to_user as gu, "group" as g where gu.user_id=? and gu.group_id = g.group_id and g.owner_id != gu.user_id', (user_id, ))
+		cur.execute('select group_id, group_owner from group_to_user where user_id=?', (user_id, ))
 
 		group_names = cur.fetchall()
 
 		# Get information about those groups
 		cleaned_data = []
 		for group_name in group_names:
-			cur.execute('select * from \"group\" where group_id=?', (group_name[0], ))
+			cur.execute('select * from \"group\" where group_id=? and owner_id=?', (group_name[0], group_name[1]))
 			data = cur.fetchall()
 			cleaned_data += get_cleaned_group_data(data, cur)
 
@@ -1397,11 +1394,12 @@ def change_description(username, groupId, groupOwner, desc):
 	finally:
 		if con:
 			con.close()
-def get_group_by_id(group):
+def get_group_by_id(groupOwner, groupId):
 	'''
 		Gets a group information by group id ( REST API option).
-	
-		:param group: ID of group to be searched for
+		
+		:param groupOwner: Owner of the group
+		:param groupId: ID of group to be searched for
 		:return Group: [Information about group (see REST API in Help section)]
 	'''
 	con = None
@@ -1410,14 +1408,14 @@ def get_group_by_id(group):
 
 		# Get information about group
 		cur = con.cursor()
-		cur.execute('select description, owner_id, name, group_id from \"group\" where group_id=?', (group, ));
+		cur.execute('select description, owner_id, name, group_id from \"group\" where owner_id = ? and group_id=?', (groupOwner, groupId));
 
 		data = cur.fetchall()
 
 		cleaned_data = []
 		# Get members of the group 
 		for row in data:
-			members = get_group_members(group)
+			members = get_group_members(groupOwner, groupId)
 			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
 			cleaned_data.append(tuple_list)
 
@@ -1467,11 +1465,12 @@ def get_group(group):
 			con.close()
 
 
-def get_group_members(group):
+def get_group_members(groupOwner, groupId):
 	'''
 		Get all members of a group.
 
-		:param group: Group ID
+		:param groupOwner: Group Owner 
+		:param groupId: Group ID
 		:return Members: [Members of group]
 	'''
 	con = None
@@ -1479,7 +1478,7 @@ def get_group_members(group):
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
-		cur.execute('select user_id from group_to_user where group_id=?', (group, ));
+		cur.execute('select user_id from group_to_user where group_owner = ? and group_id=?', (groupOwner, groupId));
 
 		data = cur.fetchall()
 
@@ -1509,8 +1508,9 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
 
-	for group in groups:
-	        members = get_group_members(group)
+	if len(groups) > 0:
+		for group in groups:
+			members = get_group_members(group[0], group[1])
 	        if logged_in_user in members:
 	            return True
 
@@ -1576,9 +1576,7 @@ def create_group(username, group):
 
 		# If no group exists, insert into database
 		if data == None:
-			# TODO: Why did I append username and groupname together?
 			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (cleanGroupName(group), group, username, "", 0, 1))
-			# cur.execute('insert into group_to_user values(?, ?)', (cleanGroupName(group), username))
 			con.commit()
 			return group
 		else:
@@ -1647,7 +1645,51 @@ def groups_for_user(username):
 		if con:
 			con.close()
 
-def get_all_groups_for_user_with_sharing_info(owner, graphname):
+def get_all_graphs_for_group(groupOwner, groupId):
+	'''
+		Get all graphs that belogn to this group.
+
+		:param groupOwner: Owner of group
+		:param groupId: Id of group
+		:return Graphs: [graphs]
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# Get graphs from this group
+		cur.execute('select gg.user_id, gg.graph_id from group_to_graph where', (groupOwner, groupId))
+
+		data = cur.fetchall()
+
+		cleaned_data=[]
+		for groups in data:
+			groups = str(groups[0])
+			cleaned_data.append(groups)
+
+		# Get all the groups that the user owns as well
+		cur.execute('select group_id from \"group\" where owner_id=?', (username, ))
+
+		data = cur.fetchall()
+
+		for groups in data:
+			groups = str(groups[0])
+			cleaned_data.append(groups)
+
+		cleaned_data = list(set(cleaned_data))
+
+		return cleaned_data
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
+
+def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
 		Gets all groups that a user owns or is a member of,
 		and indicates whether the specified graph is shared with that group
@@ -1657,7 +1699,7 @@ def get_all_groups_for_user_with_sharing_info(owner, graphname):
 		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
 	'''
 	group_info = []
-	groups = get_groups_of_user(owner)
+	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
 
 	con = None
 	try:
@@ -1666,14 +1708,16 @@ def get_all_groups_for_user_with_sharing_info(owner, graphname):
 
 		# For all groups user is a part of, indicate whether specified graph is shared with that group
 		for group in groups:
-			cur.execute('select * from group_to_graph where group_id = ? and user_id = ? and graph_id = ?', (group[6], owner, graphname))
+			cur.execute('select * from group_to_graph where group_id = ? and group_owner=? and user_id = ? and graph_id = ?', (group[6], group[2], graphowner, graphname))
 			is_shared = cur.fetchone()
 
+			print is_shared
 			if is_shared == None:
-				group_info.append({"group_name": group[0], "group_id": group[6], "graph_shared": False})
+				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": False})
 			else:
-				group_info.append({"group_name": group[0], "group_id": group[6], "graph_shared": True})
+				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": True})
 
+		print group_info
 		return group_info
 
 	except lite.Error, e:
@@ -1689,14 +1733,16 @@ def updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_no
 		Shares specified graph with all groups to share with.  Unshares specified graph with all groups to unshare with.
 		:param owner: Owner of graph
 		:param grpahname: Name of graph
-		:param groups_to_share_with: Groups to share with
-		:param groups_not_to_share_with: Groups not to share with
+		:param groups_to_share_with: Groups to share with ** have form of [groupName_groupOwner,....]
+		:param groups_not_to_share_with: Groups not to share with ** have form of [groupName_groupOwner,....]
 	'''
 	for group in groups_to_share_with:
-		share_graph_with_group(owner, gid, group)
+		groupInfo = group.split("12345__43121__")
+		share_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
 
 	for group in groups_not_to_share_with:
-		unshare_graph_with_group(owner, gid, group)
+		groupInfo = group.split("12345__43121__")
+		unshare_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
 
 def add_user_to_group(username, owner, group):
 	'''
@@ -1726,7 +1772,7 @@ def add_user_to_group(username, owner, group):
 		isOwner = cur.fetchone()
 
 		if isMember != None or isOwner != None:
-			cur.execute('insert into group_to_user values(?, ?)', (group, username))
+			cur.execute('insert into group_to_user values(?, ?, ?)', (group, owner, username))
 			con.commit();
 			return "User added!"
 		else:
@@ -1767,7 +1813,7 @@ def remove_user_from_group(username, owner, group):
 		isOwner = cur.fetchone()
 		if isOwner != None:
 			isOwner = isOwner[0]
-			cur.execute('delete from group_to_user where user_id=? and group_id=?', (username, group, ))
+			cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
 			con.commit();
 			return "User removed from group!"
 		else:
@@ -1814,13 +1860,14 @@ def remove_user_through_ui(username, owner, group):
 		if con:
 			con.close()
 
-def share_graph_with_group(owner, graph, group):
+def share_graph_with_group(owner, graph, groupId, groupOwner):
 	'''
 		Shares a graph with group.
 		
 		:param owner: Owner of group
 		:param graph: Graph to share 
-		:param group: Group ID
+		:param groupId: Group ID
+		:param groupOwner: Group Owner
 		:return <status>
 	'''
 	con = None
@@ -1838,13 +1885,13 @@ def share_graph_with_group(owner, graph, group):
 
 		# If there is a graph for the owner, then we add that graph to the group that a user is a part of (user or member)
 		if isOwner != None:
-			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
+			cur.execute('select user_id from group_to_user where user_id=? and group_id=? and group_owner=?', (owner, groupId, groupOwner))
 			isMember = cur.fetchone()
-			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id = ?', (owner, group))
+			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id = ?', (groupOwner, groupId))
 			isOwner = cur.fetchone()
 			# If the query returns, it means that the owner is a member of that group
 			if isMember != None or isOwner != None:
-				cur.execute('insert into group_to_graph values(?, ?, ?)', (group, owner, graph))
+				cur.execute('insert into group_to_graph values(?, ?, ?, ?)', (groupId, groupOwner, owner, graph))
 				con.commit()
 				return "Graph successfully shared!"
 			else:
@@ -1859,13 +1906,14 @@ def share_graph_with_group(owner, graph, group):
 		if con:
 			con.close()
 
-def unshare_graph_with_group(owner, graph, group):
+def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 	'''
 		Graph to unshare with group.
 
 		:param owner: Owner of group
 		:param graph: Graph to unshare 
-		:param group: Group ID
+		:param groupId: Group ID
+		:param groupOwner: Group Owner
 		:return <status>
 	'''
 	con = None
@@ -1876,21 +1924,12 @@ def unshare_graph_with_group(owner, graph, group):
 		# Get the graph that the user supposedly owns
 		cur.execute('select user_id from graph where user_id=? and graph_id=?', (owner, graph, ))
 		graph_owner = cur.fetchone()
-		cur.execute('select user_id from group_to_graph where graph_id=? and user_id=?', (graph, owner))
+		cur.execute('select user_id from group_to_graph where graph_id=? and user_id=? and group_id=? and group_owner = ?', (graph, owner, groupId, groupOwner))
 		graph_in_group = cur.fetchone()
 		if graph_owner != None and graph_in_group != None:
-			graph_owner = graph_owner[0]
-			cur.execute('select user_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
-			isMember = cur.fetchone()
-			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id=?', (owner, group))
-			isOwner = cur.fetchone()
-			# If the user has the rights to the graph/group, then carry out the unsharing of that graph from the group
-			if isMember != None or isOwner != None:
-				cur.execute('delete from group_to_graph where group_id=? and graph_id=? and user_id=?', (group, graph, owner))
-				con.commit()
-				return "Graph successfully unshared!"
-			else:
-				return "You are not a member of this group!"
+			cur.execute('delete from group_to_graph where group_id=? and group_owner=? and graph_id=? and user_id=?', (groupId, groupOwner, graph, owner))
+			con.commit()
+			return "Graph successfully unshared!"
 		else:
 			return "You don't own this graph or graph isn't shared with the group yet!"
 
@@ -2216,7 +2255,7 @@ def get_all_groups_for_this_graph(uid, graph):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select group_id from group_to_graph where graph_id=? and user_id=?', (graph, uid))
+		cur.execute('select group_id, group_owner from group_to_graph where graph_id=? and user_id=?', (graph, uid))
 		graphs = cur.fetchall()
 
 		if graphs == None:
@@ -2225,7 +2264,8 @@ def get_all_groups_for_this_graph(uid, graph):
 		cleaned_graphs = []
 		if graphs != None:
 			for graph in graphs:
-				cleaned_graphs.append(str(graph[0]))
+				cleaned_graphs.append((str(graph[0]), str(graph[1])))
+			
 			return cleaned_graphs
 		else:
 			return Nonef
@@ -2603,7 +2643,7 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 	shared_graphs = []
 	# Get all members of the shared groups
 	for group in all_groups_for_graph:
-		members = get_group_members(group)
+		members = get_group_members(group[0], group[1])
 		if loggedIn in members:
 			for member in members:
 				if loggedIn != member:
