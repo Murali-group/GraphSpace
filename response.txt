@@ -1,1 +1,0 @@
-{"Groups": {"owner": "dsingh5270@gmail.com", "graphs": ["test", "test1"], "group_id": "test", "description": "TEstasd;flasdfasdfasdfasdf", "members": ["ssam1994@vt.edu", "test@test"]}}
