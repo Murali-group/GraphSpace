@@ -15,9 +15,10 @@
 
 <h1>Welcome to GraphSpace!</h1>
 
-This page should help familiarize you with GraphSpace's interface and basic features.
+<b>This page should help familiarize you with GraphSpace's interface and basic features.</b>
 
-
+<br/>
+<br/>
 <h4>What is a graph?</h4>
 
 A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing vertices (also known as nodes or points) and edges which connect the vertices.
@@ -47,85 +48,30 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 
 <ul>
 
-<li><b>My Graphs</b> will show graphs that you own (you have uploaded).</li>
+<li><b><a href="{{url}}graphs/">My Graphs</a></b> will show graphs that you own (you have uploaded).</li>
 
-<li><b>Shared with me</b> will show graphs that have been shared with you through groups.</li>
+<li><b><a href="{{url}}graphs/shared/">Shared with me</a></b> will show graphs that have been shared with you through groups.</li>
 
-<li><b>Public graphs</b> will show graphs that have been made publicly available on GraphSpace.</li>
+<li><b><a href="{{url}}graphs/public/">Public Graphs</a></b> will show graphs that have been made publicly available on GraphSpace.</li>
 
 </ul>
+
+<h3 id="view">Grouping Graphs</h3>
 
 You can also look at groups, which are collections of graphs shared by members of the group. Click on groups in the navigation bar. You should see the following categories for groups
 
 <ul>
 
-<li><b>Owner of</b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members.</li>
+<li><b><a href="{{url}}groups/">Owner of</a></b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members. All other functionality is accomplished through the <a href="{{url}}help/restapi/#groups">REST API</a></li>
 
-<li><b>Member of</b> are groups that you have been added to. You can view or add graphs to these groups.</li>
-
-<li><b>Public groups</b> are groups that have been made publicly available. You can view graphs within them, but can only add your own graphs to them if you are a member.</li>
+<li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/restapi/#graphs">REST API</a></li>
 
 </ul>
 
 
 <h3 id="upload">Uploading graphs</h3>
 
-GraphSpace represents graphs using a JSON format. Below is an example of a very simple graph.
-
-<pre>
-{
-    "graph": {
-        "nodes": [
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P43146",
-                    "label": "DCC",
-                    "color": "yellow",
-                    "height": 50,
-                    "width": 50
-                }
-            }, 
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P08107",
-                    "label": "HSPA1B",
-                    "color": "yellow",
-                    "height": 50,
-                    "width": 50                
-                }
-            }
-        ],
-        "edges": [
-            {
-                "data": {
-                    "id": "P43146-P08107",
-                    "source": "P43146",
-                    "target": "P08107",
-                    "directed": "true",
-                    "color": "black",
-                    "width": 3
-                }
-            }
-        ]
-
-    },
-    "metadata": {
-        "description": "This is a tutorial graph",
-        "tags": [
-            "tutorial"
-        ]
-    }
-}
-</pre>
-
-Copy and paste this graph into a file, and then upload it using the following command (on Linux):
-
-<pre>
-curl -X POST "{{url}}api/users/[email]/graph/add/tutorial/" -F "username=[email]" -F "password=[password]" -F graphname=@"graph.json"
-</pre>
-
+GraphSpace represents graphs using a JSON format. To see an example of how to uplaod a correctly formatted JSON graph to GraphSpace, please see <a href="{{url}}help/restapi/#add_graph">this page</a>.
 
 <h3 id="sharing">Sharing graphs</h3>
 {% with url|add:"help/restapi/" as final_url %}

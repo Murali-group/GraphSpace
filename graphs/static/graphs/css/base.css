@@ -24,11 +24,12 @@ div.content {
 	/* should occupy entire parent div (content_container) */
 	width: 100%;
 	height: 100%;
-    margin-top: 20px;
+    margin-top: 10px;
     padding: 40px 15px;
 }
 
 .graphs  {
 	background-color: white;
 	position: relative;
+	padding-top: 20px;
 }

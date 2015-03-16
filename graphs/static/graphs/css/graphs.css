@@ -12,17 +12,6 @@
 	position: relative;
 }
 
-/* links located on the top of the Graphs page */
-.graph_links {
-	margin-top: 20px;
-
-	/*padding: 10px;*/
-	/*overflow: hidden;*/
-
-	/* temporary div area indicator */
-	/*background-color: rgb(250, 235, 199);*/
-}
-
 .side {
 	margin-top: 20px;
 }
@@ -52,7 +41,7 @@
 .pagination {
   height: 36px;
   /*margin: 20px 0;*/
-  margin-top: 40px;
+  margin-top: 30px;
 }
 .pagination ul {
   display: inline-block;

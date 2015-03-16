@@ -22,64 +22,16 @@ Graphs are represented in <a href="http://json.org">JSON</a> format.
 <h3>Prerequisites</h3>
 
 <p>
-To execute the examples from the command line you will need an HTTP client. On Debian systems you can install by running
+To execute the examples from the command line you will need an HTTP client. On Debian systems you can install by running </p>
 
 <pre>
 sudo apt-get install curl
 </pre>
 
-Also, you will need a user account on graphspace.
+<p><b>In order to fully utilize all the features of GraphSpace, creating an account is strongly recommended.  However, it is not required as any user can still view <a href="{{url}}graphs/">public graphs</a>.</b>
 </p>
 
-Finally, you can save the following graph to a file as an example.
 
-<pre>
-{
-    "graph": {
-        "nodes": [
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P43146",
-                    "label": "DCC",
-                    "color": "yellow",
-                    "height": 50,
-                    "width": 50
-                }
-            }, 
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P08107",
-                    "label": "HSPA1B",
-                    "color": "yellow",
-                    "height": 50,
-                    "width": 50                
-                }
-            }
-        ],
-        "edges": [
-            {
-                "data": {
-                    "id": "P43146-P08107",
-                    "source": "P43146",
-                    "target": "P08107",
-                    "directed": "true",
-                    "color": "black",
-                    "width": 3
-                }
-            }
-        ]
-
-    },
-    "metadata": {
-        "description": "This is a tutorial graph",
-        "tags": [
-            "tutorial"
-        ]
-    }
-}
-</pre>
 
 <h3>API calls</h3>
 
@@ -98,7 +50,7 @@ Below is a list of the different API calls.
 </li>
 <li><h4><a href="#groups">Groups</a></h4>
 <ul>
-<li><a href="#get_groups">Get groups</a></li>
+<!-- <li><a href="#get_groups">Get groups</a></li> -->
 <li><a href="#get_group">Get group</a></li>
 <li><a href="#remove_group">Remove group</a></li>
 <li><a href="#create_group">Create group</a></li>
@@ -285,7 +237,7 @@ Example response:
 
 <h2 id="groups">Groups</h2>
 
-<h3 id="get_groups">Get groups</h3>
+<!-- <h3 id="get_groups">Get groups</h3>
 
 Get the ids of all groups on the server. The result is a JSON object containing a list of all groups, including their descriptions and owners.
 
@@ -299,13 +251,13 @@ Example response:
 {
    "groups" : [
       {
-         "owner" : "craigy@vt.edu",
+         "owner" : "divit52@vt.edu",
          "id" : "Research",
          "description" : "Research team group."
       }
    ]
 }
-</pre>
+</pre> -->
 
 <h3 id="get_group">Get group</h3>
 
@@ -319,7 +271,7 @@ Example response:
 
 <pre>
 {
-   "owner" : "craigy@vt.edu",
+   "owner" : "divit52@vt.edu",
    "graphs" : [
       {
          "id" : "158148980"
@@ -327,7 +279,7 @@ Example response:
    ],
    "users" : [
       {
-         "id" : "craigy@vt.edu"
+         "id" : "divit52@vt.edu"
       }
    ],
    "id" : "Research",
