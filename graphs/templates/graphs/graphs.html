@@ -265,7 +265,7 @@
                 {% endif %}
             {% endif %}
         {% else %}
-            <p>{{message}}</p>
+            <p>{% autoescape off %}{{ message }}{% endautoescape %}</p>
         {% endif %}
         </table>
         </div> <!-- end results_table -->

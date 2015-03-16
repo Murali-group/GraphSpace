@@ -37,7 +37,7 @@ urlpatterns = patterns('',
         url(r'^groups/member/$', views.groups_member, name='groups_member'),
         # url(r'^groups/public/$', views.public_groups, name='public_groups'),
         url(r'^groups/all/$', views.all_groups, name='all_groups'),
-        url(r'^groups/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
+        url(r'^groups/(?P<group_owner>.+)/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)/$', views.create_group, name='create_group'),
         url(r'^delete/group/$', views.delete_group_through_ui, name='delete_group_through_ui'),
         url(r'^unsubscribe/group/$', views.unsubscribe_from_group, name='unsubscribe_from_group'),
@@ -84,8 +84,8 @@ urlpatterns = patterns('',
         url(r'^api/tags/user/(?P<username>.+)/$', views.get_tags_for_user, name='get_tags_for_user'),
 
         #REST API for graphs
-        url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),
-        url(r'^api/users/graphs/(?P<graphname>.+)/unshare/(?P<groupname>.+)/$', views.unshare_graph, name='unshare_graph'),
+        url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),
+        url(r'^api/users/graphs/(?P<graphname>.+)/unshare/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.unshare_graph, name='unshare_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/add/(?P<graphname>.+)/$', views.upload_graph, name='upload_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/get/(?P<graphname>.+)/$', views.retrieve_graph, name='retrieve_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/delete/(?P<graphname>.+)/$', views.remove_graph, name='remove_graph'),
@@ -93,11 +93,11 @@ urlpatterns = patterns('',
 
         #REST API for groups
         url(r'^api/groups/get/$', views.get_groups, name='get_groups'),
-        url(r'^api/groups/delete/(?P<groupname>.+)/$', views.delete_group, name='delete_group'),
-        url(r'^api/groups/add/(?P<groupname>.+)/$', views.add_group, name='add_group'),
-        url(r'^api/groups/(?P<groupname>.+)/adduser/(?P<user_id>.+)/$', views.add_user_to_group, name='add_user_to_group'),
-        url(r'^api/groups/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user_from_group, name='remove_user_from_group'),
-        url(r'^api/groups/(?P<groupname>.+)/get/$', views.get_group, name='get_group'), # needs more work
+        url(r'^api/groups/delete/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.delete_group, name='delete_group'),
+        url(r'^api/groups/add/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.add_group, name='add_group'),
+        url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/adduser/(?P<user_id>.+)/$', views.add_user_to_group, name='add_user_to_group'),
+        url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user_from_group, name='remove_user_from_group'),
+        url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/get/$', views.get_group, name='get_group'),
         url(r'^api/users/(?P<user_id>.+)/groups/$', views.get_group_for_user, name='get_group_for_user'),
         )
 

@@ -2,7 +2,17 @@
 {% block content %}
 {% load staticfiles %}
 
-{% include 'graphs/help_menu.html' %}
+<div class="container graphs">
+
+<ul class="nav nav-pills">
+    <li><a href="{% url 'help' %}" style="text-align:center">Getting started</a></li>
+    <li><a href="{% url 'help_tutorials' %}" style="text-align:center">Tutorials</a></li>
+    <li><a href="{% url 'help_graphs' %}" style="text-align:center">Graphs</a></li>
+    <li class="active"><a href="{% url 'help_restapi' %}" style="text-align:center">REST API</a></li>
+    <li><a href="{% url 'help_jsonref' %}" style="text-align:center">JSON Reference</a></li>
+    <li><a href="{% url 'help_about' %}" style="text-align:center">About</a></li>
+  </ul>
+<hr>
 
 <p>
 GraphSpace provides a RESTful API for managing your graphs.
@@ -330,7 +340,7 @@ Example response:
 To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
 
 <pre>
-curl -X POST "{{url}}api/groups/add/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/add/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example response:
@@ -346,14 +356,14 @@ Example response:
 To remove a group use the following command. You can only remove a group that you are the owner of.
 
 <pre>
-curl -X POST "{{url}}api/groups/delete/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/delete/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
 
 <pre>
 {
-       "Success" : "Successfully deleted group owned by craigy@vt.edu."
+       "Success" : "Successfully deleted group owned by [group_owner]."
 }
 </pre>
 
@@ -361,13 +371,13 @@ Example failed response:
 
 <pre>
 {
-       "error" : "You can only delete your own groups"
+       "Failure" : "You can only delete your own groups"
 }
 </pre>
 
 <pre>
 {
-       "error" : "No such group exists"
+       "Failure" : "No such group exists"
 }
 </pre>
 
@@ -395,14 +405,14 @@ Example response:
 Add a user to a group. You can only add a user to a group that you belong to.
 
 <pre>
-curl -X POST "{{url}}api/groups/[groupname]/adduser/[member_email]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/adduser/[member]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
 
 <pre>
 {
-   "Success" : "Successfully added user test@test.com to group newgroup."
+   "Success" : "Successfully added user [member] to group [groupname]."
 }
 </pre>
 
@@ -416,14 +426,14 @@ Example Successful response:
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
 <pre>
-curl -X POST "{{url}}api/groups/demo/removeuser/craigy@vt.edu/" -F "username=dsingh5270@gmail.com" -F "password=test"
+curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
 Example Successful response:
 
 <pre>
 {
-   "Success" : "Successfully removed user test@test.com from group newgroup."
+   "Success" : "Successfully removed user [member] from group [groupname]."
 }
 </pre>
 
@@ -438,14 +448,14 @@ Example Successful response:
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
 <pre>
-curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
 
 <pre>
 {
-   "Success" : "Shared graph owned by craigy@vt.edu with group Test."
+   "Success" : "Shared graph owned by [email] with group [groupname]."
 }
 </pre>
 
@@ -454,14 +464,14 @@ Example Successful response:
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
 <pre>
-curl -X POST "{{url}}api/users/graphs/[graph name]/unshare/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graphname]/unshare/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
 Example Successful response:
 
 <pre>
 {
-   "Success" : "Unshared graph 491850553 owned by craigy@vt.edu with group Test."
+   "Success" : "Unshared graph [graphname] owned by [email] with group [groupname]."
 }
 </pre>
 

@@ -29,7 +29,7 @@ $(document).ready(function() {
 
     var groupOwner = $("#groupOwner").text();
 
-    $.post("../../changeDescription/", {
+    $.post("../../../changeDescription/", {
         "description": desc,
         "username": username,
         "groupId": groupId,
@@ -56,7 +56,7 @@ $(document).ready(function() {
       return alert("Please enter email of user to add to this group!");
     }
 
-    $.post("../../addMember/", {
+    $.post("../../../addMember/", {
         "member": member,
         "groupId": groupId,
         "groupOwner": groupOwner
@@ -78,7 +78,7 @@ $(document).ready(function() {
 
     var groupOwner = $("#groupOwner").text();
 
-    $.post("../../removeMember/", {
+    $.post("../../../removeMember/", {
         "member": member,
         "groupId": groupId,
         "groupOwner": groupOwner

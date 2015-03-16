@@ -94,17 +94,17 @@
         <th>Description</th>
         <th>Owner</th>
         <td>Graphs</td>
-        <th>Visibility</th>
-        <th>Listed</th>
+        <!-- <th>Visibility</th>
+        <th>Listed</th> -->
         <th></th>
     </tr>
 {% for g in current_page %}
     <tr> 
-        <td><a href="{% url 'graphs_in_group' group_id=g.6%}">{{g.0}}</a></td>
+        <td><a href="{% url 'graphs_in_group' group_owner=g.2 group_id=g.6%}">{{g.0}}</a></td>
         <td>{{ g.1 }}</td>
         <td>{{ g.2 }}</td>
         <td>{{ g.3 }}</td>
-        {% if g.4 == 1 %}
+        <!-- {% if g.4 == 1 %}
         <td>Public</td>
         {% else %}
         <td>Private</td>
@@ -113,7 +113,7 @@
         <td>Yes</td>
         {% else %}
         <td>No</td>
-        {% endif %}
+        {% endif %} -->
         {% if g.2 == uid %}
             <td><button class="btn btn-default delete" id="{{ g.6 }}concat_val_buffer{{ g.2 }}">Delete</button></td>
         {% else %}

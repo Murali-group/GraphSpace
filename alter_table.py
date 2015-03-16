@@ -31,12 +31,12 @@ def alter(con, cur):
 	cur.execute('insert into graph (graph_id, user_id, json, created, modified, public, unlisted) select * from tmp_graph')
 	cur.execute('insert into graph_tag (tag_id) select * from tmp_graph_tag')
 	cur.execute('insert into graph_to_tag (graph_id, user_id, tag_id) select * from tmp_graph_to_tag')
-	cur.execute('insert into group_to_graph (group_id, user_id, graph_id) select * from tmp_group_to_graph')
-	cur.execute('insert into group_to_user (group_id, user_id) select * from tmp_group_to_user')
+	cur.execute('insert into "group" (group_id, name, owner_id, description, public, unlisted) select * from tmp_group')
+	cur.execute('insert into group_to_graph (group_id, group_owner, user_id, graph_id) select gg.group_id, g.owner_id, gg.user_id, gg.graph_id from tmp_group_to_graph as gg, "group" as g where g.group_id = gg.group_id;')
+	cur.execute('insert into group_to_user (group_id, group_owner, user_id) select gu.group_id, g.owner_id, gu.user_id from tmp_group_to_user as gu, "group" as g where g.group_id = gu.group_id')
 	cur.execute('insert into layout (layout_id, layout_name, owner_id, graph_id, user_id, json, public, unlisted) select * from tmp_layout')
 	cur.execute('insert into node (node_id, label, user_id, graph_id) select * from tmp_node')
 	cur.execute('insert into user (user_id, password, activated, activate_code, public, unlisted, admin) select * from tmp_user')
-	cur.execute('insert into "group" (group_id, name, owner_id, description, public, unlisted) select * from tmp_group')
 
 	# Commit changes to the database (only needed for insertions)
 	con.commit()
@@ -66,12 +66,12 @@ def create_tables(con, cur):
 
 	cur.execute('CREATE TABLE graph_to_tag (graph_id varchar(500) NOT NULL,user_id varchar(100) NOT NULL,tag_id varchar(100) NOT NULL,PRIMARY KEY (graph_id, user_id, tag_id),FOREIGN KEY (graph_id, user_id) REFERENCES graph(graph_id, user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY (tag_id) REFERENCES graph_tag(id) ON DELETE CASCADE ON UPDATE CASCADE)')
 
-	# SQLite doesn't like the name group, thus it is surrounded by "group" quotes.
-	cur.execute('CREATE TABLE "group" (group_id VARCHAR NOT NULL,name VARCHAR NOT NULL,owner_id VARCHAR NOT NULL,description VARCHAR NOT NULL,public INTEGER,unlisted INTEGER,PRIMARY KEY (group_id),FOREIGN KEY(owner_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE)')
+	# SQLite doesn't like the name 'group', thus it is surrounded by "group" quotes.
+	cur.execute('CREATE TABLE "group" (group_id VARCHAR NOT NULL,name VARCHAR NOT NULL,owner_id VARCHAR NOT NULL,description VARCHAR NOT NULL,public INTEGER,unlisted INTEGER,PRIMARY KEY (group_id, owner_id),FOREIGN KEY(owner_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE)')
 
-	cur.execute('CREATE TABLE group_to_graph (group_id VARCHAR NOT NULL,user_id VARCHAR NOT NULL,graph_id VARCHAR NOT NULL,PRIMARY KEY (group_id, graph_id, user_id),FOREIGN KEY(graph_id, user_id) REFERENCES graph (graph_id, user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_id) REFERENCES "group" (group_id) ON DELETE CASCADE ON UPDATE CASCADE)')
+	cur.execute('CREATE TABLE group_to_graph (group_id VARCHAR NOT NULL,group_owner VARCHAR NOT NULL,user_id VARCHAR NOT NULL,graph_id VARCHAR NOT NULL,PRIMARY KEY (group_id, group_owner, graph_id, user_id),FOREIGN KEY(graph_id, user_id) REFERENCES graph (graph_id, user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_owner) REFERENCES "group" (owner_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_id) REFERENCES "group" (group_id) ON DELETE CASCADE ON UPDATE CASCADE)')
 
-	cur.execute('CREATE TABLE group_to_user (group_id VARCHAR NOT NULL,user_id VARCHAR NOT NULL,PRIMARY KEY (user_id, group_id),FOREIGN KEY(user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_id) REFERENCES "group" (group_id) ON DELETE CASCADE ON UPDATE CASCADE)')
+	cur.execute('CREATE TABLE group_to_user (group_id VARCHAR NOT NULL,group_owner VARCHAR NOT NULL,user_id VARCHAR NOT NULL,PRIMARY KEY (user_id, group_id, group_owner),FOREIGN KEY(user_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_owner) REFERENCES "group" (owner_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(group_id) REFERENCES "group" (group_id) ON DELETE CASCADE ON UPDATE CASCADE)')
 
 	cur.execute('CREATE TABLE layout (layout_id INTEGER NOT NULL,layout_name VARCHAR NOT NULL,owner_id VARCHAR NOT NULL,graph_id VARCHAR NOT NULL,user_id VARCHAR NOT NULL,json VARCHAR NOT NULL,public INTEGER,unlisted INTEGER,PRIMARY KEY (layout_id),FOREIGN KEY(graph_id, user_id) REFERENCES graph (graph_id, user_id) ON DELETE CASCADE ON UPDATE CASCADE,FOREIGN KEY(owner_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE)')
 
@@ -103,6 +103,8 @@ def main():
 			elif sys.argv[2] == 'drop':
 				drop(con, cur)
 				# After running this, be sure to run: python manage.py syncdb
+			elif sys.argv[2] == 'create':
+				create_tables(con, cur)
 			else:
 				print "Unrecognized input!"
 

@@ -1,7 +1,17 @@
 {% extends 'base.html' %}
 {% block content %}
 
-{% include 'graphs/help_menu.html' %}
+<div class="container graphs">
+
+<ul class="nav nav-pills">
+    <li><a href="{% url 'help' %}" style="text-align:center">Getting started</a></li>
+    <li class="active"><a href="{% url 'help_tutorials' %}" style="text-align:center">Tutorials</a></li>
+    <li><a href="{% url 'help_graphs' %}" style="text-align:center">Graphs</a></li>
+    <li><a href="{% url 'help_restapi' %}" style="text-align:center">REST API</a></li>
+    <li><a href="{% url 'help_jsonref' %}" style="text-align:center">JSON Reference</a></li>
+    <li><a href="{% url 'help_about' %}" style="text-align:center">About</a></li>
+  </ul>
+<hr>
 
   
   <p>This tutorial will teach you how to upload a simple graph into GraphSpace. First of all, you will need an account, which you can create <a href="{{url}}index/">here</a>, as well as a Unix machine. You will need <pre>curl</pre> installed on the machine, which can be installed by running <pre> sudo-apt-get install curl</pre> if it is a Debian based machine such as Ubuntu.</p>
