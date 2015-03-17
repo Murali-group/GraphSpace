@@ -269,9 +269,14 @@ def _graphs_page(request, view_type):
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
             context.update(pager_context)
+            print context['current_page'][0]
             for i in xrange(len(context['current_page'].object_list)):
                 graph = list(context['current_page'][i])
-                graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                if request.GET.get('search'):
+                    print graph[4]
+                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
+                else:
+                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
                 graph = tuple(graph)
                 context['current_page'].object_list[i] = graph
 
