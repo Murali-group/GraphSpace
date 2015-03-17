@@ -65,6 +65,9 @@ Below is a list of the different API calls.
 <ul>
 <li><a href="#tag_for_user">Get Tags for User</a></li>
 <li><a href="#tag_for_graph">Get Tags for Graph</a></li>
+<li><a href="#make_graphs_for_tag_public">Make all graphs for a tag public</a></li>
+<li><a href="#make_graphs_for_tag_private">Make all graphs for a tag private</a></li>
+<li><a href="#delete_graphs_for_tag">Delete all graphs for a tag</a></li>
 </ul>
 </li>
 </ul>
@@ -499,6 +502,46 @@ Example Successful response:
 <pre>
 {"Response": ["ISMB-2014-Crosstalk"]}
 </pre>
+
+<h3 id='make_graphs_for_tag_public'>Make all graphs for a tag public</h3>
+
+Changes the privacy of all graphs that contain a [tag] under [email] public.
+<pre>
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePublic/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example Successful response:
+
+<pre>
+{"Success": "Graph with tag have been made public"}
+</pre>
+
+<h3 id='make_graphs_for_tag_private'>Make all graphs for a tag private</h3>
+
+Changes the privacy of all graphs that contain a [tag] under [email] private.
+<pre>
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example Successful response:
+
+<pre>
+{"Success": "Graph with tag have been made private"}
+</pre>
+
+<h3 id='delete_graphs_for_tag'>Delete all graphs for a tag</h3>
+
+Delets all graphs that contain a [tag] under [email].
+<pre>
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example Successful response:
+
+<pre>
+{"Success": "Graphs with tag have been deleted"}
+</pre>
+
 {% endblock %}
 
 {% block css-js-footer %}
