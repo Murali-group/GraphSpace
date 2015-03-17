@@ -2273,21 +2273,46 @@ def get_all_groups_for_this_graph(uid, graph):
 		if con:
 			con.close()
 
-def is_layout_shared(layoutId, layoutOwner, uid, graph):
-	graph_groups = get_all_groups_for_this_graph(uid, graph)
-	user_groups = get_groups_of_user(layoutOwner) + get_all_groups_with_member(layoutOwner)
+def is_layout_shared(layoutId, layoutOwner, uid, graphName):
 
-	layout_groups = []
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
 
-	for graph in graph_groups:
-		if graph in user_groups:
-			layout_groups.append(graph)
+		graph_groups = get_all_groups_for_this_graph(uid, graphName)
+		user_groups = get_groups_of_user(layoutOwner) + get_all_groups_with_member(layoutOwner)
 
-	print layout_groups
+		layout_groups = []
 
-	if groups != None:
-		for group in groups:
-			cur.execute('select ')
+		for graph in graph_groups:
+			for user_graph in user_groups:
+				sub_graph_info = (str(user_graph[6]), str(user_graph[2]))
+				if graph == sub_graph_info:
+					print graph
+					cur.execute('select layout_id from layout where layout_id=? and owner_id=? and graph_id=? and user_id=?', (layoutId, layoutOwner, graph[1], uid))
+					data = cur.fetchone()
+					sub_graph_info = list(sub_graph_info)
+					if data != None and len(data) > 0:
+						sub_graph_info.append(True)
+					else:
+						sub_graph_info.append(False)
+
+					sub_graph_info = tuple(sub_graph_info)
+
+					layout_groups.append(sub_graph_info)
+
+		if is_public_graph(uid, graphName):
+			layout_groups.append(("Public", "GraphSpace"))
+
+		return layout_groups
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return None
+
+	finally:
+		if con:
+			con.close()
 
 def emailExists(email):
 	'''
@@ -2662,6 +2687,24 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 	return shared_graphs
 
+# def share_layout_with_group(layoutId, layoutOwner, graphId, groupId, groupOwner):
+
+# 	con=None
+# 	try:
+# 		con = lite.connect(DB_NAME)
+
+# 		# Get my layouts
+# 		cur = con.cursor()
+
+# 		cur.execute('insert into layout values(?, ?,?,?,?)', (layoutOwner, ))
+
+# 	except lite.Error, e:
+# 		print "Error %s: " %e.args[0]
+# 		return None
+# 	finally:
+# 		if con:
+# 			con.close()
+			
 def get_public_layouts_for_graph(uid, gid):
 	'''
 		Get public layouts for this graph.
@@ -2807,4 +2850,87 @@ def get_all_tags_for_graph(graphname, username):
 	finally:
 		if con:
 			con.close()
-				
+
+def make_all_graphs_for_tag_public(tagname, username):
+	'''
+		Makes all graphs under a tag owned by username public.
+
+		:param tagname: Name of tag to search for
+		:param username: Email of user in GraphSpace
+		:return <Message>
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		graph_list = []
+
+		# Get all tags for specified graph and return it
+		cur.execute('update graph set public = 1 where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
+		con.commit()
+		return "Done"
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def make_all_graphs_for_tag_private(tagname, username):
+	'''
+		Makes all graphs under a tag owned by username public.
+
+		:param tagname: Name of tag to search for
+		:param username: Email of user in GraphSpace
+		:return <Message>
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		graph_list = []
+
+		# Get all tags for specified graph and return it
+		cur.execute('update graph set public = 0 where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
+		con.commit()
+		return "Done"
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def delete_all_graphs_for_tag(tagname, username):
+	'''
+		Deletes all graphs under a tag owned by username.
+
+		:param tagname: Name of tag to search for
+		:param username: Email of user in GraphSpace
+		:return <Message>
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		graph_list = []
+
+		# Get all tags for specified graph and return it
+		cur.execute('delete from graph where graph_id = (select graph_id from graph_to_tag where tag_id=? and user_id=?) and user_id = (select user_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
+		cur.execute('delete from graph_to_tag where tag_id=? and user_id=?', (tagname, username))
+
+		con.commit()
+		return "Done"
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+					

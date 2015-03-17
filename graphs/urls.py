@@ -62,7 +62,7 @@ urlpatterns = patterns('',
         url(r'^changeLayoutName/$', views.changeLayoutName, name='changeLayoutName'),
 
         # Get all groups that have specific graph shared in the group
-        url(r'^getGroupsWithGraph/$', views.getGroupsWithGraph, name='getGroupsWithGraph'),
+        url(r'^getGroupsWithLayout/$', views.getGroupsWithLayout, name='getGroupsWithLayout'),
 
         # Delete layout
         url(r'^deleteLayout/$', views.deleteLayout, name='deleteLayout'),
@@ -72,7 +72,8 @@ urlpatterns = patterns('',
 
         # Shares graphs with specified groups
         url(r'^shareGraphWithGroups/$', views.shareGraphWithGroups, name='shareGraphWithGroups'),
-
+        
+        url(r'^shareLayoutWithGroups/$', views.shareLayoutWithGroups, name='shareLayoutWithGroups'),
         # Make Layout public
         url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
         # forgot endpoint
@@ -83,8 +84,12 @@ urlpatterns = patterns('',
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
 
         # tags
+        url(r'^api/tags/user/(?P<username>.+)/(?P<tagname>.+)/makePublic/$', views.make_all_graphs_for_tag_public, name='make_all_graphs_for_tag_public'),
+        url(r'^api/tags/user/(?P<username>.+)/(?P<tagname>.+)/makePrivate/$', views.make_all_graphs_for_tag_private, name='make_all_graphs_for_tag_private'),
+        url(r'^api/tags/user/(?P<username>.+)/(?P<tagname>.+)/delete/$', views.delete_all_graphs_for_tag, name='delete_all_graphs_for_tag'),
         url(r'^api/tags/user/(?P<username>.+)/(?P<graphname>.+)/$', views.get_all_tags_for_graph, name='get_all_tags_for_graph'),
         url(r'^api/tags/user/(?P<username>.+)/$', views.get_tags_for_user, name='get_tags_for_user'),
+
 
         #REST API for graphs
         url(r'^api/users/graphs/(?P<graphname>.+)/share/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.share_graph, name='share_graph'),

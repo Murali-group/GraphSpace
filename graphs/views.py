@@ -879,9 +879,6 @@ def shareGraphWithGroups(request):
         groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
         groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
 
-        print groups_to_share_with
-        print "%s Not to share with: %s", ("Blah: ", groups_not_to_share_with)
-
         for group in groups_to_share_with:
             groupInfo = group.split("12345__43121__")
             db.share_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
@@ -1006,7 +1003,7 @@ def remove_member_through_ui(request):
 
 
 
-def getGroupsWithGraph(request):
+def getGroupsWithLayout(request):
     '''
         Gets all groups that have the particular graph shared in the group.
 
@@ -1017,11 +1014,42 @@ def getGroupsWithGraph(request):
         :return JSON: {"Groups":[Groups]}
     '''
     if request.method == 'POST':
-        result = db.get_all_groups_for_this_graph(request.POST['gid'], request.POST['owner'])
-        print result
-        return HttpResponse(json.dumps({"Groups": result}), content_type="application/json")
+        result = db.is_layout_shared(request.POST['layout'], request.POST['loggedIn'], request.POST['owner'], request.POST['gid'])
+        return HttpResponse(json.dumps({"Group_Information": result}), content_type="application/json")
     else:
         return HttpResponse("NONE")
+
+
+def shareLayoutWithGroups(request):
+    '''
+        Shares graph with specified groups.
+        Unshares graph with specified groups.
+
+        :param request:Incoming HTTP POST Request containing:
+        {"gid": <name of graph>, "owner": <owner of the graph>, "groups_to_share_with": [group_ids], "groups_not_to_share_with": [group_ids]}
+        :return TBD
+    '''
+    if request.method == 'POST':
+        print 'testing'
+        print request.POST
+        owner = request.POST['owner']
+        gid = request.POST['gid']
+        groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
+        groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
+        layoutId = request.POST['layoutId']
+
+        for group in groups_to_share_with:
+            groupInfo = group.split("12345__43121__")
+            db.share_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+
+        for group in groups_not_to_share_with:
+            groupInfo = group.split("12345__43121__")
+            db.unshare_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+
+        return HttpResponse("Done")
+
+    else:
+        return HttpResponse("Test")
 
 ##### END VIEWS #####
 
@@ -1383,7 +1411,71 @@ def get_all_graphs_for_tags(request, tag):
         result = db.get_all_graphs_for_tags(tag)
         return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
 
+def make_all_graphs_for_tag_public(request, username, tagname):
+    '''
+        Makes all graphs with this tag public
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param username: Owner of graphs to change 
+        :param tag: Name of tag to get graphs of 
 
+        :return JSON: {"Response": <message>}
+    '''
+
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        if username == request.POST['username']:
+            db.make_all_graphs_for_tag_public(tagname, username)
+            return HttpResponse(json.dumps({"Success": "Graph with tag have been made public"}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+
+def make_all_graphs_for_tag_private(request, username, tagname):
+    '''
+        Makes all graphs with this tag private
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param username: Owner of graphs to change 
+        :param tag: Name of tag to get graphs of 
+
+        :return JSON: {"Response": <message>}
+    '''
+
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        if username == request.POST['username']:
+            db.make_all_graphs_for_tag_private(tagname, username)
+            return HttpResponse(json.dumps({"Success": "Graph with tag have been made private"}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+
+def delete_all_graphs_for_tag(request, username, tagname):
+    '''
+        Makes all graphs with this tag private
+        :param HTTP POST Request containing
+        {"username": <user_id>, "password": <password>}
+        :param username: Owner of graphs to change 
+        :param tag: Name of tag to get graphs of 
+
+        :return JSON: {"Response": <message>}
+    '''
+
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        if username == request.POST['username']:
+            db.delete_all_graphs_for_tag(tagname, username)
+            return HttpResponse(json.dumps({"Success": "Graphs with tag have been deleted"}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
 
 
 
