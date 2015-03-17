@@ -42,7 +42,6 @@ function searchValues(labels) {
     //It selects those nodes that have labels as their ID's
     ids = JSON.parse(data)['IDS'];
 
-    console.log(ids);
     //For everthing else, we get correct id's from server and proceed to highlight those id's 
     //by correlating labels to id's
     for (var j = 0; j < ids.length; j++) {
@@ -621,11 +620,19 @@ $(document).ready(function() {
     $(".public").click(function (e) {
       e.preventDefault();
 
-      var paths = document.URL.split('/')
-      var publicLayout = $(this).val();
-      var userId = $("#loggedIn").text();
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+      // var paths = document.URL.split('/')
+      // var publicLayout = $(this).val();
+      // var userId = $("#loggedIn").text();
+      // var ownerId = decodeURIComponent(paths[paths.length - 3])
+      // var gid = decodeURIComponent(paths[paths.length - 2])
+
+      // $.post("../../../getGroupsWithGraph/", {
+      //   "gid": gid,
+      //   "owner": ownerId,
+      //   "loggedIn": userId
+      // }, function (data) {
+      //   console.log(data);
+      // });
 
       $.post('../../../makeLayoutPublic/', {
         'gid': gid,
@@ -655,13 +662,13 @@ $(document).ready(function() {
           for (var i = 0; i < data['Group_Information'].length; i++) {
             if (data['Group_Information'][i]['graph_shared'] == true) {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
-                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } else {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               }
             } else {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
-                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } else {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               }
@@ -670,7 +677,13 @@ $(document).ready(function() {
         } else {
           group_options += "You are not part of any groups"
         }
+
         $(".checked-list-box").html(group_options);
+
+        $(".group_val").click(function(e) {
+          console.log($(this).prop('checked'));
+        });
+
       });
 
     });
@@ -680,16 +693,24 @@ $(document).ready(function() {
       var ownerId = decodeURIComponent(paths[paths.length - 3])
       var gid = decodeURIComponent(paths[paths.length - 2])
 
+      var all_groups = {}
       var groups_to_share_with = [];
       var groups_not_to_share_with = [];
-      var checked = $(".groups :checked").each(function () {
-        groups_to_share_with.push($(this).val());
-      });
-      var checked = $(".groups :not(:checked)").each(function () {
-        if ($(this).val().length > 0) {
-          groups_not_to_share_with.push($(this).val());
+
+      $(".group_val").each(function() {
+        if (all_groups.hasOwnProperty($(this).val()) == false) {
+          all_groups[$(this).val()] = $(this).is(":checked");
         }
       });
+
+
+      for (var key in all_groups) {
+        if (all_groups[key] == true) {
+          groups_to_share_with.push(key);
+        } else {
+          groups_not_to_share_with.push(key);
+        }
+      }
 
       $.post('../../../shareGraphWithGroups/', {
         'gid': gid,
@@ -700,6 +721,7 @@ $(document).ready(function() {
         window.location.reload();
       });
     });
+
     $("#input_k").val(getLargestK(graph_json.graph));
     $("#input_max").val(getLargestK(graph_json.graph));
 

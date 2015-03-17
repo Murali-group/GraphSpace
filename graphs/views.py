@@ -91,7 +91,6 @@ def view_graph(request, uid, gid):
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
 
-        print user_is_member
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
@@ -270,6 +269,11 @@ def _graphs_page(request, view_type):
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
             context.update(pager_context)
+            for i in xrange(len(context['current_page'].object_list)):
+                graph = list(context['current_page'][i])
+                graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                graph = tuple(graph)
+                context['current_page'].object_list[i] = graph
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
@@ -870,8 +874,21 @@ def shareGraphWithGroups(request):
         groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
         groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
 
-        db.updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_not_to_share_with)
+        print groups_to_share_with
+        print "%s Not to share with: %s", ("Blah: ", groups_not_to_share_with)
+
+        for group in groups_to_share_with:
+            groupInfo = group.split("12345__43121__")
+            db.share_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
+
+        for group in groups_not_to_share_with:
+            groupInfo = group.split("12345__43121__")
+            db.unshare_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
+
         return HttpResponse("Done")
+
+    else:
+        return HttpResponse("Test")
 
 def create_group(request, groupname):
     '''
@@ -981,7 +998,23 @@ def remove_member_through_ui(request):
     if request.method == 'POST':
         result = db.remove_user_from_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
         return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
-        
+
+
+
+def getGroupsWithGraph(request):
+    '''
+        Gets all groups that have the particular graph shared in the group.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"loggedIn": [current user], "owner": < Owner of graph >, "gid": "Id of graph"}
+
+        :return JSON: {"Message": <message>}
+    '''
+    if request.method == 'POST':
+        # result = db.
+        return HttpResponse(json.dumps({"Message": "result"}), content_type="application/json")
+
 
 ##### END VIEWS #####
 

@@ -1518,9 +1518,7 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 
 	if len(groups) > 0:
 		for group in groups:
-			print group
 			members = get_group_members(group[1], group[0])
-			print members
 	        if logged_in_user in members:
 	            return True
 
@@ -1716,7 +1714,6 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 			else:
 				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": True})
 
-		print group_info
 		return group_info
 
 	except lite.Error, e:
@@ -1737,7 +1734,6 @@ def updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_no
 	'''
 	for group in groups_to_share_with:
 		groupInfo = group.split("12345__43121__")
-		share_graph_with_group(owner, gid, groupInfo[0], groupInfo[1])
 
 	for group in groups_not_to_share_with:
 		groupInfo = group.split("12345__43121__")

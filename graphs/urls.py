@@ -61,6 +61,9 @@ urlpatterns = patterns('',
         # Change name of layout
         url(r'^changeLayoutName/$', views.changeLayoutName, name='changeLayoutName'),
 
+        # Get all groups that have specific graph shared in the group
+        url(r'^getGroupsWithGraph/$', views.getGroupsWithGraph, name='getGroupsWithGraph'),
+
         # Delete layout
         url(r'^deleteLayout/$', views.deleteLayout, name='deleteLayout'),
 

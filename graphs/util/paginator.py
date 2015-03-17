@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from graphs.util import db
 
 def pager(request, content, page_size=25, adjacent_pages=3):
     '''
@@ -27,7 +28,6 @@ def pager(request, content, page_size=25, adjacent_pages=3):
     except EmptyPage:
         #If page is out of range, deliver lastpage of results.
         current_page = paginator.page(paginator.num_pages)
-
 
     startPage = max(current_page.number, 1)
     
