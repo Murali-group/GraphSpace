@@ -281,7 +281,3 @@ Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head
 # Table: edge. Column: tail_id, tail_user_id, tail_graph_id
 # Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)
 
-# to be removed
-# Table: password_reset. Columns: user_id
-# Index('password_reset_idx_user_id', PasswordReset.user_id)
-

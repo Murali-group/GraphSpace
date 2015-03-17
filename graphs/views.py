@@ -91,6 +91,7 @@ def view_graph(request, uid, gid):
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
 
+        print user_is_member
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
@@ -455,7 +456,7 @@ def graphs_in_group(request, group_owner, group_id):
                 context['Error'] = "You need to be a member of a group to see its contents!  Please contact group's owner to add you to the group!"
                 return render(request, 'graphs/error.html', context)
 
-            # Get all graph information that belogn to this group
+            # Get all graph information that belong to this group
             graph_data = db.get_all_graphs_for_group(group_owner, group_id)
 
             # include the graph data to the context

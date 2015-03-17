@@ -134,6 +134,7 @@
                       <tbody>
                           {% for member in group_members %}
                           <tr>
+                            {% if uid != member %}
                             <td>
                               {{ member}}
                             </td>
@@ -144,6 +145,7 @@
                               </div>
                               
                             </td>
+                            {% endif %}
                           </tr>
                           {% endfor %}
                       </tbody>

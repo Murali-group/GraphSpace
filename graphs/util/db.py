@@ -1285,7 +1285,7 @@ def get_groups_of_user(user_id):
 		cur.execute('select * from \"group\" where owner_id=?', (user_id, ))
 
 		data = cur.fetchall()
-	
+
 		# Clean up the data
 		return get_cleaned_group_data(data, cur)
 	except lite.Error, e:
@@ -1313,7 +1313,7 @@ def get_cleaned_group_data(data, cur):
 		cleaned_group.append(group_name[1])
 		cleaned_group.append(group_name[3])
 		cleaned_group.append(group_name[2])
-		cur.execute('select count(*) from group_to_graph where group_id=? and user_id=?', (group_name[0], group_name[2]))
+		cur.execute('select count(*) from group_to_graph where group_id=? and group_owner=?', (group_name[0], group_name[2]))
 		new_data = cur.fetchall()
 		cleaned_group.append(new_data[0][0])
 		cleaned_group.append(group_name[4])
@@ -1488,6 +1488,13 @@ def get_group_members(groupOwner, groupId):
 		for member in data:
 			cleaned_data.append(str(member[0]))
 
+		# If user is owner of the group, they can also see the graph!
+		cur.execute('select owner_id from "group" where owner_id = ? and group_id=?', (groupOwner, groupId));
+		data = cur.fetchall()
+
+		for owner in data:
+			cleaned_data.append(str(owner[0]))
+
 		return cleaned_data
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1511,7 +1518,9 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 
 	if len(groups) > 0:
 		for group in groups:
-			members = get_group_members(group[0], group[1])
+			print group
+			members = get_group_members(group[1], group[0])
+			print members
 	        if logged_in_user in members:
 	            return True
 
@@ -1658,11 +1667,18 @@ def get_all_graphs_for_group(groupOwner, groupId):
 		cur = con.cursor()
 
 		# Get graphs from this group
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from group_to_graph as gg, graph as g where gg.group_owner = ? and gg.group_id =? and gg.graph_id = g.graph_id', (groupOwner, groupId))
+		cur.execute('select graph_id, user_id from group_to_graph where group_owner=? and group_id=?', (groupOwner, groupId))
 
-		data = cur.fetchall()
+		group_graphs = cur.fetchall()
 
-		return data
+		graph_data = []
+		for graph in group_graphs:
+			cur.execute('select graph_id, modified, user_id, public from graph where graph_id = ? and user_id=?', (graph[0], graph[1]))
+			graph_info = cur.fetchone()
+			if graph_info != None:
+				graph_data.append(graph_info)
+
+		return graph_data
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]

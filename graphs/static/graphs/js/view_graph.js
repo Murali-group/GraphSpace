@@ -637,34 +637,6 @@ $(document).ready(function() {
       });
     });
 
-    // PLACEHOLDER UNTIL BUG IS CLARIFIED
-    // $(".public").click(function (e) {
-    //   e.preventDefault();
-
-    //   var paths = document.URL.split('/')
-    //   var publicLayout = $(this).val();
-    //   var userId = $("#loggedIn").text();
-    //   var ownerId = decodeURIComponent(paths[paths.length - 3])
-    //   var gid = decodeURIComponent(paths[paths.length - 2])
-
-    //   $.post('../../../getGroupsForGraph/', {
-    //     'gid': gid,
-    //     'owner': ownerId,
-    //   }, function (data) {
-    //     var group_options = "";
-    //     if (data['Groups'].length > 0) {
-    //       for (var i = 0; i < data['Groups'].length; i++) {
-    //         group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Groups'][i] + '">' + data['Groups'][i] + '</label></li>';
-    //       }
-    //       group_options += '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="public">Make public</label></li>';
-    //     } else {
-    //       group_options = '<li class="list-group-item" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="public">Make public</label></li>';
-    //     }
-    //     $(".checked-list-box").html(group_options);
-    //   });
-
-    // });
-
     $("#share_graph").click(function (e) {
       e.preventDefault();
 
@@ -682,9 +654,17 @@ $(document).ready(function() {
         if (data['Group_Information'].length > 0) {
           for (var i = 0; i < data['Group_Information'].length; i++) {
             if (data['Group_Information'][i]['graph_shared'] == true) {
-              group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              } else {
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              }
             } else {
-              group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              } else {
+                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              }
             }
           }
         } else {
