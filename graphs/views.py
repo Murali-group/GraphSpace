@@ -1014,12 +1014,14 @@ def getGroupsWithGraph(request):
 
         {"loggedIn": [current user], "owner": < Owner of graph >, "gid": "Id of graph"}
 
-        :return JSON: {"Message": <message>}
+        :return JSON: {"Groups":[Groups]}
     '''
     if request.method == 'POST':
-        # result = db.
-        return HttpResponse(json.dumps({"Message": "result"}), content_type="application/json")
-
+        result = db.get_all_groups_for_this_graph(request.POST['gid'], request.POST['owner'])
+        print result
+        return HttpResponse(json.dumps({"Groups": result}), content_type="application/json")
+    else:
+        return HttpResponse("NONE")
 
 ##### END VIEWS #####
 

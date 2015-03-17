@@ -620,28 +620,41 @@ $(document).ready(function() {
     $(".public").click(function (e) {
       e.preventDefault();
 
-      // var paths = document.URL.split('/')
-      // var publicLayout = $(this).val();
-      // var userId = $("#loggedIn").text();
-      // var ownerId = decodeURIComponent(paths[paths.length - 3])
-      // var gid = decodeURIComponent(paths[paths.length - 2])
+      var paths = document.URL.split('/')
+      var publicLayout = $(this).val();
+      var userId = $("#loggedIn").text();
+      var ownerId = decodeURIComponent(paths[paths.length - 3])
+      var gid = decodeURIComponent(paths[paths.length - 2])
 
-      // $.post("../../../getGroupsWithGraph/", {
-      //   "gid": gid,
-      //   "owner": ownerId,
-      //   "loggedIn": userId
-      // }, function (data) {
-      //   console.log(data);
-      // });
-
-      $.post('../../../makeLayoutPublic/', {
-        'gid': gid,
-        'owner': ownerId,
-        'layout': publicLayout,
-        'user_id': userId
+      $.post("../../../getGroupsWithGraph/", {
+        "layout": publicLayout,
+        "loggedIn": userId,
+        "gid": gid,
+        "owner": ownerId
       }, function (data) {
-        window.location.reload();
+        var layout_options = "";
+        if (data['Groups'].length > 0) {
+          for (var i = 0; i < data['Groups'].length; i++) {
+            layout_options += '<li class="list-group-item layouts" style="font-size: 15px;"><label>' + data['Groups'][i][0] + " owned by: " + data['Groups'][i][1] + '</label></li>';
+          }
+        } else {
+          layout_options += "You are not part of any groups"
+        }
+
+        $(".checked-list-box").html(layout_options);
+
       });
+
+
+
+      // $.post('../../../makeLayoutPublic/', {
+      //   'gid': gid,
+      //   'owner': ownerId,
+      //   'layout': publicLayout,
+      //   'user_id': userId
+      // }, function (data) {
+      //   window.location.reload();
+      // });
     });
 
     $("#share_graph").click(function (e) {

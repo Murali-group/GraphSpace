@@ -2263,7 +2263,7 @@ def get_all_groups_for_this_graph(uid, graph):
 			
 			return cleaned_graphs
 		else:
-			return Nonef
+			return None
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -2272,6 +2272,22 @@ def get_all_groups_for_this_graph(uid, graph):
 	finally:
 		if con:
 			con.close()
+
+def is_layout_shared(layoutId, layoutOwner, uid, graph):
+	graph_groups = get_all_groups_for_this_graph(uid, graph)
+	user_groups = get_groups_of_user(layoutOwner) + get_all_groups_with_member(layoutOwner)
+
+	layout_groups = []
+
+	for graph in graph_groups:
+		if graph in user_groups:
+			layout_groups.append(graph)
+
+	print layout_groups
+
+	if groups != None:
+		for group in groups:
+			cur.execute('select ')
 
 def emailExists(email):
 	'''
