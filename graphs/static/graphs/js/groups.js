@@ -1,5 +1,8 @@
 $(document).ready(function() {
 
+	/**
+	* When clicked, it creates a group through the UI.
+	*/
 	$("#create_group").click(function(e) {
 		e.preventDefault();
 
@@ -11,12 +14,14 @@ $(document).ready(function() {
 
 		var relURL = "";
 
+		//URL to post to
 		if (location.pathname.split('/').length == 4) {
 			relURL = '../../add/' + groupName + '/'
 		} else {
 			relURL = '../add/' + groupName + '/'
 		}
 
+		//POST REQUEST to create a group through UI
 		$.post(relURL, {
 			"groupname": groupName,
 			"username": $("#username").text()
@@ -31,6 +36,10 @@ $(document).ready(function() {
 		});
 	});
 
+
+	/**
+	* When clicked, it deletes a group through the UI.
+	*/
 	$(".delete").click(function (e) {
 		var groupInfo = $(this).attr("id").split('concat_val_buffer');
 		var groupOwner = groupInfo[1];
@@ -49,10 +58,14 @@ $(document).ready(function() {
 		});
 	});
 
+	/**
+	* When clicked, it removes a member from the group through the UI.
+	*/
 	$(".remove").click(function (e) {
 		var groupInfo = $(this).attr("id").split('concat_val_buffer');
 		var groupOwner = groupInfo[1];
 		var groupName = groupInfo[0];
+		//username is name of user to remove from group
 		$.post('../../unsubscribe/group/', {
 			"groupOwner": groupOwner,
 			"groupName": groupName,

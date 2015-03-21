@@ -4,7 +4,7 @@ body {
     background-color: white;
 }
 /*css for parent div element*/ 
-.csweb_container {
+.csjs_container {
     /* the containser should occupy the entire page */
     height: 100%;
     width: 100%;
@@ -13,7 +13,7 @@ body {
 }
 
 /* for cytoscape web component within csweb_container */
-.csweb {
+.csjs {
     /* the width takes up 75% of the page. */
     width: 75%;
     height: 100%;

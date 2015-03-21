@@ -1,199 +1,3 @@
-//Exports the specified graph to an image
-//Appears in side window 
-function export_graph(graphname) {
-    var png = window.cy.png();
-
-    var download = document.createElement('a');
-    download.href = png;
-    download.download = graphname + ".png";
-    fireEvent(download, 'click')
-}
-
-//This is needed to launch events in Mozilla browser
-function fireEvent(obj,evt){
-  var fireOnThis = obj;
-  if(document.createEvent ) {
-    var evObj = document.createEvent('MouseEvents');
-    evObj.initEvent( evt, true, false );
-    fireOnThis.dispatchEvent( evObj );
-  } else if( document.createEventObject ) {
-    var evObj = document.createEventObject();
-    fireOnThis.fireEvent( 'on' + evt, evObj );
-  }
-}
-
-//Function to search through graph elements in order to highlight the 
-//appropriate one
-function searchValues(labels) {
-  //split paths
-  var paths = document.URL.split('/')
-
-  //posts to server requesting the id's from the labels
-  //so cytoscape will recognize the correct element
-  $.post("../../../retrieveIDs/", {
-    'values': labels,
-    "gid": decodeURIComponent(paths[paths.length - 2]),
-    "uid": decodeURIComponent(paths[paths.length - 3]) 
-  }, function (data) {
-
-    //Split the labels so we can reference the labels
-    labels = labels.split(',');
-
-    //It selects those nodes that have labels as their ID's
-    ids = JSON.parse(data)['IDS'];
-
-    //For everthing else, we get correct id's from server and proceed to highlight those id's 
-    //by correlating labels to id's
-    for (var j = 0; j < ids.length; j++) {
-      if (ids[j].length > 0) {
-        if (window.cy.$(window.cy.$('[id="' + ids[j] + '"]').selected() == false)) {
-          // Select the specified element and don't allow the user to unselect it until button is clicked again
-          window.cy.$('[id="' + ids[j] + '"]').select();
-          window.cy.$('[id="' + ids[j] + '"]').unselectify();
-          // Append a new button for every search term
-          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
-          $("#search").val("");
-        }
-      }
-    }
-
-    var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-    var layout = getQueryVariable('layout');
-    if (layout) {
-      linkToGraph += '?layout=' + layout;
-    }
-
-    var terms = getHighlightedTerms();
-
-    linkToGraph += getHighlightedTerms();
-
-    $("#url").attr('href', linkToGraph);
-    $("#url").text("Direct Link to Highlighted Elements");
-    $(".test").css("height", $(".test").height + 30);
-  });
-}
-
-function getHighlightedTerms() {
-  // Create a url with all the highlighted terms
-  var highlightedTerms = new Array();
-  var linkToGraph = ""
-  // Go through all of the highlighted terms
-  $(".search").each(function (index) {
-    if (highlightedTerms.indexOf($(this).attr('id')) == -1) {
-      highlightedTerms.push($(this).attr('id'));
-    }
-  });
-
-  for (var i = 0; i < highlightedTerms.length; i++) {
-
-    if (highlightedTerms[i].indexOf('-') > -1) {
-      highlightedTerms[i] = highlightedTerms[i].replace('-', ':');
-    }
-
-    if (i == highlightedTerms.length - 1) {
-      linkToGraph += highlightedTerms[i];
-    } else {
-      linkToGraph += highlightedTerms[i] + ',';
-    }
-  }
-
-  return linkToGraph
-}
-
-
-// Gets the largest K value elements from the graph
-// and only renders those values
-function getLargestK(graph_json) {
-  var edges = graph_json['edges'];
-
-  var largestK = 0;
-  for (var i = 0; i < edges.length; i++) {
-    k_val = parseInt(edges[i]['data']['k']);
-    if (k_val > largestK) {
-      largestK = k_val;
-    }
-  }
-  return largestK;
-}
-
-// Checks to see if color is Hex
-function isHexaColor(sNum){
-  return (typeof sNum === "string") && sNum.length === 7
-         && ! isNaN( parseInt(sNum.substring(1), 16) ) && sNum.substring(0,1) == '#' ;
-}
-
-//Appends # character if string is hex
-function addCharacterToHex(sNum) {
-  if (sNum.length == 6 && ! isNaN( parseInt(sNum, 16) )) {
-    return '#' + sNum;
-  } else {
-    return sNum
-  }
-}
-//Small function to split terms based on the '_' character
-function splitTerms(term) {
-  return term.split("_");
-}
-
-//Gets query variables from the url
-function getQueryVariable(variable)
-{
-       var query = window.location.search.substring(1);
-       var vars = query.split("&");
-       for (var i=0;i<vars.length;i++) {
-               var pair = vars[i].split("=");
-               if(pair[0] == variable){return pair[1];}
-       }
-       return(false);
-}
-
-// Returns all the id's that are not <= k value
-function showOnlyK() {
-  var maxVal = parseInt($("#input_k").val());
-
-  window.cy.elements().show();
-  hideList = window.cy.filter('[k > ' + maxVal+ ']');
-  hideList.hide();
-}
-
-//Gets all nodes and edges up do the max value set
-//and only renders them
-function applyMax(graph_layout) {
-  var maxVal = parseInt($("#input_max").val());
-
-  var newJSON = {
-    "nodes": new Array(),
-    "edges": new Array()
-  };
-
-  // List of node ids that should remain in the graph
-  var nodeNames = Array();
-
-  for (var i = 0; i < graph_json.graph['edges'].length; i++) {
-    var edge_data = graph_json.graph['edges'][i];
-    if (edge_data['data']['k'] <= maxVal) {
-      newJSON['edges'].push(edge_data);
-      nodeNames.push(edge_data['data']['source']);
-      nodeNames.push(edge_data['data']['target']);
-    }
-  }
-
-  for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
-    var node_data = graph_json.graph['nodes'][i];
-    if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-      newJSON['nodes'].push(node_data);
-    }
-  }
-
-  window.cy.load(newJSON);
-}
-
-//Unselects a specified term from graph
-function unselectTerm(term) {
-  window.cy.$('[id="' + term + '"]').selectify();
-  window.cy.$('[id="' + term + '"]').unselect();
-}
-
 /* 
 This function is executed when the page finishes loading.
 Consult the API: http://api.jquery.com/ready/
@@ -287,8 +91,8 @@ $(document).ready(function() {
 
     //Renders the cytoscape element on the page
     //with the given options
-    window.cy = cytoscape( options = {
-      container: document.getElementById('csjs'),
+    var cy = cytoscape({
+      container: $('#csjs')[0],
 
       style: cytoscape.stylesheet()
       .selector('node')
@@ -438,7 +242,7 @@ $(document).ready(function() {
     } // end ready: function()
     });
 
-    window.cy.boxSelectionEnabled(true);
+    cy.boxSelectionEnabled(true);
 
     //setup popup dialog for displaying dialog when nodes/edges
     //are clicked for information.
@@ -835,3 +639,203 @@ $(document).ready(function() {
         }
     });
 });
+
+
+
+
+//Exports the specified graph to an image
+//Appears in side window 
+function export_graph(graphname) {
+    var png = window.cy.png();
+
+    var download = document.createElement('a');
+    download.href = png;
+    download.download = graphname + ".png";
+    fireEvent(download, 'click')
+}
+
+//This is needed to launch events in Mozilla browser
+function fireEvent(obj,evt){
+  var fireOnThis = obj;
+  if(document.createEvent ) {
+    var evObj = document.createEvent('MouseEvents');
+    evObj.initEvent( evt, true, false );
+    fireOnThis.dispatchEvent( evObj );
+  } else if( document.createEventObject ) {
+    var evObj = document.createEventObject();
+    fireOnThis.fireEvent( 'on' + evt, evObj );
+  }
+}
+
+//Function to search through graph elements in order to highlight the 
+//appropriate one
+function searchValues(labels) {
+  //split paths
+  var paths = document.URL.split('/')
+
+  //posts to server requesting the id's from the labels
+  //so cytoscape will recognize the correct element
+  $.post("../../../retrieveIDs/", {
+    'values': labels,
+    "gid": decodeURIComponent(paths[paths.length - 2]),
+    "uid": decodeURIComponent(paths[paths.length - 3]) 
+  }, function (data) {
+
+    //Split the labels so we can reference the labels
+    labels = labels.split(',');
+
+    //It selects those nodes that have labels as their ID's
+    ids = JSON.parse(data)['IDS'];
+
+    //For everthing else, we get correct id's from server and proceed to highlight those id's 
+    //by correlating labels to id's
+    for (var j = 0; j < ids.length; j++) {
+      if (ids[j].length > 0) {
+        if (window.cy.$(window.cy.$('[id="' + ids[j] + '"]').selected() == false)) {
+          // Select the specified element and don't allow the user to unselect it until button is clicked again
+          window.cy.$('[id="' + ids[j] + '"]').select();
+          window.cy.$('[id="' + ids[j] + '"]').unselectify();
+          // Append a new button for every search term
+          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
+          $("#search").val("");
+        }
+      }
+    }
+
+    var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+    var layout = getQueryVariable('layout');
+    if (layout) {
+      linkToGraph += '?layout=' + layout;
+    }
+
+    var terms = getHighlightedTerms();
+
+    linkToGraph += getHighlightedTerms();
+
+    $("#url").attr('href', linkToGraph);
+    $("#url").text("Direct Link to Highlighted Elements");
+    $(".test").css("height", $(".test").height + 30);
+  });
+}
+
+function getHighlightedTerms() {
+  // Create a url with all the highlighted terms
+  var highlightedTerms = new Array();
+  var linkToGraph = ""
+  // Go through all of the highlighted terms
+  $(".search").each(function (index) {
+    if (highlightedTerms.indexOf($(this).attr('id')) == -1) {
+      highlightedTerms.push($(this).attr('id'));
+    }
+  });
+
+  for (var i = 0; i < highlightedTerms.length; i++) {
+
+    if (highlightedTerms[i].indexOf('-') > -1) {
+      highlightedTerms[i] = highlightedTerms[i].replace('-', ':');
+    }
+
+    if (i == highlightedTerms.length - 1) {
+      linkToGraph += highlightedTerms[i];
+    } else {
+      linkToGraph += highlightedTerms[i] + ',';
+    }
+  }
+
+  return linkToGraph
+}
+
+
+// Gets the largest K value elements from the graph
+// and only renders those values
+function getLargestK(graph_json) {
+  var edges = graph_json['edges'];
+
+  var largestK = 0;
+  for (var i = 0; i < edges.length; i++) {
+    k_val = parseInt(edges[i]['data']['k']);
+    if (k_val > largestK) {
+      largestK = k_val;
+    }
+  }
+  return largestK;
+}
+
+// Checks to see if color is Hex
+function isHexaColor(sNum){
+  return (typeof sNum === "string") && sNum.length === 7
+         && ! isNaN( parseInt(sNum.substring(1), 16) ) && sNum.substring(0,1) == '#' ;
+}
+
+//Appends # character if string is hex
+function addCharacterToHex(sNum) {
+  if (sNum.length == 6 && ! isNaN( parseInt(sNum, 16) )) {
+    return '#' + sNum;
+  } else {
+    return sNum
+  }
+}
+//Small function to split terms based on the '_' character
+function splitTerms(term) {
+  return term.split("_");
+}
+
+//Gets query variables from the url
+function getQueryVariable(variable)
+{
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
+}
+
+// Returns all the id's that are not <= k value
+function showOnlyK() {
+  var maxVal = parseInt($("#input_k").val());
+
+  window.cy.elements().show();
+  hideList = window.cy.filter('[k > ' + maxVal+ ']');
+  hideList.hide();
+}
+
+//Gets all nodes and edges up do the max value set
+//and only renders them
+function applyMax(graph_layout) {
+  var maxVal = parseInt($("#input_max").val());
+
+  var newJSON = {
+    "nodes": new Array(),
+    "edges": new Array()
+  };
+
+  // List of node ids that should remain in the graph
+  var nodeNames = Array();
+
+  for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+    var edge_data = graph_json.graph['edges'][i];
+    if (edge_data['data']['k'] <= maxVal) {
+      newJSON['edges'].push(edge_data);
+      nodeNames.push(edge_data['data']['source']);
+      nodeNames.push(edge_data['data']['target']);
+    }
+  }
+
+  for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+    var node_data = graph_json.graph['nodes'][i];
+    if (nodeNames.indexOf(node_data['data']['id']) > -1) {
+      newJSON['nodes'].push(node_data);
+    }
+  }
+
+  window.cy.load(newJSON);
+}
+
+//Unselects a specified term from graph
+function unselectTerm(term) {
+  window.cy.$('[id="' + term + '"]').selectify();
+  window.cy.$('[id="' + term + '"]').unselect();
+}
+

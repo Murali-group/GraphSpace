@@ -3,6 +3,10 @@
  */
 $(document).ready(function() {
 
+	/**
+	* Upon clicking this button, POST request is sent to
+	* register the current user with GS.
+	*/
 	$("#register").click(function (e) {
 		e.preventDefault();
 		var user_id = $("#user_id").val();
@@ -29,11 +33,13 @@ $(document).ready(function() {
 			return;
 		}
 
+		//POST Payload
 		var submitRequest = {
 			"user_id": user_id,
 			"password": password
 		};
 
+		//POST Request to register user
 		$.post("/register/", submitRequest, function (data) {
 			if (data.Error) {
 				alert(data.Error);
@@ -44,6 +50,10 @@ $(document).ready(function() {
 		});
 	});
 
+	/**
+	* Upon clicking, the user makes a 
+	* POST request to sign-in to GS.
+	*/
 	$("#signin").click(function (e) {
 		e.preventDefault();
 		var email = $("#email").val();
@@ -59,11 +69,13 @@ $(document).ready(function() {
 			return;
 		}
 
+		//POST Payload
 		var loginInfo = {
 			"user_id": email,
 			"pw": pw
 		};
 
+		//POST Request to log in user
 		$.post("/index/", loginInfo, function (data) {
 			if (data.Error) {
 				alert(data.Error);
@@ -73,6 +85,10 @@ $(document).ready(function() {
 		});
 	});
 
+	/**
+	* Upon clicking, email is sent to user
+	* containing information about resetting password.
+	*/
 	$("#forgot_send").click(function (e) {
 		e.preventDefault();
 
@@ -83,10 +99,12 @@ $(document).ready(function() {
 			return;
 		}
 
+		//POST Payload
 		var forgotRequest = {
 			"forgot_email": email
 		};
 
+		//POST Request to send email to user
 		$.post("/forgot/", forgotRequest, function (data) {
 
 			if (data.Error) {
@@ -98,6 +116,10 @@ $(document).ready(function() {
 		});
 	});
 
+	/**
+	* Upon clicking, it saves the new password
+	* for the current user.
+	*/
 	$("#reset_pw").click(function (e) {
 		e.preventDefault();
 
@@ -112,6 +134,7 @@ $(document).ready(function() {
 				"pass": pass
 			};
 
+			//POST Request to send reset password
 			$.post("/reset/", newPass, function (data) {
 				if (data.Error) {
 					alert(data.Error);
@@ -123,49 +146,38 @@ $(document).ready(function() {
 		}
 	});
 
-	$("#add_graph").click(function() {
-		window.location.href = "/graphs/create";
-	});
+	/*
+		--- TO DELETE ---
 
-	$("input[name='shared']").on("change", function () {
-	    if (this.value === 'private') {
-	    	$("#shared_groups").css('display', 'block');
-	    } else {
-	    	$("#shared_groups").css('display', 'none');
-	    }
-	});
+		DELETE THIS CODE AT CODE INSPECTION 
+		$("#add_graph").click(function() {
+			window.location.href = "/graphs/create";
+		});
 
-	$("#submit_graph").click(function(e) {
-		e.preventDefault();
-		var graphName = $("#graph_name").val();
-		var tags = $("#tags").val();
-		var priv = $("#shared")
-		var pub = $("#shared2");
-		var groups = $("#groups").val();
+		$("input[name='shared']").on("change", function () {
+		    if (this.value === 'private') {
+		    	$("#shared_groups").css('display', 'block');
+		    } else {
+		    	$("#shared_groups").css('display', 'none');
+		    }
+		});
 
-		if (!graphName || graphName.length == 0) {
-			alert("Please enter a name for the graph!");
-			return;
-		}
+		$("#submit_graph").click(function(e) {
+			e.preventDefault();
+			var graphName = $("#graph_name").val();
+			var tags = $("#tags").val();
+			var priv = $("#shared")
+			var pub = $("#shared2");
+			var groups = $("#groups").val();
 
-		// var newGraph = {
-		// 	"graph_name": graphName,
-		// 	"tags": tags,
-		// 	"graph_desc": "testing",
-		// 	"graph_json": gra
+			if (!graphName || graphName.length == 0) {
+				alert("Please enter a name for the graph!");
+				return;
+			}
 
-		// };
+			$("#add_graph_form").submit();
+		});
 
-		// $.post("/graphs/create", newGraph, function (data) {
-		// 	if (data.Error) {
-		// 		alert(data.Error);
-		// 		return;
-		// 	} else {
-		// 		window.href.location = "/index/";
-		// 	}
-		// });
-
-		$("#add_graph_form").submit();
-	});
-
+		--- END DELETE ---
+	*/
 });

@@ -2,6 +2,9 @@ $(document).ready(function() {
 
 	var URL_PATH = $("#url").text();
 
+	/**
+	* When clicked, it resets the password for given user.
+	*/
 	$("#reset_pw").click(function (e) {
 		e.preventDefault();
 

@@ -18,6 +18,10 @@ $(document).ready(function() {
       collapsible: true,
    });
 
+   /**
+   * When clicked, it replaces the description of the current
+   * group with the description user entered through the UI
+   */
    $("#change_desc").click(function(e) {
     e.preventDefault();
 
@@ -29,6 +33,7 @@ $(document).ready(function() {
 
     var groupOwner = $("#groupOwner").text();
 
+    //POST REQUEST to change description of group
     $.post("../../../changeDescription/", {
         "description": desc,
         "username": username,
@@ -43,6 +48,10 @@ $(document).ready(function() {
       });
    });
 
+   /**
+   * When clicked, it adds a member (current GS user)
+   * to current group.  MUST BE GROUP OWNER TO DO THIS.
+   */
    $("#add_member").click(function(e) {
     e.preventDefault();
 
@@ -56,6 +65,7 @@ $(document).ready(function() {
       return alert("Please enter email of user to add to this group!");
     }
 
+    //POST REQUEST to add member to group
     $.post("../../../addMember/", {
         "member": member,
         "groupId": groupId,
@@ -69,6 +79,10 @@ $(document).ready(function() {
       });
    });
 
+   /**
+   * When clicked, it removes a member (current GS user)
+   * from current group.  MUST BE GROUP OWNER TO DO THIS.
+   */
    $(".removeMember").click(function(e) {
     e.preventDefault();
 
@@ -77,7 +91,8 @@ $(document).ready(function() {
     var groupId= $("#groupId").text();
 
     var groupOwner = $("#groupOwner").text();
-
+    
+    //POST REQUEST to remove member from group
     $.post("../../../removeMember/", {
         "member": member,
         "groupId": groupId,
