@@ -6,89 +6,6 @@ $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
 
-    //The following code retrieves the specified layout
-    //of a graph to be displayed.
-    //Some of them are pre-defined. Check Cytoscapejs.org
-    var graph_layout = {
-      name: 'arbor',
-      padding: 10,
-      fit:true
-    };
-
-    var query = getQueryVariable("layout");
-    if (query == "default_breadthfirst") {
-      graph_layout = {
-        name: "breadthfirst",
-        padding: 10,
-        fit: true
-      }
-    } else if (query == "default_concentric") {
-       graph_layout = {
-        name: "concentric",
-        fit: true,
-        padding: 10
-      }
-    } else if (query == "default_circle") {
-       graph_layout = {
-        name: "circle",
-        padding: 10,
-        fit: true
-      }
-    } else if (query == "default_dagre") {
-       graph_layout = {
-        name: "dagre",
-        fit: true,
-        padding: 10
-      }
-    } else if (query == 'default_cose') {
-      graph_layout = {
-        name: "cose",
-        padding: 10,
-        fit: true,
-        idealEdgeLength: 250,
-      }
-    } else if (query == "default_cola") {
-      graph_layout = {
-        name: "cola",        
-        fit: true,
-        nodeSpacing: function( node ){ return 10; },
-        padding: 10
-      }
-    }  else if (query == "default_arbor") {
-      graph_layout = {
-        name: "arbor",
-        padding: 30,
-        fit: true
-      }
-    }  else if (query == "default_springy") {
-      graph_layout = {
-        name: 'springy',
-
-        animate: true, // whether to show the layout as it's running
-        maxSimulationTime: 4000, // max length in ms to run the layout
-        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-        fit: true, // whether to fit the viewport to the graph
-        padding: 30, // padding on fit
-        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-        random: false, // whether to use random initial positions
-        infinite: false, // overrides all other options for a forces-all-the-time mode
-        ready: undefined, // callback on layoutready
-        stop: undefined, // callback on layoutstop
-
-        // springy forces
-        stiffness: 400,
-        repulsion: 400,
-        damping: 0.5
-      }
-    } else {
-      if (layout != null) {
-        graph_layout = {
-          name: 'preset',
-          positions: JSON.parse(layout.json)
-        };
-      }
-    }
-
     //Renders the cytoscape element on the page
     //with the given options
     var cy = cytoscape({
@@ -131,7 +48,7 @@ $(document).ready(function() {
         }),
     
     // default layout set to be concentric
-    layout: graph_layout,
+    layout: getLayoutFromQuery(),
     
     // draw graph, handle events etc.
     ready: function(){
@@ -824,5 +741,108 @@ function applyMax(graph_layout) {
 function unselectTerm(term) {
   window.cy.$('[id="' + term + '"]').selectify();
   window.cy.$('[id="' + term + '"]').unselect();
+}
+
+function getLayoutFromQuery() {
+
+    //The following code retrieves the specified layout
+    //of a graph to be displayed.
+    //Some of them are pre-defined. Check Cytoscapejs.org
+    var graph_layout = {
+      name: 'arbor',
+      padding: 10,
+      fit:true
+    };
+
+    var query = getQueryVariable("layout");
+    if (query == "default_breadthfirst") {
+      graph_layout = {
+        name: "breadthfirst",
+        padding: 10,
+        fit: true,
+        avoidOverlap: true,
+        animate: false
+      }
+    } else if (query == "default_concentric") {
+       graph_layout = {
+        name: "concentric",
+        fit: true,
+        padding: 10,
+        avoidOverlap: true,
+        animate: false
+      }
+    } else if (query == "default_circle") {
+       graph_layout = {
+        name: "circle",
+        padding: 10,
+        fit: true,
+        avoidOverlap: true,
+        animate: false
+      }
+    } else if (query == "default_dagre") {
+       graph_layout = {
+        name: "dagre",
+        fit: true,
+        padding: 10,
+        animate: false,
+        nodeSep: 50,
+        edgeSep: 50
+      }
+    } else if (query == 'default_cose') {
+      graph_layout = {
+        name: "cose",
+        padding: 10,
+        fit: true,
+        animate: false,
+        nodeOverlap: 30
+      }
+    } else if (query == "default_cola") {
+      graph_layout = {
+        name: "cola",        
+        fit: true,
+        nodeSpacing: function( node ){ return 20; },
+        padding: 10,
+        animate: false,
+        avoidOverlap: true
+      }
+    }  else if (query == "default_arbor") {
+      graph_layout = {
+        name: "arbor",
+        padding: 30,
+        fit: true,
+        animate: true,
+        repulsion: 4500,
+        maxSimulationTime: 2000
+      }
+    }  else if (query == "default_springy") {
+      graph_layout = {
+        name: 'springy',
+
+        animate: true, // whether to show the layout as it's running
+        maxSimulationTime: 4000, // max length in ms to run the layout
+        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+        fit: true, // whether to fit the viewport to the graph
+        padding: 30, // padding on fit
+        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+        random: false, // whether to use random initial positions
+        infinite: false, // overrides all other options for a forces-all-the-time mode
+        ready: undefined, // callback on layoutready
+        stop: undefined, // callback on layoutstop
+
+        // springy forces
+        stiffness: 400,
+        repulsion: 400,
+        damping: 0.5
+      }
+    } else {
+      if (layout != null) {
+        graph_layout = {
+          name: 'preset',
+          positions: JSON.parse(layout.json)
+        };
+      }
+    }
+
+    return graph_layout;
 }
 
