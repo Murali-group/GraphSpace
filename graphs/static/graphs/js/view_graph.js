@@ -64,6 +64,7 @@ $(document).ready(function() {
       // or unrecognized shape, have a default value
       for (var i = 0; i < graph_json['graph']['nodes'].length; i++) {
         var nodeData = graph_json['graph']['nodes'][i]['data'];
+        
         if (nodeData['height'] == undefined) {
           nodeData['height'] = 50
         }
@@ -75,9 +76,16 @@ $(document).ready(function() {
         //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
         var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
 
-        if (acceptedShapes.indexOf(nodeData['shape']) == -1) {
-          nodeData['shape'] = 'ellipse';
+        if (acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+
+          if (nodeData['shape'].toLowerCase() == 'diamond') {
+            nodeData['shape'] = 'octagon';
+          } else {
+            nodeData['shape'] = 'ellipse';
+          }
         }
+
+
 
         if (nodeData['color'] == undefined) {
           nodeData['color'] = "yellow";

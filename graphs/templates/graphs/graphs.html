@@ -38,6 +38,7 @@
                             {% url 'graphs' as the_url %}
                             {% with the_url|add:"?search="|add:search_word as final_url %}
                                 {% if view_type == 'my graphs' %}
+
                                 <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
                                 {% else %}
                                     <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">My Graphs<br>{{ my_graphs }}</button></a>
@@ -213,7 +214,7 @@
                 </tr>
                 {% for g in current_page %}
                 <tr> 
-                    {% with "{{url}}"|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                    {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
                         <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
                     {%endwith %}
                     <td><div class="test">
@@ -247,7 +248,7 @@
                     <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
                     <td><div class="test">
                         {% for tag in g.1 %}
-                             {% with "{{url}}"|add:"graphs/"|add:"?tags="|add:tag as url %}
+                             {% with url|add:"graphs/"|add:"?tags="|add:tag as url %}
                                  <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
                             {% endwith %}
 
