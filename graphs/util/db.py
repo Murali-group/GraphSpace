@@ -994,12 +994,11 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	actual_graph_names = []
 
 	if view_type == 'my graphs':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.user_id= ?', ('%' + search_word + '%', uid))
 	elif view_type == 'shared':
-		# TOO SLOW FIX
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id= ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('%' + search_word + '%', uid))
 	else:
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.public= 1', ('%' + search_word + '%', ))
 
 	graph_list = cur.fetchall()
 	# Get all unique graphs

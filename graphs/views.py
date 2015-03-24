@@ -269,7 +269,6 @@ def _graphs_page(request, view_type):
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
             context.update(pager_context)
-            print context['current_page'][0]
             for i in xrange(len(context['current_page'].object_list)):
                 graph = list(context['current_page'][i])
                 if request.GET.get('search'):
