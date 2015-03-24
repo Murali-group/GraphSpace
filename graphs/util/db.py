@@ -1497,6 +1497,7 @@ def get_group_members(groupOwner, groupId):
 		for owner in data:
 			cleaned_data.append(str(owner[0]))
 
+		print cleaned_data
 		return cleaned_data
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -2482,7 +2483,15 @@ def makeLayoutPublic(uid, gid, public_layout, loggedIn):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+		cur.execute('select public from layout where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+		data = cur.fetchone()
+
+		isPublic = data[0]
+
+		if isPublic == 0:
+			cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+		else:
+			cur.execute('update layout set public = 0 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
 		con.commit()
 
 	except lite.Error, e:
@@ -2637,6 +2646,7 @@ def get_all_layouts_for_graph(uid, gid):
 def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 	'''
 		Shares a layout with all the groups that owner of a graph is a part of.
+		
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param layoutId: LayoutID of the graph
@@ -2646,8 +2656,17 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
-
 		
+		cur.execute('select unlisted from layout where owner_id=? and graph_id = ? and layout_name = ? ', (owner, gid, layoutId))
+		data = cur.fetchone()
+
+		isListed = data[0]
+
+		if isListed == 0:
+			cur.execute('update layout set unlisted = 1 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
+		else:
+			cur.execute('update layout set unlisted = 0 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
+		con.commit()
 		
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
@@ -2701,18 +2720,47 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 		:param loggedIn: Current user of graphspace
 		:return Layouts: [shared layouts of graph]
 	'''
-	# Get all shared groups for this graph
-	all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
-	shared_graphs = []
-	# Get all members of the shared groups
-	for group in all_groups_for_graph:
-		members = get_group_members(group[0], group[1])
-		if loggedIn in members:
-			for member in members:
-				if loggedIn != member:
-					shared_graphs += get_my_layouts_for_graph(uid, gid, member)
+	# # Get all shared groups for this graph
+	# all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+	# shared_graphs = []
+	# # Get all members of the shared groups
+	# for group in all_groups_for_graph:
+	# 	members = get_group_members(group[0], group[1])
+	# 	if loggedIn in members:
+	# 		for member in members:
+	# 			if loggedIn != member:
+	# 				shared_graphs += get_my_layouts_for_graph(uid, gid, member)
 
-	return shared_graphs
+	# return shared_graphs
+
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+
+		for group in all_groups_for_graph:
+			members = get_group_members(group[1], group[0])
+			if loggedIn in members:
+				cur.execute("select layout_name from layout where owner_id =? and graph_id=? and unlisted=1", (uid, gid))
+				data = cur.fetchall()
+
+				if data == None:
+					return []
+
+				cleaned_data = []
+				for layouts in data:
+					layouts = str(layouts[0])
+					cleaned_data.append(layouts)
+
+				return cleaned_data
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return []
+	finally:
+		if con:
+			con.close()
 
 # def share_layout_with_group(layoutId, layoutOwner, graphId, groupId, groupOwner):
 

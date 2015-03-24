@@ -1031,9 +1031,13 @@ def shareLayoutWithGroups(request):
     if request.method == 'POST':
         owner = request.POST['owner']
         gid = request.POST['gid']
+        uid = request.POST['uid']
         layoutId = request.POST['layoutId']
 
-        db.share_layout_with_all_groups_of_user(owner, gid, layoutId)
+        if db.is_public_graph(owner, gid):
+            db.makeLayoutPublic(owner, gid, layoutId, uid)
+        else:
+            db.share_layout_with_all_groups_of_user(owner, gid, layoutId)
         ## SHELVE THIS FOR NOW (ALLOW USER TO CHOOSE WHICH GROUPS TO SHARE LAYOUT WITH)
         # groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
         # groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')

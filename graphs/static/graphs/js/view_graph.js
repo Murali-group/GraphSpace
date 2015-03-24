@@ -362,14 +362,23 @@ $(document).ready(function() {
       var ownerId = decodeURIComponent(paths[paths.length - 3]);
       var gid = decodeURIComponent(paths[paths.length - 2]);
 
-      $.post('../../../makeLayoutPublic/', {
+      $.post('../../../shareLayoutWithGroups/', {
+        'layoutId': $(this).val(),
         'gid': gid,
         'owner': ownerId,
-        'layout': publicLayout,
-        'user_id': userId
+        'uid': userId
       }, function (data) {
         window.location.reload();
       });
+
+      // $.post('../../../makeLayoutPublic/', {
+      //   'gid': gid,
+      //   'owner': ownerId,
+      //   'layout': publicLayout,
+      //   'user_id': userId
+      // }, function (data) {
+      //   window.location.reload();
+      // });
 
       // $.post("../../../getGroupsWithLayout/", {
       //   "layout": publicLayout,
