@@ -914,13 +914,12 @@ def find_node(uid, gid, node_to_find):
 		cur = con.cursor()
 
 		# Get the id of the node (could be id or a label) and return it if they exist
-		cur.execute('select node_id from node where node_id LIKE ? and user_id = ? and graph_id = ?', ('%' + node_to_find + '%', uid, gid))
+		cur.execute('select node_id from virtual_node_table where node_id MATCH ? and user_id = ? and graph_id = ? limit 1', ('*' + node_to_find + '*', uid, gid))
 		id_data = cur.fetchall()
 		if id_data != None and len(id_data) > 0:
-			print id_data
 			return id_data[0][0]
 		else:
-			cur.execute('select node_id from node where label LIKE ? and user_id = ? and graph_id = ?', ('%' + node_to_find + '%', uid, gid))
+			cur.execute('select node_id from virtual_node_table where label MATCH ? and user_id = ? and graph_id = ? limit 1', ('*' + node_to_find + '*', uid, gid))
 			label_data = cur.fetchall()
 			print label_data
 			if label_data != None and len(label_data) > 0:

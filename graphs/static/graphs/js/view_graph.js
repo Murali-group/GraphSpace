@@ -636,8 +636,15 @@ function searchValues(labels) {
 
         if (window.cy.$('[id="' + ids[j] + '"]').selected() == false) {
           // Select the specified element and don't allow the user to unselect it until button is clicked again
-          window.cy.$('[id="' + ids[j] + '"]').select();
-          window.cy.$('[id="' + ids[j] + '"]').unselectify();
+          // window.cy.$('[id="' + ids[j] + '"]').data('color', 'red');
+          if (window.cy.$('[id="' + ids[j] + '"]').isEdge()) {
+            window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
+          } else {
+            window.cy.$('[id="' + ids[j] + '"]').css({'color':'red', 'border-width': 10, 'border-color': 'blue'});
+          }
+
+          // window.cy.$('[id="' + ids[j] + '"]').select();
+          // window.cy.$('[id="' + ids[j] + '"]').unselectify();
           // Append a new button for every search term
           $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
           $("#search").val("");
@@ -778,8 +785,8 @@ function applyMax(graph_layout) {
 
 //Unselects a specified term from graph
 function unselectTerm(term) {
-  window.cy.$('[id="' + term + '"]').selectify();
-  window.cy.$('[id="' + term + '"]').unselect();
+  window.cy.$('[id="' + term + '"]').removeCss();
+  // window.cy.$('[id="' + term + '"]').unselect();
 }
 
 function getLayoutFromQuery() {
