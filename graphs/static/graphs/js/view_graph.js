@@ -611,7 +611,9 @@ function fireEvent(obj,evt){
 //appropriate one
 function searchValues(labels) {
   //split paths
-  var paths = document.URL.split('/')
+  var paths = document.URL.split('/');
+
+  var highlightedTerms = Array();
 
   //posts to server requesting the id's from the labels
   //so cytoscape will recognize the correct element
@@ -627,8 +629,6 @@ function searchValues(labels) {
     //It selects those nodes that have labels as their ID's
     ids = JSON.parse(data)['IDS'];
 
-    console.log(ids);
-
     //For everthing else, we get correct id's from server and proceed to highlight those id's 
     //by correlating labels to id's
     for (var j = 0; j < ids.length; j++) {
@@ -636,15 +636,13 @@ function searchValues(labels) {
 
         if (window.cy.$('[id="' + ids[j] + '"]').selected() == false) {
           // Select the specified element and don't allow the user to unselect it until button is clicked again
-          // window.cy.$('[id="' + ids[j] + '"]').data('color', 'red');
           if (window.cy.$('[id="' + ids[j] + '"]').isEdge()) {
             window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
+            highlightedTerms.push(ids[j]);
           } else {
             window.cy.$('[id="' + ids[j] + '"]').css({'color':'red', 'border-width': 10, 'border-color': 'blue'});
+            highlightedTerms.push(ids[j])
           }
-
-          // window.cy.$('[id="' + ids[j] + '"]').select();
-          // window.cy.$('[id="' + ids[j] + '"]').unselectify();
           // Append a new button for every search term
           $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
           $("#search").val("");
@@ -654,13 +652,35 @@ function searchValues(labels) {
 
     var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
     var layout = getQueryVariable('layout');
+    var search = getQueryVariable('search');
     if (layout) {
       linkToGraph += '?layout=' + layout;
+
+      if (search) {
+        linkToGraph += '&search=';
+      }
+    } else if (search) {
+      linkToGraph += '?search=' + search;
+    } else {
+      linkToGraph += '?search=';
     }
 
-    var terms = getHighlightedTerms();
 
-    linkToGraph += getHighlightedTerms();
+
+    for (var z = 0; z < highlightedTerms.length; z++) {
+      if (highlightedTerms[z].indexOf('-') > -1) {
+        highlightedTerms[z] = highlightedTerms[z].replace('-', ':');
+      }
+      if (search) {
+        linkToGraph += ',' + highlightedTerms[z];
+      } else {
+        if (z == highlightedTerms.length - 1) {
+          linkToGraph += highlightedTerms[z];
+        } else {
+          linkToGraph += highlightedTerms[z] + ',';
+        }
+      }
+    }
 
     $("#url").attr('href', linkToGraph);
     $("#url").text("Direct Link to Highlighted Elements");

@@ -921,7 +921,7 @@ def find_node(uid, gid, node_to_find):
 		else:
 			cur.execute('select node_id from virtual_node_table where label MATCH ? and user_id = ? and graph_id = ? limit 1', ('*' + node_to_find + '*', uid, gid))
 			label_data = cur.fetchall()
-			print label_data
+
 			if label_data != None and len(label_data) > 0:
 				return label_data[0][0]
 			else:
