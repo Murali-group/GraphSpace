@@ -950,7 +950,6 @@ def find_nodes(uid, search_word, view_type, cur):
 	if view_type == 'my graphs':
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.label MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('*' + search_word + '*', uid))
 		node_labels = cur.fetchall()
-		print node_labels
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
 
 		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.node_id MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('*' + search_word + '*', uid))
@@ -997,11 +996,11 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	actual_graph_names = []
 
 	if view_type == 'my graphs':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g where g.graph_id MATCH ? and g.user_id= ?', ('*' + search_word + '*', uid))
 	elif view_type == 'shared':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id = ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', (search_word, uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g, group_to_graph as gg, group_to_user as gu where g.graph_id MATCH ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('*' + search_word + '*', uid))
 	else:
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g where g.graph_id MATCH ? and g.public= 1', ('*' + search_word + '*', ))
 
 	graph_list = cur.fetchall()
 	# Get all unique graphs
