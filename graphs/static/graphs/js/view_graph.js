@@ -92,6 +92,8 @@ $(document).ready(function() {
           } else {
             nodeData['shape'] = 'ellipse';
           }
+        } else {
+          nodeData['shape'] = nodeData['shape'].toLowerCase();
         }
 
         if (nodeData['color'] == undefined) {
@@ -613,6 +615,8 @@ function searchValues(labels) {
 
     //It selects those nodes that have labels as their ID's
     ids = JSON.parse(data)['IDS'];
+
+    console.log(ids);
 
     //For everthing else, we get correct id's from server and proceed to highlight those id's 
     //by correlating labels to id's
