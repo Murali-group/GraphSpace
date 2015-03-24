@@ -653,6 +653,7 @@ function searchValues(labels) {
     var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
     var layout = getQueryVariable('layout');
     var search = getQueryVariable('search');
+    var displayLink = false;
     if (layout) {
       linkToGraph += '?layout=' + layout;
 
@@ -665,7 +666,11 @@ function searchValues(labels) {
       linkToGraph += '?search=';
     }
 
-
+    if (highlightedTerms.length > 0) {
+      displayLink = true;
+    } else {
+      return alert("No elements match your search criteria!");
+    }
 
     for (var z = 0; z < highlightedTerms.length; z++) {
       if (highlightedTerms[z].indexOf('-') > -1) {
@@ -682,9 +687,11 @@ function searchValues(labels) {
       }
     }
 
-    $("#url").attr('href', linkToGraph);
-    $("#url").text("Direct Link to Highlighted Elements");
-    $(".test").css("height", $(".test").height + 30);
+    if (displayLink) {
+      $("#url").attr('href', linkToGraph);
+      $("#url").text("Direct Link to Highlighted Elements");
+      $(".test").css("height", $(".test").height + 30);
+    }
   });
 }
 
