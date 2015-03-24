@@ -426,15 +426,17 @@ $(document).ready(function() {
             if (data['Group_Information'][i]['graph_shared'] == true) {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              } else {
-                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              }
+              } 
+              // else {
+              //   group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              // }
             } else {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              } else {
-                group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              }
+              } 
+              // else {
+              //   group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
+              // }
             }
           }
         } else {
@@ -457,32 +459,32 @@ $(document).ready(function() {
       var ownerId = decodeURIComponent(paths[paths.length - 3])
       var gid = decodeURIComponent(paths[paths.length - 2])
 
-      var all_groups = {}
-      var groups_to_share_with = [];
-      var groups_not_to_share_with = [];
+      // var all_groups = {}
+      // var groups_to_share_with = [];
+      // var groups_not_to_share_with = [];
 
-      $(".layout_val").each(function() {
-          all_groups[$(this).val()] = $(this).is(":checked");
-      });
+      // $(".layout_val").each(function() {
+      //     all_groups[$(this).val()] = $(this).is(":checked");
+      // });
 
 
-      for (var key in all_groups) {
-        if (all_groups[key] == true) {
-          groups_to_share_with.push(key);
-        } else {
-          groups_not_to_share_with.push(key);
-        }
-      }
+      // for (var key in all_groups) {
+      //   if (all_groups[key] == true) {
+      //     groups_to_share_with.push(key);
+      //   } else {
+      //     groups_not_to_share_with.push(key);
+      //   }
+      // }
 
-      console.log(groups_to_share_with);
-      console.log(groups_not_to_share_with);
+      // console.log(groups_to_share_with);
+      // console.log(groups_not_to_share_with);
 
       $.post('../../../shareLayoutWithGroups/', {
         'layoutId': $("#layoutId").text(),
         'gid': gid,
-        'owner': ownerId,
-        'groups_to_share_with' : groups_to_share_with,
-        'groups_not_to_share_with': groups_not_to_share_with
+        'owner': ownerId
+        // 'groups_to_share_with' : groups_to_share_with,
+        // 'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
         console.log(data);
         // window.location.reload();

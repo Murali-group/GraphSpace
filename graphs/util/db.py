@@ -948,28 +948,29 @@ def find_nodes(uid, search_word, view_type, cur):
 	intial_graph_with_nodes = []
 
 	if view_type == 'my graphs':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.label LIKE ? and n.graph_id = g.graph_id and n.user_id = ?', ('%' + search_word + '%', uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.label MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('*' + search_word + '*', uid))
 		node_labels = cur.fetchall()
+		print node_labels
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.node_id LIKE ? and n.graph_id = g.graph_id and n.user_id = ?', ('%' + search_word + '%', uid))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.node_id MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('*' + search_word + '*', uid))
 		node_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 
 	elif view_type == 'shared':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.label LIKE ?', (uid, '%' + search_word + '%'))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.label MATCH ?', (uid, '*' + search_word + '*'))
 		shared_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.node_id LIKE ?', (uid, '%' + search_word + '%'))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.node_id MATCH ?', (uid,'*' + search_word + '*'))
 		shared_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
 	else:
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.label LIKE ? and n.graph_id = g.graph_id and g.public = 1', ('%' + search_word + '%', ))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.label MATCH ? and n.graph_id = g.graph_id and g.public = 1', ('*' + search_word + '*', ))
 		public_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, graph as g where n.node_id LIKE ? and n.graph_id = g.graph_id and g.public = 1', ('%' + search_word + '%', ))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.node_id MATCH ? and n.graph_id = g.graph_id and g.public = 1', ('*' + search_word + '*', ))
 		public_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
 
@@ -996,11 +997,11 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	actual_graph_names = []
 
 	if view_type == 'my graphs':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.user_id= ?', ('%' + search_word + '%', uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
 	elif view_type == 'shared':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('%' + search_word + '%', uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id = ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', (search_word, uid))
 	else:
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.public= 1', ('%' + search_word + '%', ))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
 
 	graph_list = cur.fetchall()
 	# Get all unique graphs
@@ -1810,6 +1811,7 @@ def remove_user_from_group(username, owner, group):
 		if isOwner != None:
 			isOwner = isOwner[0]
 			cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
+			cur.execute('delete from group_to_graph where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
 			con.commit();
 			return "User removed from group!"
 		else:
@@ -1844,7 +1846,8 @@ def remove_user_through_ui(username, owner, group):
 		if data == None:
 			return "User does not exist!"
 
-		cur.execute('delete from group_to_user where user_id=? and group_id=?', (username, group, ))
+		cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner=?', (username, group, owner))
+		cur.execute('delete from group_to_graph where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
 		con.commit();
 		return None
 
@@ -2623,6 +2626,29 @@ def get_all_layouts_for_graph(uid, gid):
 			cleaned_data.append(graphs)
 
 		return cleaned_data
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return None
+	finally:
+		if con:
+			con.close()
+
+
+def share_layout_with_all_groups_of_user(owner, gid, layoutId):
+	'''
+		Shares a layout with all the groups that owner of a graph is a part of.
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param layoutId: LayoutID of the graph
+	'''
+
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		
+		
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
 		return None

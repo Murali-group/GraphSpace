@@ -825,7 +825,7 @@ def deleteLayout(request):
         loggedIn = request.POST['user_id']
 
         db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-        return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + '/graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
+        return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''
@@ -1029,21 +1029,24 @@ def shareLayoutWithGroups(request):
         :return TBD
     '''
     if request.method == 'POST':
-        print 'testing'
-        print request.POST
         owner = request.POST['owner']
         gid = request.POST['gid']
-        groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
-        groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
         layoutId = request.POST['layoutId']
 
-        for group in groups_to_share_with:
-            groupInfo = group.split("12345__43121__")
-            db.share_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+        db.share_layout_with_all_groups_of_user(owner, gid, layoutId)
+        ## SHELVE THIS FOR NOW (ALLOW USER TO CHOOSE WHICH GROUPS TO SHARE LAYOUT WITH)
+        # groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
+        # groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
+        # layoutId = request.POST['layoutId']
 
-        for group in groups_not_to_share_with:
-            groupInfo = group.split("12345__43121__")
-            db.unshare_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+        # for group in groups_to_share_with:
+        #     groupInfo = group.split("12345__43121__")
+        #     db.share_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+
+        # for group in groups_not_to_share_with:
+        #     groupInfo = group.split("12345__43121__")
+        #     db.unshare_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
+        ##
 
         return HttpResponse("Done")
 
