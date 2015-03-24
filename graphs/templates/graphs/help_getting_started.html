@@ -77,4 +77,15 @@ GraphSpace represents graphs using a JSON format. To see an example of how to up
 {% with url|add:"help/restapi/" as final_url %}
     To share one of your graphs, refer to the <a href='{{final_url}}'>REST API</a>.
 {% endwith %}
+<br>
+In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one in the group is allowed to see that graph anymore.  Only the graph owner is allowed to see the graph. 
+
+<h3 id="layouts">Layouts</h3>
+A layout is a specific representation of the network.  In terms of GraphSpace, a layout is the specific arrangement of nodes and edges for that graph.  GraphSpace provides a list of pre-defined algorithms to quickly layout any graph.  In addition, a user can also manually go in and arrange nodes and edges as they see fit and then save the layout for future reference.  
+
+<h3 id="sharing_layouts">Sharing layouts</h3>
+Similar to a graph, a layout may also be shared with a group.  In order for a layout to be shared with a group, the graph (and implicitly the graph owner) must already be shared with a group.  It would make no sense to share a layout with a group if that graph may not be viewed by any of the group's members. <br /><br />When you first create a layout, only the creator of the layout is allowed to see it.  If the graph is publicly available on GraphSpace, then if the user shares the layout they created, the layout will also be made publicly available.  If the graph is privately shared, then if the user decides to share a layout they created, every group that has both the creater of the layout as well as the graph which the layout references will have access to that layout.
+
+
+
 {% endblock %}

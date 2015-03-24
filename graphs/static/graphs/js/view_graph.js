@@ -689,7 +689,7 @@ function searchValues(labels) {
 
     if (displayLink) {
       $("#url").attr('href', linkToGraph);
-      $("#url").text("Direct Link to Highlighted Elements");
+      $("#url").text("Link to this graph with highighted elements");
       $(".test").css("height", $(".test").height + 30);
     }
   });
