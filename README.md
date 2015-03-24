@@ -1,14 +1,24 @@
 GraphSpace 
 ================
 
-IMMEDIATE TO DO'S
+FIXED
 =======================
-1) Completely revamp Help section
 
-2) Figure out layout logic (possibly introduce another table for this)
+1) Fixed Cytoscape click offset issue
 
-3) Convert old db to new schema and update alter_table.py (a little more b/c of layout table)
+2) Fixed Direct link issue
 
-4) Figure out how to render all the graphs with tags without slowing down too much
+3) Fixed highlight vs select issue
 
-5) Fix the rest of the issues on github
+4) Fixed 'like' search queries
+
+5) Fixed Shared layout logic
+
+NEXT UP
+======================
+
+1) Keep working on document with screenshots of UI for tutorials page
+
+2) Get columns to be rearranged
+
+3) Search for graphs on groups page
