@@ -1,5 +1,8 @@
 $(document).ready(function() {
 
+
+   setIcons();
+
 	/**
 	* When clicked, it creates a group through the UI.
 	*/
@@ -80,4 +83,88 @@ $(document).ready(function() {
 			}
 		});
 	});
+
+   /**
+   * Sorts all graphs that are returned.
+   */
+   $(".order").click(function (e) {
+      setIcon($(this).children().attr('id'));
+   });
+
+   /**
+   * Sets the specific icon for property. For example, clicking icon 
+   * in front of graph id will change the icon to something else.
+   * @param iconId ID of icon to change
+   */
+   function setIcon(iconId) {
+     if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort' || $("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-alphabet-alt') {
+        setOrderQuery(iconId, 'ascending');
+     } else if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-alphabet') {
+        setOrderQuery(iconId, 'descending');
+     }
+   }
+
+   /*
+   * Modifies the order query term in the URL to sort the 
+   * specified attribute.
+   * @param iconID ID of icon to sort attribute
+   * @param sortValue value specified which way to sort attribute (ascending, descending, none)
+   */
+   function setOrderQuery(iconId, sortValue) {
+      if (iconId == 'order_groups_icon') {
+         window.location.href = updateQueryStringParameter(window.location.href, "order", "group_" + sortValue);
+      } else if (iconId == 'order_owner_icon') {
+         window.location.href = updateQueryStringParameter(window.location.href, "order", "owner_" + sortValue);
+      }
+   }
+
+   /**
+   * Updates specified value in the query.
+   */
+   function updateQueryStringParameter(uri, key, value) {
+     var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+     var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+     if (uri.match(re)) {
+       return uri.replace(re, '$1' + key + "=" + value + '$2');
+     }
+     else {
+       return uri + separator + key + "=" + value;
+     }
+   }
+
+   /**
+   * Gets query variables from the url.
+   * @param variable variable to find in the URL
+   */
+   function getQueryVariable(variable)
+   {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0;i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){
+               return pair[1];
+            }
+          }
+          return (false);
+   }
+
+	/**
+   * Sets the icons at the loading of the page.
+   */
+   function setIcons() {
+      var orderVariable = getQueryVariable("order");
+
+      if (orderVariable) {
+         if (orderVariable == 'group_ascending') {
+            $("#order_groups_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet');
+         } else if (orderVariable == 'group_descending') {
+            $("#order_groups_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet-alt');
+         } else if (orderVariable == 'owner_ascending') {
+            $("#order_owner_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet');
+         } else if (orderVariable == 'owner_descending') {
+            $("#order_owner_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet-alt');
+         }
+      }
+   }
 });

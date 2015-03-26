@@ -11,13 +11,13 @@ $(document).ready(function() {
    //When search button on the side gets clicked
    $("#search_button").click(function (e) {
    	e.preventDefault();
-      urlAppender($("#searching").val(), 'search=', 'tags=');
+      urlAppender('search', $("#searching").val());
    });
 
    //When tag button on the side gets clicked
    $("#tags_button").click(function (e) {
    	e.preventDefault();
-      urlAppender($("#tags_searching").val(), "tags=", "search=");
+      urlAppender('search', $("#tags_searching").val());
    });
 
    $(".search").click(function (e) {
@@ -30,36 +30,15 @@ $(document).ready(function() {
       modifyQueryTerms('tags', $(this).attr('id'));
    });
 
+   setIcons();
+
    /**
    * For each tag, if it is clicked, extract the id (tag name)
    * from button and append it to the URL, making sure that URL syntax 
    * is still followed.
    */
    $(".tag_links").click(function (e) {
-      var url = document.URL;
-      //If there is no tag query in URL
-      if (url.indexOf('tags') == -1) {
-         //Insert tags at the end with '?' character if no query string present
-         if (url.indexOf('?') == -1) {
-            url += '?tags=' + $(this).attr('id');
-         } else {
-            //If there is another query, neeed '&' to join queries
-            url += '&tags=' + $(this).attr('id');
-         }
-      } else {
-         //Insert tag query at the end of the URL
-         var tagIndex = url.indexOf('tags=');
-         var sepIndex = url.indexOf('&');
-         //If tags is after the '&' character, simply append to query string
-         if (tagIndex > sepIndex) {
-            url += ',' + $(this).attr('id');
-         } else {
-            //Otherwise, need to get index of '&' and pad all tags before this character so that tags query is properly formatted
-            var url = url.substring(0, tagIndex) + url.substring(sepIndex, tagIndex) + ',' + $(this).attr('id') + url.substring(sepIndex);
-         }
-      }
-      //Change the URL to modified location
-      window.location.href = url;
+      urlAppender('tags', $(this).attr('id'));
    });   
 
    /**
@@ -67,54 +46,18 @@ $(document).ready(function() {
    * For example, it appends ?queryTerm if there are no query terms, or it appends &queryTerm=
    * to the end of the current url if a queryterm already exists.
    * 
-   * @param searchVal Value to be searched for
-   * @param element1 First element to be searched for in the query string
-   * @param element2 Second element to be searched for in the query string
+   * @param queryTerm Value to be searched for
+   * @param queryValue Element to insert as the query value
    */
-   function urlAppender(searchVal, element1, element2) {
+   function urlAppender(queryTerm, queryValue) {
       var url = document.URL;
-      if (searchVal.length > 0) {
-         //If user is viewing a certain page and there are multiple query terms
-         if (url.indexOf('page=') > -1) {
-            if (url.indexOf('&') > -1) {
-               if (url.indexOf('page=') < url.indexOf('&')) {
-                  //Get all of the URL except the pagination number user is currently at
-                  url = url.slice(0, url.indexOf('page')) + url.slice(url.indexOf('&'));
-                  return;
-               } else {
-                  //Otherwise if pagination is at the end of URL, get everything before pagination
-                  url = url.slice(0, url.indexOf('page=') -1);
-               }
-            } else {
-               //Otherwise, just get everything before pagination
-               url = url.slice(0, url.indexOf('page') - 1);
-            }
-         }
-         //If we are searching for a specific element in the query term
-         if (url.indexOf(element2) == -1) {
-            //If there is already a query term, append '&' to it
-            if (url.indexOf(element1) == -1 && url.indexOf('?') > -1) {
-               window.location.href = url + '&' + element1 + searchVal;
-            } else if (url.indexOf(element1) == -1) {
-               //Otherwise, append ? to it 
-               window.location.href = url + '?' + element1 + searchVal;
-            } else {
-               //If it is part of the same query, append it with ',' character
-               window.location.href = url + ',' + searchVal;
-            }
+      if (queryValue.length > 0) {
+         currentQueryTerms = getQueryVariable(queryTerm);
+         if (currentQueryTerms) {
+            currentQueryTerms += ',' + queryValue;
+            window.location.href = updateQueryStringParameter(url, queryTerm, currentQueryTerms);
          } else {
-            //Find out which query element comes first.
-            //Then, created new url with old query terms,
-            //in addition to the new query terms to append
-            element2Index = url.indexOf(element2);
-            element1Index = url.indexOf(element1);
-            if (element1Index > element2Index) {
-               oldSearchTerms = url.substring(element1Index);
-               searchVal += ',' + oldSearchTerms.substring(element1.length);
-               window.location.href = url.substring(0, element1Index-1) + '&' + element1 + searchVal;
-            } else {
-               window.location.href = url.substring(0, element1Index-1) + '?' + url.substring(element2Index, url.length) + '&' + element1 + searchVal;
-            }
+            window.location.href = updateQueryStringParameter(url, queryTerm, queryValue);
          }
       } else {
          return alert("Please enter a term to search for!");
@@ -177,4 +120,107 @@ $(document).ready(function() {
          }
       }
    }
+
+   /**
+   * Sorts all graphs that are returned.
+   */
+   $(".order").click(function (e) {
+      setIcon($(this).children().attr('id'));
+   });
+
+   /**
+   * Sets the specific icon for property. For example, clicking icon 
+   * in front of graph id will change the icon to something else.
+   * @param iconId ID of icon to change
+   */
+   function setIcon(iconId) {
+      //Modified button is different because of different icons to display
+      if (iconId == 'order_modified_icon') {
+         if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort' || $("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-attributes-alt') {
+            setOrderQuery(iconId, 'ascending');
+         } else if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-attributes') {
+            setOrderQuery(iconId, 'descending');
+         }
+      } else {
+         if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort' || $("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-alphabet-alt') {
+            setOrderQuery(iconId, 'ascending');
+         } else if ($("#" + iconId).attr('class') == 'glyphicon glyphicon-sort-by-alphabet') {
+            setOrderQuery(iconId, 'descending');
+         }
+      }
+   }
+
+   /*
+   * Modifies the order query term in the URL to sort the 
+   * specified attribute.
+   * @param iconID ID of icon to sort attribute
+   * @param sortValue value specified which way to sort attribute (ascending, descending, none)
+   */
+   function setOrderQuery(iconId, sortValue) {
+      if (iconId == 'order_graphs_icon') {
+         window.location.href = updateQueryStringParameter(window.location.href, "order", "graph_" + sortValue);
+      } else if (iconId == 'order_owner_icon') {
+         window.location.href = updateQueryStringParameter(window.location.href, "order", "owner_" + sortValue);
+      } else if (iconId == 'order_modified_icon') {
+         window.location.href = updateQueryStringParameter(window.location.href, "order", "modified_" + sortValue);
+      }
+   }
+
+   /**
+   * Updates specified value in the query.
+   */
+   function updateQueryStringParameter(uri, key, value) {
+     var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+     var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+     if (uri.match(re)) {
+       return uri.replace(re, '$1' + key + "=" + value + '$2');
+     }
+     else {
+       return uri + separator + key + "=" + value;
+     }
+   }
+
+   /**
+   * Gets query variables from the url.
+   * @param variable variable to find in the URL
+   */
+   function getQueryVariable(variable)
+   {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0;i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){
+               return pair[1];
+            }
+          }
+          return (false);
+   }
+
+   /**
+   * Sets the icons at the loading of the page.
+   */
+   function setIcons() {
+      var orderVariable = getQueryVariable("order");
+
+      if (orderVariable) {
+         if (orderVariable == 'graph_ascending') {
+            $("#order_graphs_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet');
+            $("#order_graphs_btn").tooltip({"content": "Order by Graph ID descending"});
+         } else if (orderVariable == 'graph_descending') {
+            $("#order_graphs_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet-alt');
+         } else if (orderVariable == 'modified_ascending') {
+            $("#order_modified_icon").attr('class', 'glyphicon glyphicon-sort-by-attributes');
+            $("#order_modified_btn").tooltip({"content": "Order by Modified descending"});
+         } else if (orderVariable == 'modified_descending') {
+            $("#order_modified_icon").attr('class', 'glyphicon glyphicon-sort-by-attributes-alt');
+         } else if (orderVariable == 'owner_ascending') {
+            $("#order_owner_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet');
+            $("#order_owner_btn").tooltip({"content": "Order by Owner descending"});
+         } else if (orderVariable == 'owner_descending') {
+            $("#order_owner_icon").attr('class', 'glyphicon glyphicon-sort-by-alphabet-alt');
+         }
+      }
+   }
+
 });

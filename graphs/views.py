@@ -252,7 +252,7 @@ def _graphs_page(request, view_type):
     context['base_url'] = db.get_base_urls(view_type)
 
     # Set all information abouut graphs to the front-end
-    context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'))
+    context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'), request.GET.get('order'))
 
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
@@ -272,7 +272,6 @@ def _graphs_page(request, view_type):
             for i in xrange(len(context['current_page'].object_list)):
                 graph = list(context['current_page'][i])
                 if request.GET.get('search'):
-                    print graph[4]
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
                 else:
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
@@ -400,6 +399,19 @@ def _groups_page(request, view_type):
             # List all groups that uid either owns or is a member of and also public groups.
             group_list = db.get_groups_of_user(context['uid'])
 
+        #Order all tuples if user wants to order their results
+        order_term = request.GET.get('order')
+        print order_term
+        if order_term:
+            if request.GET.get('order') == 'group_ascending':
+                group_list = sorted(group_list, key=lambda graph: graph[0])
+            elif order_term == 'group_descending':
+                group_list = sorted(group_list, key=lambda graph: graph[0], reverse=True)
+            elif order_term == 'owner_ascending':
+                group_list = sorted(group_list, key=lambda graph: graph[2])
+            elif order_term == 'owner_descending':
+                group_list = sorted(group_list, key=lambda graph: graph[2], reverse=True)
+
         #add the group list to context to display on the page.
         if len(group_list) != 0:
             context['group_list'] = group_list
@@ -465,13 +477,13 @@ def graphs_in_group(request, group_owner, group_id):
                 return render(request, 'graphs/error.html', context)
 
             # Get all graph information that belong to this group
-            graph_data = db.get_all_graphs_for_group(group_owner, group_id)
+            graph_data = db.get_all_graphs_for_group(group_owner, group_id, request.GET.get('order'))
 
             # include the graph data to the context
             if len(graph_data) != 0:
-                context['graph_data'] = graph_data
+                context['graph_list'] = graph_data
             else:
-                context['graph_data'] = None
+                context['graph_list'] = None
 
             group_information = db.get_group_by_id(group_owner, group_id)
 
@@ -492,6 +504,14 @@ def graphs_in_group(request, group_owner, group_id):
             pager_context = pager(request, graph_data)
             if type(pager_context) is dict:
                 context.update(pager_context)
+                for i in xrange(len(context['current_page'].object_list)):
+                    graph = list(context['current_page'][i])
+                    if request.GET.get('search'):
+                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                    else:
+                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                    graph = tuple(graph)
+                    context['current_page'].object_list[i] = graph
 
             # indicator to include css/js footer for side menu support etc.
             context['footer'] = True

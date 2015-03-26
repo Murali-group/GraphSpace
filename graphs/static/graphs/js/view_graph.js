@@ -147,7 +147,6 @@ $(document).ready(function() {
             var popup = target._private.data
 
             if (popup == null) {
-                console.log('popup null');
                 return;
             }
 
@@ -640,7 +639,7 @@ function searchValues(labels) {
             window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
             highlightedTerms.push(ids[j]);
           } else {
-            window.cy.$('[id="' + ids[j] + '"]').css({'color':'red', 'border-width': 10, 'border-color': 'blue'});
+            window.cy.$('[id="' + ids[j] + '"]').css({'border-width': 10, 'border-color': 'blue'});
             highlightedTerms.push(ids[j])
           }
           // Append a new button for every search term
@@ -695,6 +694,9 @@ function searchValues(labels) {
   });
 }
 
+/**
+ * Get all the highlighted terms in the graph.
+ */
 function getHighlightedTerms() {
   // Create a url with all the highlighted terms
   var highlightedTerms = new Array();

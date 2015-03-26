@@ -217,70 +217,74 @@
         <div class="results_table">
         <table class='table table-hover' style='table-layout:fixed;overflow:hidden;word-wrap:break-word;'>
         {% if graph_list != None and graph_list|length > 0 %}
-            <!-- list search results -->
-            {% if search_result %}
                 {% if current_page != None %}
                 <tr>
-                    <td>Graph ID</td>
-                    <td>Tags</td>
-                    <td>Node ID(Labels)</td>
-                    <td>Modified</td>
-                    <td>Owner</td>
-                    <td>Visibility</td>
-                </tr>
-                {% for g in current_page %}
-                <tr> 
-                    {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
-                        <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
-                    {%endwith %}
-                    <td><div class="test">
-                        {% for tag in g.1 %}
-                                 <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
-                        {% endfor %}</div>
-                    </td>                    
-                    <td><div class="test">{{ g.2 }}</div></td>
-                    <td><div class="test">{{ g.4 }}</div></td>
-                    <td><div class="test">{{ g.5 }}</div></td>
-                    {% if g.6 == 1 %}
-                        <td><div class="test">Public</div></td>
-                    {% else %}
-                        <td><div class="test">Private</div></td>
-                    {% endif %}                </tr>
-                {% endfor %}
-                {% endif %}
-
-            <!-- list graphs -->
-            {% else %}
-                {% if current_page != None %}
-                <tr>
-                    <th class="col-sm-2">Graph ID</th>
-                    <th class="col-sm-2">Tags</th>
-                    <th class="col-sm-2">Modified</th>
-                    <th class="col-sm-2">Owner</th>
-                    <th class="col-sm-2">Visibility</th>
-                </tr>
-                {% for g in current_page %}
-                <tr> 
-                    <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
-                    <td><div class="test">
-                        {% for tag in g.1 %}
-                             {% with url|add:"graphs/"|add:"?tags="|add:tag as url %}
-                                 <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
-                            {% endwith %}
-
-                        {% endfor %}</div>
-                    </td>
-                    <td><div class="test">{{ g.2 }}</div></td>
-                    <td><div class="test">{{ g.3 }}</div></td>
-                    {% if g.4 == 1 %}
-                    <td><div class="test">Public</div></td>
-                    {% else %}
-                    <td><div class="test">Private</div></td>
+                    <th>
+                      <button id="order_graphs_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Graph ID ascending">
+                        <span id="order_graphs_icon" class="glyphicon glyphicon-sort"></span>
+                      </button>
+                      <span>Graph ID</span>
+                    </th>
+                    <th>Tags</th>
+                    {% if search_result %}
+                        <th>Node ID(Labels)</th>
                     {% endif %}
+                    <th>
+                      <button id="order_modified_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Modified ascending">
+                        <span id="order_modified_icon" class="glyphicon glyphicon-sort"></span>
+                      </button>
+                      <span>Modified</span>
+                    </th>                    
+                    <th>
+                      <button id="order_owner_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Owner ascending">
+                        <span id="order_owner_icon" class="glyphicon glyphicon-sort"></span>
+                      </button>
+                      <span>Owner</span>
+                    </th>  
+                    <th>Visibility</th>
                 </tr>
+                {% for g in current_page %}
+                <tr> 
+                    <!-- If there is a search term or a tag term -->
+                    {% if search_result %}
+                        {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                            <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
+                        {%endwith %}
+                        <td><div class="test">
+                            {% for tag in g.1 %}
+                                <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
+                            {% endfor %}</div>
+                        </td>
+                        <td><div class="test">{{ g.2 }}</div></td>
+                        <td><div class="test">{{ g.4 }}</div></td>
+                        <td><div class="test">{{ g.5 }}</div></td>
+                        {% if g.6 == 1 %}
+                            <td><div class="test">Public</div></td>
+                        {% else %}
+                            <td><div class="test">Private</div></td>
+                        {% endif %} 
+                </tr>
+                    {% else %}
+                        <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
+                        <td><div class="test">
+                                {% for tag in g.1 %}
+                                     {% with url|add:"graphs/"|add:"?tags="|add:tag as url %}
+                                         <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td><div class="test">{{ g.2 }}</div></td>
+                        <td><div class="test">{{ g.3 }}</div></td>
+                        {% if g.4 == 1 %}
+                            <td><div class="test">Public</div></td>
+                        {% else %}
+                            <td><div class="test">Private</div></td>
+                        {% endif %}
+                </tr>
+                    {% endif %}                   
                 {% endfor %}
-                {% endif %}
-            {% endif %}
+                {% endif %}            
         {% else %}
             <p>{% autoescape off %}{{ message }}{% endautoescape %}</p>
         {% endif %}

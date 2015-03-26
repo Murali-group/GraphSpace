@@ -2,6 +2,7 @@
 {% block content %}
 {% load staticfiles %}
 <script type="text/javascript" src="{% static 'graphs/js/graphs_in_group.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/graphs.js' %}"></script>
 
 <div class="container graphs">
 <p id="username" style="display: none;">{{uid}}</p>
@@ -63,34 +64,81 @@
                 <h1 style="text-align: center;">{{group_id}}</h1>
                 <!-- list of graphs from database displayed in table form -->
                 <div class="results_table">
-
-                <table class="table table-hover">
-                {% if graph_data != None %}
-                {% if current_page != None %}
-                    <tr>
-                        <td>Graph ID</td>
-                        <td>Modified</td>
-                        <td>Owner</td>
-                        <td>Visibility</td>
-                    </tr>
-                {% for g in current_page %}
-                    <tr> 
-                        <td><a href="{% url 'view_graph' uid=g.2 gid=g.0 %}">{{g.0}}</a></td>
-                        <td>{{ g.1 }}</td>
-                        <td>{{ g.2 }}</td>
-                        {% if g.3 == 1 %}
-                        <td>Public</td>
-                        {% else %}
-                        <td>Private</td>
-                        {% endif %}
-                    </tr>
-                {% endfor %}
-                {% endif %}
-                {% else %}
-                    <p>It appeas as if there are no graphs added to this group.  Please add graphs using the REST API <a href="{{url}}help/restapi/#add_graph">here</a></p>
-                {% endif %}
-                </table>
-                </div> <!-- end results_table -->
+                  <table class='table table-hover' style='table-layout:fixed;overflow:hidden;word-wrap:break-word;'>
+                  {% if graph_list != None and graph_list|length > 0 %}
+                          {% if current_page != None %}
+                          <tr>
+                              <th>
+                                <button id="order_graphs_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Graph ID ascending">
+                                  <span id="order_graphs_icon" class="glyphicon glyphicon-sort"></span>
+                                </button>
+                                <span>Graph ID</span>
+                              </th>
+                              <th>Tags</th>
+                              {% if search_result %}
+                                  <th>Node ID(Labels)</th>
+                              {% endif %}
+                              <th>
+                                <button id="order_modified_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Modified ascending">
+                                  <span id="order_modified_icon" class="glyphicon glyphicon-sort"></span>
+                                </button>
+                                <span>Modified</span>
+                              </th>                    
+                              <th>
+                                <button id="order_owner_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Owner ascending">
+                                  <span id="order_owner_icon" class="glyphicon glyphicon-sort"></span>
+                                </button>
+                                <span>Owner</span>
+                              </th>  
+                              <th>Visibility</th>
+                          </tr>
+                          {% for g in current_page %}
+                          <tr> 
+                              <!-- If there is a search term or a tag term -->
+                              {% if search_result %}
+                                  {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                                      <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
+                                  {%endwith %}
+                                  <td><div class="test">
+                                      {% for tag in g.1 %}
+                                          <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
+                                      {% endfor %}</div>
+                                  </td>
+                                  <td><div class="test">{{ g.2 }}</div></td>
+                                  <td><div class="test">{{ g.4 }}</div></td>
+                                  <td><div class="test">{{ g.5 }}</div></td>
+                                  {% if g.6 == 1 %}
+                                      <td><div class="test">Public</div></td>
+                                  {% else %}
+                                      <td><div class="test">Private</div></td>
+                                  {% endif %} 
+                          </tr>
+                              {% else %}
+                                  <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
+                                  <td><div class="test">
+                                          {% for tag in g.1 %}
+                                               {% with url|add:"graphs/"|add:"?tags="|add:tag as url %}
+                                                   <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
+                                              {% endwith %}
+                                          {% endfor %}
+                                      </div>
+                                  </td>
+                                  <td><div class="test">{{ g.2 }}</div></td>
+                                  <td><div class="test">{{ g.3 }}</div></td>
+                                  {% if g.4 == 1 %}
+                                      <td><div class="test">Public</div></td>
+                                  {% else %}
+                                      <td><div class="test">Private</div></td>
+                                  {% endif %}
+                          </tr>
+                              {% endif %}                   
+                          {% endfor %}
+                          {% endif %}            
+                  {% else %}
+                      <p>{% autoescape off %}{{ message }}{% endautoescape %}</p>
+                  {% endif %}
+                  </table>
+                  </div> <!-- end results_table -->
             </div>
         </div>
         <!-- side menu must be on top for 'float' to work properly -->

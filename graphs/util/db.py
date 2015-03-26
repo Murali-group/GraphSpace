@@ -513,7 +513,7 @@ def get_base_urls(view_type):
 	else:
 	    return URL_PATH + "graphs/"
 
-def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
+def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms, order_by):
 	'''
 		Gets the graphs that are associated with a certain view from the user
 		
@@ -583,7 +583,52 @@ def get_graphs_for_view_type(context, view_type, uid, search_terms, tag_terms):
 		context['shared_graphs'] = len(view_graphs(uid, search_list, tag_list, 'shared'))
 		context['public_graphs'] = len(view_graphs(uid, search_list, tag_list, 'public'))
 
+	if order_by:
+		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
+
 	return context
+
+def order_information(order_term, search_terms, graphs_list):
+	'''
+		Orders all graph tuples based on order_term.
+
+		:param order_term Term to order by (example, graph, modified, owner)
+		:param search_terms Search terms in query (Needed because all search terms add two column (link to graph and node labels) which offsets references by 2)
+		:param graph_list Tuples of graphs
+		:return sorted_list Sorted list of graph tuples according to order_term
+	'''
+
+	if search_terms:
+		if order_term == 'graph_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[0])
+		elif order_term == 'graph_descending':
+			return sorted(graphs_list, key=lambda graph: graph[0], reverse=True)
+		elif order_term == 'modified_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[4])
+		elif order_term == 'modified_descending':
+			return sorted(graphs_list, key=lambda graph: graph[4], reverse=True)
+		elif order_term == 'owner_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[5])
+		elif order_term == 'owner_descending':
+			return sorted(graphs_list, key=lambda graph: graph[5], reverse=True)
+		else:
+			return graphs_list
+	else:
+		if order_term == 'graph_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[0])
+		elif order_term == 'graph_descending':
+			return sorted(graphs_list, key=lambda graph: graph[0], reverse=True)
+		elif order_term == 'modified_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[2])
+		elif order_term == 'modified_descending':
+			return sorted(graphs_list, key=lambda graph: graph[2], reverse=True)
+		elif order_term == 'owner_ascending':
+			return sorted(graphs_list, key=lambda graph: graph[3])
+		elif order_term == 'owner_descending':
+			return sorted(graphs_list, key=lambda graph: graph[3], reverse=True)
+		else:
+			return graphs_list
+
 
 def view_graphs(uid, search_terms, tag_terms, view_type):
 	'''
@@ -1652,7 +1697,7 @@ def groups_for_user(username):
 		if con:
 			con.close()
 
-def get_all_graphs_for_group(groupOwner, groupId):
+def get_all_graphs_for_group(groupOwner, groupId, order_by):
 	'''
 		Get all graphs that belong to this group.
 
@@ -1675,7 +1720,14 @@ def get_all_graphs_for_group(groupOwner, groupId):
 			cur.execute('select graph_id, modified, user_id, public from graph where graph_id = ? and user_id=?', (graph[0], graph[1]))
 			graph_info = cur.fetchone()
 			if graph_info != None:
+				graph_info = list(graph_info)
+				graph_info.insert(1, '')
+				graph_info = tuple(graph_info)
 				graph_data.append(graph_info)
+
+		graph_data = order_information(order_by, None, graph_data)
+
+		print graph_data
 
 		return graph_data
 
