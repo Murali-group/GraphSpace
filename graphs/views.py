@@ -401,7 +401,7 @@ def _groups_page(request, view_type):
 
         #Order all tuples if user wants to order their results
         order_term = request.GET.get('order')
-        print order_term
+
         if order_term:
             if request.GET.get('order') == 'group_ascending':
                 group_list = sorted(group_list, key=lambda graph: graph[0])

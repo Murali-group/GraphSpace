@@ -22,8 +22,78 @@
     {% endif %}
 </div>
 <br>
+{% if page_numbers|length > 1 %}
+          <div class="pagination pagination-centered" style="margin-top: 0px;">
+              {% if group_list != None and group_list|length > 0%}
+                  {% if has_previous %}
+                      {% if search_word and tags%}
+                          <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
+                      {% elif search_word %}
+                          <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
+                      {% elif tags %}
+                          <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
+                      {% else %}
+                          <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
+                      {% endif %}
+                  {% endif %}
+
+                  {% if search_word %}
+                      {% for p in page_numbers %}
+                          {% if tags != None %}
+                              {% if p == current_page.number %}
+                                 <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                              {% else %}
+                                  <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                              {% endif %}
+                          {% else %}
+                              {% if p == current_page.number %}
+                                 <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                              {% else %}
+                                  <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                              {% endif %}
+                          {% endif %}
+                      {% endfor %}
+                      {% if has_next %}
+                          <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                      {% endif %}
+                  {% elif tags != None %}
+                      {% for p in page_numbers %}
+                          {% if p == current_page.number %}
+                             <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                          {% else %}
+                              <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                          {% endif %}
+                      {% endfor %}
+                      {% if has_next %}
+                          <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
+                      {% endif %}
+                  {% else %}
+                     {% for p in page_numbers %}
+                          {% if p == current_page.number %}
+                             <li class='active'><a href="{% url 'graphs' %}?page={{ p }}">{{ p }}</a></li>
+                          {% else %}
+                              <li><a href="?page={{ p }}">{{ p }}</a></li>
+                          {% endif %}
+                      {% endfor %}
+                      {% if has_next %}
+                          {% if search_word and tags%}
+                              <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
+                          {% elif search_word %}
+                              <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
+                          {% elif tags %}
+                              <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
+                          {% else %}
+                              <li><a href="?page={{ next_page_number }}">Next &gt;</a></li>
+                          {% endif %}
+                      {% endif %}
+                  {% endif %}                        
+              {% endif %}
+    </div>
+{% endif %}
+<br>
 <button id="group_modal" data-toggle="modal" data-target="#groupModal" class="btn btn-default">Create Group</button>
 <p id="username" style="display: none;">{{uid}}</p>
+
 <!-- Create Modal -->
     <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog">
