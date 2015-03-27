@@ -1540,7 +1540,6 @@ def get_group_members(groupOwner, groupId):
 		for owner in data:
 			cleaned_data.append(str(owner[0]))
 
-		print cleaned_data
 		return cleaned_data
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1710,24 +1709,11 @@ def get_all_graphs_for_group(groupOwner, groupId, order_by):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		# Get graphs from this group
-		cur.execute('select graph_id, user_id from group_to_graph where group_owner=? and group_id=?', (groupOwner, groupId))
+		cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
 
-		group_graphs = cur.fetchall()
-
-		graph_data = []
-		for graph in group_graphs:
-			cur.execute('select graph_id, modified, user_id, public from graph where graph_id = ? and user_id=?', (graph[0], graph[1]))
-			graph_info = cur.fetchone()
-			if graph_info != None:
-				graph_info = list(graph_info)
-				graph_info.insert(1, '')
-				graph_info = tuple(graph_info)
-				graph_data.append(graph_info)
+		graph_data = cur.fetchall()
 
 		graph_data = order_information(order_by, None, graph_data)
-
-		print graph_data
 
 		return graph_data
 

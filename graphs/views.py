@@ -487,8 +487,6 @@ def graphs_in_group(request, group_owner, group_id):
 
             group_information = db.get_group_by_id(group_owner, group_id)
 
-            print group_information
-
             # pass the group_id to the context for display
             context['group_id'] = group_information[0][4]
 

@@ -107,7 +107,7 @@
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
                             {% endif %}
                         {% else %}
                            {% for p in page_numbers %}
@@ -119,7 +119,7 @@
                             {% endfor %}
                             {% if has_next %}
                                 {% if search_word and tags%}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% elif search_word %}
                                     <li><a href="?page={{ next_page_number }}&search={{ search_word }}">&lt; Next</a></li>
                                 {% elif tags %}
@@ -217,58 +217,75 @@
                  ids are used for accordion jQuery functions. -->
 
             <!-- Description menu -->
-            <div id="accordion_description" class="accordion">
-                <h3>Description</h3>
-                <div class="accordion_content">
-                    {{ group_description}} <br><br>
-                    {% if group_owner == uid %}
-                        <button class="btn btn-default" data-toggle="modal" data-target="#descModal" id="change_desc">Change Description</button>
-                    {% endif %}
+            <div id="description_panel_accordion" class="panel-group" style='margin-top: 15px;'>
+              <div id="member_panel" class="panel panel-default">
+                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#description_panel_accordion" href="#collapse_description_box">
+                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#description_panel_accordion" href="#collapse_description_box">Description</a></h3>
                 </div>
+                <div class="panel-collapse collapse in" id="collapse_description_box">
+                  <div class="panel-body">
+                    {{ group_description}} <br><br>
+                      {% if group_owner == uid %}
+                          <button class="btn btn-default" data-toggle="modal" data-target="#descModal" id="change_desc">Change Description</button>
+                      {% endif %}
+                  </div>
+                </div>
+              </div>
             </div>
+            <br>
 
             <!-- Owner menu -->
-            <div id="accordion_owner" class="accordion">
-                <h3>Owner</h3>
-                <div class="accordion_content">
-                    <a href="#user_address">{{ group_owner}}</a>
+            <div id="owner_panel_accordion" class="panel-group" style='margin-top: 15px;'>
+              <div id="owner_panel" class="panel panel-default">
+                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#owner_panel_accordion" href="#collapse_owner_box">
+                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#owner_panel_accordion" href="#collapse_owner_box">Owner</a></h3>
                 </div>
+                <div class="panel-collapse collapse in" id="collapse_owner_box">
+                  <div class="panel-body">
+                    <a href="#user_address">{{ group_owner}}</a>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Members menu -->
-            <div id="accordion_members" class="accordion">
-                <h3>Members</h3>
-                <div class="accordion_content">
-                {% if group_owner == uid %}
-                    <button class="btn btn-default" id="launch_member_modal" data-toggle="modal" data-target="#memberModal" >Add Members</button>
-                    <br>
-                    <br>
-                    <table id="users_tbl" class="table">
-                      <thead>
-                        <tr>
-                          <th>Username</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                          {% for member in group_members %}
+            <div id="member_panel_accordion" class="panel-group" style='margin-top: 15px;'>
+              <div id="member_panel" class="panel panel-default">
+                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#member_panel_accordion" href="#collapse_member_box">
+                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#member_panel_accordion" href="#collapse_member_box">Members</a></h3>
+                </div>
+                <div class="panel-collapse collapse in" id="collapse_member_box">
+                  <div class="panel-body">
+                    {% if group_owner == uid %}
+                      <button class="btn btn-default" id="launch_member_modal" data-toggle="modal" data-target="#memberModal" >Add Members</button>
+                      <br>
+                      <br>
+                      <table id="users_tbl" class="table">
+                        <thead>
                           <tr>
-                            {% if uid != member %}
-                            <td>
-                              {{ member}}
-                            </td>
-                            <td>
-                              
-                              <div>
-                                <button id="{{member}}" class="btn btn-default removeMember"><span class="glyphicon glyphicon-remove"></span></button>
-                              </div>
-                              
-                            </td>
-                            {% endif %}
+                            <th>Username</th>
                           </tr>
-                          {% endfor %}
-                      </tbody>
-                    </table>
-                {% else %}
+                        </thead>
+                        <tbody>
+                            {% for member in group_members %}
+                            <tr>
+                              {% if uid != member %}
+                              <td>
+                                {{ member}}
+                              </td>
+                              <td>
+                                
+                                <div>
+                                  <button id="{{member}}" class="btn btn-default removeMember"><span class="glyphicon glyphicon-remove"></span></button>
+                                </div>
+                                
+                              </td>
+                              {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                      </table>
+                    {% else %}
                     <table id="users_tbl" class="table">
                       <thead>
                         <tr>
@@ -287,9 +304,10 @@
                     </table>
                 {% endif %}
                 </div>
-            </div>
-
-
+                  </div>
+                </div>
+              </div>
+               
             <div id="search_box_panel_accordion" class="panel-group" style='margin-top: 15px;'>
               <div id="search_box_panel" class="panel panel-default">
                 <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">
@@ -327,7 +345,8 @@
               </div>
             </div>
             </div>
-            <br> <br>
+            <br>
+
     <div id="tag_panel_accordion" class="panel-group">
       <div id="tag_panel" class="panel panel-default">
         <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">
