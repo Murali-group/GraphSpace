@@ -8,6 +8,7 @@
 <p id="username" style="display: none;">{{uid}}</p>
 <p id="groupId" style="display: none;">{{group_id}}</p>
 <p id="groupOwner" style="display: none;">{{group_owner}}</p>
+<p id="groupName" style="display: none;">{{group_name}}</p>
 
 <!-- Description Modal -->
     <div class="modal fade" id="descModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -58,10 +59,79 @@
       </div>
     </div>
 
+    
+
     <div class="row">
         <div class="col-xs-6 col-sm-9">
             <div class="graph_links">
-                <h1 style="text-align: center;">{{group_id}}</h1>
+                <h1 style="text-align: center;">{{group_name}}</h1>
+                <div class="pagination pagination-centered" style="margin-top: 0px;">
+                    {% if graph_list != None and graph_list|length > 0%}
+                        {% if has_previous %}
+                            {% if search_word and tags%}
+                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
+                            {% elif search_word %}
+                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
+                            {% elif tags %}
+                                <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
+                            {% else %}
+                                <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if search_word %}
+                            {% for p in page_numbers %}
+                                {% if tags != None %}
+                                    {% if p == current_page.number %}
+                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                    {% else %}
+                                        <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                    {% endif %}
+                                {% else %}
+                                    {% if p == current_page.number %}
+                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                    {% else %}
+                                        <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% endif %}
+                        {% elif tags != None %}
+                            {% for p in page_numbers %}
+                                {% if p == current_page.number %}
+                                   <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                {% else %}
+                                    <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                            {% endif %}
+                        {% else %}
+                           {% for p in page_numbers %}
+                                {% if p == current_page.number %}
+                                   <li class='active'><a href="{% url 'graphs' %}?page={{ p }}">{{ p }}</a></li>
+                                {% else %}
+                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if has_next %}
+                                {% if search_word and tags%}
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Next</a></li>
+                                {% elif search_word %}
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">&lt; Next</a></li>
+                                {% elif tags %}
+                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">&lt; Next</a></li>
+                                {% else %}
+                                    <li><a href="?page={{ next_page_number }}">&lt; Next</a></li>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}                        
+
+                    {% endif %}
+            </div>
                 <!-- list of graphs from database displayed in table form -->
                 <div class="results_table">
                   <table class='table table-hover' style='table-layout:fixed;overflow:hidden;word-wrap:break-word;'>
@@ -219,19 +289,85 @@
                 </div>
             </div>
 
+
+            <div id="search_box_panel_accordion" class="panel-group" style='margin-top: 15px;'>
+              <div id="search_box_panel" class="panel panel-default">
+                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">
+                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">Search</a></h3>
+                </div>
+                <div class="panel-collapse collapse in" id="collapse_search_box">
+                <div class="panel-body">
+                  <form method="get" role="form">
+                     <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="searching">
+                        <span class="input-group-btn">
+                            <button class="btn btn-info" id="search_button" type="submit">Search</button>
+                        </span>
+                    </div>
+                  </form><br><br>
+                  <div id="search_tips" class="alert alert-info alert-dismissable" style="">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <strong>Search tips:</strong><br>
+                    <ul>   
+                      <li>Graphs returned match all search terms</li>
+                      <li>Search for graphs, nodes, and edges.</li>
+                      <li>Edge searching syntax - head:tail</li>
+                      <li>Edge searching example: Example: AKT1:JUN</li>
+                    </ul>
+                  </div>
+                   <ul class="nav nav-pills">
+                    {% if search_word %}
+                        {% for term in search_word_terms %}
+                        <li><a class='search' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
+                        {% endfor %}
+                    {% endif %}
+                  </ul>
+                  <br/>
+                </div>
+              </div>
+            </div>
+            </div>
+            <br> <br>
+    <div id="tag_panel_accordion" class="panel-group">
+      <div id="tag_panel" class="panel panel-default">
+        <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">
+          <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">Tags</a></h3>
+        </div>
+        <div class="panel-collapse collapse in" id="collapse_tags">
+          <div class="panel-body">
+            <p id="tag_content"></p>
+                <form method="get" role="form"> 
+
+
+                <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Enter Tags" id="tags_searching">
+                        <span class="input-group-btn">
+                            <button class="btn btn-info" id="tags_button" type="submit">Search</button>
+                        </span>
+                    </div>
+                </form>
+                <ul class="nav nav-pills">
+                    {% if tags %}
+                        {% for term in tag_terms %}
+                          <li><a class='tags' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
+                        {% endfor %}
+                    {% endif %}
+                  </ul>
+                {% for tag in all_tags %}
+                    {% with base_url|add:"?tags="|add:tag as tag_url %}
+                    <button class="btn btn-default tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>
+                    {% endwith %}
+                {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
         </div> <!-- end class = side_menu -->
     </div>
 
-
-{% if uid != None %}
-<!-- A user is logged in. -->
-{% else %}
-<!-- A user is not logged in. -->
-{% endif %}
-
 <!-- pagination of list of graphs.
      See util/paginator.py for details. -->
-<div class="pager">
+<!-- div class="pager">
     {% if graph_list != None %}
     {% if has_previous %}
     <span class="page">
@@ -262,7 +398,7 @@
     {% endif %}
     {% endif %}
 </div>
-
+ -->
 {% endblock %} <!-- end content block -->
 
 {% block css-js-footer %}
