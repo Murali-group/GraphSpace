@@ -132,7 +132,11 @@ $(document).ready(function() {
       }
 
       // load the graph to display
-      this.load(graph_json.graph);
+      this.load(graph_json.graph, function(e) {
+        console.log('working');
+      }, function() {
+        console.log('done');
+      });
 
       // enable user panning (hold the left mouse button to drag
       // the screen)
@@ -720,7 +724,6 @@ function getHighlightedTerms() {
       linkToGraph += highlightedTerms[i] + ',';
     }
   }
-
   return linkToGraph
 }
 
@@ -885,7 +888,7 @@ function getLayoutFromQuery() {
         name: "arbor",
         padding: 30,
         fit: true,
-        animate: true,
+        animate: false,
         repulsion: 4500,
         maxSimulationTime: 2000
       }
@@ -893,7 +896,7 @@ function getLayoutFromQuery() {
       graph_layout = {
         name: 'springy',
 
-        animate: true, // whether to show the layout as it's running
+        animate: false, // whether to show the layout as it's running
         maxSimulationTime: 4000, // max length in ms to run the layout
         ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
         fit: true, // whether to fit the viewport to the graph

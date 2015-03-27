@@ -292,7 +292,11 @@
     </div>
 
     <div class="col-xs-6 col-sm-3 side">
-    <div id="search_box_panel_accordion" class="panel-group" style='margin-top: -70px;'>
+    {% if page_numbers|length > 1 %}
+        <div id="search_box_panel_accordion" class="panel-group" style="margin-top: -161px;">
+    {% else %}
+        <div id="search_box_panel_accordion" class="panel-group" style="margin-top: -70px;">
+    {% endif %}
               <div id="search_box_panel" class="panel panel-default">
                 <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">
                   <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">Search</a></h3>
