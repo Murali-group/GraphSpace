@@ -59,79 +59,79 @@
       </div>
     </div>
 
-    
-
     <div class="row">
         <div class="col-xs-6 col-sm-9">
             <div class="graph_links">
                 <h1 style="text-align: center;">{{group_name}}</h1>
-                <div class="pagination pagination-centered" style="margin-top: 0px;">
-                    {% if graph_list != None and graph_list|length > 0%}
-                        {% if has_previous %}
-                            {% if search_word and tags%}
-                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
-                            {% elif search_word %}
-                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
-                            {% elif tags %}
-                                <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
-                            {% else %}
-                                <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
-                            {% endif %}
-                        {% endif %}
+                  {% if page_numbers|length > 1 %}
+                      <div class="pagination pagination-centered" style="margin-top: 0px;">
+                          {% if graph_list != None and graph_list|length > 0%}
+                              {% if has_previous %}
+                                  {% if search_word and tags%}
+                                      <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
+                                  {% elif search_word %}
+                                      <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
+                                  {% elif tags %}
+                                      <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
+                                  {% else %}
+                                      <li><a href="?page={{ previous_page_number }}">&lt; Prev</a></li>
+                                  {% endif %}
+                              {% endif %}
 
-                        {% if search_word %}
-                            {% for p in page_numbers %}
-                                {% if tags != None %}
-                                    {% if p == current_page.number %}
-                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
-                                    {% else %}
-                                        <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
-                                    {% endif %}
-                                {% else %}
-                                    {% if p == current_page.number %}
-                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
-                                    {% else %}
-                                        <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if has_next %}
-                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
-                            {% endif %}
-                        {% elif tags != None %}
-                            {% for p in page_numbers %}
-                                {% if p == current_page.number %}
-                                   <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
-                                {% else %}
-                                    <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
-                                {% endif %}
-                            {% endfor %}
-                            {% if has_next %}
-                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
-                            {% endif %}
-                        {% else %}
-                           {% for p in page_numbers %}
-                                {% if p == current_page.number %}
-                                   <li class='active'><a href="{% url 'graphs' %}?page={{ p }}">{{ p }}</a></li>
-                                {% else %}
-                                    <li><a href="?page={{ p }}">{{ p }}</a></li>
-                                {% endif %}
-                            {% endfor %}
-                            {% if has_next %}
-                                {% if search_word and tags%}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
-                                {% elif search_word %}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
-                                {% elif tags %}
-                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
-                                {% else %}
-                                    <li><a href="?page={{ next_page_number }}">Next &gt;</a></li>
-                                {% endif %}
-                            {% endif %}
-                        {% endif %}                        
-
-                    {% endif %}
-            </div>
+                              {% if search_word %}
+                                  {% for p in page_numbers %}
+                                      {% if tags != None %}
+                                          {% if p == current_page.number %}
+                                             <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                          {% else %}
+                                              <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                          {% endif %}
+                                      {% else %}
+                                          {% if p == current_page.number %}
+                                             <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                          {% else %}
+                                              <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                          {% endif %}
+                                      {% endif %}
+                                  {% endfor %}
+                                  {% if has_next %}
+                                      <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                                  {% endif %}
+                              {% elif tags != None %}
+                                  {% for p in page_numbers %}
+                                      {% if p == current_page.number %}
+                                         <li class='active'><a href="{% url 'graphs' %}?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                      {% else %}
+                                          <li><a href="?tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                      {% endif %}
+                                  {% endfor %}
+                                  {% if has_next %}
+                                      <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
+                                  {% endif %}
+                              {% else %}
+                                 {% for p in page_numbers %}
+                                      {% if p == current_page.number %}
+                                         <li class='active'><a href="{% url 'graphs' %}?page={{ p }}">{{ p }}</a></li>
+                                      {% else %}
+                                          <li><a href="?page={{ p }}">{{ p }}</a></li>
+                                      {% endif %}
+                                  {% endfor %}
+                                  {% if has_next %}
+                                      {% if search_word and tags%}
+                                          <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
+                                      {% elif search_word %}
+                                          <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
+                                      {% elif tags %}
+                                          <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
+                                      {% else %}
+                                          <li><a href="?page={{ next_page_number }}">Next &gt;</a></li>
+                                      {% endif %}
+                                  {% endif %}
+                              {% endif %}                        
+                          {% endif %}
+                  </div>
+                {% endif %}
+                
                 <!-- list of graphs from database displayed in table form -->
                 <div class="results_table">
                   <table class='table table-hover' style='table-layout:fixed;overflow:hidden;word-wrap:break-word;'>
@@ -384,40 +384,6 @@
         </div> <!-- end class = side_menu -->
     </div>
 
-<!-- pagination of list of graphs.
-     See util/paginator.py for details. -->
-<!-- div class="pager">
-    {% if graph_list != None %}
-    {% if has_previous %}
-    <span class="page">
-        <a href="?page={{ previous_page_number }}">&lt; Prev</a>
-    </span>
-    {% endif %}
-    
-    {% if show_first %}
-        <span class="page"><a href="?page=1">1</a></span>
-        <span class="ellipsis">...</span>
-    {% endif %}
-
-    {% for p in page_numbers %}
-        {% if p == current_page.number %}
-            <span class="current">{{ current_page.number }}</span>
-        {% else %}
-            <span class="page"><a href="?page={{ p }}"?>{{ p }}</a></span>
-        {% endif %}
-    {% endfor %}
-    
-    {% if show_last %}
-        <span class="ellipsis">...</span>
-        <span class="page"><a href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a></span>
-    {% endif %}
-
-    {% if has_next %}
-        <span class="page"><a href="?page={{ next_page_number }}">Next &gt;</a></span> 
-    {% endif %}
-    {% endif %}
-</div>
- -->
 {% endblock %} <!-- end content block -->
 
 {% block css-js-footer %}

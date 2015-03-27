@@ -139,7 +139,8 @@
                 {% endif %}
             </div>
 
-            <div class="pagination pagination-centered">
+            {% if page_numbers|length > 1 %}
+                <div class="pagination pagination-centered">
                     {% if graph_list != None and graph_list|length > 0%}
                         {% if has_previous %}
                             {% if search_word and tags%}
@@ -193,23 +194,21 @@
                             {% endfor %}
                             {% if has_next %}
                                 {% if search_word and tags%}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% elif search_word %}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
                                 {% elif tags %}
-                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ next_page_number }}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}">Next &gt;</a></li>
                                 {% endif %}
                             {% endif %}
                         {% endif %}                        
-
                     {% endif %}
-            </div>
+                </div>
+            {% endif %}
         </div>
-
     </div>
-
 
 <!-- list of graphs from database displayed in table form -->
 <div class="row">
