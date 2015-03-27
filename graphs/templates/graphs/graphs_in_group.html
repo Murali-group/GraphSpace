@@ -121,11 +121,11 @@
                                 {% if search_word and tags%}
                                     <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% elif search_word %}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
                                 {% elif tags %}
-                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% else %}
-                                    <li><a href="?page={{ next_page_number }}">&lt; Next</a></li>
+                                    <li><a href="?page={{ next_page_number }}">Next &gt;</a></li>
                                 {% endif %}
                             {% endif %}
                         {% endif %}                        
