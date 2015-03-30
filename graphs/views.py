@@ -246,14 +246,16 @@ def _graphs_page(request, view_type):
     uid = request.session['uid']
 
     # pass the tag information to the front-end
-    context['all_tags'] = db.get_all_tags(uid, view_type)
+    context['all_tags'] = []#db.get_all_tags(uid, view_type)
 
     # Set the base URL's so that the links point to the correct view types
-    context['base_url'] = db.get_base_urls(view_type)
+    context['base_url'] = [] #db.get_base_urls(view_type)
 
     # Set all information abouut graphs to the front-end
     context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'), request.GET.get('order'))
 
+    print 'done'
+    
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 

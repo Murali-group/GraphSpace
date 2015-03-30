@@ -1001,11 +1001,11 @@ def find_nodes(uid, search_word, view_type, cur):
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 
 	elif view_type == 'shared':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.label MATCH ?', (uid, '*' + search_word + '*'))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid, '*' + search_word + '*'))
 		shared_labels = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id and n.graph_id = g.graph_id and n.node_id MATCH ?', (uid,'*' + search_word + '*'))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid,'*' + search_word + '*'))
 		shared_ids = cur.fetchall()
 		intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
 	else:
@@ -1040,13 +1040,14 @@ def find_graphs_using_names(uid, search_word, view_type, cur):
 	actual_graph_names = []
 
 	if view_type == 'my graphs':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g where g.graph_id MATCH ? and g.user_id= ?', ('*' + search_word + '*', uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.user_id= ?', ('%' + search_word + '%', uid))
 	elif view_type == 'shared':
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g, group_to_graph as gg, group_to_user as gu where g.graph_id MATCH ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('*' + search_word + '*', uid))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('%' + search_word + '%', uid))
 	else:
-		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from virtual_graph_table as g where g.graph_id MATCH ? and g.public= 1', ('*' + search_word + '*', ))
+		cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.public= 1', ('%' + search_word + '%', ))
 
 	graph_list = cur.fetchall()
+
 	# Get all unique graphs
 	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
 
@@ -1982,7 +1983,7 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 
 def view_graphs_of_type(view_type, username):
 	'''
-		View graphs of this type.
+		View graphs of this type e.g. shared, my graphs, public.
 
 		:param view_type: Type of view (shared, public)
 		:param username: Name of user
@@ -1994,22 +1995,20 @@ def view_graphs_of_type(view_type, username):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
+		print view_type
+
 		# Select graphs depending on view type.
 		if view_type == 'public':
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.public = 1')
+			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g where g.public = 1')
 		elif view_type == 'shared':
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id', (username, ))
+			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id', (username, ))
 		else:
-			cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
+			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
 
 		# Go through each graph and retrieve all tags associated with that graph
-		initial_graphs = cur.fetchall()
-		for graph in initial_graphs:
-			temp_list = list(graph)
-			temp_list.insert(1, "")
-			# TODO: FIX SLOW QUERY
-			# temp_list.insert(1, get_all_tags_for_graph(graph[0], graph[2]))
-			graphs.append(tuple(temp_list))
+		graphs = cur.fetchall()
+
+		print 'done processing graphs for ' + view_type
 		
 		# Return the graph information (including tags) as a list of rows
 		return graphs
@@ -2042,37 +2041,6 @@ def get_graphs_for_tags(cur, username, tags):
 					graphs.append(thing)
 
 	return graphs
-
-def build_graph_information(graphs):
-	'''
-		Gets all information (including all tags) for each graph that is returned.
-		
-		:param graphs: Graphs to get information for
-		:return Graphs: [graph information]
-	'''
-	cleaned_graph = []
-	for graph in graphs:
-		#Get all tags for graph
-		cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
-		tags = cur.fetchall()
-		cleanedtags = []
-
-		for tag in tags:
-			cleanedtags.append(str(tag[0]))
-
-		graph_list = list(graph)
-		if len(cleanedtags) > 0:
-			# Insert at second location
-			graph_list.insert(1, cleanedtags)
-			cleaned_graph.append(tuple(graph_list))
-		else:
-			graph_list.insert(1, "")
-			cleaned_graph.append(tuple(graph_list))
-
-	if cleaned_graph != None:
-		return cleaned_graph
-	else:
-		return None
 
 def get_graph_info(username, tags):
 	'''
