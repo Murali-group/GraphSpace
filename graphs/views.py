@@ -109,7 +109,7 @@ def view_graph(request, uid, gid):
 
     format_shared_groups = []
     for shared_group in shared_groups:
-        format_shared_groups.append(shared_group[0] + ' owned by ' + shared_group[1])
+        format_shared_groups.append((shared_group[0], shared_group[1]))
 
     context['shared_groups'] = format_shared_groups
 

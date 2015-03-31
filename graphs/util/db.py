@@ -1453,9 +1453,17 @@ def get_group_by_id(groupOwner, groupId):
 		data = cur.fetchall()
 
 		cleaned_data = []
+
+		# Remove group owner's name from member's list to display in UI
+		initial_members = get_group_members(groupOwner, groupId)
+		members = []
+
+		for member in initial_members:
+			if member != groupOwner:
+				members.append(member)
+
 		# Get members of the group 
 		for row in data:
-			members = get_group_members(groupOwner, groupId)
 			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
 			cleaned_data.append(tuple_list)
 
@@ -1714,7 +1722,6 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur):
 		graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
 		actual_graph_with_nodes.append(tuple(graph_list))
 
-	print actual_graph_with_nodes
 	return actual_graph_with_nodes
 
 def find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur):
@@ -1735,6 +1742,7 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms, cu
 			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, word, cur)
 		else:
 			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur)
+
 
 	# After all the SQL statements have ran for all of the search_terms, count the number of times
 	# a graph appears in the initial list. If it appears as many times as there are 
@@ -1872,7 +1880,7 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
 	'''
 	group_info = []
-	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
+	groups = get_groups_of_user(graphowner) #+ get_all_groups_with_member(graphowner)
 
 	con = None
 	try:
@@ -1884,7 +1892,6 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 			cur.execute('select * from group_to_graph where group_id = ? and group_owner=? and user_id = ? and graph_id = ?', (group[6], group[2], graphowner, graphname))
 			is_shared = cur.fetchone()
 
-			print is_shared
 			if is_shared == None:
 				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": False})
 			else:
