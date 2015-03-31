@@ -1720,21 +1720,10 @@ def find_graphs_for_group_using_names(groupOwner, groupId, word, cur):
 	intial_graph_names = []
 	actual_graph_names = []
 
-	cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and gg.group_id = ? and gg.group_owner = ? and g.graph_id = gg.graph_id and gg.user_id = g.user_id', ('%' + word + '%', groupId, groupOwner))
-	
-	graph_list = cur.fetchall()
-
-	# Get all unique graphs
-	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
-
-	for graph in intial_graph_names:
-		graph_list = list(graph)
-		# Appened nothing so that the table will be displayed properly
-		graph_list.insert(1, "")
-		graph_list.insert(1,"")
-		actual_graph_names.append(tuple(graph_list))
+	cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and gg.group_id = ? and gg.group_owner = ? and g.graph_id = gg.graph_id and gg.user_id = g.user_id', ('%' + word + '%', groupId, groupOwner))
+	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
 		
-	return actual_graph_names
+	return intial_graph_names
 
 def search_result_for_graphs_in_group(groupOwner, groupId, search_terms, cur):
 	
