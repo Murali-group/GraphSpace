@@ -73,6 +73,10 @@ $(document).ready(function() {
           nodeData['width'] = 50
         }
 
+        if (nodeData['shape'] == undefined) {
+          nodeData['shape'] = 'ellipse';
+        }
+
         //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
         var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
 
