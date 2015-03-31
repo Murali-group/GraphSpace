@@ -809,10 +809,7 @@ def search_result(uid, search_terms, view_type):
 						label_string = label_string + label + ','
 					label_string = label_string[:len(label_string) - 1]
 					key_with_search = list(key_tuples[0])
-					# Append all tags for the graph
-					#TODO: TOO SLOW FIXX
 					key_with_search.insert(1, "")
-					# key_with_search.insert(1, get_all_tags_for_graph(key_with_search[0], key_with_search[4]))
 					key_with_search[2] = id_string
 					key_with_search[3] = label_string
 					key_with_search = tuple(key_with_search)
@@ -1697,12 +1694,150 @@ def groups_for_user(username):
 		if con:
 			con.close()
 
-def get_all_graphs_for_group(groupOwner, groupId, order_by):
+
+def find_edges_for_graphs_in_group(groupOwner, groupId, word, cur):
+	print 'test'
+
+
+def find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur):
+	labels_and_id_matched_graphs = []
+
+	cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+	labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+
+	cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+	labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+
+	actual_graph_with_nodes = []
+	for graph in labels_and_id_matched_graphs:
+		graph_list = list(graph)
+		graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
+		actual_graph_with_nodes.append(tuple(graph_list))
+
+	return actual_graph_with_nodes
+
+def find_graphs_for_group_using_names(groupOwner, groupId, word, cur):
+	intial_graph_names = []
+	actual_graph_names = []
+
+	cur.execute('select g.graph_id, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and gg.group_id = ? and gg.group_owner = ? and g.graph_id = gg.graph_id and gg.user_id = g.user_id', ('%' + word + '%', groupId, groupOwner))
+	
+	graph_list = cur.fetchall()
+
+	# Get all unique graphs
+	intial_graph_names = add_unique_to_list(intial_graph_names, graph_list)
+
+	for graph in intial_graph_names:
+		graph_list = list(graph)
+		# Appened nothing so that the table will be displayed properly
+		graph_list.insert(1, "")
+		graph_list.insert(1,"")
+		actual_graph_names.append(tuple(graph_list))
+		
+	return actual_graph_names
+
+def search_result_for_graphs_in_group(groupOwner, groupId, search_terms, cur):
+	
+	intial_graphs_from_search = []
+
+	for word in search_terms:
+		if ':' in search_terms:
+			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, word, cur)
+		else:
+			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(groupOwner, groupId, word, cur)
+
+	# After all the SQL statements have ran for all of the search_terms, count the number of times
+	# a graph appears in the initial list. If it appears as many times as there are 
+	# search terms, then that graph matches all the tag terms and it should be returned
+	graph_repititions = defaultdict(int)
+	graph_mappings = defaultdict(list)
+	# Counting the number of occurences
+	for graph_tuple in intial_graphs_from_search:
+		graph_repititions[graph_tuple[0] + graph_tuple[4]] += 1
+
+	for graph_tuple in intial_graphs_from_search:
+		graph_list = graph_mappings.get(graph_tuple[0] + graph_tuple[4], [])
+		graph_list.append(graph_tuple)
+		graph_mappings[graph_tuple[0] + graph_tuple[4]] = graph_list
+
+	# If value appears the number of times as there are tags, 
+	# then append that to the actual list of graphs to be returned.
+	actual_graphs_for_searches = []
+	for key, value in graph_repititions.iteritems():
+		if value >= len(search_terms):
+			key_tuples = graph_mappings[key]
+			ids_and_labels = []
+			labels = []
+			# Gather all the id's and labels that are part of the same graph 
+			# that is being searched for and make them into one tuple
+			for key_tuple in key_tuples:
+				key_with_search = list(key_tuple)
+				ids_and_labels.append(str(key_tuple[1]))
+				labels.append(str(key_tuple[2]))
+			id_string = ""
+			for ids in ids_and_labels:
+				id_string = id_string + ids + ', '
+			id_string = id_string[:len(id_string) - 2]
+			label_string = ""
+			for label in labels:
+				label = label.replace('-', ':')
+				label_string = label_string + label + ','
+			label_string = label_string[:len(label_string) - 1]
+			key_with_search = list(key_tuples[0])
+			key_with_search.insert(1, "")
+			key_with_search[2] = id_string
+			key_with_search[3] = label_string
+			key_with_search = tuple(key_with_search)
+			actual_graphs_for_searches.append(key_with_search)
+
+	# Return whole dictionary of matchin graphs
+	return actual_graphs_for_searches
+
+def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, cur):
+
+	initial_graphs_with_tags = []
+
+	for tag in tag_terms:
+		cur.execute('select distinct g.graph_id, g.modified, g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = ? and gg.group_owner = ? and gg.graph_id = gt.graph_id and gt.tag_id = ? and gt.graph_id = g.graph_id and gt.user_id = g.user_id', (groupId, groupOwner, tag))
+		initial_graphs_with_tags += cur.fetchall()
+
+	# After all the SQL statements have ran for all of the tags, count the number of times
+	# a graph appears in the initial list. If it appears as many times as there are 
+	# tag terms, then that graph matches all the tag terms and it should be returned
+	graph_repititions = defaultdict(int)
+	graph_mappings = defaultdict(list)
+	# Counting the number of occurences
+	for graph_tuple in initial_graphs_with_tags:
+		graph_repititions[graph_tuple[0]] += 1
+
+	for graph_tuple in initial_graphs_with_tags:
+		graph_list = graph_mappings.get(graph_tuple[0], [])
+		graph_list.append(graph_tuple)
+		graph_mappings[graph_tuple[0]] = graph_list
+
+	# If value appears the number of times as there are tags, 
+	# then append that to the actual list of graphs to be returned.
+	actual_graphs_for_tags = []
+	for key, value in graph_repititions.iteritems():
+		if value == len(tag_terms):
+			key_tuples = graph_mappings[key]
+			for key_tuple in key_tuples:
+				# Insert all tags for the graph in the first index
+				key_with_tag = list(key_tuple)
+				key_with_tag.insert(1, get_all_tags_for_graph(key_with_tag[0], key_with_tag[2]))
+				key_with_tag = tuple(key_with_tag)
+				actual_graphs_for_tags.append(key_with_tag)
+
+	return actual_graphs_for_tags
+
+def get_all_graphs_for_group(groupOwner, groupId, order_by, search_terms, tag_terms):
 	'''
 		Get all graphs that belong to this group.
 
 		:param groupOwner: Owner of group
 		:param groupId: Id of group
+		:param search_terms: Terms to be searched for
+		:param tag_terms: Tags to be searched for in graphs
 		:return Graphs: [graphs]
 	'''
 	con = None
@@ -1710,9 +1845,20 @@ def get_all_graphs_for_group(groupOwner, groupId, order_by):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
+		if search_terms and tag_terms:
+			return []
 
-		graph_data = cur.fetchall()
+		elif search_terms:
+			graph_data = search_result_for_graphs_in_group(groupOwner, groupId, search_terms.split(','), cur)
+
+		elif tag_terms:
+			graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), cur)
+
+		else:
+
+			cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
+
+			graph_data = cur.fetchall()
 
 		graph_data = order_information(order_by, None, graph_data)
 

@@ -254,8 +254,6 @@ def _graphs_page(request, view_type):
     # Set all information abouut graphs to the front-end
     context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'), request.GET.get('order'))
 
-    print 'done'
-    
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
@@ -479,7 +477,10 @@ def graphs_in_group(request, group_owner, group_id):
                 return render(request, 'graphs/error.html', context)
 
             # Get all graph information that belong to this group
-            graph_data = db.get_all_graphs_for_group(group_owner, group_id, request.GET.get('order'))
+            graph_data = db.get_all_graphs_for_group(group_owner, group_id, request.GET.get('order'), request.GET.get('search'), request.GET.get('tags'))
+
+            if request.GET.get('search'):
+                context['search_result'] = True
 
             # include the graph data to the context
             if len(graph_data) != 0:
@@ -511,7 +512,7 @@ def graphs_in_group(request, group_owner, group_id):
                 for i in xrange(len(context['current_page'].object_list)):
                     graph = list(context['current_page'][i])
                     if request.GET.get('search'):
-                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
                     else:
                         graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
                     graph = tuple(graph)
