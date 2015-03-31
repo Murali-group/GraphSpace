@@ -34,7 +34,12 @@ body {
 #search_tips {
     margin-top: -20px;
     margin-left: 10px;
+    width: 100%;
 }
+
+#search_tips li {
+}
+
 .ui-cytoscape-panzoom {
     top: 20%;
 }
