@@ -193,8 +193,8 @@
                 <p>{{ shared }}</p>
                 <p>Groups shared with: 
                     {% for o in shared_groups %}
-                    {% with url|add:"groups/"|add:o as url %}
-                        <a href={{url}}>{{ o }}</a>
+                    {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
+                        <a href={{url}}>{{ o.0 }} owned by {{o.1}}</a><br>
                     {% endwith %}
                     {% endfor %}
                 </p>

@@ -1880,7 +1880,7 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
 	'''
 	group_info = []
-	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
+	groups = get_groups_of_user(graphowner) #+ get_all_groups_with_member(graphowner)
 
 	con = None
 	try:
@@ -1892,7 +1892,6 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 			cur.execute('select * from group_to_graph where group_id = ? and group_owner=? and user_id = ? and graph_id = ?', (group[6], group[2], graphowner, graphname))
 			is_shared = cur.fetchone()
 
-			print is_shared
 			if is_shared == None:
 				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": False})
 			else:
