@@ -1453,9 +1453,17 @@ def get_group_by_id(groupOwner, groupId):
 		data = cur.fetchall()
 
 		cleaned_data = []
+
+		# Remove group owner's name from member's list to display in UI
+		initial_members = get_group_members(groupOwner, groupId)
+		members = []
+
+		for member in initial_members:
+			if member != groupOwner:
+				members.append(member)
+
 		# Get members of the group 
 		for row in data:
-			members = get_group_members(groupOwner, groupId)
 			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
 			cleaned_data.append(tuple_list)
 
@@ -1734,6 +1742,7 @@ def search_result_for_graphs_in_group(groupOwner, groupId, search_terms, cur):
 			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, word, cur)
 		else:
 			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(groupOwner, groupId, word, cur)
+
 
 	# After all the SQL statements have ran for all of the search_terms, count the number of times
 	# a graph appears in the initial list. If it appears as many times as there are 
