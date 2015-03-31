@@ -3,6 +3,7 @@
  */
 $(document).ready(function() {
 
+
     //these accordions make up the side menu
    $('#accordion_tags').accordion({
       collapsible: true,
@@ -30,6 +31,14 @@ $(document).ready(function() {
       modifyQueryTerms('tags', $(this).attr('id'));
    });
 
+   if (getQueryVariable('search')) {
+    $("#searching").val(decodeURIComponent(getQueryVariable('search')));
+   }
+
+   if (getQueryVariable('tags')) {
+    $("#tags_searching").val(decodeURIComponent(getQueryVariable('tags')));
+   } 
+
    setIcons();
 
    /**
@@ -53,14 +62,14 @@ $(document).ready(function() {
       var url = document.URL;
       if (queryValue.length > 0) {
          currentQueryTerms = getQueryVariable(queryTerm);
-         if (currentQueryTerms) {
-            currentQueryTerms += ',' + queryValue;
-            window.location.href = updateQueryStringParameter(url, queryTerm, currentQueryTerms);
-         } else {
+         // if (currentQueryTerms) {
+         //    currentQueryTerms += ',' + queryValue;
+         //    window.location.href = updateQueryStringParameter(url, queryTerm, currentQueryTerms);
+         // } else {
             window.location.href = updateQueryStringParameter(url, queryTerm, queryValue);
-         }
+         // }
       } else {
-         return alert("Please enter a term to search for!");
+         window.location.href = window.location.href.split('?')[0];
       }
    }
 

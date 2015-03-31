@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+
+
     //these accordions make up the side menu
     //and set it to the minimum value when page is viewed
    $('#accordion_description').accordion({
@@ -17,6 +19,14 @@ $(document).ready(function() {
    $('#accordion_tags').accordion({
       collapsible: true,
    });
+
+   if (getQueryVariable('search')) {
+    $("#searching").val(decodeURIComponent(getQueryVariable('search')));
+   }
+
+   if (getQueryVariable('tags')) {
+    $("#tags_searching").val(decodeURIComponent(getQueryVariable('tags')));
+   } 
 
    /**
    * When clicked, it replaces the description of the current
@@ -107,5 +117,23 @@ $(document).ready(function() {
         }   
       });
    });
+
+
+   /**
+   * Gets query variables from the url.
+   * @param variable variable to find in the URL
+   */
+   function getQueryVariable(variable)
+   {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0;i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){
+               return pair[1];
+            }
+          }
+          return (false);
+   }
 
 });
