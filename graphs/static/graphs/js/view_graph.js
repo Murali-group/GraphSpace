@@ -3,6 +3,7 @@ This function is executed when the page finishes loading.
 Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
+
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
 
@@ -59,12 +60,16 @@ $(document).ready(function() {
       // make the selection states of the elements mutable
       this.elements().selectify();
 
+      // $("#search_tips").html("Node example: " + graph_json['graph']['nodes'][0]['data']['label'] + "<br>Edge example: " + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target']);
+      $("#search_tips ul").append('<li>Node example: ' + graph_json['graph']['nodes'][0]['data']['label'] + '</li><li>Edge example: ' + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target'] + '</li>');
+
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the nodes in graphs already in database don't have width or height
       // or unrecognized shape, have a default value
       for (var i = 0; i < graph_json['graph']['nodes'].length; i++) {
         var nodeData = graph_json['graph']['nodes'][i]['data'];
-        
+
+
         if (nodeData['height'] == undefined) {
           nodeData['height'] = 50
         }
@@ -201,7 +206,8 @@ $(document).ready(function() {
     //these accordions make up the side menu
     $('#accordion_graph_details').accordion({
         collapsible: true,
-        active: false
+        active: false,
+        heightStyle: "content"
     });
 
     $('#accordion_export').accordion({
@@ -211,7 +217,8 @@ $(document).ready(function() {
 
     $("#accordion_search").accordion({
         collapsible: true,
-        active: true
+        active: true,
+        heightStyle: "content"
     });
 
     $('#accordion_owner').accordion({
@@ -221,7 +228,8 @@ $(document).ready(function() {
 
     $('#accordion_sharing').accordion({
         collapsible: true,
-        active: false 
+        active: false,
+        heightStyle: "content"
     });
 
     $('#accordion_layouts').accordion({
@@ -662,7 +670,7 @@ function searchValues(labels) {
             highlightedTerms.push(ids[j])
           }
           // Append a new button for every search term
-          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '</a></li>');
+          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '<b style="color: red;">  X</b></a></li>');
           $("#search").val("");
         }
       }

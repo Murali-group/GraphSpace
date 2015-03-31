@@ -16,15 +16,25 @@ body {
 .csjs {
     /* the width takes up 75% of the page. */
     width: 75%;
-    height: 100%;
+    height: 90%;
     /*padding-top: 25px;*/
     float:left;
 }
 
 .side_menu {
 	float:right;
+    margin-top: -60px;
 }
 
+#graph_title {
+    width: 75%;
+    text-align: center;
+}
+
+#search_tips {
+    margin-top: -20px;
+    margin-left: 10px;
+}
 .ui-cytoscape-panzoom {
     top: 20%;
 }

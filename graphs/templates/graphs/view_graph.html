@@ -115,6 +115,7 @@
 <div class="container-fluid csjs_container">
 
     <p id"test"></p>
+    <div id="graph_title" ><h1 id="title">testing1234</h1></div>
     <div class="csjs" id="csjs"></div>
 
     <!-- side menu must be on top for 'float' to work properly -->
@@ -137,22 +138,19 @@
                     <a id='url'></a><br><br>
                     <form> 
                         <div class="input-group">
-                            <input class="form-control" type="text" name="search" id="search" placeholder="Search">
+                            <input class="form-control" type="text" name="search" id="search" placeholder="Enter Node or Edge ID to highlight">
                             <span class="input-group-btn">
                                 <button class="btn btn-info" name="search_button" id="search_button">Search</button>
                             </span>
                         </div>
                     </form>
                 </div>
-                <div id="search_tips" class="alert alert-info alert-dismissable" style="">
+                <div id="search_tips" class="alert alert-info alert-dismissable">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     <strong>Search tips:</strong><br>
                     <ul>   
-                      <li>Enter ID or label to highlight element</li>
-                      <li>Edge Syntax: head:tail</li>
-                      <li>Click button below to unhighlight
                     </ul>
-                  </div>
+              </div>
                 <ul class="nav nav-pills" id="search_terms">
                 </ul>
             </div>
