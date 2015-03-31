@@ -477,7 +477,7 @@ def graphs_in_group(request, group_owner, group_id):
                 return render(request, 'graphs/error.html', context)
 
             # Get all graph information that belong to this group
-            graph_data = db.get_all_graphs_for_group(group_owner, group_id, request.GET.get('order'), request.GET.get('search'), request.GET.get('tags'))
+            graph_data = db.get_all_graphs_for_group(context['uid'], group_owner, group_id, request.GET.get('order'), request.GET.get('search'), request.GET.get('tags'))
 
             if request.GET.get('search'):
                 context['search_result'] = True

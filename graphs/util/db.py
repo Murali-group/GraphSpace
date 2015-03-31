@@ -1714,18 +1714,19 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur):
 		graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
 		actual_graph_with_nodes.append(tuple(graph_list))
 
+	print actual_graph_with_nodes
 	return actual_graph_with_nodes
 
-def find_graphs_for_group_using_names(groupOwner, groupId, word, cur):
+def find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur):
 	intial_graph_names = []
 	actual_graph_names = []
 
-	cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and gg.group_id = ? and gg.group_owner = ? and g.graph_id = gg.graph_id and gg.user_id = g.user_id', ('%' + word + '%', groupId, groupOwner))
+	cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and g.graph_id = gg.graph_id and gu.group_id = gg.group_id and gu.group_id = ? and gu.group_owner = ?', ('%' + word + '%', uid, groupId, groupOwner))
 	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
 		
 	return intial_graph_names
 
-def search_result_for_graphs_in_group(groupOwner, groupId, search_terms, cur):
+def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms, cur):
 	
 	intial_graphs_from_search = []
 
@@ -1733,7 +1734,7 @@ def search_result_for_graphs_in_group(groupOwner, groupId, search_terms, cur):
 		if ':' in search_terms:
 			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, word, cur)
 		else:
-			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(groupOwner, groupId, word, cur)
+			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur)
 
 	# After all the SQL statements have ran for all of the search_terms, count the number of times
 	# a graph appears in the initial list. If it appears as many times as there are 
@@ -1819,7 +1820,7 @@ def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, cur):
 
 	return actual_graphs_for_tags
 
-def get_all_graphs_for_group(groupOwner, groupId, order_by, search_terms, tag_terms):
+def get_all_graphs_for_group(uid, groupOwner, groupId, order_by, search_terms, tag_terms):
 	'''
 		Get all graphs that belong to this group.
 
@@ -1838,7 +1839,7 @@ def get_all_graphs_for_group(groupOwner, groupId, order_by, search_terms, tag_te
 			return []
 
 		elif search_terms:
-			graph_data = search_result_for_graphs_in_group(groupOwner, groupId, search_terms.split(','), cur)
+			graph_data = search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms.split(','), cur)
 
 		elif tag_terms:
 			graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), cur)
