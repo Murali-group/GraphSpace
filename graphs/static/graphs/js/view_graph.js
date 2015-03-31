@@ -137,7 +137,6 @@ $(document).ready(function() {
         if (edgeData['directed'] == false) {
           edgeData['arrow'] = 'none';
         } else {
-          console.log('true');
           edgeData['arrow'] = 'triangle';
         }
       }
@@ -159,9 +158,11 @@ $(document).ready(function() {
         var target = evt.cyTarget;
         // target some element other than background (node/edge)
         if ( target !== this ) {
-            var popup = target._private.data
+            var popup = target._private.data.popup
 
-            if (popup == null) {
+            window.cy.$('[id="' + target._private.data.id + '"]').css('color', 'red');
+
+            if (popup == null || popup.length == 0) {
                 return;
             }
 
@@ -175,8 +176,11 @@ $(document).ready(function() {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
             $('#dialog').dialog('open');
+        } else {
+          window.cy.elements().removeCss('color');
         }
       });
+
 
 
       //If ther are any terms to be searched for, highlight those terms, if found
