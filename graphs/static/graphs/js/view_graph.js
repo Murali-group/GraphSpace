@@ -29,7 +29,7 @@ $(document).ready(function() {
         })
       .selector('edge')
         .css({
-          'target-arrow-shape': 'triangle',
+          'target-arrow-shape': 'data(arrow-shape)',
           'line-color': 'data(color)',
           'source-arrow-color': 'data(color)',
           'target-arrow-color': 'data(color)',
@@ -128,6 +128,12 @@ $(document).ready(function() {
               edgeData['color'] = addCharacterToHex(edgeData['color']);
             }
            }
+        }
+
+        if (edgeData['directed'] == false) {
+          edgeData['arrow-shape'] = 'none';
+        } else {
+          edgeData['arrow-shape'] = 'triangle';
         }
       }
 
