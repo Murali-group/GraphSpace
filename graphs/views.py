@@ -1211,7 +1211,7 @@ def make_graph_public(request, user_id, graphname):
         data = db.change_graph_visibility(1, request.POST['username'], graphname)
 
         if data == None:
-            return HttpResponse(json.dumps({"Success": "Successfully make " + graphname + " owned by " + user_id + " public."}), content_type="application/json")
+            return HttpResponse(json.dumps({"Success": "Successfully made " + graphname + " owned by " + user_id + " public."}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
 
@@ -1234,7 +1234,7 @@ def make_graph_private(request, user_id, graphname):
 
         data = db.change_graph_visibility(0, request.POST['username'], graphname)
         if data == None:
-            return HttpResponse(json.dumps({"Success": "Successfully make " + graphname + " owned by " + user_id + " private."}), content_type="application/json")
+            return HttpResponse(json.dumps({"Success": "Successfully made " + graphname + " owned by " + user_id + " private."}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
 

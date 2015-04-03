@@ -2440,7 +2440,7 @@ def change_graph_visibility(isPublic, user_id, graphName):
 		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (user_id, graphName))
 
 		if len(cur.fetchall()) == 0:
-			return "Graph with name " + graphName + " doesn't exist under " + user_id
+			return "Graph with name " + graphName + " doesn't exist under " + user_id + '.'
 
 		cur.execute('update graph set public = ? where user_id = ? and graph_id = ?', (isPublic, user_id, graphName))
 		cur.execute('update layout set public = ? where user_id = ? and graph_id = ? and unlisted = 1', (isPublic, user_id, graphName))
@@ -3130,7 +3130,7 @@ def change_graph_visibility_for_tag(isPublic, tagname, username):
 		data = cur.fetchall()
 
 		if len(data) == 0:
-			return "No graphs exist for " + username + " for tag: " + tagname
+			return "No graphs exist for " + username + " for tag: " + tagname + '.'
 
 		# Get all tags for specified graph and return it
 		cur.execute('update graph set public = ? where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (isPublic, tagname, username, tagname, username))

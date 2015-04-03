@@ -46,6 +46,8 @@ Below is a list of the different API calls.
 <li><a href="#get_graph">Get graph</a></li>
 <li><a href="#remove_graph">Remove graph</a></li>
 <li><a href="#get_user_graphs">Get user graphs</a></li>
+<li><a href="#make_graph_public">Make graph public</a></li>
+<li><a href="#make_graph_private">Make graph public</a></li>
 </ul>
 </li>
 <li><h4><a href="#groups">Groups</a></h4>
@@ -159,7 +161,7 @@ Here is an example of a basic graph JSON:
 <b>When using HEX value to specify color, be sure to prepend with '#' character e.g. '#000000'</b><br><br>
 
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -181,7 +183,7 @@ To get the JSON for an existing graph use the following GET command. You can onl
 curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -247,7 +249,7 @@ To remove a graph use the following command. You can only remove a graph that be
 curl -X POST "{{url}}api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -286,6 +288,40 @@ Example response:
 }
 </pre>
 
+<h3 id="make_graph_public">Make graph public</h3>
+
+Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
+
+<pre>
+curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example successful response:
+<pre>
+{"Success": "Successfully made [graphname] owned by [email] public."}
+</pre>
+
+Example failed response:
+<pre>
+{"Error": "Graph with name [graphname] doesn't exist under [email]."}
+</pre>
+<h3 id="make_graph_private">Make graph private</h3>
+
+Makes a specific graph that user owns private (only groups that graph is shared with and owner of graph can see it).
+
+<pre>
+curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example successful response:
+<pre>
+{"Success": "Successfully made [graphname] owned by [email] private."}
+</pre>
+
+Example failed response:
+<pre>
+{"Error": "Graph with name [graphname] doesn't exist under [email]."}
+</pre>
 <h2 id="groups">Groups</h2>
 
 <!-- <h3 id="get_groups">Get groups</h3>
@@ -362,7 +398,7 @@ To remove a group use the following command. You can only remove a group that yo
 curl -X POST "{{url}}api/groups/delete/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -411,7 +447,7 @@ Add a user to a group. You can only add a user to a group that you belong to.
 curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/adduser/[member]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -432,7 +468,7 @@ Remove a user from a group. You can remove yourself from any group, but you must
 curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=dsingh5270@gmail.com" -F "password=test"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -454,7 +490,7 @@ Share a graph with a group, effectively giving all members in the group read per
 curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -470,7 +506,7 @@ Unshare a graph with a group, effectively removing read permission from all memb
 curl -X POST "{{url}}api/users/graphs/[graphname]/unshare/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {
@@ -485,7 +521,7 @@ Get all the tags that a user has for their graphs.
 curl -X POST "{{url}}api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {"Response": ["ISMB-2014-Crosstalk"]}
@@ -498,7 +534,7 @@ Get all the tags that are attached to a certain graph.
 curl -X POST "{{url}}api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 <pre>
 {"Response": ["ISMB-2014-Crosstalk"]}
 </pre>
@@ -510,7 +546,7 @@ Changes the privacy of all graphs that contain a [tag] under [email] public.
 curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePublic/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {"Success": "Graph with tag have been made public"}
@@ -523,7 +559,7 @@ Changes the privacy of all graphs that contain a [tag] under [email] private.
 curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {"Success": "Graph with tag have been made private"}
@@ -536,7 +572,7 @@ Delets all graphs that contain a [tag] under [email].
 curl -X POST "{{url}}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" -F "password=[password]"
 </pre>
 
-Example Successful response:
+Example successful response:
 
 <pre>
 {"Success": "Graphs with tag have been deleted"}
