@@ -471,11 +471,10 @@ def set_layout_context(request, context, uid, gid):
 	# context['layouts'] = get_all_layouts_for_graph(uid, gid)
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
-		context['shared_layouts'] = get_shared_layouts_for_graph(uid, gid, context['uid'])
+		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid)))
 	else:
 		context['my_layouts'] = []
-		context['shared_layouts'] = []
-	context['public_layouts'] = get_public_layouts_for_graph(uid, gid)
+		context['shared_layouts'] = get_public_layouts_for_graph(uid, gid)
 
 	return context
 
@@ -2425,8 +2424,46 @@ def get_all_groups_for_this_graph(uid, graph):
 		if con:
 			con.close()
 
-def is_layout_shared(layoutId, layoutOwner, uid, graphName):
+def change_graph_visibility(isPublic, user_id, graphName):
+	'''
+		Makes specified graph and all associated layouts public or private
 
+		:param isPublic boolean that decides if graph is made public or private (0 if private, 1 if public)
+		:param user_id ID of owner of graph
+		:param graphName name of graph to make public
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (user_id, graphName))
+
+		if len(cur.fetchall()) == 0:
+			return "Graph with name " + graphName + " doesn't exist under " + user_id
+
+		cur.execute('update graph set public = ? where user_id = ? and graph_id = ?', (isPublic, user_id, graphName))
+		cur.execute('update layout set public = ? where user_id = ? and graph_id = ? and unlisted = 1', (isPublic, user_id, graphName))
+		con.commit()
+
+	except lite.Error, e:
+		return 'Error %s:' % e.args[0]
+		return e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+def is_layout_shared(layoutId, layoutOwner, uid, graphName):
+	'''
+		Returns if a specified layout is shared
+
+		:param layoutId ID of layout
+		:param layoutOwner owner of layout
+		:param uid person requesting if layout is shared
+		:param graphName graph that layout is associated with
+		:return boolean True if layout is shared with uid
+	'''
 	con = None
 	try:
 		con = lite.connect(DB_NAME)
@@ -3073,10 +3110,11 @@ def get_all_tags_for_graph(graphname, username):
 		if con:
 			con.close()
 
-def make_all_graphs_for_tag_public(tagname, username):
+def change_graph_visibility_for_tag(isPublic, tagname, username):
 	'''
 		Makes all graphs under a tag owned by username public.
 
+		:param isPublic: If graphs are to be made public (0 for private, 1 for public)
 		:param tagname: Name of tag to search for
 		:param username: Email of user in GraphSpace
 		:return <Message>
@@ -3088,37 +3126,17 @@ def make_all_graphs_for_tag_public(tagname, username):
 
 		graph_list = []
 
-		# Get all tags for specified graph and return it
-		cur.execute('update graph set public = 1 where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
-		con.commit()
-		return "Done"
+		cur.execute('select user_id from graph_to_tag where tag_id = ? and user_id = ?', (tagname, username))
+		data = cur.fetchall()
 
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
-
-def make_all_graphs_for_tag_private(tagname, username):
-	'''
-		Makes all graphs under a tag owned by username public.
-
-		:param tagname: Name of tag to search for
-		:param username: Email of user in GraphSpace
-		:return <Message>
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		graph_list = []
+		if len(data) == 0:
+			return "No graphs exist for " + username + " for tag: " + tagname
 
 		# Get all tags for specified graph and return it
-		cur.execute('update graph set public = 0 where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
+		cur.execute('update graph set public = ? where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (isPublic, tagname, username, tagname, username))
+		cur.execute('update layout set public = ? where owner_id = ? and user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (username, isPublic, tagname, username, tagname, username))
+
 		con.commit()
-		return "Done"
 
 	except lite.Error, e:
 			print "Error %s: " %e.args[0]

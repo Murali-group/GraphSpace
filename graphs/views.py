@@ -1189,8 +1189,54 @@ def view_all_graphs_for_user(request, user_id):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         data = db.get_all_graphs_for_user(user_id)
-        return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json");
+        return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json")
 
+def make_graph_public(request, user_id, graphname):
+    '''
+        Makes specified graph and all of its layouts public
+
+        :param request: Incoming HTTP POST Request containing:
+        {"username": <username>,"password": <password>}
+        :param graphname: name of graph to make public
+        :return response: JSON Response: {"Success|Error": <message>}
+    '''
+    if request.method == 'POST':
+        
+        if request.POST['username'] != user_id:
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+        
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        data = db.change_graph_visibility(1, request.POST['username'], graphname)
+
+        if data == None:
+            return HttpResponse(json.dumps({"Success": "Successfully make " + graphname + " owned by " + user_id + " public."}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
+
+def make_graph_private(request, user_id, graphname):
+    '''
+        Makes specified graph and all of its layouts public
+
+        :param request: Incoming HTTP POST Request containing:
+        {"username": <username>,"password": <password>}
+        :param graphname: name of graph to make public
+        :return response: JSON Response: {"Success|Error": <message>}
+    '''
+    if request.method == 'POST':
+
+        if request.POST['username'] != user_id:
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+        
+        if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        data = db.change_graph_visibility(0, request.POST['username'], graphname)
+        if data == None:
+            return HttpResponse(json.dumps({"Success": "Successfully make " + graphname + " owned by " + user_id + " private."}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
 
 def get_groups(request):
     '''
@@ -1459,10 +1505,13 @@ def make_all_graphs_for_tag_public(request, username, tagname):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         if username == request.POST['username']:
-            db.make_all_graphs_for_tag_public(tagname, username)
-            return HttpResponse(json.dumps({"Success": "Graph with tag have been made public"}), content_type="application/json")
+            error = db.change_graph_visibility_for_tag(1, tagname, username)
+            if error == None:
+                return HttpResponse(json.dumps({"Success": "Graphs with tag have been made public"}), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps({"Error": error}), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps({"Error": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
 
 def make_all_graphs_for_tag_private(request, username, tagname):
     '''
@@ -1481,7 +1530,7 @@ def make_all_graphs_for_tag_private(request, username, tagname):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         if username == request.POST['username']:
-            db.make_all_graphs_for_tag_private(tagname, username)
+            db.change_graph_visibility_for_tag(0, tagname, username)
             return HttpResponse(json.dumps({"Success": "Graph with tag have been made private"}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
