@@ -18,7 +18,7 @@ $(document).ready(function() {
    //When tag button on the side gets clicked
    $("#tags_button").click(function (e) {
    	e.preventDefault();
-      urlAppender('search', $("#tags_searching").val());
+      urlAppender('tags', $("#tags_searching").val());
    });
 
    $(".search").click(function (e) {
