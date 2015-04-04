@@ -471,6 +471,8 @@ def set_layout_context(request, context, uid, gid):
 	# context['layouts'] = get_all_layouts_for_graph(uid, gid)
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
+		print get_shared_layouts_for_graph(uid, gid, context['uid'])
+		print  get_public_layouts_for_graph(uid, gid)
 		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid)))
 	else:
 		context['my_layouts'] = []
@@ -2939,6 +2941,8 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 					cleaned_data.append(layouts)
 
 				return cleaned_data
+
+		return []
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
 		return []
@@ -2983,7 +2987,7 @@ def get_public_layouts_for_graph(uid, gid):
 		data = cur.fetchall()
 
 		if data == None:
-			return None
+			return []
 
 		# Replace any spaces with html equivalent
 		cleaned_data = []
@@ -2994,7 +2998,7 @@ def get_public_layouts_for_graph(uid, gid):
 		return cleaned_data
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
-		return None
+		return []
 	finally:
 		if con:
 			con.close()
