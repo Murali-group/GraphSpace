@@ -1779,19 +1779,27 @@ def groups_for_user(username):
 			con.close()
 
 
-def find_edges_for_graphs_in_group(groupOwner, groupId, word, cur):
+def find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	print 'test'
 
 
-def find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur):
+def find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	labels_and_id_matched_graphs = []
 
-	cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
-	labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+	if search_type == 'partial_search':
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
 
-	cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
-	labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
 
+	elif search_type == 'full_search':
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from node as n, group_to_graph as gg, graph as g where n.label = ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', (word, groupOwner, groupId))
+		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.node_id = ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', (word, groupOwner, groupId))
+		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
+	
 	actual_graph_with_nodes = []
 	for graph in labels_and_id_matched_graphs:
 		graph_list = list(graph)
@@ -1800,25 +1808,27 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur):
 
 	return actual_graph_with_nodes
 
-def find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur):
+def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur):
 	intial_graph_names = []
-	actual_graph_names = []
 
-	cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and g.graph_id = gg.graph_id and gu.group_id = gg.group_id and gu.group_id = ? and gu.group_owner = ?', ('%' + word + '%', uid, groupId, groupOwner))
+	if search_type == 'partial_search':
+		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and g.graph_id = gg.graph_id and gu.group_id = gg.group_id and gu.group_id = ? and gu.group_owner = ?', ('%' + word + '%', uid, groupId, groupOwner))
+	elif search_type == 'full_search':
+		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id = ? and gu.user_id= ? and g.graph_id = gg.graph_id and gu.group_id = gg.group_id and gu.group_id = ? and gu.group_owner = ?', (word, uid, groupId, groupOwner))
+
 	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
 		
 	return intial_graph_names
 
-def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms, cur):
+def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, cur):
 	
 	intial_graphs_from_search = []
 
 	for word in search_terms:
 		if ':' in search_terms:
-			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, word, cur)
+			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
 		else:
-			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, word, cur) + find_graphs_for_group_using_names(uid, groupOwner, groupId, word, cur)
-
+			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur) + find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur)
 
 	# After all the SQL statements have ran for all of the search_terms, count the number of times
 	# a graph appears in the initial list. If it appears as many times as there are 
@@ -1864,6 +1874,8 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms, cu
 			key_with_search = tuple(key_with_search)
 			actual_graphs_for_searches.append(key_with_search)
 
+
+	print actual_graphs_for_searches
 	# Return whole dictionary of matchin graphs
 	return actual_graphs_for_searches
 
@@ -1904,7 +1916,7 @@ def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, cur):
 
 	return actual_graphs_for_tags
 
-def get_all_graphs_for_group(uid, groupOwner, groupId, order_by, search_terms, tag_terms):
+def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	'''
 		Get all graphs that belong to this group.
 
@@ -1915,6 +1927,18 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, order_by, search_terms, t
 		:return Graphs: [graphs]
 	'''
 	con = None
+
+	search_type = None
+
+	if 'partial_search' in request.GET:
+		search_type = 'partial_search'
+	elif 'full_search' in request.GET:
+		search_type = 'full_search'
+
+	search_terms = request.GET.get(search_type)
+	tag_terms = request.GET.get('tags')
+	order_by = request.GET.get('order')
+
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
@@ -1923,7 +1947,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, order_by, search_terms, t
 			return []
 
 		elif search_terms:
-			graph_data = search_result_for_graphs_in_group(uid, groupOwner, groupId, search_terms.split(','), cur)
+			graph_data = search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms.split(','), cur)
 
 		elif tag_terms:
 			graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), cur)
