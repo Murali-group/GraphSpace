@@ -48,7 +48,7 @@ $(document).ready(function() {
           'source-arrow-color': '#ff0000'
         }),
     
-    // default layout set to be concentric
+    // default layout set to be arbor
     layout: getLayoutFromQuery(),
     
     // draw graph, handle events etc.

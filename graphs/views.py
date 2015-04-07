@@ -57,7 +57,7 @@ def index(request):
         if request.session['uid'] != None:
             return _graphs_page(request, 'my graphs')
 
-        return render(request, 'graphs/index.html', context)
+        return render(request, 'graphs/help_getting_started.html', context)
     else:
         return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
 
