@@ -242,7 +242,7 @@
                 </div>
                 <div class="panel-collapse collapse in" id="collapse_owner_box">
                   <div class="panel-body">
-                    <a href="#user_address">{{ group_owner}}</a>
+                    {{ group_owner}}
                   </div>
                 </div>
               </div>
@@ -269,7 +269,6 @@
                         <tbody>
                             {% for member in group_members %}
                             <tr>
-                              {% if uid != member %}
                               <td>
                                 {{ member}}
                               </td>
@@ -280,9 +279,11 @@
                                 </div>
                                 
                               </td>
-                              {% endif %}
                             </tr>
                             {% endfor %}
+                            <tr>
+                              <td>{{group_owner}}</td>
+                            </tr>
                         </tbody>
                       </table>
                     {% else %}
@@ -300,6 +301,9 @@
                             </td>
                           </tr>
                           {% endfor %}
+                          <tr>
+                              <td>{{group_owner}}</td>
+                            </tr>
                       </tbody>
                     </table>
                 {% endif %}
@@ -383,7 +387,11 @@
     </div>
         </div> <!-- end class = side_menu -->
     </div>
-
+    </div>
+<footer class="footer">
+<br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+<br><a href = "http://js.cytoscape.org/">CytoscapeJS</a>
+</footer>
 {% endblock %} <!-- end content block -->
 
 {% block css-js-footer %}

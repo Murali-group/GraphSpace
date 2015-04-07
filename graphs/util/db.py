@@ -582,7 +582,7 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 
 	# If there is no one logged in, display only public graph results
 	if uid == None:
-		context['graph_list'] = view_graphs(uid, search_terms, tag_list, 'public')
+		context['graph_list'] = view_graphs(uid, search_type, search_terms, tag_list, 'public')
 		context['my_graphs'] = 0
 		context['shared_graphs'] = 0
 		if context['graph_list'] == None:
@@ -766,7 +766,6 @@ def search_result(uid, search_type, search_terms, view_type):
 		:return Graphs: [graphs]
 	'''
 
-	print search_type
 	if search_type != 'partial_search' and search_type !=  'full_search':
 		print 'here'
 		return []
@@ -788,11 +787,13 @@ def search_result(uid, search_type, search_terms, view_type):
 					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_type, search_word, view_type, cur)
 				# If it is a node or possibly a graph_id (name of the graph)
 				else:
-					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur) + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
+					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur)# + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
 
+			intial_graphs_from_search = list(set(intial_graphs_from_search))
+			
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
-			# search terms, then that graph matches all the tag terms and it should be returned
+			# search terms, then that graph matches all the search terms and it should be returned
 			graph_repititions = defaultdict(int)
 			graph_mappings = defaultdict(list)
 			# Counting the number of occurences

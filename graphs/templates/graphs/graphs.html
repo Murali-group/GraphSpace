@@ -312,10 +312,10 @@
                     </div>
                     <div class="input-group" id="search_radios">
                     <label>
-                        <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)">Partial
+                        <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)">Similar
                     </label>
                     <label>
-                        <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)">Full
+                        <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)">Exact
                     </label>
                     </div>
                   </form><br><br>
@@ -381,7 +381,12 @@
 </div> <!-- end graphs_container -->
 </div>
 <!-- </div> -->
+<footer class="footer">
+<br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+<br><a href = "http://js.cytoscape.org/">CytoscapeJS</a>
+</footer>
 {% endblock %} <!-- end content block -->
+
 
 {% block css-js-footer %}
 <!-- load javascripts -->

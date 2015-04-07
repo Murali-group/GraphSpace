@@ -194,6 +194,10 @@ A layout is a specific representation of the network.  In terms of GraphSpace, a
 <h3 id="sharing_layouts">Sharing layouts</h3>
 Similar to a graph, a layout may also be shared with a group.  In order for a layout to be shared with a group, the graph (and implicitly the graph owner) must already be shared with a group.  It would make no sense to share a layout with a group if that graph may not be viewed by any of the group's members. <br /><br />When you first create a layout, only the creator of the layout is allowed to see it.  If the graph is publicly available on GraphSpace, then if the user shares the layout they created, the layout will also be made publicly available.  If the graph is privately shared, then if the user decides to share a layout they created, every group that has both the creater of the layout as well as the graph which the layout references will have access to that layout.
 
-
+</div>
+<footer class="footer">
+<br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+<br><a href = "http://js.cytoscape.org/">CytoscapeJS</a>
+</footer>
 
 {% endblock %}
