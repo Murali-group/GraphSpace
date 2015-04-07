@@ -1787,10 +1787,10 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	labels_and_id_matched_graphs = []
 
 	if search_type == 'partial_search':
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ? and n.label MATCH ? ', (groupOwner, groupId, '*' + word + '*'))
 		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
 
-		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ?', ('*' + word + '*', groupOwner, groupId))
+		cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g where gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gg.group_owner = ? and gg.group_id = ? and n.node_id MATCH ? ', (groupOwner, groupId, '*' + word + '*'))
 		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
 
 	elif search_type == 'full_search':
@@ -1875,7 +1875,6 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, sea
 			actual_graphs_for_searches.append(key_with_search)
 
 
-	print actual_graphs_for_searches
 	# Return whole dictionary of matchin graphs
 	return actual_graphs_for_searches
 

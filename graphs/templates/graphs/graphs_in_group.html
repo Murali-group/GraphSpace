@@ -68,9 +68,9 @@
                           {% if graph_list != None and graph_list|length > 0%}
                               {% if has_previous %}
                                   {% if search_word and tags%}
-                                      <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
+                                      <li><a href="?page={{ previous_page_number }}&{{search_type}}={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
                                   {% elif search_word %}
-                                      <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
+                                      <li><a href="?page={{ previous_page_number }}&{{search_type}}={{ search_word }}">&lt; Prev</a></li>
                                   {% elif tags %}
                                       <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
                                   {% else %}
@@ -82,20 +82,20 @@
                                   {% for p in page_numbers %}
                                       {% if tags != None %}
                                           {% if p == current_page.number %}
-                                             <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                             <li class='active'><a href="{% url 'graphs' %}?{{search_type}}={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                           {% else %}
-                                              <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                              <li><a href="?{{search_type}}={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                           {% endif %}
                                       {% else %}
                                           {% if p == current_page.number %}
-                                             <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                             <li class='active'><a href="{% url 'graphs' %}?{{search_type}}={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                           {% else %}
-                                              <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                              <li><a href="?{{search_type}}={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                           {% endif %}
                                       {% endif %}
                                   {% endfor %}
                                   {% if has_next %}
-                                      <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                                      <li><a href="?{{search_type}}={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
                                   {% endif %}
                               {% elif tags != None %}
                                   {% for p in page_numbers %}
@@ -106,7 +106,7 @@
                                       {% endif %}
                                   {% endfor %}
                                   {% if has_next %}
-                                      <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
+                                      <li><a href="?{{search_type}}={{ search_word }}&page={{ next_page_number }}">Next</a></li> 
                                   {% endif %}
                               {% else %}
                                  {% for p in page_numbers %}
@@ -118,9 +118,9 @@
                                   {% endfor %}
                                   {% if has_next %}
                                       {% if search_word and tags%}
-                                          <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
+                                          <li><a href="?page={{ next_page_number }}&{{search_type}}={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
                                       {% elif search_word %}
-                                          <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
+                                          <li><a href="?page={{ next_page_number }}&{{search_type}}={{ search_word }}">Next &gt;</a></li>
                                       {% elif tags %}
                                           <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
                                       {% else %}
