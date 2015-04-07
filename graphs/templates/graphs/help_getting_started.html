@@ -19,7 +19,29 @@
 
 <br/>
 <br/>
-<h3>What is a graph?</h3>
+<ul>
+<li><h4><a href="#graphs">Graphs</a></h4>
+<ul>
+<li><a href="#what_is">What is a graph</a></li>
+<li><a href="#view_graph">Viewing a graph</a></li>
+<li><a href="#embedded_info">Embedded Information</a></li>
+<li><a href="#graph_panels">Graph Panels</a></li>
+<li><a href="#finding_graphs">Finding Graphs</a></li>
+<li><a href="#upload_graphs">Uploading Graphs</a></li>
+<li><a href="#layouts">Layouts</a></li>
+<li><a href="#search">Searching for graphs</a></li>
+</ul>
+</li>
+<li><h4><a href="#groups">Groups</a></h4>
+<ul>
+	<li><a href="#grouping_graphs">Grouping graphs</a></li>
+	<li><a href="#sharing_graphs">Sharing graphs</a></li>
+	<li><a href="#sharing_layouts">Group layouts</a></li>
+</ul>
+<li><h4><a href="#tags">Tags</a></h4></li>
+</ul>
+
+<h3 id="what_is">What is a graph?</h3>
 
 A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing vertices (also known as nodes or points) and edges which connect the vertices.
 
@@ -38,7 +60,7 @@ GraphSpace allows people to store and share graphs, regardless of what those gra
 <li><a href="#sharing">I want to share my graphs</a>
 </ul>
 
-<h3 id="viewing_graphs">Viewing a Graph</h3>
+<h3 id="view_graph">Viewing a Graph</h3>
 
 Below is a public graph that can be found <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">here</a>.
 
@@ -58,7 +80,7 @@ The information embedded inside elements may contain external links to sources a
 <h3 id="graph_panels">Graph Panels</h3>
 When viewing a grpah, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
-<b>Graph Details Panel</b>: Area where legent image for a graph and/or description of the graph
+<b id="graph_details">Graph Details Panel</b>: Area where legent image for a graph and/or description of the graph
 <br><br>
 <b>Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, sipmly enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards. For example, if a user searched for the node 'TEM1', then the node will look like this:
 <br><br>
@@ -117,8 +139,8 @@ The 'Auto' option provides methods to automatically layout a graph using their r
 <br>
 <b>Number of highly probably paths</b> reveals interactions (connections) that occur at a certain value.  For example, when <b>Number of highly probable paths</b> was 10, a read node was revealed.  When this value was 8, the red node was not present.
 <br>
-
-<h3 id="view">Finding graphs</h3>
+<br><br>
+<h3 id="finding_graphs">Finding graphs</h3>
 
 Notice the bar at the top of the screen. On the left hand side, right next to the big "GraphSpace" logo, are links to your graphs and groups.
 
@@ -136,6 +158,14 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 
 </ul>
 
+<h3 id="upload_graphs">Uploading graphs</h3>
+
+GraphSpace represents graphs using a JSON format. To see an example of how to uplaod a correctly formatted JSON graph to GraphSpace, please see <a href="{{url}}help/restapi/#add_graph">this page</a>.
+
+<br><br>
+<h3 id="layouts">Layouts</h3>
+A layout is a specific representation of the network.  In terms of GraphSpace, a layout is the specific arrangement of nodes and edges for that graph.  GraphSpace provides a list of pre-defined algorithms to quickly layout any graph.  In addition, a user can also manually go in and arrange nodes and edges as they see fit and then save the layout for future reference. 
+<br><br>
 <h3 id="search">Searching for graphs</h3>
 
 While on the graphs page, there are two boxes: Search and Tags [See <a href="#tags">Tags</a> section].  The Search panel allows for any user of GraphSpace to search a graph that matches the criteria of ALL search queries.  A user may search for graphs using its name as well as a node or an edge which a graph may contain.  
@@ -153,18 +183,6 @@ To search for edges, search using the following syntax [tail: head] where tail i
 
 Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.
 
-<h3 id="view">Grouping Graphs</h3>
-
-You can also look at groups, which are collections of graphs shared by members of the group. Click on groups in the navigation bar. You should see the following categories for groups
-
-<ul>
-
-<li><b><a href="{{url}}groups/">Owner of</a></b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members. All other functionality is accomplished through the <a href="{{url}}help/restapi/#groups">REST API</a></li>
-
-<li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/restapi/#graphs">REST API</a></li>
-
-</ul>
-
 <h3 id="groups">Groups</h3>
 
 <b>Note</b>: GraphSpace account required for this feature
@@ -176,20 +194,24 @@ A <b>group owner</b> is the creator of the group.  They may<ul><li>Invite any Gr
 A <b>group member</b>is a user that is a part of a group that is owned by someone else. They may<ul><li>Share their graphs with a group</li><li>Unshare the graphs that they own from the group</li></ul>
 <b>Both groups owners and group members</b> may share layouts with the group of any graph that is shared with the group.
 
+<h3 id="grouping_graphs">Grouping graphs</h3>
 
-<h3 id="upload">Uploading graphs</h3>
+You can also look at groups, which are collections of graphs shared by members of the group. Click on groups in the navigation bar. You should see the following categories for groups
 
-GraphSpace represents graphs using a JSON format. To see an example of how to uplaod a correctly formatted JSON graph to GraphSpace, please see <a href="{{url}}help/restapi/#add_graph">this page</a>.
+<ul>
 
-<h3 id="sharing">Sharing graphs</h3>
+<li><b><a href="{{url}}groups/">Owner of</a></b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members. All other functionality is accomplished through the <a href="{{url}}help/restapi/#groups">REST API</a></li>
+
+<li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/restapi/#graphs">REST API</a></li>
+
+</ul>
+
+<h3 id="sharing_graphs">Sharing graphs</h3>
 {% with url|add:"help/restapi/" as final_url %}
     To share one of your graphs, refer to the <a href='{{final_url}}'>REST API</a>.
 {% endwith %}
 <br>
-In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one in the group is allowed to see that graph anymore.  Only the graph owner is allowed to see the graph. 
-
-<h3 id="layouts">Layouts</h3>
-A layout is a specific representation of the network.  In terms of GraphSpace, a layout is the specific arrangement of nodes and edges for that graph.  GraphSpace provides a list of pre-defined algorithms to quickly layout any graph.  In addition, a user can also manually go in and arrange nodes and edges as they see fit and then save the layout for future reference.  
+In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one in the group is allowed to see that graph anymore.  Only the graph owner is allowed to see the graph.  
 
 <h3 id="sharing_layouts">Sharing layouts</h3>
 Similar to a graph, a layout may also be shared with a group.  In order for a layout to be shared with a group, the graph (and implicitly the graph owner) must already be shared with a group.  It would make no sense to share a layout with a group if that graph may not be viewed by any of the group's members. <br /><br />When you first create a layout, only the creator of the layout is allowed to see it.  If the graph is publicly available on GraphSpace, then if the user shares the layout they created, the layout will also be made publicly available.  If the graph is privately shared, then if the user decides to share a layout they created, every group that has both the creater of the layout as well as the graph which the layout references will have access to that layout.
