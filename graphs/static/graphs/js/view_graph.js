@@ -694,8 +694,11 @@ function searchValues(labels) {
 
     if (highlightedTerms.length > 0) {
       displayLink = true;
+      $("#search_error").css("display", "none");
     } else {
-      return alert("No elements match your search criteria!");
+      $("#search_error").css("display", "block");
+      $("#search_error_text").text("No elements match your search!");
+      return;
     }
 
     for (var z = 0; z < highlightedTerms.length; z++) {

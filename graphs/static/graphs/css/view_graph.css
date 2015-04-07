@@ -37,6 +37,12 @@ body {
     width: 100%;
 }
 
+#search_error {
+    margin-top: -20px;
+    margin-left: 10px;
+    width: 100%;
+}
+
 #search_tips li {
 }
 
