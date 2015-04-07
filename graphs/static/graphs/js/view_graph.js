@@ -215,11 +215,10 @@ $(document).ready(function() {
         active: false 
     });
 
-    // $("#accordion_search").accordion({
-    //     collapsible: true,
-    //     active: false,
-    //     heightStyle: "content"
-    // });
+    $("#accordion_search").accordion({
+        collapsible: true,
+        heightStyle: "content"
+    });
 
     $('#accordion_owner').accordion({
         collapsible: true,
@@ -695,11 +694,6 @@ function searchValues(labels) {
     if (highlightedTerms.length > 0) {
       displayLink = true;
       $("#search_error").css("display", "none");
-      $("#accordion_search").accordion({
-          collapsible: true,
-          heightStyle: "content",
-          active: false
-      });
     } else {
       $("#search_error").css("display", "block");
       $("#search_error_text").text("No elements match your search!");
