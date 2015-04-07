@@ -251,14 +251,21 @@ def _graphs_page(request, view_type):
     # Set the base URL's so that the links point to the correct view types
     context['base_url'] = [] #db.get_base_urls(view_type)
 
+    search_type = None
+
+    if 'partial_search' in request.GET:
+        search_type = 'partial_search'
+    elif 'full_search' in request.GET:
+        search_type = 'full_search'
+
     # Set all information abouut graphs to the front-end
-    context = db.get_graphs_for_view_type(context, view_type, uid, request.GET.get('search'), request.GET.get('tags'), request.GET.get('order'))
+    context = db.get_graphs_for_view_type(context, view_type, uid, request)
 
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
     if len(context['graph_list']) == 0:
-        context = constructGraphMessage(context, view_type, request.GET.get('search'), request.GET.get('tags'))
+        context = constructGraphMessage(context, view_type, request.GET.get(search_type), request.GET.get('tags'))
 
     #Divide the results of the query into pages. Currently has poor performance
     #because the page processes a query (which may take long)
@@ -271,7 +278,7 @@ def _graphs_page(request, view_type):
             context.update(pager_context)
             for i in xrange(len(context['current_page'].object_list)):
                 graph = list(context['current_page'][i])
-                if request.GET.get('search'):
+                if request.GET.get(search_type):
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
                 else:
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])

@@ -3,8 +3,15 @@
  */
 $(document).ready(function() {
 
+   if (getQueryVariable('full_search')) {
+      // Initially set search to full matching
+      $("#full_search").attr('checked', true);
+   } else {
+      // Initially set search to full matching
+      $("#partial_search").attr('checked', true);
+   }
 
-    //these accordions make up the side menu
+   //these accordions make up the side menu
    $('#accordion_tags').accordion({
       collapsible: true,
    });
@@ -12,27 +19,31 @@ $(document).ready(function() {
    //When search button on the side gets clicked
    $("#search_button").click(function (e) {
    	e.preventDefault();
-      urlAppender('search', $("#searching").val());
+      var newURL = removeURLParameter(document.URL, $('input[name=match]:not(:checked)').val());
+      if (newURL.charAt(newURL.length - 1) == '?') {
+         newURL = newURL.substring(0, newURL.length - 1);
+      } 
+      urlAppender(newURL, $('input[name=match]:checked').val(), $("#searching").val());
    });
 
    //When tag button on the side gets clicked
    $("#tags_button").click(function (e) {
    	e.preventDefault();
-      urlAppender('tags', $("#tags_searching").val());
+      urlAppender(document.URL, 'tags', $("#tags_searching").val());
    });
 
-   $(".search").click(function (e) {
-      e.preventDefault();
-      modifyQueryTerms('search', $(this).attr('id'));
-   });
+   // $(".search").click(function (e) {
+   //    e.preventDefault();
+   //    modifyQueryTerms($('input[name=match]:checked').val(), $(this).attr('id'));
+   // });
 
-   $(".tags").click(function (e) {
-      e.preventDefault();
-      modifyQueryTerms('tags', $(this).attr('id'));
-   });
+   // $(".tags").click(function (e) {
+   //    e.preventDefault();
+   //    modifyQueryTerms('tags', $(this).attr('id'));
+   // });
 
-   if (getQueryVariable('search')) {
-    $("#searching").val(decodeURIComponent(getQueryVariable('search')));
+   if (getQueryVariable($('input[name=match]:checked').val())) {
+    $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
    if (getQueryVariable('tags')) {
@@ -47,7 +58,7 @@ $(document).ready(function() {
    * is still followed.
    */
    $(".tag_links").click(function (e) {
-      urlAppender('tags', $(this).attr('id'));
+      urlAppender(document.URL, 'tags', $(this).attr('id'));
    });   
 
    /**
@@ -55,19 +66,13 @@ $(document).ready(function() {
    * For example, it appends ?queryTerm if there are no query terms, or it appends &queryTerm=
    * to the end of the current url if a queryterm already exists.
    * 
+   * @param url URL to append queryterm to
    * @param queryTerm Value to be searched for
    * @param queryValue Element to insert as the query value
    */
-   function urlAppender(queryTerm, queryValue) {
-      var url = document.URL;
+   function urlAppender(url, queryTerm, queryValue) {
       if (queryValue.length > 0) {
-         currentQueryTerms = getQueryVariable(queryTerm);
-         // if (currentQueryTerms) {
-         //    currentQueryTerms += ',' + queryValue;
-         //    window.location.href = updateQueryStringParameter(url, queryTerm, currentQueryTerms);
-         // } else {
-            window.location.href = updateQueryStringParameter(url, queryTerm, queryValue);
-         // }
+         window.location.href = updateQueryStringParameter(url, queryTerm, queryValue);
       } else {
          window.location.href = window.location.href.split('?')[0];
       }
@@ -75,7 +80,7 @@ $(document).ready(function() {
 
    /**
    * Modifies query terms that are part of the URL already
-   * @param termType Query type to change value of ex: search= or tags=
+   * @param termType Query type to change value of ex: search or tags
    * @param queryTerm term(s) to change to in the termType
    */
    function modifyQueryTerms(termType, queryTerm) {
@@ -174,6 +179,34 @@ $(document).ready(function() {
          window.location.href = updateQueryStringParameter(window.location.href, "order", "modified_" + sortValue);
       }
    }
+
+   /*
+   * Removes the parameter from url that I don't want.
+   * @param url URL to parse
+   * @param parameter variable to delete from querystring
+   */
+   function removeURLParameter(url, parameter) {
+    //prefer to use l.search if you have a location/link object
+    var urlparts= url.split('?');   
+    if (urlparts.length>=2) {
+
+        var prefix= encodeURIComponent(parameter)+'=';
+        var pars= urlparts[1].split(/[&;]/g);
+
+        //reverse iteration as may be destructive
+        for (var i= pars.length; i-- > 0;) {    
+            //idiom for string.startsWith
+            if (pars[i].lastIndexOf(prefix, 0) !== -1) {  
+                pars.splice(i, 1);
+            }
+        }
+
+        url= urlparts[0]+'?'+pars.join('&');
+        return url;
+    } else {
+        return url;
+    }
+}
 
    /**
    * Updates specified value in the query.

@@ -11,7 +11,7 @@
                     {% if search_word %}
                         {% if tags %}
                             {% url 'graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word|add:"&tags="|add:tags as final_url %}
                                 {% if view_type == 'my graphs' %}
                                 <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
                                 {% else %}
@@ -19,7 +19,7 @@
                                 {% endif %}
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word|add:"&tags="|add:tags as final_url %}
                                 {% if view_type == 'shared' %}
                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
                                 {% else %}
@@ -27,7 +27,7 @@
                                 {% endif %}
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word|add:"&tags="|add:tags as final_url %}
                                 {% if view_type == "public" %}
                                     <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
                                 {% else %}
@@ -36,7 +36,7 @@
                             {% endwith %}
                         {% else %}
                             {% url 'graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word as final_url %}
                                 {% if view_type == 'my graphs' %}
 
                                 <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">My Graphs<br>{{ my_graphs }}</button></a>
@@ -45,7 +45,7 @@
                                 {% endif %}
                             {% endwith %}
                             {% url 'shared_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word as final_url %}
                                 {% if view_type == 'shared' %}
                                    <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Shared with me<br>{{ shared_graphs }}</button></a>
                                 {% else %}
@@ -53,7 +53,7 @@
                                 {% endif %}
                             {% endwith %}
                             {% url 'public_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word as final_url %}
                                 {% if view_type == 'public' %}
                                     <a style='color:white' href="{{ final_url }}"><button class="btn btn-default">Public Graphs<br>{{ public_graphs }}</button></a>
                                 {% else %}
@@ -117,12 +117,12 @@
                     {% if search_word %}
                         {% if tags %}
                             {% url 'public_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word|add:"&tags="|add:tags as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word|add:"&tags="|add:tags as final_url %}
                                 <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% else %}
                             {% url 'public_graphs' as the_url %}
-                            {% with the_url|add:"?search="|add:search_word as final_url %}
+                            {% with the_url|add:"?"|add:search_type|add:"="|add:search_word as final_url %}
                                 <a style='color:white' href="{{ final_url }}"><button class="btn btn-primary">Public Graphs<br>{{ public_graphs }}</button></a>
                             {% endwith %}
                         {% endif %}
@@ -144,9 +144,9 @@
                     {% if graph_list != None and graph_list|length > 0%}
                         {% if has_previous %}
                             {% if search_word and tags%}
-                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
+                                <li><a href="?page={{ previous_page_number }}&{{search_type}}={{ search_word }}&tags={{ tags}}">&lt; Prev</a></li>
                             {% elif search_word %}
-                                <li><a href="?page={{ previous_page_number }}&search={{ search_word }}">&lt; Prev</a></li>
+                                <li><a href="?page={{ previous_page_number }}&{{search_type}}={{ search_word }}">&lt; Prev</a></li>
                             {% elif tags %}
                                 <li><a href="?page={{ previous_page_number }}&tags={{ tags}}">&lt; Prev</a></li>
                             {% else %}
@@ -158,20 +158,20 @@
                             {% for p in page_numbers %}
                                 {% if tags != None %}
                                     {% if p == current_page.number %}
-                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                       <li class='active'><a href="{% url 'graphs' %}?{{search_type}}={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                     {% else %}
-                                        <li><a href="?search={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
+                                        <li><a href="?{{search_type}}={{ search_word }}&tags={{ tags }}&page={{ p }}">{{ p }}</a></li>
                                     {% endif %}
                                 {% else %}
                                     {% if p == current_page.number %}
-                                       <li class='active'><a href="{% url 'graphs' %}?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                       <li class='active'><a href="{% url 'graphs' %}?{{search_type}}={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                     {% else %}
-                                        <li><a href="?search={{ search_word }}&page={{ p }}">{{ p }}</a></li>
+                                        <li><a href="?{{search_type}}={{ search_word }}&page={{ p }}">{{ p }}</a></li>
                                     {% endif %}
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?{{search_type}}={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
                             {% endif %}
                         {% elif tags != None %}
                             {% for p in page_numbers %}
@@ -182,7 +182,7 @@
                                 {% endif %}
                             {% endfor %}
                             {% if has_next %}
-                                <li><a href="?search={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
+                                <li><a href="?{{search_type}}={{ search_word }}&page={{ next_page_number }}">Next &gt;</a></li> 
                             {% endif %}
                         {% else %}
                            {% for p in page_numbers %}
@@ -194,9 +194,9 @@
                             {% endfor %}
                             {% if has_next %}
                                 {% if search_word and tags%}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
+                                    <li><a href="?page={{ next_page_number }}&{{search_type}}={{ search_word }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% elif search_word %}
-                                    <li><a href="?page={{ next_page_number }}&search={{ search_word }}">Next &gt;</a></li>
+                                    <li><a href="?page={{ next_page_number }}&{{search_type}}={{ search_word }}">Next &gt;</a></li>
                                 {% elif tags %}
                                     <li><a href="?page={{ next_page_number }}&tags={{ tags}}">Next &gt;</a></li>
                                 {% else %}
@@ -309,6 +309,14 @@
                         <span class="input-group-btn">
                             <button class="btn btn-info" id="search_button" type="submit">Search</button>
                         </span>
+                    </div>
+                    <div class="input-group" id="search_radios">
+                    <label>
+                        <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)">Partial
+                    </label>
+                    <label>
+                        <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)">Full
+                    </label>
                     </div>
                   </form><br><br>
                   <div id="search_tips" class="alert alert-info alert-dismissable" style="">
