@@ -787,7 +787,7 @@ def search_result(uid, search_type, search_terms, view_type):
 					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_type, search_word, view_type, cur)
 				# If it is a node or possibly a graph_id (name of the graph)
 				else:
-					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur)# + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
+					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur) + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
 
 			intial_graphs_from_search = list(set(intial_graphs_from_search))
 			
