@@ -298,8 +298,8 @@
         <div id="search_box_panel_accordion" class="panel-group" style="margin-top: -70px;">
     {% endif %}
               <div id="search_box_panel" class="panel panel-default">
-                <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">
-                  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#search_box_panel_accordion" href="#collapse_search_box">Search</a></h3>
+                <div class="panel-heading">
+                  <h3 class="panel-title">Search<a id="help_search" href="../help/#search" style="float: right; color: red;">Help</a></h3>
                 </div>
                 <div class="panel-collapse collapse in" id="collapse_search_box">
                 <div class="panel-body">
@@ -318,8 +318,9 @@
                         <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)"> Exact
                     </label>
                     </div>
-                  </form><br><br>
-                  <div id="search_tips" class="alert alert-info alert-dismissable" style="">
+                  </form>
+
+                 <!--  <div id="search_tips" class="alert alert-info alert-dismissable" style="">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     <strong>Search tips:</strong><br>
                     <ul>   
@@ -328,7 +329,7 @@
                       <li>Edge searching syntax - head:tail</li>
                       <li>Edge searching example: Example: AKT1:JUN</li>
                     </ul>
-                  </div>
+                  </div> -->
                    <!-- <ul class="nav nav-pills">
                     {% if search_word %}
                         {% for term in search_word_terms %}
@@ -344,8 +345,8 @@
             <br> <br>
     <div id="tag_panel_accordion" class="panel-group">
       <div id="tag_panel" class="panel panel-default">
-        <div class="panel-heading" class=accordion-toggle data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">
-          <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#tag_panel_accordion" href="#collapse_tags">Tags</a></h3>
+        <div class="panel-heading">
+          <h3 class="panel-title">Tags<a id="help_tags" href="../help/#tags" style="float: right; color: red;">Help</a></h3>
         </div>
         <div class="panel-collapse collapse in" id="collapse_tags">
           <div class="panel-body">

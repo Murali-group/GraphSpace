@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
 {% block content %}
-	{% if uid != None %}
-		{{ message }}
-	{% else %}
 	    <div class="container">
 
 			<div class="content">
@@ -17,6 +14,12 @@
 
 					<h3>This is still under construction, so please don't mind the bugs.  In fact, report them to <b>divit52@vt.edu</b> :)</h3>
 
+					{% if uid != None %}
+						<h4>You are logged in, go to <a href="/graphs">Graphs</a> to view your graphs.
+					{% else %}
+						<h4>If you don't have an account right now, you can check out <a href="../graphs/">public graphs</a></h4> 
+
+					{% endif %}
 					<!-- To learn about how you can use GraphSpace, check out
 
 					<a href="help/getting-started">getting started</a> -->
@@ -30,15 +33,13 @@
 					<br/>-->
 
 
-					If you don't have an account right now, you can check out the 
 
-					<a href="../graphs/">public graphs</a> 
+					
 
 				</div>
 
 			</div>
 
 		</div>
-	{% endif %}
 {% endblock %}
 

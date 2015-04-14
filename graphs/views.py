@@ -53,9 +53,9 @@ def index(request):
     context = login(request)
 
     if context['Error'] == None:
-        # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
-        if request.session['uid'] != None:
-            return _graphs_page(request, 'my graphs')
+        # # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
+        # if request.session['uid'] != None:
+        #     return _graphs_page(request, 'my graphs')
 
         return render(request, 'graphs/index.html', context)
     else:
@@ -495,6 +495,7 @@ def graphs_in_group(request, group_owner, group_id):
 
             if search_type != None:
                 context['search_result'] = True
+                context['search_type'] = search_type
 
 
             # include the graph data to the context
@@ -564,9 +565,9 @@ def help(request):
     #handle login
     context = login(request)
 
-    return render(request, 'graphs/help_getting_started.html', context)
+    return render(request, 'graphs/help_users.html', context)
 
-def help_tutorials(request):
+def help_programmers(request):
     '''
         Render the help/tutorials page.
 
@@ -577,7 +578,7 @@ def help_tutorials(request):
     #handle login
     context = login(request)
 
-    return render(request, 'graphs/help_tutorials.html', context)
+    return render(request, 'graphs/help_programmers.html', context)
 
 def help_graphs(request):
     '''

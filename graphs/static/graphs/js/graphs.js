@@ -32,6 +32,7 @@ $(document).ready(function() {
       urlAppender(document.URL, 'tags', $("#tags_searching").val());
    });
 
+
    // $(".search").click(function (e) {
    //    e.preventDefault();
    //    modifyQueryTerms($('input[name=match]:checked').val(), $(this).attr('id'));

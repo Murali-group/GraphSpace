@@ -49,7 +49,7 @@ urlpatterns = patterns('',
 
         # help page
         url(r'^help/$', views.help, name='help'),
-        url(r'^help/tutorials/$', views.help_tutorials, name='help_tutorials'),
+        url(r'^help/programmers/$', views.help_programmers, name='help_programmers'),
         url(r'^help/graphs/$', views.help_graphs, name='help_graphs'),
         url(r'^help/restapi/$', views.help_restapi, name='help_restapi'),
         url(r'^help/jsonref/$', views.help_jsonref, name='help_jsonref'),

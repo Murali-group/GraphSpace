@@ -333,6 +333,11 @@ $(document).ready(function() {
       }
     });
 
+    $(".help").click(function (e) {
+      e.preventDefault();
+      window.location.href = "../../../help/#graph_panels";
+    });
+
     // $(".highlight").click(function (e) {
     //   e.preventDefault();
     //   var searchTerms = getHighlightedTerms();
