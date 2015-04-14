@@ -954,7 +954,7 @@ def find_edges(uid, search_type, search_word, view_type, cur):
 
 	return actual_graph_with_edges
 
-def find_edge(uid, gid, edge_to_find):
+def find_edge(uid, gid, edge_to_find, search_type):
 	'''
 		Finds the id of the edge inside graph
 		Used for highlighting elements inside the graph
@@ -962,6 +962,7 @@ def find_edge(uid, gid, edge_to_find):
 		:param uid: Owner of graph
 		:param gid: Name of graph that is being viewed
 		:param edge_to_find: Edge that is being searched for
+		:param search_type: Partial or full matching
 		:return ID: [ID of edge]
 	'''
 	con = None
@@ -972,25 +973,43 @@ def find_edge(uid, gid, edge_to_find):
 		head_node = edge_to_find.split(':')[0]
 		tail_node = edge_to_find.split(':')[1]
 
-		# Find node id's that are being searched for (source and target nodes)
-		head_node = find_node(uid, gid, head_node)
-		tail_node = find_node(uid, gid, tail_node)
+		if search_type == 'partial_search':
 
-		# If both nodes exist, find label between them
-		if tail_node != None and head_node != None:
-			cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (tail_node, head_node, uid, gid))
-			data = cur.fetchall()
-			# If something exists, return the ids of the paents
-			if data != None and len(data) > 0:
-				return data[0][0]
-			else:
-				return None
+			# Find node id's that are being searched for (source and target nodes)
+			head_nodes = find_node(uid, gid, head_node, 'partial_search')
+			tail_nodes = find_node(uid, gid, tail_node, 'partial_search')
+
+			edge_list = []
+			if len(head_node) > 0 and len(tail_node) > 0:
+				for i in xrange(len(tail_nodes)):
+					for j in xrange(len(head_nodes)):
+						cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (tail_nodes[i], head_nodes[j], uid, gid))
+						data = cur.fetchall()
+						if data and len(data) > 0:
+							edge_list.append(data[0])
+
+				return edge_list
 		else:
-			return None
+
+			# Find node id's that are being searched for (source and target nodes)
+			head_node = find_node(uid, gid, head_node, 'full_search')
+			tail_node = find_node(uid, gid, tail_node, 'full_search')
+
+			# If both nodes exist, find label between them
+			if tail_node != None and head_node != None:
+				cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (str(tail_node[0]), str(head_node[0]), uid, gid))
+				data = cur.fetchall()
+				# If something exists, return the ids of the paents
+				if data != None and len(data) > 0:
+					return data[0]
+				else:
+					return []
+	
+		return []
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
-		return None
+		return []
 	finally:
 		if con:
 			con.close()
@@ -1008,7 +1027,6 @@ def find_node(uid, gid, node_to_find, search_type):
 		:return ID: [ID of node]
 	'''
 
-	id_of_node = None
 	con = None
 	try:
 		con = lite.connect(DB_NAME)

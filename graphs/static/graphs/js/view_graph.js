@@ -111,7 +111,6 @@ $(document).ready(function() {
            var hexCode = colourNameToHex(nodeData['color']);
            if (hexCode != false) {
             nodeData['color'] = hexCode;
-            console.log(hexCode);
            } else {
             if (isHexaColor(addCharacterToHex(nodeData['color']))) {
 
@@ -190,16 +189,14 @@ $(document).ready(function() {
 
       // //If ther are any terms to be searched for, highlight those terms, if found
       if (getQueryVariable('full_search')) {
-        // Initially set search to full matching
-        $("#full_search").attr('checked', true);
-        searchValues('full_search', getQueryVariable('full_search'));
-     } else if (getQueryVariable('partial_search')) {
-        // Initially set search to full matching
-        $("#partial_search").attr('checked', true);
-        searchValues('partial_search', getQueryVariable('partial_search'));
-     } else {
-        $("#partial_search").attr('checked', true);
-     }
+          // Initially set search to full matching
+          $("#full_search").attr('checked', true);
+       } else {
+          // Initially set search to full matching
+          $("#partial_search").attr('checked', true);
+       }
+
+       searchBothTypes();
 
     } // end ready: function()
     });
@@ -282,6 +279,29 @@ $(document).ready(function() {
         "unlisted": 0
       }, function (data) {
         var layoutUrl = window.location.pathname + "?layout=" + layoutName;
+
+        var searchTerms = getHighlightedTerms();
+        if (searchTerms[0].length > 0) {
+          layoutUrl += '&partial_search=';
+          for (var i = 0; i < searchTerms[0].length; i++) {
+            if (i < searchTerms[0].length - 1) {
+              layoutUrl += searchTerms[0][i] + ',';
+            } else {
+              layoutUrl += searchTerms[0][i];
+            }
+          }      
+        } 
+
+        if (searchTerms[1].length > 0) {
+          layoutUrl += '&full_search=';
+          for (var i = 0; i < searchTerms[1].length; i++) {
+            if (i < searchTerms[1].length - 1) {
+              layoutUrl += searchTerms[1][i] + ',';
+            } else {
+              layoutUrl += searchTerms[1][i];
+            }
+          }      
+        } 
         window.location.replace(layoutUrl);
       });
     });
@@ -374,12 +394,34 @@ $(document).ready(function() {
     $(".layout_links").tooltip();
 
     $(".layout_buttons").click(function (e) {
+      var linkHref = "";
       e.preventDefault();
       var searchTerms = getHighlightedTerms();
-      if (searchTerms.length > 0) {
-        var linkHref = $(this).attr('href') + '&search=' + getHighlightedTerms();
-      } else {
-        var linkHref = $(this).attr('href');
+
+      if (searchTerms[0].length > 0) {
+        linkHref = $(this).attr('href') + '&partial_search=';
+        for (var i = 0; i < searchTerms[0].length; i++) {
+          if (i < searchTerms[0].length - 1) {
+            linkHref += searchTerms[0][i] + ',';
+          } else {
+            linkHref += searchTerms[0][i];
+          }
+        }      
+      } 
+
+      if (searchTerms[1].length > 0) {
+        linkHref = $(this).attr('href') + '&full_search=';
+        for (var i = 0; i < searchTerms[1].length; i++) {
+          if (i < searchTerms[1].length - 1) {
+            linkHref += searchTerms[1][i] + ',';
+          } else {
+            linkHref += searchTerms[1][i];
+          }
+        }      
+      } 
+
+      if (searchTerms[0].length == 0 && searchTerms[1].length == 0) {
+        linkHref = $(this).attr('href');
       }
 
       if (e.target == this) {
@@ -530,7 +572,6 @@ $(document).ready(function() {
         // 'groups_to_share_with' : groups_to_share_with,
         // 'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
-        console.log(data);
         window.location.reload();
       });
     });
@@ -642,31 +683,20 @@ function fireEvent(obj,evt){
   }
 }
 
+function searchBothTypes() {
+  searchValues('partial_search', getQueryVariable('partial_search'));
+  searchValues('full_search', getQueryVariable('full_search'))
+}
+
 //Function to search through graph elements in order to highlight the 
 //appropriate one
 function searchValues(search_type, labels) {
+
   //split paths
   var paths = document.URL.split('/');
 
   var partialDistinction = Array();
   var exactDistinction = Array();
-
-  var partialURLSearch = getQueryVariable('partial_search');
-  var exactURLSearch = getQueryVariable('full_search');
-
-  if (partialURLSearch) {
-    partialURLSearch = getQueryVariable('partial_search').split(',');
-    for (var i = 0; i < partialURLSearch.length; i++) {
-      partialDistinction.push(partialURLSearch[i]);
-    }
-  }
-
-  if (exactURLSearch) {
-    exactURLSearch = getQueryVariable('full_search').split(',');
-    for (var i = 0; i < exactURLSearch.length; i++) {
-      exactDistinction.push(exactURLSearch[i]);
-    }
-  }
 
   $("#search_error_text").text("");
 
@@ -685,23 +715,10 @@ function searchValues(search_type, labels) {
 
     var displayLink = false;
 
-    var highlightedArrays = getHighlightedTerms();
+    var oldHtml = $("#search_terms").html();
+    // $("#search_terms").html("");
 
-    for (var i = 0; i < highlightedArrays[0].length; i++) {
-      if (partialDistinction.indexOf(highlightedArrays[0][i]) == -1) {
-        partialDistinction.push(highlightedArrays[0][i]);
-      }
-    }
-
-    for (var i = 0; i < highlightedArrays[1].length; i++) {
-      if (exactDistinction.indexOf(highlightedArrays[1][i]) == -1) {
-        exactDistinction.push(highlightedArrays[1][i]);
-      }
-    }
-    
-    console.log("Partial: " + partialDistinction);
-    console.log("Exact: " + exactDistinction);
-
+    if (labels.length > 0) {
     //Split the labels so we can reference the labels
     labels = labels.split(',');
 
@@ -714,6 +731,7 @@ function searchValues(search_type, labels) {
             collapsible: true,
             heightStyle: "content"
         });
+        $("#search_terms").html(oldHtml);
       }
       for (var j = 0; j < data[labels[i]].length; j++) {
         if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
@@ -726,89 +744,138 @@ function searchValues(search_type, labels) {
             displayLink = true;
           }
 
-          if ($("#partial_search").is(':checked')) {
+          if (search_type == 'partial_search') {
+            labels[i].replace(" ", "")
             if (partialDistinction.indexOf(labels[i]) == -1) {
-              partialDistinction.push(labels[i].replace(" ", ""));
+              partialDistinction.push(labels[i]);
             }
           } else {
             if (exactDistinction.indexOf(labels[i]) == -1) {
-              exactDistinction.push(labels[i].replace(" ", ""));
+              exactDistinction.push(labels[i]);
             }
           }
         }
       }
     }
 
-
-    console.log("Partial: " + partialDistinction);
-    console.log("Exact: " + exactDistinction);
-
     if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
+
+        // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+        // var layout = getQueryVariable('layout');
+
+        // if (layout) {
+        //   linkToGraph += layout;
+        // }
+
+
+        // if (search_type == 'partial_search' || partialDistinction.length > 0 || highlighted[0].length > 0) {
+        //   if (layout) {
+        //     linkToGraph += '&partial_search=';
+        //   } else {
+        //     linkToGraph += '?partial_search=';
+        //   }
+        // }
+
+
+        // for (var i = 0; i < highlighted[0].length; i++) {
+        //   linkToGraph += highlighted[0][i] + ',';
+        // }
+
+        for (var x = 0; x < partialDistinction.length; x++) {
+          partialDistinction[x].replace(" ", "");
+          $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
+          if (x < partialDistinction.length - 1) {
+            // linkToGraph += partialDistinction[x] + ',';           
+          } else {
+            // linkToGraph += partialDistinction[x];       
+          }
+        }
+
+        // if (search_type == 'full_search' || exactDistinction.length > 0) {
+        //   if (layout && partialDistinction.length > 0 || partialDistinction.length > 0 || highlighted[0].length > 0) {
+        //     linkToGraph += '&full_search=';
+        //   } else {
+        //     linkToGraph += '?full_search=';
+        //   }
+        // }
+
+        // for (var i = 0; i < highlighted[1].length; i++) {
+        //   linkToGraph += highlighted[1][i] + ',';
+        // }
+
+        for (var x = 0; x < exactDistinction.length; x++) {
+          exactDistinction[x].replace(" ", "");
+          $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + exactDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
+          // if (x < exactDistinction.length - 1) {
+          //   linkToGraph += exactDistinction[x] + ',';           
+          // } else {
+          //   linkToGraph += exactDistinction[x];       
+          // }
+        }
+
         var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
         var layout = getQueryVariable('layout');
 
+        var highlighted = getHighlightedTerms();
+
+
         if (layout) {
           linkToGraph += layout;
-        }
 
-        if (partialDistinction.length > 0 && exactDistinction.length > 0) {
-          if (layout) {
+          if (highlighted[0].length > 0) {
             linkToGraph += '&partial_search=';
-          } else {
-            linkToGraph += '?partial_search=';
-          }
-
-          for (var x = 0; x < partialDistinction.length; x++) {
-            $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '<b style="color: red;">  X</b></a></li>');
-            // $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + partialDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
-            if (x < partialDistinction.length - 1) {
-              linkToGraph += partialDistinction[x] + ',';           
-            } else {
-              linkToGraph += partialDistinction[x];       
+            for (var i = 0; i < highlighted[0].length; i++) {
+              if (i < highlighted[0].length - 1) {
+                linkToGraph += highlighted[0][i] + ',';
+              } else {
+                linkToGraph += highlighted[0][i];
+              }
             }
           }
 
-          linkToGraph += '&full_search=';
-
-          for (var x = 0; x < exactDistinction.length; x++) {
-            if (x < exactDistinction.length - 1) {
-              linkToGraph += exactDistinction[x] + ',';           
-            } else {
-              linkToGraph += exactDistinction[x];       
-            }
-          }
-        } else if (partialDistinction.length > 0) {
-          
-          if (layout) {
-            linkToGraph += '&partial_search=';
-          } else {
-            linkToGraph += '?partial_search=';
-          }
-
-          for (var x = 0; x < partialDistinction.length; x++) {
-            $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
-            if (x < partialDistinction.length - 1) {
-              linkToGraph += partialDistinction[x] + ',';           
-            } else {
-              linkToGraph += partialDistinction[x];       
+          if (highlighted[1].length > 0) {
+            linkToGraph += '&full_search=';
+            for (var i = 0; i < highlighted[1].length; i++) {
+              if (i < highlighted[1].length - 1) {
+                linkToGraph += highlighted[1][i] + ',';
+              } else {
+                linkToGraph += highlighted[1][i];
+              }
             }
           }
         } else {
-            
-            if (layout) {
-              linkToGraph += '&full_search=';
-            } else {
-              linkToGraph += '?full_search=';
-            }
-
-            for (var x = 0; x < exactDistinction.length; x++) {
-              $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + partialDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
-              if (x < exactDistinction.length - 1) {
-                linkToGraph += exactDistinction[x] + ',';           
+          if (highlighted[0].length > 0) {
+            linkToGraph += '?partial_search=';
+            for (var i = 0; i < highlighted[0].length; i++) {
+              if (i < highlighted[0].length - 1) {
+                linkToGraph += highlighted[0][i] + ',';
               } else {
-                linkToGraph += exactDistinction[x];       
+                linkToGraph += highlighted[0][i];
               }
             }
+          }
+
+          if (highlighted[1].length > 0 && highlighted[0].length > 0) {
+            linkToGraph += '&full_search=';
+            for (var i = 0; i < highlighted[1].length; i++) {
+              if (i < highlighted[1].length - 1) {
+                linkToGraph += highlighted[1][i] + ',';
+              } else {
+                linkToGraph += highlighted[1][i];
+              }
+            }
+          } else {
+              if (highlighted[1].length > 0) {
+                linkToGraph += '&full_search=';
+                for (var i = 0; i < highlighted[1].length; i++) {
+                  if (i < highlighted[1].length - 1) {
+                    linkToGraph += highlighted[1][i] + ',';
+                  } else {
+                    linkToGraph += highlighted[1][i];
+                  }
+                }
+              }
+          }
         }
 
         $("#url").attr('href', linkToGraph);
@@ -817,97 +884,7 @@ function searchValues(search_type, labels) {
         $("#search").val("");
 
     }
-
-    // console.log("Partial: " + partialDistinction);
-    // console.log("Full: " + exactDistinction);
-
-
-    // //It selects those nodes that have labels as their ID's
-    // ids = JSON.parse(data)['IDS'];
-
-    // //For everthing else, we get correct id's from server and proceed to highlight those id's 
-    // //by correlating labels to id's
-    // for (var j = 0; j < ids.length; j++) {
-    //   if (ids[j].length > 0) {
-
-    //     if (window.cy.$('[id="' + ids[j] + '"]').selected() == false) {
-    //       // Select the specified element and don't allow the user to unselect it until button is clicked again
-    //       if (window.cy.$('[id="' + ids[j] + '"]').isEdge()) {
-    //         window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
-    //         highlightedTerms.push(ids[j]);
-    //       } else {
-    //         window.cy.$('[id="' + ids[j] + '"]').css({'border-width': 10, 'border-color': 'blue'});
-    //         highlightedTerms.push(ids[j])
-    //       }
-
-    //       if (search_type == 'full_search') {
-    //         // Append a new button for every search term
-    //         $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '<b style="color: red;">  X</b></a></li>');
-    //         $("#search").val("");
-    //       }
-    //     }
-    //   }
-    // }
-
-    // for (var x = 0; x < labels.length; x++) {
-    //   if (search_type == 'partial_search') {
-    //       $("#search_terms").append('<li><a class="search"  id="' + labels[x]  + '" value="partial_+-=_+' + labels[x] + '">' + labels[x] + '<b style="color: red;">  X</b></a></li>');
-    //       $("#search").val("");
-    //   } else {
-    //       $("#search_terms").append('<li><a class="search"  id="' + labels[x]  + '" value="full_+-=_+' + labels[x] + '">' + labels[x] + '<b style="color: red;">  X</b></a></li>');
-    //       $("#search").val("");
-    //   }
-    // }
-
-    // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-    // var layout = getQueryVariable('layout');
-    // var search = getQueryVariable('search');
-    // var displayLink = false;
-    // if (layout) {
-    //   linkToGraph += '?layout=' + layout;
-
-    //   if (search) {
-    //     linkToGraph += '&search=';
-    //   }
-    // } else if (search) {
-    //   linkToGraph += '?search=' + search;
-    // } else {
-    //   linkToGraph += '?search=';
-    // }
-
-    // if (highlightedTerms.length > 0) {
-    //   displayLink = true;
-    //   $("#search_error").css("display", "none");
-    // } else {
-    //   $("#search_error").css("display", "block");
-    //   $("#search_error_text").text("No elements match your search!");
-    //   $("#accordion_search").accordion({
-    //       collapsible: true,
-    //       heightStyle: "content"
-    //   });
-    //   return;
-    // }
-
-    // for (var z = 0; z < highlightedTerms.length; z++) {
-    //   if (highlightedTerms[z].indexOf('-') > -1) {
-    //     highlightedTerms[z] = highlightedTerms[z].replace('-', ':');
-    //   }
-    //   if (search) {
-    //     linkToGraph += ',' + highlightedTerms[z];
-    //   } else {
-    //     if (z == highlightedTerms.length - 1) {
-    //       linkToGraph += highlightedTerms[z];
-    //     } else {
-    //       linkToGraph += highlightedTerms[z] + ',';
-    //     }
-    //   }
-    // }
-
-    // if (displayLink) {
-    //   $("#url").attr('href', linkToGraph);
-    //   $("#url").text("Link to this graph with highighted elements");
-    //   $(".test").css("height", $(".test").height + 30);
-    // }
+  }
   });
 }
 
