@@ -22,7 +22,17 @@
 <li><a href="#what_is">What is a graph</a></li>
 <li><a href="#view_graph">Viewing a graph</a></li>
 <li><a href="#embedded_info">Embedded Information</a></li>
-<li><a href="#graph_panels">Graph Panels</a></li>
+<li><a href="#graph_panels">Graph Panels</a>
+	<ul>
+		<li><a href="#details_panel">Graph Details Panel</a></li>
+		<li><a href="#search_panel">Search Panel</a></li>
+		<li><a href="#export_panel">Export Panel</a></li>
+		<li><a href="#owner_panel">Owner Panel</a></li>
+		<li><a href="#sharing_panel">Sharing Panel</a></li>
+		<li><a href="#layouts_panel">Layouts Panel</a></li>
+		<li><a href="#step_panel">Step through Filtering Panel</a></li>
+	</ul>
+</li>
 <li><a href="#finding_graphs">Finding Graphs</a></li>
 <li><a href="#upload_graphs">Uploading Graphs</a></li>
 <li><a href="#layouts">Layouts</a></li>
@@ -35,6 +45,7 @@
 	<li><a href="#sharing_graphs">Sharing graphs</a></li>
 	<li><a href="#sharing_layouts">Group layouts</a></li>
 </ul>
+</li>
 <li><h4><a href="#tags">Tags</a></h4></li>
 <li><h4><a href="#contact">Acknowledgements</a></h4></li>
 </ul>
@@ -78,9 +89,9 @@ The information embedded inside elements may contain external links to sources a
 <h3 id="graph_panels">Graph Panels</h3>
 When viewing a grpah, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
-<b id="graph_details">Graph Details Panel</b>: Area where legent image for a graph and/or description of the graph
+<b id="details_panel">Graph Details Panel</b>: Area where legent image for a graph and/or description of the graph
 <br><br>
-<b>Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, sipmly enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards. For example, if a user searched for the node 'TEM1', then the node will look like this:
+<b id="search_panel">Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, sipmly enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards. For example, if a user searched for the node 'TEM1', then the node will look like this:
 <br><br>
 
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">TEM1 before searching<br><img src="../../static/images/before_searching.png" style="width: 50%"></p>
@@ -99,16 +110,22 @@ If a user wants to search for edge connection from TEF4 to TEM1, they can do so 
 <p style="clear: both;"></p>
 
 <br><br>
-GraphSpace allows uesrs to send links which contain elmeents of a graph to be <b>distinguished</b>.  If a user searches for an element and the element is found inside the graph, a link is generated on top of the search bar.  This link provides a reference to this graph along with all of the elements to be distinguised.  If a GraphSpace user sends this link to someone else, they can follow the link to see the exact graph you are vieweing, including all the elements that you have distinguished.
+GraphSpace allows uesrs to send links which contain elements of a graph to be <b>distinguished</b>.  If a user searches for an element and the element is found inside the graph, a link is generated on top of the search bar.  This link provides a reference to this graph along with all of the elements to be distinguised.  If a GraphSpace user sends this link to someone else, they can follow the link to see the exact graph you are vieweing, including all the elements that you have distinguished.
 <br><br>
+The <b>Partial</b> option under the search bar allows one to search for all elements within a graph which may have the search term as part of its value.  For example, if there are two nodes CDC5 and CDC55 and the user does a partial search with the term 'CDC', then both CDC5 and CDC55 will be distinguished. 
+<br><br>
+The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be distinguished.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been distinguished since there are no nodes in our example graph which have CDC as their entire value.
+<br><br>
+Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
 
-<b>Export Panel</b>: Allows one to export the entire image of the as a PNG
+
+<b id="export_panel">Export Panel</b>: Allows one to export the entire image of the as a PNG
 <br><br>
-<b>Owner Panel</b>: shows the GraphSpace user whom the graph belongs to
+<b id="owner_panel">Owner Panel</b>: shows the GraphSpace user whom the graph belongs to
 <br><br>
-<b>Sharing Panel</b>: Displays all the groups that a graph is shared with [See <a href="#groups">groups</a> below]
+<b id="sharing_panel">Sharing Panel</b>: Displays all the groups that a graph is shared with [See <a href="#groups">groups</a> below]
 <br><br> 
-<b>Layouts Panel</b>: Provides multiple methods to display or layout a graph.  <b>Note</b>: a user must have an account with GraphSpace in order to save and share layouts they create.[See <a href="#layouts">Layout</a> section]
+<b id="layout_panel">Layouts Panel</b>: Provides multiple methods to display or layout a graph.  <b>Note</b>: a user must have an account with GraphSpace in order to save and share layouts they create.[See <a href="#layouts">Layout</a> section]
 <br><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">Auto Layouts<br><img src="../../static/images/layout_2.png" style="width: 90%"></p>
 
@@ -119,7 +136,7 @@ GraphSpace allows uesrs to send links which contain elmeents of a graph to be <b
 The 'Auto' option provides methods to automatically layout a graph using their respective algorithms. If a person has created an account and logged into GraphSpace, they they will be allowed to save any changes to the positions of elements in the graph that they manually make.  In addition, they will also be able to view layouts and share layouts with groups that they are a member of. [See <a href="#groups">groups</a> below]
 
 <br><br>
-<b>Step through filtering Panel</b>: There are graphs in GraphSpace which employ the use of Step through filtering.  This concept allows one to see subgarphs of the entire graph.  In addition, it allows a user to "step" through the connections of a graph in sequential order.  The images below show a user stepping through a graph.
+<b id="step_panel">Step through filtering Panel</b>: There are graphs in GraphSpace which employ the use of Step through filtering.  This concept allows one to see subgarphs of the entire graph.  In addition, it allows a user to "step" through the connections of a graph in sequential order.  The images below show a user stepping through a graph.
 <br><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;"><br><img src="../../static/images/step_1.png" style="width: 90%"></p>
 
@@ -174,8 +191,16 @@ To search for nodes, type the name of the node (text that you want to see inside
 <br><br>
 To search for edges, search using the following syntax [tail: head] where tail is the name of the node where the arrow is coming from and head is the name of the node that the arrow is point to.  For example, to search for the edge that connects YEF3 to SIR2, type YEF3:SIR2.  All graphs that contain this edge will be presented to the user.  
 <br><br>
+If searching for multiple values, separate all individual search terms with commas.  Ex: AKT1, AKT3, JUN
+<br><br>
+The <b>Partial</b> option under the search bar allows one to search for all graphs that may contain that word in the graph itself.  This option will return all the graphs that may have a node which contains parts of the values you are searching for, graphs that may contain part of the searched term in its title, as well as if there are edges which contain part of the searched values as well.
+<br><br>
+The <b>Exact</b> option under the search bar allows one to search for all graphs that have exactly what is being searched for.  Graphs returned from this option may have a node, graph title, or an edge which is identical to the searched terms.
+<br><br>
 <b>Note</b>:If there are multiple search terms (and/or tag terms), all graphs that are returned WILL match all of these terms.  All graphs that are returned by the searches of a node and/or an edge will have all searched terms <b>distinguished</b> inside the graph.
 <br><br>
+
+
 
 <h3 id="groups">Groups</h3>
 
@@ -214,6 +239,8 @@ Similar to a graph, a layout may also be shared with a group.  In order for a la
 <h3 id="tags">Tags</h3>
 
 Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.
+<br><br>
+Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide
 
 <h3 id="contact">Acknowledgements</h3>
 

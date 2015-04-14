@@ -338,6 +338,11 @@ $(document).ready(function() {
       window.location.href = "../../../help/#graph_panels";
     });
 
+    $("#sharing_panel").click(function(e) {
+      e.preventDefault();
+      window.location.href = "../../../help/#sharing_panel";
+    });
+
     // $(".highlight").click(function (e) {
     //   e.preventDefault();
     //   var searchTerms = getHighlightedTerms();
