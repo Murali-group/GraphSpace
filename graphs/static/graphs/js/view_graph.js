@@ -188,11 +188,18 @@ $(document).ready(function() {
 
 
 
-      //If ther are any terms to be searched for, highlight those terms, if found
-      var searchTerms = getQueryVariable("search");
-      if (searchTerms) {
-        searchValues(searchTerms);
-      }
+      // //If ther are any terms to be searched for, highlight those terms, if found
+      if (getQueryVariable('full_search')) {
+        // Initially set search to full matching
+        $("#full_search").attr('checked', true);
+        searchValues('full_search', getQueryVariable('full_search'));
+     } else if (getQueryVariable('partial_search')) {
+        // Initially set search to full matching
+        $("#partial_search").attr('checked', true);
+        searchValues('partial_search', getQueryVariable('partial_search'));
+     } else {
+        $("#partial_search").attr('checked', true);
+     }
 
     } // end ready: function()
     });
@@ -280,13 +287,16 @@ $(document).ready(function() {
     });
 
     //Searches for the element inside the graph
-
-    $("#search_button").click(function(e) {
+     $("#search_button").click(function (e) {
       e.preventDefault();
       if ($("#search").val().length > 0) {
-        searchValues($("#search").val());
+        searchValues($('input[name=match]:checked').val(), $("#search").val());
       }
-    });
+     });
+
+    if (getQueryVariable($('input[name=match]:checked').val())) {
+    $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
+   }
 
     //Unhighlights terms when the buttons in the search box is clicked on
     $("#search_terms").on("click", ".search", function(e) {
@@ -303,19 +313,19 @@ $(document).ready(function() {
       }
     });
 
-    $(".highlight").click(function (e) {
-      e.preventDefault();
-      var searchTerms = getHighlightedTerms();
-      if (searchTerms.length > 0) {
-        var linkHref = $(this).attr('id') + '&search=' + getHighlightedTerms();
-      } else {
-        var linkHref = $(this).attr('id');
-      }
+    // $(".highlight").click(function (e) {
+    //   e.preventDefault();
+    //   var searchTerms = getHighlightedTerms();
+    //   if (searchTerms.length > 0) {
+    //     var linkHref = $(this).attr('id') + '&search=' + getHighlightedTerms();
+    //   } else {
+    //     var linkHref = $(this).attr('id');
+    //   }
 
-      $("#layout_link").attr('href', linkHref);
-      $("#layout_link").text("Link to this graph with highlighted elements");
-      $("#layout_link").width(20);
-    });
+    //   $("#layout_link").attr('href', linkHref);
+    //   $("#layout_link").text("Link to this graph with highlighted elements");
+    //   $("#layout_link").width(20);
+    // });
 
     $(".change").click(function (e) {
       e.preventDefault();
@@ -521,7 +531,7 @@ $(document).ready(function() {
         // 'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
         console.log(data);
-        // window.location.reload();
+        window.location.reload();
       });
     });
 
@@ -634,96 +644,270 @@ function fireEvent(obj,evt){
 
 //Function to search through graph elements in order to highlight the 
 //appropriate one
-function searchValues(labels) {
+function searchValues(search_type, labels) {
   //split paths
   var paths = document.URL.split('/');
 
-  var highlightedTerms = Array();
+  var partialDistinction = Array();
+  var exactDistinction = Array();
+
+  var partialURLSearch = getQueryVariable('partial_search');
+  var exactURLSearch = getQueryVariable('full_search');
+
+  if (partialURLSearch) {
+    partialURLSearch = getQueryVariable('partial_search').split(',');
+    for (var i = 0; i < partialURLSearch.length; i++) {
+      partialDistinction.push(partialURLSearch[i]);
+    }
+  }
+
+  if (exactURLSearch) {
+    exactURLSearch = getQueryVariable('full_search').split(',');
+    for (var i = 0; i < exactURLSearch.length; i++) {
+      exactDistinction.push(exactURLSearch[i]);
+    }
+  }
+
+  $("#search_error_text").text("");
+
+  $("#search_error").css("display", "none");
 
   //posts to server requesting the id's from the labels
   //so cytoscape will recognize the correct element
   $.post("../../../retrieveIDs/", {
     'values': labels,
     "gid": decodeURIComponent(paths[paths.length - 2]),
-    "uid": decodeURIComponent(paths[paths.length - 3]) 
+    "uid": decodeURIComponent(paths[paths.length - 3]),
+    "search_type": search_type 
   }, function (data) {
+
+    data = JSON.parse(data);
+
+    var displayLink = false;
+
+    var highlightedArrays = getHighlightedTerms();
+
+    for (var i = 0; i < highlightedArrays[0].length; i++) {
+      if (partialDistinction.indexOf(highlightedArrays[0][i]) == -1) {
+        partialDistinction.push(highlightedArrays[0][i]);
+      }
+    }
+
+    for (var i = 0; i < highlightedArrays[1].length; i++) {
+      if (exactDistinction.indexOf(highlightedArrays[1][i]) == -1) {
+        exactDistinction.push(highlightedArrays[1][i]);
+      }
+    }
+    
+    console.log("Partial: " + partialDistinction);
+    console.log("Exact: " + exactDistinction);
 
     //Split the labels so we can reference the labels
     labels = labels.split(',');
 
-    //It selects those nodes that have labels as their ID's
-    ids = JSON.parse(data)['IDS'];
+    for (var i = 0; i < labels.length; i++) {
 
-    //For everthing else, we get correct id's from server and proceed to highlight those id's 
-    //by correlating labels to id's
-    for (var j = 0; j < ids.length; j++) {
-      if (ids[j].length > 0) {
-
-        if (window.cy.$('[id="' + ids[j] + '"]').selected() == false) {
+      if (data[labels[i]].length == 0) {
+        $("#search_error").css("display", "block");
+        $("#search_error_text").append(labels[i] + " not found!<br>");
+        $("#accordion_search").accordion({
+            collapsible: true,
+            heightStyle: "content"
+        });
+      }
+      for (var j = 0; j < data[labels[i]].length; j++) {
+        if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
           // Select the specified element and don't allow the user to unselect it until button is clicked again
-          if (window.cy.$('[id="' + ids[j] + '"]').isEdge()) {
-            window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
-            highlightedTerms.push(ids[j]);
+          if (window.cy.$('[id="' + data[labels[i]][j] + '"]').isEdge()) {
+            window.cy.$('[id="' + data[labels[i]][j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
+            displayLink = true;
           } else {
-            window.cy.$('[id="' + ids[j] + '"]').css({'border-width': 10, 'border-color': 'blue'});
-            highlightedTerms.push(ids[j])
+            window.cy.$('[id="' + data[labels[i]][j] + '"]').css({'border-width': 10, 'border-color': 'blue'});
+            displayLink = true;
           }
-          // Append a new button for every search term
-          $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '<b style="color: red;">  X</b></a></li>');
-          $("#search").val("");
+
+          if ($("#partial_search").is(':checked')) {
+            if (partialDistinction.indexOf(labels[i]) == -1) {
+              partialDistinction.push(labels[i].replace(" ", ""));
+            }
+          } else {
+            if (exactDistinction.indexOf(labels[i]) == -1) {
+              exactDistinction.push(labels[i].replace(" ", ""));
+            }
+          }
         }
       }
     }
 
-    var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-    var layout = getQueryVariable('layout');
-    var search = getQueryVariable('search');
-    var displayLink = false;
-    if (layout) {
-      linkToGraph += '?layout=' + layout;
 
-      if (search) {
-        linkToGraph += '&search=';
-      }
-    } else if (search) {
-      linkToGraph += '?search=' + search;
-    } else {
-      linkToGraph += '?search=';
-    }
+    console.log("Partial: " + partialDistinction);
+    console.log("Exact: " + exactDistinction);
 
-    if (highlightedTerms.length > 0) {
-      displayLink = true;
-      $("#search_error").css("display", "none");
-    } else {
-      $("#search_error").css("display", "block");
-      $("#search_error_text").text("No elements match your search!");
-      $("#accordion_search").accordion({
-          collapsible: true,
-          heightStyle: "content"
-      });
-      return;
-    }
+    if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
+        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+        var layout = getQueryVariable('layout');
 
-    for (var z = 0; z < highlightedTerms.length; z++) {
-      if (highlightedTerms[z].indexOf('-') > -1) {
-        highlightedTerms[z] = highlightedTerms[z].replace('-', ':');
-      }
-      if (search) {
-        linkToGraph += ',' + highlightedTerms[z];
-      } else {
-        if (z == highlightedTerms.length - 1) {
-          linkToGraph += highlightedTerms[z];
+        if (layout) {
+          linkToGraph += layout;
+        }
+
+        if (partialDistinction.length > 0 && exactDistinction.length > 0) {
+          if (layout) {
+            linkToGraph += '&partial_search=';
+          } else {
+            linkToGraph += '?partial_search=';
+          }
+
+          for (var x = 0; x < partialDistinction.length; x++) {
+            $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '<b style="color: red;">  X</b></a></li>');
+            // $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + partialDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
+            if (x < partialDistinction.length - 1) {
+              linkToGraph += partialDistinction[x] + ',';           
+            } else {
+              linkToGraph += partialDistinction[x];       
+            }
+          }
+
+          linkToGraph += '&full_search=';
+
+          for (var x = 0; x < exactDistinction.length; x++) {
+            if (x < exactDistinction.length - 1) {
+              linkToGraph += exactDistinction[x] + ',';           
+            } else {
+              linkToGraph += exactDistinction[x];       
+            }
+          }
+        } else if (partialDistinction.length > 0) {
+          
+          if (layout) {
+            linkToGraph += '&partial_search=';
+          } else {
+            linkToGraph += '?partial_search=';
+          }
+
+          for (var x = 0; x < partialDistinction.length; x++) {
+            $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
+            if (x < partialDistinction.length - 1) {
+              linkToGraph += partialDistinction[x] + ',';           
+            } else {
+              linkToGraph += partialDistinction[x];       
+            }
+          }
         } else {
-          linkToGraph += highlightedTerms[z] + ',';
+            
+            if (layout) {
+              linkToGraph += '&full_search=';
+            } else {
+              linkToGraph += '?full_search=';
+            }
+
+            for (var x = 0; x < exactDistinction.length; x++) {
+              $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + partialDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
+              if (x < exactDistinction.length - 1) {
+                linkToGraph += exactDistinction[x] + ',';           
+              } else {
+                linkToGraph += exactDistinction[x];       
+              }
+            }
         }
-      }
+
+        $("#url").attr('href', linkToGraph);
+        $("#url").text("Link to this graph with distinguished elements");
+        $(".test").css("height", $(".test").height + 30);
+        $("#search").val("");
+
     }
 
-    if (displayLink) {
-      $("#url").attr('href', linkToGraph);
-      $("#url").text("Link to this graph with highighted elements");
-      $(".test").css("height", $(".test").height + 30);
-    }
+    // console.log("Partial: " + partialDistinction);
+    // console.log("Full: " + exactDistinction);
+
+
+    // //It selects those nodes that have labels as their ID's
+    // ids = JSON.parse(data)['IDS'];
+
+    // //For everthing else, we get correct id's from server and proceed to highlight those id's 
+    // //by correlating labels to id's
+    // for (var j = 0; j < ids.length; j++) {
+    //   if (ids[j].length > 0) {
+
+    //     if (window.cy.$('[id="' + ids[j] + '"]').selected() == false) {
+    //       // Select the specified element and don't allow the user to unselect it until button is clicked again
+    //       if (window.cy.$('[id="' + ids[j] + '"]').isEdge()) {
+    //         window.cy.$('[id="' + ids[j] + '"]').css({'line-color': 'blue', 'line-style': 'dotted', 'width': 10});
+    //         highlightedTerms.push(ids[j]);
+    //       } else {
+    //         window.cy.$('[id="' + ids[j] + '"]').css({'border-width': 10, 'border-color': 'blue'});
+    //         highlightedTerms.push(ids[j])
+    //       }
+
+    //       if (search_type == 'full_search') {
+    //         // Append a new button for every search term
+    //         $("#search_terms").append('<li><a class="search"  id="' + ids[j]  + '" value="' + ids[j] + '">' + labels[j] + '<b style="color: red;">  X</b></a></li>');
+    //         $("#search").val("");
+    //       }
+    //     }
+    //   }
+    // }
+
+    // for (var x = 0; x < labels.length; x++) {
+    //   if (search_type == 'partial_search') {
+    //       $("#search_terms").append('<li><a class="search"  id="' + labels[x]  + '" value="partial_+-=_+' + labels[x] + '">' + labels[x] + '<b style="color: red;">  X</b></a></li>');
+    //       $("#search").val("");
+    //   } else {
+    //       $("#search_terms").append('<li><a class="search"  id="' + labels[x]  + '" value="full_+-=_+' + labels[x] + '">' + labels[x] + '<b style="color: red;">  X</b></a></li>');
+    //       $("#search").val("");
+    //   }
+    // }
+
+    // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+    // var layout = getQueryVariable('layout');
+    // var search = getQueryVariable('search');
+    // var displayLink = false;
+    // if (layout) {
+    //   linkToGraph += '?layout=' + layout;
+
+    //   if (search) {
+    //     linkToGraph += '&search=';
+    //   }
+    // } else if (search) {
+    //   linkToGraph += '?search=' + search;
+    // } else {
+    //   linkToGraph += '?search=';
+    // }
+
+    // if (highlightedTerms.length > 0) {
+    //   displayLink = true;
+    //   $("#search_error").css("display", "none");
+    // } else {
+    //   $("#search_error").css("display", "block");
+    //   $("#search_error_text").text("No elements match your search!");
+    //   $("#accordion_search").accordion({
+    //       collapsible: true,
+    //       heightStyle: "content"
+    //   });
+    //   return;
+    // }
+
+    // for (var z = 0; z < highlightedTerms.length; z++) {
+    //   if (highlightedTerms[z].indexOf('-') > -1) {
+    //     highlightedTerms[z] = highlightedTerms[z].replace('-', ':');
+    //   }
+    //   if (search) {
+    //     linkToGraph += ',' + highlightedTerms[z];
+    //   } else {
+    //     if (z == highlightedTerms.length - 1) {
+    //       linkToGraph += highlightedTerms[z];
+    //     } else {
+    //       linkToGraph += highlightedTerms[z] + ',';
+    //     }
+    //   }
+    // }
+
+    // if (displayLink) {
+    //   $("#url").attr('href', linkToGraph);
+    //   $("#url").text("Link to this graph with highighted elements");
+    //   $(".test").css("height", $(".test").height + 30);
+    // }
   });
 }
 
@@ -732,28 +916,20 @@ function searchValues(labels) {
  */
 function getHighlightedTerms() {
   // Create a url with all the highlighted terms
-  var highlightedTerms = new Array();
-  var linkToGraph = ""
+  var partialHighlightedTerms = new Array();
+  var fullHighlightedTerms = new Array();
+
   // Go through all of the highlighted terms
   $(".search").each(function (index) {
-    if (highlightedTerms.indexOf($(this).attr('id')) == -1) {
-      highlightedTerms.push($(this).attr('id'));
-    }
+      var value = $(this).attr('value').split('_');
+      if (value[0] == 'partial' && partialHighlightedTerms.indexOf(value[1]) == -1) {
+        partialHighlightedTerms.push(value[1]);
+      } else if (value[0] == 'exact' && fullHighlightedTerms.indexOf(value[1]) == -1) {
+        fullHighlightedTerms.push(value[1]);
+      }
   });
 
-  for (var i = 0; i < highlightedTerms.length; i++) {
-
-    if (highlightedTerms[i].indexOf('-') > -1) {
-      highlightedTerms[i] = highlightedTerms[i].replace('-', ':');
-    }
-
-    if (i == highlightedTerms.length - 1) {
-      linkToGraph += highlightedTerms[i];
-    } else {
-      linkToGraph += highlightedTerms[i] + ',';
-    }
-  }
-  return linkToGraph
+  return [partialHighlightedTerms, fullHighlightedTerms];
 }
 
 
@@ -794,13 +970,13 @@ function splitTerms(term) {
 //Gets query variables from the url
 function getQueryVariable(variable)
 {
-       var query = window.location.search.substring(1);
-       var vars = query.split("&");
-       for (var i=0;i<vars.length;i++) {
-               var pair = vars[i].split("=");
-               if(pair[0] == variable){return pair[1];}
-       }
-       return(false);
+   var query = window.location.search.substring(1);
+   var vars = query.split("&");
+   for (var i=0;i<vars.length;i++) {
+           var pair = vars[i].split("=");
+           if(pair[0] == variable){return pair[1];}
+   }
+   return(false);
 }
 
 // Returns all the id's that are not <= k value
@@ -845,9 +1021,11 @@ function applyMax(graph_layout) {
 }
 
 //Unselects a specified term from graph
-function unselectTerm(term) {
-  window.cy.$('[id="' + term + '"]').removeCss();
-  // window.cy.$('[id="' + term + '"]').unselect();
+function unselectTerm(terms) {
+  terms = terms.split(',');
+  for (var i = 0; i < terms.length; i++) {
+    window.cy.$('[id="' + terms[i] + '"]').removeCss();
+  }
 }
 
 function getLayoutFromQuery() {

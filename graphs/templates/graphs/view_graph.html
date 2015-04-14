@@ -143,6 +143,14 @@
                                 <button class="btn btn-info" name="search_button" id="search_button">Search</button>
                             </span>
                         </div>
+                        <div class="input-group" id="search_radios">
+                        <label>
+                            <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)"> Similar
+                        </label>
+                        <label>
+                            <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)"> Exact
+                        </label>
+                    </div>
                     </form>
                 </div>
                 <div id="search_error" style="display: none;" class="alert alert-danger alert-dismissable">

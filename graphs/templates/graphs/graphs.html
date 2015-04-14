@@ -246,7 +246,7 @@
                 <tr> 
                     <!-- If there is a search term or a tag term -->
                     {% if search_result %}
-                        {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %}
+                        {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?"|add:search_type|add:"="|add:g.3 as final_url %}
                             <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
                         {%endwith %}
                         <td><div class="test">
@@ -312,10 +312,10 @@
                     </div>
                     <div class="input-group" id="search_radios">
                     <label>
-                        <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)">Similar
+                        <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)"> Similar
                     </label>
                     <label>
-                        <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)">Exact
+                        <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)"> Exact
                     </label>
                     </div>
                   </form><br><br>

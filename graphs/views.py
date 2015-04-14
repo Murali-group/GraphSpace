@@ -712,21 +712,19 @@ def retrieveIDs(request):
 
     #Grab id's of the nodes to highlight given the label of the nodes
     if request.POST:
-        id_values = []
         db_session = data_connection.new_session()
         element_values = request.POST['values'].split(',')
+        elementDictionary = {}
         for element in element_values:
-            element_id = None
+            elementDictionary[element] = []
             # Find an edge
             if ':' in element:
-                element_id = db.find_edge(request.POST['uid'], request.POST['gid'], element.strip())
+                elementDictionary[element] += db.find_edge(request.POST['uid'], request.POST['gid'], element.strip(), request.POST['search_type'])
             else:
-                element_id = db.find_node(request.POST['uid'], request.POST['gid'], element.strip())
+                elementDictionary[element] += db.find_node(request.POST['uid'], request.POST['gid'], element.strip(), request.POST['search_type'])
 
-            if element_id != None and len(element_id) > 0:
-                id_values.append(element_id)
-                
-        return HttpResponse(json.dumps({"IDS": id_values}))
+        print elementDictionary
+        return HttpResponse(json.dumps(elementDictionary))
     else:
         return HttpResponseNotFound('<h1>Page not found</h1>')
 

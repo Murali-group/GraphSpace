@@ -60,3 +60,16 @@ body {
     color:#fff;
     font-size:12px Arial;
 }
+
+#search_radios {
+  text-align: center;
+  margin-top: 10px;
+}
+
+#partial_search {
+  margin-left: 30px;
+}
+
+#full_search {
+  margin-left: 30px;
+}
