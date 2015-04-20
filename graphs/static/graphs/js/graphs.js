@@ -32,6 +32,11 @@ $(document).ready(function() {
       urlAppender(document.URL, 'tags', $("#tags_searching").val());
    });
 
+   $("#clear_search").click(function (e) {
+    e.preventDefault();
+    clearSearchTerms();
+   });
+
 
    // $(".search").click(function (e) {
    //    e.preventDefault();
@@ -265,5 +270,19 @@ $(document).ready(function() {
          }
       }
    }
+
+   function clearSearchTerms() {
+    if (document.URL.indexOf('?') > -1) {
+      var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+    } else {
+      var linkToGraph = document.URL;
+    }
+
+    if (getQueryVariable('layout')) {
+      linkToGraph += '?layout=' + getQueryVariable('layout');
+    }
+
+    window.location.href = linkToGraph;
+  }
 
 });

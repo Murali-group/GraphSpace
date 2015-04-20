@@ -61,7 +61,7 @@ $(document).ready(function() {
       this.elements().selectify();
 
       // $("#search_tips").html("Node example: " + graph_json['graph']['nodes'][0]['data']['label'] + "<br>Edge example: " + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target']);
-      $("#search_tips ul").append('<li>Node example: ' + graph_json['graph']['nodes'][0]['data']['label'] + '</li><li>Edge example: ' + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target'] + '</li>');
+      // $("#search_tips ul").append('<li>Node example: ' + graph_json['graph']['nodes'][0]['data']['label'] + '</li><li>Edge example: ' + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target'] + '</li>');
 
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the nodes in graphs already in database don't have width or height
@@ -188,15 +188,17 @@ $(document).ready(function() {
 
 
       // //If ther are any terms to be searched for, highlight those terms, if found
-      if (getQueryVariable('full_search')) {
+      if (getQueryVariable('partial_search')) {
+          // Initially set search to full matching
+          $("#partial_search").attr('checked', true);
+       } else if (getQueryVariable('full_search')){
           // Initially set search to full matching
           $("#full_search").attr('checked', true);
        } else {
-          // Initially set search to full matching
           $("#partial_search").attr('checked', true);
        }
 
-       searchBothTypes();
+       searchOnLoad();
 
     } // end ready: function()
     });
@@ -310,6 +312,7 @@ $(document).ready(function() {
      $("#search_button").click(function (e) {
       e.preventDefault();
       if ($("#search").val().length > 0) {
+        window.cy.elements().removeCss();
         searchValues($('input[name=match]:checked').val(), $("#search").val());
       }
      });
@@ -319,19 +322,19 @@ $(document).ready(function() {
    }
 
     //Unhighlights terms when the buttons in the search box is clicked on
-    $("#search_terms").on("click", ".search", function(e) {
-      unselectTerm($(this).attr('id'));
-      var toRemove  = encodeURIComponent($(this).val()) + ',';
-      var origText = $("#url").text();
-      origText = origText.replace(toRemove, '');
-      $("#url").text(origText);
-      $(this).remove();
-      var toSearchFor = origText.indexOf('search=')
-      var nextVal = origText.substring(toSearchFor).replace('search=', '');
-      if ($(".search").length == 0) {
-        $("#url").text("");
-      }
-    });
+    // $("#search_terms").on("click", ".search", function(e) {
+    //   unselectTerm($(this).attr('id'));
+    //   var toRemove  = encodeURIComponent($(this).val()) + ',';
+    //   var origText = $("#url").text();
+    //   origText = origText.replace(toRemove, '');
+    //   $("#url").text(origText);
+    //   $(this).remove();
+    //   var toSearchFor = origText.indexOf('search=')
+    //   var nextVal = origText.substring(toSearchFor).replace('search=', '');
+    //   if ($(".search").length == 0) {
+    //     $("#url").text("");
+    //   }
+    // });
 
     $(".help").click(function (e) {
       e.preventDefault();
@@ -343,19 +346,43 @@ $(document).ready(function() {
       window.location.href = "../../../help/#sharing_panel";
     });
 
-    // $(".highlight").click(function (e) {
-    //   e.preventDefault();
-    //   var searchTerms = getHighlightedTerms();
-    //   if (searchTerms.length > 0) {
-    //     var linkHref = $(this).attr('id') + '&search=' + getHighlightedTerms();
-    //   } else {
-    //     var linkHref = $(this).attr('id');
-    //   }
+    $(".highlight").click(function (e) {
+      e.preventDefault();
 
-    //   $("#layout_link").attr('href', linkHref);
-    //   $("#layout_link").text("Link to this graph with highlighted elements");
-    //   $("#layout_link").width(20);
-    // });
+      var linkToGraph = $(this).attr('id');
+
+      var labels = $("#search").val().split(',');
+
+      if ($("#partial_search").is(':checked')) {
+        linkToGraph += '&partial_search=';
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i].trim().length > 0) {
+            linkToGraph += labels[i].trim() + ',';
+          }
+        } 
+      } else {
+        linkToGraph += '&full_search=';
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i].trim().length > 0) {
+            linkToGraph += labels[i].trim() + ',';
+          }
+        } 
+      }   
+
+      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);  
+
+       // var searchTerms = getHighlightedTerms();
+      // if (searchTerms.length > 0) {
+      //   var linkHref = $(this).attr('id') + '&search=' + getHighlightedTerms();
+      // } else {
+      //   var linkHref = $(this).attr('id');
+      // }
+
+
+      $("#layout_link").attr('href', linkToGraph);
+      $("#layout_link").text("Link to this graph with highlighted elements");
+      $("#layout_link").width(20);
+    });
 
     $(".change").click(function (e) {
       e.preventDefault();
@@ -404,39 +431,65 @@ $(document).ready(function() {
     $(".layout_links").tooltip();
 
     $(".layout_buttons").click(function (e) {
-      var linkHref = "";
       e.preventDefault();
-      var searchTerms = getHighlightedTerms();
-
-      if (searchTerms[0].length > 0) {
-        linkHref = $(this).attr('href') + '&partial_search=';
-        for (var i = 0; i < searchTerms[0].length; i++) {
-          if (i < searchTerms[0].length - 1) {
-            linkHref += searchTerms[0][i] + ',';
-          } else {
-            linkHref += searchTerms[0][i];
-          }
-        }      
-      } 
-
-      if (searchTerms[1].length > 0) {
-        linkHref = $(this).attr('href') + '&full_search=';
-        for (var i = 0; i < searchTerms[1].length; i++) {
-          if (i < searchTerms[1].length - 1) {
-            linkHref += searchTerms[1][i] + ',';
-          } else {
-            linkHref += searchTerms[1][i];
-          }
-        }      
-      } 
-
-      if (searchTerms[0].length == 0 && searchTerms[1].length == 0) {
-        linkHref = $(this).attr('href');
+      // var searchTerms = getHighlightedTerms();
+      if (document.URL.indexOf('?') > -1) {
+        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+      } else {
+        var linkToGraph = document.URL;
       }
+
+      linkToGraph += $(this).attr('href');
+
+      var labels = $("#search").val().split(',');
+
+      if ($("#partial_search").is(':checked')) {
+        linkToGraph += '&partial_search=';
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i].trim().length > 0) {
+            linkToGraph += labels[i].trim() + ',';
+          }
+        } 
+      } else {
+        linkToGraph += '&full_search=';
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i].trim().length > 0) {
+            linkToGraph += labels[i].trim() + ',';
+          }
+        } 
+      }
+
+      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       if (e.target == this) {
-        window.location.href = linkHref;
+        window.location.href = linkToGraph;
       }
+
+      // if (searchTerms[0].length > 0) {
+      //   linkHref = $(this).attr('href') + '&partial_search=';
+      //   for (var i = 0; i < searchTerms[0].length; i++) {
+      //     if (i < searchTerms[0].length - 1) {
+      //       linkHref += searchTerms[0][i] + ',';
+      //     } else {
+      //       linkHref += searchTerms[0][i];
+      //     }
+      //   }      
+      // } 
+
+      // if (searchTerms[1].length > 0) {
+      //   linkHref = $(this).attr('href') + '&full_search=';
+      //   for (var i = 0; i < searchTerms[1].length; i++) {
+      //     if (i < searchTerms[1].length - 1) {
+      //       linkHref += searchTerms[1][i] + ',';
+      //     } else {
+      //       linkHref += searchTerms[1][i];
+      //     }
+      //   }      
+      // } 
+
+      // if (searchTerms[0].length == 0 && searchTerms[1].length == 0) {
+      //   linkHref = $(this).attr('href');
+      // }
 
     });
 
@@ -669,6 +722,11 @@ $(document).ready(function() {
     });
 });
 
+$("#clear_search").click(function (e) {
+  e.preventDefault();
+  clearSearchTerms();
+});
+
 //Exports the specified graph to an image
 //Appears in side window 
 function export_graph(graphname) {
@@ -693,9 +751,22 @@ function fireEvent(obj,evt){
   }
 }
 
-function searchBothTypes() {
-  searchValues('partial_search', getQueryVariable('partial_search'));
-  searchValues('full_search', getQueryVariable('full_search'))
+// function searchBothTypes() {
+//   searchValues('partial_search', getQueryVariable('partial_search'));
+//   searchValues('full_search', getQueryVariable('full_search'));
+// }
+
+function searchOnLoad() {
+
+  if (getQueryVariable('partial_search')) {
+    searchValues('partial_search', getQueryVariable('partial_search'));
+    searchVals = getQueryVariable('partial_search').split(',');
+    $("#search").val(searchVals);
+  } else if (getQueryVariable('full_search')) {
+    searchValues('full_search', getQueryVariable('full_search'));
+    searchVals = getQueryVariable('full_search').split(',');
+    $("#search").val(searchVals);
+  }
 }
 
 //Function to search through graph elements in order to highlight the 
@@ -706,7 +777,9 @@ function searchValues(search_type, labels) {
   var paths = document.URL.split('/');
 
   var partialDistinction = Array();
-  var exactDistinction = Array();
+  var exactDistinction = Array();  
+
+  // window.cy.eles.removeCss();
 
   $("#search_error_text").text("");
 
@@ -726,7 +799,6 @@ function searchValues(search_type, labels) {
     var displayLink = false;
 
     var oldHtml = $("#search_terms").html();
-    // $("#search_terms").html("");
 
     if (labels.length > 0) {
     //Split the labels so we can reference the labels
@@ -736,7 +808,11 @@ function searchValues(search_type, labels) {
 
       if (data[labels[i]].length == 0) {
         $("#search_error").css("display", "block");
-        $("#search_error_text").append(labels[i] + " not found!<br>");
+        if (labels[i].trim().length == 0) {
+          $("#search_error_text").append("Please enter node or edge name!<br>");
+        } else {
+          $("#search_error_text").append(labels[i] + " not found!<br>");
+        }
         $("#accordion_search").accordion({
             collapsible: true,
             heightStyle: "content"
@@ -770,36 +846,51 @@ function searchValues(search_type, labels) {
 
     if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
 
-        // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-        // var layout = getQueryVariable('layout');
+        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+        var layout = getQueryVariable('layout');
+        var highlighted = getHighlightedTerms();
 
-        // if (layout) {
-        //   linkToGraph += layout;
-        // }
+        if (layout) {
+          linkToGraph += '?layout=' + layout;
+        }
 
 
-        // if (search_type == 'partial_search' || partialDistinction.length > 0 || highlighted[0].length > 0) {
-        //   if (layout) {
-        //     linkToGraph += '&partial_search=';
-        //   } else {
-        //     linkToGraph += '?partial_search=';
-        //   }
-        // }
+        if (search_type == 'partial_search') {
+          if (layout) {
+            linkToGraph += '&partial_search=';
+          } else {
+            linkToGraph += '?partial_search=';
+          }
+        } else if (search_type == 'full_search') {
+          if (layout) {
+            linkToGraph += '&full_search=';
+          } else {
+            linkToGraph += '?full_search=';
+          }
+        }
 
+
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i].trim().length > 0) {
+            linkToGraph += labels[i].trim() + ',';
+          }
+        }
+
+        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
         // for (var i = 0; i < highlighted[0].length; i++) {
         //   linkToGraph += highlighted[0][i] + ',';
         // }
 
-        for (var x = 0; x < partialDistinction.length; x++) {
-          partialDistinction[x].replace(" ", "");
-          $("#search_terms").append('<li><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
-          if (x < partialDistinction.length - 1) {
-            // linkToGraph += partialDistinction[x] + ',';           
-          } else {
-            // linkToGraph += partialDistinction[x];       
-          }
-        }
+        // for (var x = 0; x < partialDistinction.length; x++) {
+        //   partialDistinction[x].replace(" ", "");
+        //   // $("#search_terms").append('<li style="display: none;"><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
+        //   if (x < partialDistinction.length - 1) {
+        //     linkToGraph += partialDistinction[x] + ',';           
+        //   } else {
+        //     linkToGraph += partialDistinction[x];       
+        //   }
+        // }
 
         // if (search_type == 'full_search' || exactDistinction.length > 0) {
         //   if (layout && partialDistinction.length > 0 || partialDistinction.length > 0 || highlighted[0].length > 0) {
@@ -813,86 +904,84 @@ function searchValues(search_type, labels) {
         //   linkToGraph += highlighted[1][i] + ',';
         // }
 
-        for (var x = 0; x < exactDistinction.length; x++) {
-          exactDistinction[x].replace(" ", "");
-          $("#search_terms").append('<li><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + exactDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red;">  X</b></a></li>');
-          // if (x < exactDistinction.length - 1) {
-          //   linkToGraph += exactDistinction[x] + ',';           
-          // } else {
-          //   linkToGraph += exactDistinction[x];       
-          // }
-        }
+        // for (var x = 0; x < exactDistinction.length; x++) {
+        //   exactDistinction[x].replace(" ", "");
+        //   $("#search_terms").append('<li style="display: none;"><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + exactDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red; display: none;">  X</b></a></li>');
+        //   if (x < exactDistinction.length - 1) {
+        //     linkToGraph += exactDistinction[x] + ',';           
+        //   } else {
+        //     linkToGraph += exactDistinction[x];       
+        //   }
+        // }
 
-        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-        var layout = getQueryVariable('layout');
+        // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+        // var layout = getQueryVariable('layout');
 
-        var highlighted = getHighlightedTerms();
+        // var highlighted = getHighlightedTerms();
 
 
-        if (layout) {
-          linkToGraph += layout;
+        // if (layout) {
+        //   linkToGraph += layout;
 
-          if (highlighted[0].length > 0) {
-            linkToGraph += '&partial_search=';
-            for (var i = 0; i < highlighted[0].length; i++) {
-              if (i < highlighted[0].length - 1) {
-                linkToGraph += highlighted[0][i] + ',';
-              } else {
-                linkToGraph += highlighted[0][i];
-              }
-            }
-          }
+        //   if (highlighted[0].length > 0) {
+        //     linkToGraph += '&partial_search=';
+        //     for (var i = 0; i < highlighted[0].length; i++) {
+        //       if (i < highlighted[0].length - 1) {
+        //         linkToGraph += highlighted[0][i] + ',';
+        //       } else {
+        //         linkToGraph += highlighted[0][i];
+        //       }
+        //     }
+        //   }
 
-          if (highlighted[1].length > 0) {
-            linkToGraph += '&full_search=';
-            for (var i = 0; i < highlighted[1].length; i++) {
-              if (i < highlighted[1].length - 1) {
-                linkToGraph += highlighted[1][i] + ',';
-              } else {
-                linkToGraph += highlighted[1][i];
-              }
-            }
-          }
-        } else {
-          if (highlighted[0].length > 0) {
-            linkToGraph += '?partial_search=';
-            for (var i = 0; i < highlighted[0].length; i++) {
-              if (i < highlighted[0].length - 1) {
-                linkToGraph += highlighted[0][i] + ',';
-              } else {
-                linkToGraph += highlighted[0][i];
-              }
-            }
-          }
+        //   if (highlighted[1].length > 0) {
+        //     linkToGraph += '&full_search=';
+        //     for (var i = 0; i < highlighted[1].length; i++) {
+        //       if (i < highlighted[1].length - 1) {
+        //         linkToGraph += highlighted[1][i] + ',';
+        //       } else {
+        //         linkToGraph += highlighted[1][i];
+        //       }
+        //     }
+        //   }
+        // } else {
+        //   if (highlighted[0].length > 0) {
+        //     linkToGraph += '?partial_search=';
+        //     for (var i = 0; i < highlighted[0].length; i++) {
+        //       if (i < highlighted[0].length - 1) {
+        //         linkToGraph += highlighted[0][i] + ',';
+        //       } else {
+        //         linkToGraph += highlighted[0][i];
+        //       }
+        //     }
+        //   }
 
-          if (highlighted[1].length > 0 && highlighted[0].length > 0) {
-            linkToGraph += '&full_search=';
-            for (var i = 0; i < highlighted[1].length; i++) {
-              if (i < highlighted[1].length - 1) {
-                linkToGraph += highlighted[1][i] + ',';
-              } else {
-                linkToGraph += highlighted[1][i];
-              }
-            }
-          } else {
-              if (highlighted[1].length > 0) {
-                linkToGraph += '&full_search=';
-                for (var i = 0; i < highlighted[1].length; i++) {
-                  if (i < highlighted[1].length - 1) {
-                    linkToGraph += highlighted[1][i] + ',';
-                  } else {
-                    linkToGraph += highlighted[1][i];
-                  }
-                }
-              }
-          }
-        }
+        //   if (highlighted[1].length > 0 && highlighted[0].length > 0) {
+        //     linkToGraph += '&full_search=';
+        //     for (var i = 0; i < highlighted[1].length; i++) {
+        //       if (i < highlighted[1].length - 1) {
+        //         linkToGraph += highlighted[1][i] + ',';
+        //       } else {
+        //         linkToGraph += highlighted[1][i];
+        //       }
+        //     }
+        //   } else {
+        //       if (highlighted[1].length > 0) {
+        //         linkToGraph += '&full_search=';
+        //         for (var i = 0; i < highlighted[1].length; i++) {
+        //           if (i < highlighted[1].length - 1) {
+        //             linkToGraph += highlighted[1][i] + ',';
+        //           } else {
+        //             linkToGraph += highlighted[1][i];
+        //           }
+        //         }
+        //       }
+        //   }
+        // }
 
         $("#url").attr('href', linkToGraph);
         $("#url").text("Link to this graph with distinguished elements");
         $(".test").css("height", $(".test").height + 30);
-        $("#search").val("");
-
     }
   }
   });
@@ -1116,6 +1205,11 @@ function getLayoutFromQuery() {
     }
 
     return graph_layout;
+}
+
+function clearSearchTerms() {
+  window.cy.elements().removeCss();
+  $("#search").val("");
 }
 
 /** 

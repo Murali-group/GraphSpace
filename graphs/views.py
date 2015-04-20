@@ -724,7 +724,6 @@ def retrieveIDs(request):
             else:
                 elementDictionary[element] += db.find_node(request.POST['uid'], request.POST['gid'], element.strip(), request.POST['search_type'])
 
-        print elementDictionary
         return HttpResponse(json.dumps(elementDictionary))
     else:
         return HttpResponseNotFound('<h1>Page not found</h1>')
