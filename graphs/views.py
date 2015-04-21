@@ -487,7 +487,8 @@ def graphs_in_group(request, group_owner, group_id):
             graph_data = db.get_all_graphs_for_group(context['uid'], group_owner, group_id, request)
 
             search_type = None
-
+            context['search_result'] = False
+            
             if 'partial_search' in request.GET:
                 search_type = 'partial_search'
             elif 'full_search' in request.GET:
@@ -496,13 +497,30 @@ def graphs_in_group(request, group_owner, group_id):
             if search_type != None:
                 context['search_result'] = True
                 context['search_type'] = search_type
+                context['search_word'] = ""
 
+                cleaned_search_terms = request.GET.get(search_type).split(',')
+                for i in xrange(len(cleaned_search_terms)):
+                    cleaned_search_terms[i] = cleaned_search_terms[i].strip()
+                    # Deleted no length search terms
+                    if len(cleaned_search_terms[i]) == 0:
+                        del cleaned_search_terms[i]
+
+                for i in xrange(len(cleaned_search_terms)):
+                    context['search_word'] += cleaned_search_terms[i] + ','
+
+                if len(context['search_word']) > 0: 
+                    context['search_word'] = context['search_word'][:len(context['search_word']) - 1]
 
             # include the graph data to the context
             if len(graph_data) != 0:
                 context['graph_list'] = graph_data
             else:
                 context['graph_list'] = None
+                if context['search_result'] == True:
+                    context['message'] = "It appears as if there are no graphs in this group that match your search query!"
+                else:
+                    context['message'] = "It appears as if there are no graphs in this group yet."
 
             group_information = db.get_group_by_id(group_owner, group_id)
 
@@ -947,7 +965,7 @@ def create_group(request, groupname):
         # If there isn't already a group name that exists with the same name under account
         # add it to account
         if group_created != None:
-            return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created}), content_type="application/json")
+            return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created[0], "Group Id": group_created[1]}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Upload": "Fail", "Error": "Group name already exists for this account"}), content_type="application/json")
 
@@ -1285,7 +1303,7 @@ def get_group(request, group_owner, groupname):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         data = db.get_group(group_owner, groupname)
-        return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
+        return HttpResponse(json.dumps(data, indent=4, separators=(',', ': ')), content_type="application/json");
 
 
 def delete_group(request, group_owner, groupname):
@@ -1353,7 +1371,7 @@ def get_group_for_user(request, user_id):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
 
         group = db.groups_for_user(user_id)
-        return HttpResponse(json.dumps({"User": user_id, "Groups": group}), content_type="application/json")
+        return HttpResponse(json.dumps({"Groups": group}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def add_user_to_group(request, group_owner, groupname, user_id):
     '''
@@ -1382,7 +1400,7 @@ def add_user_to_group(request, group_owner, groupname, user_id):
             if data == None:
                 return  HttpResponse(json.dumps({"Error": "Group doesn't exist or user has already been added!"}), content_type="application/json")
 
-            return HttpResponse(json.dumps({"Response": data}), content_type="application/json")
+            return HttpResponse(json.dumps({"Success": data}), content_type="application/json")
 
         else:
             return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
@@ -1405,7 +1423,7 @@ def remove_user_from_group(request, group_owner, groupname, user_id):
             return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
         if group_owner == request.POST['username']:
             group = db.remove_user_from_group(user_id, request.POST['username'], groupname)
-            return HttpResponse(json.dumps({"Response": group}), content_type="application/json")
+            return HttpResponse(json.dumps({"Success": group}), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
 

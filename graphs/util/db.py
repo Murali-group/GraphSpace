@@ -19,6 +19,9 @@ URL_PATH = settings.URL_PATH
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection
 
+##################################################################
+# This section contains methods to populate tables on startup
+
 # --------------- Edge Insertions -----------------------------------
 
 
@@ -126,6 +129,10 @@ def add_everyone_to_password_reset():
 		if con:
 			con.close()
 
+
+			# END CONVERSIONS
+##################################################
+# This section contains methods to validate JSON 
 def validate_json(jsonString):
 	'''
 		JSON Validator. Tells if the graph being inserted is 
@@ -243,13 +250,11 @@ def propertyInJSON(elements, properties, elementType):
 		
 			met_all_properties.append(element_property)
 
-		# if len(met_all_properties) == len(properties):
-		# 	hexChecker = all(c in string.hexdigits for c in element_data['color'])
-		# 	if hexChecker:
-		# 		return "Error: Please add #to all colors that are HEX for " + elementType + " e.g. 000 should be #000"
-
-
 	return ""
+
+
+
+########### END JSON CHECKING #####################################
 
 def add_user_to_password_reset(email):
 	'''
@@ -796,8 +801,6 @@ def search_result(uid, search_type, search_terms, view_type):
 
 			# intial_graphs_from_search = list(set(intial_graphs_from_search))
 			
-			if view_type == 'shared':
-				print intial_graphs_from_search
 
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
@@ -892,36 +895,36 @@ def find_edges(uid, search_type, search_word, view_type, cur):
 			tail_node_ids.append(str(node[0]))
 
 		# treat id's as node_id's
-		cur.execute('select n.node_id from virtual_node_table as n where n.node_id = ?', ('*' + head_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.node_id = ?', (head_node, ))
 		head_node_id_data = cur.fetchall()
 		for node in head_node_id_data:
 			head_node_ids.append(str(node[0]))
 
-		cur.execute('select n.node_id from virtual_node_table as n where n.node_id = ?', ('*' + tail_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.node_id = ?', (tail_node, ))
 		tail_node_id_data = cur.fetchall()
 		for node in tail_node_id_data:
 			tail_node_ids.append(str(node[0]))
 	elif search_type == 'partial_search':
 		# treat id's as labels
-		cur.execute('select n.node_id from virtual_node_table as n where n.label match ?', ('*' + head_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.label match ?', ('.' + head_node + '*', ))
 		head_node_label_data = cur.fetchall()
 		head_node_ids = []
 		for node in head_node_label_data:
 			head_node_ids.append(str(node[0]))
 
-		cur.execute('select n.node_id from virtual_node_table as n where n.label match ?', ('*' + tail_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.label match ?', ('.' + tail_node + '*', ))
 		tail_node_label_data = cur.fetchall()
 		tail_node_ids = []
 		for node in tail_node_label_data:
 			tail_node_ids.append(str(node[0]))
 
 		# treat id's as node_id's
-		cur.execute('select n.node_id from virtual_node_table as n where n.node_id match ?', ('*' + head_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.node_id match ?', ('.' + head_node + '*', ))
 		head_node_id_data = cur.fetchall()
 		for node in head_node_id_data:
 			head_node_ids.append(str(node[0]))
 
-		cur.execute('select n.node_id from virtual_node_table as n where n.node_id match ?', ('*' + tail_node + '*', ))
+		cur.execute('select n.node_id from virtual_node_table as n where n.node_id match ?', ('.' + tail_node + '*', ))
 		tail_node_id_data = cur.fetchall()
 		for node in tail_node_id_data:
 			tail_node_ids.append(str(node[0]))
@@ -1034,12 +1037,12 @@ def find_node(uid, gid, node_to_find, search_type):
 
 		if search_type == 'partial_search':
 			# Get the id of the node (could be id or a label) and return it if they exist
-			# cur.execute('select node_id from virtual_node_table where node_id MATCH ? and user_id = ? and graph_id = ?', ('.' + node_to_find + '*', uid, gid))
-			# id_data = cur.fetchall()
+			cur.execute('select node_id from virtual_node_table where node_id MATCH ? and user_id = ? and graph_id = ?', ('.' + node_to_find + '*', uid, gid))
+			id_data = cur.fetchall()
 			id_list = []
 
-			# for ids in id_data:
-			# 	id_list.append(ids[0])
+			for ids in id_data:
+				id_list.append(ids[0])
 	
 			cur.execute('select node_id from virtual_node_table where label MATCH ? and user_id = ? and graph_id = ?', ('.' + node_to_find + '*', uid, gid))
 			label_data = cur.fetchall()
@@ -1053,16 +1056,16 @@ def find_node(uid, gid, node_to_find, search_type):
 
 		elif search_type == 'full_search':
 			# Get the id of the node (could be id or a label) and return it if they exist
-			# cur.execute('select node_id from node where node_id = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
-			# id_data = cur.fetchall()
-			# if id_data != None and len(id_data) > 0:
-			# 	return id_data[0][0]
-			# else:
-			cur.execute('select node_id from node where label = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
-			label_data = cur.fetchall()
+			cur.execute('select node_id from node where node_id = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
+			id_data = cur.fetchall()
+			if id_data != None and len(id_data) > 0:
+				return id_data[0][0]
+			else:
+				cur.execute('select node_id from node where label = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
+				label_data = cur.fetchall()
 
-			if label_data != None and len(label_data) > 0:
-				return [label_data[0][0]]
+				if label_data != None and len(label_data) > 0:
+					return [label_data[0][0]]
 
 		return []
 
@@ -1088,28 +1091,34 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 
 	if search_type == 'partial_search':
 		if view_type == 'my graphs':
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.label MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('.' + search_word + '*', uid))
+			cur.execute('select graph_id, node_id, label, modified, user_id, public from node_graph where label match ? and user_id = ?', ('.' + search_word + '*', uid))
 			node_labels = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
 
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.node_id MATCH ? and n.graph_id = g.graph_id and n.user_id = ?', ('.' + search_word + '*', uid))
+			cur.execute('select graph_id, node_id, label, modified, user_id, public from node_graph where label match ? and user_id = ?', ('.' + search_word + '*', uid))
 			node_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 
 		elif view_type == 'shared':
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid, '*' + search_word + '*'))
-			shared_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid, '*' + search_word + '*'))
-			shared_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
+			cur.execute('select * from node_graph as n1 where n1.graph_id in (select gu.graph_id from group_graph_user as gu where gu.user_id = ? intersect select n.graph_id from node_graph as n where n.label MATCH ?)', (uid, '.' + search_word + '*'))
+
+			node_ids = cur.fetchall()
+
+			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
+			# cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.label MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid, '*' + search_word + '*'))
+			# shared_labels = cur.fetchall()
+			# intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
+
+			# cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, group_to_graph as gg, graph as g, group_to_user as gu where n.node_id MATCH ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gg.graph_id = g.graph_id and gg.user_id = g.user_id and gu.user_id = ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (uid, '*' + search_word + '*'))
+			# shared_ids = cur.fetchall()
+			# intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
 		else:
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.label MATCH ? and n.graph_id = g.graph_id and g.public = 1 and n.user_id = g.user_id', ('.' + search_word + '*', ))
+			cur.execute('select graph_id, node_id, label, modified, user_id, public from node_graph where label MATCH ? and public = 1', ('.' + search_word + '*', ))
 			public_labels = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
 
-			cur.execute('select n.graph_id, n.node_id, n.label, g.modified, n.user_id, g.public from virtual_node_table as n, graph as g where n.node_id MATCH ? and n.graph_id = g.graph_id and g.public = 1 and n.user_id = g.user_id', ('.' + search_word + '*', ))
+			cur.execute('select graph_id, node_id, label, modified, user_id, public from node_graph where node_id MATCH ? and public = 1', ('.' + search_word + '*', ))
 			public_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
 
@@ -1146,7 +1155,6 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 		graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
 		actual_graph_with_nodes.append(tuple(graph_list))
 
-	print actual_graph_with_nodes
 	return actual_graph_with_nodes
 
 def find_graphs_using_names(uid, search_type, search_word, view_type, cur):
@@ -1754,14 +1762,13 @@ def create_group(username, group):
 
 		# Check to see if there is a group under the username already 
 		cur.execute('select group_id from \"group\" where group_id=? and owner_id=?', (group, username));
-
 		data = cur.fetchone()
 
 		# If no group exists, insert into database
 		if data == None:
 			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (cleanGroupName(group), group, username, "", 0, 1))
 			con.commit()
-			return group
+			return [group, cleanGroupName(group)]
 		else:
 			return None
 
@@ -2099,7 +2106,7 @@ def add_user_to_group(username, owner, group):
 		if isMember != None or isOwner != None:
 			cur.execute('insert into group_to_user values(?, ?, ?)', (group, owner, username))
 			con.commit();
-			return "User added!"
+			return "Successfully added user " + username + " to " + group + "."
 		else:
 			return "Become the owner/member of this group first!"
 
@@ -2141,7 +2148,7 @@ def remove_user_from_group(username, owner, group):
 			cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
 			cur.execute('delete from group_to_graph where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
 			con.commit();
-			return "User removed from group!"
+			return "Successfully removed user " + username + " from " + group + "."
 		else:
 			return "Can't delete user from a group you are not the owner of!"
 
@@ -2285,8 +2292,6 @@ def view_graphs_of_type(view_type, username):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		print view_type
-
 		# Select graphs depending on view type.
 		if view_type == 'public':
 			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g where g.public = 1')
@@ -2297,8 +2302,6 @@ def view_graphs_of_type(view_type, username):
 
 		# Go through each graph and retrieve all tags associated with that graph
 		graphs = cur.fetchall()
-
-		print 'done processing graphs for ' + view_type
 		
 		# Return the graph information (including tags) as a list of rows
 		return graphs

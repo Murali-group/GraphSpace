@@ -81,12 +81,18 @@ $(document).ready(function() {
         "groupId": groupId,
         "groupOwner": groupOwner
       }, function (data) {
-          if(data.Message == 'User added!') {
-              location.reload();          
-            } else {
+        console.log(data);
+          if(data.Message == 'Become the owner/member of this group first!') {
               return alert(data.Message);
+            } else {
+              location.reload();          
           }
       });
+   });
+
+   $("#clear_search").click(function(e) {
+    e.preventDefault();
+    location.href = document.URL;
    });
 
    /**
@@ -109,10 +115,10 @@ $(document).ready(function() {
         "groupOwner": groupOwner
       }, function (data) {
           if (data.Message) {
-            if(data.Message == 'User removed from group!') {
-              location.reload();          
-            } else {
+            if(data.Message == "Can't delete user from a group you are not the owner of!") {
               return alert(data.Message);
+            } else {
+              location.reload();
             }
         }   
       });

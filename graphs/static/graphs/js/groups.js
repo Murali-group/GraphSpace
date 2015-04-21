@@ -33,7 +33,6 @@ $(document).ready(function() {
 				alert(data['Error']);
 				return;
 			} else {
-				alert("Group Created!");
 				location.reload();
 			}
 		});

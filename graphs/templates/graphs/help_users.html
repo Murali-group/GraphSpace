@@ -62,12 +62,12 @@ Graphs are used to represent many different things such as computer networks, bi
 
 GraphSpace allows people to store and share graphs, regardless of what those graphs represent.
 
-
+<!-- 
 <ul>
 <li><a href="#view">I want to find and view graphs that are shared with me</a>
 <li><a href="#upload">I want to upload graphs</a>
 <li><a href="#sharing">I want to share my graphs</a>
-</ul>
+</ul> -->
 
 <h3 id="view_graph">Viewing a Graph</h3>
 
@@ -116,8 +116,8 @@ The <b>Partial</b> option under the search bar allows one to search for all elem
 <br><br>
 The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be distinguished.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been distinguished since there are no nodes in our example graph which have CDC as their entire value.
 <br><br>
-Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
-
+<!-- Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
+ -->
 
 <b id="export_panel">Export Panel</b>: Allows one to export the entire image of the as a PNG
 <br><br>
@@ -219,15 +219,15 @@ You can also look at groups, which are collections of graphs shared by members o
 
 <ul>
 
-<li><b><a href="{{url}}groups/">Owner of</a></b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members. All other functionality is accomplished through the <a href="{{url}}help/restapi/#groups">REST API</a></li>
+<li><b><a href="{{url}}groups/">Owner of</a></b> are groups that you have created and are the owner of. You can set the description of groups that you own as well as add or remove members. All other functionality is accomplished through the <a href="{{url}}help/programmers/#groups">REST API</a></li>
 
-<li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/restapi/#graphs">REST API</a></li>
+<li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/programmers/#groups">REST API</a></li>
 
 </ul>
 
 <h3 id="sharing_graphs">Sharing graphs</h3>
 {% with url|add:"help/restapi/" as final_url %}
-    To share one of your graphs, refer to the <a href='{{final_url}}'>REST API</a>.
+    To share one of your graphs, refer to the <a href='{{url}}help/programmers/#graphs'>REST API</a>.
 {% endwith %}
 <br>
 In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one in the group is allowed to see that graph anymore.  Only the graph owner is allowed to see the graph.  

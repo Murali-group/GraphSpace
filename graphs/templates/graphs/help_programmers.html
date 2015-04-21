@@ -175,7 +175,7 @@ If JSON fails validation, it should give some sort of error as to why it failed
 
 <h3 id="json_ref">JSON Reference</h3>
 
-For a detailed description of the JSON structure for graphs, please see the <a href="http://cytoscapeweb.cytoscape.org/documentation/elements">Cytoscape Web API</a>.
+For a detailed description of the JSON structure for graphs, please see the <a href="http://js.cytoscape.org/#notation/elements-json">CytoscapeJS API</a>.
 
 Below is a reference for the different JSON attributes a graph can have.
 
@@ -185,15 +185,17 @@ Below is a reference for the different JSON attributes a graph can have.
   </thead>
   <tbody>
     <tr> <td> metadata </td> <td> object </td> <td> Container for the graph details html. </td> </tr>
-    <tr> <td> layout    </td> <td> string  </td> <td> The layout style for the graph. </td> </tr>
+    <!-- <tr> <td> layout    </td> <td> string  </td> <td> The layout style for the graph. </td> </tr> -->
     <tr> <td> tags </td> <td> array    </td> <td> The initial tags to add when the graph is uploaded. </td> </tr>
-    <tr> <td> data </td> <td> object </td> <td> The node and edge data of the graph. </td> </tr>
+    <!-- <tr> <td> data </td> <td> object </td> <td> The node and edge data of the graph. </td> </tr> -->
+    <tr> <td> nodes </td> <td> array of objects </td> <td> Contains all nodes.  Each object contains "data" as key, and information about node as value. Ex: {"data": {[properties of node]}}</td> </tr>
+    <tr> <td> edges </td> <td> array of objects </td> <td> Contains all edges.  Each object contains "data" as key, and information about edge as value. Ex: {"data": {[properties of edge]}}</td> </tr>
   </tbody>
 </table>
 
 Below are the most common attributes that nodes and edges can have. For a more complete list, see the Cytoscape Web documentation for 
-<a href="http://cytoscapeweb.cytoscape.org/documentation/elements#section/Node">nodes</a> and 
-<a href="http://cytoscapeweb.cytoscape.org/documentation/elements#section/Edge">edges</a>.
+<a href="http://js.cytoscape.org/#style/node-body">nodes</a> and 
+<a href="http://js.cytoscape.org/#style/edge-line">edges</a>.
 
 <p>
 Nodes can have the following attributes:
@@ -208,10 +210,9 @@ Nodes can have the following attributes:
     <tr> <td> label    </td> <td> string </td> <td> The visible node label. </td> </tr>
     <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the node is hovered/clicked. </td> </tr>
     <tr> <td> color    </td> <td> string </td> <td> The color of the node. </td> </tr>
-    <tr> <td> size     </td> <td> float  </td> <td> The size of the node. </td> </tr>
+    <tr> <td> height     </td> <td> float  </td> <td> The height of the node. </td> </tr>
+    <tr> <td> width     </td> <td> float  </td> <td> The width of the node. </td> </tr>
     <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. </td> </tr>
-    <tr> <td> graph_id </td> <td> int    </td> <td> The id of the graph that the node belongs to. </td> </tr>
-    <tr> <td> labelFontWeight </td> <td> string </td> <td> The font size of the label. </td> </tr>
   </tbody>
 </table>
 
@@ -229,8 +230,9 @@ Edges can have the following attributes:
     <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the edge is hovered/clicked. </td> </tr>
     <tr> <td> color    </td> <td> string </td> <td> The color of the edge. </td> </tr>
     <tr> <td> width    </td> <td> float  </td> <td> The width of the edge. </td> </tr>
-    <tr> <td> graph_id </td> <td> int    </td> <td> The id of the graph this edge belongs to. </td> </tr>
-    <tr> <td> labelFontWeight </td> <td> string </td> <td> The font size of the label </td> </tr>
+    <tr> <td> source </td> <td> string    </td> <td> The source destination where edge is coming from. </td> </tr>
+    <tr> <td> target </td> <td> string    </td> <td> The target destination where edge is going to. </td> </tr>
+    <tr> <td> directed </td> <td> string    </td> <td> Value of "true" if directed, "false" otherwise for undirected edge. </td> </tr>
   </tbody>
 </table>
 
@@ -312,7 +314,7 @@ Example successful response:
 
 <pre>
 {
-       Successfully deleted edge_test7 owned by divit52@vt.edu
+       Successfully deleted [graphname] owned by [email]
 }
 </pre>
 
@@ -410,26 +412,22 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-curl -X POST "{{url}}api/groups/[groups]/get/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[group_owner]/[group_id]/get/" -F "username=[email]" -F "password=[password]"
 </pre>
-
-Example response:
 
 <pre>
 {
-   "owner" : "divit52@vt.edu",
-   "graphs" : [
-      {
-         "id" : "158148980"
-      }
-   ],
-   "users" : [
-      {
-         "id" : "divit52@vt.edu"
-      }
-   ],
-   "id" : "Research",
-   "description" : "Research team group."
+    "owner": "[group_owner]",
+    "graphs": [
+        [graphname],
+        ...
+    ],
+    "group_id": [group_id],
+    "description": "This is test group.",
+    "members": [
+        [group_owner],
+        ...
+    ]
 }
 </pre>
 
@@ -445,7 +443,9 @@ Example response:
 
 <pre>
 {
-   {"Group Name": "[groupname]", "Upload": "Success"}
+  "Group Id": [group_id], 
+  "Group Name": [groupname], 
+  "Upload": "Success"
 }
 </pre>
 
@@ -490,9 +490,10 @@ Example response:
 
 <pre>
 {
-   "groups" : [
+   "Groups" : [
       {
-         "id" : "Research"
+         "groupId" : [groupID],
+         "group_owner": [group_owner]
       }
    ]
 }
@@ -553,7 +554,7 @@ Example successful response:
 
 <pre>
 {
-   "Success" : "Shared graph owned by [email] with group [groupname]."
+  "Response": "Graph successfully shared!"
 }
 </pre>
 
@@ -569,7 +570,7 @@ Example successful response:
 
 <pre>
 {
-   "Success" : "Unshared graph [graphname] owned by [email] with group [groupname]."
+  "Response": "Graph successfully unshared!"
 }
 </pre>
 
