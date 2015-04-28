@@ -78,7 +78,8 @@ $(document).ready(function() {
    */
    function urlAppender(url, queryTerm, queryValue) {
       if (queryValue.length > 0) {
-         window.location.href = updateQueryStringParameter(url, queryTerm, queryValue);
+         var tempUrl = updateQueryStringParameter(url, queryTerm, queryValue);
+         window.location.href = removeURLParameter(tempUrl, 'page');
       } else {
          window.location.href = window.location.href.split('?')[0];
       }
