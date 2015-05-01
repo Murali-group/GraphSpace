@@ -1337,12 +1337,21 @@ def update_graph(username, graphname, graph_json):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		# Deletes information about a graph from all the tables that reference it
-		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
-		con.commit()
+		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (username, graphname))
+		data = cur.fetchone()
+
+		if data != None:
+
+			# Deletes information about a graph from all the tables that reference it
+			cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
+			cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
+			cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
+			cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
+			con.commit()
+			return insert_graph(username, graphname, graph_json)
+
+		else:
+			return "Can't update " + graphname + " because it does not exist for " + username
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
@@ -1399,7 +1408,9 @@ def delete_graph(username, graphname):
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
 		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
 		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
+		cur.execute('delete from group_to_graph where graph_id =? and user_id=?', (graphname, username))
 		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
+		cur.execute('delete from layout where graph_id = ? and user_id=?', (graphname, username))
 		con.commit()
 
 	except lite.Error, e:
