@@ -336,6 +336,17 @@ $(document).ready(function() {
     //   }
     // });
 
+    $("#pdf").click(function (e) {
+      html2canvas($("#csjs").first(), {
+        onrendered: function(canvas) {
+          var imgData = canvas.toDataURL("image/jpeg");
+          var pdf = new jsPDF('landscape');
+          pdf.addImage(imgData, 'JPEG', 0, 0, 300, 210);
+          pdf.save("download.pdf");
+        }
+      });
+    });
+
     $(".help").click(function (e) {
       e.preventDefault();
       window.location.href = "../../../help/#graph_panels";

@@ -179,9 +179,9 @@
                 <!-- There seems to be an issue with adobe flash used with Cytoscape Web. 
                  https://groups.google.com/forum/#!msg/cytoscapeweb-discuss/548wkpC3iE8/TAwyrA2MO-cJ-->
                 <button class="btn btn-default" id="export" onClick="export_graph('{{ graph_id }}');">PNG</button>
-                <!--<button class="btn btn-default" onClick="export_graph('pdf', '/download/pdf/{{ gid }}');">PDF</button>
-                <button class="btn btn-default" onClick="export_graph('svg', '/download/svg/{{ gid }}');">SVG</button>
-                <br/>-->
+                <button class="btn btn-default" id="pdf">PDF</button>
+                <button class="btn btn-default" id="svg">SVG</button>
+                <br/>
                 
                 <hr/>
                 <!-- View JSON function to be added -->
@@ -349,9 +349,23 @@
 {% endblock %}
 
 {% block css-js-footer %}
+<script type="text/javascript" src="{% static 'graphs/js/canvas2svg.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'graphs/js/html2canvas.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.standard_fonts_metrics.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.split_text_to_size.js' %}"></script>
+<!-- <script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.from_html.js' %}"></script> -->
+<script type="text/javascript" src="{% static 'graphs/js/FileSaver.js/FileSaver.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.addimage.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.from_html.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jspdf.plugin.from_html.js' %}"></script>
+
 
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+
 <link rel="stylesheet" href="{% static 'graphs/css/cytoscape.js-panzoom.css' %}">
 <!-- jQuery UI style sheet -->
 <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
