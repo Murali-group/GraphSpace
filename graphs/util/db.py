@@ -1324,6 +1324,34 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname, modified, public))
 		# cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
 
+def update_graph(username, graphname, graph_json):
+	'''
+		Updates the JSON for a graph.
+	
+		:param username: Email of user in GraphSpace
+		:param graphname: Name of graph to insert
+		:param graph_json: JSON of graph
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# Deletes information about a graph from all the tables that reference it
+		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
+		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
+		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
+		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
+		con.commit()
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+
 def get_graph_json(username, graphname):
 	'''
 		Get the JSON of the graph to view.
@@ -1371,7 +1399,6 @@ def delete_graph(username, graphname):
 		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
 		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
 		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
 		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
 		con.commit()
 
