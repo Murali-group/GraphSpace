@@ -27,8 +27,6 @@ $(document).ready(function() {
           'border-width': 1,
           'width': 'data(width)',
           'height': 'data(height)',
-          'background-image': 'https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg',
-          'background-fit': 'cover'
         })
       .selector('edge')
         .css({
@@ -119,11 +117,6 @@ $(document).ready(function() {
               nodeData['color'] = addCharacterToHex(nodeData['color']);
             }
            }
-        }
-
-        if (nodeData['background-image'] == undefined) {
-          nodeData['background-image'] = ''
-          nodeData['background-image'] = 'fit'
         }
       }
 
