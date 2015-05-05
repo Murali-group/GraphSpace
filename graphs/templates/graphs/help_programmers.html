@@ -79,7 +79,7 @@ Below is a list of the different API calls.
 In order to add a graph to the server, make the following POST request where [email] is your email and [password] is your password.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
+curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"; echo
 </pre>
 
 Here is an example of a basic graph JSON:
@@ -241,7 +241,7 @@ Edges can have the following attributes:
 To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -307,7 +307,7 @@ Example failed response:
 To remove a graph use the following command. You can only remove a graph that belongs to you.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -338,7 +338,7 @@ Example failed response:
 Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example response:
@@ -354,7 +354,7 @@ Example response:
 Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -371,7 +371,7 @@ Example failed response:
 Makes a specific graph that user owns private (only groups that graph is shared with and owner of graph can see it).
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -412,7 +412,7 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-curl -X POST "{{url}}api/groups/[group_owner]/[group_id]/get/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[group_owner]/[group_id]/get/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 <pre>
@@ -436,7 +436,7 @@ curl -X POST "{{url}}api/groups/[group_owner]/[group_id]/get/" -F "username=[ema
 To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
 
 <pre>
-curl -X POST "{{url}}api/groups/add/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/add/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example response:
@@ -454,7 +454,7 @@ Example response:
 To remove a group use the following command. You can only remove a group that you are the owner of.
 
 <pre>
-curl -X POST "{{url}}api/groups/delete/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/delete/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -484,7 +484,8 @@ Example failed response:
 Get groups a user belongs to. The result is a JSON object with a list of group ids.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"</pre>
+curl -X POST "{{url}}api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
 
 Example response:
 
@@ -504,7 +505,7 @@ Example response:
 Add a user to a group. You can only add a user to a group that you belong to.
 
 <pre>
-curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/adduser/[member]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/adduser/[member]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -525,7 +526,7 @@ Example successful response:
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
 <pre>
-curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=dsingh5270@gmail.com" -F "password=test"
+curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=dsingh5270@gmail.com" -F "password=test"; echo
 </pre>
 
 Example successful response:
@@ -547,7 +548,7 @@ Example successful response:
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
 <pre>
-curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -563,7 +564,7 @@ Example successful response:
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
 <pre>
-curl -X POST "{{url}}api/users/graphs/[graphname]/unshare/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/users/graphs/[graphname]/unshare/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -591,7 +592,7 @@ Example successful response:
 
 Get all the tags that are attached to a certain graph.
 <pre>
-curl -X POST "{{url}}api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -603,7 +604,7 @@ Example successful response:
 
 Changes the privacy of all graphs that contain a [tag] under [email] public.
 <pre>
-curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePublic/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePublic/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -616,7 +617,7 @@ Example successful response:
 
 Changes the privacy of all graphs that contain a [tag] under [email] private.
 <pre>
-curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -629,7 +630,7 @@ Example successful response:
 
 Delets all graphs that contain a [tag] under [email].
 <pre>
-curl -X POST "{{url}}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" -F "password=[password]"
+curl -X POST "{{url}}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
