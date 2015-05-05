@@ -405,7 +405,8 @@ $(document).ready(function() {
 
 
       $("#layout_link").attr('href', linkToGraph);
-      $("#layout_link").text("Link to this graph with highlighted elements");
+      $("#layout_link").text("Link to this graph with distinguished elements");
+      $("#layout_link").css('text-decoration', 'underline');
       $("#layout_link").width(20);
     });
 
@@ -1012,6 +1013,7 @@ function searchValues(search_type, labels) {
         // }
 
         $("#url").attr('href', linkToGraph);
+        $("#url").css('text-decoration', 'underline');
         $("#url").text("Link to this graph with distinguished elements");
         $(".test").css("height", $(".test").height + 30);
     }
