@@ -1145,6 +1145,35 @@ def upload_graph(request, user_id, graphname):
         else:
             return HttpResponse(json.dumps({"Success": "Graph inserted into GraphSpace!"}), content_type="application/json")
 
+def update_graph(request, user_id, graphname):
+    '''
+        Updates an already existing graph.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+        
+        :return response: JSON Response: {"Success|Error": <message>}
+    '''
+
+    if request.method == 'POST':
+
+        if request.POST['username'] != user_id:
+            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+
+        if db.get_valid_user(user_id, request.POST['password']) == None:
+            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+
+        graph_errors = db.update_graph(user_id, graphname, request.FILES['graphname'].read())
+        if graph_errors != None:
+            return HttpResponse(json.dumps({"Error": graph_errors}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"Success": "Updated " + graphname + " for " + user_id}), content_type="application/json")
+
+
 def retrieve_graph(request, user_id, graphname):
     '''
         Retrieves the json of a specified graph

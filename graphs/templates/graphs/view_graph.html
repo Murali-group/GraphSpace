@@ -268,7 +268,7 @@
                                     <div class="tab-pane" id="my-layouts-pane">
                                       {% for o in my_layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
+                                        <a class="list-group-item layout_buttons" href="{{o}}">
                                             <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
                                               <span class="glyphicon glyphicon-remove"></span>
                                             </button>
@@ -291,7 +291,7 @@
                                     <div class="tab-pane" id="shared-layouts-pane">
                                         {% for o in shared_layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
+                                        <a class="list-group-item layout_buttons" href="{{o}}">
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
@@ -304,7 +304,7 @@
                                     <div class="tab-pane" id="public-layouts-pane">
                                       {% for o in public_layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
+                                        <a class="list-group-item layout_buttons" href="{{o}}">
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>

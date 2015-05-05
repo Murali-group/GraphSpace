@@ -359,28 +359,42 @@ $(document).ready(function() {
 
     $(".highlight").click(function (e) {
       e.preventDefault();
+      // var searchTerms = getHighlightedTerms();
+      // if (document.URL.indexOf('?') > -1) {
+      //   var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+      // } else {
+      //   var linkToGraph = document.URL;
+      // }
 
-      var linkToGraph = $(this).attr('id');
+      linkToGraph = /*'?layout=' + */$(this).attr('id') + ',';
 
       var labels = $("#search").val().split(',');
+      console.log(labels[0].length);
 
       if ($("#partial_search").is(':checked')) {
-        linkToGraph += '&partial_search=';
-        for (var i = 0; i < labels.length; i++) {
-          if (labels[i].trim().length > 0) {
-            linkToGraph += labels[i].trim() + ',';
-          }
-        } 
+        if (labels.length > 0 && labels[0].length > 0) {
+            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            linkToGraph += '&partial_search=';
+            for (var i = 0; i < labels.length; i++) {
+              if (labels[i].trim().length > 0) {
+                linkToGraph += labels[i].trim() + ',';
+              }
+            } 
+        }
       } else {
-        linkToGraph += '&full_search=';
-        for (var i = 0; i < labels.length; i++) {
-          if (labels[i].trim().length > 0) {
-            linkToGraph += labels[i].trim() + ',';
-          }
-        } 
-      }   
+        if (labels.length > 0 && labels[0].length > 0) {
+          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          linkToGraph += '&full_search=';
+          for (var i = 0; i < labels.length; i++) {
+            if (labels[i].trim().length > 0) {
+              linkToGraph += labels[i].trim() + ',';
+            }
+          } 
+        }
+      }
 
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);  
+      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+
 
        // var searchTerms = getHighlightedTerms();
       // if (searchTerms.length > 0) {
@@ -450,24 +464,31 @@ $(document).ready(function() {
         var linkToGraph = document.URL;
       }
 
-      linkToGraph += $(this).attr('href');
+      linkToGraph += '?layout=' + $(this).attr('href') + ',';
 
       var labels = $("#search").val().split(',');
+      console.log(labels[0].length);
 
       if ($("#partial_search").is(':checked')) {
-        linkToGraph += '&partial_search=';
-        for (var i = 0; i < labels.length; i++) {
-          if (labels[i].trim().length > 0) {
-            linkToGraph += labels[i].trim() + ',';
-          }
-        } 
+        if (labels.length > 0 && labels[0].length > 0) {
+            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            linkToGraph += '&partial_search=';
+            for (var i = 0; i < labels.length; i++) {
+              if (labels[i].trim().length > 0) {
+                linkToGraph += labels[i].trim() + ',';
+              }
+            } 
+        }
       } else {
-        linkToGraph += '&full_search=';
-        for (var i = 0; i < labels.length; i++) {
-          if (labels[i].trim().length > 0) {
-            linkToGraph += labels[i].trim() + ',';
-          }
-        } 
+        if (labels.length > 0 && labels[0].length > 0) {
+          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          linkToGraph += '&full_search=';
+          for (var i = 0; i < labels.length; i++) {
+            if (labels[i].trim().length > 0) {
+              linkToGraph += labels[i].trim() + ',';
+            }
+          } 
+        }
       }
 
       linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
