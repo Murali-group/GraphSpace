@@ -240,12 +240,12 @@
                         <div class="tab-pane" id="builtin">
                             <br/>
                             <ul class="nav nav-pills">
-                            <li id="ldf"><a id="layout-force-directed" class="layout_buttons" href="?layout=default_concentric">Concentric</a></li>
-                            <li id="lc"><a id="layout-circle" class="layout_buttons" href="?layout=default_breadthfirst">Tree</a></li>
-                            <li id="lr"><a id="layout-radial" class="layout_buttons" href="?layout=default_circle">Circle</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="?layout=default_cose">Cosine Spring Embedder</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="?layout=default_arbor">ForceDirected</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="?layout=default_cola">Cola</a></li>
+                            <li id="ldf"><a id="layout-force-directed" class="layout_buttons" href="default_concentric">Concentric</a></li>
+                            <li id="lc"><a id="layout-circle" class="layout_buttons" href="default_breadthfirst">Tree</a></li>
+                            <li id="lr"><a id="layout-radial" class="layout_buttons" href="default_circle">Circle</a></li>
+                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_cose">Cosine Spring Embedder</a></li>
+                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_arbor">ForceDirected</a></li>
+                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_cola">Cola</a></li>
                             </ul>
                         </div>
 
@@ -349,7 +349,6 @@
 {% endblock %}
 
 {% block css-js-footer %}
-<script type="text/javascript" src="{% static 'graphs/js/canvas2svg.js' %}"></script>
 
 <script type="text/javascript" src="{% static 'graphs/js/html2canvas.js' %}"></script>
 
