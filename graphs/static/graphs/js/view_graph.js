@@ -158,6 +158,7 @@ $(document).ready(function() {
       
       // display node data as a popup
       this.on('tap', function(evt){
+        window.cy.elements().removeCss('color');
         // get target
         var target = evt.cyTarget;
         // target some element other than background (node/edge)
@@ -180,9 +181,7 @@ $(document).ready(function() {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
             $('#dialog').dialog('open');
-        } else {
-          window.cy.elements().removeCss('color');
-        }
+        } 
       });
 
 
