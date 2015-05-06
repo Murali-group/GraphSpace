@@ -65,7 +65,7 @@ $(document).ready(function() {
         'text-halign': 'data(text-halign)'
       })
       .selector('[background-image]').css({
-        'background-image': 'url(https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg)'
+        'background-image': 'url(data(background-image))'
       })
       .selector('node').css({
         'text-valign': 'center',
@@ -1112,21 +1112,15 @@ function setDefaultNodeProperties(nodeJSON) {
       nodeData['shape'] = nodeData['shape'].toLowerCase();
     }
 
-    //REMOVE EVENTUALLY
-    if (nodeData['color'] != undefined) {
-      nodeData['background-color'] = nodeData['color'];
-    }
-    //END REMOVE
-
-    if (nodeData['background-color'] == undefined) {
-      nodeData['background-color'] = "yellow";
+    if (nodeData['color'] == undefined) {
+      nodeData['color'] = "yellow";
     } else {
-       var hexCode = colourNameToHex(nodeData['background-color']);
+       var hexCode = colourNameToHex(nodeData['color']);
        if (hexCode != false) {
-        nodeData['background-color'] = hexCode;
+        nodeData['color'] = hexCode;
        } else {
-        if (isHexaColor(addCharacterToHex(nodeData['background-color']))) {
-          nodeData['background-color'] = addCharacterToHex(nodeData['background-color']);
+        if (isHexaColor(addCharacterToHex(nodeData['color']))) {
+          nodeData['color'] = addCharacterToHex(nodeData['color']);
         }
        }
     }
