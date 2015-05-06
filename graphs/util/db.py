@@ -1259,12 +1259,12 @@ def insert_graph(username, graphname, graph_json):
 			# Used so that I can highlight the node
 			# TODO: double check this because I may need to get the id and not the label
 			nodes = graphJson['graph']['nodes']
-			rand = 1
-			for node in nodes:
-				if len(node['data']['label']) == 0:
-					node['data']['label'] = rand
-					rand = rand + 1
-			rand = 0
+			# rand = 1
+			# for node in nodes:
+			# 	if len(node['data']['label']) == 0:
+			# 		node['data']['label'] = rand
+			# 		rand = rand + 1
+			# rand = 0
 
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
