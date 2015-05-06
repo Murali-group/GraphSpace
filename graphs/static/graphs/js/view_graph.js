@@ -64,7 +64,7 @@ $(document).ready(function() {
       .selector('[text-halign]').css({
         'text-halign': 'data(text-halign)'
       })
-      .selector('[background-image]').css({
+      .selector('[image]').css({
         'background-image': 'data(image)'
       })
       .selector('node').css({
