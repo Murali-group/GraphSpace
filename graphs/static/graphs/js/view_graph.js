@@ -13,21 +13,112 @@ $(document).ready(function() {
       container: $('#csjs')[0],
 
       style: cytoscape.stylesheet()
-      .selector('node')
-        .css({
-          //name to display
-          'content': 'data(label)', 
-          'shape': 'data(shape)',
-          'text-valign': 'center',
-          'color': '#000000',
-          'text-outline-width': 0,
-          'background-color': 'data(color)', 
-          'font-size': 15,
-          'border-color': '#000000',
-          'border-width': 1,
-          'width': 'data(width)',
-          'height': 'data(height)',
-        })
+      .selector('[width]').css({
+        'width': 'data(width)'
+      })
+      .selector('[height]').css({
+        'height': 'data(height)'
+      })
+      .selector('[shape]').css({
+        'shape': 'data(shape)'
+      })
+      // .selector('[background-color]').css({
+      //   'background-color': 'data(background-color)'
+      // })
+      .selector('[background-blacken]').css({
+        'background-blacken': 'data(background-blacken)'
+      })
+      .selector('[background-opacity]').css({
+        'border-opacity': 'data(border-opacity)'
+      })
+      .selector('[color]').css({
+        'background-color': 'data(color)'
+      })
+      .selector('[label]').css({
+        'content': 'data(label)'
+      })
+      .selector('[font-family]').css({
+        'font-family': 'data(font-family)'
+      })
+      .selector('[font-weight]').css({
+        'font-weight': 'data(font-weight)'
+      })
+      .selector('[text-transform]').css({
+        'text-transform': 'data(text-transform)'
+      })
+      .selector('[text-opacity]').css({
+        'text-opacity': 'data(text-opacity)'
+      })
+      .selector('[text-outline-color]').css({
+        'text-outline-color': 'data(text-outline-color)'
+      })
+      .selector('[text-outline-opacity]').css({
+        'text-outline-opacity': 'data(text-outline-opacity)'
+      })
+      .selector('[text-outline-width]').css({
+        'text-outline-width': 'data(text-outline-width)'
+      })
+      .selector('[min-zoomed-font-size]').css({
+        'min-zoomed-font-size': 'data(min-zoomed-font-size)'
+      })
+      .selector('[text-halign]').css({
+        'text-halign': 'data(text-halign)'
+      })
+      .selector('[background-image]').css({
+        'background-image': 'url(https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg)'
+      })
+      .selector('node').css({
+        'text-valign': 'center',
+        'border-width': 1,
+        'text-outline-width': 0,
+        'font-size': 15,
+        'height': 50,
+        'width': 50
+        // 'background-image': 'url(https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg)'
+      })
+      // .selector('[text-valign]').css({
+      //   'text-valign': 'data(text-valign)'
+      // })
+      // .selector('node')
+        // .css({
+          // 'width': 'data(width)',
+          // 'height': 'data(height)',
+          // 'shape': 'data(shape)',
+          // 'background-color': 'data(background-color)',
+          // 'background-blacken': 'data(background-blacken)',
+          // 'background-opacity': 'data(background-opacity)',
+          // 'border-width': 'data(border-width)',
+          // 'border-style': 'data(border-style)',
+          // 'border-color': 'data(border-color)',
+          // 'border-opacity': 'data(border-opacity)',
+          // 'color': 'data(color)',
+          // 'content': 'data(content)',
+          // 'font-family': 'data(font-family)',
+          // 'font-weight': 'data(font-weight)',
+          // 'text-transform': 'data(text-transform)',
+          // 'text-opacity': 'data(text-opacity)',
+          // 'text-outline-color': 'data(text-outline-color)',
+          // 'text-outline-opacity': 'data(text-outline-opacity)',
+          // 'text-outline-width': 'data(text-outline-width)',
+          // 'min-zoomed-font-size': 'data(min-zoomed-font-size)',
+          // 'text-halign': 'data(text-halign)',
+          // 'text-valign': 'data(text-valign)',
+          // 'background-image': 'data(background-image)',
+          // 'background-fit': 'data(background-fit)'
+
+
+          // 'content': 'data(label)', 
+          // 'shape': 'data(shape)',
+          // 'text-valign': 'center',
+          // 'color': '#000000',
+          // 'text-outline-width': 0,
+          // 'background-color': 'data(color)', 
+          // 'font-size': 15,
+          // 'border-color': '#000000',
+          // 'border-width': 1,
+          // 'width': 'data(width)',
+          // 'height': 'data(height)'
+        // })
       .selector('edge')
         .css({
           'target-arrow-shape': 'data(arrow)',
@@ -60,66 +151,7 @@ $(document).ready(function() {
       // make the selection states of the elements mutable
       this.elements().selectify();
 
-      // $("#search_tips").html("Node example: " + graph_json['graph']['nodes'][0]['data']['label'] + "<br>Edge example: " + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target']);
-      // $("#search_tips ul").append('<li>Node example: ' + graph_json['graph']['nodes'][0]['data']['label'] + '</li><li>Edge example: ' + graph_json['graph']['edges'][0]['data']['source'] + ':' + graph_json['graph']['edges'][0]['data']['target'] + '</li>');
-
-      // DONE SO OLD GRAPHS WILL DISPLAY
-      //If the nodes in graphs already in database don't have width or height
-      // or unrecognized shape, have a default value
-      for (var i = 0; i < graph_json['graph']['nodes'].length; i++) {
-        var nodeData = graph_json['graph']['nodes'][i]['data'];
-
-
-        if (nodeData['height'] == undefined) {
-          nodeData['height'] = 50
-        }
-
-        if (nodeData['width'] == undefined) {
-          nodeData['width'] = 50
-        }
-
-        if (nodeData['shape'] == undefined) {
-          nodeData['shape'] = 'ellipse';
-        }
-
-        //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
-        var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
-
-        if (acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
-
-          if (nodeData['shape'].toLowerCase() == 'diamond') {
-            nodeData['shape'] = 'octagon';
-          } else if (nodeData['shape'] == 'square') {
-            if (nodeData['label'].length == 0) {
-              nodeData['shape'] = 'rectangle';
-              nodeData['height'] = 20;
-              nodeData['width'] = 20;
-            } else {
-              nodeData['shape'] = "rectangle"
-            }
-
-          } else {
-            nodeData['shape'] = 'ellipse';
-          }
-        } else {
-          nodeData['shape'] = nodeData['shape'].toLowerCase();
-        }
-
-        if (nodeData['color'] == undefined) {
-          nodeData['color'] = "yellow";
-        } else {
-           var hexCode = colourNameToHex(nodeData['color']);
-           if (hexCode != false) {
-            nodeData['color'] = hexCode;
-           } else {
-            if (isHexaColor(addCharacterToHex(nodeData['color']))) {
-
-              nodeData['color'] = addCharacterToHex(nodeData['color']);
-            }
-           }
-        }
-      }
-
+      setDefaultNodeProperties(graph_json['graph']['nodes'])
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
@@ -181,7 +213,9 @@ $(document).ready(function() {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
             $('#dialog').dialog('open');
-        } 
+        } else {
+          window.cy.elements().removeCss('color');
+        }
       });
 
 
@@ -320,21 +354,6 @@ $(document).ready(function() {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
-    //Unhighlights terms when the buttons in the search box is clicked on
-    // $("#search_terms").on("click", ".search", function(e) {
-    //   unselectTerm($(this).attr('id'));
-    //   var toRemove  = encodeURIComponent($(this).val()) + ',';
-    //   var origText = $("#url").text();
-    //   origText = origText.replace(toRemove, '');
-    //   $("#url").text(origText);
-    //   $(this).remove();
-    //   var toSearchFor = origText.indexOf('search=')
-    //   var nextVal = origText.substring(toSearchFor).replace('search=', '');
-    //   if ($(".search").length == 0) {
-    //     $("#url").text("");
-    //   }
-    // });
-
     $("#pdf").click(function (e) {
       html2canvas($("#csjs").first(), {
         onrendered: function(canvas) {
@@ -358,14 +377,7 @@ $(document).ready(function() {
 
     $(".highlight").click(function (e) {
       e.preventDefault();
-      // var searchTerms = getHighlightedTerms();
-      // if (document.URL.indexOf('?') > -1) {
-      //   var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-      // } else {
-      //   var linkToGraph = document.URL;
-      // }
-
-      linkToGraph = /*'?layout=' + */$(this).attr('id') + ',';
+      linkToGraph = $(this).attr('id') + ',';
 
       var labels = $("#search").val().split(',');
       console.log(labels[0].length);
@@ -393,15 +405,6 @@ $(document).ready(function() {
       }
 
       linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
-
-
-       // var searchTerms = getHighlightedTerms();
-      // if (searchTerms.length > 0) {
-      //   var linkHref = $(this).attr('id') + '&search=' + getHighlightedTerms();
-      // } else {
-      //   var linkHref = $(this).attr('id');
-      // }
-
 
       $("#layout_link").attr('href', linkToGraph);
       $("#layout_link").text("Link to this graph with distinguished elements");
@@ -496,33 +499,6 @@ $(document).ready(function() {
       if (e.target == this) {
         window.location.href = linkToGraph;
       }
-
-      // if (searchTerms[0].length > 0) {
-      //   linkHref = $(this).attr('href') + '&partial_search=';
-      //   for (var i = 0; i < searchTerms[0].length; i++) {
-      //     if (i < searchTerms[0].length - 1) {
-      //       linkHref += searchTerms[0][i] + ',';
-      //     } else {
-      //       linkHref += searchTerms[0][i];
-      //     }
-      //   }      
-      // } 
-
-      // if (searchTerms[1].length > 0) {
-      //   linkHref = $(this).attr('href') + '&full_search=';
-      //   for (var i = 0; i < searchTerms[1].length; i++) {
-      //     if (i < searchTerms[1].length - 1) {
-      //       linkHref += searchTerms[1][i] + ',';
-      //     } else {
-      //       linkHref += searchTerms[1][i];
-      //     }
-      //   }      
-      // } 
-
-      // if (searchTerms[0].length == 0 && searchTerms[1].length == 0) {
-      //   linkHref = $(this).attr('href');
-      // }
-
     });
 
     $(".public").click(function (e) {
@@ -542,50 +518,6 @@ $(document).ready(function() {
       }, function (data) {
         window.location.reload();
       });
-
-      // $.post('../../../makeLayoutPublic/', {
-      //   'gid': gid,
-      //   'owner': ownerId,
-      //   'layout': publicLayout,
-      //   'user_id': userId
-      // }, function (data) {
-      //   window.location.reload();
-      // });
-
-      // $.post("../../../getGroupsWithLayout/", {
-      //   "layout": publicLayout,
-      //   "loggedIn": userId,
-      //   "gid": gid,
-      //   "owner": ownerId
-      // }, function (data) {
-      //   var layout_options = "";
-      //   if (data['Group_Information'].length > 0) {
-      //     for (var i = 0; i < data['Group_Information'].length; i++) {
-      //       if (data['Group_Information'][i]['2'] == true) {
-      //         if (ownerId == userId || data['Group_Information'][i]['1'] == userId) {
-      //           layout_options += '<li class="list-group-item layout" style="font-size: 15px;"><label><input type="checkbox" class="layout_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['0'] + '12345__43121__' + data['Group_Information'][i][1] + '">' + data['Group_Information'][i][0] + " owned by: " + data['Group_Information'][i][1] + '</label></li>';
-      //         } else {
-      //           layout_options += '<li class="list-group-item layout" style="font-size: 15px;"><label>' + data['Group_Information'][i][0] + " owned by: " + data['Group_Information'][i][1] + '</label></li>';
-      //         }
-      //       } else {
-      //         if (ownerId == userId || data['Group_Information'][i]['1'] == userId) {
-      //           layout_options += '<li class="list-group-item layout" style="font-size: 15px;"><label><input type="checkbox" class="layout_val" style="margin-right: 30px;" value="' + data['Group_Information'][i][0] + '12345__43121__' + data['Group_Information'][i][1] + '">' + data['Group_Information'][i][0] + " owned by: " + data['Group_Information'][i][1] + '</label></li>';
-      //         } else {
-      //           layout_options += '<li class="list-group-item layout" style="font-size: 15px;"><label>' + data['Group_Information'][i][0] + " owned by: " + data['Group_Information'][i][1] + '</label></li>';
-      //         }
-      //       }
-      //     }
-      //   } else {
-      //     layout_options += "You are not part of any groups"
-      //   }
-
-      //   layout_options += "<p style='display: none;' id='layoutId'>" + publicLayout + "</p>";
-
-      //   $(".checked-list-box").html(layout_options);
-      //   $(".layout_val").click(function(e) {
-      //       $(this).prop('checked');
-      //   });
-      // });
     });
 
     $("#share_graph").click(function (e) {
@@ -608,16 +540,10 @@ $(document).ready(function() {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
-              // else {
-              //   group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              // }
             } else {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
-              // else {
-              //   group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label>' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
-              // }
             }
           }
         } else {
@@ -640,32 +566,10 @@ $(document).ready(function() {
       var ownerId = decodeURIComponent(paths[paths.length - 3])
       var gid = decodeURIComponent(paths[paths.length - 2])
 
-      // var all_groups = {}
-      // var groups_to_share_with = [];
-      // var groups_not_to_share_with = [];
-
-      // $(".layout_val").each(function() {
-      //     all_groups[$(this).val()] = $(this).is(":checked");
-      // });
-
-
-      // for (var key in all_groups) {
-      //   if (all_groups[key] == true) {
-      //     groups_to_share_with.push(key);
-      //   } else {
-      //     groups_not_to_share_with.push(key);
-      //   }
-      // }
-
-      // console.log(groups_to_share_with);
-      // console.log(groups_not_to_share_with);
-
       $.post('../../../shareLayoutWithGroups/', {
         'layoutId': $("#layoutId").text(),
         'gid': gid,
         'owner': ownerId
-        // 'groups_to_share_with' : groups_to_share_with,
-        // 'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
         window.location.reload();
       });
@@ -782,11 +686,6 @@ function fireEvent(obj,evt){
     fireOnThis.fireEvent( 'on' + evt, evObj );
   }
 }
-
-// function searchBothTypes() {
-//   searchValues('partial_search', getQueryVariable('partial_search'));
-//   searchValues('full_search', getQueryVariable('full_search'));
-// }
 
 function searchOnLoad() {
 
@@ -909,107 +808,6 @@ function searchValues(search_type, labels) {
         }
 
         linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
-
-        // for (var i = 0; i < highlighted[0].length; i++) {
-        //   linkToGraph += highlighted[0][i] + ',';
-        // }
-
-        // for (var x = 0; x < partialDistinction.length; x++) {
-        //   partialDistinction[x].replace(" ", "");
-        //   // $("#search_terms").append('<li style="display: none;"><a class="search"  id="' + data[partialDistinction[x]]  + '" value="partial_' + partialDistinction[x] + '">' + partialDistinction[x] + '*<b style="color: red;">  X</b></a></li>');
-        //   if (x < partialDistinction.length - 1) {
-        //     linkToGraph += partialDistinction[x] + ',';           
-        //   } else {
-        //     linkToGraph += partialDistinction[x];       
-        //   }
-        // }
-
-        // if (search_type == 'full_search' || exactDistinction.length > 0) {
-        //   if (layout && partialDistinction.length > 0 || partialDistinction.length > 0 || highlighted[0].length > 0) {
-        //     linkToGraph += '&full_search=';
-        //   } else {
-        //     linkToGraph += '?full_search=';
-        //   }
-        // }
-
-        // for (var i = 0; i < highlighted[1].length; i++) {
-        //   linkToGraph += highlighted[1][i] + ',';
-        // }
-
-        // for (var x = 0; x < exactDistinction.length; x++) {
-        //   exactDistinction[x].replace(" ", "");
-        //   $("#search_terms").append('<li style="display: none;"><a class="search"  id="' + data[exactDistinction[x]]  + '" value="exact_' + exactDistinction[x] + '">' + exactDistinction[x] + '<b style="color: red; display: none;">  X</b></a></li>');
-        //   if (x < exactDistinction.length - 1) {
-        //     linkToGraph += exactDistinction[x] + ',';           
-        //   } else {
-        //     linkToGraph += exactDistinction[x];       
-        //   }
-        // }
-
-        // var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-        // var layout = getQueryVariable('layout');
-
-        // var highlighted = getHighlightedTerms();
-
-
-        // if (layout) {
-        //   linkToGraph += layout;
-
-        //   if (highlighted[0].length > 0) {
-        //     linkToGraph += '&partial_search=';
-        //     for (var i = 0; i < highlighted[0].length; i++) {
-        //       if (i < highlighted[0].length - 1) {
-        //         linkToGraph += highlighted[0][i] + ',';
-        //       } else {
-        //         linkToGraph += highlighted[0][i];
-        //       }
-        //     }
-        //   }
-
-        //   if (highlighted[1].length > 0) {
-        //     linkToGraph += '&full_search=';
-        //     for (var i = 0; i < highlighted[1].length; i++) {
-        //       if (i < highlighted[1].length - 1) {
-        //         linkToGraph += highlighted[1][i] + ',';
-        //       } else {
-        //         linkToGraph += highlighted[1][i];
-        //       }
-        //     }
-        //   }
-        // } else {
-        //   if (highlighted[0].length > 0) {
-        //     linkToGraph += '?partial_search=';
-        //     for (var i = 0; i < highlighted[0].length; i++) {
-        //       if (i < highlighted[0].length - 1) {
-        //         linkToGraph += highlighted[0][i] + ',';
-        //       } else {
-        //         linkToGraph += highlighted[0][i];
-        //       }
-        //     }
-        //   }
-
-        //   if (highlighted[1].length > 0 && highlighted[0].length > 0) {
-        //     linkToGraph += '&full_search=';
-        //     for (var i = 0; i < highlighted[1].length; i++) {
-        //       if (i < highlighted[1].length - 1) {
-        //         linkToGraph += highlighted[1][i] + ',';
-        //       } else {
-        //         linkToGraph += highlighted[1][i];
-        //       }
-        //     }
-        //   } else {
-        //       if (highlighted[1].length > 0) {
-        //         linkToGraph += '&full_search=';
-        //         for (var i = 0; i < highlighted[1].length; i++) {
-        //           if (i < highlighted[1].length - 1) {
-        //             linkToGraph += highlighted[1][i] + ',';
-        //           } else {
-        //             linkToGraph += highlighted[1][i];
-        //           }
-        //         }
-        //       }
-        //   }
-        // }
 
         $("#url").attr('href', linkToGraph);
         $("#url").css('text-decoration', 'underline');
@@ -1212,7 +1010,7 @@ function getLayoutFromQuery() {
       graph_layout = {
         name: 'springy',
 
-        animate: false, // whether to show the layout as it's running
+        animate: true, // whether to show the layout as it's running
         maxSimulationTime: 4000, // max length in ms to run the layout
         ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
         fit: true, // whether to fit the viewport to the graph
@@ -1279,5 +1077,59 @@ function colourNameToHex(colour)
       return colours[colour]
     }
     return false;
+}
+
+/**
+* Sets default properties of node objects.
+*/
+function setDefaultNodeProperties(nodeJSON) {
+  // DONE SO OLD GRAPHS WILL DISPLAY
+  //If the nodes in graphs already in database don't have width or height
+  // or unrecognized shape, have a default value
+  for (var i = 0; i < nodeJSON.length; i++) {
+    var nodeData = nodeJSON[i]['data'];
+
+    //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+    var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
+
+    if (acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+
+      if (nodeData['shape'].toLowerCase() == 'diamond') {
+        nodeData['shape'] = 'octagon';
+      } else if (nodeData['shape'] == 'square') {
+        if (nodeData['label'].length == 0) {
+          nodeData['shape'] = 'rectangle';
+          nodeData['height'] = 20;
+          nodeData['width'] = 20;
+        } else {
+          nodeData['shape'] = "rectangle"
+        }
+
+      } else {
+        nodeData['shape'] = 'ellipse';
+      }
+    } else {
+      nodeData['shape'] = nodeData['shape'].toLowerCase();
+    }
+
+    //REMOVE EVENTUALLY
+    if (nodeData['color'] != undefined) {
+      nodeData['background-color'] = nodeData['color'];
+    }
+    //END REMOVE
+
+    if (nodeData['background-color'] == undefined) {
+      nodeData['background-color'] = "yellow";
+    } else {
+       var hexCode = colourNameToHex(nodeData['background-color']);
+       if (hexCode != false) {
+        nodeData['background-color'] = hexCode;
+       } else {
+        if (isHexaColor(addCharacterToHex(nodeData['background-color']))) {
+          nodeData['background-color'] = addCharacterToHex(nodeData['background-color']);
+        }
+       }
+    }
+  }
 }
 

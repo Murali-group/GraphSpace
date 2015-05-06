@@ -320,27 +320,6 @@
                     </div>
                   </form>
                   <br>
-                  <!-- <div style="text-align: center;">
-                    <button class="btn btn-default" id="clear_search">Clear all search terms</button>
-                  </div> -->
-
-                 <!--  <div id="search_tips" class="alert alert-info alert-dismissable" style="">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong>Search tips:</strong><br>
-                    <ul>   
-                      <li>Graphs returned match all search terms</li>
-                      <li>Search for graphs, nodes, and edges.</li>
-                      <li>Edge searching syntax - head:tail</li>
-                      <li>Edge searching example: Example: AKT1:JUN</li>
-                    </ul>
-                  </div> -->
-                   <!-- <ul class="nav nav-pills">
-                    {% if search_word %}
-                        {% for term in search_word_terms %}
-                        <li><a class='search' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
-                        {% endfor %}
-                    {% endif %}
-                  </ul> -->
                   <br/>
                 </div>
               </div>
@@ -365,13 +344,6 @@
                         </span>
                     </div>
                 </form>
-                <!-- <ul class="nav nav-pills">
-                    {% if tags %}
-                        {% for term in tag_terms %}
-                          <li><a class='tags' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
-                        {% endfor %}
-                    {% endif %}
-                  </ul> -->
                 {% for tag in all_tags %}
                     {% with base_url|add:"?tags="|add:tag as tag_url %}
                     <button class="btn btn-default tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>

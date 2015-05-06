@@ -1,5 +1,5 @@
 /**
- * Springy v2.7.1
+ * Springy v2.5.0
  *
  * Copyright (c) 2010-2013 Dennis Hotson
  *
@@ -24,24 +24,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-(function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define(function () {
-            return (root.returnExportsGlobal = factory());
-        });
-    } else if (typeof exports === 'object') {
-        // Node. Does not work with strict CommonJS, but
-        // only CommonJS-like enviroments that support module.exports,
-        // like Node.
-        module.exports = factory();
-    } else {
-        // Browser globals
-        root.Springy = factory();
-    }
-}(this, function() {
 
-	var Springy = {};
+(function() {
+	// Enable strict mode for EC5 compatible browsers
+	"use strict";
+
+	// Establish the root object, `window` in the browser, or `global` on the server.
+	var root = this;
+
+	// The top-level namespace. All public Springy classes and modules will
+	// be attached to this. Exported for both CommonJS and the browser.
+	var Springy;
+	if (typeof exports !== 'undefined') {
+		Springy = exports;
+	} else {
+		Springy = root.Springy = {};
+	}
 
 	var Graph = Springy.Graph = function() {
 		this.nodeSet = {};
@@ -332,7 +330,7 @@
 		this.stiffness = stiffness; // spring stiffness constant
 		this.repulsion = repulsion; // repulsion constant
 		this.damping = damping; // velocity damping factor
-		this.minEnergyThreshold = minEnergyThreshold || 0.01; //threshold used to determine render stop
+		this.minEnergyThreshold = minEnergyThreshold || 0.01; //threshold used to determine render stop 
 
 		this.nodePoints = {}; // keep track of points associated with nodes
 		this.edgeSprings = {}; // keep track of springs associated with edges
@@ -476,14 +474,14 @@
 
 	var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }; // stolen from coffeescript, thanks jashkenas! ;-)
 
-	Springy.requestAnimationFrame = __bind(this.requestAnimationFrame ||
-		this.webkitRequestAnimationFrame ||
-		this.mozRequestAnimationFrame ||
-		this.oRequestAnimationFrame ||
-		this.msRequestAnimationFrame ||
+	Springy.requestAnimationFrame = __bind(root.requestAnimationFrame ||
+		root.webkitRequestAnimationFrame ||
+		root.mozRequestAnimationFrame ||
+		root.oRequestAnimationFrame ||
+		root.msRequestAnimationFrame ||
 		(function(callback, element) {
-			this.setTimeout(callback, 10);
-		}), this);
+			root.setTimeout(callback, 10);
+		}), root);
 
 
 	/**
@@ -679,7 +677,7 @@
 			t.layout.eachNode(function(node, point) {
 				t.drawNode(node, point.p);
 			});
-		}, this.onRenderStop, this.onRenderStart);
+		}, this.onRenderStart, this.onRenderStop);
 	};
 
 	Renderer.prototype.stop = function() {
@@ -722,6 +720,4 @@
 		}
 		return true;
 	};
-
-  return Springy;
-}));
+}).call(this);
