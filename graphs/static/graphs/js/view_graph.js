@@ -65,7 +65,7 @@ $(document).ready(function() {
         'text-halign': 'data(text-halign)'
       })
       .selector('[background-image]').css({
-        'background-image': 'url(data(background-image))'
+        'background-image': 'data(image)'
       })
       .selector('node').css({
         'text-valign': 'center',
