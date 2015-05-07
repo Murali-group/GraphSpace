@@ -1211,11 +1211,11 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 
 	elif search_type == 'full_search':
 		if view_type == 'my graphs':
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? n.user_id = ?', (search_word, uid))
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? and n.user_id = ?', (search_word, uid))
 			node_labels = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
 
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? n.node_id = ?', (search_word, uid))
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id = ? and n.user_id = ?', (search_word, uid))
 			node_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 		
@@ -1229,11 +1229,11 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
 
 		else:
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? and n.public = 1', (search_word, ))
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? and n.public = 1', ( search_word, ))
 			public_labels = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
 
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id = ? and n.public = 1', (search_word, ))
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id = ? and n.public = 1', ( search_word, ))
 			public_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
 
