@@ -20,7 +20,6 @@ import bcrypt
 import os
 from operator import itemgetter
 from itertools import groupby
-from graphs.util.json_converter import convert_json
 
 #get database
 data_connection = db_init.db
@@ -59,7 +58,7 @@ def index(request):
 
         return render(request, 'graphs/index.html', context)
     else:
-        return HttpResponse(json.dumps({"Error": context['Error']}), content_type="application/json");
+        return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
 
 def view_graph(request, uid, gid):
     '''
@@ -671,7 +670,7 @@ def register(request):
             user_id = register_form.cleaned_data['user_id']
 
             if user_id == None:
-                return HttpResponse(json.dumps({"Error": "Email already exists!"}), content_type="application/json");
+                return HttpResponse(json.dumps(db.throwError(400, "Email already exists!")), content_type="application/json");
             
             # hash the password using bcrypt library
             hashed_pw = bcrypt.hashpw(
@@ -779,9 +778,9 @@ def sendResetEmail(request):
 
     # If email is not found, throw an error
     if emailId == None:
-        return HttpResponse(json.dumps({"Error": "Email does not exist!"}), content_type="application/json");
+        return HttpResponse(json.dumps(db.throwError(404, "Email does not exist!")), content_type="application/json");
 
-    return HttpResponse(json.dumps({"Success": "Email has been sent!"}), content_type="application/json");
+    return HttpResponse(json.dumps(db.sendMessage(200, "Email has been sent!")), content_type="application/json");
 
 def resetLink(request):
     '''
@@ -796,7 +795,7 @@ def resetLink(request):
     email = db.retrieveResetInfo(code)
 
     if email == None:
-        return HttpResponse(json.dumps({"Error": "Unrecognized ID"}), content_type="application/json");
+        return HttpResponse(json.dumps(db.throwError(400, "Unrecognized ID")), content_type="application/json");
 
     context = {"email": email, "url": URL_PATH}
 
@@ -816,9 +815,9 @@ def resetPassword(request):
     resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
 
     if resetInfo == None:
-        return HttpResponse(json.dumps({"Error": "Password Update not successful!"}), content_type="application/json");
+        return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
 
-    return HttpResponse(json.dumps({"Success": "Password updated for " + request.POST['email']}), content_type="application/json");
+    return HttpResponse(json.dumps(db.sendMessage(200, "Password updated for " + request.POST['email'])), content_type="application/json");
 
 
 def save_layout(request, uid, gid):
@@ -862,7 +861,7 @@ def changeLayoutName(request):
         loggedIn = request.POST['loggedIn']
 
         db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
-        return HttpResponse(json.dumps({"Success": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def deleteLayout(request):
     '''
@@ -881,7 +880,7 @@ def deleteLayout(request):
         loggedIn = request.POST['user_id']
 
         db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-        return HttpResponse(json.dumps({"Success": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''
@@ -900,7 +899,7 @@ def makeLayoutPublic(request):
         loggedIn = request.POST['user_id']
 
         db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
-        return HttpResponse(json.dumps({"Success": "Layout made public!", "url": URL_PATH + uid + '/' + gid + '/'}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout made public!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
 
 
 def getGroupsForGraph(request):
@@ -917,7 +916,7 @@ def getGroupsForGraph(request):
         owner = request.POST['owner']
         gid = request.POST['gid']
         
-        return HttpResponse(json.dumps({"Group_Information": db.get_all_groups_for_user_with_sharing_info(owner, gid)}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": db.get_all_groups_for_user_with_sharing_info(owner, gid)}), content_type="application/json")
 
 def shareGraphWithGroups(request):
     '''
@@ -965,9 +964,9 @@ def create_group(request, groupname):
         # If there isn't already a group name that exists with the same name under account
         # add it to account
         if group_created != None:
-            return HttpResponse(json.dumps({"Upload": "Success", "Group Name": group_created[0], "Group Id": group_created[1]}), content_type="application/json")
+            return HttpResponse(json.dumps({"StatusCode": 201, "Message": "Group created!", "Group Name": group_created[0], "Group Id": group_created[1]}), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Upload": "Fail", "Error": "Group name already exists for this account"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "Group name already exists for this account")), content_type="application/json")
 
 def delete_group_through_ui(request):
     '''
@@ -984,7 +983,7 @@ def delete_group_through_ui(request):
     if request.method == 'POST':
         if request.POST['username'] == request.POST['groupOwner']:
             db.remove_group(request.POST['groupOwner'], request.POST['groupName'])
-            return HttpResponse(json.dumps({"Delete": request.POST['groupName'] + " deleted for " + request.POST['groupOwner']}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, request.POST['groupName'] + " deleted for " + request.POST['groupOwner'])), content_type="application/json")
 
 def unsubscribe_from_group(request):
     '''
@@ -1001,9 +1000,9 @@ def unsubscribe_from_group(request):
     if request.method == 'POST':
         result = db.remove_user_through_ui(request.POST['username'], request.POST['groupOwner'], request.POST['groupName'])
         if result != None:
-            return HttpResponse(json.dumps({"Error": result}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Unsubscribe": " You are no longer following " + request.POST['groupName'] + " owned by " + request.POST['groupOwner']}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "You are no longer following " + request.POST['groupName'] + " owned by " + request.POST['groupOwner'])), content_type="application/json")
 
 def change_description_through_ui(request):
     '''
@@ -1020,9 +1019,9 @@ def change_description_through_ui(request):
     if request.method == 'POST':
         result = db.change_description(request.POST['username'], request.POST['groupId'], request.POST['groupOwner'], request.POST['description'])
         if result != None:
-            return HttpResponse(json.dumps({"Error": result}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Changed": "Changed description"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Changed description")), content_type="application/json")
 
 def add_member_through_ui(request):
     '''
@@ -1038,7 +1037,7 @@ def add_member_through_ui(request):
     # If request is a POST request, add it to the server
     if request.method == 'POST':
         result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
-        return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
+        return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
 
 def remove_member_through_ui(request):
     '''
@@ -1054,7 +1053,7 @@ def remove_member_through_ui(request):
     # If request is a POST request, add it to the server
     if request.method == 'POST':
         result = db.remove_user_from_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
-        return HttpResponse(json.dumps({"Message": result}), content_type="application/json")
+        return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
 
 
 
@@ -1070,7 +1069,7 @@ def getGroupsWithLayout(request):
     '''
     if request.method == 'POST':
         result = db.is_layout_shared(request.POST['layout'], request.POST['loggedIn'], request.POST['owner'], request.POST['gid'])
-        return HttpResponse(json.dumps({"Group_Information": result}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": result}), content_type="application/json")
     else:
         return HttpResponse("NONE")
 
@@ -1134,16 +1133,16 @@ def upload_graph(request, user_id, graphname):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
         if graph_errors != None:
-            return HttpResponse(json.dumps({"Error": graph_errors}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, graph_errors)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Success": "Graph inserted into GraphSpace!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(201, "Graph inserted into GraphSpace!")), content_type="application/json")
 
 def update_graph(request, user_id, graphname):
     '''
@@ -1162,16 +1161,16 @@ def update_graph(request, user_id, graphname):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         graph_errors = db.update_graph(user_id, graphname, request.FILES['graphname'].read())
         if graph_errors != None:
-            return HttpResponse(json.dumps({"Error": graph_errors}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, graph_errors)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Success": "Updated " + graphname + " for " + user_id}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(201, "Updated " + graphname + " for " + user_id + '.')), content_type="application/json")
 
 
 def retrieve_graph(request, user_id, graphname):
@@ -1190,16 +1189,16 @@ def retrieve_graph(request, user_id, graphname):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
             return HttpResponse(jsonData)
         else:
-            return HttpResponse(json.dumps({"Error": "No Such Graph Exists"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists!")), content_type="application/json")
 
 def remove_graph(request, user_id, graphname):
     '''
@@ -1218,17 +1217,17 @@ def remove_graph(request, user_id, graphname):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
   
         jsonData = db.get_graph_json(user_id, graphname)
         if jsonData != None:
             db.delete_graph(user_id, graphname)
-            return HttpResponse(json.dumps({"Success": "Successfully deleted " + graphname + " owned by " + user_id}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + graphname + " owned by " + user_id + '.')), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Error": "No Such Graph Exists"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists.")), content_type="application/json")
 
 def view_all_graphs_for_user(request, user_id):
     '''
@@ -1243,13 +1242,13 @@ def view_all_graphs_for_user(request, user_id):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
 
         if db.get_valid_user(user_id, request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         data = db.get_all_graphs_for_user(user_id)
-        return HttpResponse(json.dumps({"Graphs": data}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Graphs": data}), content_type="application/json")
 
 def make_graph_public(request, user_id, graphname):
     '''
@@ -1263,17 +1262,17 @@ def make_graph_public(request, user_id, graphname):
     if request.method == 'POST':
         
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
         
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         data = db.change_graph_visibility(1, request.POST['username'], graphname)
 
         if data == None:
-            return HttpResponse(json.dumps({"Success": "Successfully made " + graphname + " owned by " + user_id + " public."}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully made " + graphname + " owned by " + user_id + " public.")), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, data)), content_type="application/json")
 
 def make_graph_private(request, user_id, graphname):
     '''
@@ -1287,16 +1286,16 @@ def make_graph_private(request, user_id, graphname):
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps({"Error": "Usernames do not match!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.usernameMismatchError()), content_type="application/json")
         
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         data = db.change_graph_visibility(0, request.POST['username'], graphname)
         if data == None:
-            return HttpResponse(json.dumps({"Success": "Successfully made " + graphname + " owned by " + user_id + " private."}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully made " + graphname + " owned by " + user_id + " private.")), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Error": data}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, data)), content_type="application/json")
 
 def get_groups(request):
     '''
@@ -1311,10 +1310,10 @@ def get_groups(request):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         data = db.get_all_groups_in_server()
-        return HttpResponse(json.dumps({"Groups": data}), content_type="application/json");
+        return HttpResponse(json.dumps({"StatusCode": 200, "Groups": data}), content_type="application/json")
 
 def get_group(request, group_owner, groupname):
     '''
@@ -1329,10 +1328,10 @@ def get_group(request, group_owner, groupname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         data = db.get_group(group_owner, groupname)
-        return HttpResponse(json.dumps(data, indent=4, separators=(',', ': ')), content_type="application/json");
+        return HttpResponse(json.dumps({"StatusCode": 200, "Groups": data}, indent=4, separators=(',', ': ')), content_type="application/json");
 
 
 def delete_group(request, group_owner, groupname):
@@ -1350,13 +1349,13 @@ def delete_group(request, group_owner, groupname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         if group_owner == request.POST['username']:
             data = db.remove_group(request.POST['username'], groupname)
-            return HttpResponse(json.dumps({"Success": data}), content_type="application/json");
+            return HttpResponse(json.dumps(db.sendMessage(200, data)), content_type="application/json");
         else:
-            return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!")), content_type="application/json")
 
 
 def add_group(request, group_owner, groupname):
@@ -1375,12 +1374,13 @@ def add_group(request, group_owner, groupname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
         
         if group_owner == request.POST['username']:
-            return create_group(request, groupname)
+            data = create_group(request, groupname)
+            return HttpResponse(json.dumps(db.sendMessage(200, data)), content_type="application/json");
         else:
-            return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!")), content_type="application/json")
 
 def get_group_for_user(request, user_id):
     '''
@@ -1397,10 +1397,10 @@ def get_group_for_user(request, user_id):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         group = db.groups_for_user(user_id)
-        return HttpResponse(json.dumps({"Groups": group}, indent=4, separators=(',', ': ')), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Groups": group}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def add_user_to_group(request, group_owner, groupname, user_id):
     '''
@@ -1419,7 +1419,7 @@ def add_user_to_group(request, group_owner, groupname, user_id):
 
         # Check to see if the user/password is acceptable
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         if group_owner == request.POST['username']:
             # Adds user to group
@@ -1427,12 +1427,12 @@ def add_user_to_group(request, group_owner, groupname, user_id):
 
             # If nothing is returned, that means that something went wrong
             if data == None:
-                return  HttpResponse(json.dumps({"Error": "Group doesn't exist or user has already been added!"}), content_type="application/json")
+                return  HttpResponse(json.dumps(db.throwError(400, "Group doesn't exist or user has already been added!")), content_type="application/json")
 
-            return HttpResponse(json.dumps({"Success": data}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, data)), content_type="application/json")
 
         else:
-            return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!")), content_type="application/json")
 
 
 def remove_user_from_group(request, group_owner, groupname, user_id):
@@ -1449,12 +1449,12 @@ def remove_user_from_group(request, group_owner, groupname, user_id):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
         if group_owner == request.POST['username']:
             group = db.remove_user_from_group(user_id, request.POST['username'], groupname)
-            return HttpResponse(json.dumps({"Success": group}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, group)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Failure": "The group owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!")), content_type="application/json")
 
 def share_graph(request, graphname, group_owner, groupname):
     '''
@@ -1470,10 +1470,13 @@ def share_graph(request, graphname, group_owner, groupname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         result = db.share_graph_with_group(request.POST['username'], graphname, groupname, group_owner)
-        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+        if result == None:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Graph successfully shared with group!")), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(400, result)), content_type="application/json")
 
 def unshare_graph(request, graphname, group_owner, groupname):
     '''
@@ -1489,10 +1492,13 @@ def unshare_graph(request, graphname, group_owner, groupname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         result = db.unshare_graph_with_group(request.POST['username'], graphname, groupname, group_owner)
-        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+        if result == None:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Graph successfully unshared with group!")), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(400, result)), content_type="application/json")
 
 def get_tags_for_user(request, username):
     '''
@@ -1506,10 +1512,10 @@ def get_tags_for_user(request, username):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         result = db.get_all_tags_for_user(username)
-        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}), content_type="application/json")
 
 def get_all_tags_for_graph(request, username, graphname):
     '''
@@ -1524,11 +1530,11 @@ def get_all_tags_for_graph(request, username, graphname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
 
         result = db.get_all_tags_for_graph(graphname, username)
-        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}), content_type="application/json")
 
 def get_all_graphs_for_tags(request, tag):
     '''
@@ -1543,10 +1549,10 @@ def get_all_graphs_for_tags(request, tag):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         result = db.get_all_graphs_for_tags(tag)
-        return HttpResponse(json.dumps({"Response": result}), content_type="application/json")
+        return HttpResponse(json.dumps({"StatusCode": 200, "Graphs": result}), content_type="application/json")
 
 def make_all_graphs_for_tag_public(request, username, tagname):
     '''
@@ -1562,16 +1568,16 @@ def make_all_graphs_for_tag_public(request, username, tagname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         if username == request.POST['username']:
             error = db.change_graph_visibility_for_tag(1, tagname, username)
             if error == None:
-                return HttpResponse(json.dumps({"Success": "Graphs with tag have been made public"}), content_type="application/json")
+                return HttpResponse(json.dumps(db.sendMessage(200, "Graphs with tag have been made public")), content_type="application/json")
             else:
-                return HttpResponse(json.dumps({"Error": error}), content_type="application/json")
+                return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Error": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!")), content_type="application/json")
 
 def make_all_graphs_for_tag_private(request, username, tagname):
     '''
@@ -1587,13 +1593,13 @@ def make_all_graphs_for_tag_private(request, username, tagname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         if username == request.POST['username']:
             db.change_graph_visibility_for_tag(0, tagname, username)
-            return HttpResponse(json.dumps({"Success": "Graph with tag have been made private"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Graph with tag have been made private")), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!")), content_type="application/json")
 
 def delete_all_graphs_for_tag(request, username, tagname):
     '''
@@ -1609,13 +1615,13 @@ def delete_all_graphs_for_tag(request, username, tagname):
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
-            return HttpResponse(json.dumps({"Error": "Username/Password is not recognized!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.userNotFoundError()), content_type="application/json")
 
         if username == request.POST['username']:
             db.delete_all_graphs_for_tag(tagname, username)
-            return HttpResponse(json.dumps({"Success": "Graphs with tag have been deleted"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Graphs with tag have been deleted")), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"Failure": "The tag owner and the person making this request are not the same person!"}), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!")), content_type="application/json")
 
 
 

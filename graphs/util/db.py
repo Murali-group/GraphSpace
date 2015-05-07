@@ -4,7 +4,6 @@ from datetime import datetime
 import sys
 import bcrypt
 import json
-from graphs.util.json_converter import convert_json
 from operator import itemgetter
 from itertools import groupby
 from collections import Counter, defaultdict
@@ -21,6 +20,8 @@ URL_PATH = settings.URL_PATH
 
 ##################################################################
 # This section contains methods to populate tables on startup
+
+
 
 # --------------- Edge Insertions -----------------------------------
 
@@ -102,6 +103,79 @@ def insert_all_edges_from_json():
 			con.close()
 
 # --------------- End Edge Insertions --------------------------------
+
+def convert_json(original_json):
+    '''
+        Converts original_json that's used in Cytoscape Web
+        such that it is compatible with the new Cytoscape.js
+
+        See: http://cytoscape.github.io/cytoscape.js/
+
+        Original json structure used for Cytoscape Web:
+        {
+            "metadata": {
+
+            },
+
+            "graph": {
+                "data": {
+                    "nodes": [ 
+                        { "id": "node1", "label": "n1", ... },
+                        { "id": "node2", "label": "n2", ... },
+                        ...
+                    ],
+                    "edges": [ 
+                        { "id": "edge1", "label": "e1", ... },
+                        { "id": "edge2", "label": "e2", ... },
+                        ...
+                    ]
+                }
+            }
+        }
+
+        New json structure:
+        {
+            "metadata": {
+
+            },
+
+            "graph": {
+                "nodes": [
+                    {"data": {"id": "node1", "label": "n1", ...}},
+                    {"data": {"id": "node2", "label": "n2", ...}},
+                    ...
+                ],
+                "edges": [
+                    {"data": {"id": "edge1", "label": "e1", ...}},
+                    {"data": {"id": "edge2", "label": "e2", ...}},
+                    ...
+                ]
+            }
+        }
+    '''
+
+    #parse old json data
+    old_json = json.loads(original_json)
+    old_nodes = old_json['graph']['data']['nodes']
+    old_edges = old_json['graph']['data']['edges']
+
+    new_nodes, new_edges = [], []
+
+    #format node and edge data
+    for node in old_nodes:
+        new_nodes.append({"data": node})
+
+    for edge in old_edges:
+        new_edges.append({"data": edge})
+
+    #build the new json
+    new_json = {}
+    new_json['metadata'] = old_json['metadata']
+    new_json['graph'] = {}
+    new_json['graph']['nodes'] = new_nodes
+    new_json['graph']['edges'] = new_edges
+
+    return json.dumps(new_json, indent=4)
 
 def add_everyone_to_password_reset():
 	'''
@@ -2356,7 +2430,7 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 			if isMember != None or isOwner != None:
 				cur.execute('insert into group_to_graph values(?, ?, ?, ?)', (groupId, groupOwner, owner, graph))
 				con.commit()
-				return "Graph successfully shared!"
+				return None
 			else:
 				return "You are not a member of this group!"
 		else:
@@ -2392,7 +2466,7 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 		if graph_owner != None and graph_in_group != None:
 			cur.execute('delete from group_to_graph where group_id=? and group_owner=? and graph_id=? and user_id=?', (groupId, groupOwner, graph, owner))
 			con.commit()
-			return "Graph successfully unshared!"
+			return None
 		else:
 			return "You don't own this graph or graph isn't shared with the group yet!"
 
@@ -3456,4 +3530,46 @@ def delete_all_graphs_for_tag(tagname, username):
 	finally:
 		if con:
 			con.close()
-					
+
+def usernameMismatchError():
+	'''
+		Returns response telling user that their usernames (from the URL and username field in POST request)
+		do not match
+	'''
+	return throwError(400, "Usernames do not match!")
+
+def userNotFoundError():
+	'''
+		Returns response telling user that their username and password combination is not found.
+	'''
+	return throwError(401, "Username/Password is not recognized!")
+
+def throwError(statusCode, error):
+	'''
+		Returns response to any error.
+	'''
+	return constructResponse(statusCode, None, error)
+
+def sendMessage(statusCode, message):
+	'''
+		Returns response to sucessful request.
+	'''
+	return constructResponse(statusCode, message, None)
+
+def constructResponse(statusCode, message, error):
+	'''
+		Constructs a response to send to the user.
+
+		:param statusCode: Status coe of the request
+		:param message: Message to send to the user
+		:param error: Error to display to the user
+		:return <Message>
+	'''
+	response = {"StatusCode": statusCode}
+
+	if message != None:
+		response['Message'] = message
+	else:
+		response['Error'] = error
+
+	return response
