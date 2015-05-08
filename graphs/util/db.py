@@ -260,13 +260,13 @@ def validate_json(jsonString):
 
 	# If any of the above errors has > 0 length, we have an error
 	if len(edgeError) > 0:
-		jsonErrors += edgeError + '\n'
+		jsonErrors += edgeError
 	if len(nodeError) > 0:
-		jsonErrors += nodeError + '\n'
+		jsonErrors += nodeError
 	if len(nodeUniqueIDError) > 0:
-		jsonErrors += nodeUniqueIDError + '\n'
+		jsonErrors += nodeUniqueIDError
 	if len(nodeCheckShape) > 0:
-		jsonErrors += nodeCheckShape + '\n'
+		jsonErrors += nodeCheckShape
 
 	return jsonErrors
 
@@ -284,7 +284,7 @@ def checkUniqueID(elements):
 		if element['data']['id'] not in id_map:
 			id_map.append(element['data']['id'])
 		else:
-			return "Error: " + element['data']['id'] + " for a node is duplicated!"
+			return element['data']['id'] + " for a node is duplicated!"
 
 	return ""
 
@@ -299,7 +299,7 @@ def checkShapes(elements):
 
 	for element in elements:
 		if element['data']['shape'] not in allowed_shapes:
-			return "Error: illegal shape: " + element['data']['shape'] + ' for a node'
+			return "illegal shape: " + element['data']['shape'] + ' for a node'
 
 	return ""
 
@@ -320,7 +320,7 @@ def propertyInJSON(elements, properties, elementType):
 		element_data = element['data']
 		for element_property in properties:
 			if element_property not in element_data:
-				return "Error: Property " + element_property +  " not in JSON for " + elementType
+				return "Property " + element_property +  " not in JSON for " + elementType
 		
 			met_all_properties.append(element_property)
 

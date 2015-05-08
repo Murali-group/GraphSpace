@@ -164,14 +164,18 @@ Example successful response:
 
 <pre>
 {
-  "Success": "Graph inserted into GraphSpace!"
+    "Message": "Graph inserted into GraphSpace!",
+    "StatusCode": 201
 }
 </pre>
 
 If JSON fails validation, it should give some sort of error as to why it failed
 
 <pre>
-{"Error": "Property color not in JSON for an edge"}
+{
+    "Error": "Property width not in JSON for node",
+    "StatusCode": 400
+}
 </pre>
 
 <h3 id="json_ref">JSON Reference</h3>
@@ -298,7 +302,8 @@ Example failed response:
 
 <pre>
 {
-   "error" : "No such graph exists"
+    "Error": "No Such Graph Exists!",
+    "StatusCode": 404
 }
 </pre>
 <h3 id="update_graph">Update graph</h3>
@@ -310,14 +315,18 @@ curl -X POST "{{url}}api/users/[email]/graph/update/[graphname]/" -F "username=[
 Example successful response:
 
 <pre>
-{"Success": "Updated [graphname] for [username]"}
+{
+    "Message": "Updated [graphname] for [email].",
+    "StatusCode": 201
+}
 </pre>
 
 Example failed response:
 
 <pre>
 {
-   "Error" : "Can't update [graphname] because it does not exist for [username]
+    "Error": "Can't update [graphname] because it does not exist for [email]",
+    "StatusCode": 404
 }
 </pre>
 
@@ -333,21 +342,16 @@ Example successful response:
 
 <pre>
 {
-       Successfully deleted [graphname] owned by [email]
+    "Message": "Successfully deleted [graphname] owned by [email].",
+    "StatusCode": 200
 }
 </pre>
 
 Example failed response:
-
 <pre>
 {
-       "error" : "You can only delete your own graphs"
-}
-</pre>
-
-<pre>
-{
-       "error" : "No such graph exists"
+    "Error": "No Such Graph Exists.",
+    "StatusCode": 404
 }
 </pre>
 
@@ -364,7 +368,11 @@ Example response:
 
 <pre>
 {
-  "Graphs" : ["graph1", "graph2"]
+    "Graphs": [
+        "tutorial_graph1",
+        "tutorail_graph2"
+    ],
+    "StatusCode": 200
 }
 </pre>
 
@@ -378,12 +386,18 @@ curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPublic/[gra
 
 Example successful response:
 <pre>
-{"Success": "Successfully made [graphname] owned by [email] public."}
+{
+    "Message": "Successfully made [graphname] owned by [email] public.",
+    "StatusCode": 200
+}
 </pre>
 
 Example failed response:
 <pre>
-{"Error": "Graph with name [graphname] doesn't exist under [email]."}
+{
+    "Error": "Graph with name [graphname] doesn't exist under [email].",
+    "StatusCode": 404
+}
 </pre>
 <h3 id="make_graph_private">Make graph private</h3>
 
@@ -395,12 +409,18 @@ curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPrivate/[gr
 
 Example successful response:
 <pre>
-{"Success": "Successfully made [graphname] owned by [email] private."}
+{
+    "Message": "Successfully made [graphname] owned by [email] public.",
+    "StatusCode": 200
+}
 </pre>
 
 Example failed response:
 <pre>
-{"Error": "Graph with name [graphname] doesn't exist under [email]."}
+{
+    "Error": "Graph with name [graphname] doesn't exist under [email].",
+    "StatusCode": 404
+}
 </pre>
 <h2 id="groups">Groups</h2>
 
@@ -431,23 +451,28 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-curl -X POST "{{url}}api/groups/[group_owner]/[group_id]/get/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 <pre>
 {
-    "owner": "[group_owner]",
-    "graphs": [
-        [graphname],
-        ...
-    ],
-    "group_id": [group_id],
-    "description": "This is test group.",
-    "members": [
-        [group_owner],
-        ...
-    ]
+    "Groups": {
+        "owner": "dsingh5270@gmail.com",
+        "graphs": [
+            "api_test",
+            "secret_feature"
+        ],
+        "group_id": "Test1",
+        "description": "This is test group to see if changing description works properly.",
+        "members": [
+            "annaritz@vt.edu",
+            "ategge@vt.edu",
+            "dsingh5270@gmail.com"
+        ]
+    },
+    "StatusCode": 200
 }
+
 </pre>
 
 <h3 id="create_group">Create group</h3>
@@ -458,14 +483,25 @@ To create a group, use the following command. You will be the owner of the group
 curl -X POST "{{url}}api/groups/add/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
-Example response:
+Example successful response:
 
 <pre>
 {
-  "Group Id": [group_id], 
-  "Group Name": [groupname], 
-  "Upload": "Success"
+    "Group Id": "Test2",
+    "Message": "Group created!",
+    "Group Name": "Test2",
+    "StatusCode": 201
 }
+</pre>
+
+Example failure response:
+
+<pre>
+{
+    "Error": "Group name already exists for this account",
+    "StatusCode": 400
+}
+
 </pre>
 
 <h3 id="remove_group">Remove group</h3>
@@ -480,21 +516,18 @@ Example successful response:
 
 <pre>
 {
-       "Success" : "Successfully deleted group owned by [group_owner]."
+    "Message": "Successfully deleted [groupname] owned by [group_owner].",
+    "StatusCode": 200
 }
+
 </pre>
 
 Example failed response:
 
 <pre>
 {
-       "Failure" : "You can only delete your own groups"
-}
-</pre>
-
-<pre>
-{
-       "Failure" : "No such group exists"
+    "Message": "Group not found!",
+    "StatusCode": 200
 }
 </pre>
 
@@ -510,13 +543,15 @@ Example response:
 
 <pre>
 {
-   "Groups" : [
+  "Groups": [
       {
-         "groupId" : [groupID],
-         "group_owner": [group_owner]
+          "group_owner": "[email]",
+          "groupId": "[Test1]"
       }
-   ]
+  ],
+  "StatusCode": 200
 }
+
 </pre>
 
 <h3 id="add_user_to_group">Add user to group</h3>
@@ -531,14 +566,20 @@ Example successful response:
 
 <pre>
 {
-   "Success" : "Successfully added user [member] to group [groupname]."
+    "Message": "Successfully added user [member] to [groupname].",
+    "StatusCode": 200
 }
+
 </pre>
 
-<!-- Example failed response:
+Example failed response:
 
 <pre>
-</pre> -->
+{
+    "Error": "Group doesn't exist or user has already been added!",
+    "StatusCode": 400
+}
+</pre>
 
 <h3 id="remove_user_from_group">Remove user from group</h3>
 
@@ -552,15 +593,10 @@ Example successful response:
 
 <pre>
 {
-   "Success" : "Successfully removed user [member] from group [groupname]."
+    "Message": "Successfully removed user [member] from [groupname].",
+    "StatusCode": 200
 }
 </pre>
-
-<!-- Example failed response:
-
-<pre>
-</pre> -->
-
 
 <h3 id="share_graph">Share graph with a group</h3>
 
@@ -574,7 +610,8 @@ Example successful response:
 
 <pre>
 {
-  "Response": "Graph successfully shared!"
+    "Message": "Graph successfully shared with group!",
+    "StatusCode": 200
 }
 </pre>
 
@@ -590,7 +627,8 @@ Example successful response:
 
 <pre>
 {
-  "Response": "Graph successfully unshared!"
+    "Message": "Graph successfully unshared with group!",
+    "StatusCode": 200
 }
 </pre>
 
@@ -604,7 +642,15 @@ curl -X POST "{{url}}api/tags/user/[email]/" -F "username=[email]" -F "password=
 Example successful response:
 
 <pre>
-{"Response": ["ISMB-2014-Crosstalk"]}
+{
+    "Tags": [
+        "tutorial,
+        "pathways",
+        "pictures",
+    ],
+    "StatusCode": 200
+}
+
 </pre>
 
 <h3 id='tag_for_graph'>Get Tags for a Graph</h3>
@@ -616,7 +662,12 @@ curl -X POST "{{url}}api/tags/user/[email]/[graphname]/" -F "username=[email]" -
 
 Example successful response:
 <pre>
-{"Response": ["ISMB-2014-Crosstalk"]}
+{
+    "Tags": [
+        "tutorial"
+    ],
+    "StatusCode": 200
+}
 </pre>
 
 <h3 id='make_graphs_for_tag_public'>Make all graphs for a tag public</h3>
@@ -629,7 +680,10 @@ curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePublic/" -F "username=[emai
 Example successful response:
 
 <pre>
-{"Success": "Graph with tag have been made public"}
+{
+    "Message": "Graphs with tag have been made public",
+    "StatusCode": 200
+}
 </pre>
 
 <h3 id='make_graphs_for_tag_private'>Make all graphs for a tag private</h3>
@@ -642,7 +696,10 @@ curl -X POST "{{url}}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[ema
 Example successful response:
 
 <pre>
-{"Success": "Graph with tag have been made private"}
+{
+    "Message": "Graph with tag have been made private",
+    "StatusCode": 200
+}
 </pre>
 
 <h3 id='delete_graphs_for_tag'>Delete all graphs for a tag</h3>
@@ -655,7 +712,10 @@ curl -X POST "{{url}}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" 
 Example successful response:
 
 <pre>
-{"Success": "Graphs with tag have been deleted"}
+{
+    "Message": "Graphs with tag have been deleted",
+    "StatusCode": 200
+}
 </pre>
 
 </div>
