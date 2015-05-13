@@ -14,90 +14,222 @@ $(document).ready(function() {
 
       //Style properties of NODE body
       style: cytoscape.stylesheet()
-      .selector('[width]').css({
+      .selector('node[width]').css({
         'width': 'data(width)'
       })
-      .selector('[height]').css({
+      .selector('node[height]').css({
         'height': 'data(height)'
       })
-      .selector('[shape]').css({
+      .selector('node[shape]').css({
         'shape': 'data(shape)'
       })
-      .selector('[background_color]').css({
+      .selector('node[background_color]').css({
         'background-color': 'data(background_color)'
       })
-      .selector('[background_blacken]').css({
+      .selector('node[background_blacken]').css({
         'background-blacken': 'data(background_blacken)'
       })
-      .selector('[background_opacity]').css({
+      .selector('node[background_opacity]').css({
         'border-opacity': 'data(background_opacity)'
       })
-      .selector('[border_width]').css({
+      .selector('node[border_width]').css({
         'border-width': 'data(border_width)'
       })
-      .selector('[border_style]').css({
+      .selector('node[border_style]').css({
         'border-style': 'data(border_style)'
       })
-      .selector('[border_color]').css({
+      .selector('node[border_color]').css({
         'border-color': 'data(border_color)'
       })
-      .selector('[border_opacity]').css({
+      .selector('node[border_opacity]').css({
         'border-opacity': 'data(border_opacity)'
       })
 
       //BACKGROUND IMAGE PROPERTIES
-      
+      .selector('node[background_image]').css({
+        'background-image': 'data(background_image)'
+      })
+      .selector('node[background_image_opacity]').css({
+        'background-image-opacity': 'data(background_image_opacity)'
+      })
+      .selector('node[background_fit]').css({
+        'background-fit': 'data(background_fit)'
+      })
+      .selector('node[background_repeat]').css({
+        'background-repeat': 'data(background_repeat)'
+      })
+      .selector('node[background_position_x]').css({
+        'background-position-x': 'data(background_position_x)'
+      })
+      .selector('node[background_position_y]').css({
+        'background-position-y': 'data(background_position_y)'
+      })
+      .selector('node[background_clip]').css({
+        'background-clip': 'data(background_clip)'
+      })
+
+      //HAVE NOT DONE PIE CHART BACKGROUND
 
       //LABEL PROPERTIES
-      .selector('[color]').css({
+      .selector('node[color]').css({
         'color': 'data(color)'
       })
-      .selector('[content]').css({
+      .selector('node[content]').css({
         'content': 'data(content)'
       })
-      .selector('[font-family]').css({
+      .selector('node[font_family]').css({
         'font-family': 'data(font_family)'
       })
-      .selector('[font-weight]').css({
+      .selector('node[font_size]').css({
+        'font-size': 'data(font_size)'
+      })
+      .selector('node[font_style]').css({
+        'font-style': 'data(font_style)'
+      })
+      .selector('node[font-weight]').css({
         'font-weight': 'data(font_weight)'
       })
-      .selector('[text-transform]').css({
+      .selector('node[text-transform]').css({
         'text-transform': 'data(text_transform)'
       })
-      .selector('[text_wrap]').css({
+      .selector('node[text_wrap]').css({
         'text-wrap': 'data(text_wrap)'
       })
-      .selector('[text-opacity]').css({
+      .selector('node[text_max_width]').css({
+        'text-max-width': 'data(text_max_width)'
+      })
+      .selector('node[edge_text_rotation]').css({
+        'edge-text-rotation': 'data(edge_text_rotation)'
+      })
+      .selector('node[text-opacity]').css({
         'text-opacity': 'data(text_opacity)'
       })
-      .selector('[text_outline_color]').css({
+      .selector('node[text_outline_color]').css({
         'text-outline-color': 'data(text_outline_color)'
       })
-      .selector('[text_outline_opacity]').css({
+      .selector('node[text_outline_opacity]').css({
         'text-outline-opacity': 'data(text_outline_opacity)'
       })
-      .selector('[text_outline_width]').css({
-        'text-outline-width': 'data(text_outline_width)'
+      .selector('node[text_outline_width]').css({
+        'text-outline-width': 2
       })
-      .selector('[min_zoomed_font_size]').css({
+      .selector('node[text_shadow_blur]').css({
+        'text-shadow-blur': 'data(text_shadow_blur)'
+      })
+      .selector('node[text_shadow_color]').css({
+        'text-shadow-color': 'data(text_shadow_color)'
+      })
+      .selector('node[text_shadow_offset_x]').css({
+        'text-shadow-offset-x': 'data(text_shadow_offset_x)'
+      })
+      .selector('node[text_shadow_offset_y]').css({
+        'text-shadow-offset-y': 'data(text_shadow_offset_y)'
+      })
+      .selector('node[text_shadow_opacity]').css({
+        'text-shadow-opacity': 'data(text_shadow_opacity)'
+      })
+      .selector('node[text_background_shape]').css({
+        'text-background-shape': 'data(text_background_shape)'
+      })
+      .selector('node[text_border_width]').css({
+        'text-border-width': 'data(text_border_width)'
+      })
+      .selector('node[text_border_style]').css({
+        'text-border-style': 'data(text_border_style)'
+      })
+      .selector('node[text_border_color]').css({
+        'text-border-color': 'data(text_border_color)'
+      })
+      .selector('node[text_outline_width]').css({
+        'text-border-color': 'data(text_outline_width)'
+      })
+      .selector('node[min_zoomed_font_size]').css({
         'min-zoomed-font-size': 'data(min_zoomed_font_size)'
       })
-      .selector('[text_halign]').css({
+      .selector('node[text_halign]').css({
         'text-halign': 'data(text_halign)'
       })
-      .selector('[text_valign]').css({
+      .selector('node[text_valign]').css({
         'text-valign': 'data(text_valign)'
       })
-      .selector('node').css({
-        'text-valign': 'center'
+
+      //EDGE LINE PROPERTIES
+      .selector('edge[width]').css({
+        'width': 'data(width)'
       })
-      .selector('edge')
-        .css({
-          'target-arrow-shape': 'data(arrow)',
-          'line-color': 'data(color)',
-          'source-arrow-color': 'data(color)',
-          'target-arrow-color': 'data(color)',
-        })
+      .selector('edge[curve_style]').css({
+        'curve-style': 'data(curve_style)'
+      })
+      .selector('edge[haystack-radius]').css({
+        'haystack-radius': 'data(haystack-radius)'
+      })
+      .selector('edge[control_point_step_size]').css({
+        'control-point-step-size': 'data(control_point_step_size)'
+      })
+      .selector('edge[control_point_distance]').css({
+        'control-point-distance': 'data(control_point_distance)'
+      })
+      .selector('edge[control_point_weight]').css({
+        'control-point-weight': 'data(control_point_weight)'
+      })
+      .selector('edge[line_color]').css({
+        'line-color': 'data(line_color)'
+      })
+      .selector('edge[line_style]').css({
+        'line-style': 'data(line_style)'
+      })
+
+      //EDGE ARROW PROPERTIES
+      .selector('edge[source_arrow_color]').css({
+        'source-arrow-color': 'data(source_arrow_color)'
+      })
+      .selector('edge[source_arrow_shape]').css({
+        'source-arrow-shape': 'data(source_arrow_shape)'
+      })
+      .selector('edge[source_arrow_fill]').css({
+        'source-arrow-fill': 'data(source_arrow_fill)'
+      })
+      .selector('edge[mid_source_arrow_color]').css({
+        'mid-source-arrow-color': 'data(mid_source_arrow_color)'
+      })
+      .selector('edge[mid_source_arrow_shape]').css({
+        'mid-source-arrow-shape': 'data(mid_source_arrow_shape)'
+      })
+      .selector('edge[mid_source_arrow_fill]').css({
+        'mid-source-arrow-fill': 'data(mid_source_arrow_fill)'
+      })
+      .selector('edge[target_arrow_color]').css({
+        'target-arrow-color': 'data(target_arrow_color)'
+      })
+      .selector('edge[target_arrow_shape]').css({
+        'target-arrow-shape': 'data(target_arrow_shape)'
+      })
+      .selector('edge[target_arrow_fill]').css({
+        'target-arrow-fill': 'data(target_arrow_fill)'
+      })
+      .selector('edge[mid_target_arrow_color]').css({
+        'mid-target-arrow-color': 'data(mid_target_arrow_color)'
+      })
+      .selector('edge[mid_target_arrow_shape]').css({
+        'mid-target-arrow-shape': 'data(mid_target_arrow_shape)'
+      })
+      .selector('edge[mid_target_arrow_fill]').css({
+        'mid-target-arrow-fill': 'data(mid_target_arrow_fill)'
+      })
+
+
+
+      .selector('node').css({
+        'text-valign': 'center',
+        'text-outline-width': 2
+      })
+    // .selector('edge')
+    //   .css({
+    //     'target-arrow-shape': 'data(arrow)',
+    //     'line-color': 'data(color)',
+    //     'source-arrow-color': 'data(color)',
+    //     'target-arrow-color': 'data(color)',
+    //   })
       .selector('node:selected')
         .css({
           'border-width': 3,
