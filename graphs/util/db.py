@@ -1314,8 +1314,8 @@ def insert_graph(username, graphname, graph_json):
 		# If not, add this graph to his account
 		if data == None:
 			validationErrors = validate_json(graph_json)
-			if len(validationErrors) > 0:
-				return validationErrors
+			# if len(validationErrors) > 0:
+			# 	return validationErrors
 
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
@@ -1395,7 +1395,7 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
 
 	for node in nodes:
-		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname, modified, public))
+		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
 		# cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
 
 def update_graph(username, graphname, graph_json):

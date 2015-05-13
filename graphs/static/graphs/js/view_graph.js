@@ -12,6 +12,7 @@ $(document).ready(function() {
     window.cy = cytoscape({
       container: $('#csjs')[0],
 
+      //Style properties of NODE body
       style: cytoscape.stylesheet()
       .selector('[width]').css({
         'width': 'data(width)'
@@ -22,104 +23,74 @@ $(document).ready(function() {
       .selector('[shape]').css({
         'shape': 'data(shape)'
       })
-      // .selector('[background-color]').css({
-      //   'background-color': 'data(background-color)'
-      // })
-      .selector('[background-blacken]').css({
-        'background-blacken': 'data(background-blacken)'
+      .selector('[background_color]').css({
+        'background-color': 'data(background_color)'
       })
-      .selector('[background-opacity]').css({
-        'border-opacity': 'data(border-opacity)'
+      .selector('[background_blacken]').css({
+        'background-blacken': 'data(background_blacken)'
       })
+      .selector('[background_opacity]').css({
+        'border-opacity': 'data(background_opacity)'
+      })
+      .selector('[border_width]').css({
+        'border-width': 'data(border_width)'
+      })
+      .selector('[border_style]').css({
+        'border-style': 'data(border_style)'
+      })
+      .selector('[border_color]').css({
+        'border-color': 'data(border_color)'
+      })
+      .selector('[border_opacity]').css({
+        'border-opacity': 'data(border_opacity)'
+      })
+
+      //BACKGROUND IMAGE PROPERTIES
+      
+
+      //LABEL PROPERTIES
       .selector('[color]').css({
-        'background-color': 'data(color)'
+        'color': 'data(color)'
       })
-      .selector('[label]').css({
-        'content': 'data(label)'
+      .selector('[content]').css({
+        'content': 'data(content)'
       })
       .selector('[font-family]').css({
-        'font-family': 'data(font-family)'
+        'font-family': 'data(font_family)'
       })
       .selector('[font-weight]').css({
-        'font-weight': 'data(font-weight)'
+        'font-weight': 'data(font_weight)'
       })
       .selector('[text-transform]').css({
-        'text-transform': 'data(text-transform)'
+        'text-transform': 'data(text_transform)'
+      })
+      .selector('[text_wrap]').css({
+        'text-wrap': 'data(text_wrap)'
       })
       .selector('[text-opacity]').css({
-        'text-opacity': 'data(text-opacity)'
+        'text-opacity': 'data(text_opacity)'
       })
-      .selector('[text-outline-color]').css({
-        'text-outline-color': 'data(text-outline-color)'
+      .selector('[text_outline_color]').css({
+        'text-outline-color': 'data(text_outline_color)'
       })
-      .selector('[text-outline-opacity]').css({
-        'text-outline-opacity': 'data(text-outline-opacity)'
+      .selector('[text_outline_opacity]').css({
+        'text-outline-opacity': 'data(text_outline_opacity)'
       })
-      .selector('[text-outline-width]').css({
-        'text-outline-width': 'data(text-outline-width)'
+      .selector('[text_outline_width]').css({
+        'text-outline-width': 'data(text_outline_width)'
       })
-      .selector('[min-zoomed-font-size]').css({
-        'min-zoomed-font-size': 'data(min-zoomed-font-size)'
+      .selector('[min_zoomed_font_size]').css({
+        'min-zoomed-font-size': 'data(min_zoomed_font_size)'
       })
-      .selector('[text-halign]').css({
-        'text-halign': 'data(text-halign)'
+      .selector('[text_halign]').css({
+        'text-halign': 'data(text_halign)'
       })
-      .selector('[image]').css({
-        'background-image': 'data(image)',
-        'background-fit': 'cover'
+      .selector('[text_valign]').css({
+        'text-valign': 'data(text_valign)'
       })
       .selector('node').css({
-        'text-valign': 'center',
-        'border-width': 1,
-        'text-outline-width': 0,
-        'font-size': 15,
-        'height': 50,
-        'width': 50
-        // 'background-image': 'url(https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg)'
+        'text-valign': 'center'
       })
-      // .selector('[text-valign]').css({
-      //   'text-valign': 'data(text-valign)'
-      // })
-      // .selector('node')
-        // .css({
-          // 'width': 'data(width)',
-          // 'height': 'data(height)',
-          // 'shape': 'data(shape)',
-          // 'background-color': 'data(background-color)',
-          // 'background-blacken': 'data(background-blacken)',
-          // 'background-opacity': 'data(background-opacity)',
-          // 'border-width': 'data(border-width)',
-          // 'border-style': 'data(border-style)',
-          // 'border-color': 'data(border-color)',
-          // 'border-opacity': 'data(border-opacity)',
-          // 'color': 'data(color)',
-          // 'content': 'data(content)',
-          // 'font-family': 'data(font-family)',
-          // 'font-weight': 'data(font-weight)',
-          // 'text-transform': 'data(text-transform)',
-          // 'text-opacity': 'data(text-opacity)',
-          // 'text-outline-color': 'data(text-outline-color)',
-          // 'text-outline-opacity': 'data(text-outline-opacity)',
-          // 'text-outline-width': 'data(text-outline-width)',
-          // 'min-zoomed-font-size': 'data(min-zoomed-font-size)',
-          // 'text-halign': 'data(text-halign)',
-          // 'text-valign': 'data(text-valign)',
-          // 'background-image': 'data(background-image)',
-          // 'background-fit': 'data(background-fit)'
-
-
-          // 'content': 'data(label)', 
-          // 'shape': 'data(shape)',
-          // 'text-valign': 'center',
-          // 'color': '#000000',
-          // 'text-outline-width': 0,
-          // 'background-color': 'data(color)', 
-          // 'font-size': 15,
-          // 'border-color': '#000000',
-          // 'border-width': 1,
-          // 'width': 'data(width)',
-          // 'height': 'data(height)'
-        // })
       .selector('edge')
         .css({
           'target-arrow-shape': 'data(arrow)',
@@ -1089,6 +1060,7 @@ function setDefaultNodeProperties(nodeJSON) {
   // or unrecognized shape, have a default value
   for (var i = 0; i < nodeJSON.length; i++) {
     var nodeData = nodeJSON[i]['data'];
+    console.log(nodeData);
 
     //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
     var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
