@@ -128,8 +128,13 @@ def view_graph(request, uid, gid):
     # id of the owner of this graph
     context['owner'] = uid
 
-    # graph id
-    context['graph_id'] = gid
+    if 'name' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['name']
+    else:
+        context['graph_name'] = ''
+
+    # # graph id
+    # context['graph_id'] = gid
 
     if 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True
