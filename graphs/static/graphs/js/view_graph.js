@@ -111,7 +111,7 @@ $(document).ready(function() {
         'text-outline-opacity': 'data(text_outline_opacity)'
       })
       .selector('node[text_outline_width]').css({
-        'text-outline-width': 2
+        'text-outline-width': 'data(text_outline_width)'
       })
       .selector('node[text_shadow_blur]').css({
         'text-shadow-blur': 'data(text_shadow_blur)'
@@ -139,9 +139,6 @@ $(document).ready(function() {
       })
       .selector('node[text_border_color]').css({
         'text-border-color': 'data(text_border_color)'
-      })
-      .selector('node[text_outline_width]').css({
-        'text-border-color': 'data(text_outline_width)'
       })
       .selector('node[min_zoomed_font_size]').css({
         'min-zoomed-font-size': 'data(min_zoomed_font_size)'
@@ -220,8 +217,7 @@ $(document).ready(function() {
 
 
       .selector('node').css({
-        'text-valign': 'center',
-        'text-outline-width': 2
+        'text-valign': 'center'
       })
     // .selector('edge')
     //   .css({
