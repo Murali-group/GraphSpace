@@ -345,8 +345,8 @@ $(document).ready(function() {
     //these accordions make up the side menu
     $('#accordion_graph_details').accordion({
         collapsible: true,
-        active: false,
-        heightStyle: "content"
+        active: true,
+        // heightStyle: "content"
     });
 
     $('#accordion_export').accordion({

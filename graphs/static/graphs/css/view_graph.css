@@ -23,11 +23,10 @@ body {
 
 .side_menu {
 	float:right;
-    margin-top: -60px;
 }
 
 #graph_title {
-    width: 75%;
+    width: 100%;
     text-align: center;
 }
 
