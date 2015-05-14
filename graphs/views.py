@@ -47,7 +47,10 @@ def index(request):
     # db.insert_all_edges_from_json()
     #####################
 
+    # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
     # db.update_json_to_cs_2_4()
+
+
     # handle login.
     # see graphs.auth.login for details
     context = login(request)

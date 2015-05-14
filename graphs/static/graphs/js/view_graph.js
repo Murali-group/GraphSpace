@@ -216,8 +216,6 @@ $(document).ready(function() {
         'mid-target-arrow-fill': 'data(mid_target_arrow_fill)'
       })
 
-
-
       .selector('node').css({
         'text-valign': 'center'
       })
