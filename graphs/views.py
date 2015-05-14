@@ -47,6 +47,7 @@ def index(request):
     # db.insert_all_edges_from_json()
     #####################
 
+    # db.update_json_to_cs_2_4()
     # handle login.
     # see graphs.auth.login for details
     context = login(request)
@@ -55,7 +56,6 @@ def index(request):
         # # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
         # if request.session['uid'] != None:
         #     return _graphs_page(request, 'my graphs')
-
         return render(request, 'graphs/index.html', context)
     else:
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");

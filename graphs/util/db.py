@@ -103,6 +103,84 @@ def insert_all_edges_from_json():
 			con.close()
 
 # --------------- End Edge Insertions --------------------------------
+# Populates the edge table with edges from jsons
+# already in the database
+def update_json_to_cs_2_4():
+	'''
+		Inserts all edges from the JSON into the database
+
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		con.text_factory = str
+		cur = con.cursor()
+		# Get information from all graphs already in the database
+		# QUERY EXAMPLE: select user_id, graph_id from graph
+		cur.execute('select user_id, graph_id, json from graph')
+		data = cur.fetchall()
+
+		# If there is anything in the graph table
+		if data != None:
+			# Go through each Graph
+			for j in data:
+				print 'Processing %s of %s', (j[1], j[0])
+				cleaned_json = json.loads(j[2])
+				# Since there are two types of JSON: one originally submitted
+				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
+				# TODO: Remove conversion by specifying it when the user creates a graph
+				if 'data' in cleaned_json['graph']:
+					cleaned_json = update_json(json.loads(convert_json(j[2])))
+				else:
+					cleaned_json = update_json(cleaned_json)
+
+				cleaned_json_string = json.dumps(cleaned_json, sort_keys=True, indent=4)
+				# Update original JSON to match that with the new edge ID's
+				# TODO: Write query examples
+				cur.execute('update graph set json=? where graph_id=? and user_id=?', (cleaned_json_string, j[1], j[0]))
+				con.commit()
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
+
+def update_json(json_string):
+
+	for node in json_string['graph']['nodes']:
+		# Replace label with content
+		if 'label' in node['data']:
+			node['data']['content'] = node['data']['label']
+			del node['data']['label']
+
+		#Replace color with background_color
+		if 'color' in node['data']:
+			node['data']['background_color'] = node['data']['color']
+			node['data']['color'] = 'black'
+
+		# Add text-wrap property
+		node['data']['text_wrap'] = 'wrap'
+
+		# Make it so text is vertically aligned
+		node['data']['text_valign'] = 'center'
+
+	for edge in json_string['graph']['edges']:
+		# Replace label with content
+		if 'label' in edge['data']:
+			edge['data']['content'] = edge['data']['label']
+			del edge['data']['label']
+
+		# Replace shape with target_arrow_shape
+		if 'arrow' in edge['data']:
+			edge['data']['target_arrow_shape'] = "triangle"
+			del edge['data']['arrow']
+
+		if 'directed' in edge['data'] and edge['data']['directed'] == "true":
+			edge['data']['target_arrow_shape'] = "triangle"
+
+	return json_string
 
 def convert_json(original_json):
     '''
