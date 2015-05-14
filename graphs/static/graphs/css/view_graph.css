@@ -23,12 +23,12 @@ body {
 
 .side_menu {
 	float:right;
-    margin-top: -60px;
 }
 
 #graph_title {
     width: 75%;
     text-align: center;
+    margin-left: 50px;
 }
 
 #search_tips {
