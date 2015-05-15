@@ -4,6 +4,11 @@ Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
 
+    if ($("#title").text().length > 0) {
+      $("#graph_title").html("<h1>" + $("#title").text() + "</h1>");
+      $(".side_menu").css("margin-top", -50);
+    }
+
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
 
