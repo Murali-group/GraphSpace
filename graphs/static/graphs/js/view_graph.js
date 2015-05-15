@@ -1205,7 +1205,6 @@ function setDefaultNodeProperties(nodeJSON) {
         } else {
           nodeData['shape'] = "rectangle"
         }
-
       } else {
         nodeData['shape'] = 'ellipse';
       }
