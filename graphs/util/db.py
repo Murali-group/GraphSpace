@@ -298,23 +298,16 @@ def validate_json(jsonString):
 	# Validates the JSON that is uploaded to make sure
 	# it has the following properties
 	# node:
-	# label,
-	# shape,
-	# color,
-	# height,
-	# width
+	# content,
 	# id have to be unique
 
 	# edge:
 	# (dont need an id) - I auto generate one
-	# color
 	# source
 	# target
-	# directed
-	# width
 
-	edge_properties = ['color', 'source', 'target', 'directed', 'width']
-	node_properties = ['content', 'background_color', 'shape', 'height', 'width', 'id']
+	edge_properties = ['source', 'target']
+	node_properties = ['content', 'id']
 
 	cleaned_json = json.loads(jsonString)
 	# Since there are two types of JSON: one originally submitted
@@ -1367,7 +1360,7 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json):
+def insert_graph(username, graphname, graph_json, created=None, modified=None):
 	'''
 		# TODO: Add rest call example
 		Inserts a uniquely named graph under a username.
@@ -1419,8 +1412,15 @@ def insert_graph(username, graphname, graph_json):
 
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
-			cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
-
+			if modified == None and created == None:
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
+			elif modified == None:
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, 0, 1))
+			elif created == None:
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, 0, 1))
+			else:
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, 0, 1))
+			
 			tags = graphJson['metadata']['tags']
 
 			# Insert all tags for this graph into tags database
@@ -1493,14 +1493,25 @@ def update_graph(username, graphname, graph_json):
 
 		if data != None:
 
-			# Deletes information about a graph from all the tables that reference it
-			cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-			cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-			cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-			cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
-			con.commit()
-			return insert_graph(username, graphname, graph_json)
+			result = insert_graph(username, graphname, graph_json)
+			if result != None:
 
+				cur.execute('select * from graph where user_id = ? and graph_id = ?', (username, graphname))
+				old_graph = cur.fetchone()
+				# Deletes information about a graph from all the tables that reference it
+				cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
+				cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
+				cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
+				cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
+				con.commit()
+				result = insert_graph(username, graphname, graph_json, old_graph[3])
+				if result == None:
+					return result
+				else:
+					insert_graph(username, graphname, old_graph[2], old_graph[3], old_graph[4])
+					return result
+			else:
+				return result
 		else:
 			return "Can't update " + graphname + " because it does not exist for " + username
 
