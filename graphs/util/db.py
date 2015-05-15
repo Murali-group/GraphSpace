@@ -1494,14 +1494,17 @@ def update_graph(username, graphname, graph_json):
 
 		if data != None:
 
-			# Deletes information about a graph from all the tables that reference it
-			cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-			cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-			cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-			cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
-			con.commit()
-			return insert_graph(username, graphname, graph_json)
-
+			result = insert_graph(username, graphname, graph_json) != None:
+			if result != None		
+				# Deletes information about a graph from all the tables that reference it
+				cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
+				cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
+				cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
+				cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
+				con.commit()
+				return insert_graph(username, graphname, graph_json)
+			else:
+				return result
 		else:
 			return "Can't update " + graphname + " because it does not exist for " + username
 
