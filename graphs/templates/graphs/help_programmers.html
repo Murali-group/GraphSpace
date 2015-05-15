@@ -263,20 +263,30 @@ Example successful response:
                 "data": {
                     "shape": "ellipse",
                     "id":"P4314611",
-                    "label": "DCC",
+                    "content": "DCC",
                     "height": 50,
                     "width": 50,
-                    "color": "yellow"
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2
                 }
             }, 
             {
                 "data": {
                     "shape": "ellipse",
                     "id":"P0810711",
-                    "label": "HSPA1B",
-                    "height": 50,
-                    "width": 50,
-                    "color": "yellow"
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888"
                 }
             }
         ],
@@ -285,16 +295,19 @@ Example successful response:
                 "data": {
                     "source": "P4314611",
                     "target": "P0810711",
-                    "directed": "true",
-                    "color": "#000000",
-                    "width": 2
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle"
                 }
             }
         ]
 
     },
     "metadata": {
-        "description": "This is a tutorial graph",
+        "name": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
         "tags": [
             "tutorial"
         ]
