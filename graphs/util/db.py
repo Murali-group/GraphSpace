@@ -1391,7 +1391,7 @@ def insert_graph(username, graphname, graph_json):
 
 		# If not, add this graph to his account
 		if data == None:
-			validationErrors = validate_json(graph_json)
+			# validationErrors = validate_json(graph_json)
 			# if len(validationErrors) > 0:
 			# 	return validationErrors
 

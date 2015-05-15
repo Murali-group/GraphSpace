@@ -92,20 +92,30 @@ Here is an example of a basic graph JSON:
                 "data": {
                     "shape": "ellipse",
                     "id":"P4314611",
-                    "label": "DCC",
+                    "content": "DCC",
                     "height": 50,
                     "width": 50,
-                    "color": "yellow"
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2
                 }
             }, 
             {
                 "data": {
                     "shape": "ellipse",
                     "id":"P0810711",
-                    "label": "HSPA1B",
-                    "height": 50,
-                    "width": 50,
-                    "color": "yellow"
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888"
                 }
             }
         ],
@@ -115,15 +125,19 @@ Here is an example of a basic graph JSON:
                     "source": "P4314611",
                     "target": "P0810711",
                     "directed": "true",
-                    "color": "#000000",
-                    "width": 2
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle"
                 }
             }
         ]
 
     },
     "metadata": {
-        "description": "This is a tutorial graph",
+        "name": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
         "tags": [
             "tutorial"
         ]
@@ -134,9 +148,9 @@ Here is an example of a basic graph JSON:
 <p><b>The following properties are required for a <em>node</em> to have:</b>
   
   <ul>
-    <li>label</li>
+    <li>content</li>
     <li>shape</li>
-    <li>color</li>
+    <li>background_color</li>
     <li>height</li>
     <li>width</li>
     <li>id (each node id has to be unique)</li>
@@ -182,7 +196,7 @@ If JSON fails validation, it should give some sort of error as to why it failed
 
 For a detailed description of the JSON structure for graphs, please see the <a href="http://js.cytoscape.org/#notation/elements-json">CytoscapeJS API</a>.
 
-Below is a reference for the different JSON attributes a graph can have.
+Below is a brief overview of some of the basic properties the JSON may have for a graph.
 
 <table class="table">
   <thead>
@@ -198,12 +212,13 @@ Below is a reference for the different JSON attributes a graph can have.
   </tbody>
 </table>
 
-Below are the most common attributes that nodes and edges can have. For a more complete list, see the Cytoscape Web documentation for 
+<p>
+Below are the most common attributes that nodes and edges can have. For a complete list, see the Cytoscape Web documentation for 
 <a href="http://js.cytoscape.org/#style/node-body">nodes</a> and 
 <a href="http://js.cytoscape.org/#style/edge-line">edges</a>.
-
+</p>
 <p>
-Nodes can have the following attributes:
+Basic node attributes:
 </p>
 
 <table class="table">
@@ -212,12 +227,12 @@ Nodes can have the following attributes:
   </thead>
   <tbody>
     <tr> <td> id </td> <td> string </td> <td> The id of the node. </td> </tr>
-    <tr> <td> label    </td> <td> string </td> <td> The visible node label. </td> </tr>
+    <tr> <td> content    </td> <td> string </td> <td> The visible node label. </td> </tr>
     <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the node is hovered/clicked. </td> </tr>
-    <tr> <td> color    </td> <td> string </td> <td> The color of the node. </td> </tr>
+    <tr> <td> background_color    </td> <td> string </td> <td> The background color of the node. </td> </tr>
     <tr> <td> height     </td> <td> float  </td> <td> The height of the node. </td> </tr>
     <tr> <td> width     </td> <td> float  </td> <td> The width of the node. </td> </tr>
-    <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. </td> </tr>
+    <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. (See <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a> documentation for types of shapes)</td> </tr>
   </tbody>
 </table>
 
@@ -231,7 +246,7 @@ Edges can have the following attributes:
   </thead>
   <tbody>
     <tr> <td> id </td> <td> string </td> <td> The id of the edge. </td> </tr>
-    <tr> <td> label    </td> <td> string </td> <td> The visible label of the edge </td> </tr>
+    <tr> <td> content    </td> <td> string </td> <td> The visible label of the edge </td> </tr>
     <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the edge is hovered/clicked. </td> </tr>
     <tr> <td> color    </td> <td> string </td> <td> The color of the edge. </td> </tr>
     <tr> <td> width    </td> <td> float  </td> <td> The width of the edge. </td> </tr>

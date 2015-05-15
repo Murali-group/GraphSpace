@@ -48,7 +48,7 @@ def index(request):
     #####################
 
     # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
-    db.update_json_to_cs_2_4()
+    # db.update_json_to_cs_2_4()
 
 
     # handle login.
