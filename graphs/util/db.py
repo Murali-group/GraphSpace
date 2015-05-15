@@ -1495,7 +1495,7 @@ def update_graph(username, graphname, graph_json):
 		if data != None:
 
 			result = insert_graph(username, graphname, graph_json) != None:
-			if result != None		
+			if result != None:		
 				# Deletes information about a graph from all the tables that reference it
 				cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
 				cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
