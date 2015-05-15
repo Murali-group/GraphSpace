@@ -314,8 +314,7 @@ def validate_json(jsonString):
 	# width
 
 	edge_properties = ['color', 'source', 'target', 'directed', 'width']
-	node_properties = ['label', 'color', 'shape', 'height', 'width', 'id']
-
+	node_properties = ['content', 'background_color', 'shape', 'height', 'width', 'id']
 
 	cleaned_json = json.loads(jsonString)
 	# Since there are two types of JSON: one originally submitted
@@ -1392,8 +1391,8 @@ def insert_graph(username, graphname, graph_json):
 		# If not, add this graph to his account
 		if data == None:
 			validationErrors = validate_json(graph_json)
-			# if len(validationErrors) > 0:
-			# 	return validationErrors
+			if len(validationErrors) > 0:
+				return validationErrors
 
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
