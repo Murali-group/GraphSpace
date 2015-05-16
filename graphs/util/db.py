@@ -82,10 +82,10 @@ def insert_all_edges_from_json():
 					cur.execute('select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?', (j[0], j[1], edge['data']['source'], j[1], j[1], edge['data']['target']))
 					sanity = cur.fetchall()
 					if sanity == None or len(sanity) == 0:
-						if 'directed' in edge['data']:
+						if 'target_arrow_shape' in edge['data']:
 							# A normal edge has an edge and a tail.  However, we define as edge having a source and a target. source---->target
 							# TODO: Double check Edge insertion values and write query examples
-							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
+							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["target_arrow_shape"]))
 						else:
 							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
 
@@ -177,7 +177,7 @@ def update_json(json_string):
 			edge['data']['target_arrow_shape'] = "triangle"
 			del edge['data']['arrow']
 
-		if 'directed' in edge['data'] and edge['data']['directed'] == "true":
+		if 'target_arrow_shape' in edge['data']:
 			edge['data']['target_arrow_shape'] = "triangle"
 
 	return json_string
@@ -1469,8 +1469,10 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 
 	# Add all edges and nodes in the JSON to their respective tables
 	for edge in edges:
-		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["directed"]))
-
+		if 'target_arrow_shape' in edge['data']:
+			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], 1))
+		else:
+			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], 1))
 	for node in nodes:
 		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
 		# cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
