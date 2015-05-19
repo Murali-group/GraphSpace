@@ -308,7 +308,6 @@ $(document).ready(function() {
                 return;
             }
 
-            $('#dialog').html(popup);
             if (target._private.data.popup != null && target._private.data.popup.length > 0) {
               $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
@@ -317,7 +316,11 @@ $(document).ready(function() {
             } else {
               $('#dialog').dialog('option', 'title', target.data('label'));
             }
+            $("#dialog").dialog({
+              'maxHeight': 500
+            });
             $('#dialog').dialog('open');
+
         } else {
           window.cy.elements().removeCss('color');
         }
