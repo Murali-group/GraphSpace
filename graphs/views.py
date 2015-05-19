@@ -95,7 +95,11 @@ def view_graph(request, uid, gid):
 
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-            graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+            if len(db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).all()) > 0:
+                graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+            else: 
+                context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
+                return render(request, 'graphs/error.html', context)
         else:
             context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
             return render(request, 'graphs/error.html', context)
