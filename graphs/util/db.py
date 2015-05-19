@@ -309,36 +309,39 @@ def validate_json(jsonString):
 	edge_properties = ['source', 'target']
 	node_properties = ['content', 'id']
 
-	cleaned_json = json.loads(jsonString)
-	# Since there are two types of JSON: one originally submitted
-	# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-	# TODO: Remove conversion by specifying it when the user creates a graph
-	if 'data' in cleaned_json['graph']:
-		cleaned_json = assign_edge_ids(json.loads(convert_json(jsonString)))
-	else:
-		cleaned_json = assign_edge_ids(cleaned_json)
+	try: 
+		cleaned_json = json.loads(jsonString)
+		# Since there are two types of JSON: one originally submitted
+		# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
+		# TODO: Remove conversion by specifying it when the user creates a graph
+		if 'data' in cleaned_json['graph']:
+			cleaned_json = assign_edge_ids(json.loads(convert_json(jsonString)))
+		else:
+			cleaned_json = assign_edge_ids(cleaned_json)
 
-	edges = cleaned_json['graph']['edges']
-	nodes = cleaned_json['graph']['nodes']
+		edges = cleaned_json['graph']['edges']
+		nodes = cleaned_json['graph']['nodes']
 
-	jsonErrors = ""
-	# Combines edge and node Errors
-	edgeError = propertyInJSON(edges, edge_properties, 'edge')
-	nodeError = propertyInJSON(nodes, node_properties, 'node')
-	nodeUniqueIDError = checkUniqueID(nodes)
-	nodeCheckShape = checkShapes(nodes)
+		jsonErrors = ""
+		# Combines edge and node Errors
+		edgeError = propertyInJSON(edges, edge_properties, 'edge')
+		nodeError = propertyInJSON(nodes, node_properties, 'node')
+		nodeUniqueIDError = checkUniqueID(nodes)
+		nodeCheckShape = checkShapes(nodes)
 
-	# If any of the above errors has > 0 length, we have an error
-	if len(edgeError) > 0:
-		jsonErrors += edgeError
-	if len(nodeError) > 0:
-		jsonErrors += nodeError
-	if len(nodeUniqueIDError) > 0:
-		jsonErrors += nodeUniqueIDError
-	if len(nodeCheckShape) > 0:
-		jsonErrors += nodeCheckShape
+		# If any of the above errors has > 0 length, we have an error
+		if len(edgeError) > 0:
+			jsonErrors += edgeError
+		if len(nodeError) > 0:
+			jsonErrors += nodeError
+		if len(nodeUniqueIDError) > 0:
+			jsonErrors += nodeUniqueIDError
+		if len(nodeCheckShape) > 0:
+			jsonErrors += nodeCheckShape
 
-	return jsonErrors
+		return jsonErrors
+	except ValueError, e:
+		return e.args[0]
 
 def checkUniqueID(elements):
 	'''
@@ -1384,7 +1387,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None):
 		# If not, add this graph to his account
 		if data == None:
 			validationErrors = validate_json(graph_json)
-			if len(validationErrors) > 0:
+			if len(str(validationErrors)) > 0:
 				return validationErrors
 
 			curTime = datetime.now()
