@@ -1838,6 +1838,9 @@ def get_group(group_owner, groupId):
 
 		data = cur.fetchall()
 
+		if len(data) == 0:
+			return None
+
 		cleaned_data = {}
 		# Get group members and graphs in group etc
 		for row in data:

@@ -109,7 +109,7 @@ urlpatterns = patterns('',
         url(r'^api/groups/add/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.add_group, name='add_group'),
         url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/adduser/(?P<user_id>.+)/$', views.add_user_to_group, name='add_user_to_group'),
         url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/removeuser/(?P<user_id>.+)/$', views.remove_user_from_group, name='remove_user_from_group'),
-        url(r'^api/groups/(?P<group_owner>.+)/(?P<groupname>.+)/get/$', views.get_group, name='get_group'),
+        url(r'^api/groups/get/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.get_group, name='get_group'),
         url(r'^api/users/(?P<user_id>.+)/groups/$', views.get_group_for_user, name='get_group_for_user'),
         )
 
