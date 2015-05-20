@@ -468,7 +468,7 @@ Example response:
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
 <pre>
-curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 <pre>
