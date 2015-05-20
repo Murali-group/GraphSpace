@@ -632,6 +632,9 @@ $(document).ready(function() {
         'owner': ownerId,
         'uid': userId
       }, function (data) {
+        if (data.Error) {
+          return alert(data.Error);
+        }
         window.location.reload();
       });
     });
@@ -687,7 +690,8 @@ $(document).ready(function() {
         'gid': gid,
         'owner': ownerId
       }, function (data) {
-        window.location.reload();
+        console.log(data);
+        // window.location.reload();
       });
     });
 
