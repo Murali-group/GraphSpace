@@ -839,7 +839,11 @@ def save_layout(request, uid, gid):
         :param HTTP POST Request
 
     '''
-    return HttpResponse(db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted']))
+    result = db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
+    if result == None:
+        return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
+    
+    return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json");
 
 def download(request):
     '''
@@ -891,8 +895,12 @@ def deleteLayout(request):
         layoutToDelete = request.POST['layout']
         loggedIn = request.POST['user_id']
 
-        db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
-        return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
+        result = db.deleteLayout(uid, gid, layoutToDelete, loggedIn)
+
+        if result == None:
+            return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/'}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
 
 def makeLayoutPublic(request):
     '''

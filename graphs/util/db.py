@@ -3148,14 +3148,20 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
-		cur = con.cursor()	
+		cur = con.cursor()
+
+		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ?', (layout_name, owner, graph))
+		layoutExists = cur.fetchall()
+
+		if len(layoutExists) > 0:
+			return "Layout with this name already exists for this graph! Please delete old layout or rename this one."	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, user, json, 0, 0))
 		con.commit()
-		return "Layout Saved!"
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
 		return None
+	except lite.Error, e:
+		print "Error %s: " % e.args[0]
+		return e.args[0]
 	finally:
 		if con:
 			con.close()
@@ -3176,10 +3182,10 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 
 		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
 		con.commit()
-
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
 		return None
+	except lite.Error, e:
+		print "Error %s: " % e.args[0]
+		return e.args[0]
 	finally:
 		if con:
 			con.close()

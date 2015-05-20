@@ -421,6 +421,11 @@ $(document).ready(function() {
         "public": 0,
         "unlisted": 0
       }, function (data) {
+
+        if (data.Error) {
+          return alert(data.Error);
+        }
+
         var layoutUrl = window.location.pathname + "?layout=" + layoutName;
 
         var searchTerms = getHighlightedTerms();
@@ -560,6 +565,9 @@ $(document).ready(function() {
         'layout': publicLayout,
         'user_id': userId
       }, function (data) {
+        if (data.Error) {
+          return alert(data.Error);
+        }
         window.location.href = data.url;
       })
     });
