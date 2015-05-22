@@ -58,7 +58,7 @@ def index(request):
         request.session['uid'] = None
         result = db.sendForgotEmail(request.POST['user_id'])
         context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
-        return render(request, 'graphs/index.html', context)
+        return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
 
     context = login(request)
 
