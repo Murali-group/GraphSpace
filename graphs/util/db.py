@@ -771,7 +771,8 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 
 	if order_by:
 		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
-
+	else:
+		context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
 	return context	
 
 def order_information(order_term, search_terms, graphs_list):
