@@ -54,6 +54,7 @@ def index(request):
     # see graphs.auth.login for details
 
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
+        context = {}
         request.session['uid'] = None
         result = db.sendForgotEmail(request.POST['user_id'])
         context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
