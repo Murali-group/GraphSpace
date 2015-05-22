@@ -80,7 +80,7 @@ $(document).ready(function() {
 			if (data.Error) {
 				alert(data.Error);
 			} else {
-				$("body").html(data);
+				window.location.reload();
 			}
 		});
 	});

@@ -37,6 +37,7 @@ def assign_edge_ids(json_string):
 	# Appending id's to all the edges using the source and target as part of its ids
 	# TODO: Change '-' character to something that can't be found in an edge
 	for edge in json_string['graph']['edges']:
+		print edge
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
 
 	# Return JSON having all edges with ids
@@ -63,7 +64,6 @@ def insert_all_edges_from_json():
 		if data != None:
 			# Go through each Graph
 			for j in data:
-				print 'Processing %s of %s', (j[1], j[0])
 				cleaned_json = json.loads(j[2])
 				# Since there are two types of JSON: one originally submitted
 				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
@@ -72,7 +72,8 @@ def insert_all_edges_from_json():
 					cleaned_json = assign_edge_ids(json.loads(convert_json(j[2])))
 				else:
 					cleaned_json = assign_edge_ids(cleaned_json)
-
+				
+				print 'Processing %s of %s', (j[1], j[0])
 				# Go through json of the graphs, if edge is not in database, then insert it (to avoid conflicts where source and target nodes are the same).
 				# Special accomodation is done for if edge has directed property or not
 				# TODO: Remove dependency of same source and target nodes as well as directed and undirected nodes
@@ -173,12 +174,11 @@ def update_json(json_string):
 			del edge['data']['label']
 
 		# Replace shape with target_arrow_shape
-		if 'arrow' in edge['data']:
+		if 'directed' in edge['data']:
 			edge['data']['target_arrow_shape'] = "triangle"
-			del edge['data']['arrow']
 
-		if 'target_arrow_shape' in edge['data']:
-			edge['data']['target_arrow_shape'] = "triangle"
+		# if 'target_arrow_shape' in edge['data']:
+		# 	edge['data']['target_arrow_shape'] = "triangle"
 
 	return json_string
 
@@ -462,11 +462,11 @@ def need_to_reset_password(email):
 			if len(user_exists) > 0:
 				return True
 			else:
-				return False
+				return None
 
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
-
+		return True
 	finally:
 		if con:
 			con.close()
@@ -2818,6 +2818,7 @@ def is_public_graph(username, graph):
 		# If there is a graph with the username and graph, return if it is public or not
 		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
 		public = cur.fetchone()
+		print public
 
 		if public == None:
 			return None
@@ -2995,15 +2996,17 @@ def sendForgotEmail(email):
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 
-			add_user_to_password_reset(email)
 			cur.execute("select code from password_reset where user_id = ?", [email])
 
 			if cur.rowcount == 0:
 				return None
 
-			data = cur.fetchone()
+			data = cur.fetchall()
+			if len(data) == 0:
+				return "Email does not exist!"
+
 			mail_title = 'Password Reset Information for GraphSpace!'
-			message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + data[0]
+			message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + str(data[0][0])
 			emailFrom = "GraphSpace Admin"
 			send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
 			return "Email Sent!"
@@ -3440,6 +3443,7 @@ def get_public_layouts_for_graph(uid, gid):
 		
 		data = cur.fetchall()
 
+		print data
 		if data == None:
 			return []
 

@@ -50,9 +50,15 @@ def index(request):
     # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
     # db.update_json_to_cs_2_4()
 
-
     # handle login.
     # see graphs.auth.login for details
+
+    if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
+        request.session['uid'] = None
+        result = db.sendForgotEmail(request.POST['user_id'])
+        context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
+        return render(request, 'graphs/index.html', context)
+
     context = login(request)
 
     if context['Error'] == None:
@@ -141,7 +147,7 @@ def view_graph(request, uid, gid):
         context['graph_name'] = ''
 
     # # graph id
-    # context['graph_id'] = gid
+    context['graph_id'] = gid
 
     if 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True
@@ -695,8 +701,8 @@ def register(request):
             admin = 0
 
             # user table is on a separate database
-            db = Database('prod')
-            user = db.meta.tables['user']
+            db_base = Database('prod')
+            user = db_base.meta.tables['user']
 
             # build insert statement to insert the new user
             # info into the database.
@@ -709,13 +715,13 @@ def register(request):
                                  admin=admin)
 
             # make connection to the database
-            conn = db.connect()
+            conn = db_base.connect()
             # execute the insert statement
             # see Executing part at
             # http://docs.sqlalchemy.org/en/rel_0_9/core/tutorial.html#coretutorial-insert-expressions 
             conn.execute(new_user)
             # close connection
-            db.close()
+            db_base.close()
 
             # should display success message. not there yet.
             return HttpResponseRedirect('/index/')
@@ -786,6 +792,7 @@ def sendResetEmail(request):
         :returns JSON: {"Error|Success": "Email does not exist! | "Email has been sent!"}
 
     '''
+    db.add_user_to_password_reset(request.POST['forgot_email'])
     emailId = db.sendForgotEmail(request.POST['forgot_email'])
 
     # If email is not found, throw an error
@@ -987,6 +994,26 @@ def create_group(request, groupname):
             return HttpResponse(json.dumps({"StatusCode": 201, "Message": "Group created!", "Group Name": group_created[0], "Group Id": group_created[1]}, indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "Group name already exists for this account"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+def deleteGraph(request):
+    '''
+        Allows deletion of graph.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"uid": <owner of graph>, "gid": < name of graph>}
+
+        :return JSON: {"Delete": <message>}
+    '''
+    if request.method == 'POST':
+        user_id = request.POST['uid']
+        graphname = request.POST['gid']
+        jsonData = db.get_graph_json(user_id, graphname)
+        if jsonData != None:
+            db.delete_graph(request.POST['uid'], request.POST['gid'])
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + graphname + " owned by " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists."), indent=4, separators=(',', ': ')), content_type="application/json")
 
 def delete_group_through_ui(request):
     '''

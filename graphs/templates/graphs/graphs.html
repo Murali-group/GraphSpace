@@ -241,6 +241,9 @@
                       <span>Owner</span>
                     </th>  
                     <th>Visibility</th>
+                    {% if view_type == 'my graphs' and uid != None  %}
+                    <th></th>
+                    {% endif %}
                 </tr>
                 {% for g in current_page %}
                 <tr> 
@@ -262,6 +265,9 @@
                         {% else %}
                             <td><div class="test">Private</div></td>
                         {% endif %} 
+                        {% if view_type == 'my graphs' and uid != None %}
+                            <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.4}}">Delete</button></div></td>
+                        {% endif %}
                 </tr>
                     {% else %}
                         <td><div class="test"><a href="{% url 'view_graph' uid=g.3 gid=g.0 %}">{{ g.0 }}</a></div></td>
@@ -279,6 +285,9 @@
                             <td><div class="test">Public</div></td>
                         {% else %}
                             <td><div class="test">Private</div></td>
+                        {% endif %}
+                        {% if view_type == 'my graphs' and uid != None %}
+                            <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.3}}">Delete</button></div></td>
                         {% endif %}
                 </tr>
                     {% endif %}                   

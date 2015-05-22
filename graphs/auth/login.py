@@ -18,16 +18,6 @@ def login(request):
 	URL_PATH = settings.URL_PATH
 
 	if request.method == 'POST':
-		# if db.need_to_reset_password(request.POST['user_id']):
-		# 	login_form = LoginForm()
-		# 	context['login_form'] = login_form
-		# 	context['register_form'] = register_form
-		# 	context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
-		# 	message = 'Information you have given does not match our records. Please try again.'
-		# 	request.session['uid'] = None
-	 #      	context['url'] = URL_PATH
-	 #      	db.sendForgotEmail(request.POST['user_id'])
-	 #      	return context
 
 		user = authenticate(username=request.POST['user_id'], password=request.POST['pw'])
 		login_form = LoginForm(request.POST)

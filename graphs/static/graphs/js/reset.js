@@ -21,7 +21,7 @@ $(document).ready(function() {
 				if (data.Error) {
 					return alert(data.Error);
 				} else {
-					alert(data.Success);
+					alert("Password Updated!");
 					window.location.href = URL_PATH + 'index/';
 				}
 			});

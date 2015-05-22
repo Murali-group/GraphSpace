@@ -150,6 +150,24 @@ $(document).ready(function() {
    });
 
    /**
+   * Deletes a graph through the UI.
+   */
+   $(".delete_graph").click(function (e) {
+    var uid = $(this).val();
+    var gid = $(this).attr('id');
+
+    $.post('../deleteGraph/', {
+      'uid': uid,
+      'gid': gid
+    }, function (data) {
+      if (data.Error) {
+        return alert(data.Error);
+      }
+      window.location.reload();
+    });
+   });
+
+   /**
    * Sets the specific icon for property. For example, clicking icon 
    * in front of graph id will change the icon to something else.
    * @param iconId ID of icon to change
