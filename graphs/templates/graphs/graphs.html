@@ -241,9 +241,7 @@
                       <span>Owner</span>
                     </th>  
                     <th>Visibility</th>
-                    {% if view_type == 'my graphs' and uid != None  %}
                     <th></th>
-                    {% endif %}
                 </tr>
                 {% for g in current_page %}
                 <tr> 
@@ -265,8 +263,10 @@
                         {% else %}
                             <td><div class="test">Private</div></td>
                         {% endif %} 
-                        {% if view_type == 'my graphs' and uid != None %}
+                        {% if g.5 == uid %}
                             <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.4}}">Delete</button></div></td>
+                        {% else %}
+                            <td></td>
                         {% endif %}
                 </tr>
                     {% else %}
@@ -286,8 +286,10 @@
                         {% else %}
                             <td><div class="test">Private</div></td>
                         {% endif %}
-                        {% if view_type == 'my graphs' and uid != None %}
+                        {% if g.3 == uid %}
                             <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.3}}">Delete</button></div></td>
+                        {% else %}
+                            <td></td>
                         {% endif %}
                 </tr>
                     {% endif %}                   

@@ -156,7 +156,7 @@ $(document).ready(function() {
     var uid = $(this).val();
     var gid = $(this).attr('id');
 
-    $.post('../deleteGraph/', {
+    $.post('/deleteGraph/', {
       'uid': uid,
       'gid': gid
     }, function (data) {
