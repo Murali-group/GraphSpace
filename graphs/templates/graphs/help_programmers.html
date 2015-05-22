@@ -398,7 +398,7 @@ Example response:
 Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -421,7 +421,7 @@ Example failed response:
 Makes a specific graph that user owns private (only groups that graph is shared with and owner of graph can see it).
 
 <pre>
-curl -X POST "http://localhost:8000/api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
