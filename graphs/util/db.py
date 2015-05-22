@@ -2333,7 +2333,7 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
 	'''
 	group_info = []
-	groups = get_groups_of_user(graphowner) #+ get_all_groups_with_member(graphowner)
+	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
 
 	con = None
 	try:

@@ -161,9 +161,8 @@
                                 <span>Owner</span>
                               </th>  
                               <th>Visibility</th>
-                              {% if uid == group_owner  %}
-                                <th></th>
-                              {% endif %}
+                              <th></th>
+                              
                           </tr>
                           {% for g in current_page %}
                           <tr> 
@@ -185,8 +184,10 @@
                                   {% else %}
                                       <td><div class="test">Private</div></td>
                                   {% endif %}
-                                  {% if uid == group_owner  %}
-                                      <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.4}}">Delete</button></div></td>
+                                  {% if uid == group_owner or g.5 == uid %}
+                                      <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.5}}">Delete</button></div></td>
+                                  {% else %}
+                                      <td></td>
                                   {% endif %} 
                           </tr>
                               {% else %}
@@ -206,9 +207,11 @@
                                   {% else %}
                                       <td><div class="test">Private</div></td>
                                   {% endif %}
-                                  {% if uid == group_owner  %}
+                                  {% if uid == group_owner  or g.3 == uid %}
                                       <td><div class="test"><button class="btn btn-default delete_graph" id="{{g.0}}" value="{{g.3}}">Delete</button></div></td>
-                                  {% endif %}
+                                  {% else %}
+                                      <td></td>
+                                  {% endif %} 
                           </tr>
                               {% endif %}                   
                           {% endfor %}
