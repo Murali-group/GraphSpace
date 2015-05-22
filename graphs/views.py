@@ -437,6 +437,9 @@ def _groups_page(request, view_type):
             elif order_term == 'owner_descending':
                 group_list = sorted(group_list, key=lambda graph: graph[2], reverse=True)
 
+        else:
+            group_list = sorted(group_list, key=lambda graph: graph[0])
+            
         #add the group list to context to display on the page.
         if len(group_list) != 0:
             context['group_list'] = group_list

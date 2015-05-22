@@ -2312,8 +2312,11 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 
 			graph_data = cur.fetchall()
 
-		graph_data = order_information(order_by, None, graph_data)
-
+		if order_by:
+			graph_data = order_information(order_by, None, graph_data)
+		else:
+			graph_data = order_information("modified_descending", None, graph_data)
+			
 		return graph_data
 
 	except lite.Error, e:
