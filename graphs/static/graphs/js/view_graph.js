@@ -1063,7 +1063,9 @@ function getLayoutFromQuery() {
     var graph_layout = {
       name: 'arbor',
       padding: 10,
-      fit:true
+      fit:true,
+      animate: true,
+      maxSimulationTime: 1000
     };
 
     var query = getQueryVariable("layout");
@@ -1122,9 +1124,8 @@ function getLayoutFromQuery() {
         name: "arbor",
         padding: 30,
         fit: true,
-        animate: false,
-        repulsion: 4500,
-        maxSimulationTime: 2000
+        animate: true,
+        maxSimulationTime: 1000
       }
     }  else if (query == "default_springy") {
       graph_layout = {
