@@ -295,6 +295,10 @@ def validate_json(jsonString):
 		:return Errors | None: [Errors of JSON]
 	'''
 
+	req_error = validate_required_properties(jsonString)
+	return req_error
+
+def validate_required_properties(jsonString):
 	# Validates the JSON that is uploaded to make sure
 	# it has the following properties
 	# node:
@@ -312,34 +316,36 @@ def validate_json(jsonString):
 	try: 
 		cleaned_json = json.loads(jsonString)
 		# Since there are two types of JSON: one originally submitted
-		# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-		# TODO: Remove conversion by specifying it when the user creates a graph
 		if 'data' in cleaned_json['graph']:
-			cleaned_json = assign_edge_ids(json.loads(convert_json(jsonString)))
-		else:
-			cleaned_json = assign_edge_ids(cleaned_json)
+			cleaned_json = json.loads(convert_json(jsonString))
 
 		edges = cleaned_json['graph']['edges']
 		nodes = cleaned_json['graph']['nodes']
 
 		jsonErrors = ""
 		# Combines edge and node Errors
-		edgeError = propertyInJSON(edges, edge_properties, 'edge')
 		nodeError = propertyInJSON(nodes, node_properties, 'node')
+		edgeError = propertyInJSON(edges, edge_properties, 'edge')
+
+		# If any of the above errors has > 0 length, we have an error
+		if len(nodeError) > 0:
+			return nodeError
+		if len(edgeError) > 0:
+			return edgeError
+
+		# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
+		# TODO: Remove conversion by specifying it when the user creates a graph
+		cleaned_json = assign_edge_ids(cleaned_json)
+
 		nodeUniqueIDError = checkUniqueID(nodes)
 		nodeCheckShape = checkShapes(nodes)
 
-		# If any of the above errors has > 0 length, we have an error
-		if len(edgeError) > 0:
-			jsonErrors += edgeError
-		if len(nodeError) > 0:
-			jsonErrors += nodeError
 		if len(nodeUniqueIDError) > 0:
-			jsonErrors += nodeUniqueIDError
+			return nodeUniqueIDError
 		if len(nodeCheckShape) > 0:
-			jsonErrors += nodeCheckShape
+			return  nodeCheckShape
 
-		return jsonErrors
+		return None
 	except ValueError, e:
 		return e.args[0]
 
@@ -393,7 +399,10 @@ def propertyInJSON(elements, properties, elementType):
 		element_data = element['data']
 		for element_property in properties:
 			if element_property not in element_data:
-				return "Property " + element_property +  " not in JSON for " + elementType
+				if 'id' in element_data:
+					return "Property '" + element_property +  "' not in JSON for " + elementType + ': ' + element_data['id']
+				else:
+					return "Property '" + element_property +  "' not in JSON for " + elementType
 		
 			met_all_properties.append(element_property)
 
@@ -632,6 +641,7 @@ def set_layout_context(request, context, uid, gid):
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
 		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid)))
+		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
 	else:
 		context['my_layouts'] = []
 		context['shared_layouts'] = get_public_layouts_for_graph(uid, gid)
@@ -1388,9 +1398,8 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None):
 		# If not, add this graph to his account
 		if data == None:
 			validationErrors = validate_json(graph_json)
-			if len(str(validationErrors)) > 0:
+			if validationErrors != None:
 				return validationErrors
-
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
 
@@ -1915,10 +1924,11 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	'''
 
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
-
 	if len(groups) > 0:
 		for group in groups:
 			members = get_group_members(group[1], group[0])
+			print logged_in_user
+			print members
 	        if logged_in_user in members:
 	            return True
 
@@ -2316,7 +2326,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 			graph_data = order_information(order_by, None, graph_data)
 		else:
 			graph_data = order_information("modified_descending", None, graph_data)
-			
+
 		return graph_data
 
 	except lite.Error, e:
@@ -3338,7 +3348,7 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 		# Get my layouts
 		cur = con.cursor()
-		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=?", (uid, gid, loggedIn))
+		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=? and unlisted = 0", (uid, gid, loggedIn))
 		
 		data = cur.fetchall()
 
@@ -3391,6 +3401,59 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 			members = get_group_members(group[1], group[0])
 			if loggedIn in members:
 				cur.execute("select layout_name from layout where owner_id =? and graph_id=? and unlisted=1", (uid, gid))
+				data = cur.fetchall()
+
+				if data == None:
+					return []
+
+				cleaned_data = []
+				for layouts in data:
+					layouts = str(layouts[0])
+					cleaned_data.append(layouts)
+
+				return cleaned_data
+
+		return []
+	except lite.Error, e:
+		print "Error %s: " %e.args[0]
+		return []
+	finally:
+		if con:
+			con.close()
+
+def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
+	'''
+		Get shared layouts for this graph.
+
+		:param uid: Owner of graph
+		:param gid: Name of graph
+		:param loggedIn: Current user of graphspace
+		:return Layouts: [shared layouts of graph]
+	'''
+	# # Get all shared groups for this graph
+	# all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+	# shared_graphs = []
+	# # Get all members of the shared groups
+	# for group in all_groups_for_graph:
+	# 	members = get_group_members(group[0], group[1])
+	# 	if loggedIn in members:
+	# 		for member in members:
+	# 			if loggedIn != member:
+	# 				shared_graphs += get_my_layouts_for_graph(uid, gid, member)
+
+	# return shared_graphs
+
+	con=None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+
+		for group in all_groups_for_graph:
+			members = get_group_members(group[1], group[0])
+			if loggedIn in members:
+				cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id = ? and unlisted=1", (uid, gid, loggedIn))
 				data = cur.fetchall()
 
 				if data == None:

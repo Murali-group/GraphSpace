@@ -272,7 +272,7 @@
                                             <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
                                               <span class="glyphicon glyphicon-remove"></span>
                                             </button>
-                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Share/Unshare layout" style="float: right;">
+                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Share layout" style="float: right;">
                                               <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                             
@@ -291,13 +291,33 @@
                                     <div class="tab-pane" id="shared-layouts-pane">
                                         {% for o in shared_layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_buttons" href="{{o}}">
+                                        {% if o in my_shared_layouts %}
+                                            <a class="list-group-item layout_buttons" href="{{o}}">
+                                            <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
+                                              <span class="glyphicon glyphicon-remove"></span>
+                                            </button>
+                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Unshare layout" style="float: right;">
+                                              <span class="glyphicon glyphicon-eye-close"></span>
+                                            </button>
+                                            
+                                            <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
+                                              <span class="glyphicon glyphicon-pencil"></span>
+                                            </button>
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
                                             {{o}}
                                             <div style="clear: both;"></div>
                                           </a>
+                                        {% else %}
+                                            <a class="list-group-item layout_buttons" href="{{o}}">
+                                                <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
+                                                  <span class="glyphicon glyphicon-link"></span>
+                                                </button>
+                                                {{o}}
+                                                <div style="clear: both;"></div>
+                                              </a>
+                                        {% endif %}
                                         {% endwith %}
                                       {% endfor %}
                                     </div>

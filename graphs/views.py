@@ -99,7 +99,7 @@ def view_graph(request, uid, gid):
     else:
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
-
+        print user_is_member
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             if len(db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).all()) > 0:
@@ -439,7 +439,7 @@ def _groups_page(request, view_type):
 
         else:
             group_list = sorted(group_list, key=lambda graph: graph[0])
-            
+
         #add the group list to context to display on the page.
         if len(group_list) != 0:
             context['group_list'] = group_list
