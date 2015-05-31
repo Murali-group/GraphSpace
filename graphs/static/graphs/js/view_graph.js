@@ -1006,13 +1006,15 @@ function getQueryVariable(variable)
    return(false);
 }
 
-// Returns all the id's that are not <= k value
+// Returns all the id's that are > k value
 function showOnlyK() {
-  var maxVal = parseInt($("#input_k").val());
+  if ($("#input_k").val().length > 0) {
+    var maxVal = parseInt($("#input_k").val());
 
-  window.cy.elements().show();
-  hideList = window.cy.filter('[k > ' + maxVal+ ']');
-  hideList.hide();
+    window.cy.elements().show();
+    hideList = window.cy.filter('[k > ' + maxVal+ ']');
+    hideList.hide();
+  }
 }
 
 //Gets all nodes and edges up do the max value set
@@ -1246,5 +1248,41 @@ function setDefaultNodeProperties(nodeJSON) {
        }
     }
   }
+}
+
+$("#input_k").bind("change", function() {
+  setInputK();
+});
+
+function setInputK() {
+  if ($("#input_k").val() < 0) {
+   $("#input_k").val(0);
+  }
+  if ($("#input_k").val() > $("#input_max").val()) {
+   $("#input_k").val($("#input_max").val());
+  }
+  setBarToValue($("#input_k"), "slider");
+  $("#slider").slider({value: $("#input_k").val(), max: $('#input_max').val()});
+}
+
+$("#input_max").bind("change", function() {
+  if ($(this).val() < 0) {
+   $(this).val(0);
+  }
+  var slider_max = $("#slider_max").slider("option", "max");
+  if ($(this).val() > slider_max) {
+   $(this).val(slider_max);
+  }
+  setBarToValue(this, "slider_max");
+  applyMax(graph_json.graph);
+  setInputK();
+});
+
+function setBarToValue(inputId, barId) {
+  var slider_max = $("#slider_max").slider("option", "max");
+  if ($(inputId).val() > slider_max) {
+    $(inputId).val(slider_max);
+  }
+  showOnlyK();
 }
 
