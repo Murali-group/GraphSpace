@@ -1267,8 +1267,9 @@ function setInputK() {
   if ($("#input_k").val() < 0) {
    $("#input_k").val(0);
   }
-  if ($("#input_k").val() > $("#input_max").val()) {
+  if (parseInt($("#input_k").val()) > parseInt($("#input_max").val())) {
    $("#input_k").val($("#input_max").val());
+   
   }
   setBarToValue($("#input_k"), "slider");
   $("#slider").slider({value: $("#input_k").val(), max: $('#input_max').val()});
