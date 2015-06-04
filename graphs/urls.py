@@ -76,7 +76,10 @@ urlpatterns = patterns('',
         url(r'^shareLayoutWithGroups/$', views.shareLayoutWithGroups, name='shareLayoutWithGroups'),
         # Make Layout public
         url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
+        url(r'^setDefaultLayout/$', views.setDefaultLayout, name='setDefaultLayout'),
+
         url(r'^deleteGraph/$', views.deleteGraph, name='deleteGraph'),
+
         # forgot endpoint
         url(r'^forgot/$', views.sendResetEmail, name='forgot'),
 

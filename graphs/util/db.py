@@ -605,6 +605,39 @@ def get_valid_user(username, password):
 		if con:
 			con.close()
 
+def get_default_layout(uid, gid):
+	'''
+		Gets the default layout for a graph.
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		# Retrieve hashed password of the user
+		cur = con.cursor()
+		# TODO: Write query examples
+		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		#If there is no data, then user does not exist
+		if data == None:
+			return json.dumps(None)
+		else:
+			cur.execute('select json from layout where layout_id=?', (data[0], ))
+			data = cur.fetchone()
+			print data[0]
+			if data != None:
+				return json.dumps({"json": cytoscapePresetLayout(json.loads(str(data[0])))})
+			else:
+				return json.dumps(None)
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return json.dumps(None)
+	finally:
+		if con:
+			con.close()
+
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
@@ -621,10 +654,12 @@ def set_layout_context(request, context, uid, gid):
 	if len(request.GET.get('layout', '')) > 0:
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
 		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
-		else: 
-		    layout_to_view = json.dumps(None)
+		else:
+			layout_to_view = get_default_layout(uid, gid)
+			# layout_to_view = json.dumps(None)
 	else:
-	    layout_to_view = json.dumps(None)
+		layout_to_view = get_default_layout(uid, gid)
+		# layout_to_view = json.dumps(None)
 
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
@@ -784,6 +819,58 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 	else:
 		context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
 	return context	
+
+def setDefaultLayout(layoutName, graph_id, graph_owner):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# Get all groups that the user owns
+		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ?', (graph_id, graph_owner, layoutName));
+		data = cur.fetchone()
+
+		# If there is data, gather all of the tags for this view type and return it
+		if data == None or len(data) == 0:
+			return "Layout does not exist for this graph"
+		else:
+			cur.execute('update graph set default_layout_id = ? where graph_id = ? and user_id = ?', (data[0], graph_id, graph_owner))
+			con.commit()
+			return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return "Something went wrong!"
+
+	finally:
+		if con:
+			con.close()
+
+def removeDefaultLayout(layoutName, graph_id, graph_owner):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		# Get all groups that the user owns
+		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ?', (graph_id, graph_owner, layoutName));
+		data = cur.fetchone()
+
+		# If there is data, gather all of the tags for this view type and return it
+		if data == None or len(data) == 0:
+			return "Layout does not exist for this graph"
+		else:
+			cur.execute('update graph set default_layout_id = ? where graph_id = ? and user_id = ?', (None, graph_id, graph_owner))
+			con.commit()
+			return None
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return "Something went wrong!"
+
+	finally:
+		if con:
+			con.close()
 
 def order_information(order_term, search_terms, graphs_list):
 	'''

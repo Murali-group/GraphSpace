@@ -322,7 +322,6 @@ $(document).ready(function() {
               });
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
-              console.log(target._private.data);
               $('#dialog').dialog('option', 'title', target._private.data.content);
             }
             $("#dialog").dialog({
@@ -502,7 +501,6 @@ $(document).ready(function() {
       linkToGraph = $(this).attr('id') + ',';
 
       var labels = $("#search").val().split(',');
-      console.log(labels[0].length);
 
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
@@ -595,7 +593,6 @@ $(document).ready(function() {
       linkToGraph += '?layout=' + $(this).attr('href') + ',';
 
       var labels = $("#search").val().split(',');
-      console.log(labels[0].length);
 
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
@@ -689,20 +686,20 @@ $(document).ready(function() {
 
     });
 
-    $("#share_layout_with_selected_groups").click(function(e) {
-      var paths = document.URL.split('/')
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+    // $("#share_layout_with_selected_groups").click(function(e) {
+    //   var paths = document.URL.split('/')
+    //   var ownerId = decodeURIComponent(paths[paths.length - 3])
+    //   var gid = decodeURIComponent(paths[paths.length - 2])
 
-      $.post('../../../shareLayoutWithGroups/', {
-        'layoutId': $("#layoutId").text(),
-        'gid': gid,
-        'owner': ownerId
-      }, function (data) {
-        console.log(data);
-        // window.location.reload();
-      });
-    });
+    //   $.post('../../../shareLayoutWithGroups/', {
+    //     'layoutId': $("#layoutId").text(),
+    //     'gid': gid,
+    //     'owner': ownerId
+    //   }, function (data) {
+    //     console.log(data);
+    //     // window.location.reload();
+    //   });
+    // });
 
 
     $("#share_graph_with_selected_groups").click(function (e) {
@@ -1159,7 +1156,9 @@ function getLayoutFromQuery() {
         damping: 0.5
       }
     } else {
-      if (layout != null) {
+
+      if (layout.hasOwnProperty('json')) {
+        console.log(layout.json);
         graph_layout = {
           name: 'preset',
           positions: JSON.parse(layout.json)
@@ -1212,6 +1211,23 @@ function colourNameToHex(colour)
 }
 
 /**
+* Makes specific layout the default layout for a graph.
+*/
+$(".default").click(function(e) {
+      var paths = document.URL.split('/')
+      var ownerId = decodeURIComponent(paths[paths.length - 3])
+      var gid = decodeURIComponent(paths[paths.length - 2])
+
+      $.post('../../../setDefaultLayout/', {
+        'layoutId': $(this).val(),
+        'gid': gid,
+        'uid': ownerId
+      }, function (data) {
+        window.location.reload();
+      });
+    });
+
+/**
 * Sets default properties of node objects.
 */
 function setDefaultNodeProperties(nodeJSON) {
@@ -1220,7 +1236,6 @@ function setDefaultNodeProperties(nodeJSON) {
   // or unrecognized shape, have a default value
   for (var i = 0; i < nodeJSON.length; i++) {
     var nodeData = nodeJSON[i]['data'];
-    console.log(nodeData);
 
     //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
     var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];

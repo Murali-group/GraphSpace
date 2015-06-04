@@ -99,7 +99,7 @@ def view_graph(request, uid, gid):
     else:
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
-        print user_is_member
+
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
             if len(db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).all()) > 0:
@@ -1123,7 +1123,15 @@ def getGroupsWithLayout(request):
         return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": result}), content_type="application/json")
     else:
         return HttpResponse("NONE")
-
+def setDefaultLayout(request):
+    if request.method == 'POST':
+        result = db.setDefaultLayout(request.POST['layoutId'], request.POST['gid'], request.POST['uid'])
+        if result != None:
+            return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Set " + request.POST['layoutId'] + "as default")), content_type="application/json")
+    else:
+        return HttpResponse("NONE")
 
 def shareLayoutWithGroups(request):
     '''

@@ -275,13 +275,17 @@
                                             <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Share layout" style="float: right;">
                                               <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
-                                            
                                             <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
                                               <span class="glyphicon glyphicon-pencil"></span>
                                             </button>
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
+                                            {% if uid == owner %}
+                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: right;">
+                                                  <span class="glyphicon glyphicon-pencil"></span>
+                                                </button>
+                                            {% endif %}
                                             {{o}}
                                             <div style="clear: both;"></div>
                                           </a>
@@ -306,6 +310,11 @@
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
+                                            {% if uid == owner %}
+                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: right;">
+                                                  <span class="glyphicon glyphicon-pencil"></span>
+                                                </button>
+                                            {% endif %}
                                             {{o}}
                                             <div style="clear: both;"></div>
                                           </a>
@@ -314,6 +323,11 @@
                                                 <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
                                                   <span class="glyphicon glyphicon-link"></span>
                                                 </button>
+                                                {% if uid == owner %}
+                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: right;">
+                                                  <span class="glyphicon glyphicon-pencil"></span>
+                                                </button>
+                                            {% endif %}
                                                 {{o}}
                                                 <div style="clear: both;"></div>
                                               </a>
