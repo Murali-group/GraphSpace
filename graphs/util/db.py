@@ -625,7 +625,6 @@ def get_default_layout(uid, gid):
 		else:
 			cur.execute('select json from layout where layout_id=?', (data[0], ))
 			data = cur.fetchone()
-			print data[0]
 			if data != None:
 				return json.dumps({"json": cytoscapePresetLayout(json.loads(str(data[0])))})
 			else:
@@ -655,11 +654,11 @@ def set_layout_context(request, context, uid, gid):
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
 		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
 		else:
-			layout_to_view = get_default_layout(uid, gid)
-			# layout_to_view = json.dumps(None)
+			# layout_to_view = get_default_layout(uid, gid)
+			layout_to_view = json.dumps(None)
 	else:
-		layout_to_view = get_default_layout(uid, gid)
-		# layout_to_view = json.dumps(None)
+		# layout_to_view = get_default_layout(uid, gid)
+		layout_to_view = json.dumps(None)
 
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view

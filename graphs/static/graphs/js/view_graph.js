@@ -1156,9 +1156,15 @@ function getLayoutFromQuery() {
         damping: 0.5
       }
     } else {
-
-      if (layout.hasOwnProperty('json')) {
-        console.log(layout.json);
+      // var layout = getQueryVariable('layout');
+      // if (layout.hasOwnProperty('json')) {
+      //   console.log(layout.json);
+      //   graph_layout = {
+      //     name: 'preset',
+      //     positions: JSON.parse(layout.json)
+      //   };
+      // }
+       if (layout != null) {
         graph_layout = {
           name: 'preset',
           positions: JSON.parse(layout.json)
@@ -1213,19 +1219,19 @@ function colourNameToHex(colour)
 /**
 * Makes specific layout the default layout for a graph.
 */
-$(".default").click(function(e) {
-      var paths = document.URL.split('/')
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+// $(".default").click(function(e) {
+//   var paths = document.URL.split('/')
+//   var ownerId = decodeURIComponent(paths[paths.length - 3])
+//   var gid = decodeURIComponent(paths[paths.length - 2])
 
-      $.post('../../../setDefaultLayout/', {
-        'layoutId': $(this).val(),
-        'gid': gid,
-        'uid': ownerId
-      }, function (data) {
-        window.location.reload();
-      });
-    });
+//   $.post('../../../setDefaultLayout/', {
+//     'layoutId': $(this).val(),
+//     'gid': gid,
+//     'uid': ownerId
+//   }, function (data) {
+//     window.location.reload();
+//   });
+// });
 
 /**
 * Sets default properties of node objects.
