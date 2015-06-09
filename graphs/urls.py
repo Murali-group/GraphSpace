@@ -77,6 +77,7 @@ urlpatterns = patterns('',
         # Make Layout public
         url(r'^makeLayoutPublic/$', views.makeLayoutPublic, name='makeLayoutPublic'),
         url(r'^setDefaultLayout/$', views.setDefaultLayout, name='setDefaultLayout'),
+        url(r'^removeDefaultLayout/$', views.removeDefaultLayout, name='removeDefaultLayout'),
 
         url(r'^deleteGraph/$', views.deleteGraph, name='deleteGraph'),
 

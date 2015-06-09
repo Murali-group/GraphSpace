@@ -637,6 +637,33 @@ def get_default_layout(uid, gid):
 		if con:
 			con.close()
 
+def get_default_layout_id(uid, gid):
+	'''
+		Gets the default layout for a graph.
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		# Retrieve hashed password of the user
+		cur = con.cursor()
+		# TODO: Write query examples
+		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		#If there is no data, then user does not exist
+		if data == None:
+			return None
+		else:
+			return data[0]
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return json.dumps(None)
+	finally:
+		if con:
+			con.close()
+
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
@@ -652,13 +679,14 @@ def set_layout_context(request, context, uid, gid):
     # if there is a layout specified, then render that layout
 	if len(request.GET.get('layout', '')) > 0:
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
-		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)}) 
+		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)})
+		    context['default_layout'] = None
 		else:
-			# layout_to_view = get_default_layout(uid, gid)
-			layout_to_view = json.dumps(None)
+			layout_to_view = get_default_layout(uid, gid)
+			context['default_layout'] = get_default_layout_id(uid, gid)
 	else:
-		# layout_to_view = get_default_layout(uid, gid)
-		layout_to_view = json.dumps(None)
+		layout_to_view = get_default_layout(uid, gid)
+		context['default_layout'] = get_default_layout_id(uid, gid)
 
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
@@ -826,12 +854,12 @@ def setDefaultLayout(layoutName, graph_id, graph_owner):
 		cur = con.cursor()
 
 		# Get all groups that the user owns
-		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ?', (graph_id, graph_owner, layoutName));
+		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ? and unlisted = 1', (graph_id, graph_owner, layoutName));
 		data = cur.fetchone()
 
 		# If there is data, gather all of the tags for this view type and return it
 		if data == None or len(data) == 0:
-			return "Layout does not exist for this graph"
+			return "It appears as if the layout either does not exist or is not shared."
 		else:
 			cur.execute('update graph set default_layout_id = ? where graph_id = ? and user_id = ?', (data[0], graph_id, graph_owner))
 			con.commit()
@@ -859,7 +887,7 @@ def removeDefaultLayout(layoutName, graph_id, graph_owner):
 		if data == None or len(data) == 0:
 			return "Layout does not exist for this graph"
 		else:
-			cur.execute('update graph set default_layout_id = ? where graph_id = ? and user_id = ?', (None, graph_id, graph_owner))
+			cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (graph_id, graph_owner))
 			con.commit()
 			return None
 
@@ -3285,7 +3313,14 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
+		
+		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
+		data = cur.fetchone()
 
+		if data:
+			cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (gid, uid))
+			con.commit()
+			
 		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
 		con.commit()
 		return None

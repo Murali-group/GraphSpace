@@ -1123,13 +1123,24 @@ def getGroupsWithLayout(request):
         return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": result}), content_type="application/json")
     else:
         return HttpResponse("NONE")
+
 def setDefaultLayout(request):
     if request.method == 'POST':
         result = db.setDefaultLayout(request.POST['layoutId'], request.POST['gid'], request.POST['uid'])
         if result != None:
             return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.sendMessage(200, "Set " + request.POST['layoutId'] + "as default")), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(200, "Set " + request.POST['layoutId'] + " as default")), content_type="application/json")
+    else:
+        return HttpResponse("NONE")
+
+def removeDefaultLayout(request):
+    if request.method == 'POST':
+        result = db.removeDefaultLayout(request.POST['layoutId'], request.POST['gid'], request.POST['uid'])
+        if result != None:
+            return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Removed " + request.POST['layoutId'] + " as default")), content_type="application/json")
     else:
         return HttpResponse("NONE")
 

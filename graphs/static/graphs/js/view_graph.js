@@ -1219,19 +1219,42 @@ function colourNameToHex(colour)
 /**
 * Makes specific layout the default layout for a graph.
 */
-// $(".default").click(function(e) {
-//   var paths = document.URL.split('/')
-//   var ownerId = decodeURIComponent(paths[paths.length - 3])
-//   var gid = decodeURIComponent(paths[paths.length - 2])
+$(".default").click(function(e) {
+  var paths = document.URL.split('/')
+  var ownerId = decodeURIComponent(paths[paths.length - 3])
+  var gid = decodeURIComponent(paths[paths.length - 2])
 
-//   $.post('../../../setDefaultLayout/', {
-//     'layoutId': $(this).val(),
-//     'gid': gid,
-//     'uid': ownerId
-//   }, function (data) {
-//     window.location.reload();
-//   });
-// });
+  $.post('../../../setDefaultLayout/', {
+    'layoutId': $(this).val(),
+    'gid': gid,
+    'uid': ownerId
+  }, function (data) {
+    if (data.Error) {
+      return alert(data.Error);
+    }
+    window.location.reload();
+  });
+});
+
+/**
+* Makes specific layout the default layout for a graph.
+*/
+$(".removeDefault").click(function(e) {
+  var paths = document.URL.split('/')
+  var ownerId = decodeURIComponent(paths[paths.length - 3])
+  var gid = decodeURIComponent(paths[paths.length - 2])
+
+  $.post('../../../removeDefaultLayout/', {
+    'layoutId': $(this).val(),
+    'gid': gid,
+    'uid': ownerId
+  }, function (data) {
+    if (data.Error) {
+      return alert(data.Error);
+    }
+    window.location.reload();
+  });
+});
 
 /**
 * Sets default properties of node objects.
