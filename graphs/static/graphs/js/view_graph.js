@@ -311,15 +311,15 @@ $(document).ready(function() {
             if (target._private.data.popup != null && target._private.data.popup.length > 0) {
               $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
-            // if (target._private.group == 'edges') {
-            //   $.post("../../../retrieveIDs/", {
-            //     'values': labels,
-            //     "gid": decodeURIComponent(paths[paths.length - 2]),
-            //     "uid": decodeURIComponent(paths[paths.length - 3]),
-            //     "search_type": search_type 
-            //   }, function (data) {
+            if (target._private.group == 'edges') {
+              // $.post("../../../retrieveIDs/", {
+              //   'values': labels,
+              //   "gid": decodeURIComponent(paths[paths.length - 2]),
+              //   "uid": decodeURIComponent(paths[paths.length - 3]),
+              //   "search_type": search_type 
+              // }, function (data) {
 
-            //   });
+              // });
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
               $('#dialog').dialog('option', 'title', target._private.data.content);
