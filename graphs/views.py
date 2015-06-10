@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.views import generic
+from django.templatetags.static import static
 
 from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
@@ -1143,6 +1144,9 @@ def removeDefaultLayout(request):
             return HttpResponse(json.dumps(db.sendMessage(200, "Removed " + request.POST['layoutId'] + " as default")), content_type="application/json")
     else:
         return HttpResponse("NONE")
+
+def renderImage(request):
+    return HttpResponseRedirect(URL_PATH + 'static/images/legend.png');
 
 def shareLayoutWithGroups(request):
     '''

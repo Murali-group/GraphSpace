@@ -55,6 +55,9 @@ urlpatterns = patterns('',
         url(r'^help/jsonref/$', views.help_jsonref, name='help_jsonref'),
         url(r'^help/about/$', views.help_about, name='help_about'),
 
+        # hack to get all HGTV graphs working
+        url(r'^images/legend.png$', views.renderImage, name='renderImage'),
+
         # register page
         url(r'^register/$', views.register, name='register'),
 
