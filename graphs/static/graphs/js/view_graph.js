@@ -312,14 +312,15 @@ $(document).ready(function() {
               $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
             if (target._private.group == 'edges') {
-              // $.post("../../../retrieveIDs/", {
-              //   'values': labels,
-              //   "gid": decodeURIComponent(paths[paths.length - 2]),
-              //   "uid": decodeURIComponent(paths[paths.length - 3]),
-              //   "search_type": search_type 
-              // }, function (data) {
-
-              // });
+              $.post("../../../retrieveIDs/", {
+                'values': [target._private.data.source, target._private.data.target],
+                "gid": decodeURIComponent(paths[paths.length - 2]),
+                "uid": decodeURIComponent(paths[paths.length - 3]),
+                "search_type": "full_search" 
+              }, function (data) {
+                console.log(data);
+              });
+              
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
               $('#dialog').dialog('option', 'title', target._private.data.content);

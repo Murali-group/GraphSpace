@@ -854,7 +854,7 @@ def setDefaultLayout(layoutName, graph_id, graph_owner):
 		cur = con.cursor()
 
 		# Get all groups that the user owns
-		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ? and unlisted = 1', (graph_id, graph_owner, layoutName));
+		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ? and (unlisted = 1 or public = 1)', (graph_id, graph_owner, layoutName));
 		data = cur.fetchone()
 
 		# If there is data, gather all of the tags for this view type and return it
@@ -1540,13 +1540,13 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None):
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
 			if modified == None and created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
 			elif modified == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, 0, 1))
 			elif created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, 0, 1))
 			else:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, 0, 1))
 			
 			tags = graphJson['metadata']['tags']
 
@@ -3320,7 +3320,7 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		if data:
 			cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (gid, uid))
 			con.commit()
-			
+
 		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
 		con.commit()
 		return None
@@ -3444,6 +3444,8 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 			cur.execute('update layout set unlisted = 1 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
 		else:
 			cur.execute('update layout set unlisted = 0 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
+			cur.execute('update graph set default_layout_id=NULL where graph_id = ? and user_id = ?', (gid, owner))
+
 		con.commit()
 		
 	except lite.Error, e:
@@ -3469,7 +3471,7 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 		# Get my layouts
 		cur = con.cursor()
-		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=? and unlisted = 0", (uid, gid, loggedIn))
+		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=? and unlisted = 0 and public=0", (uid, gid, loggedIn))
 		
 		data = cur.fetchall()
 
