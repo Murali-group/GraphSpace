@@ -1078,6 +1078,7 @@ function getLayoutFromQuery() {
     };
 
     var query = getQueryVariable("layout");
+
     if (query == "default_breadthfirst") {
       graph_layout = {
         name: "breadthfirst",
@@ -1165,11 +1166,17 @@ function getLayoutFromQuery() {
       //     positions: JSON.parse(layout.json)
       //   };
       // }
-       if (layout != null) {
+
+       if (layout.json != null) {
         graph_layout = {
           name: 'preset',
           positions: JSON.parse(layout.json)
         };
+      } else {
+          alert("Layout does not exist!");
+          var loc = window.location.href;
+          var baseLoc = loc.substring(0, loc.indexOf("?"));
+          window.location.href = baseLoc;
       }
     }
 
