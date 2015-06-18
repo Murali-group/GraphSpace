@@ -1167,7 +1167,7 @@ function getLayoutFromQuery() {
       //   };
       // }
 
-       if (layout.json != null) {
+       if (layout && layout.json != null) {
         graph_layout = {
           name: 'preset',
           positions: JSON.parse(layout.json)
