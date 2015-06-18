@@ -1172,15 +1172,11 @@ function getLayoutFromQuery() {
           name: 'preset',
           positions: JSON.parse(layout.json)
         };
-      } else {
+      } else if (query) {
           alert("Layout does not exist!");
-          var graph_layout = {
-          name: 'arbor',
-          padding: 10,
-          fit:true,
-          animate: true,
-          maxSimulationTime: 1000
-        };
+          var loc = window.location.href;
+          var baseLoc = loc.substring(0, loc.indexOf("?"));
+          window.location.href = baseLoc;
       }
     }
 
