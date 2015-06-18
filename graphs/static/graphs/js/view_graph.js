@@ -276,9 +276,9 @@ $(document).ready(function() {
         }
 
         if (edgeData['directed'] == false) {
-          edgeData['arrow'] = 'none';
+          edgeData['target_arrow_shape'] = 'none';
         } else {
-          edgeData['arrow'] = 'triangle';
+          edgeData['target_arrow_shape'] = 'triangle';
         }
       }
 
