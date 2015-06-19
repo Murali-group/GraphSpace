@@ -151,7 +151,7 @@ def view_graph(request, uid, gid):
     # # graph id
     context['graph_id'] = gid
 
-    if 'k' in json_data['graph']['edges'][0]['data']:
+    if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True
 
     # redirect if the user wishes to view the json data

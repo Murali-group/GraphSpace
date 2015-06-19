@@ -262,15 +262,18 @@ $(document).ready(function() {
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
 
-        if (edgeData['color'] == undefined) {
-          edgeData['color'] = "black";
+        if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
+          edgeData['line_color'] = "black";
         } else {
-          var hexCode = colourNameToHex(edgeData['color']);
+          if (edgeData.hasOwnProperty('color')) {
+            edgeData['line_color'] = edgeData['color'];
+          }
+          var hexCode = colourNameToHex(edgeData['line_color']);
            if (hexCode != false) {
-            edgeData['color'] = hexCode;
+            edgeData['line_color'] = hexCode;
            } else {
-            if (isHexaColor(addCharacterToHex(edgeData['color']))) {
-              edgeData['color'] = addCharacterToHex(edgeData['color']);
+            if (isHexaColor(addCharacterToHex(edgeData['line_color']))) {
+              edgeData['line_color'] = addCharacterToHex(edgeData['line_color']);
             }
            }
         }
