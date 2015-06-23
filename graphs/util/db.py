@@ -34,11 +34,20 @@ def assign_edge_ids(json_string):
 		:return json_string: JSON of graph having id's for all edges
 	'''
 
+	
+	ids = []
 	# Appending id's to all the edges using the source and target as part of its ids
 	# TODO: Change '-' character to something that can't be found in an edge
 	for edge in json_string['graph']['edges']:
-		print edge
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+		if edge['data']['id'] not in ids:
+			ids.append(edge['data']['id'])
+		else:
+			counter = 0
+			while edge['data']['id'] in ids:
+				counter += 1
+				edge['data']['id'] = edge['data']['id'] + str(counter)
+			ids.append(edge['data']['id'])
 
 	# Return JSON having all edges with ids
 	return json_string
@@ -374,7 +383,7 @@ def checkShapes(elements):
 		:param elements: JSON of nodes
 		:return Error: <message>
 	'''
-	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"]
+	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond"]
 
 	for element in elements:
 		if element['data']['shape'] not in allowed_shapes:
@@ -1530,12 +1539,12 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None):
 			# Used so that I can highlight the node
 			# TODO: double check this because I may need to get the id and not the label
 			nodes = graphJson['graph']['nodes']
-			# rand = 1
-			# for node in nodes:
-			# 	if len(node['data']['label']) == 0:
-			# 		node['data']['label'] = rand
-			# 		rand = rand + 1
-			# rand = 0
+			rand = 1
+			for node in nodes:
+				if 'data' in node and 'content' in node['data'] and len(node['data']['content']) == 0:
+					node['data']['content'] = rand
+					rand = rand + 1
+			rand = 0
 
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
@@ -1594,12 +1603,25 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 
 	edges = graphJson['graph']['edges']
 
+	dupEdges = []
+
+	rand = 0
 	# Add all edges and nodes in the JSON to their respective tables
 	for edge in edges:
-		if 'target_arrow_shape' in edge['data']:
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], 1))
+		if (edge['data']['source'] in dupEdges):
+			rand += 1
+			if 'target_arrow_shape' in edge['data']:
+				cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
+			else:
+				cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
+			dupEdges.append(edge['data']['source']);
 		else:
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], 1))
+			if 'target_arrow_shape' in edge['data']:
+				cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
+			else:
+				cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
+		
+			dupEdges.append(edge['data']['source']);
 	for node in nodes:
 		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
 		# cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))

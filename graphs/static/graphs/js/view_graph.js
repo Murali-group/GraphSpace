@@ -256,12 +256,19 @@ $(document).ready(function() {
       // make the selection states of the elements mutable
       this.elements().selectify();
 
+      var testEdges = new Array();
+
       setDefaultNodeProperties(graph_json['graph']['nodes'])
       // DONE SO OLD GRAPHS WILL DISPLAY
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
-
+        if (testEdges.indexOf(edgeData['id']) == -1) {
+          testEdges.push(edgeData['id']);
+        } else {
+          console.log("Duplicate edge found");
+          edgeData['id'] = edgeData['id'] + i;
+        }
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
           edgeData['line_color'] = "black";
         } else {
