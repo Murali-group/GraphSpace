@@ -1673,8 +1673,11 @@ def make_all_graphs_for_tag_private(request, username, tagname):
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
         if username == request.POST['username']:
-            db.change_graph_visibility_for_tag(0, tagname, username)
-            return HttpResponse(json.dumps(db.sendMessage(200, "Graph with tag have been made private"), indent=4, separators=(',', ': ')), content_type="application/json")
+            error = db.change_graph_visibility_for_tag(0, tagname, username)
+            if error == None:
+                return HttpResponse(json.dumps(db.sendMessage(200, "Graphs with tag have been made private"), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.throwError(400, error), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
 
