@@ -287,6 +287,8 @@ $(document).ready(function() {
 
         if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
           edgeData['target_arrow_shape'] = 'none';
+        } else if (edgeData['directed'] == true) {
+          edgeData['target_arrow_shape'] = 'triangle';
         }
       }
 
