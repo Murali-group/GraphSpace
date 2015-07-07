@@ -285,10 +285,8 @@ $(document).ready(function() {
            }
         }
 
-        if (edgeData['directed'] == false) {
+        if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
           edgeData['target_arrow_shape'] = 'none';
-        } else {
-          edgeData['target_arrow_shape'] = 'triangle';
         }
       }
 
