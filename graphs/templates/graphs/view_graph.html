@@ -132,7 +132,7 @@
         </div>
 
         <div id="accordion_search" class="accordion">
-            <h3>Search<a class="help" href="../../../help/#search_panel" style="float: right; color: red;">Help</a></h3>
+            <h3>Search<a class="help" href="../../../help/#search_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content test">
                 <div class="search_box">
                     <a id='url'></a><br><br>
@@ -201,7 +201,7 @@
 
         <!-- Sharing menu -->
         <div id="accordion_sharing" class="accordion">
-            <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: red;">Help</a></h3>
+            <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content">
                 <p>{{ shared }}</p>
                 <p>Groups shared with: 
@@ -220,7 +220,7 @@
 
         <!-- Layouts menu -->
          <div id="accordion_layouts" class="accordion">
-            <h3>Layouts<a class="help" href="../../../help/#layout_panel" style="float: right; color: red;">Help</a></h3>
+            <h3>Layouts<a class="help" href="../../../help/#layout_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content">
                 {% if uid != None %}
                     <div>
@@ -388,16 +388,16 @@
         {% if filters != None %}
         <!-- Filters menu -->
         <div id="accordion_filters" class="accordion">
-            <h3>Step-Filters</h3>
+            <h3>Filter the number of paths shown</h3>
             <div class="accordion_content">
-                 Number of highly probable paths 
+                 Number of paths
                 <input class="form-control" id="input_k" style="width: 4em;" value="0" size="4" maxlength="">
                 <br>
                 <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
                 </div>
                 <!-- <input id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false" type="range" min=0 max=10> -->
                 <br>
-                 Max highly probable paths 
+                 Maximum number of paths
                  <input class="form-control" id="input_max" value="0" style="width: 4em;" size="4" maxlength="4">
                  <br>
                  <div id="slider_max" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>

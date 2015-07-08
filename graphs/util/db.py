@@ -1497,7 +1497,7 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json, created=None, modified=None):
+def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None):
 	'''
 		# TODO: Add rest call example
 		Inserts a uniquely named graph under a username.
@@ -1549,13 +1549,13 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None):
 			# Inserts it into the database, all graphs inserted are private for now
 			# TODO: Verify if that is what I want
 			if modified == None and created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, public, unlisted,default_layout_id))
 			elif modified == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, public, unlisted,default_layout_id))
 			elif created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, public, unlisted,default_layout_id))
 			else:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, NULL)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, 0, 1))
+				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, public, unlisted,default_layout_id))
 			
 			tags = graphJson['metadata']['tags']
 
@@ -1639,10 +1639,14 @@ def update_graph(username, graphname, graph_json):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (username, graphname))
+		cur.execute('select graph_id, public, unlisted, default_layout_id from graph where user_id = ? and graph_id = ?', (username, graphname))
 		data = cur.fetchone()
 
 		if data != None:
+
+			public = data[1]
+			unlisted = data[2]
+			default_layout = str(data[3])
 
 			result = insert_graph(username, graphname, graph_json)
 			if result != None:
@@ -1655,11 +1659,11 @@ def update_graph(username, graphname, graph_json):
 				cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
 				cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
 				con.commit()
-				result = insert_graph(username, graphname, graph_json, old_graph[3])
+				result = insert_graph(username, graphname, graph_json, old_graph[3], datetime.now(), public,unlisted,default_layout)
 				if result == None:
 					return result
 				else:
-					insert_graph(username, graphname, old_graph[2], old_graph[3], old_graph[4])
+					insert_graph(username, graphname, old_graph[2], old_graph[3], old_graph[4], old_graph[5], old_graph[6], old_graph[7])
 					return result
 			else:
 				return result
