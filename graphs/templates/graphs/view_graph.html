@@ -206,12 +206,14 @@
                 {% if shared_groups|length == 0 %}
                     <p>You have not shared this graph with any groups.</p>
                 {% else %}
-                <p>Groups shared with: 
+                <p>You have shared the graph with the following group(s):
+                    <ul>
                     {% for o in shared_groups %}
                     {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
-                        <a href={{url}}><u>{{ o.0 }} owned by {{o.1}}</u></a><br>
+                        <li><a href={{url}}><u>{{ o.0 }} owned by {{o.1}}</u></a><br></li>
                     {% endwith %}
                     {% endfor %}
+                    </ul>
                 </p>
                 {% endif %}
                 <br>
