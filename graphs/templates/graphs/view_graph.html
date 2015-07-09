@@ -203,7 +203,9 @@
         <div id="accordion_sharing" class="accordion">
             <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content">
-                <p>{{ shared }}</p>
+                {% if shared_groups|length == 0 %}
+                    <p>You have not shared this graph with any groups.</p>
+                {% else %}
                 <p>Groups shared with: 
                     {% for o in shared_groups %}
                     {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
@@ -211,8 +213,9 @@
                     {% endwith %}
                     {% endfor %}
                 </p>
+                {% endif %}
                 <br>
-                <button class="btn btn-default" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with groups</button>
+                <button class="btn btn-default" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with your <br>groups</button>
                 <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
             </div>
         </div>
