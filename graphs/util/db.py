@@ -10,6 +10,7 @@ from collections import Counter, defaultdict
 import random
 import string
 from django.conf import settings
+import uuid
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
@@ -1251,6 +1252,113 @@ def find_edges(uid, search_type, search_word, view_type, cur):
 		actual_graph_with_edges.append(tuple(graph_list))
 
 	return actual_graph_with_edges
+
+
+def uploadCyjsFile(username, graphJSON):
+	parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
+
+	csjs = json.loads(graphJSON)
+
+	for node in csjs['elements']['nodes']:
+		tempNode = {"data": {}}
+		tempNode['data']['id'] = node['data']['id']
+		if len(node['data']['node_fillColor']) > 0:
+			tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
+		tempNode['data']['content'] = node['data']['name']
+		tempNode['data']['shape'] = "ellipse"
+		parseJson['graph']['nodes'].append(tempNode)
+
+	for edge in csjs['elements']['edges']:
+		tempEdge = {"data": {}}
+		tempEdge['data']['source'] = edge['data']['source']
+		tempEdge['data']['target'] = edge['data']['target']
+		tempEdge['data']['popup'] = edge['data']['name']
+		parseJson['graph']['edges'].append(tempEdge)
+
+	parseJson['metadata']['name'] = csjs['data']['name']
+	parseJson['metadata']['tags'] = []
+	parseJson['metadata']['description'] = ""
+
+	if username != None:
+		result = insert_graph(username, parseJson['metadata']['name'], json.dumps(parseJson))
+		if result == None:
+			return {"Success": URL_PATH + "graphs/" + username + "/" + parseJson['metadata']['name']}
+		else:
+			return {"Error": result}
+	else:
+		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+		public_user_id = public_user_id.replace('-', '_')
+		
+		first_request = create_public_user(public_user_id)
+
+		if first_request == None:
+			result = insert_graph(public_user_id, parseJson['metadata']['name'], json.dumps(parseJson))
+
+			if result == None: 
+				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + parseJson['metadata']['name']}
+			else: 
+				return {"Error": result}
+		else:
+			return {"Error": result}
+
+def delete_30_day_old_anon_graphs():
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute("delete FROM graph where user_id like '%Public_User_%' and created >= date('now','-30 day')");
+		con.commit()
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return e.args[0]
+	finally:
+		if con:
+			con.close()
+
+
+def rgb_to_hex(rgb):
+	rgbTuple = rgb.split(',')
+	rgbNum = []
+	for tup in rgbTuple:
+		rgbNum.append(int(tup))
+
+	rgbNum = tuple(rgbNum)
+	return '#%02x%02x%02x' % rgbNum
+
+def create_public_user(public_user_id):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('insert into user values(?,?,?,?,?,?,?)', (public_user_id, 'test', 1, 1, 1, 1, 0))
+		con.commit()
+		return None
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return e.args[0]
+	finally:
+		if con:
+			con.close()
+
+def delete_public_user():
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('delete into user where user=?', ("test", ))
+		con.commit()
+		return None
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return e.args[0]
+	finally:
+		if con:
+			con.close()
+
 
 def find_edge(uid, gid, edge_to_find, search_type):
 	'''

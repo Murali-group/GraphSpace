@@ -21,6 +21,7 @@ urlpatterns = patterns('',
         url(r'^graphs/shared/$', views.shared_graphs, name='shared_graphs'),
         url(r'^graphs/public/$', views.public_graphs, name='public_graphs'),
         url(r'^graphs/all/$', views.all_graphs, name='all_graphs'),
+        url(r'^graphs/upload/$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
         
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/

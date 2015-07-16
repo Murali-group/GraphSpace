@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+<div class="container">
+<div class="content">
+
+<div class="row">
+<div class="col-sm-12 col-xs-12 value">
+
+
+<!-- <form role="form">
+  {% if uid != None %}
+	  <div class="form-group">
+	    <label for="email">Email address</label>
+	    <input type="text" class="form-control" id="email" value="{{uid}}"readonly>
+	  </div>
+  {% else %}
+	<div class="form-group">
+	    <label for="email">Public User</label>
+	    <input type="text" class="form-control" id="email" value="Public User" readonly>
+	  </div>
+  {% endif %}
+	<span class="btn btn-default btn-file">
+	    Attach Cyjs file <input type="file">
+	</span>
+	<br>
+	<br>
+  <button type="submit" class="btn btn-default">Submit</button>
+
+</form>
+ -->
+
+ <form class="form-horizontal" enctype="multipart/form-data" id="upload_form" method="POST">
+<fieldset>
+
+<!-- Form Name -->
+<legend>Upload Graph</legend>
+
+{% if Success != None%}
+	Graph is now viewable at: <a href="{{Success}}" style="text-align: center; color: green;">{{Success}}!</a>
+{% elif Error != None %}
+	<h3 style="text-align: center; color: red;">Error: {{Error}}</h3>
+{% endif %}
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="email">Email</label>  
+  <div class="col-md-4">
+  {% if uid == None %}
+  <input id="email" name="email" type="text" value="Public User" placeholder="email" readonly class="form-control input-md" required="">
+  {% else %}
+	  <input id="email" name="email" type="text" placeholder="email" value="{{uid}}" readonly class="form-control input-md" required="">
+  {% endif %}
+  </div>
+</div>
+
+<!-- File Button --> 
+<div class="form-group">
+  <label class="col-md-4 control-label" for="filebutton"></label>
+  <div class="col-md-4" id="test">
+    <span class="btn btn-default btn-file" id="filename">
+	    Attach Cyjs file <input id="graphname" name="graphname" type="file">
+	</span>
+
+  </div>
+</div>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="singlebutton"></label>
+  <div class="col-md-4">
+    <button id="upload_graph" name="upload_graph" class="btn btn-primary">Upload Graph</button>
+  </div>
+</div>
+
+</fieldset>
+</form>
+
+
+</div>
+</div>
+
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/error.css' %}">
+<footer class="footer">
+<br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+<br><a href = "http://js.cytoscape.org/">CytoscapeJS</a>
+</footer>
+<!-- cytoscape web wrapper for viewing graph -->
+<!-- stylesheet for view_graph page -->
+<link rel="stylesheet" href="{% static 'graphs/css/upload_graph.css' %}">
+<script type="text/javascript" src="{% static 'graphs/js/upload_graph_through_ui.js' %}"></script>
+
+{% endblock %}

@@ -21,6 +21,7 @@ import bcrypt
 import os
 from operator import itemgetter
 from itertools import groupby
+from graphs.forms import LoginForm, RegisterForm
 
 #get database
 data_connection = db_init.db
@@ -92,7 +93,7 @@ def view_graph(request, uid, gid):
     # of the group where this graph is shared
     # or if he owns this graph, then allow him to view it
     # otherwise do not allow it
-    if db.is_public_graph(uid, gid):
+    if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
         graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
         context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
@@ -1147,6 +1148,30 @@ def removeDefaultLayout(request):
 
 def renderImage(request):
     return HttpResponseRedirect(URL_PATH + 'static/images/legend.png');
+
+def upload_graph_through_ui(request):
+
+    if request.method == 'POST':
+            login_form = LoginForm()
+
+            if request.POST['email'] == 'Public User':
+                # assign random id generator
+                result = db.uploadCyjsFile(None, request.FILES['graphname'].read())
+                if 'Error' not in result:
+                    context = {'login_form': login_form, 'Success': result['Success']}
+                else:
+                    context = {'login_form': login_form, 'Error': result['Error']}
+                return render(request, 'graphs/upload_graph.html', context)
+            else:
+                result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read())
+                if 'Error' not in result:
+                    context = {'login_form': login_form, 'Success': result['Success']}
+                else:
+                    context = {'login_form': login_form, 'Error': result['Error']}
+                return render(request, 'graphs/upload_graph.html', context)
+    else: 
+        context = login(request)
+        return render(request, 'graphs/upload_graph.html', context)
 
 def shareLayoutWithGroups(request):
     '''
