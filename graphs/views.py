@@ -1153,21 +1153,22 @@ def upload_graph_through_ui(request):
 
     if request.method == 'POST':
             login_form = LoginForm()
-
+            register_form = RegisterForm()
+            
             if request.POST['email'] == 'Public User':
                 # assign random id generator
                 result = db.uploadCyjsFile(None, request.FILES['graphname'].read())
                 if 'Error' not in result:
-                    context = {'login_form': login_form, 'Success': result['Success']}
+                    context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
                 else:
-                    context = {'login_form': login_form, 'Error': result['Error']}
+                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
                 return render(request, 'graphs/upload_graph.html', context)
             else:
                 result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read())
                 if 'Error' not in result:
-                    context = {'login_form': login_form, 'Success': result['Success']}
+                    context = {'login_form': login_form,  'register_form': register_form, 'Success': result['Success']}
                 else:
-                    context = {'login_form': login_form, 'Error': result['Error']}
+                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
                 return render(request, 'graphs/upload_graph.html', context)
     else: 
         context = login(request)

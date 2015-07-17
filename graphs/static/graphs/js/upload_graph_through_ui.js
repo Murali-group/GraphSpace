@@ -5,10 +5,9 @@ $(document).ready(function() {
 	// 	$(this).text($("#graphname").val());
 	// });
 
-	// $("#graphname").on('change', function() {
-	// 	$("#filename").text($(this).val());
-	// 	$("#graphname").val($(this).val());
-	// });
+	$("#graphname").on('change', function() {
+		$("#files").text($(this).val());
+	});
 
 	$("#upload_graph").click(function(e) {
 		e.preventDefault();
@@ -24,6 +23,9 @@ $(document).ready(function() {
 		$("#upload_form").submit();
 	});
 
-
+	$("#create").click(function(e) {
+		e.preventDefault();
+		$("#createModal").modal('toggle');
+	});
 
 });
