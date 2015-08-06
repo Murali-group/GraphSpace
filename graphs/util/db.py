@@ -1262,8 +1262,9 @@ def uploadCyjsFile(username, graphJSON):
 	for node in csjs['elements']['nodes']:
 		tempNode = {"data": {}}
 		tempNode['data']['id'] = node['data']['id']
-		if len(node['data']['node_fillColor']) > 0:
-			tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
+		if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
+			# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
+			tempNode['data']['background_color'] = node['data']['node_fillColor']
 		tempNode['data']['content'] = node['data']['name']
 		tempNode['data']['shape'] = "ellipse"
 		parseJson['graph']['nodes'].append(tempNode)
@@ -1322,7 +1323,11 @@ def rgb_to_hex(rgb):
 	rgbTuple = rgb.split(',')
 	rgbNum = []
 	for tup in rgbTuple:
-		rgbNum.append(int(tup))
+		try:
+			rgbNum.append(int(tup))
+		except ValueError:
+			rgbNum.append(tup);
+
 
 	rgbNum = tuple(rgbNum)
 	return '#%02x%02x%02x' % rgbNum

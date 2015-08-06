@@ -6,13 +6,14 @@
 <ul class="nav nav-pills">
     <li class="active"><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
     <li ><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
+    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
   </ul>
 <hr>
 
-<h1>Welcome to GraphSpace!</h1>
-
-<hr>
-<b>This page should help familiarize you with GraphSpace's interface and basic features as a normal user.</b>
+<!-- <h1>Welcome to GraphSpace!</h1>
+ -->
+<!-- <hr> -->
+<b>This page should help familiarize you with GraphSpace's interface and basic features.</b>
 
 <br/>
 <br/>
@@ -20,6 +21,7 @@
 <li><h4><a href="#graphs">Graphs</a></h4>
 <ul>
 <li><a href="#what_is">What is a graph</a></li>
+<li><a href="#navigating_gs">Navigating GraphSpace</a></li>
 <li><a href="#view_graph">Viewing a graph</a></li>
 <li><a href="#embedded_info">Embedded Information</a></li>
 <li><a href="#graph_panels">Graph Panels</a>
@@ -56,18 +58,17 @@ A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a math
 
 <br/>
 
-Graphs are used to represent many different things such as computer networks, biological pathways, and many more.
-
-<br/>
-
-GraphSpace allows people to store and share graphs, regardless of what those graphs represent.
-
+Graphs may be used to represent many different types of models.  An example of some of them are computer networks and biological pathways.  A graph may contain vertices(nodes) and lines(edges).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between these two proteins.  Thus, if two nodes in the graph have an edge that is connected between them, this indicates that two proteins in the network interact.  Although we have so far described that graphs on GraphSpace can represent biological networks, GraphSpace provides users the flexibility to create graphs regardless of what they represent. 
 <!-- 
 <ul>
 <li><a href="#view">I want to find and view graphs that are shared with me</a>
 <li><a href="#upload">I want to upload graphs</a>
 <li><a href="#sharing">I want to share my graphs</a>
 </ul> -->
+<h3 id="navigating_gs">Navigating GraphSpace</h3>
+
+Anonymous users may only see <a href="{{url}}graphs/public">public graphs</a>.  This section contains all graphs that anyone that visits GraphSpace can see.  Any person on GraphSpace may upload a graph.  Anonymous users may only <a href="{{url}}graphs/upload/">upload</a> public graphs.  If a person is a registered user of GraphSpace, they may upload via the <a href="{{url}}help/programmers#add_graph">REST API</a> or <a href="{{url}}graphs/upload/">web interface</a>.  Registered users of GraphSpace may specify whether they want their graphs to be private or public via <a href="{{url}}help/programmers#make_graph_public">REST API</a>.<br><br>
+When a user is logged into GraphSpace, they may navigate to the "Graphs" section in order to see all the graphs that they have permissions to see.  The "Graphs" section has three options, My Graphs (all graphs that the user uploaded), Shared Graphs (graphs that are shared with groups that the user is member of), and Public Graphs (graphs that everyone can view).
 
 <h3 id="view_graph">Viewing a Graph</h3>
 
