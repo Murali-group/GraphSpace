@@ -57,6 +57,7 @@ def index(request):
 
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
+        print 'TESTING'
         request.session['uid'] = None
         result = db.sendForgotEmail(request.POST['user_id'])
         context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
@@ -1152,6 +1153,8 @@ def renderImage(request):
 def upload_graph_through_ui(request):
 
     if request.method == 'POST':
+            print 'HERE'
+            print request.POST
             login_form = LoginForm()
             register_form = RegisterForm()
             
@@ -1166,12 +1169,13 @@ def upload_graph_through_ui(request):
             else:
                 result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read())
                 if 'Error' not in result:
-                    context = {'login_form': login_form,  'register_form': register_form, 'Success': result['Success']}
+                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}
                 else:
-                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
+                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Error': result['Error']}
                 return render(request, 'graphs/upload_graph.html', context)
     else: 
         context = login(request)
+        print context
         return render(request, 'graphs/upload_graph.html', context)
 
 def shareLayoutWithGroups(request):

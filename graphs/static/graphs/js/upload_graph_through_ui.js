@@ -1,9 +1,7 @@
 $(document).ready(function() {
 
 	
-	// $("span").click(function() {
-	// 	$(this).text($("#graphname").val());
-	// });
+	$("#files").text("No file chosen");
 
 	$("#graphname").on('change', function() {
 		$("#files").text($(this).val());
@@ -15,9 +13,8 @@ $(document).ready(function() {
 		var email = $("#email").val();
 		var graph = $("#graphname").val();
 
-		console.log($("#graphname").val());
 		if (graph.length == 0) {
-			return alert("Please enter a graph under the cyjs standard");
+			return alert("Please upload a valid cyjs graph!");
 		}
 
 		$("#upload_form").submit();

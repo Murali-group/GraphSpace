@@ -38,8 +38,13 @@
 <legend>Upload Graph</legend>
 
 {% if Success != None%}
-	Graph is now viewable at: <a href="{{Success}}" style="text-align: center; color: green;">{{Success}}!</a><br>
-  <br>**Please note that this URL in your records. We will delete this graph after <b>30 days</b>. If you like GraphSpace and would like persistent storage of your graphs, please consider <a id="create">creating an account</a>.
+	<p style="text-align: center;">Graph is now viewable at: <a href="{{Success}}" style="text-align: center; color: green;">{{Success}}!</a></p>
+  <br>
+  {% if uid == None %}
+    **Please note that this URL in your records. We will delete this graph after <b>30 days</b>. If you like GraphSpace and would like persistent storage of your graphs, please consider <a id="create">creating an account</a>.
+      <br>
+
+  {% endif %}
 {% elif Error != None %}
 	<h3 style="text-align: center; color: red;">Error: {{Error}}</h3>
 {% endif %}
@@ -61,17 +66,18 @@
   <label class="col-md-4 control-label" for="filebutton"></label>
   <div class="col-md-4" id="test">
     <span class="btn btn-default btn-file" id="filename">
-	    Upload .cyjs file <input id="graphname" name="graphname" type="file" accept=".cyjs">
+	    Select a file in cyjs format <input id="graphname" name="graphname" type="file" accept=".cyjs"><br>
 	</span>
-  <p id="files"></p>
+  <p id="files" style="color: red;"></p>
   </div>
 </div>
+<p style="font-size: 11px;text-align: center;color: green;">The Cytoscape JavaScript (cyjs) is a JSON format. You can export a network created in Cytoscape (v3.1 or later) in this format.</p>
 
 <!-- Button -->
 <div class="form-group">
   <label class="col-md-4 control-label" for="singlebutton"></label>
   <div class="col-md-4">
-    <button id="upload_graph" name="upload_graph" class="btn btn-primary">Upload Graph</button>
+    <button id="upload_graph" name="upload_graph" class="btn btn-primary">Submit File</button>
   </div>
 </div>
 
