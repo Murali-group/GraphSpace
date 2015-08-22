@@ -476,7 +476,7 @@ $(document).ready(function() {
      $("#search_button").click(function (e) {
       e.preventDefault();
       if ($("#search").val().length > 0) {
-        window.cy.elements().removeCss();
+        // window.cy.elements().removeCss();
         searchValues($('input[name=match]:checked').val(), $("#search").val());
       }
      });
@@ -537,7 +537,11 @@ $(document).ready(function() {
       linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       $("#layout_link").attr('href', linkToGraph);
-      $("#layout_link").text("Link to this graph with distinguished elements");
+      if ($("#layout_link").html().length > 0) {
+        $("#layout_link").html("");
+      } else {
+        $("#layout_link").html("<p>Link to this graph with distinguished elements</p><hr>");
+      }
       $("#layout_link").css('text-decoration', 'underline');
       $("#layout_link").width(20);
     });
@@ -836,6 +840,21 @@ function searchOnLoad() {
   }
 }
 
+function findKValueOfLabel(label) {
+  console.log(label);
+  for (edge in graph_json['graph']['edges']) {
+    if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
+      return graph_json['graph']['edges'][edge]['data']['k'];
+    }
+  }
+
+  for (node in graph_json['graph']['nodes']) {
+    if (graph_json['graph']['nodes'][node]['data']['id'] == label) {
+      return graph_json['graph']['nodes'][node]['data']['k'];
+    }
+  }
+}
+
 //Function to search through graph elements in order to highlight the 
 //appropriate one
 function searchValues(search_type, labels) {
@@ -872,7 +891,6 @@ function searchValues(search_type, labels) {
     labels = labels.split(',');
 
     for (var i = 0; i < labels.length; i++) {
-
       if (data[labels[i]].length == 0) {
         $("#search_error").css("display", "block");
         if (labels[i].trim().length == 0) {
@@ -886,7 +904,15 @@ function searchValues(search_type, labels) {
         });
         $("#search_terms").html(oldHtml);
       }
+
+      var k_val = $("#input_k").val();
+
       for (var j = 0; j < data[labels[i]].length; j++) {
+        if (findKValueOfLabel(data[labels[i]][j]) !== undefined && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
+          $("#search_error").css("display", "block");
+          $("#search_error_text").append("Please set 'Number of paths' to atleast " + findKValueOfLabel(data[labels[i]][j]) + " in order to view seached elements for the current network.");
+        }
+        
         if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
           // Select the specified element and don't allow the user to unselect it until button is clicked again
           if (window.cy.$('[id="' + data[labels[i]][j] + '"]').isEdge()) {
@@ -908,7 +934,7 @@ function searchValues(search_type, labels) {
             }
           }
         }
-      }
+      } 
     }
 
     if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
@@ -920,7 +946,6 @@ function searchValues(search_type, labels) {
         if (layout) {
           linkToGraph += '?layout=' + layout;
         }
-
 
         if (search_type == 'partial_search') {
           if (layout) {
@@ -936,7 +961,6 @@ function searchValues(search_type, labels) {
           }
         }
 
-
         for (var i = 0; i < labels.length; i++) {
           if (labels[i].trim().length > 0) {
             linkToGraph += labels[i].trim() + ',';
@@ -947,7 +971,7 @@ function searchValues(search_type, labels) {
 
         $("#url").attr('href', linkToGraph);
         $("#url").css('text-decoration', 'underline');
-        $("#url").text("Link to this graph with distinguished elements");
+        $("#url").html("<p id='testing1'>Link to this graph with distinguished elements</p>");
         $(".test").css("height", $(".test").height + 30);
     }
   }
@@ -1063,6 +1087,7 @@ function applyMax(graph_layout) {
   }
 
   window.cy.load(newJSON);
+  showOnlyK();
 }
 
 //Unselects a specified term from graph
@@ -1195,6 +1220,9 @@ function getLayoutFromQuery() {
 function clearSearchTerms() {
   window.cy.elements().removeCss();
   $("#search").val("");
+  showOnlyK();
+  applyMax(graph_json);
+  $("#testing1").html("");
 }
 
 /** 
