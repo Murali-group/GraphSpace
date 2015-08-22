@@ -841,7 +841,6 @@ function searchOnLoad() {
 }
 
 function findKValueOfLabel(label) {
-  console.log(label);
   for (edge in graph_json['graph']['edges']) {
     if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
       return graph_json['graph']['edges'][edge]['data']['k'];
@@ -908,11 +907,11 @@ function searchValues(search_type, labels) {
       var k_val = $("#input_k").val();
 
       for (var j = 0; j < data[labels[i]].length; j++) {
-        if (findKValueOfLabel(data[labels[i]][j]) !== undefined && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
+        if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
           $("#search_error").css("display", "block");
           $("#search_error_text").append("Please set 'Number of paths' to atleast " + findKValueOfLabel(data[labels[i]][j]) + " in order to view seached elements for the current network.");
         }
-        
+
         if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
           // Select the specified element and don't allow the user to unselect it until button is clicked again
           if (window.cy.$('[id="' + data[labels[i]][j] + '"]').isEdge()) {
