@@ -4,7 +4,7 @@ $(document).ready(function() {
 	$("#files").text("No file chosen");
 
 	$("#graphname").on('change', function() {
-		$("#files").text($(this).val());
+		$("#files").text(getFileName($(this).val()));
 	});
 
 	$("#upload_graph").click(function(e) {
@@ -26,3 +26,14 @@ $(document).ready(function() {
 	});
 
 });
+
+function getFileName(fullPath) {
+	if (fullPath) {
+		var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+		var filename = fullPath.substring(startIndex);
+		if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+			filename = filename.substring(1);
+		}
+		return filename;
+	}
+};

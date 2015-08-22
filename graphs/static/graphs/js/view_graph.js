@@ -266,7 +266,6 @@ $(document).ready(function() {
         if (testEdges.indexOf(edgeData['id']) == -1) {
           testEdges.push(edgeData['id']);
         } else {
-          console.log("Duplicate edge found");
           edgeData['id'] = edgeData['id'] + i;
         }
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
