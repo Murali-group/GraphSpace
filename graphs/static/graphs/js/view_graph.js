@@ -998,7 +998,6 @@ function getHighlightedTerms() {
   return [partialHighlightedTerms, fullHighlightedTerms];
 }
 
-
 // Gets the largest K value elements from the graph
 // and only renders those values
 function getLargestK(graph_json) {
