@@ -359,6 +359,20 @@ $(document).ready(function() {
 
        searchOnLoad();
 
+       if (getQueryVariable('num_paths')) {
+        if ($("#input_k").val()) {
+          $("#input_k").val(getQueryVariable("num_paths"));
+        }
+       }
+
+       if (getQueryVariable('max_paths')) {
+        if ($("#input_max").val()) {
+          $("#input_max").val(getQueryVariable("max_paths"));
+        }
+       }
+
+       applyMax(graph_json.graph);
+
     } // end ready: function()
     });
 
@@ -1046,12 +1060,14 @@ function getQueryVariable(variable)
 
 // Returns all the id's that are > k value
 function showOnlyK() {
-  if ($("#input_k").val().length > 0) {
-    var maxVal = parseInt($("#input_k").val());
+  if ($("#input_k").val()) {
+    if ($("#input_k").val().length > 0) {
+      var maxVal = parseInt($("#input_k").val());
 
-    window.cy.elements().show();
-    hideList = window.cy.filter('[k > ' + maxVal+ ']');
-    hideList.hide();
+      window.cy.elements().show();
+      hideList = window.cy.filter('[k > ' + maxVal+ ']');
+      hideList.hide();
+    }
   }
 }
 
@@ -1060,6 +1076,9 @@ function showOnlyK() {
 function applyMax(graph_layout) {
   var maxVal = parseInt($("#input_max").val());
 
+  if (!maxVal) {
+    return;
+  }
   var newJSON = {
     "nodes": new Array(),
     "edges": new Array()
@@ -1205,7 +1224,7 @@ function getLayoutFromQuery() {
           positions: JSON.parse(layout.json)
         };
       } else if (query) {
-          alert("Layout does not exist!");
+          alert("Layout does not exist or has not been shared yet!");
           var loc = window.location.href;
           var baseLoc = loc.substring(0, loc.indexOf("?"));
           window.location.href = baseLoc;

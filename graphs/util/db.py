@@ -689,7 +689,8 @@ def set_layout_context(request, context, uid, gid):
     # if there is a layout specified, then render that layout
 	if len(request.GET.get('layout', '')) > 0:
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
-		    layout_to_view = json.dumps({"json": get_layout_for_graph(request.GET.get('layout'), gid, uid)})
+		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, context['uid'])
+		    layout_to_view = json.dumps({"json": graph_json})
 		    context['default_layout'] = None
 		else:
 			layout_to_view = get_default_layout(uid, gid)
@@ -3471,27 +3472,31 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 			con.close()
 
 
-def get_layout_for_graph(layout_name, layout_graph, layout_owner):
+def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 	'''
 		Retrieves specific layout for a certain graph.
 
 		:param layout_name: Name of layout
 		:param layout_graph: Name of graph
 		:param layout_owner: Owner of layout
+		:param loggedIn: Logged in user
 		:return Layout: [layout]
 	'''
-
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
 		# Get JSON of layout
-		cur.execute("select json from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, layout_graph, layout_owner))
+		cur.execute("select json, unlisted, public, owner_id from layout where layout_name =? and graph_id=? and user_id=?", (layout_name, graph_id, graph_owner))
 		data = cur.fetchone()
 
 		if data == None:
 			return None
+
+		if loggedIn != data[3]:
+			if data[1] == 0 and data[2] == 0:
+				return None
 
 		return cytoscapePresetLayout(json.loads(str(data[0])))
 
