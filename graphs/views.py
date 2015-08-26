@@ -115,6 +115,9 @@ def view_graph(request, uid, gid):
     # Get correct layout for the graph to view
     context = db.set_layout_context(request, context, uid, gid)
 
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
     # Convert JSON for CytoscapeJS, if needed
     context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
     context['draw_graph'] = True

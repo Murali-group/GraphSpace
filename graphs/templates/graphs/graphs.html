@@ -225,7 +225,7 @@
                       </button>
                       <span>Graph ID</span>
                     </th>
-                    <th>Tags</th>
+                    <th class='col-sm-1'>Tags</th>
                     {% if search_result %}
                         <th>Node ID(Labels)</th>
                     {% endif %}
@@ -235,7 +235,7 @@
                       </button>
                       <span>Modified</span>
                     </th>                    
-                    <th>
+                    <th class='col-sm-2'>
                       <button id="order_owner_btn" class="btn btn-default order" rel="tooltip" data-toggle="tooltip" title="Sort by Owner ascending">
                         <span id="order_owner_icon" class="glyphicon glyphicon-sort"></span>
                       </button>
@@ -248,9 +248,15 @@
                 <tr> 
                     <!-- If there is a search term or a tag term -->
                     {% if search_result %}
-                        {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?"|add:search_type|add:"="|add:search_word as final_url %}
-                            <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
-                        {%endwith %}
+                        {% if g.2|length > 0 %}
+                            {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?"|add:search_type|add:"="|add:search_word as final_url %}
+                                <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
+                            {%endwith %}
+                        {% else %}
+                            {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0 as final_url %}
+                                <td><div class="test"><a href="{{final_url}}">{{ g.0 }}</a></div></td>
+                            {%endwith %}
+                        {% endif %}
                         <td><div class="test">
                             {% for tag in g.1 %}
                                 <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
@@ -303,7 +309,7 @@
         </div> <!-- end results_table -->
     </div>
 
-    <div class="col-xs-6 col-sm-3 side">
+    <div class="col-sm-3 side">
     {% if page_numbers|length > 1 %}
         <div id="search_box_panel_accordion" class="panel-group" style="margin-top: -161px;">
     {% else %}

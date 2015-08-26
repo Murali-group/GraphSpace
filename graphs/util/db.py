@@ -690,6 +690,8 @@ def set_layout_context(request, context, uid, gid):
 	if len(request.GET.get('layout', '')) > 0:
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, context['uid'])
+		    if graph_json == None:
+		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    layout_to_view = json.dumps({"json": graph_json})
 		    context['default_layout'] = None
 		else:
@@ -710,7 +712,6 @@ def set_layout_context(request, context, uid, gid):
 	elif 'full_search' in request.GET:
 	    search_type = 'full_search'
 
-	# context['layouts'] = get_all_layouts_for_graph(uid, gid)
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
 		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid)))
