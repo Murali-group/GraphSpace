@@ -676,6 +676,19 @@ def help_about(request):
 
     return render(request, 'graphs/help_about.html', context)
 
+def help_tutorial(request):
+    '''
+        Render the help/tutorial page.
+
+        :param request: HTTP GET Request
+
+    '''
+
+    #handle login
+    context = login(request)
+
+    return render(request, 'graphs/help_tutorial.html', context)
+
 def register(request):
     '''
         Register a new user.
