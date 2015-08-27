@@ -877,7 +877,7 @@ function searchValues(search_type, labels) {
 
   var partialDistinction = Array();
   var exactDistinction = Array();  
-
+  
   // window.cy.eles.removeCss();
 
   $("#search_error_text").text("");
@@ -902,7 +902,7 @@ function searchValues(search_type, labels) {
     if (labels.length > 0) {
     //Split the labels so we can reference the labels
     labels = labels.split(',');
-
+    var k_problems = [];
     for (var i = 0; i < labels.length; i++) {
       if (data[labels[i]].length == 0) {
         $("#search_error").css("display", "block");
@@ -920,10 +920,12 @@ function searchValues(search_type, labels) {
 
       var k_val = $("#input_k").val();
 
+
       for (var j = 0; j < data[labels[i]].length; j++) {
         if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
-          $("#search_error").css("display", "block");
-          $("#search_error_text").append("Please set 'Number of paths' to atleast " + findKValueOfLabel(data[labels[i]][j]) + " in order to view seached elements for the current network.");
+          // $("#search_error").css("display", "block");
+          k_problems.push(findKValueOfLabel(data[labels[i]][j]));
+          // $("#search_error_text").append("Please set 'Number of paths' to atleast " + findKValueOfLabel(data[labels[i]][j]) + " in order to view seached elements for the current network.");
         }
 
         if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
@@ -948,6 +950,30 @@ function searchValues(search_type, labels) {
           }
         }
       } 
+    }
+
+    if (k_problems.length > 0) {
+      var message = "";
+      $("#search_error").css("display", "block");
+
+      var maxProblem = 0;
+      for (var a = 0; a < k_problems.length; a++) {
+        maxProblem = Math.max(maxProblem, k_problems[a]);
+      }
+
+      if (k_problems.length == 1) {
+        message = "A node or edge matches the search term but is not visible.";
+      } else {
+        message = "Multiple nodes or edges match the search term but some of them are not visible.";
+      }
+
+      if (maxProblem > $("#input_max").val()) {
+        message += " Please set 'Number of paths' and 'Maximum number of paths' to at least " + maxProblem + " to view all of the searched terms.";
+      } else {
+        message +=  " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
+      }
+      
+      $("#search_error_text").append(message);
     }
 
     if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
