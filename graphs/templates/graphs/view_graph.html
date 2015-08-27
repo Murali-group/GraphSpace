@@ -217,7 +217,9 @@
                 </p>
                 {% endif %}
                 <br>
-                <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with your groups</button>
+                {% if uid == owner %}
+                    <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with your groups</button>
+                {% endif %}
                 <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
             </div>
         </div>
