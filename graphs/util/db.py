@@ -2429,12 +2429,13 @@ def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, wor
 	intial_graph_names = []
 
 	if search_type == 'partial_search':
-		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and g.graph_id = gg.graph_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
+		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and g.graph_id = gg.graph_id and g.user_id = gg.user_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
 	elif search_type == 'full_search':
-		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.graph_id = gg.graph_id and gg.group_id = ? and gg.group_owner = ?', (word, groupId, groupOwner))
+		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id and gg.group_id = ? and gg.group_owner = ?', (word, groupId, groupOwner))
 
 	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
 	
+	print intial_graph_names
 	return intial_graph_names
 
 def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, cur):
@@ -2573,7 +2574,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 
 		else:
 
-			cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
+			cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and g.user_id = gg.user_id and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
 
 			graph_data = cur.fetchall()
 

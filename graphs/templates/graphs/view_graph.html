@@ -204,9 +204,9 @@
             <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content">
                 {% if shared_groups|length == 0 %}
-                    <p>You have not shared this graph with any groups.</p>
+                    <p>This graph is not shared with any groups.</p>
                 {% else %}
-                <p>You have shared the graph with the following group(s):
+                <p>This graph has been shared with the following group(s):
                     <ul>
                     {% for o in shared_groups %}
                     {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
