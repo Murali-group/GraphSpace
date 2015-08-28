@@ -1147,11 +1147,11 @@ function getLayoutFromQuery() {
     //of a graph to be displayed.
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
-      name: 'arbor',
+      name: 'concentric',
       padding: 10,
       fit:true,
-      animate: true,
-      maxSimulationTime: 1000
+      animate: false,
+      // maxSimulationTime: 1000
     };
 
     var query = getQueryVariable("layout");
@@ -1210,7 +1210,7 @@ function getLayoutFromQuery() {
       graph_layout = {
         name: "arbor",
         padding: 30,
-        fit: true,
+        fit: false,
         animate: true,
         maxSimulationTime: 1000
       }
