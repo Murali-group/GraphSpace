@@ -14,10 +14,6 @@
 <h1>Tutorial on interacting with GraphSpace</h1>
 <hr>
 
-<b>This tutorial allows for a new user to get up and running with GraphSpace.</b>
-
-<br/>
-<br/>
 <ul>
   <li><h4><a href="#logging_in">Logging In</a></h4>
   <li><h4><a href="#in_search">Searching within Multiple Graphs</a></h4>
@@ -29,32 +25,29 @@
 
 <div id="logging_in">
 <h2>Logging In</h2>
-<p>The following image is a screenshot from <a href="{{url}}">here</a>.</p>
+<p>The <a href="{{url}}">welcome page</a> greets a user when the user visits GraphSpace. We assume that the user has already created an account and uploaded graphs via the upload page or the RESTful API.</p>
 <br>
 <img width="70%" height="60%" align="middle" src="../../static/images/log_in.png"></img>
 <br><br>
-<p>Figure 1: The welcome page greets a user when he/she visits GraphSpace. We assume that the user has already created an account and uploaded graphs via the upload page or the RESTful API.</p>
 
 <br>
-<p>An anonymous user may view all public graphs that exist on <a href="{{url}}graphs/">GraphSpace</a></p>
-<br>
+<!-- <p>An anonymous user may view all public graphs that exist on <a href="{{url}}graphs/">GraphSpace</a></p>
+<br> -->
+<p>The user logs in and is provided a link to the list of graphs that the user can access.</p>
 <img width="70%" height="60%" align="middle" src="../../static/images/logged_in.png"></img>
 <br><br>
-<p>Figure 2: The user logs in and is directed to the list of graphs that he/she can access.</p>
 <br>
+<p>Clicking on the link titled "Graphs" takes the user to a page that lists the graphs accessible by the user. In this example, this user owns 33 graphs and can access public graphs. No graphs are shared with this user.</p>
 <img width="70%" height="60%" align="middle" src="../../static/images/graphs.png"></img>
 <br><br>
-<p>Figure 3: Clicking on the link titled "Graphs" takes the user to a page that lists the graphs accessible by the user. In this example, this user owns 33 graphs and can access public graphs. No graphs are shared with this user.</p>
 </div>
 
 <div id="in_search">
 <h2>Searching within Multiple Graphs</h2>
-<p>This section allows how a user how to filter graphs that match desired criterion.
 <br>
-<br>
+<p>The user searches this list for graphs that contain the protein CTNNB1, the symbol for \(\beta\)-catenin, a transcriptional regulator in the Wnt signaling pathway), obtaining a reduced list of graphs. The selection of the button ``Similar'' means that the any protein whose label or identifies contains "CTNNB1" as a substring will match this search.  This image shows the result of this search. There are six graphs owned by the user and two public graphs that contain this protein. Each link in the "Graph id" column will take the user to a specific graph with the search term highlighted.</p>
 <img width="70%" height="60%" align="middle" src="../../static/images/graph_search.png"></img>
-<br><br>
-<p>Figure 4: The user searches this list for graphs that contain the protein CTNNB1, the symbol for \(\beta\)-catenin, a transcriptional regulator in the Wnt signaling pathway), obtaining a reduced list of graphs. The selection of the button ``Similar'' means that the any protein whose label or identifies contains "CTNNB1" as a substring will match this search. There are six graphs owned by the user and two public graphs that contain this protein. Each link in the "Graph id" column will take the user to a specific graph with the search term highlighted.</p>
+
 <br>
 <img width="70%" height="60%" align="middle" src="../../static/images/view_graph.png"></img>
 <p>Figure 5: The user clicks on the graph with the id ``KEGG-Wnt-signaling-pathway'' and reaches the graph for the Wnt pathway with the searched node highlighted.</p>

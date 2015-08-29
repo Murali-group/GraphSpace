@@ -106,11 +106,10 @@ $(document).ready(function() {
 
 		//POST Request to send email to user
 		$.post("/forgot/", forgotRequest, function (data) {
-
-			if (data.Error) {
+			if (data.StatusCode != 200) {
 				alert(data.Error);
 			} else {
-				alert(data.Success);
+				alert(data.Message);
 				window.location.href = "/index/";
 			}
 		});
