@@ -3,9 +3,9 @@ $(document).ready(function() {
 	var URL_PATH = $("#url").text();
 
 	/**
-	* When clicked, it resets the password for given user.
-	*/
-	$("#reset_pw").click(function (e) {
+	 * When clicked, it resets the password for given user.
+	 */
+	$("#reset_pw").click(function(e) {
 		e.preventDefault();
 
 		var password = $("#password").val()
@@ -16,7 +16,10 @@ $(document).ready(function() {
 		} else if (password !== verifyPass) {
 			return alert("Please make sure both fields have the same value!");
 		} else {
-			$.post("../resetPassword/", {email: $("#reset_email").val(), password: password}, function (data) {
+			$.post("../resetPassword/", {
+				email: $("#reset_email").val(),
+				password: password
+			}, function(data) {
 
 				if (data.Error) {
 					return alert(data.Error);

@@ -3311,6 +3311,8 @@ def retrieveResetInfo(code):
 
 		data = cur.fetchone()
 
+		print data
+
 
 		if data == None:
 			return None

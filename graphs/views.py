@@ -832,15 +832,18 @@ def resetLink(request):
         :return JSON: {"email": <user_id> | "Error": "Unrecognized ID"}
 
     '''
-    code = request.GET.get('id')
-    email = db.retrieveResetInfo(code)
+    if request.method == 'GET': 
+        code = request.GET.get('id')
+        email = db.retrieveResetInfo(code)
 
-    if email == None:
-        return HttpResponse(json.dumps(db.throwError(400, "Unrecognized ID")), content_type="application/json");
+        if email == None:
+            context = {}
+            context['Error'] = "This password reset link is outdated. Please try resetting your password again."
+            return render(request, 'graphs/error.html', context)
 
-    context = {"email": email, "url": URL_PATH}
+        context = {"email": email, "url": URL_PATH}
 
-    return render(request, 'graphs/reset.html', context)
+        return render(request, 'graphs/reset.html', context)
 
 def resetPassword(request):
     '''
