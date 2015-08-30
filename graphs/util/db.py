@@ -2438,7 +2438,6 @@ def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, wor
 
 	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
 	
-	print intial_graph_names
 	return intial_graph_names
 
 def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, cur):
@@ -2582,9 +2581,11 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 			graph_data = cur.fetchall()
 
 		if order_by:
-			graph_data = order_information(order_by, None, graph_data)
+			graph_data = order_information(order_by, search_terms, graph_data)
 		else:
-			graph_data = order_information("modified_descending", None, graph_data)
+			graph_data = order_information("modified_descending", search_terms, graph_data)
+
+		print 'here'
 
 		return graph_data
 
