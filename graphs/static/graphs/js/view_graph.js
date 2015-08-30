@@ -1147,7 +1147,7 @@ function getLayoutFromQuery() {
     //of a graph to be displayed.
     //Some of them are pre-defined. Check Cytoscapejs.org
     var graph_layout = {
-      name: 'concentric',
+      name: 'random',
       padding: 10,
       fit:true,
       animate: false,
@@ -1185,7 +1185,7 @@ function getLayoutFromQuery() {
         name: "dagre",
         fit: true,
         padding: 10,
-        animate: false,
+        animate: true,
         nodeSep: 50,
         edgeSep: 50
       }
@@ -1194,7 +1194,7 @@ function getLayoutFromQuery() {
         name: "cose",
         padding: 10,
         fit: true,
-        animate: false,
+        animate: true,
         nodeOverlap: 30
       }
     } else if (query == "default_cola") {
@@ -1203,7 +1203,7 @@ function getLayoutFromQuery() {
         fit: true,
         nodeSpacing: function( node ){ return 20; },
         padding: 10,
-        animate: false,
+        animate: true,
         avoidOverlap: true
       }
     }  else if (query == "default_arbor") {
