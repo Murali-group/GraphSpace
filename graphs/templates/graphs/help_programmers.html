@@ -75,9 +75,9 @@ Below is a list of the different API calls.
 </li>
 </ul>
 
-<h2 id="graphs">Graphs</h2>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
 
-<h3 id="add_graph">Add graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="add_graph">Add graph</h3>
 
 In order to add a graph to the server, make the following POST request where [email] is your email and [password] is your password.
 
@@ -183,7 +183,7 @@ If JSON fails validation, it should give some sort of error as to why it failed
 }
 </pre>
 
-<h3 id="json_ref">JSON Reference</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
 
 For a detailed description of the JSON structure for graphs, please see the <a href="http://js.cytoscape.org/#notation/elements-json">CytoscapeJS API</a>.
 
@@ -247,7 +247,7 @@ Basic edge attributes:
   </tbody>
 </table>
 
-<h3 id="get_graph">Get graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="get_graph">Get graph</h3>
 
 To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.
 
@@ -325,7 +325,7 @@ Example failed response:
     "StatusCode": 404
 }
 </pre>
-<h3 id="update_graph">Update graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="update_graph">Update graph</h3>
 If a user wants to update any information for a specific graph, they can do so using this command.  The user uploads the modified JSON of the graph to the server.  Note, a user can only update a graph if it already exists in GraphSpace for that user.
 <pre>
 curl -X POST "{{url}}api/users/[email]/graph/update/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
@@ -349,7 +349,7 @@ Example failed response:
 }
 </pre>
 
-<h3 id="remove_graph">Remove graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_graph">Remove graph</h3>
 
 To remove a graph use the following command. You can only remove a graph that belongs to you.
 
@@ -375,7 +375,7 @@ Example failed response:
 </pre>
 
 
-<h3 id="get_user_graphs">Get user graphs</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_graphs">Get user graphs</h3>
 
 Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
 
@@ -395,7 +395,7 @@ Example response:
 }
 </pre>
 
-<h3 id="make_graph_public">Make graph public</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="make_graph_public">Make graph public</h3>
 
 Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
 
@@ -418,7 +418,7 @@ Example failed response:
     "StatusCode": 404
 }
 </pre>
-<h3 id="make_graph_private">Make graph private</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="make_graph_private">Make graph private</h3>
 
 Makes a specific graph that user owns private (only groups that graph is shared with and owner of graph can see it).
 
@@ -441,7 +441,7 @@ Example failed response:
     "StatusCode": 404
 }
 </pre>
-<h2 id="groups">Groups</h2>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h2>
 
 <!-- <h3 id="get_groups">Get groups</h3>
 
@@ -465,7 +465,7 @@ Example response:
 }
 </pre> -->
 
-<h3 id="get_group">Get group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_group">Get group</h3>
 
 Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
 
@@ -494,7 +494,7 @@ curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]/" -F "username=[ema
 
 </pre>
 
-<h3 id="create_group">Create group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="create_group">Create group</h3>
 
 To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
 
@@ -523,7 +523,7 @@ Example failure response:
 
 </pre>
 
-<h3 id="remove_group">Remove group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_group">Remove group</h3>
 
 To remove a group use the following command. You can only remove a group that you are the owner of.
 
@@ -550,7 +550,7 @@ Example failed response:
 }
 </pre>
 
-<h3 id="get_user_groups">Get groups a user belongs to</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_groups">Get groups a user belongs to</h3>
 
 Get groups a user belongs to. The result is a JSON object with a list of group ids.
 
@@ -573,7 +573,7 @@ Example response:
 
 </pre>
 
-<h3 id="add_user_to_group">Add user to group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="add_user_to_group">Add user to group</h3>
 
 Add a user to a group. You can only add a user to a group that you belong to.
 
@@ -599,7 +599,7 @@ Example failed response:
 }
 </pre>
 
-<h3 id="remove_user_from_group">Remove user from group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_user_from_group">Remove user from group</h3>
 
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
@@ -616,7 +616,7 @@ Example successful response:
 }
 </pre>
 
-<h3 id="share_graph">Share graph with a group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="share_graph">Share graph with a group</h3>
 
 Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
 
@@ -633,7 +633,7 @@ Example successful response:
 }
 </pre>
 
-<h3 id="unshare_graph">Unshare graph with a group</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="unshare_graph">Unshare graph with a group</h3>
 
 Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
 
@@ -650,7 +650,9 @@ Example successful response:
 }
 </pre>
 
-<h3 id='tag_for_user'>Get Tags for User</h3>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="tags">Tags</h2>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='tag_for_user'>Get Tags for User</h3>
 
 Get all the tags that a user has for their graphs.
 <pre>
@@ -671,7 +673,7 @@ Example successful response:
 
 </pre>
 
-<h3 id='tag_for_graph'>Get Tags for a Graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='tag_for_graph'>Get Tags for a Graph</h3>
 
 Get all the tags that are attached to a certain graph.
 <pre>
@@ -688,7 +690,7 @@ Example successful response:
 }
 </pre>
 
-<h3 id='make_graphs_for_tag_public'>Make all graphs for a tag public</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='make_graphs_for_tag_public'>Make all graphs for a tag public</h3>
 
 Changes the privacy of all graphs that contain a [tag] under [email] public.
 <pre>
@@ -704,7 +706,7 @@ Example successful response:
 }
 </pre>
 
-<h3 id='make_graphs_for_tag_private'>Make all graphs for a tag private</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='make_graphs_for_tag_private'>Make all graphs for a tag private</h3>
 
 Changes the privacy of all graphs that contain a [tag] under [email] private.
 <pre>
@@ -720,7 +722,7 @@ Example successful response:
 }
 </pre>
 
-<h3 id='delete_graphs_for_tag'>Delete all graphs for a tag</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='delete_graphs_for_tag'>Delete all graphs for a tag</h3>
 
 Delets all graphs that contain a [tag] under [email].
 <pre>
