@@ -1491,6 +1491,9 @@ def find_node(uid, gid, node_to_find, search_type):
 		if con:
 			con.close()
 
+def intersect(a, b):
+     return list(set(a) & set(b))
+
 def find_nodes(uid, search_type, search_word, view_type, cur):
 	'''
 		Finds graphs that have the nodes that are being searched for.
@@ -1515,16 +1518,44 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
 		elif view_type == 'shared':
 			before = datetime.now().second
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n, group_to_graph as gg, group_to_user as gu where n.label LIKE ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gu.user_id = ? and gg.group_owner <> ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', ('%' + search_word + '%', uid, uid))
-			shared_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
 
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n, group_to_graph as gg, group_to_user as gu where n.node_id LIKE ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gu.user_id = ? and gg.group_owner <> ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', ('%' + search_word + '%', uid, uid))
-			shared_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
+			cur.execute('select group_id, group_owner from group_to_user where user_id= ? and group_owner <> ?', (uid, uid))
+			groups_user_belongs_to = cur.fetchall()
+
+			graphs_in_group = []
+			for single_group in groups_user_belongs_to:
+				cur.execute('select graph_id, user_id from group_to_graph where group_id = ? and group_owner = ?', (single_group[0], single_group[1]))
+				graphs_in_group += cur.fetchall()
+
+			graphs_in_group = list(set(graphs_in_group))
+			
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label LIKE ? and n.user_id <> ?', ('%' + search_word + '%', uid))
+			node_info = cur.fetchall()
+			node_info = list(set(node_info))
+
+			final_graphs = []
+
+			for matched in node_info:
+				searched_graph = (matched[0], matched[4])
+				if searched_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, final_graphs)
+
+			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.user_id <> ?', ('%' + search_word + '%', uid))
+			node_info = cur.fetchall()
+			node_info = list(set(node_info))
+
+			final_graphs = []
+
+			for matched in node_info:
+				searched_graph = (matched[0], matched[4])
+				if searched_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, final_graphs)
 			after = datetime.now().second
 
-			print after - before
 		else:
 			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label LIKE ? and n.public = 1', ('%' + search_word + '%', ))
 			public_labels = cur.fetchall()
