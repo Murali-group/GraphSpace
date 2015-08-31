@@ -2438,6 +2438,7 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	labels_and_id_matched_graphs = []
 
 	if search_type == 'partial_search':
+
 		cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n, group_to_graph as gg where n.label Like ? and gg.graph_id = n.graph_id and gg.user_id = n.user_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
 		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
 
