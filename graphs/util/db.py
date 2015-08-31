@@ -2606,9 +2606,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 			graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), cur)
 
 		else:
-
-			cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g, group_to_graph as gg where gg.group_owner= ? and g.user_id = gg.user_id and gg.group_id = ? and gg.graph_id = g.graph_id', (groupOwner, groupId))
-
+			cur.execute('select g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g where exists ( select * from group_to_graph as gg where gg.group_owner= ? and g.user_id = gg.user_id and gg.group_id = ? and gg.graph_id = g.graph_id)', (groupOwner, groupId))
 			graph_data = cur.fetchall()
 
 		if order_by:
