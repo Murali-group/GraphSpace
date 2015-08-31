@@ -2614,8 +2614,6 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		else:
 			graph_data = order_information("modified_descending", search_terms, graph_data)
 
-		print 'here'
-
 		return graph_data
 
 	except lite.Error, e:
