@@ -1,10 +1,6 @@
 from django.conf.urls import patterns, url
 from graphs import views
 
-
-handler404 = views.custom_404
-handler500 = views.custom_500
-
 urlpatterns = patterns('', 
         # name parameter indicates the name of the view. This name
         # can be accessed from respective html files using Django 
