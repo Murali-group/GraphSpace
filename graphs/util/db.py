@@ -1411,8 +1411,6 @@ def find_edge(uid, gid, edge_to_find, search_type):
 			head_node = find_node(uid, gid, head_node, 'full_search')
 			tail_node = find_node(uid, gid, tail_node, 'full_search')
 
-			print head_node
-			print tail_node
 			# If both nodes exist, find label between them
 			if tail_node != None and head_node != None:
 				cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (str(tail_node[0]), str(head_node[0]), uid, gid))
@@ -1706,7 +1704,12 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 			else:
 				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, public, unlisted,default_layout_id))
 			
-			tags = graphJson['metadata']['tags']
+			print graphJson['metadata']
+
+			if 'tags' in graphJson['metadata']:
+				tags = graphJson['metadata']['tags']
+			else:
+				tags = []
 
 			# Insert all tags for this graph into tags database
 			insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con, curTime, 0)
