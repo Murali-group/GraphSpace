@@ -892,7 +892,7 @@ function searchValues(search_type, labels) {
     "uid": decodeURIComponent(paths[paths.length - 3]),
     "search_type": search_type 
   }, function (data) {
-
+    console.log(data);
     data = JSON.parse(data);
 
     var displayLink = false;

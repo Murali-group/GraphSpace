@@ -1406,13 +1406,12 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 				return edge_list
 		else:
-
 			# Find node id's that are being searched for (source and target nodes)
 			head_node = find_node(uid, gid, head_node, 'full_search')
 			tail_node = find_node(uid, gid, tail_node, 'full_search')
 
 			# If both nodes exist, find label between them
-			if tail_node != None and head_node != None:
+			if tail_node != None and head_node != None and len(tail_node) > 0 and len(head_node) > 0:
 				cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (str(tail_node[0]), str(head_node[0]), uid, gid))
 				data = cur.fetchall()
 				# If something exists, return the ids of the paents
