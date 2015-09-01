@@ -35,6 +35,12 @@ group_to_graph = db_init.group_to_graph
 URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
+def custom_404(request):
+    return render_to_response('error.html', {"Error": "Page not found! Please try another URL!"})
+
+def custom_500(request):
+    return render_to_response('error.html', {"Error": "Oops! Something went wrong! An email will be sent to the admins of this web application!"})
+
 def index(request):
     '''Render the main page
 
