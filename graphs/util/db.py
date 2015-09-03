@@ -1703,8 +1703,6 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 			else:
 				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, public, unlisted,default_layout_id))
 			
-			print graphJson['metadata']
-
 			if 'tags' in graphJson['metadata']:
 				tags = graphJson['metadata']['tags']
 			else:
@@ -2218,8 +2216,6 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	if len(groups) > 0:
 		for group in groups:
 			members = get_group_members(group[1], group[0])
-			print logged_in_user
-			print members
 	        if logged_in_user in members:
 	            return True
 
@@ -3121,7 +3117,6 @@ def is_public_graph(username, graph):
 		# If there is a graph with the username and graph, return if it is public or not
 		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
 		public = cur.fetchone()
-		print public
 
 		if public == None:
 			return None
@@ -3232,7 +3227,6 @@ def is_layout_shared(layoutId, layoutOwner, uid, graphName):
 			for user_graph in user_groups:
 				sub_graph_info = (str(user_graph[6]), str(user_graph[2]))
 				if graph == sub_graph_info:
-					print graph
 					cur.execute('select layout_id from layout where layout_id=? and owner_id=? and graph_id=? and user_id=?', (layoutId, layoutOwner, graph[1], uid))
 					data = cur.fetchone()
 					sub_graph_info = list(sub_graph_info)
@@ -3341,9 +3335,6 @@ def retrieveResetInfo(code):
 			return None
 
 		data = cur.fetchone()
-
-		print data
-
 
 		if data == None:
 			return None
@@ -3525,7 +3516,7 @@ def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 		cur = con.cursor()
 
 		# Get JSON of layout
-		cur.execute("select json, unlisted, public, owner_id from layout where layout_name =? and graph_id=? and user_id=?", (layout_name, graph_id, graph_owner))
+		cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=? and user_id=?", (layout_name, graph_id, graph_owner, loggedIn))
 		data = cur.fetchone()
 
 		if data == None:
@@ -3814,7 +3805,6 @@ def get_public_layouts_for_graph(uid, gid):
 		
 		data = cur.fetchall()
 
-		print data
 		if data == None:
 			return []
 

@@ -181,7 +181,6 @@ def view_json(request, uid, gid):
         # Get the json of the graph that we want to view
         graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     except NoResultFound:
-        print uid, gid
         context['Error'] = "Graph not found, please make sure you have the correct URL."
         return render(request, 'graphs/error.html', context)
 
