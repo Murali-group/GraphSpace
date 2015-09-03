@@ -46,17 +46,22 @@ $(document).ready(function() {
     var groupInfo = $(this).attr("id").split('concat_val_buffer');
     var groupOwner = groupInfo[1];
     var groupName = groupInfo[0];
-    $.post('../delete/group/', {
-      "groupOwner": groupOwner,
-      "groupName": groupName,
-      "username": $("#username").text()
-    }, function(data) {
-      if ("Error" in data) {
-        alert(data['Error']);
-        return;
-      } else {
-        location.reload();
-      }
+
+    $("#deleteModal").modal('toggle');
+
+    $("#delete_confirm").on('click', function(e) {
+      $.post('../delete/group/', {
+        "groupOwner": groupOwner,
+        "groupName": groupName,
+        "username": $("#username").text()
+      }, function(data) {
+        if ("Error" in data) {
+          alert(data['Error']);
+          return;
+        } else {
+          location.reload();
+        }
+      });
     });
   });
 
@@ -67,19 +72,25 @@ $(document).ready(function() {
     var groupInfo = $(this).attr("id").split('concat_val_buffer');
     var groupOwner = groupInfo[1];
     var groupName = groupInfo[0];
-    //username is name of user to remove from group
-    $.post('../../unsubscribe/group/', {
-      "groupOwner": groupOwner,
-      "groupName": groupName,
-      "username": $("#username").text()
-    }, function(data) {
-      if ("Error" in data) {
-        alert(data['Error']);
-        return;
-      } else {
-        alert(data['Unsubscribe']);
-        location.reload();
-      }
+
+    $("#unfollowModal").modal('toggle');
+
+    $("#unfollow_confirm").click(function (e) {
+      //username is name of user to remove from group
+      console.log("Group Owner: " + groupOwner + ", Group Name: " + groupName);
+      $.post('../../unsubscribe/group/', {
+        "groupOwner": groupOwner,
+        "groupName": groupName,
+        "username": $("#username").text()
+      }, function(data) {
+        console.log(data);
+        if ("Error" in data) {
+          alert(data['Error']);
+          return;
+        } else {
+          location.reload();
+        }
+      });
     });
   });
 
