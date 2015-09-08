@@ -92,11 +92,12 @@ The information embedded inside elements may contain external links to sources a
 When viewing a graph, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
 <b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details Panel</b>: Area where legend image for a graph and/or description of the graph.
-<img src="../../static/images/gd_panel.png" style="width: 50%"></p>
+<br><br>
+<img src="../../static/images/gd_panel.png" style="width: 30%"></p>
 <br>
 <b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
-<br>
-<img src="../../static/images/s_panel.png" style="width: 50%"></p>
+<br><br>
+<img src="../../static/images/s_panel.png" style="width: 30%"></p>
 <br>
 <p> For example, if a user searched for the node 'TEM1', then the node will look like this:</p><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">TEM1 before searching<br><img src="../../static/images/before_searching.png" style="width: 50%"></p>
@@ -117,22 +118,82 @@ If a user wants to search for edge connection from TEF4 to TEM1, they can do so 
 <br><br>
 GraphSpace allows users to send links which contain elements of a graph to be <b>distinguished</b>.  If a user searches for an element and the element is found inside the graph, a link is generated on top of the search bar.  This link provides a reference to this graph along with all of the elements to be distinguished.  If a GraphSpace user sends this link to someone else, they can follow the link to see the exact graph you are viewing, including all the elements that you have distinguished.
 <br><br>
-The <b>Partial</b> option under the search bar allows one to search for all elements within a graph which may have the search term as part of its value.  For example, if there are two nodes CDC5 and CDC55 and the user does a partial search with the term 'CDC', then both CDC5 and CDC55 will be distinguished. 
+The <b>Similar</b> option under the search bar allows one to search for all elements within a graph which may have the search term as part of its value.  For example, if there are two nodes CDC5 and CDC55 and the user does a similar search with the term 'CDC', then both CDC5 and CDC55 will be distinguished. 
 <br><br>
 The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be distinguished.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been distinguished since there are no nodes in our example graph which have CDC as their entire value.
 <br><br>
+
+Consider a graph which contains 4 nodes: Node_1, Node_2, Node_3, and Node_10.  There is an edge connecting Node_1 to Node_2, Node_2 to Node_3 and Node_3 to Node_10.
+
+<br><br>
+The following table describes which nodes will be distinguished if a user of GraphSpace were to search this graph using Similar vs Exact search:
+<br><br>
+
+<table border="1" cellspacing="0" cellpadding="0" > 
+<tbody>
+<tr>
+<td valign="top" ><p>Type of Search</p></td>
+<td valign="top" ><p>Search Term</p></td>
+<td valign="top" ><p>Nodes Distingushed</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Exact</p></td>
+<td valign="top" ><p>Node_1</p></td>
+<td valign="top" ><p>Node_1</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Similar</p></td>
+<td valign="top" ><p>Node_1</p></td>
+<td valign="top" ><p>Node_1</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Exact</p></td>
+<td valign="top" ><p>Node_</p></td>
+<td valign="top" ><p>No nodes are distinguished</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Similar</p></td>
+<td valign="top" ><p>Node_</p></td>
+<td valign="top" ><p>Node_1, Node_2, Node_3, Node_10</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Exact</p></td>
+<td valign="top" ><p>node_1</p></td>
+<td valign="top" ><p>No nodes are distinguished</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Similar</p></td>
+<td valign="top" ><p>node_1</p></td>
+<td valign="top" ><p>Node_1</p></td>
+</tr>
+
+<tr>
+<td valign="top" ><p>Similar</p></td>
+<td valign="top" ><p>Node_1</p></td>
+<td valign="top" ><p>Node_1, Node_10</p></td>
+</tr>
+
+</tbody>
+</table>
+<br>
 <!-- Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
  -->
 
 <b style="padding-top: 50px; margin-top: -40px;" id="export_panel">Export Panel</b>: Allows one to export the entire image of the as a PNG.  The JSON option allows a user to see the exact JSON that was used to render the current graph.
 <br>
-<img src="../../static/images/e_panel.png" style="width: 60%"><br>
+<img src="../../static/images/e_panel.png" style="width: 30%"><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="owner_panel">Owner Panel</b>: shows the GraphSpace user whom the graph belongs to
 <br>
-<img src="../../static/images/o_panel.png" style="width: 60%"><br>
+<img src="../../static/images/o_panel.png" style="width: 30%"><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="sharing_panel">Sharing Panel</b>: Displays all the groups that a graph is shared with.  If a user is the owner of a graph, they will also have an option to share this graph with all the groups that they are a member of or the own.  [See <a href="#groups">groups</a> below for more information]
 <br>
-<img src="../../static/images/sh_panel.png" style="width: 60%"><br>
+<img src="../../static/images/sh_panel.png" style="width: 30%"><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="layout_panel">Layouts Panel</b>: Provides <a href="http://js.cytoscape.org/#layouts">multiple methods</a> to display or layout a graph.  <b>Note</b>: a user must have an account with GraphSpace in order to save and share layouts they create.
 <br><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">Auto Layouts<br><img src="../../static/images/layout_2.png" style="width: 90%"></p>
@@ -145,7 +206,7 @@ The 'Auto' option provides methods to automatically layout a graph using their r
 If a user of GraphSpace saves their own layout, they are given the following functionalities for the layout through buttons presented in the following order:
 (i) a direct link to this layout, (ii) change name of layout, (iii) share this layout with other users who have access to this graph, (iv) delete this layout, and (v) make it the default layout, i.e., instruct GraphSpace to display this layout whenever a user visits the page for this graph.
 <br><br>
-<img src="../../static/images/layout_panel_image.png" style="width: 60%"><br>
+<img src="../../static/images/layout_panel_image.png" style="width: 25%"><br>
 
 <br><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="step_panel">Step through filtering Panel</b>: There are graphs in GraphSpace which employ the use of Step through filtering.  This concept allows one to see subgraphs of the entire graph.  In addition, it allows a user to "step" through the connections of a graph in sequential order.  The images below show a user stepping through a graph.
@@ -174,7 +235,7 @@ Depending on the resolution of the computer that is used to access GraphSpace, o
 <br><br>
 <img src="../../static/images/navbar.png" style="width: 60%;"><br>
 <br><br>
-or
+or depending on the resolution, may look like:
 <br><br>
 <img src="../../static/images/navbar-2.png" style="width: 60%;"><br>
 <br><br>
