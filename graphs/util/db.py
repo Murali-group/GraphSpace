@@ -693,6 +693,7 @@ def set_layout_context(request, context, uid, gid):
 		    if 'uid' in context:
 		    	temp_uid = context['uid']
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, temp_uid)
+		    print graph_json
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    layout_to_view = json.dumps({"json": graph_json})
@@ -3516,8 +3517,11 @@ def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 		cur = con.cursor()
 
 		# Get JSON of layout
-		cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=? and user_id=?", (layout_name, graph_id, graph_owner, loggedIn))
+		# cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=? and user_id=?", (layout_name, graph_id, graph_owner, loggedIn))
+		cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, graph_id, graph_owner))
 		data = cur.fetchone()
+
+		print data
 
 		if data == None:
 			return None
