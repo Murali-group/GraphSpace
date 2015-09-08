@@ -38,19 +38,22 @@
 </li>
 <li><a href="#finding_graphs">Finding Graphs</a></li>
 <li><a href="#upload_graphs">Uploading Graphs</a></li>
-<li><a href="#layouts">Layouts</a></li>
+	<ul>
+		<li><a href="#upload_graphs_rest">REST API</a></li>
+		<li><a href="#upload_graphs_cyjs">CYJS</a></li>
+	</ul>
 <li><a href="#search">Searching for graphs</a></li>
 </ul>
 </li>
 <li><h4><a href="#groups">Groups</a></h4>
 <ul>
-	<li><a href="#grouping_graphs">Grouping graphs</a></li>
-	<li><a href="#sharing_graphs">Sharing graphs</a></li>
+<!-- 	<li><a href="#grouping_graphs">Grouping graphs</a></li>
+ -->	<li><a href="#sharing_graphs">Sharing graphs</a></li>
 	<li><a href="#sharing_layouts">Group layouts</a></li>
 </ul>
 </li>
 <li><h4><a href="#tags">Tags</a></h4></li>
-<li><h4><a href="#contact">Acknowledgements</a></h4></li>
+<li><h4><a href="#contact">Acknowledgments</a></h4></li>
 </ul>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="what_is">What is a graph?</h3>
@@ -59,7 +62,7 @@ A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a math
 
 <br/>
 
-Graphs may be used to represent many different types of models.  An example of some of them are computer networks and biological pathways.  A graph may contain vertices(nodes) and lines(edges).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between these two proteins.  Thus, if two nodes in the graph have an edge that is connected between them, this indicates that two proteins in the network interact.  Although we have so far described that graphs on GraphSpace can represent biological networks, GraphSpace provides users the flexibility to create graphs regardless of what they represent. 
+Graphs may be used to represent many different types of models.  An example of some of them are computer networks and biological pathways.  A graph may contain vertices(nodes) and lines(edges).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between these two proteins.  Thus, if two nodes in the graph have an edge that is connected between them, this indicates that two proteins in the network interact.
 <!-- 
 <ul>
 <li><a href="#view">I want to find and view graphs that are shared with me</a>
@@ -73,29 +76,29 @@ When a user is logged into GraphSpace, they may navigate to the "Graphs" section
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Viewing a Graph</h3>
 
-Below is a public graph that can be found <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">here</a>.
+Consider the follow public <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">graph</a> below:
 
 <br><br>
 <img width="80%" height="500px" align="middle" src="../../static/images/public_graph.png">
 
 <br><br>
-Positions of all the nodes in a graph are mutable.  One can click and drag on nodes to change their positions.
-<br><br>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="embedded_info">Embedded Information</h3>
-Elements inside of a graph may have information embedded in them.  Clicking on the element will reveal information it contains(such as description).  The image below shows the information that is contained inside a the node <b>CCT6</b>.
-
+Elements (nodes and edges) inside of a graph may have information embedded in them.  Upon clicking any element inside of a graph, the element's border color will turn red.  If the clicked element does contain information, it will show up as part of a pop up box, otherwise no pop up will be shown. The image below shows the information that is contained inside of the node <b>CCT6</b>.
 <br><br>
 <img width="50%" height="400px" align="middle" src="../../static/images/node_info.png">
 <br><br>
 The information embedded inside elements may contain external links to sources as well.
 <h3 style="padding-top: 50px; margin-top: -40px;" id="graph_panels">Graph Panels</h3>
-When viewing a grpah, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
+When viewing a graph, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
-<b style="padding-top: 50px; margin-top: -40px;" id="details_panel">Graph Details Panel</b>: Area where legend image for a graph and/or description of the graph
-<br><br>
-<b style="padding-top: 50px; margin-top: -40px;" id="search_panel">Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards. For example, if a user searched for the node 'TEM1', then the node will look like this:
-<br><br>
-
+<b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details Panel</b>: Area where legend image for a graph and/or description of the graph.
+<img src="../../static/images/gd_panel.png" style="width: 50%"></p>
+<br>
+<b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
+<br>
+<img src="../../static/images/s_panel.png" style="width: 50%"></p>
+<br>
+<p> For example, if a user searched for the node 'TEM1', then the node will look like this:</p><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">TEM1 before searching<br><img src="../../static/images/before_searching.png" style="width: 50%"></p>
 
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">TEM1 after searching<br><img src="../../static/images/node_search.png" style="width: 50%"></p>
@@ -121,21 +124,28 @@ The <b>Exact</b> option under the search bar allows one to search for all elemen
 <!-- Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
  -->
 
-<b style="padding-top: 50px; margin-top: -40px;" id="export_panel">Export Panel</b>: Allows one to export the entire image of the as a PNG
-<br><br>
+<b style="padding-top: 50px; margin-top: -40px;" id="export_panel">Export Panel</b>: Allows one to export the entire image of the as a PNG.  The JSON option allows a user to see the exact JSON that was used to render the current graph.
+<br>
+<img src="../../static/images/e_panel.png" style="width: 60%"><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="owner_panel">Owner Panel</b>: shows the GraphSpace user whom the graph belongs to
-<br><br>
-<b style="padding-top: 50px; margin-top: -40px;" id="sharing_panel">Sharing Panel</b>: Displays all the groups that a graph is shared with [See <a href="#groups">groups</a> below]
-<br><br> 
-<b style="padding-top: 50px; margin-top: -40px;" id="layout_panel">Layouts Panel</b>: Provides multiple methods to display or layout a graph.  <b>Note</b>: a user must have an account with GraphSpace in order to save and share layouts they create.[See <a href="#layouts">Layout</a> section]
+<br>
+<img src="../../static/images/o_panel.png" style="width: 60%"><br>
+<b style="padding-top: 50px; margin-top: -40px;" id="sharing_panel">Sharing Panel</b>: Displays all the groups that a graph is shared with.  If a user is the owner of a graph, they will also have an option to share this graph with all the groups that they are a member of or the own.  [See <a href="#groups">groups</a> below for more information]
+<br>
+<img src="../../static/images/sh_panel.png" style="width: 60%"><br>
+<b style="padding-top: 50px; margin-top: -40px;" id="layout_panel">Layouts Panel</b>: Provides <a href="http://js.cytoscape.org/#layouts">multiple methods</a> to display or layout a graph.  <b>Note</b>: a user must have an account with GraphSpace in order to save and share layouts they create.
 <br><br>
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">Auto Layouts<br><img src="../../static/images/layout_2.png" style="width: 90%"></p>
 
 <p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">Manual Layouts<br><img src="../../static/images/layout_panel.png" style="width: 90%"></p>
 <p style="clear: both;"></p>
-
 <br><br>
-The 'Auto' option provides methods to automatically layout a graph using their respective algorithms. If a person has created an account and logged into GraphSpace, they they will be allowed to save any changes to the positions of elements in the graph that they manually make.  In addition, they will also be able to view layouts and share layouts with groups that they are a member of. [See <a href="#groups">groups</a> below]
+The 'Auto' option provides methods to automatically layout a graph using their respective <a href="http://js.cytoscape.org/#layouts">algorithms</a>. If a person has created an account and logged into GraphSpace, they they will be allowed to save any changes to the positions of elements in the graph that they manually make.  In addition, they will also be able to view layouts and share layouts with groups that they are a member of. [See <a href="#groups">groups</a> below]
+<br><br>
+If a user of GraphSpace saves their own layout, they are given the following functionalities for the layout through buttons presented in the following order:
+(i) a direct link to this layout, (ii) change name of layout, (iii) share this layout with other users who have access to this graph, (iv) delete this layout, and (v) make it the default layout, i.e., instruct GraphSpace to display this layout whenever a user visits the page for this graph.
+<br><br>
+<img src="../../static/images/layout_panel_image.png" style="width: 60%"><br>
 
 <br><br>
 <b style="padding-top: 50px; margin-top: -40px;" id="step_panel">Step through filtering Panel</b>: There are graphs in GraphSpace which employ the use of Step through filtering.  This concept allows one to see subgraphs of the entire graph.  In addition, it allows a user to "step" through the connections of a graph in sequential order.  The images below show a user stepping through a graph.
@@ -159,9 +169,25 @@ The 'Auto' option provides methods to automatically layout a graph using their r
 <br><br>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="finding_graphs">Finding graphs</h3>
 
-Notice the bar at the top of the screen. On the left hand side, right next to the big "GraphSpace" logo, are links to your graphs and groups.
+Depending on the resolution of the computer that is used to access GraphSpace, one of two navigation bars may be shown at the top of the screen:
 
-<br/>
+<br><br>
+<img src="../../static/images/navbar.png" style="width: 60%;"><br>
+<br><br>
+or
+<br><br>
+<img src="../../static/images/navbar-2.png" style="width: 60%;"><br>
+<br><br>
+
+If the latter is shown, simply click on the toggle icon on the right of the navigation bar to reveal the links and buttons.
+
+<br><br>
+<img src="../../static/images/navbar-2-circle.png" style="width: 60%;"><br>
+<br><br>
+
+<br><br>
+<img src="../../static/images/navbar-2-graphs.png" style="width: 60%;"><br>
+<br><br>
 
 On your graphs page, you will see buttons at the top of the page called "My Graphs", "Shared with me" and "Public graphs".
 
@@ -175,30 +201,37 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 
 </ul>
 
+<p>If a user is logged into GraphSpace, then the graphs link will take them to graphs which they own.  If the user is not logged in, the graphs link will direct them to the public graphs page.</p>
+
 <h3 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs">Uploading graphs</h3>
 
-GraphSpace represents graphs using a JSON format. To see an example of how to upload a correctly formatted JSON graph to GraphSpace, please see <a href="{{url}}help/programmers/#add_graph">this page</a>.
+<p>GraphSpace provides two methods to upload graphs: <a href="{{url}}help/programmers/#add_graph">Programmer's Guide</a> or <a href="{{url}}graphs/upload">CYJS upload link</a>.</p>
 
-<br><br>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="layouts">Layouts</h3>
-A layout is a specific representation of the network.  In terms of GraphSpace, a layout is the specific arrangement of nodes and edges for that graph.  GraphSpace provides a list of pre-defined algorithms to quickly layout any graph.  In addition, a user can also manually go in and arrange nodes and edges as they see fit and then save the layout for future reference. 
-<br><br>
+<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_rest">REST API</h4>
+<p>This approach allows one to be more flexible and utilize all of the CSS features by specifically referencing them in the <a href="{{url}}help/programmers/#json_ref">JSON</a>.</p>
+
+<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">CYJS Upload link</h4>
+<p>If a GraphSpace user generates their graph using Cytoscape 3.1 (or later), they have the option of importing their generated graph directly into GraphSpace via this link.  This link only accepts .cyjs formatted JSON.  Follow <a href="https://github.com/idekerlab/cy-net-share/wiki">these directions</a> in order to correctly generate a (.cyjs) file from Cytoscape 3.1 (or later).</p>
+
 <h3 style="padding-top: 50px; margin-top: -40px;" id="search">Searching for graphs</h3>
 
-While on the graphs page, there are two boxes: Search and Tags [See <a href="#tags">Tags</a> section].  The Search panel allows for any user of GraphSpace to search a graph that matches the criteria of ALL search queries.  A user may search for graphs using its name as well as a node or an edge which a graph may contain.  
+While on the graphs page, there are two panels: Search and Tags [See <a href="#tags">Tags</a> section].  The Search panel allows for any user of GraphSpace to search a graph that matches the criteria of ALL search queries.  A user may search for graphs using its name as well as a node or an edge which a graph may contain.  
+<br><br>
+<img src="../../static/images/graph_search_panel.png" style="width: 60%;"><br>
+<br><br>
+The <b>Similar</b> option under the search bar allows one to search for all graphs that may contain that word in the graph itself.  This option will return all the graphs that may have a node which contains parts of the term(s) being searching, graphs that may contain part of the searched term in its name, as well as if there are edges which contain part of the searched term(s).
+<br><br>
+The <b>Exact</b> option under the search bar allows one to search for all graphs that have exactly what is being searched for.  Graphs returned from this option may have a node, graph name, or an edge which is identical to the searched term(s).
 <br><br>
 To search for graphs that match a name, simply type the name or a part of the name of the graph
 <br><br>
-To search for nodes, type the name of the node (text that you want to see inside the node)
+To search for nodes, type the name of the node (text that is contained inside of a node)
 <br><br>
 To search for edges, search using the following syntax [tail: head] where tail is the name of the node where the arrow is coming from and head is the name of the node that the arrow is point to.  For example, to search for the edge that connects YEF3 to SIR2, type YEF3:SIR2.  All graphs that contain this edge will be presented to the user.  
 <br><br>
 If searching for multiple values, separate all individual search terms with commas.  Ex: AKT1, AKT3, JUN
 <br><br>
-The <b>Partial</b> option under the search bar allows one to search for all graphs that may contain that word in the graph itself.  This option will return all the graphs that may have a node which contains parts of the values you are searching for, graphs that may contain part of the searched term in its title, as well as if there are edges which contain part of the searched values as well.
-<br><br>
-The <b>Exact</b> option under the search bar allows one to search for all graphs that have exactly what is being searched for.  Graphs returned from this option may have a node, graph title, or an edge which is identical to the searched terms.
-<br><br>
+
 <b>Note</b>:If there are multiple search terms (and/or tag terms), all graphs that are returned WILL match all of these terms.  All graphs that are returned by the searches of a node and/or an edge will have all searched terms <b>distinguished</b> inside the graph.
 <br><br>
 
@@ -209,12 +242,13 @@ The <b>Exact</b> option under the search bar allows one to search for all graphs
 <b>Note</b>: GraphSpace account required for this feature
 
 <br><br>
-Groups contain collections of graphs that are shared by members of the group.  
+Groups may be thought of as a collection of GraphSpace users.  For example, if there are multiple researchers who are working on the same project, a group may be created containing all of the researchers.  Once a GraphSpace user is within a group, they may share any graph which they own with the rest of the group.  Only members of the group will be able to see the graph.
 <br><br>
 A <b>group owner</b> is the creator of the group.  They may<ul><li>Invite any GraphSpace user that has an account to be a member of their group <li>Remove any member from their group</li><li>Unshare any graph that has already been shared by the members of their group</li></ul>
-A <b>group member</b>is a user that is a part of a group that is owned by someone else. They may<ul><li>Share their graphs with a group</li><li>Unshare the graphs that they own from the group</li></ul>
-<b>Both groups owners and group members</b> may share layouts with the group of any graph that is shared with the group.
+A <b>group member</b> is a user that is a part of a group that is owned by someone else. They may<ul><li>Share their graphs with a group</li><li>Unshare the graphs that they own from the group</li></ul>
+<b>Both groups owners and group members</b> may share layouts of any graph that is already shared with the group.
 
+<!--
 <h3 style="padding-top: 50px; margin-top: -40px;" id="grouping_graphs">Grouping graphs</h3>
 
 You can also look at groups, which are collections of graphs shared by members of the group. Click on groups in the navigation bar. You should see the following categories for groups
@@ -225,22 +259,22 @@ You can also look at groups, which are collections of graphs shared by members o
 
 <li><b><a href="{{url}}groups/member/">Members of</a></b> are groups that you have been added to. You can view or add graphs to these groups through the <a href="{{url}}help/programmers/#groups">REST API</a></li>
 
-</ul>
+</ul> -->
 
-<h3 style="padding-top: 50px; margin-top: -40px;" id="sharing_graphs">Sharing graphs</h3>
-{% with url|add:"help/restapi/" as final_url %}
-    To share one of your graphs, refer to the <a href='{{url}}help/programmers/#graphs'>REST API</a>.
-{% endwith %}
-<br>
-In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one in the group is allowed to see that graph anymore.  Only the graph owner is allowed to see the graph.  
+<h3 style="padding-top: 50px; margin-top: -40px;" id="sharing_graphs">Sharing graphs with group(s)</h3>
+<p>There are two ways to share a graph that a user owns: <a href='{{url}}help/programmers/#share_graph'>REST API</a> and <a href='{{url}}help/#sharing_panel'>Sharing Panel</a>.</p>
 
-<h3 style="padding-top: 50px; margin-top: -40px;" id="sharing_layouts">Sharing layouts</h3>
-Similar to a graph, a layout may also be shared with a group.  In order for a layout to be shared with a group, the graph (and implicitly the graph owner) must already be shared with a group.  It would make no sense to share a layout with a group if that graph may not be viewed by any of the group's members. <br /><br />When you first create a layout, only the creator of the layout is allowed to see it.  If the graph is publicly available on GraphSpace, then if the user shares the layout they created, the layout will also be made publicly available.  If the graph is privately shared, then if the user decides to share a layout they created, every group that has both the creator of the layout as well as the graph which the layout references will have access to that layout.
+In order to share a graph, you must own the graph.  In addition, you must be a member or the owner of the group you want to share the graph with.  Sharing a graph allows all the members in the group to see the graph.  Un-sharing a graph means that no one else in the group is allowed to see that graph anymore.
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="sharing_layouts">Sharing layouts with group(s)</h3>
+
+<p>Similar to a graph, a layout may also be shared with a group.  In order for a layout to be shared with a group, the graph (and implicitly the graph owner) must already be shared with a group.  It would make no sense to share a layout with a group if that graph may not be viewed by any of the group's members. <br /><br />When you first create a layout, only the creator of the layout is allowed to see it.  If the graph is publicly available on GraphSpace, then if the user shares the layout they created, the layout will also be made publicly available.  If the graph is privately shared, then if the user decides to share a layout they created, every group that has both the creator of the layout as well as the graph which the layout references will have access to that layout.</p>
 
 
 <h3 id="tags">Tags</h3>
 
-Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.
+Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.  Tags are used to organize graphs for a user of GraphSpace, whereas groups are used to share graphs amongst multiple users of GraphSpace.
+
 <br><br>
 Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide
 

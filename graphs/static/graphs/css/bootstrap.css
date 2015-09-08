@@ -17,7 +17,7 @@ article,
 aside,
 details,
 figcaption,
-figure,
+figure,.
 footer,
 header,
 hgroup,
@@ -3675,9 +3675,9 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   }
   .navbar-collapse.collapse {
     display: block !important;
-    height: auto !important;
+    /*height: auto !important;
     padding-bottom: 0;
-    overflow: visible !important;
+    overflow: visible !important;*/
   }
   .navbar-collapse.in {
     overflow-y: visible;

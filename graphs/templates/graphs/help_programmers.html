@@ -13,25 +13,34 @@
 
 <b>
 GraphSpace provides a RESTful API for managing your graphs.
-Graphs are represented in <a href="http://json.org">JSON</a> format.
+Graphs are represented in <a href="http://json.org">JSON</a> format.<br><br>
+<p>In order to fully utilize features of this REST API, one must have an account with GraphSpace.</p>
+</p>
 </b>
 
 <h3>Prerequisites</h3>
 
 <p>
-To execute the examples from the command line you will need an HTTP client. On Debian systems you can install by running </p>
+To execute the examples from the command line you will need an HTTP client. On Debian systems you can install one by running </p>
 
 <pre>
 sudo apt-get install curl
 </pre>
 
-<p><b>In order to fully utilize all the features of GraphSpace, creating an account is strongly recommended.  However, it is not required as any user can still view <a href="{{url}}graphs/public">public graphs</a>.</b>
-</p>
-
 <hr>
 
+<h3>API Basics</h3>
 
+<p>All of the GraphSpace API documentation adhere to the following semantics.</p>
 
+<p>Anything in "[]" specifies a variable.  For example, [email] means use GraphSpace account (email) in place of [email] in the request.
+
+<p>Example GET graph request in the documentation is: <br>
+<pre>curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo</pre></p>
+
+<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with password "example_password" would be: <br><pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example" -F "password=example_password"; echo</pre></p>
+
+<p>In general, API calls using this REST API will have a "StatusCode" property.  This property adheres to the usual <a href="http://www.restapitutorial.com/httpstatuscodes.html">REST API status codes</a>.</p>
 <h3>API calls</h3>
 
 <p>
@@ -53,11 +62,13 @@ Below is a list of the different API calls.
 </li>
 <li><h4><a href="#groups">Groups</a></h4>
 <ul>
+<li><a href="#create_group">Create group</a></li>
+<li><a href="#remove_group">Remove group</a></li>
 <!-- <li><a href="#get_groups">Get groups</a></li> -->
 <li><a href="#get_group">Get group</a></li>
-<li><a href="#remove_group">Remove group</a></li>
-<li><a href="#create_group">Create group</a></li>
-<li><a href="#get_user_groups">Get groups a user belongs to</a></li>
+<!-- <li><a href="#remove_group">Remove group</a></li>
+ --><!-- <li><a href="#create_group">Create group</a></li>
+ --><li><a href="#get_user_groups">Get groups a user belongs to</a></li>
 <li><a href="#add_user_to_group">Add user to group</a></li>
 <li><a href="#remove_user_from_group">Remove user from group</a></li>
 <li><a href="#share_graph">Share a graph with a group</a></li>
@@ -79,7 +90,7 @@ Below is a list of the different API calls.
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="add_graph">Add graph</h3>
 
-In order to add a graph to the server, make the following POST request where [email] is your email and [password] is your password.
+In order to add a graph to GraphSpace, make the following POST request where [email] is your email and [password] is your password.
 
 <pre>
 curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"; echo
@@ -196,15 +207,25 @@ Below is a brief overview of some of the basic properties the JSON may have for 
   <tbody>
     <tr> <td> metadata </td> <td> object </td> <td> Container for the graph details html. </td> </tr>
     <!-- <tr> <td> layout    </td> <td> string  </td> <td> The layout style for the graph. </td> </tr> -->
-    <tr> <td> tags </td> <td> array    </td> <td> The initial tags to add when the graph is uploaded. </td> </tr>
+    <!-- <tr> <td> tags </td> <td> array    </td> <td> The tags to add when the graph is uploaded. </td> </tr> -->
     <!-- <tr> <td> data </td> <td> object </td> <td> The node and edge data of the graph. </td> </tr> -->
     <tr> <td> nodes </td> <td> array of objects </td> <td> Contains all nodes.  Each object contains "data" as key, and information about node as value. Ex: {"data": {[properties of node]}}</td> </tr>
     <tr> <td> edges </td> <td> array of objects </td> <td> Contains all edges.  Each object contains "data" as key, and information about edge as value. Ex: {"data": {[properties of edge]}}</td> </tr>
   </tbody>
 </table>
-
+<p>Below are properties that the metadata object may have</p>
+<table class="table">
+  <thead>
+    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
+  </thead>
+  <tbody>
+  <tr><td> name</td><td> string</td><td> Name that is displayed while viewing a graph</td>
+  <tr><td> description</td><td> string</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May contain information such as a legend or significance of the graph.</td>
+  <tr><td> tags</td><td> array</td><td> Used to categorize graphs. See <a href="{{url}}help/#tags">Tags</a> for more information.</td>
+  </tbody>
+</table>
 <p>
-Below are the most common attributes that nodes and edges can have. For a complete list, see the Cytoscape Web documentation for 
+Below are the most common attributes that nodes and edges can have. For a complete list, see the CytoscapeJS documentation for 
 <a href="http://js.cytoscape.org/#style/node-body">nodes</a> and 
 <a href="http://js.cytoscape.org/#style/edge-line">edges</a>.<br><br>
 **NOTE** All properties with '-' character should be replaced with '_'.  Example: 'background-color' should be 'background_color'
@@ -249,10 +270,10 @@ Basic edge attributes:
 
 <h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="get_graph">Get graph</h3>
 
-To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.
+To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.  Here, [graph_owner_email] refers to the owner of the graph whose JSON you are trying to retrieve.  It may or may not be your email.
 
 <pre>
-curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/users/[graph_owner_email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
@@ -377,7 +398,7 @@ Example failed response:
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_graphs">Get user graphs</h3>
 
-Get all ids of graphs belonging to a user. The result is a JSON object containing a list of all graph ids for the specified user.
+Get all ids of graphs belonging to the user making this request. The result is a JSON object containing a list of all graph ids for the specified user.
 
 <pre>
 curl -X POST "{{url}}api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"; echo
@@ -443,6 +464,8 @@ Example failed response:
 </pre>
 <h2 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h2>
 
+<p><b>Note: All spaces that are contained within the name of a group will be truncated for GET requests.  For example, if there is a group named: "Test 1", then the [group_id] for this group would be "Test1". </b></p>
+
 <!-- <h3 id="get_groups">Get groups</h3>
 
 Get the ids of all groups on the server. The result is a JSON object containing a list of all groups, including their descriptions and owners.
@@ -465,34 +488,6 @@ Example response:
 }
 </pre> -->
 
-<h3 style="padding-top: 50px; margin-top: -40px;" id="get_group">Get group</h3>
-
-Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
-
-<pre>
-curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]/" -F "username=[email]" -F "password=[password]"; echo
-</pre>
-
-<pre>
-{
-    "Groups": {
-        "owner": "dsingh5270@gmail.com",
-        "graphs": [
-            "api_test",
-            "secret_feature"
-        ],
-        "group_id": "Test1",
-        "description": "This is test group to see if changing description works properly.",
-        "members": [
-            "annaritz@vt.edu",
-            "ategge@vt.edu",
-            "dsingh5270@gmail.com"
-        ]
-    },
-    "StatusCode": 200
-}
-
-</pre>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="create_group">Create group</h3>
 
@@ -548,6 +543,35 @@ Example failed response:
     "Message": "Group not found!",
     "StatusCode": 200
 }
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_group">Get group</h3>
+
+Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
+
+<pre>
+curl -X POST "{{url}}api/groups/get/[group_owner]/[group_id]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+<pre>
+{
+    "Groups": {
+        "owner": "dsingh5270@gmail.com",
+        "graphs": [
+            "api_test",
+            "secret_feature"
+        ],
+        "group_id": "Test1",
+        "description": "This is test group to see if changing description works properly.",
+        "members": [
+            "annaritz@vt.edu",
+            "ategge@vt.edu",
+            "dsingh5270@gmail.com"
+        ]
+    },
+    "StatusCode": 200
+}
+
 </pre>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_groups">Get groups a user belongs to</h3>
@@ -618,7 +642,7 @@ Example successful response:
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="share_graph">Share graph with a group</h3>
 
-Share a graph with a group, effectively giving all members in the group read permission. You can only share graphs you own with groups you belong to.
+Share a graph with a group, effectively giving all members in the group the ability to see a graph. You can only share graphs you own with groups you are a member of or the owner of.
 
 <pre>
 curl -X POST "{{url}}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"; echo
