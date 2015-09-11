@@ -26,6 +26,7 @@ div.content {
 	height: 100%;
     margin-top: 10px;
     padding: 40px 15px;
+    visibility: hidden;
 }
 
 .graphs  {

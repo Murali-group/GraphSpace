@@ -3,6 +3,8 @@
  */
 $(document).ready(function() {
 
+	$(".content").css('visibility', 'visible');
+
 	/**
 	* Upon clicking this button, POST request is sent to
 	* register the current user with GS.
