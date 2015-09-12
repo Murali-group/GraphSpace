@@ -6,7 +6,7 @@ body {
 /*css for parent div element*/ 
 .csjs_container {
     /* the containser should occupy the entire page */
-    height: 98%;
+    height: 100%;
     width: 100%;
     background-color: #fff; 
     /*position: relative;*/
