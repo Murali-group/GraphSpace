@@ -23,6 +23,10 @@ body {
 
 .side_menu {
 	float:right;
+    padding-left: 5px;
+    border-left-style: solid;
+    border-width: 5px;
+    padding-right: 5px;
 }
 
 #graph_title {
@@ -43,9 +47,6 @@ body {
     width: 100%;
 }
 
-#search_tips li {
-}
-
 .ui-cytoscape-panzoom {
     top: 20%;
 }
@@ -62,7 +63,7 @@ body {
 }
 
 #search_radios {
-  text-align: center;
+  text-align: left;
   margin-top: 10px;
 }
 
