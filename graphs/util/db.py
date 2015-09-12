@@ -2893,7 +2893,7 @@ def view_graphs_of_type(view_type, username):
 
 		# Select graphs depending on view type.
 		if view_type == 'public':
-			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from graph as g where g.public = 1')
+			cur.execute('select distinct g.graph_id, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.public = 1')
 		elif view_type == 'shared':
 			cur.execute('select distinct g.graph_id, "" as placeholder, g.modified, g.user_id, g.public from group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id', (username, ))
 		else:
@@ -2901,6 +2901,8 @@ def view_graphs_of_type(view_type, username):
 
 		# Go through each graph and retrieve all tags associated with that graph
 		graphs = cur.fetchall()
+
+		print graphs
 		
 		# Return the graph information (including tags) as a list of rows
 		return graphs
