@@ -320,7 +320,7 @@
                                       {% for o in my_layouts %}
                                         {% with layout_urls|add:o as url %}
 
-                                        {% if o in layout_name %}
+                                        {% if o == layout_name %}
                                             <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
                                         {% else %}
                                             <a class="list-group-item layout_buttons" href="{{o}}">
@@ -360,7 +360,7 @@
                                         {% for o in shared_layouts %}
                                             {% with layout_urls|add:o as url %}
                                             {% if o in my_shared_layouts %}
-                                                {% if o in layout_name %}
+                                                {% if o == layout_name %}
                                                     <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
                                                 {% else %}
                                                     <a class="list-group-item layout_buttons" href="{{o}}">
