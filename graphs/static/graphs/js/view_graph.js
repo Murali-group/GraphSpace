@@ -1332,7 +1332,7 @@ $(".default").click(function(e) {
     if (data.Error) {
       return alert(data.Error);
     }
-    window.location.reload();
+    window.location.href = window.location.href.split('?')[0];
   });
 });
 

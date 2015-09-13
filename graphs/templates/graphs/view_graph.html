@@ -338,7 +338,7 @@
                                             <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
-                                            {% if uid == owner %}
+                                            <!-- {% if uid == owner %}
                                                 <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: left;">
                                                   <span class="glyphicon glyphicon-bookmark"></span>
                                                 </button>
@@ -346,7 +346,7 @@
                                                 <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: left;">
                                                   <span class="glyphicon glyphicon-bookmark"></span>
                                                 </button>
-                                            {% endif %}
+                                            {% endif %} -->
                                             <div style="clear: both;"></div>
                                           </a>
                                         {% endwith %}
@@ -380,11 +380,11 @@
                                                   <span class="glyphicon glyphicon-link"></span>
                                                 </button>
                                                 {% if uid == owner %}
-                                                    {% if default_layout == None or default_layout != o %}
+                                                    {% if default_layout_name == None or default_layout_name != o %}
                                                         <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o}}" style="float: left;">
                                                           <span class="glyphicon glyphicon-bookmark"></span>
                                                         </button>
-                                                    {% elif default_layout == o %}
+                                                    {% elif default_layout_name == o %}
                                                         <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: left;">
                                                           <span class="glyphicon glyphicon-bookmark"></span>
                                                         </button>

@@ -740,6 +740,7 @@ def set_layout_context(request, context, uid, gid):
 		context['default_layout'] = get_default_layout_id(uid, gid)
 		context['layout_name'] = get_default_layout_name(uid, gid)
 		
+	context['default_layout_name'] = get_default_layout_name(uid, gid)
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "/?layout="
