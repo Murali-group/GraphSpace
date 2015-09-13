@@ -1154,6 +1154,12 @@ function getLayoutFromQuery() {
       // maxSimulationTime: 1000
     };
 
+    $("#auto").addClass('active');
+    $("#manual").removeClass('active');
+
+    $('#builtin').addClass('active');
+    $('#custom').removeClass('active');
+
     var query = getQueryVariable("layout");
 
     if (query == "default_breadthfirst") {
@@ -1243,6 +1249,12 @@ function getLayoutFromQuery() {
       //     positions: JSON.parse(layout.json)
       //   };
       // }
+
+      $("#auto").removeClass('active');
+      $("#manual").addClass('active');
+
+      $('#builtin').removeClass('active');
+      $('#custom').addClass('active');
 
        if (layout && layout.json != null) {
         graph_layout = {

@@ -22,7 +22,7 @@ body {
 }
 
 .side_menu {
-	float:right;
+    float:right;
     padding-left: 5px;
     border-left-style: solid;
     border-width: 3px;

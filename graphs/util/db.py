@@ -674,6 +674,39 @@ def get_default_layout_id(uid, gid):
 		if con:
 			con.close()
 
+def get_default_layout_name(uid, gid):
+	'''
+		Gets the default layout for a graph.
+	'''
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		# Retrieve hashed password of the user
+		cur = con.cursor()
+		# TODO: Write query examples
+		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		#If there is no data, then user does not exist
+		if data == None:
+			return None
+		else:
+			cur.execute('select layout_name from layout where layout_id=?', (data[0], ))
+			data = cur.fetchone()
+
+			if data == None:
+				return None
+
+			return data[0]
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return json.dumps(None)
+	finally:
+		if con:
+			con.close()
+
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
@@ -693,18 +726,20 @@ def set_layout_context(request, context, uid, gid):
 		    if 'uid' in context:
 		    	temp_uid = context['uid']
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, temp_uid)
-		    print graph_json
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    layout_to_view = json.dumps({"json": graph_json})
-		    context['default_layout'] = None
+		    context['default_layout'] = get_default_layout_id(uid, gid)
 		else:
 			layout_to_view = get_default_layout(uid, gid)
 			context['default_layout'] = get_default_layout_id(uid, gid)
+
+		context['layout_name'] = request.GET.get('layout')
 	else:
 		layout_to_view = get_default_layout(uid, gid)
 		context['default_layout'] = get_default_layout_id(uid, gid)
-
+		context['layout_name'] = get_default_layout_name(uid, gid)
+		
 	# send layout information to the front-end
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "/?layout="
@@ -2901,8 +2936,6 @@ def view_graphs_of_type(view_type, username):
 
 		# Go through each graph and retrieve all tags associated with that graph
 		graphs = cur.fetchall()
-
-		print graphs
 		
 		# Return the graph information (including tags) as a list of rows
 		return graphs
@@ -3394,7 +3427,7 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('update layout set layout_name = ? where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (new_layout_name, uid, gid, loggedIn, old_layout_name))
+		cur.execute('update layout set layout_name = ? where owner_id=? and graph_id = ? and layout_name = ? ', (new_layout_name, uid, gid, old_layout_name))
 		con.commit()
 
 	except lite.Error, e:
@@ -3405,29 +3438,28 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 			con.close()
 
 # Makes a layout public
-def makeLayoutPublic(uid, gid, public_layout, loggedIn):
+def makeLayoutPublic(uid, gid, public_layout):
 	'''
 		Makes a layout public.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param public_layout: Name of layout
-		:param loggedIn: Use rmaking those changes
 	'''
 	con=None
 	try:
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select public from layout where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+		cur.execute('select public from layout where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
 		data = cur.fetchone()
 
 		isPublic = data[0]
 
 		if isPublic == 0:
-			cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+			cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
 		else:
-			cur.execute('update layout set public = 0 where owner_id=? and graph_id = ? and user_id=? and layout_name = ? ', (uid, gid, loggedIn, public_layout))
+			cur.execute('update layout set public = 0 where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
 		con.commit()
 
 	except lite.Error, e:
@@ -3459,7 +3491,7 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 		layoutExists = cur.fetchall()
 
 		if len(layoutExists) > 0:
-			return "Layout with this name already exists for this graph! Please delete old layout or rename this one."	
+			return "Layout with this name already exists for this graph! Please choose another name."	
 
 		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, user, json, 0, 0))
 		con.commit()
@@ -3485,15 +3517,23 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 		
-		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
+		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ?' , (layoutToDelete, uid, gid))
 		data = cur.fetchone()
 
-		if data:
-			cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (gid, uid))
-			con.commit()
+		print data[0]
 
-		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ? and user_id = ?' , (layoutToDelete, uid, gid, loggedIn))
+		if data:
+			cur.execute('select default_layout_id from graph where graph_id = ? and user_id = ?', (gid, uid))
+			layout_id = cur.fetchone()
+
+			if layout_id != None and layout_id[0] == data[0]:
+				print 'testing'
+				cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (gid, uid))
+				con.commit()
+
+		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ?' , (layoutToDelete, uid, gid))
 		con.commit()
+
 		return None
 	except lite.Error, e:
 		print "Error %s: " % e.args[0]
@@ -3522,8 +3562,6 @@ def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 		# cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=? and user_id=?", (layout_name, graph_id, graph_owner, loggedIn))
 		cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, graph_id, graph_owner))
 		data = cur.fetchone()
-
-		print data
 
 		if data == None:
 			return None
@@ -3724,7 +3762,7 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 	'''
-		Get shared layouts for this graph.
+		Get shared layouts of the graph owner for this graph.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
@@ -3749,25 +3787,20 @@ def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
+		cur.execute("select distinct layout_name from layout where owner_id =? and graph_id=? and user_id=? and (unlisted = 1 or public = 1)", (uid, gid, loggedIn))
+		
+		data = cur.fetchall()
 
-		for group in all_groups_for_graph:
-			members = get_group_members(group[1], group[0])
-			if loggedIn in members:
-				cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id = ? and unlisted=1", (uid, gid, loggedIn))
-				data = cur.fetchall()
+		if data == None:
+			return []
 
-				if data == None:
-					return []
+		cleaned_data = []
 
-				cleaned_data = []
-				for layouts in data:
-					layouts = str(layouts[0])
-					cleaned_data.append(layouts)
-
-				return cleaned_data
-
-		return []
+		for layouts in data:
+			layouts = str(layouts[0])
+			cleaned_data.append(layouts)
+		
+		return cleaned_data
 	except lite.Error, e:
 		print "Error %s: " %e.args[0]
 		return []

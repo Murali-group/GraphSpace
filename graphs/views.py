@@ -1211,7 +1211,7 @@ def shareLayoutWithGroups(request):
             return HttpResponse(json.dumps(db.throwError(400, "No groups to share with.  Either share this graph with a group first or make this graph public!")), content_type="application/json")
         else:
             if db.is_public_graph(owner, gid):
-                db.makeLayoutPublic(owner, gid, layoutId, uid)
+                db.makeLayoutPublic(owner, gid, layoutId)
             else:
                 db.share_layout_with_all_groups_of_user(owner, gid, layoutId)
         ## SHELVE THIS FOR NOW (ALLOW USER TO CHOOSE WHICH GROUPS TO SHARE LAYOUT WITH)

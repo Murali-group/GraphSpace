@@ -218,7 +218,7 @@
                 {% endif %}
                 <br>
                 {% if uid == owner %}
-                    <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with your groups</button>
+                    <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with groups</button>
                 {% endif %}
                 <!-- <p>Sharing details. Indicate whether this graph is public and whether this graph is shared with any groups or not.</p> -->
             </div>
@@ -240,31 +240,71 @@
                 <div class="tabbable">
                     <ul class="nav nav-tabs" id="layout-tabs">
                       <a id='layout_link' href=""></a>
-                      <li><a href="#builtin" data-toggle="tab">Auto</a></li>
-                      <li class="active"><a href="#custom" data-toggle="tab">Manual</a></li>
+                      <li id="auto"><a href="#builtin" data-toggle="tab">Auto</a></li>
+                      <li id="manual"><a href="#custom" data-toggle="tab">Manual</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane" id="builtin">
                             <br/>
                             <ul class="nav nav-pills">
-                            <li id="lr"><a id="layout-radial" class="layout_buttons" href="default_circle">Circle</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_cola">Constraint-based Layout</a></li>
-                            <li id="ldf"><a id="layout-force-directed" class="layout_buttons" href="default_concentric">Concentric</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_cose">Spring Embedder</a></li>
-                            <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_arbor">Force Directed</a></li>
-                            <li id="lc"><a id="layout-circle" class="layout_buttons" href="default_breadthfirst">Tree</a></li>  
+                                {% if layout_name == "default_circle" %}
+                                    <li class="active" id="lr"><a id="layout-radial" class="layout_buttons" href="default_circle">Circle</a></li>
+                                {% else %}
+                                    <li id="lr"><a id="layout-radial" class="layout_buttons" href="default_circle">Circle</a></li>
+                                {% endif %}
+                                {% if layout_name == "default_cola" %}
+                                    <li class="active" id="lt"><a id="layout-cola" class="layout_buttons" href="default_cola">Constraint-based Layout</a></li>
+                                {% else %}
+                                    <li id="lt"><a id="layout-cola" class="layout_buttons" href="default_cola">Constraint-based Layout</a></li>
+                                {% endif %}
+                                {% if layout_name == "default_concentric" %}
+                                    <li class="active" id="ldf"><a id="layout-force-directed" class="layout_buttons" href="default_concentric">Concentric</a></li>
+                                {% else %}
+                                    <li id="ldf"><a id="layout-force-directed" class="layout_buttons" href="default_concentric">Concentric</a></li>
+                                {% endif %}
+                                {% if layout_name == "default_cose" %}
+                                    <li class="active" id="lt"><a id="layout-cose" class="layout_buttons" href="default_cose">Spring Embedder</a></li>
+                                {% else %}
+                                    <li id="lt"><a id="layout-cose" class="layout_buttons" href="default_cose">Spring Embedder</a></li>
+                                {% endif %}
+                                {% if layout_name == "default_arbor" %}
+                                    <li class="active" id="lt"><a id="layout-tree" class="layout_buttons" href="default_arbor">Force Directed</a></li>
+                                {% else %}
+                                    <li id="lt"><a id="layout-tree" class="layout_buttons" href="default_arbor">Force Directed</a></li>
+                                {% endif %}
+                                {% if layout_name == "default_breadthfirst" %}
+                                    <li class="active" id="lc"><a id="layout-circle" class="layout_buttons" href="default_breadthfirst">Tree</a></li>  
+                                {% else %}
+                                    <li id="lc"><a id="layout-circle" class="layout_buttons" href="default_breadthfirst">Tree</a></li>  
+                                {% endif %}
                             </ul>  
                         </div>
 
-                        <div class="active tab-pane" id="custom">
+                        <div class="tab-pane" id="custom">
                             <br/>
                             <div class="tabbable">
                             <ul class="nav nav-pills">
-                                <li id="clm" class="">
-                                    <a id="layouts-mine" href="#my-layouts-pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
-                                </li>
-                                <li id="cls" class=""><a id="layouts-shared" href="#shared-layouts-pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
-                                </li>                 
+                                {% if layout_name in my_layouts %}
+                                    <li id="private" class="active">
+                                        <a id="layouts-mine" href="#my-layouts-pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
+                                    </li>
+                                    <li id="shared"><a id="layouts-shared" href="#shared-layouts-pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
+                                    </li>  
+                                {% elif layout_name in shared_layouts %}
+                                    <li id="private">
+                                        <a id="layouts-mine" href="#my-layouts-pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
+                                    </li>
+                                    <li id="shared" class="active">
+                                        <a id="layouts-shared" href="#shared-layouts-pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
+                                    </li>
+                                {% else %}    
+                                    <li id="private">
+                                        <a id="layouts-mine" href="#my-layouts-pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
+                                    </li>
+                                    <li id="shared">
+                                        <a id="layouts-shared" href="#shared-layouts-pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
+                                    </li>
+                                {% endif %}           
                             </ul>
                             <br/>
                                 <div id="alert-div">
@@ -272,106 +312,129 @@
                                 <div class="tab-content">
                                 <div class="tab-pane active" id="graph-layouts-pane">
                                 </div>
-                                    <div class="tab-pane" id="my-layouts-pane">
+                                    {% if layout_name in my_layouts %}
+                                        <div class="tab-pane active" id="my-layouts-pane">
+                                    {% else %}
+                                        <div class="tab-pane" id="my-layouts-pane">
+                                    {% endif %}
                                       {% for o in my_layouts %}
                                         {% with layout_urls|add:o as url %}
-                                        <a class="list-group-item layout_buttons" href="{{o}}">
-                                            <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
+
+                                        {% if o in layout_name %}
+                                            <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
+                                        {% else %}
+                                            <a class="list-group-item layout_buttons" href="{{o}}">
+                                        {% endif %}
+                                            {{o}}<br /><br />
+                                            <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: left;">
                                               <span class="glyphicon glyphicon-remove"></span>
                                             </button>
-                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Share layout" style="float: right;">
+                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Share layout" style="float: left;">
                                               <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
-                                            <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
+                                            <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: left;">
                                               <span class="glyphicon glyphicon-pencil"></span>
                                             </button>
-                                            <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
+                                            <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
                                               <span class="glyphicon glyphicon-link"></span>
                                             </button>
                                             {% if uid == owner %}
-                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: right;">
+                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as Default Layout" value="{{o}}" style="float: left;">
                                                   <span class="glyphicon glyphicon-bookmark"></span>
                                                 </button>
                                             {% else %}
-                                                <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: right;">
+                                                <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: left;">
                                                   <span class="glyphicon glyphicon-bookmark"></span>
                                                 </button>
                                             {% endif %}
-                                            {{o}}
                                             <div style="clear: both;"></div>
                                           </a>
                                         {% endwith %}
                                       {% endfor %}
                                   </div>
-                                    <div class="tab-pane" id="shared-layouts-pane">
+                                    {% if layout_name in shared_layouts %}
+                                        <div class="tab-pane active" id="shared-layouts-pane">
+                                    {% else %}
+                                        <div class="tab-pane" id="shared-layouts-pane">
+                                    {% endif %}
                                         {% for o in shared_layouts %}
-                                        {% with layout_urls|add:o as url %}
-                                        {% if o in my_shared_layouts %}
-                                            <a class="list-group-item layout_buttons" href="{{o}}">
-                                            <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
-                                              <span class="glyphicon glyphicon-remove"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Unshare layout" style="float: right;">
-                                              <span class="glyphicon glyphicon-eye-close"></span>
-                                            </button>
-                                            
-                                            <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
-                                              <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
-                                              <span class="glyphicon glyphicon-link"></span>
-                                            </button>
-                                            {% if uid == owner and default_layout == None %}
-                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o}}" style="float: right;">
-                                                  <span class="glyphicon glyphicon-bookmark"></span>
-                                                </button>
-                                            {% else %}
-                                                <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: right;">
-                                                  <span class="glyphicon glyphicon-bookmark"></span>
-                                                </button>
-                                            {% endif %}
-                                            {{o}}
-                                            <div style="clear: both;"></div>
-                                          </a>
-                                        {% else %}
-                                                {% if uid == owner %}
-                                                <a class="list-group-item layout_buttons" href="{{o}}">
-                                            <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: right;">
-                                              <span class="glyphicon glyphicon-remove"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Unshare layout" style="float: right;">
-                                              <span class="glyphicon glyphicon-eye-close"></span>
-                                            </button>
-                                            
-                                            <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: right;">
-                                              <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
-                                              <span class="glyphicon glyphicon-link"></span>
-                                            </button>
-                                            {% if uid == owner and default_layout == None %}
-                                                <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o}}" style="float: right;">
-                                                  <span class="glyphicon glyphicon-bookmark"></span>
-                                                </button>
-                                            {% else %}
-                                                <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: right;">
-                                                  <span class="glyphicon glyphicon-bookmark"></span>
-                                                </button>
-                                            {% endif %}
-                                                {%else %}
+                                            {% with layout_urls|add:o as url %}
+                                            {% if o in my_shared_layouts %}
+                                                {% if o in layout_name %}
+                                                    <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
+                                                {% else %}
                                                     <a class="list-group-item layout_buttons" href="{{o}}">
-                                                    <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: right;">
-                                                      <span class="glyphicon glyphicon-link"></span>
-                                                    </button>
-                                            {% endif %}
-                                                {{o}}
+                                                {% endif %}
+                                                 {{o}}<br /><br />
+                                               <!-- <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: left;">
+                                                  <span class="glyphicon glyphicon-remove"></span>
+                                                </button> -->
+                                                <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Unshare layout" style="float: left;">
+                                                  <span class="glyphicon glyphicon-eye-close"></span>
+                                                </button>
+                                                
+                                                <button class="btn btn-default layout_links change" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o}}" style="float: left;">
+                                                  <span class="glyphicon glyphicon-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                                  <span class="glyphicon glyphicon-link"></span>
+                                                </button>
+                                                {% if uid == owner %}
+                                                    {% if default_layout == None or default_layout != o %}
+                                                        <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o}}" style="float: left;">
+                                                          <span class="glyphicon glyphicon-bookmark"></span>
+                                                        </button>
+                                                    {% elif default_layout == o %}
+                                                        <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: left;">
+                                                          <span class="glyphicon glyphicon-bookmark"></span>
+                                                        </button>
+                                                    {% endif %}
+                                                {% endif %}
                                                 <div style="clear: both;"></div>
                                               </a>
-                                        {% endif %}
-                                        {% endwith %}
+                                            {% else %}
+                                                    {% if uid == owner %}
+                                                        {% if o == layout_name %}
+                                                            <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
+                                                        {% else %}
+                                                            <a class="list-group-item layout_buttons" href="{{o}}">
+                                                        {% endif %}
+                                                        {{o}}<br /><br />
+<!--                                                         <button class="btn btn-default layout_links remove" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o}}" style="float: left;">
+                                                          <span class="glyphicon glyphicon-remove"></span>
+                                                        </button> -->
+                                                        <button class="btn btn-default layout_links public" id="{{url}}" value="{{o}}" rel="tooltip"title="Unshare layout" style="float: left;">
+                                                          <span class="glyphicon glyphicon-eye-close"></span>
+                                                        </button>
+                                                        <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                                          <span class="glyphicon glyphicon-link"></span>
+                                                        </button>
+                                                        <button class="btn btn-default layout_links default" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o}}" style="float: left;">
+                                                          <span class="glyphicon glyphicon-bookmark"></span>
+                                                        </button>
+                                                         {% if uid == owner and default_layout == o %}
+                                                            <button class="btn btn-default layout_links removeDefault" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o}}" style="float: left;">
+                                                              <span class="glyphicon glyphicon-bookmark"></span>
+                                                            </button>
+                                                        {% endif %}
+                                                    {%else %}
+                                                        {% if o == layout_name %}
+                                                            <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{o}}">
+                                                        {% else %}
+                                                            <a class="list-group-item layout_buttons" href="{{o}}">
+                                                        {% endif %}
+                                                        {{o}}<br /><br />
+                                                        <button class="btn btn-default layout_links highlight" id="{{url}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                                          <span class="glyphicon glyphicon-link"></span>
+                                                        </button>
+                                                {% endif %}
+                                                    <div style="clear: both;"></div>
+                                                  </a>
+                                            {% endif %}
+                                            {% endwith %}
                                       {% endfor %}
                                     </div>
-                                    <div class="tab-pane" id="public-layouts-pane">
+<!--                                     <div class="tab-pane" id="public-layouts-pane">
                                       {% for o in public_layouts %}
                                         {% with layout_urls|add:o as url %}
                                         <a class="list-group-item layout_buttons" href="{{o}}">
@@ -383,7 +446,7 @@
                                           </a>
                                         {% endwith %}
                                       {% endfor %}
-                                    </div>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
