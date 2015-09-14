@@ -4,11 +4,11 @@
 <div class="container graphs">
 
 <ul class="nav nav-pills">
+    <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
     <li class="active"><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
     <li ><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
-    <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
-    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
-  </ul>
+<!--     <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
+ -->  </ul>
 <hr>
 
 <!-- <h1>Welcome to GraphSpace!</h1>
@@ -22,8 +22,8 @@
 <li><h4><a href="#graphs">Graphs</a></h4>
 <ul>
 <li><a href="#what_is">What is a graph</a></li>
-<li><a href="#navigating_gs">Navigating GraphSpace</a></li>
-<li><a href="#view_graph">Viewing a graph</a></li>
+<!-- <li><a href="#navigating_gs">Navigating GraphSpace</a></li>
+ --><li><a href="#view_graph">Viewing a graph</a></li>
 <li><a href="#embedded_info">Embedded Information</a></li>
 <li><a href="#graph_panels">Graph Panels</a>
 	<ul>
@@ -69,10 +69,10 @@ Graphs may be used to represent many different types of models.  An example of s
 <li><a href="#upload">I want to upload graphs</a>
 <li><a href="#sharing">I want to share my graphs</a>
 </ul> -->
-<h3 style="padding-top: 50px; margin-top: -40px;" id="navigating_gs">Navigating GraphSpace</h3>
+<!-- <h3 style="padding-top: 50px; margin-top: -40px;" id="navigating_gs">Navigating GraphSpace</h3>
 
-Anonymous users may only see <a href="{{url}}graphs/public">public graphs</a>.  This section contains all graphs that anyone that visits GraphSpace can see.  Any person on GraphSpace may upload a graph.  Anonymous users may only <a href="{{url}}graphs/upload/">upload</a> public graphs.  If a person is a registered user of GraphSpace, they may upload via the <a href="{{url}}help/programmers#add_graph">REST API</a> or <a href="{{url}}graphs/upload/">web interface</a>.  Registered users of GraphSpace may specify whether they want their graphs to be private or public via <a href="{{url}}help/programmers#make_graph_public">REST API</a>.<br><br>
-When a user is logged into GraphSpace, they may navigate to the "Graphs" section in order to see all the graphs that they have permissions to see.  The "Graphs" section has three options, My Graphs (all graphs that the user uploaded), Shared Graphs (graphs that are shared with groups that the user is member of), and Public Graphs (graphs that everyone can view).
+Users of GraphSpace who have not made an account or have not logged in may only see <a href="{{url}}graphs/public">public graphs</a>.  Public graphs contains all graphs that are available to everyone.  Any person on GraphSpace may upload a graph.  Users without a GraphSpace account may only <a href="{{url}}graphs/upload/">upload</a> public graphs.  If a person is a registered user of GraphSpace, they may upload via the <a href="{{url}}help/programmers#add_graph">REST API</a> or <a href="{{url}}graphs/upload/">web interface</a>.  Registered users of GraphSpace may specify whether they want their graphs to be private or public via <a href="{{url}}help/programmers#make_graph_public">REST API</a>.<br><br>
+When a user is <b>logged into GraphSpace</b>, they may navigate to the <a href="{{url}}graphs/">Graphs</a> section in order to see all of the graphs that they have permissions to see.  The "Graphs" section has three options, <a href="{{url}}graphs/">My Graphs</a>  (all graphs that the user has already uploaded), <a href="{{url}}graphs/shared">Shared Graphs</a> (graphs that are shared with groups that the user is member of), and <a href="{{url}}graphs/public">Public Graphs</a>  (graphs that everyone can view). -->
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Viewing a Graph</h3>
 
@@ -372,7 +372,7 @@ It is built using the following technologies:<br/><br/>
 
 <footer class="footer">
 <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
-<br><a href = "http://js.cytoscape.org/">CytoscapeJS</a>
+<br><a href = "http://js.cytoscape.org/">CytoscapeJS 2.4.0</a>
 </footer>
 
 {% endblock %}
