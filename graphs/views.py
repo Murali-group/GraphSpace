@@ -325,11 +325,11 @@ def constructGraphMessage(context, view_type, search, tags):
 
     elif view_type == 'public':
         if search == None and tags == None:
-            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs."
+            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
         elif search != None and tags == None:
-            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs with the given search criteria."
+            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria."
         elif tags != None and search == None:
-            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs with the given tag criteria."
+            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria."
         else:
             context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs with the given search and tag criteria."
 
@@ -344,13 +344,13 @@ def constructGraphMessage(context, view_type, search, tags):
             context['message'] = "It appears that there are no graphs available that match the search and tag criteria."
     else:
         if search == None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded. Please <a href='/../help/programmers/#add_graph'>upload</a> graphs in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
         elif search != None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please <a href='/../help/programmers/#add_graph'>upload</a> graphs with the given search criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria in order to see them here."
         elif tags != None and search == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please <a href='/../help/programmers/#add_graph'>upload</a> graphs with the given tag criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria in order to see them here."
         else:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please <a href='/../help/programmers/#add_graph'>upload</a> graphs with the given search and tag criteria in order to see them here."
+            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>  with the given search and tag criteria in order to see them here."
 
     return context
 
