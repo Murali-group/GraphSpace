@@ -32,6 +32,7 @@
 .test {
   width: 125px;
   word-wrap: break-word;
+  padding-right: 30px;
 }
 
 .search_box_container {
