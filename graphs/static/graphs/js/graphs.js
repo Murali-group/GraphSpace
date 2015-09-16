@@ -37,6 +37,11 @@ $(document).ready(function() {
     clearSearchTerms();
   });
 
+  $("#clear_tags").click(function(e) {
+    e.preventDefault();
+    clearTagTerms();
+  });
+
 
   // $(".search").click(function (e) {
   //    e.preventDefault();
@@ -300,15 +305,28 @@ $(document).ready(function() {
     }
   }
 
-  function clearSearchTerms() {
-    if (document.URL.indexOf('?') > -1) {
-      var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+  function clearTagTerms() {
+    if (document.URL.indexOf('?') > -1 && document.URL.indexOf('tags') > -1) {
+      var linkToGraph = removeURLParameter(document.URL, "tags");
+      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
     } else {
       var linkToGraph = document.URL;
     }
 
-    if (getQueryVariable('layout')) {
-      linkToGraph += '?layout=' + getQueryVariable('layout');
+    window.location.href = linkToGraph;
+  }
+
+  function clearSearchTerms() {
+    if (document.URL.indexOf('?') > -1) {
+      if (getQueryVariable("partial_search")) {
+        var linkToGraph = removeURLParameter(document.URL, "partial_search");
+        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      } else if (getQueryVariable("full_search")) {
+        var linkToGraph = removeURLParameter(document.URL, "full_search");
+        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      }
+    } else {
+      var linkToGraph = document.URL;
     }
 
     window.location.href = linkToGraph;

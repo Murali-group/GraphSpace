@@ -252,7 +252,7 @@
                     </div>
                   </form><br>
                   <div style="text-align: center;">
-                    <button class="btn btn-default" id="clear_search">Clear all search terms</button>
+                    <button class="btn btn-default" style="width: 100%;" id="clear_search">Clear all search terms</button>
                   </div>
                   <!-- <div id="search_tips" class="alert alert-info alert-dismissable" style="">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -305,9 +305,13 @@
                   </ul>
                 {% for tag in all_tags %}
                     {% with base_url|add:"?tags="|add:tag as tag_url %}
-                    <button class="btn btn-default tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>
+                    <button class="btn btn-primary tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>
                     {% endwith %}
                 {% endfor %}
+                <br>
+                <br>
+                <button class="btn btn-default" id="clear_tags" style="width: 100%;">Clear all tag terms</button>
+
           </div>
         </div>
       </div>

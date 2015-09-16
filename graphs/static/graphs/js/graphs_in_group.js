@@ -90,10 +90,70 @@ $(document).ready(function() {
       });
    });
 
-   $("#clear_search").click(function(e) {
+  $("#clear_search").click(function(e) {
     e.preventDefault();
-    location.href = document.URL;
-   });
+    clearSearchTerms();
+  });
+
+  $("#clear_tags").click(function(e) {
+    e.preventDefault();
+    clearTagTerms();
+  });
+
+  function clearTagTerms() {
+    if (document.URL.indexOf('?') > -1 && document.URL.indexOf('tags') > -1) {
+      var linkToGraph = removeURLParameter(document.URL, "tags");
+      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+    } else {
+      var linkToGraph = document.URL;
+    }
+
+    window.location.href = linkToGraph;
+  }
+
+  /*
+   * Removes the parameter from url that I don't want.
+   * @param url URL to parse
+   * @param parameter variable to delete from querystring
+   */
+  function removeURLParameter(url, parameter) {
+    //prefer to use l.search if you have a location/link object
+    var urlparts = url.split('?');
+    if (urlparts.length >= 2) {
+
+      var prefix = encodeURIComponent(parameter) + '=';
+      var pars = urlparts[1].split(/[&;]/g);
+
+      //reverse iteration as may be destructive
+      for (var i = pars.length; i-- > 0;) {
+        //idiom for string.startsWith
+        if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+          pars.splice(i, 1);
+        }
+      }
+
+      url = urlparts[0] + '?' + pars.join('&');
+      return url;
+    } else {
+      return url;
+    }
+  }
+
+  function clearSearchTerms() {
+    if (document.URL.indexOf('?') > -1) {
+      if (getQueryVariable("partial_search")) {
+        var linkToGraph = removeURLParameter(document.URL, "partial_search");
+        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      } else if (getQueryVariable("full_search")) {
+        var linkToGraph = removeURLParameter(document.URL, "full_search");
+        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      }
+    } else {
+      var linkToGraph = document.URL;
+    }
+
+    window.location.href = linkToGraph;
+  }
 
    /**
    * When clicked, it removes a member (current GS user)
