@@ -1301,6 +1301,15 @@ def uploadCyjsFile(username, graphJSON):
 
 	csjs = json.loads(graphJSON)
 
+	if 'elements' not in csjs:
+		return {"Error": "No elements inside of file!"}
+
+	if 'nodes' not in csjs['elements']:
+		return {"Error": "File must contain nodes property in elements dictionary!"}
+
+	if 'edges' not in csjs['elements']:
+		return {"Error": "File must contain edges property in elements dictionary!"}
+
 	for node in csjs['elements']['nodes']:
 		tempNode = {"data": {}}
 		tempNode['data']['id'] = node['data']['id']
@@ -1337,6 +1346,37 @@ def uploadCyjsFile(username, graphJSON):
 		if first_request == None:
 			result = insert_graph(public_user_id, parseJson['metadata']['name'], json.dumps(parseJson))
 
+			if result == None: 
+				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + parseJson['metadata']['name']}
+			else: 
+				return {"Error": result}
+		else:
+			return {"Error": result}
+
+def uploadJSONFile(username, graphJSON):
+
+	parseJson = json.loads(graphJSON)
+
+	if 'metadata' not in parseJson:
+		parseJson['metadata'] = {}
+
+	if 'name' not in parseJson['metadata']:
+		parseJson['metadata']['name'] = "graph_" + str(datetime.now())
+
+	if username != None:
+		result = insert_graph(username, parseJson['metadata']['name'], json.dumps(parseJson))
+		if result == None:
+			return {"Success": URL_PATH + "graphs/" + username + "/" + parseJson['metadata']['name']}
+		else:
+			return {"Error": result}
+	else:
+		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+		public_user_id = public_user_id.replace('-', '_')
+		
+		first_request = create_public_user(public_user_id)
+
+		if first_request == None:
+			result = insert_graph(public_user_id, parseJson['metadata']['name'], json.dumps(parseJson))
 			if result == None: 
 				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + parseJson['metadata']['name']}
 			else: 
