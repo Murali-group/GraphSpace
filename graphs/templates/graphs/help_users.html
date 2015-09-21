@@ -22,20 +22,21 @@
 <li><h4><a href="#graphs">Graphs</a></h4>
 <ul>
 <li><a href="#what_is">What is a graph</a></li>
-<!-- <li><a href="#navigating_gs">Navigating GraphSpace</a></li>
- --><li><a href="#view_graph">Viewing a graph</a></li>
-<li><a href="#embedded_info">Embedded Information</a></li>
-<li><a href="#graph_panels">Graph Panels</a>
+<li><a href="#view_graph">Viewing a graph</a></li>
 	<ul>
-		<li><a href="#details_panel">Graph Details Panel</a></li>
-		<li><a href="#search_panel">Search Panel</a></li>
-		<li><a href="#export_panel">Export Panel</a></li>
-		<li><a href="#owner_panel">Owner Panel</a></li>
-		<li><a href="#sharing_panel">Sharing Panel</a></li>
-		<li><a href="#layout_panel">Layouts Panel</a></li>
-		<li><a href="#step_panel">Step through Filtering Panel</a></li>
+		<li><a href="#embedded_info">Embedded Information</a></li>
+		<li><a href="#graph_panels">Graph Panels</a>
+			<ul>
+				<li><a href="#details_panel">Graph Details</a></li>
+				<li><a href="#search_panel">Search</a></li>
+				<li><a href="#export_panel">Export</a></li>
+				<li><a href="#owner_panel">Owner</a></li>
+				<li><a href="#sharing_panel">Sharing</a></li>
+				<li><a href="#layout_panel">Layouts</a></li>
+				<li><a href="#step_panel">Step through Filtering</a></li>
+			</ul>
+		</li>
 	</ul>
-</li>
 <li><a href="#finding_graphs">Finding Graphs</a></li>
 <li><a href="#upload_graphs">Uploading Graphs</a></li>
 	<ul>
@@ -56,13 +57,13 @@
 <li><h4><a href="#contact">Acknowledgments</a></h4></li>
 </ul>
 
+<hr>
+
 <h3 style="padding-top: 50px; margin-top: -40px;" id="what_is">What is a graph?</h3>
 
-A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing vertices (also known as nodes or points) and edges which connect the vertices.
+<p>A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing nodes and edges which connect the nodes together.</p>
 
-<br/>
-
-Graphs may be used to represent many different types of models.  An example of some of them are computer networks and biological pathways.  A graph may contain vertices(nodes) and lines(edges).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between these two proteins.  Thus, if two nodes in the graph have an edge that is connected between them, this indicates that two proteins in the network interact.
+<p>Graphs may be used to represent many different types of models such as computer networks and biological pathways.  A graph may contain nodes(vertices) and edges(lines).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between two proteins.  An edge that connects two proteins indicates interaction between them.</p>
 <!-- 
 <ul>
 <li><a href="#view">I want to find and view graphs that are shared with me</a>
@@ -73,7 +74,7 @@ Graphs may be used to represent many different types of models.  An example of s
 
 Users of GraphSpace who have not made an account or have not logged in may only see <a href="{{url}}graphs/public">public graphs</a>.  Public graphs contains all graphs that are available to everyone.  Any person on GraphSpace may upload a graph.  Users without a GraphSpace account may only <a href="{{url}}graphs/upload/">upload</a> public graphs.  If a person is a registered user of GraphSpace, they may upload via the <a href="{{url}}help/programmers#add_graph">REST API</a> or <a href="{{url}}graphs/upload/">web interface</a>.  Registered users of GraphSpace may specify whether they want their graphs to be private or public via <a href="{{url}}help/programmers#make_graph_public">REST API</a>.<br><br>
 When a user is <b>logged into GraphSpace</b>, they may navigate to the <a href="{{url}}graphs/">Graphs</a> section in order to see all of the graphs that they have permissions to see.  The "Graphs" section has three options, <a href="{{url}}graphs/">My Graphs</a>  (all graphs that the user has already uploaded), <a href="{{url}}graphs/shared">Shared Graphs</a> (graphs that are shared with groups that the user is member of), and <a href="{{url}}graphs/public">Public Graphs</a>  (graphs that everyone can view). -->
-
+<hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Viewing a Graph</h3>
 
 Consider the follow public <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">graph</a> below:
@@ -82,20 +83,23 @@ Consider the follow public <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-q
 <img width="80%" height="500px" align="middle" src="../../static/images/public_graph.png">
 
 <br><br>
+<hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="embedded_info">Embedded Information</h3>
-Elements (nodes and edges) inside of a graph may have information embedded in them.  Upon clicking any element inside of a graph, the element's border color will turn red.  If the clicked element does contain information, it will show up as part of a pop up box, otherwise no pop up will be shown. The image below shows the information that is contained inside of the node <b>CCT6</b>.
+Elements (nodes and edges) inside of a graph may have information embedded in them.  Upon clicking any element inside of a graph, the element's border color will turn red.  If the clicked element contains information (see <a href="{{url}}help/programmers/#json_ref">JSON reference</a>), it will show up as part of a pop up box, otherwise no pop up will be shown. The image below shows the information that is contained inside of the node <b>CCT6</b>.
 <br><br>
 <img width="50%" height="400px" align="middle" src="../../static/images/node_info.png">
 <br><br>
 The information embedded inside elements may contain external links to sources as well.
+<hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="graph_panels">Graph Panels</h3>
 When viewing a graph, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
-<b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details Panel</b>: Area where legend image for a graph and/or description of the graph.
+<b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details</b>: Contains information describing the graph e.g. legend
 <br><br>
 <img src="../../static/images/gd_panel.png" style="width: 30%"></p>
 <br>
-<b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching Panel</b>: "Search" allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on top of the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
+<hr>
+<b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching</b>: Allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
 <br><br>
 <img src="../../static/images/s_panel.png" style="width: 30%"></p>
 <br>
@@ -122,7 +126,7 @@ The <b>Similar</b> option under the search bar allows one to search for all elem
 <br><br>
 The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be distinguished.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been distinguished since there are no nodes in our example graph which have CDC as their entire value.
 <br><br>
-
+<!--
 Consider a graph which contains 4 nodes: Node_1, Node_2, Node_3, and Node_10.  There is an edge connecting Node_1 to Node_2, Node_2 to Node_3 and Node_3 to Node_10.
 
 <br><br>
@@ -181,7 +185,7 @@ The following table describes which nodes will be distinguished if a user of Gra
 
 </tbody>
 </table>
-<br>
+<br>-->
 <!-- Each term that is searched for while viewing the graph will get added to any previous search query.  For example, assume that there are two nodes, AKT1 and AKT3 that exist inside a graph.  The user searches for the term 'AKT1' using exact search.  If the user then exact searches for 'AKT3', then AKT3, in addition to AKT1 (from the previous search query) will be distinguished in the graph.  If one wishes to clear any search terms, they may do so by clicking the appropriate search term under the search bar.
  -->
 
