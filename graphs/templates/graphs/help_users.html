@@ -40,7 +40,7 @@
 <li><a href="#upload_graphs">Uploading Graphs</a></li>
 	<ul>
 		<li><a href="#upload_graphs_rest">REST API</a></li>
-		<li><a href="#upload_graphs_cyjs">CYJS</a></li>
+		<li><a href="#upload_graphs_cyjs">User Interface</a></li>
 	</ul>
 <li><a href="#search">Searching for graphs</a></li>
 </ul>
@@ -266,13 +266,15 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs">Uploading graphs</h3>
 
-<p>GraphSpace provides two methods to upload graphs: <a href="{{url}}help/programmers/#add_graph">Programmer's Guide</a> or <a href="{{url}}graphs/upload">CYJS upload link</a>.</p>
+<p>GraphSpace provides two methods to upload graphs: <a href="{{url}}help/programmers/#add_graph">Programmer's Guide</a> or <a href="{{url}}graphs/upload">User Interface</a>.</p>
 
 <h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_rest">REST API</h4>
 <p>This approach allows one to be more flexible and utilize all of the CSS features by specifically referencing them in the <a href="{{url}}help/programmers/#json_ref">JSON</a>.</p>
 
-<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">CYJS Upload link</h4>
-<p>For users who want to test drive GraphSpace and also use Cytoscape (3.1 or later), we allow <a href="{{url}}graphs/upload">uploads</a> of individual graphs in the CYJS format. Please follow <a href="https://github.com/idekerlab/cy-net-share/wiki">these instructions</a> to export your Cytoscape graph to CYJS format.
+<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">User Interface</h4>
+<p>For users who don't want to use the REST API for uploading a graph, we provide an easy upload interface.  This interface allows users to upload their JSON directly into their accounts on GraphSpace.<br><p>For users who want to test drive GraphSpace and also use Cytoscape (3.1 or later), we allow <a href="{{url}}graphs/upload">uploads</a> of individual graphs in the CYJS format. Please follow <a href="https://github.com/idekerlab/cy-net-share/wiki">these instructions</a> to export your Cytoscape graph to CYJS format.<b>Note: CYJS Files may only be uploaded via this user interface!</b></p>
+
+<p>For users who are not registered on GraphSpace, we provide this upload functionality as a tool to obtain a unique URL that contains the content of any JSON/CYJS file that is uploaded via the user interface.  <b>Note: all graphs that are uploaded for unregistered users of GraphSpace will be deleted after 30 days.</b></p>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="search">Searching for graphs</h3>
 

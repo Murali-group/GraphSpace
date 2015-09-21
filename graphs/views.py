@@ -1187,15 +1187,20 @@ def upload_graph_through_ui(request):
 
             upload_json = True
 
+            title_of_graph = None
+
+            if 'title' in request.POST:
+                title_of_graph = request.POST['title']
+
             if str(request.FILES['graphname'])[-4:] != "json":
                 upload_json = None
             
             if request.POST['email'] == 'Public User':
                 # assign random id generator
                 if upload_json:
-                    result = db.uploadJSONFile(None, request.FILES['graphname'].read())
+                    result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
                 else:
-                    result = db.uploadCyjsFile(None, request.FILES['graphname'].read())
+                    result = db.uploadCyjsFile(None, request.FILES['graphname'].read(), title_of_graph)
 
                 if 'Error' not in result:
                     context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
@@ -1205,9 +1210,9 @@ def upload_graph_through_ui(request):
             else:
 
                 if upload_json:
-                    result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read())
+                    result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
                 else:
-                    result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read())
+                    result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
 
                 if 'Error' not in result:
                     context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}

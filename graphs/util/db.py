@@ -1296,13 +1296,13 @@ def find_edges(uid, search_type, search_word, view_type, cur):
 	return actual_graph_with_edges
 
 
-def uploadCyjsFile(username, graphJSON):
+def uploadCyjsFile(username, graphJSON, title):
 	parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
 
 	csjs = json.loads(graphJSON)
 
 	if 'elements' not in csjs:
-		return {"Error": "No elements inside of file!"}
+		return {"Error": "No elements property inside of file!"}
 
 	if 'nodes' not in csjs['elements']:
 		return {"Error": "File must contain nodes property in elements dictionary!"}
@@ -1331,10 +1331,12 @@ def uploadCyjsFile(username, graphJSON):
 	parseJson['metadata']['tags'] = []
 	parseJson['metadata']['description'] = ""
 
+	title = title or parseJson['metadata']['name']
+
 	if username != None:
-		result = insert_graph(username, parseJson['metadata']['name'], json.dumps(parseJson))
+		result = insert_graph(username, title, json.dumps(parseJson))
 		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + parseJson['metadata']['name']}
+			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
 		else:
 			return {"Error": result}
 	else:
@@ -1344,16 +1346,17 @@ def uploadCyjsFile(username, graphJSON):
 		first_request = create_public_user(public_user_id)
 
 		if first_request == None:
-			result = insert_graph(public_user_id, parseJson['metadata']['name'], json.dumps(parseJson))
+			result = insert_graph(public_user_id, title, json.dumps(parseJson))
 
 			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + parseJson['metadata']['name']}
+				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
 			else: 
 				return {"Error": result}
 		else:
 			return {"Error": result}
 
-def uploadJSONFile(username, graphJSON):
+def uploadJSONFile(username, graphJSON, title):
+
 
 	parseJson = json.loads(graphJSON)
 
@@ -1363,10 +1366,12 @@ def uploadJSONFile(username, graphJSON):
 	if 'name' not in parseJson['metadata']:
 		parseJson['metadata']['name'] = "graph_" + str(datetime.now())
 
+	title = title or parseJson['metadata']['name']
+
 	if username != None:
-		result = insert_graph(username, parseJson['metadata']['name'], json.dumps(parseJson))
+		result = insert_graph(username, title, json.dumps(parseJson))
 		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + parseJson['metadata']['name']}
+			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
 		else:
 			return {"Error": result}
 	else:
@@ -1376,9 +1381,9 @@ def uploadJSONFile(username, graphJSON):
 		first_request = create_public_user(public_user_id)
 
 		if first_request == None:
-			result = insert_graph(public_user_id, parseJson['metadata']['name'], json.dumps(parseJson))
+			result = insert_graph(public_user_id, title, json.dumps(parseJson))
 			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + parseJson['metadata']['name']}
+				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
 			else: 
 				return {"Error": result}
 		else:

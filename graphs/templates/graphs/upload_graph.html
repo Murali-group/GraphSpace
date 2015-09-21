@@ -61,6 +61,15 @@
   </div>
 </div>
 
+{% if uid != None %}
+<div class="form-group">
+  <label class="col-md-4 control-label" for="title">Title of Graph</label>  
+  <div class="col-md-4">
+    <input id="title" name="title" type="text" placeholder="Title" class="form-control input-md" required="">
+  </div>
+</div>
+{% endif %}
+
 <!-- File Button --> 
 <div class="form-group">
   <label class="col-md-4 control-label" for="filebutton"></label>
