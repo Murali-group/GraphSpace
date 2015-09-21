@@ -296,13 +296,14 @@
                         </span>
                     </div>
                 </form>
-                <ul class="nav nav-pills">
+                <!-- <ul class="nav nav-pills">
                     {% if tags %}
                         {% for term in tag_terms %}
                           <li><a class='tags' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
                         {% endfor %}
                     {% endif %}
-                  </ul>
+                  </ul> -->
+                  <br>
                 {% for tag in all_tags %}
                     {% with base_url|add:"?tags="|add:tag as tag_url %}
                     <button class="btn btn-primary tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>

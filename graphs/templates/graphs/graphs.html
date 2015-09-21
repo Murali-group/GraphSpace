@@ -385,6 +385,7 @@
                         </span>
                     </div>
                 </form>
+                <br>
                 {% for tag in all_tags %}
                     {% with base_url|add:"?tags="|add:tag as tag_url %}
                     <button class="btn btn-primary tag_links" id="{{tag}}" style="margin: 2px;">{{ tag }}</button>

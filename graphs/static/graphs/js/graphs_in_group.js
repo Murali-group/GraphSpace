@@ -147,6 +147,8 @@ $(document).ready(function() {
       } else if (getQueryVariable("full_search")) {
         var linkToGraph = removeURLParameter(document.URL, "full_search");
         linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      } else {
+        var linkToGraph = document.URL;
       }
     } else {
       var linkToGraph = document.URL;
