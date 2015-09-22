@@ -22,18 +22,19 @@
 <li><h4><a href="#graphs">Graphs</a></h4>
 <ul>
 <li><a href="#what_is">What is a graph</a></li>
+<li><a href="#public_private">Public vs. Private Graphs</a></li>
 <li><a href="#view_graph">Viewing a graph</a></li>
 	<ul>
 		<li><a href="#embedded_info">Embedded Information</a></li>
 		<li><a href="#graph_panels">Graph Panels</a>
 			<ul>
-				<li><a href="#details_panel">Graph Details</a></li>
-				<li><a href="#search_panel">Search</a></li>
-				<li><a href="#export_panel">Export</a></li>
-				<li><a href="#owner_panel">Owner</a></li>
-				<li><a href="#sharing_panel">Sharing</a></li>
-				<li><a href="#layout_panel">Layouts</a></li>
-				<li><a href="#step_panel">Step through Filtering</a></li>
+				<li><a href="#details_panel">Graph Details Panel</a></li>
+				<li><a href="#search_panel">Search Panel</a></li>
+				<li><a href="#export_panel">Export Panel</a></li>
+				<li><a href="#owner_panel">Owner Panel</a></li>
+				<li><a href="#sharing_panel">Sharing Panel</a></li>
+				<li><a href="#layout_panel">Layouts Panel</a></li>
+				<li><a href="#step_panel">Step through Filtering Panel</a></li>
 			</ul>
 		</li>
 	</ul>
@@ -75,6 +76,13 @@
 Users of GraphSpace who have not made an account or have not logged in may only see <a href="{{url}}graphs/public">public graphs</a>.  Public graphs contains all graphs that are available to everyone.  Any person on GraphSpace may upload a graph.  Users without a GraphSpace account may only <a href="{{url}}graphs/upload/">upload</a> public graphs.  If a person is a registered user of GraphSpace, they may upload via the <a href="{{url}}help/programmers#add_graph">REST API</a> or <a href="{{url}}graphs/upload/">web interface</a>.  Registered users of GraphSpace may specify whether they want their graphs to be private or public via <a href="{{url}}help/programmers#make_graph_public">REST API</a>.<br><br>
 When a user is <b>logged into GraphSpace</b>, they may navigate to the <a href="{{url}}graphs/">Graphs</a> section in order to see all of the graphs that they have permissions to see.  The "Graphs" section has three options, <a href="{{url}}graphs/">My Graphs</a>  (all graphs that the user has already uploaded), <a href="{{url}}graphs/shared">Shared Graphs</a> (graphs that are shared with groups that the user is member of), and <a href="{{url}}graphs/public">Public Graphs</a>  (graphs that everyone can view). -->
 <hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="public_private">Public vs. Private Graphs</h3>
+<p>When a registered user uploads a graph to GraphSpace either through the <a href="{{url}}help/programmers">REST API</a> or the <a href="{{url}}graphs/upload">User Interface</a>, it is by default uploaded as a <b>private</b> graph.  A private graph may only be viewed by the owner of the graph (registered user who uploaded the graph).  The only way a private graph may be viewed by other registered GraphSpace users is if the private graph is shared with a <a href="#groups">group</a>.  If the owner of the graph is part of a group and shares their private graph with the group, all members of the group may view it as well as create their own layouts for the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p>
+
+<p>A <b>public</b> graph is viewable to any person that visits GraphSpace.  In order to make a private graph public, it may be done so through the <a href="{{url}}help/programmers/#make_graph_public">REST API</a>.  By making a graph public, it allows all registered users to share their layouts to the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p> 
+
+
+<hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Viewing a Graph</h3>
 
 Consider the follow public <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">graph</a> below:
@@ -94,12 +102,12 @@ The information embedded inside elements may contain external links to sources a
 <h3 style="padding-top: 50px; margin-top: -40px;" id="graph_panels">Graph Panels</h3>
 When viewing a graph, you'll notice that there are panels to the right of a graph.  Some of these panels are hidden.  Clicking on an individual panel will reveal information the panels contain.
 <br><br>
-<b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details</b>: Contains information describing the graph e.g. legend
+<b style="padding-top: 60px; margin-top: -40px;" id="details_panel">Graph Details Panel</b>: Contains information describing the graph e.g. legend
 <br><br>
 <img src="../../static/images/gd_panel.png" style="width: 30%"></p>
 <br>
 <hr>
-<b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching</b>: Allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
+<b style="padding-top: 60px; margin-top: -40px;" id="search_panel">Searching Panel</b>: Allows one to <b>distinguish</b> an element of a graph.  If a user wants to distinguish a node, simply enter the text that is displayed on the node.  If a user wants to distinguish an edge, enter a query in the following format: [tail: head], where the tail is a node that an edge is pointing from, and the head is a node which the arrow is pointing towards.
 <br><br>
 <img src="../../static/images/s_panel.png" style="width: 30%"></p>
 <br>
@@ -273,10 +281,10 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 <h3 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs">Uploading graphs</h3>
 
 <p>GraphSpace provides two methods to upload graphs: <a href="{{url}}help/programmers/#add_graph">Programmer's Guide</a> or <a href="{{url}}graphs/upload">User Interface</a>.</p>
-
+<hr>
 <h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_rest">REST API</h4>
 <p>This approach allows one to be more flexible and utilize all of the CSS features by specifically referencing them in the <a href="{{url}}help/programmers/#json_ref">JSON</a> for the graph.</p>
-
+<hr>
 <h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">User Interface</h4>
 <p>For users who don't want to use the <a href="{{url}}help/programmers/">REST API</a> for uploading a graph, we provide an easy interface for <a href="{{url}}graphs/upload">uploading</a> individual graphs.  This interface allows users to upload their graphs directly into their accounts on GraphSpace.
 </p>
@@ -311,8 +319,8 @@ To search for edges, search using the following syntax [tail: head] where tail i
 <br><br>
 If searching for multiple values, separate all individual search terms with commas.  Ex: AKT1, AKT3, JUN
 <br><br>
-<p>Refer to <a href="#search_panel">Searching Panel</a> for more information on searching funcitonality</p>
-
+<!-- <p>Refer to <a href="#search_panel">Searching Panel</a> for more information on searching funcitonality</p>
+ -->
 <p><b>Note</b>:If there are multiple search terms (and/or tag terms), all graphs that are returned WILL match all of these terms.  All graphs that are returned by the searches of a node and/or an edge will have all searched terms <b>distinguished</b> inside the graph.</p>
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h3>
@@ -352,10 +360,11 @@ In order to share a graph, you must own the graph.  In addition, you must be a m
 <hr>
 <h3 id="tags">Tags</h3>
 
-Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.  Tags are used to organize graphs for a user of GraphSpace, whereas groups are used to share graphs amongst multiple users of GraphSpace.
+<p>Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.  Tags are used to organize graphs for a user of GraphSpace, whereas groups are used to share graphs amongst multiple users of GraphSpace.</p>
 
-<br><br>
-Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide
+<p>Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide</p>
+
+<p>All tags associated with a graph must be defined in the metadata for the graph itself.  Refer to <a href="{{url}}help/programmers/#json_ref">JSON Reference</a>.</p>
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="contact">Acknowledgments</h3>
 
