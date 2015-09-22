@@ -195,24 +195,68 @@ If JSON fails validation, it should give some sort of error as to why it failed
 </pre>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
+<p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.
 
-For a detailed description of the JSON structure for graphs, please see the <a href="http://js.cytoscape.org/#notation/elements-json">CytoscapeJS API</a>.
+<p>GraphSpace supports Nody and Edge body properties from <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a>.</p>
+<p><b>Note</b>: All properties supported by CytoscapeJS which contain the '-' character must be specified as the '_' character when constructing the JSON for a graph.  For example, "background-color" is a property that is supported by CytoscapeJS.  In order to utilize this property in GraphSpace, it should be written as "background_color".  Another example is "border-color".  If a user wants to define this property in the JSON of the graph, it should be written as "border_color".</p></p>
 
-Below is a brief overview of some of the basic properties the JSON may have for a graph.
+<p>The basic structure of a properly formatted JSON in GraphSpace contains the following structure: 
+
+<pre>
+{
+    "graph": {
+        "nodes": [],
+        "edges": []
+    },
+    "metadata": {
+        "name": "",
+        "description": "",
+        "tags": []
+    }
+}
+</pre>
+<hr>
+<p>The "graph" property contains an array of <b>"nodes"</b> and <b>"edges"</b>.</p>
+
+<p>A node is an object that <b>must</b> contain the following properties:</p>
+
+<table class="table">
+  <thead>
+    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
+  </thead>
+  <tbody>
+    <tr> <td> id </td> <td> string </td> <td> The id of the node. </td> </tr>
+    <tr> <td> content    </td> <td> string </td> <td> The text that is displayed inside of the node. </td> </tr>
+    <tr> <td> popup    </td> <td> string </td> <td> The information that will be displayed in a popup when the node is hovered/clicked. </td> </tr>
+    <tr> <td> background_color    </td> <td> string </td> <td> The background color of the node.  It may be the names of colors or <a href="http://www.w3schools.com/tags/ref_colorpicker.asp">hexadecimal</a> values of the colors. </td> </tr>
+    <tr> <td> height     </td> <td> float  </td> <td> The height of the node. </td> </tr>
+    <tr> <td> width     </td> <td> float  </td> <td> The width of the node. </td> </tr>
+    <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. (See <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a> documentation for types of shapes)</td> </tr>
+    <tr> <td> k     </td> <td> integer  </td> <td> Show this node at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information.</td> </tr>
+ </tbody>
+</table>
+<hr>
+<p>An edge is an object that <b>must</b> have the following properties:</p>
 
 <table class="table">
   <thead>
     <tr> <th> Name </th> <th> Type </th> <td> Description </td> </tr>
   </thead>
   <tbody>
-    <tr> <td> metadata </td> <td> object </td> <td> Container for the graph details html. </td> </tr>
-    <!-- <tr> <td> layout    </td> <td> string  </td> <td> The layout style for the graph. </td> </tr> -->
-    <!-- <tr> <td> tags </td> <td> array    </td> <td> The tags to add when the graph is uploaded. </td> </tr> -->
-    <!-- <tr> <td> data </td> <td> object </td> <td> The node and edge data of the graph. </td> </tr> -->
-    <tr> <td> nodes </td> <td> array of objects </td> <td> Contains all nodes.  Each object contains "data" as key, and information about node as value. Ex: {"data": {[properties of node]}}</td> </tr>
-    <tr> <td> edges </td> <td> array of objects </td> <td> Contains all edges.  Each object contains "data" as key, and information about edge as value. Ex: {"data": {[properties of edge]}}</td> </tr>
+    <tr> <td> id </td> <td> string </td> <td> The id of the edge. </td> </tr>
+    <tr> <td> content    </td> <td> string </td> <td> Text that will be displayed on the edge (usually blank strings)</td> </tr>
+    <tr> <td> popup    </td> <td> string </td> <td> The information that will be displayed in a popup when the edge is hovered/clicked. </td> </tr>
+    <tr> <td> color    </td> <td> string </td> <td> The color of the edge. </td> </tr>
+    <tr> <td> width    </td> <td> float  </td> <td> The width of the edge. </td> </tr>
+    <tr> <td> source </td> <td> string    </td> <td> The id of the node where the edge is coming from</td> </tr>
+    <tr> <td> target </td> <td> string    </td> <td> The id of the node where edge is going to. </td> </tr>
+    <tr> <td> k     </td> <td> integer  </td> <td> Show this node at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information.</td> </tr>
   </tbody>
 </table>
+<hr>
+
+<p>The "metadata" property in a graph contains information about the graph.</p>
+
 <p>Below are properties that the metadata object may have</p>
 <table class="table">
   <thead>
@@ -221,52 +265,74 @@ Below is a brief overview of some of the basic properties the JSON may have for 
   <tbody>
   <tr><td> name</td><td> string</td><td> Name that is displayed while viewing a graph</td>
   <tr><td> description</td><td> string</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May contain information such as a legend or significance of the graph.</td>
-  <tr><td> tags</td><td> array</td><td> Used to categorize graphs. See <a href="{{url}}help/#tags">Tags</a> for more information.</td>
+  <tr><td> tags</td><td> array of strings</td><td> Used to categorize graphs.  See <a href="{{url}}help/#tags">Tags</a> for more information.</td></tr>
   </tbody>
 </table>
-<p>
-Below are the most common attributes that nodes and edges can have. For a complete list, see the CytoscapeJS documentation for 
-<a href="http://js.cytoscape.org/#style/node-body">nodes</a> and 
-<a href="http://js.cytoscape.org/#style/edge-line">edges</a>.<br><br>
-**NOTE** All properties with '-' character should be replaced with '_'.  Example: 'background-color' should be 'background_color'
-</p>
-<p>
-Basic node attributes:
-</p>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="example">Example JSON</h3>
+<p>The following example is a correctly structured JSON for GraphSpace.</p>
+<pre>
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P4314611",
+                    "content": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2,
+                    "k": 0
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P0810711",
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888",
+                    "k": 0
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "source": "P4314611",
+                    "target": "P0810711",
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle",
+                    "k": 0
+                }
+            }
+        ]
 
-<table class="table">
-  <thead>
-    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
-  </thead>
-  <tbody>
-    <tr> <td> id </td> <td> string </td> <td> The id of the node. </td> </tr>
-    <tr> <td> content    </td> <td> string </td> <td> The visible node label. </td> </tr>
-    <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the node is hovered/clicked. </td> </tr>
-    <tr> <td> background_color    </td> <td> string </td> <td> The background color of the node. </td> </tr>
-    <tr> <td> height     </td> <td> float  </td> <td> The height of the node. </td> </tr>
-    <tr> <td> width     </td> <td> float  </td> <td> The width of the node. </td> </tr>
-    <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. (See <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a> documentation for types of shapes)</td> </tr>
-  </tbody>
-</table>
-
-<p>
-Basic edge attributes:
-</p>
-
-<table class="table">
-  <thead>
-    <tr> <th> Name </th> <th> Type </th> <td> Description </td> </tr>
-  </thead>
-  <tbody>
-    <tr> <td> id </td> <td> string </td> <td> The id of the edge. </td> </tr>
-    <tr> <td> content    </td> <td> string </td> <td> The visible label of the edge </td> </tr>
-    <tr> <td> popup    </td> <td> string </td> <td> The html that will be displayed when the edge is hovered/clicked. </td> </tr>
-    <tr> <td> color    </td> <td> string </td> <td> The color of the edge. </td> </tr>
-    <tr> <td> width    </td> <td> float  </td> <td> The width of the edge. </td> </tr>
-    <tr> <td> source </td> <td> string    </td> <td> The source destination where edge is coming from. </td> </tr>
-    <tr> <td> target </td> <td> string    </td> <td> The target destination where edge is going to. </td> </tr>
-  </tbody>
-</table>
+    },
+    "metadata": {
+        "name": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
+</pre>
 
 <h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="get_graph">Get graph</h3>
 
@@ -291,7 +357,8 @@ Example successful response:
                     "width": 50,
                     "background_color": "yellow",
                     "background_blacken": 0.1,
-                    "border_width": 2
+                    "border_width": 2,
+                    "k": 0
                 }
             }, 
             {
@@ -309,7 +376,8 @@ Example successful response:
                     "text_wrap": "wrap",
                     "color": "black",
                     "text_outline_width": 2,
-                    "text_outline_color": "#888"
+                    "text_outline_color": "#888",
+                    "k": 0
                 }
             }
         ],
@@ -322,7 +390,8 @@ Example successful response:
                     "line_color": "blue",
                     "line_style": "dotted",
                     "source_arrow_color": "yellow",
-                    "target_arrow_shape": "triangle"
+                    "target_arrow_shape": "triangle",
+                    "k": 0
                 }
             }
         ]
