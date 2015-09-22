@@ -50,9 +50,9 @@ Below is a list of the different API calls.
 <ul>
 <li><h4><a href="#graphs">Graphs</a></h4>
 <ul>
-<li><a href="#add_graph">Add graph</a></li>
 <li><a href="#json_ref">JSON Reference</a></li>
 <li><a href="#example">Example JSON</a></li>
+<li><a href="#add_graph">Add graph</a></li>
 <li><a href="#get_graph">Get graph</a></li>
 <li><a href="#update_graph">Update graph</a></li>
 <li><a href="#remove_graph">Remove graph</a></li>
@@ -87,114 +87,8 @@ Below is a list of the different API calls.
 </li>
 </ul>
 
+<hr>
 <h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
-
-<h3 style="padding-top: 50px; margin-top: -40px;" id="add_graph">Add graph</h3>
-
-In order to add a graph to GraphSpace, make the following POST request where [email] is your email and [password] is your password.
-
-<pre>
-curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"; echo
-</pre>
-
-Here is an example of a basic graph JSON:
-<pre>
-{
-    "graph": {
-        "nodes": [
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P4314611",
-                    "content": "DCC",
-                    "height": 50,
-                    "width": 50,
-                    "background_color": "yellow",
-                    "background_blacken": 0.1,
-                    "border_width": 2
-                }
-            }, 
-            {
-                "data": {
-                    "shape": "ellipse",
-                    "id":"P0810711",
-                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
-                    "height": 150,
-                    "width": 150,
-                    "background_color": "red",
-                    "background_blacken": 0,
-                    "border_width": 5,
-                    "border_style": "double",
-                    "border_color": "black",
-                    "text_wrap": "wrap",
-                    "color": "black",
-                    "text_outline_width": 2,
-                    "text_outline_color": "#888"
-                }
-            }
-        ],
-        "edges": [
-            {
-                "data": {
-                    "source": "P4314611",
-                    "target": "P0810711",
-                    "width": 12,
-                    "line_color": "blue",
-                    "line_style": "dotted",
-                    "source_arrow_color": "yellow",
-                    "target_arrow_shape": "triangle"
-                }
-            }
-        ]
-
-    },
-    "metadata": {
-        "name": "Graph Name",
-        "description": "Description of graph.. can also point to an image hosted elsewhere",
-        "tags": [
-            "tutorial"
-        ]
-    }
-}
-</pre>
-
-<!-- <p><b>The following properties are required for a <em>node</em> to have:</b>
-  
-  <ul>
-    <li>content</li>
-    <li>id (each node id has to be unique)</li>
-  </ul>
-
-<b>The following properties are required for a <em>edge</em> to have:</b>
-  
-  <ul>
-    <li>source</li>
-    <li>target</li>
-  </ul>
-
-</p>
-
-<b>When using HEX value to specify color, be sure to prepend with '#' character e.g. '#000000'</b><br><br> -->
-
-
-Example successful response:
-
-<pre>
-{
-    "Message": "Graph inserted into GraphSpace!",
-    "StatusCode": 201
-}
-</pre>
-
-If JSON fails validation, it should give some sort of error as to why it failed
-
-<pre>
-{
-    "Error": "Property content not in JSON for node",
-    "StatusCode": 400
-}
-</pre>
-
 <h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
 <p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.
 
@@ -332,6 +226,113 @@ If JSON fails validation, it should give some sort of error as to why it failed
             "tutorial"
         ]
     }
+}
+</pre>
+<hr>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="add_graph">Add graph</h3>
+
+In order to add a graph to GraphSpace, make the following POST request where [email] is your email and [password] is your password.
+
+<pre>
+curl -X POST "{{url}}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"; echo
+</pre>
+
+Here is an example of a basic graph JSON:
+<pre>
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P4314611",
+                    "content": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P0810711",
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "source": "P4314611",
+                    "target": "P0810711",
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle"
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "name": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
+</pre>
+
+<!-- <p><b>The following properties are required for a <em>node</em> to have:</b>
+  
+  <ul>
+    <li>content</li>
+    <li>id (each node id has to be unique)</li>
+  </ul>
+
+<b>The following properties are required for a <em>edge</em> to have:</b>
+  
+  <ul>
+    <li>source</li>
+    <li>target</li>
+  </ul>
+
+</p>
+
+<b>When using HEX value to specify color, be sure to prepend with '#' character e.g. '#000000'</b><br><br> -->
+
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graph inserted into GraphSpace!",
+    "StatusCode": 201
+}
+</pre>
+
+If JSON fails validation, it should give some sort of error as to why it failed
+
+<pre>
+{
+    "Error": "Property content not in JSON for node",
+    "StatusCode": 400
 }
 </pre>
 <hr>
