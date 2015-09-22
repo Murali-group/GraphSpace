@@ -36,7 +36,8 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 def index(request):
-    '''Render the main page
+    '''
+        Render the main page
 
         :param request: HTTP GET Request
     '''
@@ -71,6 +72,19 @@ def index(request):
         return render(request, 'graphs/index.html', context)
     else:
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
+
+def features(request):
+    '''
+        View features page.
+       
+        :param request: HTTP GET Request
+
+    '''
+    #handle login
+    context = login(request)
+
+    return render(request, 'graphs/features.html', context)
+
 
 def view_graph(request, uid, gid):
     '''

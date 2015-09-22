@@ -8,6 +8,7 @@ urlpatterns = patterns('',
 
         # main page
         url(r'^download/$', views.download, name='download'),
+        url(r'^features/$', views.features, name='features'),
         url(r'^index/$', views.index, name='index'),
         url(r'^$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),
