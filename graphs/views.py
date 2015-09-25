@@ -300,8 +300,10 @@ def _graphs_page(request, view_type):
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
+    request_tags = request.GET.get('tags') or request.GET.get('tag') or None
+
     if len(context['graph_list']) == 0:
-        context = constructGraphMessage(context, view_type, request.GET.get(search_type), request.GET.get('tags'))
+        context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
 
     all_tags = []
     #Divide the results of the query into pages. Currently has poor performance

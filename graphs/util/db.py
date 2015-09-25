@@ -818,7 +818,7 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 		search_type = 'full_search'
 
 	search_terms = request.GET.get(search_type)
-	tag_terms = request.GET.get('tags')
+	tag_terms = request.GET.get('tags') or request.GET.get('tag')
 	order_by = request.GET.get('order')
 	
 	# modify tag information 
@@ -2670,7 +2670,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		search_type = 'full_search'
 
 	search_terms = request.GET.get(search_type)
-	tag_terms = request.GET.get('tags')
+	tag_terms = request.GET.get('tags') or request.GET.get('tag')
 	order_by = request.GET.get('order')
 
 	try:
