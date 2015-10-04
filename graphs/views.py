@@ -95,7 +95,7 @@ def view_graph(request, uid, gid):
         :param gid: Graph id of the graph to view
     '''
     #create a new db session
-    db_session = data_connection.new_session()
+    # db_session = data_connection.new_session()
 
     # context contains all the elements we want to render on the web
     # page. we fill in the various elements of context before calling
@@ -108,7 +108,8 @@ def view_graph(request, uid, gid):
     # or if he owns this graph, then allow him to view it
     # otherwise do not allow it
     if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
-        graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
+        # graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
     elif request.session['uid'] == None:
         context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
         return render(request, 'graphs/error.html', context)
@@ -118,9 +119,8 @@ def view_graph(request, uid, gid):
 
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-            if len(db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).all()) > 0:
-                graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
-            else: 
+            graph_to_view = db.get_all_info_for_graph(uid, gid)
+            if len(graph_to_view) == 0:
                 context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
                 return render(request, 'graphs/error.html', context)
         else:
@@ -187,19 +187,19 @@ def view_json(request, uid, gid):
         :param gid: name of graph that the user owns
     '''
     #create a new db session
-    db_session = data_connection.new_session()
+    # db_session = data_connection.new_session()
 
     context = {}
 
-    try:
-        # Get the json of the graph that we want to view
-        graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
-    except NoResultFound:
+
+    graph_to_view = db.get_graph_json(uid, gid)
+
+    if graph_to_view == None:
         context['Error'] = "Graph not found, please make sure you have the correct URL."
         return render(request, 'graphs/error.html', context)
 
     # Get correct json for CytoscapeJS
-    context['json'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['json'] = db.retrieve_cytoscape_json(graph_to_view)
 
     # id of the owner of this graph
     context['owner'] = uid
