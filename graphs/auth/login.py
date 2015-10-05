@@ -1,14 +1,11 @@
-from django.contrib.auth import authenticate
+from graphs.auth import AuthBackend
 from graphs.forms import LoginForm, RegisterForm
 from graphs.util import db
 from django.conf import settings
 
 def login(request):
 	'''
-	Handles the login request from the webpage.
-
-	django.contrib.auth.authenticate uses authenticate() function defined in
-	graph.auth.AuthBackend
+		Handles the login request from the webpage.
 	'''
 	#context of the view to be passed in for rendering
 	context = {}
@@ -19,13 +16,13 @@ def login(request):
 
 	if request.method == 'POST':
 
-		user = authenticate(username=request.POST['user_id'], password=request.POST['pw'])
+		user = AuthBackend.authenticate(username=request.POST['user_id'], password=request.POST['pw'])
 		login_form = LoginForm(request.POST)
 		if user is not None:
-			message = '%s, Welcome to GraphSpace!' % user.user_id
-			request.session['uid'] = user.user_id
-			request.session['admin'] = user.admin
-			context = {'login_form': login_form, 'user': user, 'uid': user.user_id, 'admin': user.admin, "Error": None, "url": URL_PATH}
+			message = '%s, Welcome to GraphSpace!' % user['user_id']
+			request.session['uid'] = user['user_id']
+			request.session['admin'] = user['admin']
+			context = {'login_form': login_form, 'user': user, 'uid': user['user_id'], 'admin': user['admin'], "Error": None, "url": URL_PATH}
 			return context
 		else:
 			login_form = LoginForm()

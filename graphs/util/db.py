@@ -1540,6 +1540,7 @@ def find_node(uid, gid, node_to_find, search_type):
 	
 			cur.execute('select node_id from node where label LIKE ? and user_id = ? and graph_id = ?', ('%' + node_to_find + '%', uid, gid))
 			label_data = cur.fetchall()
+			print label_data
 			for labels in label_data:
 				id_list.append(str(labels[0]))
 			
@@ -2015,7 +2016,7 @@ def get_all_groups_in_server():
 		cur = con.cursor()
 
 		# Group is written this way because SQLITE wouldn't accept it simply as group
-		cur.execute('select * from \"group\"');
+		cur.execute('select group_id, group_name, owner_id, public from \"group\"');
 
 		data = cur.fetchall()
 
@@ -3346,7 +3347,7 @@ def emailExists(email):
 		con = lite.connect(DB_NAME)
 
 		cur = con.cursor()
-		cur.execute("select user_id from user where user_id = ?", [email])
+		cur.execute("select * from user where user_id = ?", [email])
 
 		if cur.rowcount == 0:
 			return None
@@ -4075,6 +4076,64 @@ def delete_all_graphs_for_tag(tagname, username):
 
 		con.commit()
 		return "Done"
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def getGraphInfo(uid, gid):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select json, public, graph_id from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		if data == None:
+			return None
+		else:
+			return data
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def retrieveJSON(uid, gid):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select json from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		if data == None:
+			return None
+		else:
+			return data
+
+	except lite.Error, e:
+			print "Error %s: " %e.args[0]
+			return None
+	finally:
+		if con:
+			con.close()
+
+def insert_user(user_id, password, activated, activate_code, public, unlisted, admin):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('insert into user values (?,?,?,?,?,?,?)', (user_id, password, activated, activate_code, public, unlisted, admin))
+		con.commit()
 
 	except lite.Error, e:
 			print "Error %s: " %e.args[0]

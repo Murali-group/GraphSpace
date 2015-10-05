@@ -3,9 +3,7 @@ See https://docs.djangoproject.com/en/dev/topics/forms/ for details.
 '''
 
 from django import forms
-import graphs.util.db_init as db_init
-import graphs.util.db_conn as db_conn
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound 
+from graphs.util import db
 
 class LoginForm(forms.Form):
 	'''
@@ -58,25 +56,15 @@ class RegisterForm(forms.Form):
 
 			https://docs.djangoproject.com/en/1.6/ref/forms/validation/#cleaning-a-specific-field-attribute
 		'''
-		# using test database to store login information
-		db = db_conn.Database('prod')
-		user = db.meta.tables['user']
 		cleaned_data = super(RegisterForm, self).clean()
 		user_id = cleaned_data["user_id"]
-		db_session = db.new_session()
 
+		check_user = db.emailExists(user_id)
 
-		try:
-			# query for user id to see if it exists
-			check_user = db_session.query(user.c.user_id).filter(user.c.user_id == user_id).one()
-		except NoResultFound:
-			# good to create new user
+		if check_user == None:
 			return user_id
-		except MultipleResultsFound:
-			# should not happen
-			raise MultipleResultsFound("this should not happen.")
+		else:
 			return None
-
 
 	def clean(self):
 		'''

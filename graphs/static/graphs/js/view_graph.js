@@ -888,8 +888,8 @@ function searchValues(search_type, labels) {
   //so cytoscape will recognize the correct element
   $.post("../../../retrieveIDs/", {
     'values': labels,
-    "gid": decodeURIComponent(paths[paths.length - 2]),
-    "uid": decodeURIComponent(paths[paths.length - 3]),
+    "gid": decodeURIComponent(paths[paths.length - 1]),
+    "uid": decodeURIComponent(paths[paths.length - 2]),
     "search_type": search_type 
   }, function (data) {
     console.log(data);

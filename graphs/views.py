@@ -4,33 +4,18 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.views import generic
 from django.templatetags.static import static
 
-from graphs.util.db_conn import Database
 from graphs.util.paginator import pager
 from graphs.util import db
 from graphs.auth.login import login
 from forms import LoginForm, SearchForm, RegisterForm
 from django.conf import settings
 
-from sqlalchemy.orm.exc import NoResultFound
-
-import sqlalchemy, sqlalchemy.orm
-import models
 import json
-import graphs.util.db_init as db_init
 import bcrypt
 import os
 from operator import itemgetter
 from itertools import groupby
 from graphs.forms import LoginForm, RegisterForm
-
-#get database
-data_connection = db_init.db
-
-#get tables from the database
-graph = db_init.graph
-user = db_init.user
-group = db_init.group
-group_to_graph = db_init.group_to_graph
 
 URL_PATH = settings.URL_PATH
 
@@ -53,9 +38,6 @@ def index(request):
     # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
     # db.update_json_to_cs_2_4()
 
-    # handle login.
-    # see graphs.auth.login for details
-
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
         request.session['uid'] = None
@@ -66,25 +48,9 @@ def index(request):
     context = login(request)
 
     if context['Error'] == None:
-        # # If there is someone logged in, return the 'my graphs' page, otherwise redirect to inital screen
-        # if request.session['uid'] != None:
-        #     return _graphs_page(request, 'my graphs')
         return render(request, 'graphs/index.html', context)
     else:
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
-
-def features(request):
-    '''
-        View features page.
-       
-        :param request: HTTP GET Request
-
-    '''
-    #handle login
-    context = login(request)
-
-    return render(request, 'graphs/features.html', context)
-
 
 def view_graph(request, uid, gid):
     '''
@@ -94,8 +60,6 @@ def view_graph(request, uid, gid):
         :param uid: Owner of the graph to view
         :param gid: Graph id of the graph to view
     '''
-    #create a new db session
-    db_session = data_connection.new_session()
 
     # context contains all the elements we want to render on the web
     # page. we fill in the various elements of context before calling
@@ -108,7 +72,7 @@ def view_graph(request, uid, gid):
     # or if he owns this graph, then allow him to view it
     # otherwise do not allow it
     if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
-        graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+        graph_to_view = db.getGraphInfo(uid, gid)
     elif request.session['uid'] == None:
         context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
         return render(request, 'graphs/error.html', context)
@@ -118,8 +82,8 @@ def view_graph(request, uid, gid):
 
         # if admin, then they can see everything
         if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-            if len(db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).all()) > 0:
-                graph_to_view = db_session.query(graph.c.json, graph.c.public, graph.c.graph_id).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
+            if db.getGraphInfo(uid, gid) != None:
+                graph_to_view =  db.getGraphInfo(uid, gid)
             else: 
                 context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
                 return render(request, 'graphs/error.html', context)
@@ -166,7 +130,7 @@ def view_graph(request, uid, gid):
     else:
         context['graph_name'] = ''
 
-    # # graph id
+    # graph id
     context['graph_id'] = gid
 
     if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
@@ -186,15 +150,12 @@ def view_json(request, uid, gid):
         :param uid: email of the user that owns this graph
         :param gid: name of graph that the user owns
     '''
-    #create a new db session
-    db_session = data_connection.new_session()
 
     context = {}
+    # Get the json of the graph that we want to view
+    graph_to_view = db.retrieveJSON(uid, gid)
 
-    try:
-        # Get the json of the graph that we want to view
-        graph_to_view = db_session.query(graph.c.json).filter(graph.c.user_id==uid, graph.c.graph_id==gid).one()
-    except NoResultFound:
+    if graph_to_view == None:
         context['Error'] = "Graph not found, please make sure you have the correct URL."
         return render(request, 'graphs/error.html', context)
 
@@ -261,10 +222,6 @@ def _graphs_page(request, view_type):
         :param request: HTTP GET Request
         :param view_type: Type of view for graph (Ex: my graphs, shared, public)
     '''
-    
-    #get new session from the database
-    db_session = data_connection.new_session()
-    
     #context of the view to be passed in for rendering
     context = {}
     graph_list = None
@@ -327,7 +284,6 @@ def _graphs_page(request, view_type):
                 context['current_page'].object_list[i] = graph
 
     context['all_tags'] = list(set(all_tags))[:10]
-
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
@@ -415,10 +371,6 @@ def _groups_page(request, view_type):
         :param view_type: Type of view for the group (Example: owner of, member, public, all)
 
     '''
-
-    #get new session from the database
-    db_session = data_connection.new_session()
-
     #context of the view to be passed in for rendering
     context = {}
     group_list = None
@@ -439,8 +391,7 @@ def _groups_page(request, view_type):
         # if admin, then they can view this
         elif view_type == 'all':
             if db.is_admin(uid) == 1:
-                group_list = db_session.query(group.c.group_id, group.c.name, 
-                        group.c.owner_id, group.c.public).all()
+                group_list = db.get_all_groups_in_server()
             else:
                 context['Error'] = "You are not authorized to see this group's contents! Please contact group's owner to add you to the group!"
                 return render(request, 'graphs/error.html', context)
@@ -511,9 +462,6 @@ def graphs_in_group(request, group_owner, group_id):
 
     #handle login
     context = login(request)
-
-    #create a new db session
-    db_session = data_connection.new_session()
 
     # add search form
     search_form = SearchForm()
@@ -621,6 +569,19 @@ def graphs_in_group(request, group_owner, group_id):
     else:
         context['Error'] = "Please log in to view groups page"
         return render(request, 'graphs/error.html', context)
+
+
+def features(request):
+    '''
+        View features page.
+       
+        :param request: HTTP GET Request
+
+    '''
+    #handle login
+    context = login(request)
+
+    return render(request, 'graphs/features.html', context)
 
 def help(request):
     '''
@@ -749,28 +710,7 @@ def register(request):
             unlisted = 0
             admin = 0
 
-            # user table is on a separate database
-            db_base = Database('prod')
-            user = db_base.meta.tables['user']
-
-            # build insert statement to insert the new user
-            # info into the database.
-            new_user = user.insert().values(user_id=user_id,
-                                 password=hashed_pw,
-                                 activated=activated,
-                                 activate_code=activate_code,
-                                 public=public,
-                                 unlisted=unlisted,
-                                 admin=admin)
-
-            # make connection to the database
-            conn = db_base.connect()
-            # execute the insert statement
-            # see Executing part at
-            # http://docs.sqlalchemy.org/en/rel_0_9/core/tutorial.html#coretutorial-insert-expressions 
-            conn.execute(new_user)
-            # close connection
-            db_base.close()
+            db.insert_user(user_id, hashed_pw, activated, activate_code, public, unlisted, admin)
 
             # should display success message. not there yet.
             return HttpResponseRedirect('/index/')
@@ -797,7 +737,6 @@ def retrieveIDs(request):
 
     #Grab id's of the nodes to highlight given the label of the nodes
     if request.POST:
-        db_session = data_connection.new_session()
         element_values = request.POST['values'].split(',')
         elementDictionary = {}
         for element in element_values:
@@ -1478,7 +1417,7 @@ def get_groups(request):
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        data = db.get_all_groups_in_server()
+        data = db.get_all_groups_with_member(request.POST['username'])
         return HttpResponse(json.dumps({"StatusCode": 200, "Groups": data}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def get_group(request, group_owner, groupname):
