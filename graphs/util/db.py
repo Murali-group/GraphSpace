@@ -796,6 +796,31 @@ def get_base_urls(view_type):
 	else:
 	    return URL_PATH + "graphs/"
 
+def get_all_info_for_graph(uid, gid):
+	con = None
+	try:
+		con = lite.connect(DB_NAME)
+
+		# Retrieve hashed password of the user
+		cur = con.cursor()
+
+		cur.execute('select json, public, graph_id from graph where user_id = ? and graph_id = ?', (uid, gid))
+		data = cur.fetchone()
+
+		#If there is no data, then user does not exist
+		if data == None:
+			return None
+
+		print data
+		return data
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+		return json.dumps(None)
+	finally:
+		if con:
+			con.close()
+
 def get_graphs_for_view_type(context, view_type, uid, request):
 	'''
 		Gets the graphs that are associated with a certain view from the user
@@ -1133,7 +1158,6 @@ def search_result(uid, search_type, search_terms, view_type):
 				# If it is a node or possibly a graph_id (name of the graph)
 				else:
 					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur) + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
-
 			# intial_graphs_from_search = list(set(intial_graphs_from_search))
 
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
@@ -1768,11 +1792,11 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 			# Used so that I can highlight the node
 			# TODO: double check this because I may need to get the id and not the label
 			nodes = graphJson['graph']['nodes']
-			rand = 1
-			for node in nodes:
-				if 'data' in node and 'content' in node['data'] and len(node['data']['content']) == 0:
-					node['data']['content'] = rand
-					rand = rand + 1
+			# rand = 1
+			# for node in nodes:
+			# 	if 'data' in node and 'content' in node['data'] and len(node['data']['content']) == 0:
+			# 		node['data']['content'] = rand
+			# 		rand = rand + 1
 			rand = 0
 
 			# Inserts it into the database, all graphs inserted are private for now

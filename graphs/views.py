@@ -60,7 +60,6 @@ def view_graph(request, uid, gid):
         :param uid: Owner of the graph to view
         :param gid: Graph id of the graph to view
     '''
-
     # context contains all the elements we want to render on the web
     # page. we fill in the various elements of context before calling
     # the render() function.
@@ -72,7 +71,7 @@ def view_graph(request, uid, gid):
     # or if he owns this graph, then allow him to view it
     # otherwise do not allow it
     if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
-        graph_to_view = db.getGraphInfo(uid, gid)
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
     elif request.session['uid'] == None:
         context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
         return render(request, 'graphs/error.html', context)
@@ -150,17 +149,18 @@ def view_json(request, uid, gid):
         :param uid: email of the user that owns this graph
         :param gid: name of graph that the user owns
     '''
-
     context = {}
     # Get the json of the graph that we want to view
     graph_to_view = db.retrieveJSON(uid, gid)
+
+    graph_to_view = db.get_graph_json(uid, gid)
 
     if graph_to_view == None:
         context['Error'] = "Graph not found, please make sure you have the correct URL."
         return render(request, 'graphs/error.html', context)
 
     # Get correct json for CytoscapeJS
-    context['json'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['json'] = db.retrieve_cytoscape_json(graph_to_view)
 
     # id of the owner of this graph
     context['owner'] = uid
