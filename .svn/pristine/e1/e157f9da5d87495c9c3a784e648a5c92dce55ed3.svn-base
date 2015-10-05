@@ -1,8 +1,0 @@
-{% extends 'base.html' %}
-{% block content %}
-
-{% include 'graphs/help_menu.html' %}
-
-  under construction
-
-{% endblock %}

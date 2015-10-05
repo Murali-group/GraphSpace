@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>{{ gid }}</title>
-    </head>
-    <pre>
-        {{ json }}
-    </pre>
-</html>
