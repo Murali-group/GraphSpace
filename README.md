@@ -39,6 +39,7 @@ Open up graphspace/settings.py
 Update the following properties to the appropriate paths:
 
 DB_FULL_PATH: "Full path to the database"
+
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
 Finally, run GraphSpace: python manage.py runserver
