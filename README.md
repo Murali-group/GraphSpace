@@ -8,7 +8,9 @@ Amazon EC2 Instance is running at: http://ec2-52-5-177-0.compute-1.amazonaws.com
 Pre-made user logins
 
 Username: user1@example.com Password: user1
+
 Username: user2@example.com Password: user2
+
 Username: user3@example.com Password: user3
 
 Up and Running with GraphSpace
