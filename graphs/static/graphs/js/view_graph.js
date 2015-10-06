@@ -878,7 +878,7 @@ function searchValues(search_type, labels) {
   var partialDistinction = Array();
   var exactDistinction = Array();  
   
-  // window.cy.eles.removeCss();
+  window.cy.elements().removeCss();
 
   $("#search_error_text").text("");
 
@@ -1012,6 +1012,8 @@ function searchValues(search_type, labels) {
         $("#url").css('text-decoration', 'underline');
         $("#url").html("<p id='testing1'>Link to this graph with distinguished elements</p>");
         $(".test").css("height", $(".test").height + 30);
+    } else {
+      $("#url").html("");
     }
   }
   });
