@@ -815,6 +815,8 @@ $(document).ready(function() {
 $("#clear_search").click(function (e) {
   e.preventDefault();
   clearSearchTerms();
+  $("#search_error").text("");
+  $("#search_error").css("display", "none");
 });
 
 //Exports the specified graph to an image
