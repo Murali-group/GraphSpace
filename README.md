@@ -18,21 +18,21 @@ Up and Running with GraphSpace
 
 In order to get a local working copy of GraphSpace, one must have Python (v2.7.10) running on their machine as well as sqlite3.  
 
-Next, download the script from https://bootstrap.pypa.io/get-pip.py.  Navigate to where you downloaded this script and run: python get-pip.py
+Next, download the script from https://bootstrap.pypa.io/get-pip.py.  Navigate to where you downloaded this script and run: `python get-pip.py`
 
 This installs pip (Python package installer).  Pip allows one to download various Python specific modules.
 
-In order to install Django, run: pip install django
+In order to install Django, run: `pip install django`
 
-We need to install our hashing module: pip install py-bcrypt
+We need to install our hashing module: `pip install py-bcrypt`
 
-Finally, when all the packages are installed from your computer, run: git clone https://github.com/DSin52/GraphSpace.git
+Finally, when all the packages are installed from your computer, run: `git clone https://github.com/DSin52/GraphSpace.git`
 
 This installs GraphSpace server to your current directory.
 
-Go into the GraphSpace directory: cd GraphSpace
+Go into the GraphSpace directory: `cd GraphSpace`
 
-Change the name of startup.db to graphspace.db
+Change the name of startup.db to graphspace.db: `mv startup.db graphspace.db`
 
 Open up graphspace/settings.py
 
@@ -42,11 +42,11 @@ DB_FULL_PATH: "Full path to the database"
 
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
-Finally, run GraphSpace: python manage.py runserver
+Finally, run GraphSpace: `python manage.py runserver`
 
 Testing GraphSpace REST API
 =================================
 
-To test the GraphSpace REST API, run: python test-restapi.py
+To test the GraphSpace REST API, run: `python test-restapi.py`
 
 This will test all the endpoints.  If something fails, it will display the error
