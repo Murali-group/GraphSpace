@@ -43,3 +43,10 @@ DB_FULL_PATH: "Full path to the database"
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
 Finally, run GraphSpace: python manage.py runserver
+
+Testing GraphSpace REST API
+=================================
+
+To test the GraphSpace REST API, run: python test-restapi.py
+
+This will test all the endpoints.  If something fails, it will display the error
