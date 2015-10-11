@@ -4030,6 +4030,7 @@ def get_all_tags_for_graph(graphname, username):
 		# Get all tags for specified graph and return it
 		cur.execute('select distinct tag_id from graph_to_tag where user_id = ? and graph_id=?', (username, graphname))
 		data = cur.fetchall()
+
 		if data != None:
 			for item in data:
 				tags_list.append(str(item[0]))
