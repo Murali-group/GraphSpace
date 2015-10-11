@@ -1675,6 +1675,7 @@ def make_all_graphs_for_tag_public(request, username, tagname):
 
     if request.method == 'POST':
 
+        print 'testing'
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
