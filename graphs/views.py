@@ -13,6 +13,8 @@ from django.conf import settings
 import json
 import bcrypt
 import os
+import operator
+
 from operator import itemgetter
 from itertools import groupby
 from graphs.forms import LoginForm, RegisterForm
@@ -262,12 +264,32 @@ def _graphs_page(request, view_type):
     if len(context['graph_list']) == 0:
         context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
 
-    all_tags = []
-    #Divide the results of the query into pages. Currently has poor performance
-    #because the page processes a query (which may take long)
-    #everytime the page loads. I think that this can be improved if
-    #I store the query result in the session such that it doesn't
-    #process the query unnecessarily.
+    # OLD WAY OF DOING TAGS
+
+    # all_tags = []
+    # #Divide the results of the query into pages. Currently has poor performance
+    # #because the page processes a query (which may take long)
+    # #everytime the page loads. I think that this can be improved if
+    # #I store the query result in the session such that it doesn't
+    # #process the query unnecessarily.
+    # if context['graph_list'] != None:
+    #     pager_context = pager(request, context['graph_list'])
+    #     if type(pager_context) is dict:
+    #         context.update(pager_context)
+    #         for i in xrange(len(context['current_page'].object_list)):
+    #             graph = list(context['current_page'][i])
+    #             if request.GET.get(search_type):
+    #                 graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
+    #                 all_tags += graph[1]
+    #             else:
+    #                 graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+    #                 all_tags += graph[1]
+    #             graph = tuple(graph)
+    #             context['current_page'].object_list[i] = graph
+
+    # context['all_tags'] = list(set(all_tags))[:10]
+
+    all_tags = {}
     if context['graph_list'] != None:
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
@@ -276,14 +298,33 @@ def _graphs_page(request, view_type):
                 graph = list(context['current_page'][i])
                 if request.GET.get(search_type):
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
-                    all_tags += graph[1]
                 else:
                     graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
-                    all_tags += graph[1]
                 graph = tuple(graph)
                 context['current_page'].object_list[i] = graph
 
-    context['all_tags'] = list(set(all_tags))[:10]
+    recent_graphs = context['graph_list']
+
+    recent_graphs.sort(key=lambda r: r[2], reverse=True)
+
+    if len(recent_graphs) > 250:
+        recent_graphs = recent_graphs[:250]
+
+    for graph in recent_graphs:
+        graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
+        for tag in graph_tags:
+            if len(tag) > 0:
+                if tag in all_tags:
+                    all_tags[tag] += 1
+                else:
+                    all_tags[tag] = 1
+
+    sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
+
+    all_tags_refined = [i[0] for i in sorted_tags]
+
+    # Populates tags search bar with most used tags of last 250 graphs
+    context['all_tags'] = all_tags_refined #list(set(all_tags))[:10]
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
