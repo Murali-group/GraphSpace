@@ -41,8 +41,8 @@
 <li><a href="#finding_graphs">Finding Graphs</a></li>
 <li><a href="#upload_graphs">Uploading Graphs</a></li>
 	<ul>
-		<li><a href="#upload_graphs_rest">REST API</a></li>
-		<li><a href="#upload_graphs_cyjs">User Interface</a></li>
+		<li><a href="#upload_graphs_rest">Via REST API</a></li>
+		<li><a href="#upload_graphs_cyjs">Via Web Interface</a></li>
 	</ul>
 <li><a href="#search">Searching for graphs</a></li>
 </ul>
@@ -63,7 +63,7 @@
 
 <p>A <a href="http://en.wikipedia.org/wiki/Graph_(mathematics)">graph</a> is a mathematical object containing nodes and edges which connect the nodes together.</p>
 
-<p>Graphs may be used to represent many different types of models such as computer networks and biological pathways.  A graph may contain nodes(vertices) and edges(lines).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between two proteins.  An edge that connects two proteins indicates interaction between them.</p>
+<p>Graphs may be used to represent many different types of models such as computer networks and biological pathways.  A graph may contain nodes(vertices) and edges(lines).  In GraphSpace, we utilize these two objects to layout biological networks.  In these networks, nodes may be thought of as proteins, and edges may be thought of as interactions between two proteins.  An edge that connects two proteins indicates an interaction between them.</p>
 <!-- 
 <ul>
 <li><a href="#view">I want to find and view graphs that are shared with me</a>
@@ -76,7 +76,7 @@ Users of GraphSpace who have not made an account or have not logged in may only 
 When a user is <b>logged into GraphSpace</b>, they may navigate to the <a href="{{url}}graphs/">Graphs</a> section in order to see all of the graphs that they have permissions to see.  The "Graphs" section has three options, <a href="{{url}}graphs/">My Graphs</a>  (all graphs that the user has already uploaded), <a href="{{url}}graphs/shared">Shared Graphs</a> (graphs that are shared with groups that the user is member of), and <a href="{{url}}graphs/public">Public Graphs</a>  (graphs that everyone can view). -->
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="public_private">Public vs. Private Graphs</h3>
-<p>When a registered user uploads a graph to GraphSpace either through the <a href="{{url}}help/programmers">REST API</a> or the <a href="{{url}}graphs/upload">User Interface</a>, it is by default uploaded as a <b>private</b> graph.  A private graph may only be viewed by the owner of the graph (registered user who uploaded the graph).  The only way a private graph may be viewed by other registered GraphSpace users is if the private graph is shared with a <a href="#groups">group</a>.  If the owner of the graph is part of a group and shares their private graph with the group, all members of the group may view it as well as create their own layouts for the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p>
+<p>When a registered user uploads a graph to GraphSpace either through the <a href="{{url}}help/programmers#add_graph">REST API call</a> found in the <a href="{{url}}help/programmers">Programmer's Guide</a> or through the <a href="{{url}}graphs/upload">web interface</a>, it is by default uploaded as a <b>private</b> graph.  A private graph may only be viewed by the owner of the graph (registered user who uploaded the graph).  The only way a private graph may be viewed by other registered GraphSpace users is if the private graph is shared with a <a href="#groups">group</a>.  If the owner of the graph is part of a group and shares their private graph with the group, all members of the group may view it as well as create their own layouts for the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p>
 
 <p>A <b>public</b> graph is viewable to any person that visits GraphSpace.  In order to make a private graph public, it may be done so through the <a href="{{url}}help/programmers/#make_graph_public">REST API</a>.  By making a graph public, it allows all registered users to share their layouts to the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p> 
 
@@ -279,24 +279,24 @@ On your graphs page, you will see buttons at the top of the page called "My Grap
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs">Uploading graphs</h3>
 
-<p>GraphSpace provides two methods to upload graphs: <a href="{{url}}help/programmers/#add_graph">Programmer's Guide</a> or <a href="{{url}}graphs/upload">User Interface</a>.</p>
+<p>GraphSpace provides two methods to upload graphs: Through the <a href="{{url}}help/programmers/#add_graph">REST API call</a> or through the <a href="{{url}}graphs/upload">web interface</a>.</p>
 <hr>
-<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_rest">REST API</h4>
-<p>This approach allows one to be more flexible and utilize all of the CSS features by specifically referencing them in the <a href="{{url}}help/programmers/#json_ref">JSON</a> for the graph.</p>
+<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_rest">Via REST API</h4>
+<p>This approach allows one to be more flexible and utilize all of the CSS features by specifically referencing them in the <a href="{{url}}help/programmers/#json_ref">JSON</a> for the graph. Please refer to the <a href="{{url}}help/programmers/">Programmer's Guide</a> for more information.</p>
 <hr>
-<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">User Interface</h4>
-<p>For users who don't want to use the <a href="{{url}}help/programmers/">REST API</a> for uploading a graph, we provide an easy interface for <a href="{{url}}graphs/upload">uploading</a> individual graphs.  This interface allows users to upload their graphs directly into their accounts on GraphSpace.
+<h4 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs_cyjs">Via Web Interface</h4>
+<p>For users who don't want to use the <a href="{{url}}help/programmers/">REST API</a> for uploading a graph, we provide an easy web interface for <a href="{{url}}graphs/upload">uploading</a> individual graphs.  This interface allows users to upload their graphs directly into their accounts on GraphSpace.
 </p>
 
 <p>We allow for the <a href="{{url}}graphs/upload">upload</a> of two types of files into GraphSpace using this interface: graphs that follow the <a href="">JSON Reference</a> (.json files) and graphs that are exported directly from Cytoscape 3.1 or later (.cyjs files).</p>
 
 <p>Please follow <a href="https://github.com/idekerlab/cy-net-share/wiki">these instructions</a> to export your Cytoscape graph to .cyjs format.</p>
 
-<p><b>Note: Files using the .cyjs format may only be uploaded via the user interface!</b></p>
+<p><b>Note: Files using the .cyjs format may only be uploaded via the web interface!</b></p>
 
 <!-- <p>For users who want to test drive GraphSpace and also use Cytoscape (3.1 or later), we allow <a href="{{url}}graphs/upload">uploads</a> of individual graphs in the CYJS format as well. Please follow <a href="https://github.com/idekerlab/cy-net-share/wiki">these instructions</a> to export your Cytoscape graph to CYJS format.<b>Note: CYJS Files may only be uploaded via this user interface!</b></p> -->
 
-<p>For users who are not registered on GraphSpace, we provide this upload functionality as a tool to obtain a unique URL that contains the content of any .json/.cyjs file that is uploaded via the user interface.</p>
+<p>For users who are not registered on GraphSpace, we provide this upload functionality as a tool to obtain a unique URL that contains the content of any .json/.cyjs file that is uploaded via the web interface.</p>
 
 <p><b>Note: all graphs that are uploaded for unregistered users of GraphSpace will be deleted after 30 days.</b></p>
 <hr>
