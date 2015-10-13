@@ -291,6 +291,91 @@ def add_everyone_to_password_reset():
 		if con:
 			con.close()
 
+def checkNodeEdgeConsistency(user_id):
+	'''
+		Goes through JSONs in GraphSpace database and makes sure 
+		that the node and edge table have the appropriate 
+		values and nothing that shouldn't be there.
+
+	'''
+	con = None
+	try: 
+		con = lite.connect(DB_NAME)
+		cur = con.cursor()
+
+		cur.execute('select * from graph where user_id=?', (user_id, ))
+
+		data = cur.fetchall()
+
+		if data == None:
+			return
+
+		for graph in data:
+
+			graph_id = graph[0]
+			user_id = graph[1]
+			graph_json = json.loads(graph[2])
+			created = graph[3]
+			modified = graph[4]
+			public = graph[5]
+			unlisted = graph[6]
+			default_layout_id = graph[7]
+
+			if 'data' in graph_json:
+				graph_json = json.loads(convert_json(graph[2]))
+
+			node_list = []
+			edge_list = []
+
+			for node in graph_json['graph']['nodes']:
+				node_list.append(str(node['data']['id']))
+
+			for edge in graph_json['graph']['edges']:
+				edge_list.append(str(edge['data']['id']))
+
+			cur.execute('select node_id from node where graph_id=? and user_id =?', (graph_id, user_id))
+
+			nodes = cur.fetchall()
+
+			mark_for_deletion = False
+
+			if len(nodes) != len(node_list):
+				mark_for_deletion = True
+
+			for node in nodes:
+				node = str(node[0])
+				if node not in node_list:
+					mark_for_deletion = True
+
+			cur.execute('select head_id, tail_id from edge where head_user_id = ? and head_graph_id=?', (user_id, graph_id))
+
+			edges = cur.fetchall()
+
+			if len(edges) != len(edge_list):
+				mark_for_deletion = True
+
+			for edge in edges:
+				edge = str(edge[0]) + "-"+ str(edge[1])
+				if edge not in edge_list:
+					mark_for_deletion = True
+
+			if mark_for_deletion == True:
+				cur.execute('delete from graph where graph_id = ? and user_id = ?', (graph_id, user_id))
+				cur.execute('delete from node where graph_id = ? and user_id = ?', (graph_id, user_id))
+				cur.execute('delete from edge where head_graph_id = ? and head_user_id = ?', (graph_id, user_id))
+				cur.execute('delete from graph_to_tag where graph_id=? and  user_id=?', (graph_id, user_id))
+				con.commit()
+				print insert_graph(user_id, graph_id, graph[2], created=created, modified=modified, public=public, unlisted=unlisted, default_layout_id=default_layout_id, skip=True)
+				print "Reinserted: " + graph_id
+
+		print "Done processing"
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
 
 			# END CONVERSIONS
 ##################################################
@@ -1750,7 +1835,7 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None):
+def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None, skip=None):
 	'''
 		# TODO: Add rest call example
 		Inserts a uniquely named graph under a username.
@@ -1773,9 +1858,11 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 
 		# If not, add this graph to his account
 		if data == None:
-			validationErrors = validate_json(graph_json)
-			if validationErrors != None:
-				return validationErrors
+			if skip != True:
+				validationErrors = validate_json(graph_json)
+				if validationErrors != None:
+					return validationErrors
+
 			curTime = datetime.now()
 			graphJson = json.loads(graph_json)
 
@@ -1880,7 +1967,6 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 			dupEdges.append(edge['data']['source']);
 	for node in nodes:
 		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
-		# cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['label'], username, graphname))
 
 def update_graph(username, graphname, graph_json):
 	'''
@@ -2741,7 +2827,6 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
 	group_info = []
 	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
-
 	con = None
 	try:
 		con = lite.connect(DB_NAME)

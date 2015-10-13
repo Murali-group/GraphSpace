@@ -443,9 +443,10 @@ $(document).ready(function() {
          layout.push(nodeData);
       }
 
+      var queryString = location.href.split(location.host)[1].split("?")[0];
       //Posts information to the server regarding the current display of the graph,
       //including position
-      $.post("layout/", {
+      $.post(queryString + "/layout/", {
         layout_id: "1",
         layout_name: layoutName,
         points: JSON.stringify(layout),
@@ -574,8 +575,8 @@ $(document).ready(function() {
         return alert("Enter a new layout name!");
       } else {
         $.post('../../../changeLayoutName/', {
-          "gid": decodeURIComponent(paths[paths.length - 2]),
-          "uid": decodeURIComponent(paths[paths.length - 3]),
+          "gid": decodeURIComponent(paths[paths.length - 1].split("?")[0]),
+          "uid": decodeURIComponent(paths[paths.length - 2]),
           "loggedIn": $("#loggedIn").text(),
           "old_layout_name": $(this).val(),
           "new_layout_name": new_layout_name
@@ -591,8 +592,8 @@ $(document).ready(function() {
       var paths = document.URL.split('/')
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+      var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
       $.post('../../../deleteLayout/', {
         'gid': gid,
@@ -657,8 +658,8 @@ $(document).ready(function() {
       var paths = document.URL.split('/');
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
-      var ownerId = decodeURIComponent(paths[paths.length - 3]);
-      var gid = decodeURIComponent(paths[paths.length - 2]);
+      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+      var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
       $.post('../../../shareLayoutWithGroups/', {
         'layoutId': $(this).val(),
@@ -679,8 +680,8 @@ $(document).ready(function() {
       var paths = document.URL.split('/')
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+      var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
       $.post('../../../getGroupsForGraph/', {
         'gid': gid,
@@ -732,8 +733,8 @@ $(document).ready(function() {
 
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')
-      var ownerId = decodeURIComponent(paths[paths.length - 3])
-      var gid = decodeURIComponent(paths[paths.length - 2])
+      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+      var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
       var all_groups = {}
       var groups_to_share_with = [];
@@ -1325,8 +1326,8 @@ function colourNameToHex(colour)
 */
 $(".default").click(function(e) {
   var paths = document.URL.split('/')
-  var ownerId = decodeURIComponent(paths[paths.length - 3])
-  var gid = decodeURIComponent(paths[paths.length - 2])
+    var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+    var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
   $.post('../../../setDefaultLayout/', {
     'layoutId': $(this).val(),
@@ -1345,8 +1346,8 @@ $(".default").click(function(e) {
 */
 $(".removeDefault").click(function(e) {
   var paths = document.URL.split('/')
-  var ownerId = decodeURIComponent(paths[paths.length - 3])
-  var gid = decodeURIComponent(paths[paths.length - 2])
+  var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+  var ownerId = decodeURIComponent(paths[paths.length - 2]);
 
   $.post('../../../removeDefaultLayout/', {
     'layoutId': $(this).val(),
