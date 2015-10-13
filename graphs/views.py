@@ -432,7 +432,7 @@ def _groups_page(request, view_type):
     if uid is not None:
         # Get groups that the user is a member of
         if view_type == 'member':
-            group_list = db.get_all_groups_with_member(context['uid'])
+            group_list = db.get_all_groups_with_member(context['uid']) + db.get_groups_of_user(context['uid'])
 
         # if admin, then they can view this
         elif view_type == 'all':
@@ -444,7 +444,7 @@ def _groups_page(request, view_type):
 
         #groups of logged in user(my groups)
         else:
-            # List all groups that uid either owns or is a member of and also public groups.
+            # List all groups that uid either owns.
             group_list = db.get_groups_of_user(context['uid'])
 
         #Order all tuples if user wants to order their results
@@ -475,7 +475,7 @@ def _groups_page(request, view_type):
             context.update(pager_context)
 
         context['my_groups'] = len(db.get_groups_of_user(context['uid']))
-        context['member_groups'] = len(db.get_all_groups_with_member(context['uid']))
+        context['member_groups'] = len(db.get_all_groups_with_member(context['uid'])) + context['my_groups']
 
         if view_type == 'owner of' and context['my_groups'] == 0:
             context['message'] = "It appears that you are not an owner of any group.  Please create a group in order to own a group."
