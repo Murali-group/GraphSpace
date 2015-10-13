@@ -881,7 +881,7 @@ function searchValues(search_type, labels) {
   var partialDistinction = Array();
   var exactDistinction = Array();  
   
-  window.cy.elements().removeCss();
+  // window.cy.elements().removeCss();
 
   $("#search_error_text").text("");
 
@@ -1281,7 +1281,7 @@ function clearSearchTerms() {
   window.cy.elements().removeCss();
   $("#search").val("");
   showOnlyK();
-  applyMax(graph_json);
+  // applyMax(graph_json);
   $("#testing1").html("");
 }
 

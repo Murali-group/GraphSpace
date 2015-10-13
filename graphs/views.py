@@ -39,7 +39,8 @@ def index(request):
 
     # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
     # db.update_json_to_cs_2_4()
-    
+    # db.checkPublicNodeEdgeConsistency()
+
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
         request.session['uid'] = None
@@ -51,7 +52,7 @@ def index(request):
 
     # if 'uid' in context and context['uid'] != None:
     #     # Checks consistency of all graphs 
-    #     db.checkNodeEdgeConsistency(context['uid'])
+    #     db.checkNodeEdgeConsistencyOfUser(context['uid'])
 
     if context['Error'] == None:
         return render(request, 'graphs/index.html', context)
@@ -882,7 +883,6 @@ def save_layout(request, uid, gid):
         :param HTTP POST Request
 
     '''
-    print 'testing'
     result = db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
     if result == None:
         return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
@@ -1721,7 +1721,6 @@ def make_all_graphs_for_tag_public(request, username, tagname):
 
     if request.method == 'POST':
 
-        print 'testing'
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
