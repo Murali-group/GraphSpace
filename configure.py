@@ -29,7 +29,7 @@ if __name__ == "__main__":
 	install("py-bcrypt")
 	install("django-analytical")
 
-	subprocess.check_call(["mv", "startup.db", "graphspace.db"])
+	# subprocess.check_call(["mv", "startup.db", "graphspace.db"])
 	subprocess.check_call([sys.executable, "manage.py", "migrate"])
 
 	print "All dependencies have successfully been installed."
