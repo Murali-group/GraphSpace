@@ -21,6 +21,13 @@ In order to get GraphSpace running on your computer, please install Python and s
 3. Run the script to download all of the necessary dependencies. *This step may require sudo priveleges*: `python configure.py`
 4. Modify gs-setup.sh file and replace all variables with appropriate values
 5. Propogate changes in gs-setup.sh file to GraphSpace: `. gs-setup.sh`
+  gs-setup.sh contains the following values
+  * `SECRET_KEY`: key used for hashing
+  * `GOOGLE_ANALYTICS_PROPERTY_ID`: ID given by Google Analytics to track users on website
+  * `EMAIL_HOST`: Host provider through which email is sent (example: smtp.gmail.com)
+  * `EMAIL_HOST_USER`: Email address to send emails from GraphSpace through
+  * `EMAIL_HOST_PASSWORD`: Password for email address
+  * `EMAIL_PORT`: Port to send emails through
 6. Finally, start the GraphSpace server: `python manage.py runserver`
 9. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
