@@ -3,8 +3,6 @@ GraphSpace
 
 GraphSpace is running at http://graphspace.org
 
-Amazon EC2 Instance is running at: http://ec2-52-5-177-0.compute-1.amazonaws.com
-
 GraphSpace has three dummy users: 
 
 1. Username: user1@example.com Password: user1
