@@ -33,6 +33,7 @@ In order to get GraphSpace running on your computer, please install Python and s
 Testing the GraphSpace REST API
 =================================
 
-To test the GraphSpace REST API, run `python test-restapi.py`
+1. Navigate to tests directory in GraphSpace: `cd tests`
+2. Enter python command to run test cases: `python restapi_test.py`
 
 This script will test all the REST API commands supported by the GraphSpace server.  If something fails, it will display the error.
