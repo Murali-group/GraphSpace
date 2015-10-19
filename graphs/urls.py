@@ -199,6 +199,3 @@ urlpatterns = patterns('',
 
         )
 
-handler404 = 'graphs.views.handler_404'
-handler500 = 'graphs.views.handler_500'
-
