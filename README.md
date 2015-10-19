@@ -18,12 +18,10 @@ In order to get GraphSpace running on your computer, please install Python and s
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git`
 2. Visit the GraphSpace directory: `cd GraphSpace`
-3. Open `graphspace/settings.py` in a text editor.
-4. Update the `DB_FULL_PATH property` to point to the location of `graphspace.db`. 
-5. Run the script to download all of the necessary dependencies *May require sudo priveleges* `python configure.py`
-6. Modify gs-setup.sh file and replace all variables with appropriate values
-7. Propogate changes in gs-setup.sh file to GraphSpace: `. gs-setup.sh`
-8. Finally, start the GraphSpace server: `python manage.py runserver`
+3. Run the script to download all of the necessary dependencies. *This step may require sudo priveleges*: `python configure.py`
+4. Modify gs-setup.sh file and replace all variables with appropriate values
+5. Propogate changes in gs-setup.sh file to GraphSpace: `. gs-setup.sh`
+6. Finally, start the GraphSpace server: `python manage.py runserver`
 9. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
 Testing the GraphSpace REST API
