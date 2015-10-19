@@ -15,6 +15,9 @@ def install_django():
 def install_py_bcrypt():
 	os.system('sudo pip install py-bcrypt')
 
+def install_google_analytics():
+	os.system('sudo pip install django-analytical')
+
 def change_db_name():
 	os.system('mv startup.db graphspace.db')
 
