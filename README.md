@@ -21,8 +21,8 @@ In order to get GraphSpace running on your computer, please install Python and s
 3. Run the script to download all of the necessary dependencies. *This step may require sudo priveleges*: `python configure.py`
 4. Modify gs-setup.sh file and replace all variables with appropriate values
 5. Propogate changes in gs-setup.sh file to GraphSpace: `. gs-setup.sh`
-  * `SECRET_KEY`: key used for hashing
-  * `GOOGLE_ANALYTICS_PROPERTY_ID`: ID given by Google Analytics to track users on website
+  * `SECRET_KEY`: key used for hashing (https://docs.djangoproject.com/en/1.8/ref/settings/#secret-key)
+  * `GOOGLE_ANALYTICS_PROPERTY_ID`: Tracking ID given by Google Analytics to track GraphSpace users (https://support.google.com/analytics/answer/1032385?hl=en)
   * `EMAIL_HOST`: Host provider through which email is sent (example: smtp.gmail.com)
   * `EMAIL_HOST_USER`: Email address to send emails from GraphSpace through
   * `EMAIL_HOST_PASSWORD`: Password for email address
