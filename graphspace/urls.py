@@ -11,3 +11,6 @@ urlpatterns = patterns('',
     url(r'^', include('graphs.urls'), name='base'),
     #url(r'^graphs/$', include('graphs.urls')),
 )
+
+handler404 = 'graphs.views.handler_404'
+handler500 = 'graphs.views.handler_500'
