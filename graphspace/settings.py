@@ -34,10 +34,13 @@ DB_FULL_PATH = '/Users/Divit/Documents/GRA/GraphSpace/graphspace.db'
 URL_PATH = "http://localhost:8000/"
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
+GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-69001577-1'
+
 # Application definition
 
 INSTALLED_APPS = (
 #    'django.contrib.admin',
+    'analytical',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
