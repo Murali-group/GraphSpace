@@ -1780,8 +1780,17 @@ def delete_all_graphs_for_tag(request, username, tagname):
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
 
+def handler_404(request):
+    if request.method == 'POST':
+        return HttpResponse(json.dumps(db.throwError(400, "REST API endpoint does not exist!")), content_type="application/json")
+    else:
+        return render(request,'404.html')
 
-
+def handler_500():
+    if request.method == 'POST':
+        return HttpResponse(json.dumps(db.throwError(400, "An error was encountered during this request.  REST API call not successful.")), content_type="application/json")
+    else:
+        return render(request,'500.html')
 
 
 

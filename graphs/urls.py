@@ -197,6 +197,8 @@ urlpatterns = patterns('',
         url(r'^api/tags/user/(?P<username>.+)/(?P<graphname>.+)$', views.get_all_tags_for_graph, name='get_all_tags_for_graph'),
         url(r'^api/tags/user/(?P<username>.+)$', views.get_tags_for_user, name='get_tags_for_user'),
 
-        
         )
+
+handler404 = 'views.handler_404'
+handler500 = 'views.handler_500'
 
