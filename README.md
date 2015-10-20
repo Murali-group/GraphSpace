@@ -12,7 +12,7 @@ GraphSpace has three dummy users:
 Running GraphSpace locally
 ===================================
 
-In order to get GraphSpace running on your computer, please install Python and sqlite3. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install required Python packages, download the GraphSpace code, and set up and start the server.
+In order to get GraphSpace running on your computer, please install Python and sqlite3. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install required Python packages, download the GraphSpace code, and set up and start the server.  The following instructions are for machines running Linux.
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git`
 2. Visit the GraphSpace directory: `cd GraphSpace`
