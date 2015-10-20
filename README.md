@@ -28,6 +28,47 @@ In order to get GraphSpace running on your computer, please install Python and s
 6. Finally, start the GraphSpace server: `python manage.py runserver`
 9. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
+Running GraphSpace on Apache
+===================================
+
+This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  Before we configure GraphSpace for running on Apache, please follow the steps in **Running GraphSpace locally section**.  After you have completed all the steps in the previous section, execute the instructions below. 
+
+1. Visit the GraphSpace directory: `cd GraphSpace`
+2. Navigate to graphspace directory: `cd graphspace`
+3. In a text editor, open up settings.py
+4. In settings.py, set `DEBUG=False` and `TEMPLATE_DEBUG=False`
+5. Next, we need to install apache2 on our server: `sudo apt-get install apache2`
+6. Visit `apache2` directory
+7. Navigate to `sites-enabled` directory: `cd sites-enabled`
+8. Create a file called `graphspace.conf`
+9. Inside file, copy and paste following lines
+ ```
+ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
+ WSGIPythonPath /path_to_GraphSpace
+  <Directory /path_to_GraphSpace/graphspace>
+     <Files wsgi.py>
+         Order deny,allow
+         Require all granted
+     </Files>
+  </Directory>
+  
+  Alias /static/ /path_to_GraphSpace/graphspace/graphs/static/
+  
+  <Directory /path_to_GraphSpace/graphspace/graphs/static>
+      Require all granted
+  </Directory>
+  
+  <Directory /path_to_GraphSpace>
+   Options Indexes FollowSymLinks
+   AllowOverride None
+   Require all granted
+  </Directory>
+ ```
+10. Save the file
+11. Restart apache server
+
+Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
+
 Testing the GraphSpace REST API
 =================================
 
