@@ -9,7 +9,7 @@ GraphSpace has three dummy users:
 2. Username: user2@example.com Password: user2
 3. Username: user3@example.com Password: user3
 
-Running GraphSpace on your computer
+Running GraphSpace locally
 ===================================
 
 In order to get GraphSpace running on your computer, please install Python and sqlite3. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install required Python packages, download the GraphSpace code, and set up and start the server.
