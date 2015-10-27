@@ -169,7 +169,7 @@ def testGetUserGraphs(email, password):
 	elif len(response['Graphs']) == 1:
 		print "Passed testGetUserGraphs test!"
 	else:
-		print "Error in testGetUserGraphs: Incorrect number of graphs returned! Should be 1, got: " + response['Graphs']
+		print "Error in testGetUserGraphs: Incorrect number of graphs returned! Should be 1, got: ", response['Graphs']
 
 def testMakeGraphPublic(email, password, filename):
 	register_openers()
@@ -416,6 +416,8 @@ def testGetTagsForGraph(email, password, graph_name):
 
 	if 'Error' in response:
 		print "Error in testRemoveGroup: " + response['Error']
+	elif 'Tags' not in response: 
+		print "No Tags Found!"
 	elif response['Tags'][0] == 'tutorial':
 		print "Passed testGetTagsForGraph test!"
 	else:
@@ -447,7 +449,7 @@ def testMakeGraphsWithTagPublic(email, password, tag, filename):
 
 			isPublic = data[0]
 
-			if isPublic == 0:
+			if isPublic == 1:
 				print "Passed testMakeGraphsWithTagPublic test!"
 			else:
 				print "Error in testMakeGraphsWithTagPublic: " + filename + " is still not public!"
@@ -535,7 +537,7 @@ if __name__ == '__main__':
 	# Tags API Tests
 	testGetTagsForUser(email, password)
 	testGetTagsForGraph(email, password, graph_name)
-	testMakeGraphsWithTagPrivate(email, password, 'tutorial', graph_name)
+	testMakeGraphsWithTagPublic(email, password, 'tutorial', graph_name)
 	testMakeGraphsWithTagPrivate(email, password, 'tutorial', graph_name)
 
 	testRemoveGraph(email, password, graph_name)

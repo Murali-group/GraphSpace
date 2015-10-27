@@ -29,18 +29,6 @@ def index(request):
         :param request: HTTP GET Request
     '''
 
-    #####################
-    # UNCOMMENT THESE ON INITIAL START UP TO POPULATE TABLES
-    #####################
-    # db.add_everyone_to_password_reset()
-
-    # db.insert_all_edges_from_json()
-    #####################
-
-    # UNCOMENT THIS LINE IF YOU WANT TO CONVERT JSON TO MATCH CS 2.4 PROPERTIES
-    # db.update_json_to_cs_2_4()
-    # db.checkPublicNodeEdgeConsistency()
-
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
         request.session['uid'] = None
@@ -49,10 +37,6 @@ def index(request):
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
 
     context = login(request)
-
-    # if 'uid' in context and context['uid'] != None:
-    #     # Checks consistency of all graphs 
-    #     db.checkNodeEdgeConsistencyOfUser(context['uid'])
 
     if context['Error'] == None:
         return render(request, 'graphs/index.html', context)

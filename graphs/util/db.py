@@ -96,9 +96,9 @@ def insert_all_edges_from_json():
 						if 'target_arrow_shape' in edge['data']:
 							# A normal edge has an edge and a tail.  However, we define as edge having a source and a target. source---->target
 							# TODO: Double check Edge insertion values and write query examples
-							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["target_arrow_shape"]))
+							cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["target_arrow_shape"], None))
 						else:
-							cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], ""))
+							cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], "", None))
 
 				cleaned_json_string = json.dumps(cleaned_json, sort_keys=True, indent=4)
 				# Update original JSON to match that with the new edge ID's
@@ -141,6 +141,7 @@ def update_json_to_cs_2_4():
 				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
 				# TODO: Remove conversion by specifying it when the user creates a graph
 				if 'data' in cleaned_json['graph']:
+					print "converting json"
 					cleaned_json = update_json(json.loads(convert_json(j[2])))
 				else:
 					cleaned_json = update_json(cleaned_json)
@@ -277,7 +278,7 @@ def add_everyone_to_password_reset():
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select user_id from user')
+		cur.execute('select user_id from user where user_id=?', "dsingh5270@gmail.com")
 
 		user_data = cur.fetchall()
 
@@ -294,8 +295,10 @@ def add_everyone_to_password_reset():
 def reUploadInconsistentGraphs(data):
 	con = None
 	try: 
+		incosistent_graphs = open("inconsistency.txt", "a")
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
+		graphs_processed = 1
 		for graph in data:
 
 			graph_id = graph[0]
@@ -307,17 +310,16 @@ def reUploadInconsistentGraphs(data):
 			unlisted = graph[6]
 			default_layout_id = graph[7]
 
+			print "Processing Graph: ", graph_id, " owned by: ", user_id, "\n", graphs_processed, " processed so far"
+			graphs_processed += 1
+
 			if 'data' in graph_json:
 				graph_json = json.loads(convert_json(graph[2]))
 
 			node_list = []
-			edge_list = []
 
 			for node in graph_json['graph']['nodes']:
 				node_list.append(str(node['data']['id']))
-
-			for edge in graph_json['graph']['edges']:
-				edge_list.append(str(edge['data']['id']))
 
 			cur.execute('select node_id from node where graph_id=? and user_id =?', (graph_id, user_id))
 
@@ -329,30 +331,17 @@ def reUploadInconsistentGraphs(data):
 				print "Nodes don't match"
 				mark_for_deletion = True
 
+			unspecified_nodes = ""
+
 			for node in nodes:
 				node = str(node[0])
 				if node not in node_list:
 					print "Unspecified node: ", node
-					mark_for_deletion = True
-
-			cur.execute('select head_id, tail_id from edge where head_user_id = ? and head_graph_id=?', (user_id, graph_id))
-
-			edges = cur.fetchall()
-			parsed_edges = []
-
-			# if len(edges) != len(edge_list):
-			# 	"Edges don't match"
-			# 	mark_for_deletion = True
-
-			for edge in edges:
-				parsed_edges.append(str(edge[0]) + "-"+ str(edge[1]))
-
-			for edge in edge_list:
-				if edge not in parsed_edges:
-					print "Unspecified edge: ", edge
+					unspecified_nodes += node + ", "
 					mark_for_deletion = True
 				
 			if mark_for_deletion == True:
+				incosistent_graphs.write(graph_id + '\t' + user_id + "\t" + created + "\t" + modified + "\t" + unspecified_nodes + "\n" )
 				cur.execute('delete from graph where graph_id = ? and user_id = ?', (graph_id, user_id))
 				cur.execute('delete from node where graph_id = ? and user_id = ?', (graph_id, user_id))
 				cur.execute('delete from edge where head_graph_id = ? and head_user_id = ?', (graph_id, user_id))
@@ -365,7 +354,7 @@ def reUploadInconsistentGraphs(data):
 					print "Reinserted: " + graph_id
 
 		print "Done processing"
-
+		incosistent_graphs.close()
 	except lite.Error, e:
 		print 'Error %s:' % e.args[0]
 
@@ -385,7 +374,7 @@ def checkPublicNodeEdgeConsistency():
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select * from graph where public = 1')
+		cur.execute('select * from graph')
 		data = cur.fetchall()
 
 		if data == None:
@@ -1637,10 +1626,12 @@ def find_edge(uid, gid, edge_to_find, search_type):
 			if len(head_node) > 0 and len(tail_node) > 0:
 				for i in xrange(len(tail_nodes)):
 					for j in xrange(len(head_nodes)):
-						cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (tail_nodes[i], head_nodes[j], uid, gid))
+						id_being_searched = "%" + tail_nodes[i] + '-' + head_nodes[j] + "%"
+						cur.execute('select label from edge where label like ? and head_user_id = ? and head_graph_id = ?', (id_being_searched, uid, gid))
 						data = cur.fetchall()
 						if data and len(data) > 0:
-							edge_list.append(data[0])
+							for e in data:
+								edge_list.append(e[0])
 
 				return edge_list
 		else:
@@ -1650,11 +1641,17 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 			# If both nodes exist, find label between them
 			if tail_node != None and head_node != None and len(tail_node) > 0 and len(head_node) > 0:
-				cur.execute('select label from edge where tail_id = ? and head_id = ? and head_user_id = ? and head_graph_id = ? limit 1', (str(tail_node[0]), str(head_node[0]), uid, gid))
+				id_being_searched = "%" + str(tail_node[0]) + '-' + str(head_node[0]) + "%"
+				print id_being_searched
+				cur.execute('select label from edge where label like ? and head_user_id = ? and head_graph_id = ?', (id_being_searched, uid, gid))
 				data = cur.fetchall()
+				edge_list = []
 				# If something exists, return the ids of the paents
-				if data != None and len(data) > 0:
-					return data[0]
+				if data and len(data) > 0:
+					for e in data:
+						edge_list.append(e[0])
+
+					return edge_list
 				else:
 					return []
 	
@@ -2002,10 +1999,16 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 
 		if edge['data']['source'] + '-' + edge['data']['target'] in dupEdges:
 			rand += 1
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"] + str(rand), edge['data']['id'], 1))
+			if 'id' not in edge['data']:
+				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target'] + rand
+
+			cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"] + str(rand), edge['data']['id'], 1, None))
 			dupEdges.append(edge['data']['source'] + str(rand) + '-' + edge['data']['target'] + str(rand))
 		else:
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
+			if 'id' not in edge['data']:
+				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+			
+			cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1, None))
 		# if (edge['data']['source'] in dupEdges):
 		# 	rand += 1
 		# 	if 'target_arrow_shape' in edge['data']:
@@ -2021,6 +2024,10 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 		
 		# 	dupEdges.append(edge['data']['source']);
 	for node in nodes:
+		
+		if 'label' in node['data']:
+			node['data']['content'] = node['data']['label']
+
 		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
 
 def update_graph(username, graphname, graph_json):

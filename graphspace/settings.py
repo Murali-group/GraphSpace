@@ -22,9 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = os.environ.get('TEMPLATE_DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
@@ -55,7 +55,6 @@ ROOT_URLCONF = 'graphspace.urls'
 
 WSGI_APPLICATION = 'graphspace.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
@@ -65,8 +64,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'graphspace.db'),
     }
 }
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
