@@ -253,32 +253,8 @@ def _graphs_page(request, view_type):
     if len(context['graph_list']) == 0:
         context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
 
-    # OLD WAY OF DOING TAGS
-
-    # all_tags = []
-    # #Divide the results of the query into pages. Currently has poor performance
-    # #because the page processes a query (which may take long)
-    # #everytime the page loads. I think that this can be improved if
-    # #I store the query result in the session such that it doesn't
-    # #process the query unnecessarily.
-    # if context['graph_list'] != None:
-    #     pager_context = pager(request, context['graph_list'])
-    #     if type(pager_context) is dict:
-    #         context.update(pager_context)
-    #         for i in xrange(len(context['current_page'].object_list)):
-    #             graph = list(context['current_page'][i])
-    #             if request.GET.get(search_type):
-    #                 graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
-    #                 all_tags += graph[1]
-    #             else:
-    #                 graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
-    #                 all_tags += graph[1]
-    #             graph = tuple(graph)
-    #             context['current_page'].object_list[i] = graph
-
-    # context['all_tags'] = list(set(all_tags))[:10]
-
     all_tags = {}
+    
     if context['graph_list'] != None:
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:

@@ -1272,15 +1272,34 @@ def search_result(uid, search_type, search_terms, view_type):
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 
-			# If it is an edge
+			test_dict = dict()
+
 			for search_word in search_terms:
+				matched_graphs = find_graphs_using_names(uid, search_type, search_word, view_type, cur)			
+				
 				if ':' in search_word:
-					intial_graphs_from_search = intial_graphs_from_search + find_edges(uid, search_type, search_word, view_type, cur)
+					matched_graphs += find_edges(uid, search_type, search_word, view_type, cur)
 				# If it is a node or possibly a graph_id (name of the graph)
 				else:
-					intial_graphs_from_search = intial_graphs_from_search + find_nodes(uid, search_type, search_word, view_type, cur) + find_graphs_using_names(uid, search_type, search_word, view_type, cur)
-			# intial_graphs_from_search = list(set(intial_graphs_from_search))
+					matched_graphs += find_nodes(uid, search_type, search_word, view_type, cur)
 
+				test_dict[search_word] = matched_graphs
+
+				intial_graphs_from_search += matched_graphs
+
+			print test_dict
+
+			# for graph_tuple in intial_graphs_from_search:
+			# 	key = graph_tuple[0] + graph_tuple[4]
+			# 	if key not in test_dict:
+			# 		test_dict[key] = 1
+			# 	else:
+			# 		temp_list = test_dict[key]
+			# 		# temp_list.append(graph_tuple)
+			# 		temp_list += 1
+			# 		test_dict[key] = temp_list
+
+			# print test_dict
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
 			# search terms, then that graph matches all the search terms and it should be returned
@@ -1290,12 +1309,13 @@ def search_result(uid, search_type, search_terms, view_type):
 			for graph_tuple in intial_graphs_from_search:
 				graph_repititions[graph_tuple[0] + graph_tuple[4]] += 1
 
+
 			for graph_tuple in intial_graphs_from_search:
 				graph_list = graph_mappings.get(graph_tuple[0] + graph_tuple[4], [])
 				graph_list.append(graph_tuple)
 				graph_mappings[graph_tuple[0] + graph_tuple[4]] = graph_list
 
-			# If value appears the number of times as there are tags, 
+			# If value appears the number of times as there are terms, 
 			# then append that to the actual list of graphs to be returned.
 			actual_graphs_for_searches = []
 			for key, value in graph_repititions.iteritems():
@@ -1320,13 +1340,14 @@ def search_result(uid, search_type, search_terms, view_type):
 						for label in labels:
 							label = label.replace('-', ':')
 							label_string = label_string + label + ','
-						# while label_string[len(label_string) - 1] == ',' or label_string[len(label_string) - 1] == ' ':
+
 						label_string = label_string[:len(label_string) - 1]
 						key_with_search = list(key_tuples[0])
 						key_with_search.insert(1, "")
 						key_with_search[2] = id_string
 						key_with_search[3] = label_string
 						key_with_search = tuple(key_with_search)
+
 						actual_graphs_for_searches.append(key_with_search)
 
 			# Return whole dictionary of matchin graphs
@@ -1642,7 +1663,6 @@ def find_edge(uid, gid, edge_to_find, search_type):
 			# If both nodes exist, find label between them
 			if tail_node != None and head_node != None and len(tail_node) > 0 and len(head_node) > 0:
 				id_being_searched = "%" + str(tail_node[0]) + '-' + str(head_node[0]) + "%"
-				print id_being_searched
 				cur.execute('select label from edge where label like ? and head_user_id = ? and head_graph_id = ?', (id_being_searched, uid, gid))
 				data = cur.fetchall()
 				edge_list = []
@@ -1796,6 +1816,7 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.public = 1', ('%' + search_word + '%', ))
 			public_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
+			intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
 
 	elif search_type == 'full_search':
 		if view_type == 'my graphs':
@@ -1875,7 +1896,49 @@ def add_unique_to_list(listname, data):
 
 	return listname
 
+def add_unique_nodes_to_list(data):
+	'''
+		Adds all unique items to the specified list
+		Also checks to see if the length is > 0 for each item
+		inserted into the list
 
+		:param listname: List to put unique elements in
+		:param data: Possible duplicate data to search through
+		:return listname: [Unique elements]
+	'''
+
+	# Dict to keep track of unique graph and merged tuples
+	graph_dict = dict()
+	unique_list = []
+
+	# Go through each graph tuple that contains the node
+	for i in range(len(data)):
+		graph_id = data[i][0]
+		node_id = data[i][1]
+		label = data[i][2]
+		modified = data[i][3]
+		user_id = data[i][4]
+		public = data[i][5]
+
+		key = graph_id + user_id
+
+		if key not in graph_dict:
+			graph_dict[key] = [i]
+		else:
+			test = graph_dict[key]
+			test.append(i)
+			graph_dict[key] = test
+
+	for key, value in graph_dict.iteritems():
+		index_list = graph_dict[key]
+		new_row = [data[0][0], "", "", data[0][3], data[0][4], data[0][5]]
+		for i in index_list:
+			new_row[1] += data[i][1] + ", "
+			new_row[2] += data[i][2] + ", "
+		unique_list.append(tuple(new_row))
+
+	return unique_list
+	
 # -------------------------- REST API -------------------------------
 
 def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None, skip=None):
