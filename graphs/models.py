@@ -118,9 +118,9 @@ class Group(Base):
     # to 'group_to_user'. An equivalent way to link the two classes is to instead 
     # add the following line to User:
     # groups = relationship('Group', secondary=group_to_user, backref='user')
-    users = relationship('User', secondary=group_to_user, backref='group')
-    # specifies many-to-many relationship with Graph table
-    graphs = relationship('Graph', secondary=group_to_graph, backref='group')
+    users = relationship('User', backref='group')
+    # # specifies many-to-many relationship with Graph table
+    # graphs = relationship('Graph', backref='group')
 
 class Graph(Base):
     __tablename__ = 'graph'
@@ -139,6 +139,8 @@ class Graph(Base):
     layouts = relationship("Layout")
     # Each node can belong to at most one graph. See the 'Node' class for details.
     nodes = relationship("Node")
+
+    # groups = relationship("Group", backref='graph')
     
     #specify many to many relationship with GraphTag
     tags = relationship("GraphTag", secondary=graph_to_tag, backref='graph')

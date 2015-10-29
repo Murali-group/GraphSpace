@@ -15,7 +15,6 @@ urlpatterns = patterns('',
         url(r'^graphs/$', views.graphs, name='graphs'),
         url(r'^graphs/shared/$', views.shared_graphs, name='shared_graphs'),
         url(r'^graphs/public/$', views.public_graphs, name='public_graphs'),
-        url(r'^graphs/all/$', views.all_graphs, name='all_graphs'),
         url(r'^graphs/upload/$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
         
         # view graph page. This contains regular expression to catch url in the form of the following:
@@ -31,7 +30,6 @@ urlpatterns = patterns('',
         # groups page
         url(r'^groups/$', views.groups, name='groups'),
         url(r'^groups/member/$', views.groups_member, name='groups_member'),
-        url(r'^groups/all/$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_owner>.+)/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)/$', views.create_group, name='create_group'),
         url(r'^delete/group/$', views.delete_group_through_ui, name='delete_group_through_ui'),
@@ -111,7 +109,6 @@ urlpatterns = patterns('',
         url(r'^graphs$', views.graphs, name='graphs'),
         url(r'^graphs/shared$', views.shared_graphs, name='shared_graphs'),
         url(r'^graphs/public$', views.public_graphs, name='public_graphs'),
-        url(r'^graphs/all$', views.all_graphs, name='all_graphs'),
         url(r'^graphs/upload$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
         
         # view graph page. This contains regular expression to catch url in the form of the following:
@@ -127,7 +124,6 @@ urlpatterns = patterns('',
         # groups page
         url(r'^groups$', views.groups, name='groups'),
         url(r'^groups/member$', views.groups_member, name='groups_member'),
-        url(r'^groups/all$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_owner>.+)/(?P<group_id>.+)$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)$', views.create_group, name='create_group'),
         url(r'^delete/group$', views.delete_group_through_ui, name='delete_group_through_ui'),

@@ -31,7 +31,7 @@ def index(request):
 
         :param request: HTTP GET Request
     '''
-
+    # db.add_everyone_to_password_reset()
     # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
     # that means that the user is trying to log on to GraphSpace.
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
@@ -60,6 +60,228 @@ def index(request):
     else:
         # If there is a problem, throw error and the reason why there was a problem
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
+
+def logout(request):
+    '''
+        Log the user out and display logout page.
+
+        :param request: HTTP GET Request
+
+    '''
+
+    # Clears all context
+    context = {}
+    
+    # Deletes the "Uid" key from the session 
+    # currently being tracked by Django.
+    try:
+        del request.session['uid']
+    except KeyError:
+        # TODO: should something be done here?
+        pass
+
+    # redirect to the main page after logout.
+    return HttpResponseRedirect('/index/')
+
+def download(request):
+    '''
+        Download the graph as an image.
+        Used for when user requests to download PNG of graph.
+
+        :param HTTP GET Request
+
+    '''
+
+    # Only respond if it is a POST request.
+    # It will contain the image to be downloaded by the user
+    if request.POST:
+        if request.POST['image']:
+            response =  HttpResponse(request.POST['image'], content_type='application/octet-stream')
+            response['Content-Disposition'] = 'attachment; filename="foo.png"'
+            return response
+
+    else:
+        # redirect to the main page
+        return HttpResponseRedirect('/index/')
+
+def graphs(request):
+    '''
+        Render the My Graphs page
+
+        :param request: HTTP GET Request
+    '''
+
+    return _graphs_page(request, 'my graphs')
+    
+def shared_graphs(request):
+    '''
+        Render the graphs/shared/ page showing all graphs that are shared with a user
+
+        :param request: HTTP GET Request
+    '''
+    
+    return _graphs_page(request, 'shared') 
+
+def public_graphs(request):
+    '''
+        Render the graphs/public/ page showing all graphs that are public
+
+        :param request: HTTP GET Request
+    '''
+
+    return _graphs_page(request, 'public')
+
+def _graphs_page(request, view_type):
+    '''
+        wrapper view for the following pages:
+            graphs/
+            graphs/shared/
+            graphs/public/
+
+        :param request: HTTP GET Request
+        :param view_type: Type of view for graph (Ex: my graphs, shared, public)
+    '''
+    #context of the view to be passed in for rendering
+    context = {}
+    graph_list = None
+
+    #handle login
+    context = login(request)
+
+    #Send view_type to front end to tell the user (through button color) where they are
+    context['view_type'] = view_type
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    #check for authentication
+    uid = request.session['uid']
+
+    # pass the tag information to the front-end
+    context['all_tags'] = []#db.get_all_tags(uid, view_type)
+
+    # Set the base URL's so that the links point to the correct view types
+    context['base_url'] = [] #db.get_base_urls(view_type)
+
+    search_type = None
+
+    if 'partial_search' in request.GET:
+        search_type = 'partial_search'
+    elif 'full_search' in request.GET:
+        search_type = 'full_search'
+
+    # Set all information abouut graphs to the front-end
+    context = db.get_graphs_for_view_type(context, view_type, uid, request)
+
+    # reset the search form
+    context['search_form'] = SearchForm(placeholder='Search...')
+
+    request_tags = request.GET.get('tags') or request.GET.get('tag') or None
+
+    if len(context['graph_list']) == 0:
+        context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
+
+    all_tags = {}
+    
+    if context['graph_list'] != None:
+        pager_context = pager(request, context['graph_list'])
+        if type(pager_context) is dict:
+            context.update(pager_context)
+            for i in xrange(len(context['current_page'].object_list)):
+                graph = list(context['current_page'][i])
+                if request.GET.get(search_type):
+                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
+                else:
+                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
+                graph = tuple(graph)
+                context['current_page'].object_list[i] = graph
+
+    recent_graphs = context['graph_list']
+
+    recent_graphs.sort(key=lambda r: r[2], reverse=True)
+
+    if len(recent_graphs) > 250:
+        recent_graphs = recent_graphs[:250]
+
+    for graph in recent_graphs:
+        graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
+        for tag in graph_tags:
+            if len(tag) > 0:
+                if tag in all_tags:
+                    all_tags[tag] += 1
+                else:
+                    all_tags[tag] = 1
+
+    sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
+
+    all_tags_refined = [i[0] for i in sorted_tags]
+
+    # Populates tags search bar with most used tags of last 250 graphs
+    context['all_tags'] = all_tags_refined #list(set(all_tags))[:10]
+
+    # indicator to include css/js footer for side menu support etc.
+    context['footer'] = True
+
+    return render(request, 'graphs/graphs.html', context)
+
+def upload_graph_through_ui(request):
+
+    if request.method == 'POST':
+            login_form = LoginForm()
+            register_form = RegisterForm()
+
+            upload_json = True
+
+            title_of_graph = None
+
+            if 'title' in request.POST:
+                title_of_graph = request.POST['title']
+
+            if str(request.FILES['graphname'])[-4:] != "json":
+                upload_json = None
+            
+            if request.POST['email'] == 'Public User':
+                # assign random id generator
+                if upload_json:
+                    result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
+                else:
+                    result = db.uploadCyjsFile(None, request.FILES['graphname'].read(), title_of_graph)
+
+                if 'Error' not in result:
+                    context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
+                else:
+                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
+                return render(request, 'graphs/upload_graph.html', context)
+            else:
+
+                if upload_json:
+                    result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+                else:
+                    result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+
+                if 'Error' not in result:
+                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}
+                else:
+                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Error': result['Error']}
+                
+                return render(request, 'graphs/upload_graph.html', context)
+    else: 
+        context = login(request)
+        return render(request, 'graphs/upload_graph.html', context)
+
+def save_layout(request, uid, gid):
+    '''
+        Saves a layout for a graph.
+
+        :param HTTP POST Request
+
+    '''
+    result = db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
+    if result == None:
+        return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
+    
+    return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json");
+
 
 def view_graph(request, uid, gid):
     '''
@@ -182,179 +404,6 @@ def view_json(request, uid, gid):
         return render(request, 'graphs/view_json.html', context)
     else:
         return HttpResponse(context['json'])
-
-def graphs(request):
-    '''
-        Render the My Graphs page
-
-        :param request: HTTP GET Request
-    '''
-
-    return _graphs_page(request, 'my graphs')
-    
-def shared_graphs(request):
-    '''
-        Render the graphs/shared/ page showing all graphs that are shared with a user
-
-        :param request: HTTP GET Request
-    '''
-    
-    return _graphs_page(request, 'shared') 
-
-def public_graphs(request):
-    '''
-        Render the graphs/public/ page showing all graphs that are public
-
-        :param request: HTTP GET Request
-    '''
-
-    return _graphs_page(request, 'public')
-
-def all_graphs(
-    request):
-    '''
-        Render the graphs/all/ page showing all graphs. Admin feature [NOT CURRENTLY SUPPORTED]
-
-        :param request: HTTP GET Request
-    '''
-
-    return _graphs_page(request, 'all')
-
-def _graphs_page(request, view_type):
-    '''
-        wrapper view for the following pages:
-            graphs/
-            graphs/shared/
-            graphs/public/
-            graphs/all/
-
-        :param request: HTTP GET Request
-        :param view_type: Type of view for graph (Ex: my graphs, shared, public)
-    '''
-    #context of the view to be passed in for rendering
-    context = {}
-    graph_list = None
-
-    #handle login
-    context = login(request)
-
-    #Send view_type to front end to tell the user (through button color) where they are
-    context['view_type'] = view_type
-
-    if context['Error']:
-        return render(request, 'graphs/error.html', context)
-
-    #check for authentication
-    uid = request.session['uid']
-
-    # pass the tag information to the front-end
-    context['all_tags'] = []#db.get_all_tags(uid, view_type)
-
-    # Set the base URL's so that the links point to the correct view types
-    context['base_url'] = [] #db.get_base_urls(view_type)
-
-    search_type = None
-
-    if 'partial_search' in request.GET:
-        search_type = 'partial_search'
-    elif 'full_search' in request.GET:
-        search_type = 'full_search'
-
-    # Set all information abouut graphs to the front-end
-    context = db.get_graphs_for_view_type(context, view_type, uid, request)
-
-    # reset the search form
-    context['search_form'] = SearchForm(placeholder='Search...')
-
-    request_tags = request.GET.get('tags') or request.GET.get('tag') or None
-
-    if len(context['graph_list']) == 0:
-        context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
-
-    all_tags = {}
-    
-    if context['graph_list'] != None:
-        pager_context = pager(request, context['graph_list'])
-        if type(pager_context) is dict:
-            context.update(pager_context)
-            for i in xrange(len(context['current_page'].object_list)):
-                graph = list(context['current_page'][i])
-                if request.GET.get(search_type):
-                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
-                else:
-                    graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
-                graph = tuple(graph)
-                context['current_page'].object_list[i] = graph
-
-    recent_graphs = context['graph_list']
-
-    recent_graphs.sort(key=lambda r: r[2], reverse=True)
-
-    if len(recent_graphs) > 250:
-        recent_graphs = recent_graphs[:250]
-
-    for graph in recent_graphs:
-        graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
-        for tag in graph_tags:
-            if len(tag) > 0:
-                if tag in all_tags:
-                    all_tags[tag] += 1
-                else:
-                    all_tags[tag] = 1
-
-    sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
-
-    all_tags_refined = [i[0] for i in sorted_tags]
-
-    # Populates tags search bar with most used tags of last 250 graphs
-    context['all_tags'] = all_tags_refined #list(set(all_tags))[:10]
-
-    # indicator to include css/js footer for side menu support etc.
-    context['footer'] = True
-
-    return render(request, 'graphs/graphs.html', context)
-
-def constructGraphMessage(context, view_type, search, tags):
-    if view_type == 'shared':
-        if search == None and tags == None:
-            context['message'] = "It appears that there are no groups that have shared their graphs."
-        elif search != None and tags == None:
-            context['message'] = "It appears that there are no groups that have shared their graphs with the given search criteria."
-        elif tags != None and search == None:
-            context['message'] = "It appears that there are no groups that have shared their graphs with the given tag criteria."
-        else:
-            context['message'] = "It appears that there are no groups that have shared their graphs with the given search and tag criteria."
-
-    elif view_type == 'public':
-        if search == None and tags == None:
-            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
-        elif search != None and tags == None:
-            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria."
-        elif tags != None and search == None:
-            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria."
-        else:
-            context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs with the given search and tag criteria."
-
-    elif view_type == 'all':
-        if search == None and tags == None:
-            context['message'] = "It appears that there are no graphs available."
-        elif search != None and tags == None:
-            context['message'] = "It appears that there are no graphs available that match the search criteria."
-        elif tags != None and search == None:
-            context['message'] = "It appears that there are no graphs available that match the tag criteria."
-        else:
-            context['message'] = "It appears that there are no graphs available that match the search and tag criteria."
-    else:
-        if search == None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
-        elif search != None and tags == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria in order to see them here."
-        elif tags != None and search == None:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria in order to see them here."
-        else:
-            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>  with the given search and tag criteria in order to see them here."
-
-    return context
 
 def groups(request):
     ''' 
@@ -775,24 +824,6 @@ def retrieveIDs(request):
     else:
         return HttpResponseNotFound('<h1>Page not found</h1>')
 
-def logout(request):
-    '''
-        Log the user out and display logout page.
-
-        :param request: HTTP GET Request
-
-    '''
-    context = {}
-    
-    try:
-        del request.session['uid']
-    except KeyError:
-        # TODO: should something be done here?
-        pass
-
-    # redirect to the main page after logout.
-    return HttpResponseRedirect('/index/')
-
 def sendResetEmail(request):
     '''
         Sends an email to the requester.
@@ -852,34 +883,6 @@ def resetPassword(request):
         return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
 
     return HttpResponse(json.dumps(db.sendMessage(200, "Password updated for " + request.POST['email'])), content_type="application/json");
-
-
-def save_layout(request, uid, gid):
-    '''
-        Saves a layout for a graph.
-
-        :param HTTP POST Request
-
-    '''
-    result = db.save_layout(request.POST['layout_id'], request.POST['layout_name'], uid, gid, request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
-    if result == None:
-        return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
-    
-    return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json");
-
-def download(request):
-    '''
-        Download the graph as an image.
-
-        :param HTTP GET Request
-
-    '''
-
-    if request.POST:
-        if request.POST['image']:
-            response =  HttpResponse(request.POST['image'], content_type='application/octet-stream')
-            response['Content-Disposition'] = 'attachment; filename="foo.png"'
-            return response
 
 def changeLayoutName(request):
     '''
@@ -1158,51 +1161,6 @@ def removeDefaultLayout(request):
 def renderImage(request):
     return HttpResponseRedirect(URL_PATH + 'static/images/legend.png');
 
-def upload_graph_through_ui(request):
-
-    if request.method == 'POST':
-            login_form = LoginForm()
-            register_form = RegisterForm()
-
-            upload_json = True
-
-            title_of_graph = None
-
-            if 'title' in request.POST:
-                title_of_graph = request.POST['title']
-
-            if str(request.FILES['graphname'])[-4:] != "json":
-                upload_json = None
-            
-            if request.POST['email'] == 'Public User':
-                # assign random id generator
-                if upload_json:
-                    result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
-                else:
-                    result = db.uploadCyjsFile(None, request.FILES['graphname'].read(), title_of_graph)
-
-                if 'Error' not in result:
-                    context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
-                else:
-                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
-                return render(request, 'graphs/upload_graph.html', context)
-            else:
-
-                if upload_json:
-                    result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
-                else:
-                    result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
-
-                if 'Error' not in result:
-                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}
-                else:
-                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Error': result['Error']}
-                
-                return render(request, 'graphs/upload_graph.html', context)
-    else: 
-        context = login(request)
-        return render(request, 'graphs/upload_graph.html', context)
-
 def shareLayoutWithGroups(request):
     '''
         Shares graph with specified groups.
@@ -1225,20 +1183,7 @@ def shareLayoutWithGroups(request):
                 db.makeLayoutPublic(owner, gid, layoutId)
             else:
                 db.share_layout_with_all_groups_of_user(owner, gid, layoutId)
-        ## SHELVE THIS FOR NOW (ALLOW USER TO CHOOSE WHICH GROUPS TO SHARE LAYOUT WITH)
-        # groups_to_share_with = request.POST.getlist('groups_to_share_with[]')
-        # groups_not_to_share_with = request.POST.getlist('groups_not_to_share_with[]')
-        # layoutId = request.POST['layoutId']
-
-        # for group in groups_to_share_with:
-        #     groupInfo = group.split("12345__43121__")
-        #     db.share_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
-
-        # for group in groups_not_to_share_with:
-        #     groupInfo = group.split("12345__43121__")
-        #     db.unshare_layout_with_group(layoutId, owner, gid, groupInfo[0], groupInfo[1])
-        ##
-
+ 
             return HttpResponse(json.dumps(db.sendMessage(200, "Okay")), content_type="application/json")
 
 ##### END VIEWS #####
@@ -1758,6 +1703,9 @@ def delete_all_graphs_for_tag(request, username, tagname):
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
 
+
+# Private Utility methods used throughout views.py
+
 def handler_404(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(db.throwError(404, "REST API endpoint does not exist!")), content_type="application/json")
@@ -1770,8 +1718,47 @@ def handler_500():
     else:
         return render(request,'500.html')
 
+def constructGraphMessage(context, view_type, search, tags):
+    if view_type == 'shared':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given tag criteria."
+        else:
+            context['message'] = "It appears that there are no groups that have shared their graphs with the given search and tag criteria."
 
+    elif view_type == 'public':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no public graphs available.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no public graphs available that match the search criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no public graphs available that match the tag criteria.  Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria."
+        else:
+            context['message'] = "It appears that there are no public graphs available that match the search and tag criteria.  Please create an account and join a group or <a href='/../help/programmers/#add_graph'>upload</a> your own graphs with the given search and tag criteria."
 
+    elif view_type == 'all':
+        if search == None and tags == None:
+            context['message'] = "It appears that there are no graphs available."
+        elif search != None and tags == None:
+            context['message'] = "It appears that there are no graphs available that match the search criteria."
+        elif tags != None and search == None:
+            context['message'] = "It appears that there are no graphs available that match the tag criteria."
+        else:
+            context['message'] = "It appears that there are no graphs available that match the search and tag criteria."
+    else:
+        if search == None and tags == None:
+            context['message'] = "It appears that you currently have no graphs uploaded. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>."
+        elif search != None and tags == None:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the search terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given search criteria in order to see them here."
+        elif tags != None and search == None:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a> with the given tag criteria in order to see them here."
+        else:
+            context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>  with the given search and tag criteria in order to see them here."
+
+    return context
 
 
 

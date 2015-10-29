@@ -19,14 +19,18 @@ from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
 from sqlalchemy.orm.exc import NoResultFound
 
-#get database
+import graphs.models as models
+
 data_connection = db_init.db
 
 #get tables from the database
 graph = db_init.graph
+node = db_init.node
+edge = db_init.edge
 user = db_init.user
 group = db_init.group
 group_to_graph = db_init.group_to_graph
+password_reset = db_init.password_reset
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
@@ -34,181 +38,98 @@ URL_PATH = settings.URL_PATH
 
 
 # This file is a wrapper to communicate with sqlite3 database 
-# that does not need authentication for connection
+# that does not need authentication for connection.
 
-##################################################################
-# This section contains methods to populate tables on startup
-
-
+# It may be viewed as the controller to the database
 
 # --------------- Edge Insertions -----------------------------------
 
-
 def assign_edge_ids(json_string):
 	'''
-		Modifies all id's of edges to be the names of the nodes that they are attached to.
+		Modifies all ID's of edges to be the names of the nodes that they are attached to.
 
 		:param json_string: JSON of graph
-		:return json_string: JSON of graph having id's for all edges
+		:return json_string: JSON of graph having unique ID's for all edges
 	'''
-
 	
 	ids = []
-	# Appending id's to all the edges using the source and target as part of its ids
-	# TODO: Change '-' character to something that can't be found in an edge
+	# Creates ID's for all of the edges by creating utilizing the source and target nodes
+	# The edge ID would have the form: source-target
 	for edge in json_string['graph']['edges']:
+
 		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+
+		# If the ID has not yet been seen (is unique), simply store the ID 
+		# of that edge as source-target
 		if edge['data']['id'] not in ids:
 			ids.append(edge['data']['id'])
 		else:
+			# Otherwise if there are multiple edges with the same ID,
+			# append a number to the end of the ID so we can distinguish
+			# multiple edges having the same source and target.
+			# This needs to be done because HTML DOM needs unique IDs.
 			counter = 0
 			while edge['data']['id'] in ids:
 				counter += 1
 				edge['data']['id'] = edge['data']['id'] + str(counter)
 			ids.append(edge['data']['id'])
 
-	# Return JSON having all edges with ids
+	# Return JSON having all edges containing unique ID's
 	return json_string
 
-# Populates the edge table with edges from jsons
-# already in the database
-def insert_all_edges_from_json():
-	'''
-		Inserts all edges from the JSON into the database
-
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		con.text_factory = str
-		cur = con.cursor()
-		# Get information from all graphs already in the database
-		# QUERY EXAMPLE: select user_id, graph_id from graph
-		cur.execute('select user_id, graph_id, json from graph')
-		data = cur.fetchall()
-
-		# If there is anything in the graph table
-		if data != None:
-			# Go through each Graph
-			for j in data:
-				cleaned_json = json.loads(j[2])
-				# Since there are two types of JSON: one originally submitted
-				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-				# TODO: Remove conversion by specifying it when the user creates a graph
-				if 'data' in cleaned_json['graph']:
-					cleaned_json = assign_edge_ids(json.loads(convert_json(j[2])))
-				else:
-					cleaned_json = assign_edge_ids(cleaned_json)
-				
-				print 'Processing %s of %s', (j[1], j[0])
-				# Go through json of the graphs, if edge is not in database, then insert it (to avoid conflicts where source and target nodes are the same).
-				# Special accomodation is done for if edge has directed property or not
-				# TODO: Remove dependency of same source and target nodes as well as directed and undirected nodes
-				for edge in cleaned_json['graph']['edges']:
-					# TODO: Write query examples
-					# QUERY EXAMPLE: select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?, (test_user@test.com, test_graph, {graph: ...})
-					cur.execute('select * from edge where head_user_id=? and head_graph_id = ? and head_id = ? and tail_user_id = ? and tail_graph_id = ? and tail_id = ?', (j[0], j[1], edge['data']['source'], j[1], j[1], edge['data']['target']))
-					sanity = cur.fetchall()
-					if sanity == None or len(sanity) == 0:
-						if 'target_arrow_shape' in edge['data']:
-							# A normal edge has an edge and a tail.  However, we define as edge having a source and a target. source---->target
-							# TODO: Double check Edge insertion values and write query examples
-							cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], edge['data']["target_arrow_shape"], None))
-						else:
-							cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (j[0], j[1], edge['data']["source"], j[1], j[1], edge['data']["target"], edge['data']["source"] + "-" + edge['data']["target"], "", None))
-
-				cleaned_json_string = json.dumps(cleaned_json, sort_keys=True, indent=4)
-				# Update original JSON to match that with the new edge ID's
-				# TODO: Write query examples
-				cur.execute('update graph set json=? where graph_id=? and user_id=?', (cleaned_json_string, j[1], j[0]))
-				con.commit()
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
 # --------------- End Edge Insertions --------------------------------
-# Populates the edge table with edges from jsons
-# already in the database
-def update_json_to_cs_2_4():
-	'''
-		Inserts all edges from the JSON into the database
 
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		con.text_factory = str
-		cur = con.cursor()
-		# Get information from all graphs already in the database
-		# QUERY EXAMPLE: select user_id, graph_id from graph
-		cur.execute('select user_id, graph_id, json from graph')
-		data = cur.fetchall()
+'''
+	Updates JSON from CytoscapeWeb schema to be compatible
+	with CytoscapeJS. 
 
-		# If there is anything in the graph table
-		if data != None:
-			# Go through each Graph
-			for j in data:
-				print 'Processing %s of %s', (j[1], j[0])
-				cleaned_json = json.loads(j[2])
-				# Since there are two types of JSON: one originally submitted
-				# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-				# TODO: Remove conversion by specifying it when the user creates a graph
-				if 'data' in cleaned_json['graph']:
-					print "converting json"
-					cleaned_json = update_json(json.loads(convert_json(j[2])))
-				else:
-					cleaned_json = update_json(cleaned_json)
+	:param unprocessed_json: JSON string to be converted to CytoscapeJS standards
+	:return CytoscapeJS compatible JSON
+'''
+def update_json(unprocessed_json):
 
-				cleaned_json_string = json.dumps(cleaned_json, sort_keys=True, indent=4)
-				# Update original JSON to match that with the new edge ID's
-				# TODO: Write query examples
-				cur.execute('update graph set json=? where graph_id=? and user_id=?', (cleaned_json_string, j[1], j[0]))
-				con.commit()
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def update_json(json_string):
-
-	for node in json_string['graph']['nodes']:
+	# Go through all of the nodes in the json of the graph
+	for node in unprocessed_json['graph']['nodes']:
 		# Replace label with content
+		# This is done because CytoscapeJS uses "content" property
+		# to distinguish items to be displayed inside of a node
+		# whereas CytoscapeWeb used "label" property
 		if 'label' in node['data']:
 			node['data']['content'] = node['data']['label']
 			del node['data']['label']
 
-		#Replace color with background_color
+		# Replace color with background_color
+		# This is done to satisfy CytoscapeJS requirements
+		# Originally, color really meant background color
 		if 'color' in node['data']:
 			node['data']['background_color'] = node['data']['color']
+			# In CytoscapeJS, I'm setting the default text color to be black
 			node['data']['color'] = 'black'
 
-		# Add text-wrap property
+		# Add text-wrap property that allows for CytoscapeJS to recognize
+		# new line characters
 		node['data']['text_wrap'] = 'wrap'
 
 		# Make it so text is vertically aligned
 		node['data']['text_valign'] = 'center'
 
-	for edge in json_string['graph']['edges']:
+	# Go through all of the edges in the json of the graph
+	for edge in unprocessed_json['graph']['edges']:
 		# Replace label with content
+		# This is done because CytoscapeJS uses "content" property
+		# to distinguish items to be displayed inside of a node
+		# whereas CytoscapeWeb used "label" property
 		if 'label' in edge['data']:
 			edge['data']['content'] = edge['data']['label']
 			del edge['data']['label']
 
-		# Replace shape with target_arrow_shape
+		# Replace shape with target_arrow_shape and add a triangle.
+		# CytoscapeJS is more granular in its detail to construct a directed 
+		# edge than CytoscapeWeb was.
 		if 'directed' in edge['data']:
 			edge['data']['target_arrow_shape'] = "triangle"
 
-		# if 'target_arrow_shape' in edge['data']:
-		# 	edge['data']['target_arrow_shape'] = "triangle"
-
-	return json_string
+	return unprocessed_json
 
 def convert_json(original_json):
     '''
@@ -290,24 +211,178 @@ def add_everyone_to_password_reset():
 		for forgot password functionalities
 
 	'''
-	con = None
-	try: 
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
 
-		cur.execute('select user_id from user where user_id=?', "dsingh5270@gmail.com")
+	#create a new db session
+	db_session = data_connection.new_session()
+	
+	try:
+		# Get all users that are currently in the user table
+		user_ids = db_session.query(user.c.user_id).all()
+		
+		# Go through each username and add it to the password_reset table
+		for user_id in user_ids:
+			# This is done to remove the unicode encoding and simply 
+			# extract the string
+			user_id  = user_id[0]
+			add_user_to_password_reset(db_session, user_id)
 
-		user_data = cur.fetchall()
+	except NoResultFound:
+		print "There are no users in the database"
+		return None
+	
+	db_session.close()
 
-		for user in user_data:
-			add_user_to_password_reset(user[0])
+def add_user_to_password_reset(db_session, email):
+	'''
+		Adds a specific user to password_reset table.
+		If email is in this, it automatically sends email to change 
+		password for that account the next time the user logs on
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+		:param email: Email of the user for GraphSpace
+	'''
+	try:
+		# Get the user if they exist
+		user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).one()
+		
+		# Generate unique code that GraphSpace will use to identify
+		# which user is trying to reset their password
+		code = id_generator()
 
-	finally:
-		if con:
-			con.close()
+		# Create new entry to be inserted into password_reset table
+		reset_user = models.PasswordReset(id = None, user_id = email, code = code, created = datetime.now())
+		
+		# Commit the changes to the database
+		db_session.add(reset_user)
+		db_session.commit()
+
+	except NoResultFound:
+		print "User: " + email + " not found!"
+		return None
+
+def emailExists(db_session, email):
+	'''
+		Checks to see if a user's email exists.
+
+		:param email: Email of user
+		:return boolean: True if user exists
+	'''
+	try:
+		# Get the user if they exist
+		user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).one()
+		# Get the string representation from the tuple
+		return user_id[0]
+	except NoResultFound:
+		print "User: " + email + " not found!"
+		return None
+
+def need_to_reset_password(email):
+	'''
+		Checks to see if a user needs to reset their password.
+		If email is in password_reset email, they do, otherwise, not.
+
+		:param email: Email of the user in GraphSpace
+	'''
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	try:
+		# If email exists in password_reset table, then the user has to reset their password
+		user_id = db_session.query(password_reset.c.user_id).filter(password_reset.c.user_id == email).all()
+		print user_id
+		return True
+	except NoResultFound:
+		print "User: " + email + " not found!"
+		return None
+
+	db_session.close()
+
+def sendForgotEmail(email):
+	'''
+		Emails the user to reset their password.
+
+		:param email of user
+	'''
+
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	try:
+		# Retrieve reset code attached to email
+		reset_code = db_session.query(password_reset.c.code).filter(password_reset.c.user_id == email).one()
+
+		# Construct email message
+		mail_title = 'Password Reset Information for GraphSpace!'
+		message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + reset_code[0]
+		emailFrom = "GraphSpace Admin"
+		
+		# Sends email to respective user
+		send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
+		db_session.close()
+		return "Email Sent!"
+	except NoResultFound:
+		print "User " + email + " does not exist"
+		db_session.close()
+		return None
+
+def retrieveResetInfo(reset_code):
+	'''
+		Retrieves the reset information for a user (for comparing which user it is).
+
+		:param reset_code: Code that the user has to match to HTTP GET request
+		:return account: Account associated with the code 
+	'''
+
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	try:
+		# Obtain email attached to code -> code that was send to email address
+		# This is a verification step to ensure code is legit
+		user_id_to_reset = db_session.query(password_reset.c.user_id).filter(password_reset.c.code == reset_code).one()
+		# Retrieve string from unicode
+		user_id_to_reset = user_id_to_reset[0]
+		db_session.close()
+		return user_id_to_reset
+	except NoResultFound:
+		print "Code provided is not correct"
+		db_session.close()
+		return None
+
+def resetPassword(username, password):
+	'''
+		Updates password information about a user.
+
+		:param username: Email of user
+		:param password: Password of user
+
+	'''
+
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	try:
+		# Hash password
+		password = bcrypt.hashpw(password, bcrypt.gensalt())
+		# Update the password for the user (after encryption of course)
+		user_to_reset_pw_for = db_session.query(user).filter(user.c.user_id == username).one()
+		reinsert_user = models.User(user_id = user_to_reset_pw_for.user_id, password = password, activated = user_to_reset_pw_for.activated, activate_code = user_to_reset_pw_for.activate_code, public = user_to_reset_pw_for.public, unlisted = user_to_reset_pw_for.unlisted, admin = user_to_reset_pw_for.admin)
+
+		print reinsert_user.user_id
+		db_session.delete(user_to_reset_pw_for)
+		# db_session.add(reinsert_user)
+		db_session.commit()
+
+		# Remove user's account from password_reset table
+		# delete_from_password_reset = db_session.query(password_reset).filter(password_reset.c.user_id == username).one()
+		# db_session.delete(delete_from_password_reset)
+		
+		db_session.close()
+		return "Password Updated!"
+	except Exception as ex:
+		print ex
+		print "Password not updated correctly"
+		db_session.close()
+		return None
 
 def reUploadInconsistentGraphs(data):
 	con = None
@@ -560,74 +635,6 @@ def propertyInJSON(elements, properties, elementType):
 
 
 ########### END JSON CHECKING #####################################
-
-def add_user_to_password_reset(email):
-	'''
-		Adds a specific user to password_reset table.
-		If email is in this, it automatically sends email to change 
-		password for that account the next time the user logs on
-
-		:param email: Email of the user for GraphSpace
-	'''
-
-	con = None
-	try: 
-		# If email is an account on GraphSpace
-		if emailExists(email) != None:
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
-
-			cur.execute('select user_id from password_reset where user_id=?', (email, ))
-
-			user_data = cur.fetchall()
-
-			# If user isn't already in password_reset table, add them with a new code
-			if len(user_data) == 0:
-
-				code = id_generator()
-				# Generate a random code - used as the GET path to reset that user's password
-				cur.execute('insert into password_reset values(?,?,?,?)', (None, email, code, datetime.now()))
-
-				con.commit()
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def need_to_reset_password(email):
-	'''
-		Checks to see if a user needs to reset their password.
-		If email is in password_reset email, they do, otherwise, not.
-
-		:param email: Email of the user in GraphSpace
-	'''
-
-	con = None
-	try: 
-		# If email is in database
-		if emailExists(email) != None:
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
-
-			# If email is in password_reset table
-			cur.execute('select user_id from password_reset where user_id = ?', (email, ))
-
-			user_exists = cur.fetchall()
-
-			if len(user_exists) > 0:
-				return True
-			else:
-				return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return True
-	finally:
-		if con:
-			con.close()
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
 	'''
@@ -3587,129 +3594,6 @@ def is_layout_shared(layoutId, layoutOwner, uid, graphName):
 		print 'Error %s:' % e.args[0]
 		return None
 
-	finally:
-		if con:
-			con.close()
-
-def emailExists(email):
-	'''
-		Checks to see if a user's email exists.
-
-		:param email: Email of user
-		:return boolean: True if user exists
-	'''
-
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-
-		cur = con.cursor()
-		cur.execute("select * from user where user_id = ?", [email])
-
-		if cur.rowcount == 0:
-			return None
-
-		data = cur.fetchone()
-		return data
-
-	except lite.Error, e:
-   
-    		print "Error %s:" % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def sendForgotEmail(email):
-	'''
-		Emails the user to reset their password.
-
-		:param email of user
-	'''
-
-	if emailExists(email) != None:
-		con=None
-		try:
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
-
-			cur.execute("select code from password_reset where user_id = ?", [email])
-
-			if cur.rowcount == 0:
-				return None
-
-			data = cur.fetchall()
-			if len(data) == 0:
-				return "Email does not exist!"
-
-			mail_title = 'Password Reset Information for GraphSpace!'
-			message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + str(data[0][0])
-			emailFrom = "GraphSpace Admin"
-			send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
-			return "Email Sent!"
-		except lite.Error, e:
-			print "Error %s: " %e.args[0]
-
-		finally:
-			if con:
-				con.close()
-	else:
-		return None
-
-def retrieveResetInfo(code):
-	'''
-		Retrieves the reset information for a user (for comparing which user it is).
-
-		:param code: Code that the user has to match to HTTP GET request
-		:return account: Account associated with the code 
-	'''
-
-	con=None
-	try:
-		con = lite.connect(DB_NAME)
-
-		cur = con.cursor()
-		cur.execute("select user_id from password_reset where code = ?", (code, ))
-
-		if cur.rowcount == 0:
-			return None
-
-		data = cur.fetchone()
-
-		if data == None:
-			return None
-
-		accountToReset = data[0]
-		return accountToReset
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def resetPassword(username, password):
-	'''
-		Updates password information about a user.
-
-		:param username: Email of user
-		:param password: Password of user
-
-	'''
-
-	con=None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute("update user set password = ? where user_id = ?", (bcrypt.hashpw(password, bcrypt.gensalt()), username))
-		cur.execute('delete from password_reset where user_id=?', (username, ))
-
-		con.commit();
-		return "Password Updated!"
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return None
 	finally:
 		if con:
 			con.close()
