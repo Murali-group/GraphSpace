@@ -4,6 +4,12 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.views import generic
 from django.templatetags.static import static
 
+from django.shortcuts import render_to_response
+import sqlalchemy, sqlalchemy.orm
+from graphs.util.db_conn import Database
+import graphs.util.db_init as db_init
+from sqlalchemy.orm.exc import NoResultFound
+
 from graphs.util.paginator import pager
 from graphs.util import db
 from graphs.auth.login import login
@@ -19,6 +25,15 @@ from operator import itemgetter
 from itertools import groupby
 from graphs.forms import LoginForm, RegisterForm
 
+#get database
+data_connection = db_init.db
+
+#get tables from the database
+graph = db_init.graph
+user = db_init.user
+group = db_init.group
+group_to_graph = db_init.group_to_graph
+
 URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
@@ -28,6 +43,15 @@ def index(request):
 
         :param request: HTTP GET Request
     '''
+
+    #create a new db session
+    db_session = data_connection.new_session()
+
+    try:
+        test_user = db_session.query(user).filter(user.c.user_id == "dsingh5270@gmail.com").one()
+        print test_user
+    except NoResultFound:
+        print 'shit'
 
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
