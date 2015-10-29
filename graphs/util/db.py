@@ -1,20 +1,37 @@
-import sqlite3 as lite
-from django.core.mail import send_mail
-from datetime import datetime
 import sys
 import bcrypt
 import json
-from operator import itemgetter
-from itertools import groupby
-from collections import Counter, defaultdict
 import random
 import string
-from django.conf import settings
 import uuid
+
+from collections import Counter, defaultdict
+from operator import itemgetter
+from itertools import groupby
+from datetime import datetime
+from django.core.mail import send_mail
+import sqlite3 as lite
+
+from django.conf import settings
+
+import sqlalchemy, sqlalchemy.orm
+from graphs.util.db_conn import Database
+import graphs.util.db_init as db_init
+from sqlalchemy.orm.exc import NoResultFound
+
+#get database
+data_connection = db_init.db
+
+#get tables from the database
+graph = db_init.graph
+user = db_init.user
+group = db_init.group
+group_to_graph = db_init.group_to_graph
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
+
 
 # This file is a wrapper to communicate with sqlite3 database 
 # that does not need authentication for connection

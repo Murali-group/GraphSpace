@@ -5,10 +5,6 @@ from django.views import generic
 from django.templatetags.static import static
 
 from django.shortcuts import render_to_response
-import sqlalchemy, sqlalchemy.orm
-from graphs.util.db_conn import Database
-import graphs.util.db_init as db_init
-from sqlalchemy.orm.exc import NoResultFound
 
 from graphs.util.paginator import pager
 from graphs.util import db
@@ -25,18 +21,10 @@ from operator import itemgetter
 from itertools import groupby
 from graphs.forms import LoginForm, RegisterForm
 
-#get database
-data_connection = db_init.db
-
-#get tables from the database
-graph = db_init.graph
-user = db_init.user
-group = db_init.group
-group_to_graph = db_init.group_to_graph
-
 URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
+
 def index(request):
     '''
         Render the main page
@@ -44,27 +32,33 @@ def index(request):
         :param request: HTTP GET Request
     '''
 
-    #create a new db session
-    db_session = data_connection.new_session()
-
-    try:
-        test_user = db_session.query(user).filter(user.c.user_id == "dsingh5270@gmail.com").one()
-        print test_user
-    except NoResultFound:
-        print 'shit'
-
+    # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
+    # that means that the user is trying to log on to GraphSpace.
+    # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
+    # The password_reset table contains all the users whose passwords need to be updated.
+    # Once the user has updated their password, their name is removed from the password_reset table
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
+        
+        # Forcibly clearing an existing user session (essentially logging user out) 
         request.session['uid'] = None
+
+        # Email the user the link to reset their password
         result = db.sendForgotEmail(request.POST['user_id'])
+
+        # Any and all errors are thrown via "Error" key in context.  This will
+        # be displayed to the user on the front end through a message.
         context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
 
+    # Action to login the user to GraphSpace
     context = login(request)
 
+    # If there is no problem, then context contains user's information
     if context['Error'] == None:
         return render(request, 'graphs/index.html', context)
     else:
+        # If there is a problem, throw error and the reason why there was a problem
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
 
 def view_graph(request, uid, gid):
@@ -75,8 +69,8 @@ def view_graph(request, uid, gid):
         :param uid: Owner of the graph to view
         :param gid: Graph id of the graph to view
     '''
-    # context contains all the elements we want to render on the web
-    # page. we fill in the various elements of context before calling
+    # Context contains all the elements we want to render on the web
+    # page. We fill in the various elements of context before calling
     # the render() function.
     #handle login
     context = login(request)
