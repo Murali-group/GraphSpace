@@ -224,7 +224,7 @@ def add_everyone_to_password_reset():
 			# This is done to remove the unicode encoding and simply 
 			# extract the string
 			user_id  = user_id[0]
-			add_user_to_password_reset(db_session, user_id)
+			add_user_to_password_reset(user_id, db_session)
 
 	except NoResultFound:
 		print "There are no users in the database"
@@ -232,7 +232,7 @@ def add_everyone_to_password_reset():
 	
 	db_session.close()
 
-def add_user_to_password_reset(db_session, email):
+def add_user_to_password_reset(email, db_session):
 	'''
 		Adds a specific user to password_reset table.
 		If email is in this, it automatically sends email to change 
@@ -259,20 +259,24 @@ def add_user_to_password_reset(db_session, email):
 		print "User: " + email + " not found!"
 		return None
 
-def emailExists(db_session, email):
+def emailExists(email):
 	'''
 		Checks to see if a user's email exists.
 
 		:param email: Email of user
 		:return boolean: True if user exists
 	'''
+	#create a new db session
+	db_session = data_connection.new_session()
+
 	try:
 		# Get the user if they exist
-		user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).one()
+		user = db_session.query(models.User).filter(models.User.user_id == email).one()
 		# Get the string representation from the tuple
-		return user_id[0]
+		db_session.close()
+		return user
 	except NoResultFound:
-		print "User: " + email + " not found!"
+		db_session.close()
 		return None
 
 def need_to_reset_password(email):
@@ -287,8 +291,7 @@ def need_to_reset_password(email):
 
 	try:
 		# If email exists in password_reset table, then the user has to reset their password
-		user_id = db_session.query(password_reset.c.user_id).filter(password_reset.c.user_id == email).all()
-		print user_id
+		user_id = db_session.query(password_reset.c.user_id).filter(password_reset.c.user_id == email).one()
 		return True
 	except NoResultFound:
 		print "User: " + email + " not found!"
@@ -364,20 +367,15 @@ def resetPassword(username, password):
 		# Hash password
 		password = bcrypt.hashpw(password, bcrypt.gensalt())
 		# Update the password for the user (after encryption of course)
-		user_to_reset_pw_for = db_session.query(user).filter(user.c.user_id == username).one()
-		reinsert_user = models.User(user_id = user_to_reset_pw_for.user_id, password = password, activated = user_to_reset_pw_for.activated, activate_code = user_to_reset_pw_for.activate_code, public = user_to_reset_pw_for.public, unlisted = user_to_reset_pw_for.unlisted, admin = user_to_reset_pw_for.admin)
-
-		print reinsert_user.user_id
-		db_session.delete(user_to_reset_pw_for)
-		# db_session.add(reinsert_user)
-		db_session.commit()
+		user_to_reset_pw_for = db_session.query(models.User).filter(models.User.user_id == username).one()
+		user_to_reset_pw_for.password = password
 
 		# Remove user's account from password_reset table
-		# delete_from_password_reset = db_session.query(password_reset).filter(password_reset.c.user_id == username).one()
-		# db_session.delete(delete_from_password_reset)
-		
+		delete_from_password_reset = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == username).one()
+		db_session.delete(delete_from_password_reset)
+		db_session.commit()
 		db_session.close()
-		return "Password Updated!"
+		return "Password updated successfully"
 	except Exception as ex:
 		print ex
 		print "Password not updated correctly"
