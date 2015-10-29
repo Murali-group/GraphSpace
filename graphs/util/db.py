@@ -1272,34 +1272,17 @@ def search_result(uid, search_type, search_terms, view_type):
 			con = lite.connect(DB_NAME)
 			cur = con.cursor()
 
-			test_dict = dict()
-
 			for search_word in search_terms:
 				matched_graphs = find_graphs_using_names(uid, search_type, search_word, view_type, cur)			
 				
 				if ':' in search_word:
 					matched_graphs += find_edges(uid, search_type, search_word, view_type, cur)
-				# If it is a node or possibly a graph_id (name of the graph)
 				else:
 					matched_graphs += find_nodes(uid, search_type, search_word, view_type, cur)
 
-				test_dict[search_word] = matched_graphs
-
+				matched_graphs = add_unique_nodes_to_list(matched_graphs)
 				intial_graphs_from_search += matched_graphs
 
-			print test_dict
-
-			# for graph_tuple in intial_graphs_from_search:
-			# 	key = graph_tuple[0] + graph_tuple[4]
-			# 	if key not in test_dict:
-			# 		test_dict[key] = 1
-			# 	else:
-			# 		temp_list = test_dict[key]
-			# 		# temp_list.append(graph_tuple)
-			# 		temp_list += 1
-			# 		test_dict[key] = temp_list
-
-			# print test_dict
 			# After all the SQL statements have ran for all of the search_terms, count the number of times
 			# a graph appears in the initial list. If it appears as many times as there are 
 			# search terms, then that graph matches all the search terms and it should be returned
@@ -1332,16 +1315,20 @@ def search_result(uid, search_type, search_terms, view_type):
 					id_string = ""
 					if len(ids_and_labels) > 0:
 						for ids in ids_and_labels:
-							id_string = id_string + ids + ','
+							if len(ids) > 0:
+								id_string = id_string + ids + ','
 
-						id_string = id_string[:len(id_string) - 1]
+						if len(id_string) > 0:
+							id_string = id_string[:len(id_string) - 1]
 
 						label_string = ""
 						for label in labels:
 							label = label.replace('-', ':')
-							label_string = label_string + label + ','
+							if len(label) > 0:
+								label_string = label_string + label + ','
 
-						label_string = label_string[:len(label_string) - 1]
+						if len(label_string) > 0:
+							label_string = label_string[:len(label_string) - 1]
 						key_with_search = list(key_tuples[0])
 						key_with_search.insert(1, "")
 						key_with_search[2] = id_string
@@ -1482,7 +1469,9 @@ def uploadCyjsFile(username, graphJSON, title):
 		if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
 			# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
 			tempNode['data']['background_color'] = node['data']['node_fillColor']
-		tempNode['data']['content'] = node['data']['name']
+		if 'name' in node['data']:
+			tempNode['data']['content'] = node['data']['name']
+
 		tempNode['data']['shape'] = "ellipse"
 		parseJson['graph']['nodes'].append(tempNode)
 
@@ -1490,10 +1479,17 @@ def uploadCyjsFile(username, graphJSON, title):
 		tempEdge = {"data": {}}
 		tempEdge['data']['source'] = edge['data']['source']
 		tempEdge['data']['target'] = edge['data']['target']
-		tempEdge['data']['popup'] = edge['data']['name']
+
+		if 'name' in edge['data']:
+			tempEdge['data']['popup'] = edge['data']['name']
+
 		parseJson['graph']['edges'].append(tempEdge)
 
-	parseJson['metadata']['name'] = csjs['data']['name']
+	if 'name' in csjs['data']:
+		parseJson['metadata']['name'] = csjs['data']['name']
+	else:
+		parseJson['metadata']['name'] = "temp_graph"
+
 	parseJson['metadata']['tags'] = []
 	parseJson['metadata']['description'] = ""
 
@@ -1816,7 +1812,6 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.public = 1', ('%' + search_word + '%', ))
 			public_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
-			intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
 
 	elif search_type == 'full_search':
 		if view_type == 'my graphs':
@@ -1846,6 +1841,7 @@ def find_nodes(uid, search_type, search_word, view_type, cur):
 			public_ids = cur.fetchall()
 			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
 
+	intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
 	return intial_graph_with_nodes
 
 def find_graphs_using_names(uid, search_type, search_word, view_type, cur):
@@ -1930,11 +1926,16 @@ def add_unique_nodes_to_list(data):
 			graph_dict[key] = test
 
 	for key, value in graph_dict.iteritems():
-		index_list = graph_dict[key]
-		new_row = [data[0][0], "", "", data[0][3], data[0][4], data[0][5]]
-		for i in index_list:
-			new_row[1] += data[i][1] + ", "
-			new_row[2] += data[i][2] + ", "
+		new_row = [data[value[0]][0], "", "", data[value[0]][3], data[value[0]][4], data[value[0]][5]]
+		for i in value:
+			if len(data[i][1]) > 0:
+				new_row[1] += data[i][1] + ", "
+			if len(data[i][2]) > 0:
+				new_row[2] += data[i][2] + ", "
+		if len(new_row[1]) > 2:
+			new_row[1] = new_row[1][:-2]
+		if len(new_row[2]) > 2:
+			new_row[2] = new_row[2][:-2]
 		unique_list.append(tuple(new_row))
 
 	return unique_list
@@ -2773,7 +2774,7 @@ def find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	# 	graph_list = list(graph)
 	# 	graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
 	# 	actual_graph_with_nodes.append(tuple(graph_list))
-
+	intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
 	return labels_and_id_matched_graphs
 
 def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur):
@@ -2793,10 +2794,15 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, sea
 	intial_graphs_from_search = []
 
 	for word in search_terms:
+		matched_graphs = find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur)
 		if ':' in word:
-			intial_graphs_from_search += find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
+			matched_graphs += find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
 		else:
-			intial_graphs_from_search += find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur) + find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur)
+			matched_graphs += find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
+				
+
+		matched_graphs = add_unique_nodes_to_list(matched_graphs)
+		intial_graphs_from_search += matched_graphs
 
 	# After all the SQL statements have ran for all of the search_terms, count the number of times
 	# a graph appears in the initial list. If it appears as many times as there are 
