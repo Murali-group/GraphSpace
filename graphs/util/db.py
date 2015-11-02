@@ -18,6 +18,8 @@ import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import and_, or_
+from sqlalchemy import distinct
 
 import graphs.models as models
 
@@ -30,7 +32,9 @@ edge = db_init.edge
 user = db_init.user
 group = db_init.group
 group_to_graph = db_init.group_to_graph
+group_to_user = db_init.group_to_user
 password_reset = db_init.password_reset
+graph_to_tag = db_init.graph_to_tag
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
@@ -78,58 +82,6 @@ def assign_edge_ids(json_string):
 	return json_string
 
 # --------------- End Edge Insertions --------------------------------
-
-'''
-	Updates JSON from CytoscapeWeb schema to be compatible
-	with CytoscapeJS. 
-
-	:param unprocessed_json: JSON string to be converted to CytoscapeJS standards
-	:return CytoscapeJS compatible JSON
-'''
-def update_json(unprocessed_json):
-
-	# Go through all of the nodes in the json of the graph
-	for node in unprocessed_json['graph']['nodes']:
-		# Replace label with content
-		# This is done because CytoscapeJS uses "content" property
-		# to distinguish items to be displayed inside of a node
-		# whereas CytoscapeWeb used "label" property
-		if 'label' in node['data']:
-			node['data']['content'] = node['data']['label']
-			del node['data']['label']
-
-		# Replace color with background_color
-		# This is done to satisfy CytoscapeJS requirements
-		# Originally, color really meant background color
-		if 'color' in node['data']:
-			node['data']['background_color'] = node['data']['color']
-			# In CytoscapeJS, I'm setting the default text color to be black
-			node['data']['color'] = 'black'
-
-		# Add text-wrap property that allows for CytoscapeJS to recognize
-		# new line characters
-		node['data']['text_wrap'] = 'wrap'
-
-		# Make it so text is vertically aligned
-		node['data']['text_valign'] = 'center'
-
-	# Go through all of the edges in the json of the graph
-	for edge in unprocessed_json['graph']['edges']:
-		# Replace label with content
-		# This is done because CytoscapeJS uses "content" property
-		# to distinguish items to be displayed inside of a node
-		# whereas CytoscapeWeb used "label" property
-		if 'label' in edge['data']:
-			edge['data']['content'] = edge['data']['label']
-			del edge['data']['label']
-
-		# Replace shape with target_arrow_shape and add a triangle.
-		# CytoscapeJS is more granular in its detail to construct a directed 
-		# edge than CytoscapeWeb was.
-		if 'directed' in edge['data']:
-			edge['data']['target_arrow_shape'] = "triangle"
-
-	return unprocessed_json
 
 def convert_json(original_json):
     '''
@@ -224,7 +176,7 @@ def add_everyone_to_password_reset():
 			# This is done to remove the unicode encoding and simply 
 			# extract the string
 			user_id  = user_id[0]
-			add_user_to_password_reset(user_id, db_session)
+			add_user_to_password_reset(user_id, db_session = db_session)
 
 	except NoResultFound:
 		print "There are no users in the database"
@@ -232,14 +184,18 @@ def add_everyone_to_password_reset():
 	
 	db_session.close()
 
-def add_user_to_password_reset(email, db_session):
+def add_user_to_password_reset(email, db_session=None):
 	'''
 		Adds a specific user to password_reset table.
 		If email is in this, it automatically sends email to change 
 		password for that account the next time the user logs on
 
 		:param email: Email of the user for GraphSpace
+		:param db_session: database connection (See sqlalchemy.org for more information)
 	'''
+	# Get database connection
+	db_session = db_session or data_connection.new_session()
+
 	try:
 		# Get the user if they exist
 		user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).one()
@@ -264,7 +220,7 @@ def emailExists(email):
 		Checks to see if a user's email exists.
 
 		:param email: Email of user
-		:return boolean: True if user exists
+		:return boolean: True if user exists, false otherwise
 	'''
 	#create a new db session
 	db_session = data_connection.new_session()
@@ -644,84 +600,6 @@ def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
 	'''
 	return ''.join(random.choice(chars) for _ in range(size))
 
-def is_admin(username):
-	'''
-		Checks to see if a given user is an admin
-
-		:param username: Email of the user in GraphSpace
-		:return boolean: True or False
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		#Execute query to check admin for username
-		# TODO: Write query examples
-		cur.execute('select admin from user where user_id = ?', (username,))
-		data = cur.fetchone()
-
-		# If user does exist and if his admin bit is set to 1, then they are an admin
-		if data != None and data[0] == 1:
-			return True
-		else:
-			# Return nothing otherwise
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def get_all_tags(username, view_type):
-	'''
-		Gets all tags for a given view_type and a username
-
-		:param username: Email of the user in GraphSpace
-		:param view_type: Type of view to filter (shared, public, owned)
-		:return Tags: [] or None 
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		# Query only the tags that is the specfic view type
-		# NOTE: Changes if a person is logged in
-		if view_type == 'public' or username == None:
-		# TODO: Write query examples
-			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where g.public = 1 and gt.graph_id = g.graph_id limit 10')
-		elif view_type == 'shared':
-		# TODO: Write query examples
-			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g, group_to_graph as gg where gt.graph_id = g.graph_id and g.graph_id=gg.graph_id and gg.user_id=?limit 10', (username, ))
-		else:
-		# TODO: Write query examples
-			cur.execute('select distinct gt.tag_id from graph_to_tag as gt, graph as g where gt.graph_id = g.graph_id and g.user_id=? limit 10', (username, ))
-
-		# Get all the data, if there is any
-		data = cur.fetchall()
-
-		# If there is data, gather all of the tags for this view type and return it
-		if data != None:
-			cleaned_data = []
-			for tag in data:
-				if len(tag[0]) > 0:
-					cleaned_data.append(tag[0])
-
-			return cleaned_data
-		else:
-			# Otherwise return Noething
-			return None
-			
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
 def get_valid_user(username, password):
 	'''
 		Checks to see if a user/password combination exists.
@@ -730,126 +608,110 @@ def get_valid_user(username, password):
 		:param password: Password of the user
 		:return username: <Username> | None if wrong information
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-
-		# Retrieve hashed password of the user
-		cur = con.cursor()
-		# TODO: Write query examples
-		cur.execute('select password from user where user_id = ?', (username,))
-
-		data = cur.fetchone()
-
-		#If there is no data, then user does not exist
-		if data == None:
+		# Get user if they exist in the database
+		valid_user = db_session.query(models.User).filter(models.User.user_id == username).one()
+		# If hashed password != the hashed password in the database, user trying to log in is not a valid user of GraphSpace
+		if bcrypt.hashpw(password, valid_user.password) != valid_user.password:
+			db_session.close()
 			return None
-		else:
-			# If the hash of the passwords are not the same, then the user (theoretically) does not exist
-			if bcrypt.hashpw(password, data[0]) != data[0]:
-				return None
-			else:
-				# If everything clears 
-				return username
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+		db_session.close()
+		return valid_user
+	except NoResultFound:
+		db_session.close()
+		return None	
 
-	finally:
-		if con:
-			con.close()
+def get_graph(user_id, graph_id):
+	'''
+		Gets the graph.
+
+		@param user_id: Owner of graph
+		@param graph_id: ID of graph
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	try:
+		# Gets graph 
+		graph = db_session.query(models.Graph).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).one()
+		db_session.close()
+		return graph
+	except NoResultFound:
+		db_session.close()
+		return None
 
 def get_default_layout(uid, gid):
 	'''
 		Gets the default layout for a graph.
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		# Retrieve the specific graph
+		graph_being_searched = get_graph(uid, gid)
 
-		# Retrieve hashed password of the user
-		cur = con.cursor()
-		# TODO: Write query examples
-		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
+		# Retrieve the saved layout from the database
+		default_layout_json = db_session.query(models.Layout).filter(models.Layout.layout_id == graph_being_searched.default_layout_id).one()
 
-		#If there is no data, then user does not exist
-		if data == None:
-			return json.dumps(None)
-		else:
-			cur.execute('select json from layout where layout_id=?', (data[0], ))
-			data = cur.fetchone()
-			if data != None:
-				return json.dumps({"json": cytoscapePresetLayout(json.loads(str(data[0])))})
-			else:
-				return json.dumps(None)
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return json.dumps(None)
-	finally:
-		if con:
-			con.close()
+		db_session.close()
+		return json.dumps({"json": cytoscapePresetLayout(json.loads(str(data[0])))})
+	except NoResultFound:
+		db_session.close()
+		return json.dumps(None)	
 
 def get_default_layout_id(uid, gid):
 	'''
 		Gets the default layout for a graph.
 	'''
-	con = None
+	# Get the graph
+	graph = get_graph(uid, gid)
+
+	if graph != None:
+		return graph.default_layout_id
+	else:
+		return None
+
+def get_layout(layout_id):
+	'''
+		Gets the layout of ID.
+
+		@param layout_id: Id of layout
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-
-		# Retrieve hashed password of the user
-		cur = con.cursor()
-		# TODO: Write query examples
-		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
-
-		#If there is no data, then user does not exist
-		if data == None:
-			return None
-		else:
-			return data[0]
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return json.dumps(None)
-	finally:
-		if con:
-			con.close()
+		# Gets the layout for that specific ID
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_id == layout_id).one()
+		db_session.close()
+		return layout
+	except NoResultFound:
+		db_session.close()
+		return None	
 
 def get_default_layout_name(uid, gid):
 	'''
 		Gets the default layout for a graph.
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
+	# Get the specific graph
+	graph = get_graph(uid, gid)
 
-		# Retrieve hashed password of the user
-		cur = con.cursor()
-		# TODO: Write query examples
-		cur.execute('select default_layout_id from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
+	# If the graph exists and has a default layout id
+	if graph != None and graph.default_layout_id != None:
 
-		#If there is no data, then user does not exist
-		if data == None:
-			return None
-		else:
-			cur.execute('select layout_name from layout where layout_id=?', (data[0], ))
-			data = cur.fetchone()
+		# Get the layout from the database
+		default_layout = get_layout(graph.default_layout_id)
 
-			if data == None:
-				return None
-
-			return data[0]
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return json.dumps(None)
-	finally:
-		if con:
-			con.close()
+		# If the layout exists, return its name
+		if default_layout != None:
+			return default_layout.layout_name
+	else:
+		return None
 
 def set_layout_context(request, context, uid, gid):
 	'''
@@ -941,55 +803,55 @@ def get_base_urls(view_type):
 	    return URL_PATH + "graphs/"
 
 def get_all_info_for_graph(uid, gid):
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
+	'''
+		Returns JSON, public, and graph id of the graph
 
-		# Retrieve hashed password of the user
-		cur = con.cursor()
+		@param uid: Owner of graph
+		@param graph_id: ID of graph
+	'''
+	# Get the graph
+	graph = get_graph(uid, gid)
 
-		cur.execute('select json, public, graph_id from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
+	if graph == None:
+		return None
 
-		#If there is no data, then user does not exist
-		if data == None:
-			return None
-
-		return data
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return json.dumps(None)
-	finally:
-		if con:
-			con.close()
+	return (graph.json, graph.public, graph.graph_id)
 
 def get_graphs_for_view_type(context, view_type, uid, request):
 	'''
 		Gets the graphs that are associated with a certain view from the user
 		
 		:param context: Dictionary containing values to pass to front-end
-		:param view_type: Type of view to render
+		:param view_type: Type of view to render (my graphs, shared, public)
 		:param uid: Owner of the graph
 		:param request: Get request
 		:return context: Dictionary containing values to pass to front-end
 	'''
 
+	# Lists to hold all tag terms and search terms that are beign queried
 	tag_list = []
 	search_list = []
 
+	# Keep track of type of search that user specified
 	search_type = None
 
+	# Partial search may be thought of as "contains" matching
+    # Exact search may be though of as "identical" matching
 	if 'partial_search' in request.GET:
 		search_type = 'partial_search'
 	elif 'full_search' in request.GET:
 		search_type = 'full_search'
 
+	# Get search terms from query
 	search_terms = request.GET.get(search_type)
+
+	# Get tag terms from query
 	tag_terms = request.GET.get('tags') or request.GET.get('tag')
+
+	# Get ordered terms for query (ordered being if they want to sort table by its columns)
 	order_by = request.GET.get('order')
 	
-	# modify tag information 
+	# Extract tags from query
 	if tag_terms and len(tag_terms) > 0:
 		cleaned_tags = tag_terms.split(',')
 		client_side_tags = ""
@@ -998,21 +860,40 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 		# of the query string
 		for tags in xrange(len(cleaned_tags)):
 		    cleaned_tags[tags] = cleaned_tags[tags].strip()
+		    # If user enters in a blank tag, delete it
 		    if len(cleaned_tags[tags]) == 0:
 		    	del cleaned_tags[tags]
+	    	# Multiple tags are distinguished by commas, so we add them here
 		    client_side_tags = client_side_tags + cleaned_tags[tags] + ','
 
+	    # Remove the last comma since nothing comes after last tag
 		client_side_tags = client_side_tags[:len(client_side_tags) - 1]
+
+		# Set tags to the cleaned tags we formulated from the query
+		# This is done to append to URL of the different view_types we can have
+		# For example: buttons containing My Graphs, Shared, and Public will
+		# have query string of tags appended to end of URL
+		# This happens in front-end (See graphs/templates/graphs/graphs.html)
 		context['tags'] = client_side_tags
+
 		# This is for the side menu, each tag has its own button
 		context['tag_terms'] = cleaned_tags
+
+		# Cleaned list of tags ready to be queried in view_graphs method
 		tag_list = cleaned_tags
 
-    # modify search information
+    # Extract search terms from query
 	if search_terms and len(search_terms) > 0:
+		# Set to true so that front-end will know to apend
+		# a search term to all views (My Graphs, Shared, Public)
 		context['search_result'] = True
+
+		# Split up search terms by comma
 		cleaned_search_terms = search_terms.split(',')
+
+		# Search string to formulate that will contain all search terms
 		client_side_search = ""
+
 		# Goes through each search term, making it a string
 		# so the url will contain those searches as a part
 		# of the query string
@@ -1021,16 +902,34 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 			# Deleted no length search terms
 			if len(cleaned_search_terms[i]) == 0:
 				del cleaned_search_terms[i]
+
 			# This is for the side menu, each search item has its own button
 			client_side_search = client_side_search + cleaned_search_terms[i] + ','
 
+		# Remove last comma
 		client_side_search = client_side_search[:len(client_side_search) - 1]
+
+		# All context variables will be recognized in the front end 
+		# See (See graphs/templates/graphs/graphs.html)
 		context['search_word'] = client_side_search
+
+		# Type of search (partial or exact) -> Used to fill in radio button 
 		context['search_type'] = search_type
+
+		# Search terms (Used to append URL to view types: My Graphs, Shared, Public)
 		context['search_word_terms'] = cleaned_search_terms
+
+		# Cleaned list of search terms to be queried on
 		search_list = cleaned_search_terms
 
 	# If there is no one logged in, display only public graph results
+	# my_graphs represents all matching graphs which I own
+	# shared_graphs represents all matching graphs which are shared with me
+	# public graphs represent all matching graphs available to everyone
+
+	# In order to produce the number of graphs returned that match the query 
+	# (for the My Graphs, Shared, and Public buttons), I am also retrieving the len
+	# of matched graphs for each view_type.  This feature was requesed by Murali
 	if uid == None:
 		context['graph_list'] = view_graphs(uid, search_type, search_terms, tag_list, 'public')
 		context['my_graphs'] = 0
@@ -1056,68 +955,78 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 			context['shared_graphs'] = len(view_graphs(uid, search_type, search_list, tag_list, 'shared'))
 			context['public_graphs'] = len(context['graph_list'])
 
-		# context['graph_list'] = view_graphs(uid, search_type, search_list, tag_list, view_type)
-		# context['my_graphs'] = 0#len(view_graphs(uid, search_type, search_list, tag_list, 'my graphs'))
-		# context['shared_graphs'] = 0#len(view_graphs(uid, search_type, search_list, tag_list, 'shared'))
-		# context['public_graphs'] = 0#len(view_graphs(uid, search_type, search_list, tag_list, 'public'))
-
+	# If user has requested the graphs to be ordered in a certain manner, order them as requested
 	if order_by:
 		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
 	else:
+		# By default, all graphs are ordered via descending modified date (as per Anna's request)
 		context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
+	
 	return context	
 
 def setDefaultLayout(layoutName, graph_id, graph_owner):
-	con = None
+	'''
+		Sets default layout of graph.
+
+		@param layoutName: name of layout
+		@param graph_id: ID of graph
+		@param graph_owner: Owner of graph
+	'''
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Check to see if graph exists
+		graph = get_graph(graph_owner, graph_id)
 
-		# Get all groups that the user owns
-		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ? and (unlisted = 1 or public = 1)', (graph_id, graph_owner, layoutName));
-		data = cur.fetchone()
+		if graph == None:
+			return "It appears as if the graph requested does not exist."
 
-		# If there is data, gather all of the tags for this view type and return it
-		if data == None or len(data) == 0:
-			return "It appears as if the layout either does not exist or is not shared."
-		else:
-			cur.execute('update graph set default_layout_id = ? where graph_id = ? and user_id = ?', (data[0], graph_id, graph_owner))
-			con.commit()
-			return None
+		# Check to see if the layout is either shared or exists in the database
+		layout = db_session.query(models.Layout).filter(models.Layout.user_id == graph_owner).filter(models.Layout.graph_id == graph_id).filter(models.Layout.layout_name == layoutName).filter(and_(models.Layout.unlisted == 1, models.Layout.public == 1)).all()
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return "Something went wrong!"
-
-	finally:
-		if con:
-			con.close()
+		graph.default_layout_id = layout.layout_id
+		db_session.commit()
+		db_session.close()
+		return None
+	except NoResultFound:
+		db_session.close()
+		return "Can't set default layout of layout that doesn't exist or you can't access."	
 
 def removeDefaultLayout(layoutName, graph_id, graph_owner):
-	con = None
+	'''
+		Removes default layout of graph.
+
+		@param layoutName: name of layout
+		@param graph_id: ID of graph
+		@param graph_owner: Owner of graph
+	'''
+	# Get graph being viewed
+	graph = get_graph(graph_owner, graph_id)
+
+	if graph == None:
+		return "Graph does not exist!"
+
+	# Get the layout to see if it exists
+	layout = get_layout(graph.default_layout_id)
+
+	if layout == None:
+		return "Layout does not exist for this graph!"
+
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		# Get all groups that the user owns
-		cur.execute('select layout_id from layout where graph_id=? and user_id = ? and layout_name = ?', (graph_id, graph_owner, layoutName));
-		data = cur.fetchone()
-
-		# If there is data, gather all of the tags for this view type and return it
-		if data == None or len(data) == 0:
-			return "Layout does not exist for this graph"
-		else:
-			cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (graph_id, graph_owner))
-			con.commit()
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return "Something went wrong!"
-
-	finally:
-		if con:
-			con.close()
+		if layout.layout_name == layoutName:
+			graph.default_layout_id = None
+			db_session.commit()
+		db_session.close()
+		return None
+	except Exception as ex:
+		db_session.close()
+		return "An unexpected error occureed: " + ex
 
 def order_information(order_term, search_terms, graphs_list):
 	'''
@@ -1175,9 +1084,13 @@ def view_graphs(uid, search_type, search_terms, tag_terms, view_type):
 	# If there are graphs that fit search and tag criteria
 	if search_terms and tag_terms and len(search_terms) > 0 and len(tag_terms) > 0:
 		actual_graphs = []
+
+		# Get all graphs that contain all the search terms
 		search_result_graphs = search_result(uid, search_type, search_terms, view_type)
 		
+		# Get all graphs that contain all the tag terms
 		tag_result_graphs = tag_result(uid, tag_terms, view_type)
+
 		tag_graphs = [x[0] for x in tag_result_graphs]
 		actual = [x[0] for x in actual_graphs]
 
@@ -1210,62 +1123,54 @@ def tag_result(uid, tag_terms, view_type):
 	if len(tag_terms) > 0:
 		# Place holder that stores all the graphs
 		initial_graphs_with_tags = []	
-		con = None
-		try: 
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
 
-			# Go through all the tag terms, based on the view type and append them the initial place holder
-			for tag in tag_terms:
-				if view_type == 'my graphs':
-					cur.execute('select g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g, graph_to_tag as gt where gt.graph_id = g.graph_id and gt.tag_id = ? and gt.user_id = ?', (tag, uid))
-					
-				elif view_type == 'shared':
-					cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (tag, uid))
-					
-				else:
-					cur.execute('select g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g, graph_to_tag as gt where gt.graph_id = g.graph_id and gt.tag_id = ? and g.public = ?', (tag, 1))
+		# Create database connection
+		db_session = data_connection.new_session()
 
-				# After the current SQL is executed, collect the results
-				data = cur.fetchall()
-				for graph in data:
-					initial_graphs_with_tags.append(graph)
+		# Go through all the tag terms, based on the view type and append them the initial place holder
+		for tag in tag_terms:
+			intial_graphs_with_tags = []
 
-			# After all the SQL statements have ran for all of the tags, count the number of times
-			# a graph appears in the initial list. If it appears as many times as there are 
-			# tag terms, then that graph matches all the tag terms and it should be returned
-			graph_repititions = defaultdict(int)
-			graph_mappings = defaultdict(list)
-			# Counting the number of occurences
-			for graph_tuple in initial_graphs_with_tags:
-				graph_repititions[graph_tuple[0]] += 1
+			if view_type == 'my graphs':
+				try:
+					intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.user_id == uid).all()
+				except NoResultFound:
+					print 'No graphs that you own match the tag term'
 
-			for graph_tuple in initial_graphs_with_tags:
-				graph_list = graph_mappings.get(graph_tuple[0], [])
-				graph_list.append(graph_tuple)
-				graph_mappings[graph_tuple[0]] = graph_list
+			elif view_type == 'shared':
+				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.Graph.user_id == models.GroupToUser.user_id).filter(models.GraphTag.tag_id == tag).filter(models.GroupToUser.user_id == uid).all()
+			else:
+				try:
+					intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.public == 1).all()
+				except NoResultFound:
+					print 'No graphs that you own match the tag term'
 
-			# If value appears the number of times as there are tags, 
-			# then append that to the actual list of graphs to be returned.
-			actual_graphs_for_tags = []
-			for key, value in graph_repititions.iteritems():
-				if value == len(tag_terms):
-					key_tuples = graph_mappings[key]
-					for key_tuple in key_tuples:
-						# Insert all tags for the graph in the first index
-						key_with_tag = list(key_tuple)
-						key_with_tag.insert(1, get_all_tags_for_graph(key_with_tag[0], key_with_tag[2]))
-						key_with_tag = tuple(key_with_tag)
-						actual_graphs_for_tags.append(key_with_tag)
+		# Go through and count the list of occurrences of matched graph
+		graph_repititions = defaultdict(int)
 
-			return actual_graphs_for_tags
+		# Counting the number of occurences
+		for graph in intial_graphs_with_tags:
+			graph_repititions[graph] += 1
 
-		except lite.Error, e:
-			print 'Error %s:' % e.args[0]
-			return []
-		finally:
-			if con:
-				con.close()
+		# Go through and aggregate all graph together
+		graph_mappings = defaultdict(list)
+
+		# If the number of times a graph appears matches the number of search terms
+		# it is a graph we want (simulating the and operator for all search terms)
+		for graph in intial_graphs_with_tags:
+
+			graph_tuple = (graph.graph_id, get_all_tags_for_graph(graph.graph_id, graph.user_id), graph.modified, graph.user_id, graph.public)
+
+			# Graph matches all search terms
+			if graph_repititions[graph] == len(tag_terms):
+
+				# If we haven't seen this graph yet 
+				if graph not in graph_mappings:
+					graph_mappings[graph] = graph_tuple
+				
+		# Go through all the graphs and insert tags for the graphs that match all search terms
+		return graph_mappings.values()
+
 	else:
 		return []
 
@@ -1280,6 +1185,7 @@ def search_result(uid, search_type, search_terms, view_type):
 		:return Graphs: [graphs]
 	'''
 
+	# If it is a search type that is not recognized, return empty list
 	if search_type != 'partial_search' and search_type !=  'full_search':
 		return []
 
@@ -1287,92 +1193,194 @@ def search_result(uid, search_type, search_terms, view_type):
 	if not isinstance(search_terms, list):
 		search_terms = search_terms.split(',')
 
+	# If there are any search terms
 	if len(search_terms) > 0:
-		intial_graphs_from_search = []
-		con = None
-		try: 
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
 
-			for search_word in search_terms:
-				matched_graphs = find_graphs_using_names(uid, search_type, search_word, view_type, cur)			
-				
-				if ':' in search_word:
-					matched_graphs += find_edges(uid, search_type, search_word, view_type, cur)
+		# List to keep track of all matched graphs
+		initial_graphs_from_search = []
+
+		# Get connection to database
+		data_session = data_connection.new_session()
+
+		# Go through each search term, aggregating 
+		# all graphs that match the specific search term
+		for search_word in search_terms:
+			# matched_graphs contains a list of all graphs that match the specific search term
+			matched_graphs = []
+			# First, we check to see if there are any graphs that have a graph name that matches the search term
+			matched_graphs += find_all_graphs_containing_search_word(uid, search_type, search_word, view_type, data_session)
+
+			# ":" indicates that search_word may be an edge
+			if ':' in search_word:
+				# append all graphs that contain an edge which matches the search_word
+				matched_graphs += find_all_graphs_containing_edges(uid, search_type, search_word, view_type, data_session)
+			# otherwise append all graphs that contain a node which matches the search word
+			else:
+				matched_graphs += find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, data_session)
+
+			# Go through all matched graphs
+			# If there is a graph that appears multiple times in the list
+			# combine their result.
+			# Effectively, a graph may appear at most one time for each search word
+			matched_graphs = combine_similar_graphs(matched_graphs)
+
+			# Add condensed tuples to list of graphs matched
+			initial_graphs_from_search += matched_graphs 
+
+		# Go through and count the list of occurrences of matched graph
+		graph_repititions = defaultdict(int)
+
+		# Counting the number of occurences
+		for graph_tuple in initial_graphs_from_search:
+			key = graph_tuple[0] + graph_tuple[4]
+			graph_repititions[key] += 1
+
+		# Go through and aggregate all graph together
+		graph_mappings = defaultdict(list)
+
+		# If the number of times a graph appears matches the number of search terms
+		# it is a graph we want (simulating the and operator for all search terms)
+		for graph_tuple in initial_graphs_from_search:
+			key = graph_tuple[0] + graph_tuple[4]
+
+			graph_tuple = list(graph_tuple)
+
+			# Placeholder for tags of the graph
+			graph_tuple.insert(1, "")
+
+			# Graph matches all search terms
+			if graph_repititions[key] == len(search_terms):
+
+				# If we haven't seen this graph yet 
+				if key not in graph_mappings:
+					graph_mappings[key] = tuple(graph_tuple)
 				else:
-					matched_graphs += find_nodes(uid, search_type, search_word, view_type, cur)
+					# Combine result of previous tuple
+					old_tuple = list(graph_mappings[key])
 
-				matched_graphs = add_unique_nodes_to_list(matched_graphs)
-				intial_graphs_from_search += matched_graphs
+					# If there is already a matching node/edge id
+					if len(old_tuple[2]) > 0 and len(graph_tuple[2]) > 0:
+						old_tuple[2] += ", " + graph_tuple[2]
+						old_tuple[3] += ", " + graph_tuple[3]
+					# Otherwise, simply insert this graph tuples id
+					else:
+						old_tuple[2] += graph_tuple[2]
+						old_tuple[3] += graph_tuple[3]
 
-			# After all the SQL statements have ran for all of the search_terms, count the number of times
-			# a graph appears in the initial list. If it appears as many times as there are 
-			# search terms, then that graph matches all the search terms and it should be returned
-			graph_repititions = defaultdict(int)
-			graph_mappings = defaultdict(list)
-			# Counting the number of occurences
-			for graph_tuple in intial_graphs_from_search:
-				graph_repititions[graph_tuple[0] + graph_tuple[4]] += 1
+					graph_mappings[key] = tuple(old_tuple)
 
-
-			for graph_tuple in intial_graphs_from_search:
-				graph_list = graph_mappings.get(graph_tuple[0] + graph_tuple[4], [])
-				graph_list.append(graph_tuple)
-				graph_mappings[graph_tuple[0] + graph_tuple[4]] = graph_list
-
-			# If value appears the number of times as there are terms, 
-			# then append that to the actual list of graphs to be returned.
-			actual_graphs_for_searches = []
-			for key, value in graph_repititions.iteritems():
-				if value >= len(search_terms):
-					key_tuples = graph_mappings[key]
-					ids_and_labels = []
-					labels = []
-					# Gather all the id's and labels that are part of the same graph 
-					# that is being searched for and make them into one tuple
-					for key_tuple in key_tuples:
-						key_with_search = list(key_tuple)
-						ids_and_labels.append(str(key_tuple[1]))
-						labels.append(str(key_tuple[2]))
-					id_string = ""
-					if len(ids_and_labels) > 0:
-						for ids in ids_and_labels:
-							if len(ids) > 0:
-								id_string = id_string + ids + ','
-
-						if len(id_string) > 0:
-							id_string = id_string[:len(id_string) - 1]
-
-						label_string = ""
-						for label in labels:
-							label = label.replace('-', ':')
-							if len(label) > 0:
-								label_string = label_string + label + ','
-
-						if len(label_string) > 0:
-							label_string = label_string[:len(label_string) - 1]
-						key_with_search = list(key_tuples[0])
-						key_with_search.insert(1, "")
-						key_with_search[2] = id_string
-						key_with_search[3] = label_string
-						key_with_search = tuple(key_with_search)
-
-						actual_graphs_for_searches.append(key_with_search)
-
-			# Return whole dictionary of matchin graphs
-			return actual_graphs_for_searches
-
-		except lite.Error, e:
-			print 'Error %s:' % e.args[0]
-			return []
-		finally:
-			if con:
-				con.close()
-
+		# Go through all the graphs and insert tags for the graphs that match all search terms
+		return graph_mappings.values()
 	else:
 		return []
 
-def find_edges(uid, search_type, search_word, view_type, cur):
+def combine_similar_graphs(matched_graphs):
+	'''
+		Go through list of all matched graphs and combine results if graph appears multiple times.
+
+		@param matched_graphs: List of graphs, nodes, edges that all have reference to graph id via respective models (SQLAlchemy)
+	'''
+	graph_entry = dict()
+
+	# Go through all the matching graphs/nodes/edges depending on the type of match
+	for graph in matched_graphs:
+		# If graph contains a matching node
+		if hasattr(graph, 'node_id'):
+			key = graph.graph_id + graph.user_id
+			# If graph has not been encountered yet, insert new tuple
+			if key not in graph_entry:
+				# Construct new entry
+				new_graph_entry = (graph.graph_id, graph.node_id + "(" + graph.label + ")", graph.label, graph.modified, graph.user_id, graph.public)
+
+				# Add to dict
+				graph_entry[key] = new_graph_entry
+			else:
+				# If graph has been discovered, append node id details to graph tuple
+				cur_graph_entry = list(graph_entry[key])
+				if len(cur_graph_entry[1]) == 0:
+					cur_graph_entry[1] += graph.node_id + "(" + graph.label + ")"
+					cur_graph_entry[2] += graph.label
+				else:
+					cur_graph_entry[1] += ", " + graph.node_id + "(" + graph.label + ")"
+					cur_graph_entry[2] += ", " + graph.label
+
+				# Add modified entry
+				graph_entry[key] = tuple(cur_graph_entry)
+
+		# If graph contains a matching edge
+		elif hasattr(graph, 'head_graph_id'):
+			key = graph.head_graph_id + graph.head_user_id
+
+			# If graph has been encountered yet, insert new tuple
+			if key not in graph_entry:
+				graph_info = get_graph(graph.head_user_id, graph.head_graph_id)
+
+				# Construct new entry
+				new_graph_entry = (graph.head_graph_id, graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")", head.label, graph_info.modified, graph_info.user_id, graph_info.public)
+
+				# Add to dict
+				graph_entry[key] = new_graph_entry
+			else:
+				# If graph already has been encountered
+				cur_graph_entry = list(graph_entry[key])
+				if len(cur_graph_entry[1]) == 0:
+					cur_graph_entry[1] += graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")"
+					cur_graph_entry[2] += graph.label
+				else:
+					cur_graph_entry[1] += ", " + graph.node_id + "(" + graph.label + ")"
+					cur_graph_entry[2] += ", " + graph.label
+
+				# Add appended entry
+				graph_entry[key] = tuple(cur_graph_entry)
+
+		# If graph contains a term that is in the id of the graph
+		else: 
+			key = graph.graph_id + graph.user_id
+			# If graph has not yet been encountered, append tuple to list of graphs encountered
+			if key not in graph_entry:
+				# Create new entry
+				new_graph_entry = (graph.graph_id, "", "", graph.modified, graph.user_id, graph.public)
+
+				# Add new entry to dict
+				graph_entry[key] = new_graph_entry
+
+	return graph_entry.values()
+
+def find_all_graphs_containing_search_word(uid, search_type, search_word, view_type, db_session):
+	'''	
+		Finds graphs that have the matching graph name.
+
+		:param uid: Owner of the graph
+		:param search_type: Type of search (full_search or partial_search)
+		:param search_word: Graph names being searched for
+		:param view_type: Type of view to limit the graphs to (my graphs, shared, public)
+		:param cur: Database cursor
+		:return Graphs: [Graphs]
+	'''
+	matched_graphs = []
+	# Return all graphs that have a graph name that partially matches the search word
+	if search_type == 'partial_search':
+		# Select graphs that match the given view type
+		if view_type == "my graphs":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.user_id == uid).all()
+		elif view_type == "shared":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
+		elif view_type == "public":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.public == 1).all()
+
+	# Return all graphs that have a gaph name that exactly matches the search word
+	elif search_type == 'full_search':
+		# Select graphs that match the given view type
+		if view_type == "my graphs":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.Graph.user_id == uid).all()
+		elif view_type == "shared":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
+		elif view_type == "public":
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id ==search_word).filter(models.Graph.public == 1).all()
+
+	return matched_graphs
+
+def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, db_session):
 	'''
 		Finds graphs that have the edges that are being searched for.
 
@@ -1384,139 +1392,273 @@ def find_edges(uid, search_type, search_word, view_type, cur):
 		:return Edges: [Edges]
 	'''
 
-	initial_graphs_with_edges = []
-	node_ids = search_word.split(':')
+	# List to keep track of all graphs that contain edges that match the search_word
+	initial_graphs_matching_edges = []
 
+	# Separate the edge into its two node ID's
+	# This is done because in the database, an edge ID is comprised of target:source nodes
+	node_ids = search_word.split(":")
+
+	# Get head and tail node references
 	head_node = node_ids[0]
 	tail_node = node_ids[1]
 
-	head_node_ids = []
-	tail_node_ids = []
+	# List of all head node ids
+	head_nodes = []
 
-	if search_type == 'full_search':
-		# treat id's as labels
-		cur.execute('select n.node_id from node as n where n.label = ?', (head_node, ))
-		head_node_label_data = cur.fetchall()
-		head_node_ids = []
-		for node in head_node_label_data:
-			head_node_ids.append(str(node[0]))
+	# List of all tail node ids
+	tail_nodes = []
 
-		cur.execute('select n.node_id from node as n where n.label = ?', (tail_node, ))
-		tail_node_label_data = cur.fetchall()
-		tail_node_ids = []
-		for node in tail_node_label_data:
-			tail_node_ids.append(str(node[0]))
+	# Match all edges that contain the edges that exactly match the search_word
+	if search_type == "full_search":
 
-		# treat id's as node_id's
-		cur.execute('select n.node_id from node as n where n.node_id = ?', (head_node, ))
-		head_node_id_data = cur.fetchall()
-		for node in head_node_id_data:
-			head_node_ids.append(str(node[0]))
+		# Get all (head) nodes that contain a label matching search_word
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == head_node).all()
+		
+		# Get all (tail) nodes that contain a label matching search_word
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == tail_node).all()
 
-		cur.execute('select n.node_id from node as n where n.node_id = ?', (tail_node, ))
-		tail_node_id_data = cur.fetchall()
-		for node in tail_node_id_data:
-			tail_node_ids.append(str(node[0]))
-	elif search_type == 'partial_search':
-		# treat id's as labels
-		cur.execute('select n.node_id from node as n where n.label like ?', ('%' + head_node + '%', ))
-		head_node_label_data = cur.fetchall()
-		head_node_ids = []
-		for node in head_node_label_data:
-			head_node_ids.append(str(node[0]))
+		# Get all (head) nodes that contain a node id matching search_word 
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == head_node).all()
 
-		cur.execute('select n.node_id from node as n where n.label like ?', ('%' + tail_node + '%', ))
-		tail_node_label_data = cur.fetchall()
-		tail_node_ids = []
-		for node in tail_node_label_data:
-			tail_node_ids.append(str(node[0]))
+		# Get all (tail) nodes that contain a node id matched search_word 
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == tail_node).all()
+		
+	elif search_type == "partial_search":
 
-		# treat id's as node_id's
-		cur.execute('select n.node_id from node as n where n.node_id like ?', ('%' + head_node + '%', ))
-		head_node_id_data = cur.fetchall()
-		for node in head_node_id_data:
-			head_node_ids.append(str(node[0]))
+		# Get all (head) nodes that contain a partially matching label
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + head_node + "%")).all()
+		
+		# Get all (tail) nodes that contain a label partially matching label
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + tail_node + "%")).all()
 
-		cur.execute('select n.node_id from node as n where n.node_id like ?', ('%' + tail_node + '%', ))
-		tail_node_id_data = cur.fetchall()
-		for node in tail_node_id_data:
-			tail_node_ids.append(str(node[0]))
+		# Get all (head) nodes that contain a node id partially matching search_word 
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + head_node + "%")).all()
+		
+		# Get all (head) nodes that contain a node id partially matching search_word 
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + tail_node + "%")).all()
 
-	head_node_ids = list(set(head_node_ids))
-	tail_node_ids = list(set(tail_node_ids))
+	# Remove all the duplicates
+	head_nodes = list(set(head_nodes))
+	tail_nodes = list(set(tail_nodes))
 
-	# If there are any graphs that fit the criteria, 
-	# return the graphs that are under the type of graphs
-	# that the user wants to see (his/her graphs, or public etc)
-	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
-		for i in xrange(len(head_node_ids)):
-			for j in xrange(len(tail_node_ids)):
-				if view_type == 'public':
-					cur.execute('select e.head_graph_id, e.head_id, e.label, datetime(g.modified), e.head_user_id, g.public from edge as e, graph as g where e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and g.public = 1', (head_node_ids[i], tail_node_ids[j]))
-				elif view_type == 'shared':
-					cur.execute('select e.head_graph_id, e.head_id, e.label, datetime(g.modified), e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where gg.user_id = ? and e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id', (uid, head_node_ids[i], tail_node_ids[j]))
+	# Go through head and tail nodes to see if there are any graphs
+	# that match the given view type (my graphs, shared, public).
+	# In other words, return all graphs that having matching edges
+	# for the given view type.
+
+	# TODO: ASK MURALI ABOUT BIDIRECTION EDGES
+
+	# If there are both head and tail nodes
+	if len(head_nodes) > 0 and len(tail_nodes) > 0:
+		# Go through all permutations of these nodes
+		# compile graphs that match the given view_type (my graphs, shared, public)
+		for i in xrange(len(head_nodes)):
+			for j in xrange(len(tail_nodes)):
+				h_node =  head_nodes[i][0]
+				t_node =  tail_nodes[j][0]
+				if view_type == "public":
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+				elif view_type == "shared":
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(group_to_graph.c.user_id == uid).filter(models.Edge.head_graph_id == group_to_graph.c.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
 				else:
-					cur.execute('select e.head_graph_id, e.head_id, e.label, datetime(g.modified), e.head_user_id, g.public from edge as e, graph as g where e.head_user_id = ? and e.head_graph_id = g.graph_id and e.head_id = ? and e.tail_id = ?', (uid, head_node_ids[i], tail_node_ids[j]))
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
 
-				data = cur.fetchall()
-				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
-				
-	actual_graph_with_edges = []
-	for graph in initial_graphs_with_edges:
-		graph_list = list(graph)
-		# Appending the nodes that are being searched for
-		graph_list[1] = graph_list[2] + ' (' + head_node + '-' + tail_node + ')'
-		actual_graph_with_edges.append(tuple(graph_list))
+		return initial_graphs_matching_edges
+	else:
+		return []
 
-	return actual_graph_with_edges
+def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, db_session):
+	'''
+		Finds graphs that have the nodes that are being searched for.
 
+		:param uid: Owner of the graph
+		:param search_type: Type of search (partial_search or full_search)
+		:param search_word: Node being searched for
+		:param view_type: Type of view to limit the graphs to
+		:param db_session: Database session
+		:return Nodes: [Nodes]
+	'''
+
+	# Graphs that contained nodes matching the search_word
+	initial_graphs_matching_nodes = []
+
+	# If search type wants to partially match node
+	if view_type == "my graphs":
+
+		if search_type == "partial_search":
+			# Get all partially matching nodes containing the label
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+			
+			# Get all partially matching nodes containing the node id
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+		else:
+			# Get all partially matching nodes containing the label
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.user_id == uid).all()
+			
+			# Get all partially matching nodes containing the node id
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.user_id == uid).all()
+	# Shared graphs
+	elif view_type == "shared":
+		# Get all the groups that a user is a member of
+		groups_user_belongs_to = db_session.query(group_to_user.c.group_id, group_to_user.c.group_owner).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_owner != uid).all()
+
+		# Get all graphs that are part of groups that the user belongs to
+		graphs_in_group = list()
+
+		# Go through each group and add graphs keys to the set
+		for single_group in groups_user_belongs_to:
+			group_id = single_group[0]
+			group_owner = single_group[1]
+
+			graphs_in_group += db_session.query(group_to_graph.c.graph_id, group_to_graph.c.user_id).filter(group_to_graph.c.group_id == group_id).filter(group_to_graph.c.group_owner == group_owner).all()
+
+		if search_type == "partial_search":
+			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id != uid).all()
+
+			# Collect all graphs that are shared with user and matches terms
+			final_graphs = []
+
+			# Go through all matched graphs to see which graphs 
+			# are also shared with user and take the intersection
+			for matched in all_matched_node_graphs:
+				search_graph = (matched.graph_id, matched.user_id)
+				if search_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id != uid).all()
+
+			# Go through all matched graphs to see which graphs 
+			# are also shared with user and take the intersection
+			for matched in all_matched_node_graphs:
+				search_graph = (matched.graph_id, matched.user_id)
+				if search_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			initial_graphs_matching_nodes = final_graphs
+		else:
+			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.user_id != uid).all()
+
+			# Collect all graphs that are shared with user and matches terms
+			final_graphs = []
+
+			# Go through all matched graphs to see which graphs 
+			# are also shared with user and take the intersection
+			for matched in all_matched_node_graphs:
+				search_graph = (matched.graph_id, matched.user_id)
+				if search_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.user_id != uid).all()
+
+			# Go through all matched graphs to see which graphs 
+			# are also shared with user and take the intersection
+			for matched in all_matched_node_graphs:
+				search_graph = (matched.graph_id, matched.user_id)
+				if search_graph in graphs_in_group:
+					final_graphs.append(matched)
+
+			initial_graphs_matching_nodes = final_graphs
+	# public graphs
+	else:
+		if search_type == "partial_search":
+			# Get all partially matching nodes containing the label
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+
+			# Get all partially matching nodes containing the node id
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+		else:
+			# Get all partially matching nodes containing the label
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+
+			# Get all partially matching nodes containing the node id
+			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+
+	return initial_graphs_matching_nodes
 
 def uploadCyjsFile(username, graphJSON, title):
+	'''
+		Uploads a .cyjs file as a JSON via /upload.
+
+		@param username: Owner of graph
+		@param graphJSON: CYJS of graph
+		@param tile: Title of graph
+	'''
+
+	# Create JSON stucture for GraphSpace recognized JSON
 	parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
 
+	# Load JSON from string
 	csjs = json.loads(graphJSON)
 
+	# If there is no elements that exist in the provided JSON
 	if 'elements' not in csjs:
 		return {"Error": "No elements property inside of file!"}
 
+	# If there is no nodes that exist in the provided JSON
 	if 'nodes' not in csjs['elements']:
 		return {"Error": "File must contain nodes property in elements dictionary!"}
 
+	# If there is no edges that exist in the provided JSON
 	if 'edges' not in csjs['elements']:
 		return {"Error": "File must contain edges property in elements dictionary!"}
 
+	# Go through nodes and translate properties so CytoscapeJS may render
 	for node in csjs['elements']['nodes']:
+
+		# Container for translated node
 		tempNode = {"data": {}}
+
+		# Copy over ID
 		tempNode['data']['id'] = node['data']['id']
+
+		# Change color property to background color 
 		if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
 			# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
 			tempNode['data']['background_color'] = node['data']['node_fillColor']
+
+		# If user wants to display something in node, add 'content'
 		if 'name' in node['data']:
 			tempNode['data']['content'] = node['data']['name']
 
+		# No shape is provided as far as I know, so I pad in an ellipse
 		tempNode['data']['shape'] = "ellipse"
 		parseJson['graph']['nodes'].append(tempNode)
 
+	# Go through all the edges
 	for edge in csjs['elements']['edges']:
+
 		tempEdge = {"data": {}}
+
+		# Copy over source and target
 		tempEdge['data']['source'] = edge['data']['source']
 		tempEdge['data']['target'] = edge['data']['target']
 
+		# If there is a name property, it will be in a popup
 		if 'name' in edge['data']:
 			tempEdge['data']['popup'] = edge['data']['name']
 
+		# Add edges to json
 		parseJson['graph']['edges'].append(tempEdge)
 
+	# If there is a title in the graph
 	if 'name' in csjs['data']:
 		parseJson['metadata']['name'] = csjs['data']['name']
 	else:
 		parseJson['metadata']['name'] = "temp_graph"
 
+	# No tags or description since CYJS doesn't give me any
 	parseJson['metadata']['tags'] = []
 	parseJson['metadata']['description'] = ""
 
 	title = title or parseJson['metadata']['name']
 
+	# Insert converted graph to GraphSpace and provide URL
+	# for logged in user
 	if username != None:
 		result = insert_graph(username, title, json.dumps(parseJson))
 		if result == None:
@@ -1524,6 +1666,7 @@ def uploadCyjsFile(username, graphJSON, title):
 		else:
 			return {"Error": result}
 	else:
+		# Create a unique user and insert graph for that name
 		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
 		public_user_id = public_user_id.replace('-', '_')
 		
@@ -1540,18 +1683,30 @@ def uploadCyjsFile(username, graphJSON, title):
 			return {"Error": result}
 
 def uploadJSONFile(username, graphJSON, title):
+	'''
+		Uploads JSON file to GraphSpace via /upload.
 
+		@param username: Owner of graph
+		@param graphJSON: JSON of graph
+		@param title: Title of graph
 
+	'''
+
+	# Loads JSON format
 	parseJson = json.loads(graphJSON)
 
+	# Creates metadata tag
 	if 'metadata' not in parseJson:
 		parseJson['metadata'] = {}
 
+	# If name is not provided, name is data
 	if 'name' not in parseJson['metadata']:
 		parseJson['metadata']['name'] = "graph_" + str(datetime.now())
 
 	title = title or parseJson['metadata']['name']
 
+	# Insert converted graph to GraphSpace and provide URL
+	# for logged in user	
 	if username != None:
 		result = insert_graph(username, title, json.dumps(parseJson))
 		if result == None:
@@ -1559,6 +1714,7 @@ def uploadJSONFile(username, graphJSON, title):
 		else:
 			return {"Error": result}
 	else:
+		# Create a unique user and insert graph for that name
 		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
 		public_user_id = public_user_id.replace('-', '_')
 		
@@ -1574,21 +1730,17 @@ def uploadJSONFile(username, graphJSON, title):
 			return {"Error": result}
 
 def delete_30_day_old_anon_graphs():
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		graph = db_session.query(models.Graph).filter(models.Graph.user_id.like("%Public_User_%")).filter(models.Graph.created >= date('now', '-30 day'))
 
-		cur.execute("delete FROM graph where user_id like '%Public_User_%' and created >= date('now','-30 day')");
-		con.commit()
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return e.args[0]
-	finally:
-		if con:
-			con.close()
-
+		db_session.delete(graph)
+		db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
 
 def rgb_to_hex(rgb):
 	rgbTuple = rgb.split(',')
@@ -1604,37 +1756,45 @@ def rgb_to_hex(rgb):
 	return '#%02x%02x%02x' % rgbNum
 
 def create_public_user(public_user_id):
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	'''
+		Creates a public user (temporary)
 
-		cur.execute('insert into user values(?,?,?,?,?,?,?)', (public_user_id, 'test', 1, 1, 1, 1, 0))
-		con.commit()
+		@param public_user_id: Id of user
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	try:
+		# Create a public user and add to database
+		public_user = User(public_user_id, "public", 1, 1, 1, 1, 0)
+		db_session.add(public_user)
+		db_session.commit()
+		db_session.close()
 		return None
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return e.args[0]
-	finally:
-		if con:
-			con.close()
+	except NoResultFound:
+		db_session.close()
+
 
 def delete_public_user():
-	con = None
+	'''
+		Deletes all public users from database.
+	'''
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		public_users = db_session.query(models.User).filter(models.User.password == "public").all()
 
-		cur.execute('delete into user where user=?', ("test", ))
-		con.commit()
-		return None
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return e.args[0]
-	finally:
-		if con:
-			con.close()
+		for user in public_user:
+			db_session.delete(user)
 
+		db_session.commit()
+		db_session.close()
+
+	except NoResultFound:
+		db_session.close()
+		return None	
 
 def find_edge(uid, gid, edge_to_find, search_type):
 	'''
@@ -1647,60 +1807,67 @@ def find_edge(uid, gid, edge_to_find, search_type):
 		:param search_type: Partial or full matching
 		:return ID: [ID of edge]
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		head_node = edge_to_find.split(':')[0]
-		tail_node = edge_to_find.split(':')[1]
+	# Extract nodes from input
+	head_node = edge_to_find.split(':')[0]
+	tail_node = edge_to_find.split(':')[1]
 
-		if search_type == 'partial_search':
+	# List containing edges
+	edge_list = []
+
+	# Filter by search type
+	if search_type == "partial_search":
+		# If there is a head and tail node
+		if len(head_node) > 0 and len(tail_node) > 0:
 
 			# Find node id's that are being searched for (source and target nodes)
 			head_nodes = find_node(uid, gid, head_node, 'partial_search')
 			tail_nodes = find_node(uid, gid, tail_node, 'partial_search')
 
-			edge_list = []
-			if len(head_node) > 0 and len(tail_node) > 0:
-				for i in xrange(len(tail_nodes)):
-					for j in xrange(len(head_nodes)):
-						id_being_searched = "%" + tail_nodes[i] + '-' + head_nodes[j] + "%"
-						cur.execute('select label from edge where label like ? and head_user_id = ? and head_graph_id = ?', (id_being_searched, uid, gid))
-						data = cur.fetchall()
-						if data and len(data) > 0:
-							for e in data:
-								edge_list.append(e[0])
+			# Go through all permutations of head and tail node
+			# to account for undirected edges
+			for i in xrange(len(tail_nodes)):
+				for j in xrange(len(head_nodes)):
 
-				return edge_list
-		else:
-			# Find node id's that are being searched for (source and target nodes)
-			head_node = find_node(uid, gid, head_node, 'full_search')
-			tail_node = find_node(uid, gid, tail_node, 'full_search')
+					try:
+						# Aggregate all matching edges
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_id == head_nodes[j]).filter(models.Edge.tail_id == tail_nodes[i]).filter(models.Edge.head_user_id == uid).filter(models.Edge.head_graph_id == gid).all()
 
-			# If both nodes exist, find label between them
-			if tail_node != None and head_node != None and len(tail_node) > 0 and len(head_node) > 0:
-				id_being_searched = "%" + str(tail_node[0]) + '-' + str(head_node[0]) + "%"
-				cur.execute('select label from edge where label like ? and head_user_id = ? and head_graph_id = ?', (id_being_searched, uid, gid))
-				data = cur.fetchall()
-				edge_list = []
-				# If something exists, return the ids of the paents
-				if data and len(data) > 0:
-					for e in data:
-						edge_list.append(e[0])
+						edge_list += matching_edges
 
-					return edge_list
-				else:
-					return []
-	
-		return []
+					except NoResultFound:
+						print "No matching edges"
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return []
-	finally:
-		if con:
-			con.close()
+	else:	
+		# Find node id's that are being searched for (source and target nodes)
+		head_nodes = find_node(uid, gid, head_node, 'full_search')
+		tail_nodes = find_node(uid, gid, tail_node, 'full_search')
+
+		# Go through all permutations of head and tail node
+		# to account for undirected edges
+		for i in xrange(len(tail_nodes)):
+			for j in xrange(len(head_nodes)):
+
+				# If both nodes exist, find label between them
+				if tail_node != None and head_node != None:
+
+					try:
+						# Aggregate all matching edges
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_id == head_node).filter(models.Edge.tail_id == tail_node).filter(models.Edge.head_user_id == uid).filter(models.Edge.head_graph_id == gid).all()
+
+						edge_list += matching_edges
+
+					except NoResultFound:
+						print "No matching edges"
+
+	# Get all labels from edges
+	edge_labels = []
+	for edge in edge_list:
+		edge_labels.append(edge.label)
+
+	return edge_labels
 
 def find_node(uid, gid, node_to_find, search_type):
 	'''
@@ -1715,188 +1882,48 @@ def find_node(uid, gid, node_to_find, search_type):
 		:return ID: [ID of node]
 	'''
 
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		id_list = []
+		# Filter by search types
+		if search_type == "partial_search":
+			# Get all matching labels
+			labels = db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + node_to_find + "%")).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
-		if search_type == 'partial_search':
-			# Get the id of the node (could be id or a label) and return it if they exist
-			cur.execute('select node_id from node where node_id LIKE ? and user_id = ? and graph_id = ?', ('%' + node_to_find + '%', uid, gid))
-			id_data = cur.fetchall()
-			id_list = []
+			# Get all matching ids
+			node_ids = db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + node_to_find + "%")).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
-			for ids in id_data:
-				id_list.append(str(ids[0]))
-	
-			cur.execute('select node_id from node where label LIKE ? and user_id = ? and graph_id = ?', ('%' + node_to_find + '%', uid, gid))
-			label_data = cur.fetchall()
-			for labels in label_data:
-				id_list.append(str(labels[0]))
-			
-			id_list = list(set(id_list))
+			for label in labels:
+				if label not in id_list:
+					id_list.append(label[0])
 
-			if len(id_list) > 0:
-				return id_list
+			for node_id in node_ids:
+				if node_id not in id_list:
+					id_list.append(node_id[0])
 
-		elif search_type == 'full_search':
-			# Get the id of the node (could be id or a label) and return it if they exist
-			cur.execute('select node_id from node where node_id = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
-			id_data = cur.fetchall()
-			if id_data != None and len(id_data) > 0:
-				return [id_data[0][0]]
-			else:
-				cur.execute('select node_id from node where label = ? and user_id = ? and graph_id = ? limit 1', (node_to_find, uid, gid))
-				label_data = cur.fetchall()
+		else:
+			# Get all matching labels
+			label = db_session.query(models.Node.node_id).filter(models.Node.label == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
 
-				if label_data != None and len(label_data) > 0:
-					return [label_data[0][0]]
+			# Get all matching ids
+			node_id = db_session.query(models.Node.node_id).filter(models.Node.node_id == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
 
-		return []
+			if label != None and label not in id_list:
+				id_list.append(label[0])
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return []
-	finally:
-		if con:
-			con.close()
+			if node_id != None and node_id not in id_list:
+				id_list.append(node_id[0])
+
+		db_session.close()
+		return id_list
+	except NoResultFound:
+		db_session.close()
+		return []	
 
 def intersect(a, b):
      return list(set(a) & set(b))
-
-def find_nodes(uid, search_type, search_word, view_type, cur):
-	'''
-		Finds graphs that have the nodes that are being searched for.
-
-		:param uid: Owner of the graph
-		:param search_type: partial or full matching
-		:param search_word: Node being searched for
-		:param view_type: Type of view to limit the graphs to
-		:param cur: Database cursor
-		:return Nodes: [Nodes]
-	'''
-	intial_graph_with_nodes = []
-
-	if search_type == 'partial_search':
-		if view_type == 'my graphs':
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label LIKE ? and n.user_id = ?', ('%' + search_word + '%', uid))
-			node_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.user_id = ?', ('%' + search_word + '%', uid))
-			node_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
-		elif view_type == 'shared':
-			before = datetime.now().second
-
-			cur.execute('select group_id, group_owner from group_to_user where user_id= ? and group_owner <> ?', (uid, uid))
-			groups_user_belongs_to = cur.fetchall()
-
-			graphs_in_group = []
-			for single_group in groups_user_belongs_to:
-				cur.execute('select graph_id, user_id from group_to_graph where group_id = ? and group_owner = ?', (single_group[0], single_group[1]))
-				graphs_in_group += cur.fetchall()
-
-			graphs_in_group = list(set(graphs_in_group))
-			
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label LIKE ? and n.user_id <> ?', ('%' + search_word + '%', uid))
-			node_info = cur.fetchall()
-			node_info = list(set(node_info))
-
-			final_graphs = []
-
-			for matched in node_info:
-				searched_graph = (matched[0], matched[4])
-				if searched_graph in graphs_in_group:
-					final_graphs.append(matched)
-
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, final_graphs)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.user_id <> ?', ('%' + search_word + '%', uid))
-			node_info = cur.fetchall()
-			node_info = list(set(node_info))
-
-			final_graphs = []
-
-			for matched in node_info:
-				searched_graph = (matched[0], matched[4])
-				if searched_graph in graphs_in_group:
-					final_graphs.append(matched)
-
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, final_graphs)
-			after = datetime.now().second
-
-		else:
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label LIKE ? and n.public = 1', ('%' + search_word + '%', ))
-			public_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id LIKE ? and n.public = 1', ('%' + search_word + '%', ))
-			public_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
-
-	elif search_type == 'full_search':
-		if view_type == 'my graphs':
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? and n.user_id = ?', (search_word, uid))
-			node_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_labels)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id = ? and n.user_id = ?', (search_word, uid))
-			node_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, node_ids)
-		
-		elif view_type == 'shared':
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n, group_to_graph as gg, group_to_user as gu where n.label = ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gu.user_id = ? and gg.group_owner <> ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (search_word, uid, uid))
-			shared_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_labels)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n, group_to_graph as gg, group_to_user as gu where n.node_id = ? and gg.graph_id = n.graph_id and n.user_id = gg.user_id and gu.user_id = ? and gg.group_owner <> ? and gu.group_id = gg.group_id and gu.group_owner = gg.group_owner', (search_word, uid, uid))
-			shared_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, shared_ids)
-
-		else:
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.label = ? and n.public = 1', ( search_word, ))
-			public_labels = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_labels)
-
-			cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, n.modified, n.user_id, n.public from node as n where n.node_id = ? and n.public = 1', ( search_word, ))
-			public_ids = cur.fetchall()
-			intial_graph_with_nodes = add_unique_to_list(intial_graph_with_nodes, public_ids)
-
-	intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
-	return intial_graph_with_nodes
-
-def find_graphs_using_names(uid, search_type, search_word, view_type, cur):
-	'''	
-		Finds graphs that have the matching graph name.
-
-		:param uid: Owner of the graph
-		:param search_type: Type of search (full_search or partial_search)
-		:param search_word: Graph names being searched for
-		:param view_type: Type of view to limit the graphs to
-		:param cur: Database cursor
-		:return Graphs: [Graphs]
-	'''
-
-	if search_type == 'partial_search':
-		if view_type == 'my graphs':
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.user_id= ?', ('%' + search_word + '%', uid))
-		elif view_type == 'shared':
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id LIKE ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', ('%' + search_word + '%', uid))
-		else:
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.graph_id LIKE ? and g.public= 1', ('%' + search_word + '%', ))
-
-	elif search_type == 'full_search':
-		if view_type == 'my graphs':
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.graph_id = ? and g.user_id= ?', (search_word, uid))
-		elif view_type == 'shared':
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g, group_to_graph as gg, group_to_user as gu where g.graph_id = ? and gu.user_id= ? and gu.group_id = gg.group_id and g.graph_id = gg.graph_id', (search_word, uid))
-		else:
-			cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.graph_id = ? and g.public= 1', (search_word, ))
-
-	graph_list = cur.fetchall()
-
-	return graph_list
 
 def add_unique_to_list(listname, data):
 	'''
@@ -1914,59 +1941,10 @@ def add_unique_to_list(listname, data):
 
 	return listname
 
-def add_unique_nodes_to_list(data):
-	'''
-		Adds all unique items to the specified list
-		Also checks to see if the length is > 0 for each item
-		inserted into the list
-
-		:param listname: List to put unique elements in
-		:param data: Possible duplicate data to search through
-		:return listname: [Unique elements]
-	'''
-
-	# Dict to keep track of unique graph and merged tuples
-	graph_dict = dict()
-	unique_list = []
-
-	# Go through each graph tuple that contains the node
-	for i in range(len(data)):
-		graph_id = data[i][0]
-		node_id = data[i][1]
-		label = data[i][2]
-		modified = data[i][3]
-		user_id = data[i][4]
-		public = data[i][5]
-
-		key = graph_id + user_id
-
-		if key not in graph_dict:
-			graph_dict[key] = [i]
-		else:
-			test = graph_dict[key]
-			test.append(i)
-			graph_dict[key] = test
-
-	for key, value in graph_dict.iteritems():
-		new_row = [data[value[0]][0], "", "", data[value[0]][3], data[value[0]][4], data[value[0]][5]]
-		for i in value:
-			if len(data[i][1]) > 0:
-				new_row[1] += data[i][1] + ", "
-			if len(data[i][2]) > 0:
-				new_row[2] += data[i][2] + ", "
-		if len(new_row[1]) > 2:
-			new_row[1] = new_row[1][:-2]
-		if len(new_row[2]) > 2:
-			new_row[2] = new_row[2][:-2]
-		unique_list.append(tuple(new_row))
-
-	return unique_list
-	
 # -------------------------- REST API -------------------------------
 
 def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None, skip=None):
 	'''
-		# TODO: Add rest call example
 		Inserts a uniquely named graph under a username.
 
 		:param username: Email of user in GraphSpace
@@ -1974,83 +1952,69 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 		:param graph_json: JSON of graph
 	'''
 
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
+	# Check to see if graph already exists
+	graph_exists = get_graph(username, graphname)
 
-		cur = con.cursor()
-		# TODO: Write query examples
-		# Checks to see if a user already has a graph with the same name under his account
-		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (username, graphname))
+	# If graph already exists for user, alert them
+	if graph_exists != None:
+		return 'Graph ' + graphname + ' already exists for ' + username + '!'
 
-		data = cur.fetchone()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		# If not, add this graph to his account
-		if data == None:
-			if skip != True:
-				validationErrors = validate_json(graph_json)
-				if validationErrors != None:
-					return validationErrors
+	# Do we want to skip validation checking - Done for CYJS files
+	if skip != True:
+		validationErrors = validate_json(graph_json)
+		if validationErrors != None:
+			return validationErrors
 
-			curTime = datetime.now()
-			graphJson = json.loads(graph_json)
+	# Get the current time
+	curTime = datetime.now()
 
-			# Checks to see if it is compatible with CytoscapeJS and converts it accordingly
-			# TODO: Delete this after Verifier is finished
-			if 'data' in graphJson['graph']:
-				graphJson = json.loads(convert_json(graph_json))
+	# Load JSON string into JSON structure
+	graphJson = json.loads(graph_json)
 
-			# Attach ID's to each edge for traversing the element
-			graphJson = assign_edge_ids(graphJson)
+	# Needed for old graphs, converts CytoscapeWeb to CytoscapeJS standard
+	if 'data' in graphJson['graph']:
+		graphJson = json.loads(convert_json(graph_json))
 
-			# Go through all the nodes in the JSON and if they don't have a label,
-			# Append a random label to it
-			# Used so that I can highlight the node
-			# TODO: double check this because I may need to get the id and not the label
-			nodes = graphJson['graph']['nodes']
-			# rand = 1
-			# for node in nodes:
-			# 	if 'data' in node and 'content' in node['data'] and len(node['data']['content']) == 0:
-			# 		node['data']['content'] = rand
-			# 		rand = rand + 1
-			rand = 0
+	# Attach ID's to each edge for traversing the element
+	graphJson = assign_edge_ids(graphJson)	
 
-			# Inserts it into the database, all graphs inserted are private for now
-			# TODO: Verify if that is what I want
-			if modified == None and created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, curTime, public, unlisted,default_layout_id))
-			elif modified == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, curTime, public, unlisted,default_layout_id))
-			elif created == None:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), curTime, modified, public, unlisted,default_layout_id))
-			else:
-				cur.execute('insert into graph values(?, ?, ?, ?, ?, ?, ?, ?)', (graphname, username, json.dumps(graphJson, sort_keys=True, indent=4), created, modified, public, unlisted,default_layout_id))
-			
-			if 'tags' in graphJson['metadata']:
-				tags = graphJson['metadata']['tags']
-			else:
-				tags = []
-
-			# Insert all tags for this graph into tags database
-			insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con, curTime, 0)
-			# Commit the changes
-			con.commit()
-
-			# If everything works, return Nothing 
-			return None
+	nodes = graphJson['graph']['nodes']
 	
-		else:
-			return 'Graph ' + graphname + ' already exists for ' + username + '!'
+	# If we're not passed in any time values, use the current time as timestamps
+	if modified == None and created == None:
+		modified = curTime
+		created = curTime
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return e.args[0]
+	# If we're given a creation time but no modified time, use current time
+	elif modified == None:
+		modified = curTime
 
-	finally:
-		if con:
-			con.close()
+	# If we're given a modified time but no creation time, use current time
+	elif created == None:
+		created = curTime
 
-def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con, modified, public):
+	# Construct new graph to add to database
+	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, unlisted = unlisted, default_layout_id = default_layout_id)
+
+	db_session.add(new_graph)
+	db_session.commit()
+
+	if 'tags' in graphJson['metadata']:
+		tags = graphJson['metadata']['tags']
+	else:
+		tags = []
+
+	# Insert all tags for this graph into tags database
+	insert_data_for_graph(graphJson, graphname, username, tags, nodes, curTime, 0, db_session)
+
+	db_session.close()
+	# If everything works, return Nothing 
+	return None
+
+def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified, public, db_session):
 	'''
 		Inserts metadata about a graph into its respective tables.
 
@@ -2058,64 +2022,94 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, cur, con,
 		:param graphname: Name of graph
 		:username: Name of user
 		:param: Tags of graph
-		:param Nodes: Nodes to insert into nodes table
-		:param cur: Database cursor
-		:param con: Database connection
+		:param nodes: Nodes to insert into nodes table
+		:param modified: Modification date of tabe
+		:param public: Nodes to insert into nodes table
+		:param db_session: Database connection
 	'''
-	
 	# Add all tags for this graph into graph_tag and graph_to_tag tables
 	for tag in tags:
-		# TODO: Query example
-		cur.execute('select tag_id from graph_tag where tag_id=?', (tag, ))
-		tagData = cur.fetchone()
-		if tagData == None:
-			cur.execute('insert into graph_tag values(?)', (tag, ))
+		tag_exists = db_session.query(models.GraphTag).filter(models.GraphTag.tag_id == tag).first()
 
-		cur.execute('insert into graph_to_tag values(?,?,?)', (graphname, username, tag))
+		# If the tag doesn't already exists in the database, add it
+		if tag_exists == None:
+			new_tag = models.GraphTag(tag_id = tag)
+			db_session.add(new_tag)
+			db_session.commit()
 
+		# Add to Graph to Tag table so that we can retrieve all graphs with tag
+		new_graph_to_tag = models.GraphToTag(graph_id = graphname, user_id = username, tag_id = tag)
+		db_session.add(new_graph_to_tag)
+		db_session.commit()
+
+	# Go through edges and parse them accordingly
 	edges = graphJson['graph']['edges']
 
+	# If there are edges with same source and directed
 	dupEdges = []
 
+	# Number to differentiate between two duplicate edges
 	rand = 0
-	# Add all edges and nodes in the JSON to their respective tables
-	for edge in edges:
-		if 'target_arrow_shape' not in edge['data']:
-			edge['data']['target_arrow_shape'] = "none"
 
+	for edge in edges:
+		# Is the edge directed?
+		is_directed = 1
+
+		# Make edge undirected if it doesn't have target_arrow_shape attribute
+		if 'target_arrow_shape' not in edge['data']:
+			edge['data']['target_arrow_shape'] = "none"	
+			is_directed = 0
+
+		# Keep track of all the duplicate edges
+		# If there are two duplicate edges, append a counter and store it as an ID
 		if edge['data']['source'] + '-' + edge['data']['target'] in dupEdges:
 			rand += 1
 			if 'id' not in edge['data']:
 				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target'] + rand
 
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"] + str(rand), edge['data']['id'], 1, None))
-			dupEdges.append(edge['data']['source'] + str(rand) + '-' + edge['data']['target'] + str(rand))
+
+		# If this is first time we've seen an edge, simply get its ID without the counter
 		else:
 			if 'id' not in edge['data']:
 				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
-			
-			cur.execute('insert into edge values(?,?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1, None))
-		# if (edge['data']['source'] in dupEdges):
-		# 	rand += 1
-		# 	if 'target_arrow_shape' in edge['data']:
-		# 		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
-		# 	else:
-		# 		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"] + str(rand), graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
-		# 	dupEdges.append(edge['data']['source']);
-		# else:
-		# 	if 'target_arrow_shape' in edge['data']:
-		# 		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
-		# 	else:
-		# 		cur.execute('insert into edge values(?,?,?,?,?,?,?,?)', (username, graphname, edge['data']["source"], graphname, graphname, edge['data']["target"], edge['data']['id'], 1))
-		
-		# 	dupEdges.append(edge['data']['source']);
+
+		dupEdges.append(edge['data']['source'] + '-' + edge['data']['target'])
+
+		# TRICKY NOTE: An edge's ID is used as the label property
+		# The reason is because edge uses an 'id' column as the primary key.
+		# The label was the column I decided to avoid completely reconstructing the database
+
+		# If edge is bidirectional, we insert two edges with inverse source and target nodes
+		if is_directed == 0:
+			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
+
+			db_session.add(new_edge)
+
+			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['target'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['source'], label = edge['data']['id'], directed = is_directed, id = None)
+
+			db_session.add(new_edge)
+
+		else:
+			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
+
+			db_session.add(new_edge)
+
+		db_session.commit()
+
+	# Go through all nodes in JSON and add to node table
 	for node in nodes:
-		
+		# Used for backwards-compatibility since some JSON have label 
+		# but new CytoscapeJS uses the content property
 		if 'label' in node['data']:
 			node['data']['content'] = node['data']['label']
+			del node['data']['label']
 
-		cur.execute('insert into node values(?,?,?,?,?,?)', (node['data']['id'], node['data']['content'], username, graphname, modified, public))
+		# Add node to table
+		new_node = models.Node(node_id = node['data']['id'], label = node['data']['content'], user_id = username, graph_id = graphname, modified = modified, public = public)
 
+		db_session.add(new_node)
+		db_session.commit()
+			
 def update_graph(username, graphname, graph_json):
 	'''
 		Updates the JSON for a graph.
@@ -2124,49 +2118,58 @@ def update_graph(username, graphname, graph_json):
 		:param graphname: Name of graph to insert
 		:param graph_json: JSON of graph
 	'''
-	con = None
+
+	# Get graph
+	graph = get_graph(username, graphname)
+
+	# If graph doesn't exist
+	if graph == None:
+		return "Can't update " + graphname + " because it does not exist for " + username
+
+	# Get database connection
+	db_session = data_connection.new_session()
+
+	# Delete from graph
+	db_session.delete(graph)
+	db_session.commit()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Delete from graph to tag
+		gt_to_delete = db_session.query(models.GraphToTag).filter(models.GraphToTag.graph_id == graphname).filter(models.GraphToTag.user_id == username).all()
 
-		cur.execute('select graph_id, public, unlisted, default_layout_id from graph where user_id = ? and graph_id = ?', (username, graphname))
-		data = cur.fetchone()
+		for gt in gt_to_delete:
+			db_session.delete(gt)
+			db_session.commit()
 
-		if data != None:
+	except NoResultFound:
+		print "No tags for graph"
 
-			public = data[1]
-			unlisted = data[2]
-			default_layout = str(data[3])
+	try:
+		# Delete from edge
+		edges_to_delete = db_session.query(models.Edge).filter(models.Edge.head_graph_id == graphname).filter(models.Edge.head_user_id == username).all()
 
-			result = insert_graph(username, graphname, graph_json)
-			if result != None:
+		for edge in edges_to_delete:
+			db_session.delete(edge)
+			db_session.commit()
 
-				cur.execute('select * from graph where user_id = ? and graph_id = ?', (username, graphname))
-				old_graph = cur.fetchone()
-				# Deletes information about a graph from all the tables that reference it
-				cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-				cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-				cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-				cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
-				con.commit()
-				result = insert_graph(username, graphname, graph_json, old_graph[3], datetime.now(), public,unlisted,default_layout)
-				if result == None:
-					return result
-				else:
-					insert_graph(username, graphname, old_graph[2], old_graph[3], old_graph[4], old_graph[5], old_graph[6], old_graph[7])
-					return result
-			else:
-				return result
-		else:
-			return "Can't update " + graphname + " because it does not exist for " + username
+	except NoResultFound:
+		print "No edges in graph to delete"
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	try:
+		# Delete from node
+		nodes_to_delete = db_session.query(models.Node).filter(models.Node.graph_id == graphname).filter(models.Node.user_id == username).all()
 
-	finally:
-		if con:
-			con.close()
+		for node in nodes_to_delete:
+			db_session.delete(node)
+			db_session.commit()
 
+	except NoResultFound:
+		print "No nodes in graph to delete"
+
+	# Re-insert graph
+	result = insert_graph(username, graphname, graph_json, graph.created, datetime.now(), graph.public, graph.unlisted, graph.default_layout_id)
+
+	return result
 
 def get_graph_json(username, graphname):
 	'''
@@ -2176,28 +2179,14 @@ def get_graph_json(username, graphname):
 		:param password: Password of the user
 		:return JSON: JSON of graph to view
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Get the graph
+	graph = get_graph(username, graphname)
 
-		# Return the JSON of the graph that matches the username and the graphname
-		cur.execute('select json from graph where user_id = ? and graph_id = ?', (username, graphname))
+	# If graph doesn't exist, return None
+	if graph == None:
+		return None
 
-		jsonData = cur.fetchone()
-
-		# If there is JSON for this graph, return it
-		if jsonData and jsonData[0]:
-			return jsonData[0]
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
+	return graph.json
 
 def delete_graph(username, graphname):
 	'''
@@ -2206,26 +2195,58 @@ def delete_graph(username, graphname):
 		:param username: Email of user in GraphSpace
 		:param password: Password of the user
 	'''
-	con = None
+
+	# Get graph
+	graph = get_graph(username, graphname)
+
+	if graph == None:
+		return
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Delete graph 
+		db_session.delete(graph)
 
-		# Deletes information about a graph from all the tables that reference it
-		cur.execute('delete from graph where user_id = ? and graph_id = ?', (username, graphname))
-		cur.execute('delete from graph_to_tag where graph_id=? and user_id=?', (graphname, username))
-		cur.execute('delete from edge where head_graph_id =? and head_user_id=?', (graphname, username))
-		cur.execute('delete from group_to_graph where graph_id =? and user_id=?', (graphname, username))
-		cur.execute('delete from node where graph_id = ? and user_id=?', (graphname, username))
-		cur.execute('delete from layout where graph_id = ? and user_id=?', (graphname, username))
-		con.commit()
+		# Delete from graph_to_tag
+		gt = db_session.query(models.GraphToTag).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+		for g_tags in gt:
+			db_session.delete(g_tags)
 
-	finally:
-		if con:
-			con.close()
+		# Delete from group_to_graph
+		gg = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.user_id == username).filter(models.GroupToGraph.graph_id == graphname).all()
+
+		for g_gruop in gg:
+			db_session.delete(g_gruop)
+
+		# Delete from edge
+		edge = db_session.query(models.Edge).filter(models.Edge.head_graph_id == graphname).filter(models.Edge.head_user_id == username).all()
+
+		for e in edge:
+			db_session.delete(e)
+
+		# Delete from node
+		node = db_session.query(models.Node).filter(models.Node.user_id == username).filter(models.Node.graph_id == graphname).all()
+
+		for n in node:
+			db_session.delete(n)
+
+		# Delete from layout
+		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == username).filter(models.Layout.user_id == username).all()
+
+		for l in layout:
+			db_session.delete(l)
+
+		db_session.commit()
+		db_session.close()
+
+	except Exception as ex:
+		print ex
+		db_session.commit()
+		db_session.close()
+		return	
 
 def get_all_graphs_for_user(username):
 	'''
@@ -2234,68 +2255,46 @@ def get_all_graphs_for_user(username):
 		:param username: Email of user in GraphSpace
 		:return Graphs: [graphs]
 	'''
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	con = None
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get all graphs user owns
+		user_graphs = db_session.query(models.Graph).filter(models.Graph.user_id == username).all()
 
-		# Query for all graphs by a specific user
-		cur.execute('select graph_id from graph where user_id = ?', (username, ))
+		# Get all names of graphs that user owns
+		cleaned_user_graph_names = []
 
-		data = cur.fetchall()
+		# Get rid of unicode
+		for graph in user_graphs:
+			cleaned_user_graph_names.append(graph.graph_id)
 
-		# If there are graphs for the user, return them 
-		if data != None:
-			cleaned_data = []
-			for graphs in data:
-				cleaned_data.append(str(graphs[0]))
-
-			if len(cleaned_data) > 0:
-				return cleaned_data
-
+		db_session.close()
+		return cleaned_user_graph_names
+	except NoResultFound:
+		db_session.close()
 		return []
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-
-	finally:
-		if con:
-			con.close()
-
-def get_all_groups_in_server():
+def get_graphs_in_group(group_id, group_owner):
 	'''
-		Gets all groups that are in the server
+		Gets graphs in a group.
+
+		@param group_id: Id of group
+		@param group_owner: Owner of group
 	'''
 
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		# Group is written this way because SQLITE wouldn't accept it simply as group
-		cur.execute('select group_id, group_name, owner_id, public from \"group\"');
-
-		data = cur.fetchall()
-
-		if data == None:
-			return None
-
-		cleaned_data = []
-
-		# Return information about the group
-		for group in data:
-			cleaned_record = {"owner": group[2], "id": group[0], "description": group[3]}
-			cleaned_data.append(cleaned_record)
-
-		return cleaned_data
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
+		# Gets all the graphs in the group
+		graphs_in_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).all()
+		
+		db_session.close()
+		return graphs_in_group
+	except NoResultFound:
+		db_session.close()
+		return []	
 
 def get_groups_of_user(user_id):
 	'''
@@ -2304,27 +2303,23 @@ def get_groups_of_user(user_id):
 		:param user_id: Email of user of GraphSpace
 		:return Groups: [group information]
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get all groups that user owns
+		owned_groups = db_session.query(models.Group).filter(models.Group.owner_id == user_id).all()
 
-		# Get all groups that the user owns
-		cur.execute('select * from \"group\" where owner_id=?', (user_id, ))
+		# Get information about graphs in group and format it
+		complete_group_information = get_cleaned_group_data(owned_groups, db_session)
 
-		data = cur.fetchall()
+		db_session.close()
+		return complete_group_information
+	except NoResultFound:
+		db_session.close()
+		return None	
 
-		# Clean up the data
-		return get_cleaned_group_data(data, cur)
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
-def get_cleaned_group_data(data, cur):
+def get_cleaned_group_data(data, db_session):
 	'''
 		Get all information about group (including number of graphs group has)
 
@@ -2333,25 +2328,25 @@ def get_cleaned_group_data(data, cur):
 		:return Groups: [gorup information + graphs in group information]
 	'''
 
-	cleaned_data = []
+	# Get information about how many graphs each group contains
+	complete_group_information = []
 
-	# Go through and create an index including the number of graphs that a group has 
-	for group_name in data:
+	for group in data:
 		cleaned_group = []
-		cleaned_group.append(group_name[1])
-		cleaned_group.append(group_name[3])
-		cleaned_group.append(group_name[2])
-		cur.execute('select count(*) from group_to_graph where group_id=? and group_owner=?', (group_name[0], group_name[2]))
-		new_data = cur.fetchall()
-		cleaned_group.append(new_data[0][0])
-		cleaned_group.append(group_name[4])
-		cleaned_group.append(group_name[5])
-		cleaned_group.append(group_name[0])
-		cleaned_group = tuple(cleaned_group)
+		cleaned_group.append(group.name)
+		cleaned_group.append(group.description)
+		cleaned_group.append(group.owner_id)
 
-		cleaned_data.append(cleaned_group)
+		graphs = db_session.query(models.Graph).filter(models.GroupToGraph.group_id == group.group_id).filter(models.GroupToGraph.group_owner == group.owner_id).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).all()
 
-	return cleaned_data
+		cleaned_group.append(len(graphs))
+
+		cleaned_group.append(group.public)
+		cleaned_group.append(group.unlisted)
+		cleaned_group.append(group.group_id)
+		complete_group_information.append(tuple(cleaned_group))
+
+	return complete_group_information
 
 def get_all_groups_with_member(user_id):
 	'''
@@ -2360,33 +2355,21 @@ def get_all_groups_with_member(user_id):
 		:param user_id: Member to be searched for in all groups
 		:return Groups: [Groups that user_id is a member of]
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		# Get all groups that the user is a member of
+		groups_with_member = db_session.query(models.Group).filter(models.Group.group_id == models.GroupToUser.group_id).filter(models.Group.owner_id == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == user_id).all()
 
-		cur = con.cursor()
+		# Format group information
+		cleaned_groups = get_cleaned_group_data(groups_with_member, db_session)
 
-		# Get all groups that user is a member of
-		cur.execute('select group_id, group_owner from group_to_user where user_id=?', (user_id, ))
-
-		group_names = cur.fetchall()
-
-		# Get information about those groups
-		cleaned_data = []
-		for group_name in group_names:
-			cur.execute('select * from \"group\" where group_id=? and owner_id=?', (group_name[0], group_name[1]))
-			data = cur.fetchall()
-			cleaned_data += get_cleaned_group_data(data, cur)
-
-		return list(set(cleaned_data))
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+		db_session.close()
+		return cleaned_groups
+	except NoResultFound:
+		db_session.close()
 		return None
-
-	finally:
-		if con:
-			con.close()
 
 def change_description(username, groupId, groupOwner, desc):
 	'''
@@ -2398,27 +2381,24 @@ def change_description(username, groupId, groupOwner, desc):
 		:param desc: Description to change to
 		:return Error: <error>
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-
-		cur = con.cursor()
-
 		if username != groupOwner:
 			return "You can only change description of group that you own!"
 
-		cur.execute('update "group" set description = ? where owner_id = ? and group_id = ?', (desc, groupOwner, groupId))
-		con.commit()
+		group = db_session.query(models.Group).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).one()
 
+		group.description = desc
+
+		db_session.commit()
+		db_session.close()
 		return None
-		
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return e.args[0]
+	except Exception as ex:
+		db_session.close()
+		return ex
 
-	finally:
-		if con:
-			con.close()
 def get_group_by_id(groupOwner, groupId):
 	'''
 		Gets a group information by group id ( REST API option).
@@ -2427,39 +2407,32 @@ def get_group_by_id(groupOwner, groupId):
 		:param groupId: ID of group to be searched for
 		:return Group: [Information about group (see REST API in Help section)]
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		# Get information about group
-		cur = con.cursor()
-		cur.execute('select description, owner_id, name, group_id from \"group\" where owner_id = ? and group_id=?', (groupOwner, groupId));
+	# Get the group
+	group = db_session.query(models.Group).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).first()
 
-		data = cur.fetchall()
-
-		cleaned_data = []
-
-		# Remove group owner's name from member's list to display in UI
-		initial_members = get_group_members(groupOwner, groupId)
-		members = []
-
-		for member in initial_members:
-			if member != groupOwner:
-				members.append(member)
-
-		# Get members of the group 
-		for row in data:
-			tuple_list = (str(row[0]), members, str(row[1]), str(row[2]), str(row[3]))
-			cleaned_data.append(tuple_list)
-
-		return cleaned_data
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	# If no group is found, return
+	if group == None:
 		return None
 
-	finally:
-		if con:
-			con.close()
+	cleaned_data = []
+
+	# Remove group owner's name from member's list to display in UI
+	initial_members = get_group_members(groupOwner, groupId)
+	members = []
+
+	# Get all member names
+	for member in initial_members:
+		if member.user_id != groupOwner:
+			members.append(member.user_id)
+
+	# Combine group with members of group
+	cleaned_tuple = (group.description, members, group.owner_id, group.name, group.group_id)
+
+	db_session.close()
+	return [cleaned_tuple]
 
 def get_group(group_owner, groupId):
 	'''
@@ -2469,41 +2442,34 @@ def get_group(group_owner, groupId):
 		:param groupId: ID of groupId
 		:return Group: [information of group]
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		cur = con.cursor()
-		cur.execute('select description, owner_id, name, group_id from \"group\" where group_id=? and owner_id=?', (groupId, group_owner));
+	# Get the group
+	group = db_session.query(models.Group).filter(models.Group.group_id == groupId).filter(models.Group.owner_id == group_owner).first()
 
-		data = cur.fetchall()
-
-		if len(data) == 0:
-			return None
-
-		cleaned_data = {}
-		# Get group members and graphs in group etc
-		for row in data:
-			cleaned_data['members'] = get_group_members(group_owner, groupId)
-			cleaned_data['owner'] = str(row[1])
-			cleaned_data['group_id'] = str(row[3])
-			cleaned_data['description'] = str(row[0])
-			cur.execute('select graph_id from group_to_graph where group_id=? and group_owner = ?', (groupId, group_owner))
-			cleaned_data['graphs'] = []
-			graph_data = cur.fetchall()
-			if len(graph_data) > 0:
-				for graph in graph_data:
-					cleaned_data['graphs'].append(graph[0])
-
-		return cleaned_data
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	# If no group exists, return
+	if group == None:
+		db_session.close()
 		return None
 
-	finally:
-		if con:
-			con.close()
+	cleaned_data = {}
 
+	cleaned_data['members'] = get_group_members(group_owner, groupId)
+	cleaned_data['owner'] = group.owner_id
+	cleaned_data['group_id'] = group.group_id
+	cleaned_data['description'] = group.description
+
+	# Get all graph anmes for group
+	graphs = get_graphs_in_group(group.group_id, group.owner_id)
+
+	graph_names = []
+	for graph in graphs:
+		graph_names.append(graph.graph_id)
+
+	cleaned_data['graphs'] = graphs
+	db_session.close()
+	return cleaned_data
 
 def get_group_members(groupOwner, groupId):
 	'''
@@ -2513,35 +2479,22 @@ def get_group_members(groupOwner, groupId):
 		:param groupId: Group ID
 		:return Members: [Members of group]
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		# Get all members of the group
+		group_members = db_session.query(models.User).filter(models.User.user_id == models.GroupToUser.user_id).filter(models.GroupToUser.group_owner == groupOwner).filter(models.GroupToUser.group_id == groupId).all()
 
-		cur = con.cursor()
-		cur.execute('select user_id from group_to_user where group_owner = ? and group_id=?', (groupOwner, groupId));
+		# Also get owns of the group as well since owners are technically members of the group too
+		group_members += db_session.query(models.User).filter(models.User.user_id == models.GroupToUser.user_id).filter(models.GroupToUser.group_owner == groupOwner).filter(models.GroupToUser.group_id == groupId).all()
 
-		data = cur.fetchall()
+		db_session.close()
+		return group_members
 
-		# Get all members and clean up the data
-		cleaned_data = []
-		for member in data:
-			cleaned_data.append(str(member[0]))
-
-		# If user is owner of the group, they can also see the graph!
-		cur.execute('select owner_id from "group" where owner_id = ? and group_id=?', (groupOwner, groupId));
-		data = cur.fetchall()
-
-		for owner in data:
-			cleaned_data.append(str(owner[0]))
-
-		return cleaned_data
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	except NoResultFound:
+		db_session.close()
 		return None
-
-	finally:
-		if con:
-			con.close()
 
 def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	'''
@@ -2556,7 +2509,7 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
 	if len(groups) > 0:
 		for group in groups:
-			members = get_group_members(group[1], group[0])
+			members = get_group_members(group.owner_id, group.group_id)
 	        if logged_in_user in members:
 	            return True
 
@@ -2571,69 +2524,69 @@ def remove_group(owner, group):
 		:return <result
 	'''
 
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Get group
+	group_get = db_session.query(models.Group).filter(models.Group.owner_id == owner).filter(models.Group.group_id == group).first()
+
+	if group_get == None:
+		return "Group not found"
+
+	# Delete group
+	db_session.delete(group_get)
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get group to graph 
+		group_to_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == group).filter(models.GroupToGraph.group_owner == owner).all()
 
-		# If there is a group with this owner, then remove it from the server
-		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group, ));
+		# Delete entry from group to graph
+		for gg in group_to_graph:
+			db_session.delete(gg)
+	except NoResultFound:
+		print 'nothing found'
 
-		data = cur.fetchone()
-		if data == None:
-			return "Group not found!"
+	try:
+		# Get group to user 
+		group_to_user = db_session.query(models.GroupToUser).filter(models.GroupToUser.group_id == group).filter(models.GroupToUser.group_owner == owner).all()
 
-		if data[0] == None:
-			return "Can't remove group"
-		else:
-			# Remove metadata from tables
-			cur.execute('delete from \"group\" where owner_id=? and group_id=?', (owner, group, ))
-			cur.execute('delete from group_to_graph where group_owner=? and group_id=?', (owner, group))
-			cur.execute('delete from group_to_user where group_owner = ? and group_id=?', (owner, group))
-			con.commit();
-			return "Successfully deleted " + group + " owned by " + owner + "."
+		# Delete entry from group to user
+		for gu in group_to_user:
+			db_session.delete(gu)
+	except NoResultFound:
+		print 'nothing found'
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
+	db_session.commit()
+	db_session.close()
+	return "Successfully deleted " + group + " owned by " + owner + "."
 
-	finally:
-		if con:
-			con.close()
-
-def create_group(username, group):
+def create_group(username, groupId):
 	'''
 		Inserts a uniquely named group under a username.
 
 		:param owner: Owner of group
-		:param group: Group ID
+		:param groupId: Group ID
 		:return <result>
 	'''
 
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		# Check to see if there is a group under the username already 
-		cur.execute('select group_id from \"group\" where group_id=? and owner_id=?', (group, username));
-		data = cur.fetchone()
+	group = db_session.query(models.Group).filter(models.Group.group_id == cleanGroupName(groupId)).filter(models.Group.owner_id == username).first()
 
-		# If no group exists, insert into database
-		if data == None:
-			cur.execute('insert into \"group\" values(?, ?, ?, ?, ?, ?)', (cleanGroupName(group), group, username, "", 0, 1))
-			con.commit()
-			return [group, cleanGroupName(group)]
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	# Group already exists in database
+	if group != None:
+		db_session.close()
 		return None
 
-	finally:
-		if con:
-			con.close()
+	# Create new group
+	new_group = models.Group(group_id = cleanGroupName(groupId), name = groupId, owner_id = username, description = "", public = 0, unlisted = 1)
+
+	# Add to database
+	db_session.add(new_group)
+	db_session.commit()
+	db_session.close()
+	return [groupId, cleanGroupName(groupId)]
 
 def cleanGroupName(groupName):
 	'''
@@ -2653,41 +2606,31 @@ def groups_for_user(username):
 		:param username: Email of user
 		:return Groups: [groups]
 	'''
-	con = None
+	# Create database connection
+	db_session = data_connection.new_session()
+	cleaned_group_data = []
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get all groups that the user is a member of
+		member_of_groups = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == username).all()
 
-		#TODO: add what a user can see as well (ie has access to)
-		# Get groups that the user is a member of
-		cur.execute('select group_id, group_owner from group_to_user where user_id=?', (username, ))
+		for group in member_of_groups:
+			cleaned_group_data.append({"groupId": group.group_id, "group_owner": group.group_owner})
 
-		data = cur.fetchall()
+	except NoResultFound:
+		print "User is not a member of any groups"
 
-		cleaned_data=[]
-		for groups in data:
-			groups = {"groupId": str(groups[0]), "group_owner": str(groups[1])}
-			cleaned_data.append(groups)
+	try:
+		# Get all groups that the user owns
+		owned_groups = db_session.query(models.Group).filter(models.Group.owner_id == username).all()
 
-		# Get all the groups that the user owns as well
-		cur.execute('select group_id from \"group\" where owner_id=?', (username, ))
+		for group in owned_groups:
+			cleaned_group_data.append({"groupId": group.group_id, "group_owner": group.owner_id})
 
-		data = cur.fetchall()
+	except NoResultFound:
+		print "User is not an owner of any groups"
 
-		for groups in data:
-			groups = {"groupId": str(groups[0]), "group_owner": username}
-			cleaned_data.append(groups)
-
-		return cleaned_data
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
+	db_session.close()
+	return cleaned_group_data
 
 def find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
 	initial_graphs_with_edges = []
@@ -2811,71 +2754,110 @@ def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, wor
 	
 	return intial_graph_names
 
-def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, cur):
+def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, db_session, groupOwner, groupId):
+
+	# If it is a search type that is not recognized, return empty list
+	if search_type != 'partial_search' and search_type !=  'full_search':
+		return []
+
+	# Make into list if it is not a lsit
+	if not isinstance(search_terms, list):
+		search_terms = search_terms.split(',')
+
+	# If there are any search terms
+	if len(search_terms) > 0:
+
+		# List to keep track of all matched graphs
+		initial_graphs_from_search = []
+
+		# Get connection to database
+		data_session = data_connection.new_session()
+
+		# Go through each search term, aggregating 
+		# all graphs that match the specific search term
+		for search_word in search_terms:
+			# matched_graphs contains a list of all graphs that match the specific search term
+			matched_graphs = []
+			# First, we check to see if there are any graphs that have a graph name that matches the search term
+			matched_graphs += find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+
+			# ":" indicates that search_word may be an edge
+			if ':' in search_word:
+				# append all graphs that contain an edge which matches the search_word
+				matched_graphs += find_all_graphs_containing_edges_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+			# otherwise append all graphs that contain a node which matches the search word
+			else:
+				matched_graphs += find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+
+			# Go through all matched graphs
+			# If there is a graph that appears multiple times in the list
+			# combine their result.
+			# Effectively, a graph may appear at most one time for each search word
+			matched_graphs = combine_similar_graphs(matched_graphs)
+
+			# Add condensed tuples to list of graphs matched
+			initial_graphs_from_search += matched_graphs 
+
+		# Go through and count the list of occurrences of matched graph
+		graph_repititions = defaultdict(int)
+
+		# Counting the number of occurences
+		for graph_tuple in initial_graphs_from_search:
+			key = graph_tuple[0] + graph_tuple[4]
+			graph_repititions[key] += 1
+
+		# Go through and aggregate all graph together
+		graph_mappings = defaultdict(list)
+
+		# If the number of times a graph appears matches the number of search terms
+		# it is a graph we want (simulating the and operator for all search terms)
+		for graph_tuple in initial_graphs_from_search:
+			key = graph_tuple[0] + graph_tuple[4]
+
+			graph_tuple = list(graph_tuple)
+
+			# Placeholder for tags of the graph
+			graph_tuple.insert(1, "")
+
+			# Graph matches all search terms
+			if graph_repititions[key] == len(search_terms):
+
+				# If we haven't seen this graph yet 
+				if key not in graph_mappings:
+					graph_mappings[key] = tuple(graph_tuple)
+				else:
+					# Combine result of previous tuple
+					old_tuple = list(graph_mappings[key])
+
+					# If there is already a matching node/edge id
+					if len(old_tuple[2]) > 0 and len(graph_tuple[2]) > 0:
+						old_tuple[2] += ", " + graph_tuple[2]
+						old_tuple[3] += ", " + graph_tuple[3]
+					# Otherwise, simply insert this graph tuples id
+					else:
+						old_tuple[2] += graph_tuple[2]
+						old_tuple[3] += graph_tuple[3]
+
+					graph_mappings[key] = tuple(old_tuple)
+
+		# Go through all the graphs and insert tags for the graphs that match all search terms
+		return graph_mappings.values()
+	else:
+		return []
+
+def find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId):
+
+	matched_graphs = []
+	# Return all graphs that have a graph name that partially matches the search word
+	if search_type == 'partial_search':
 	
-	intial_graphs_from_search = []
 
-	for word in search_terms:
-		matched_graphs = find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur)
-		if ':' in word:
-			matched_graphs += find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
-		else:
-			matched_graphs += find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur)
-				
+	# Return all graphs that have a gaph name that exactly matches the search word
+	elif search_type == 'full_search':
+		matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
 
-		matched_graphs = add_unique_nodes_to_list(matched_graphs)
-		intial_graphs_from_search += matched_graphs
+	return matched_graphs
 
-	# After all the SQL statements have ran for all of the search_terms, count the number of times
-	# a graph appears in the initial list. If it appears as many times as there are 
-	# search terms, then that graph matches all the tag terms and it should be returned
-	graph_repititions = defaultdict(int)
-	graph_mappings = defaultdict(list)
-	# Counting the number of occurences
-	for graph_tuple in intial_graphs_from_search:
-		graph_repititions[graph_tuple[0] + graph_tuple[4]] += 1
-
-	for graph_tuple in intial_graphs_from_search:
-		graph_list = graph_mappings.get(graph_tuple[0] + graph_tuple[4], [])
-		graph_list.append(graph_tuple)
-		graph_mappings[graph_tuple[0] + graph_tuple[4]] = graph_list
-
-	# If value appears the number of times as there are tags, 
-	# then append that to the actual list of graphs to be returned.
-	actual_graphs_for_searches = []
-	for key, value in graph_repititions.iteritems():
-		if value >= len(search_terms):
-			key_tuples = graph_mappings[key]
-			ids_and_labels = []
-			labels = []
-
-			# Gather all the id's and labels that are part of the same graph 
-			# that is being searched for and make them into one tuple
-			for key_tuple in key_tuples:
-				key_with_search = list(key_tuple)
-				ids_and_labels.append(str(key_tuple[1]))
-				labels.append(str(key_tuple[2]))
-			id_string = ""
-			if len(ids_and_labels) > 0:
-				for ids in ids_and_labels:
-					id_string = id_string + ids.strip() + ','
-
-				id_string = id_string[:len(id_string) - 1]
-				label_string = ""
-				for label in labels:
-					label = label.replace('-', ':')
-					label_string = label_string + label.strip() + ','
-
-				label_string = label_string[:len(label_string) - 1]
-				key_with_search = list(key_tuples[0])
-				key_with_search.insert(1, "")
-				key_with_search[2] = id_string
-				key_with_search[3] = label_string
-				key_with_search = tuple(key_with_search)
-				actual_graphs_for_searches.append(key_with_search)
-
-	# Return whole dictionary of matchin graphs
-	return actual_graphs_for_searches
 
 def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, cur):
 
@@ -2924,8 +2906,11 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		:param tag_terms: Tags to be searched for in graphs
 		:return Graphs: [graphs]
 	'''
-	con = None
 
+	# Get connection to databse
+	data_session = data_connection.new_session()
+
+	# Set search type
 	search_type = None
 
 	if 'partial_search' in request.GET:
@@ -2937,37 +2922,46 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	tag_terms = request.GET.get('tags') or request.GET.get('tag')
 	order_by = request.GET.get('order')
 
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	graph_data = []
 
-		if search_terms and tag_terms:
-			return []
+	# If both a tag term and search term are entered
+	if search_terms and tag_terms and len(search_terms) > 0 and len(tag_terms) > 0:
+		actual_graphs = []
 
-		elif search_terms:
-			graph_data = search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms.split(','), cur)
+		# Get all graphs that contain all the search terms
+		uid, search_type, search_word, view_type, group_id, group_owner, db_session
+		search_result_graphs = search_result_for_graphs_in_group(uid, search_type, search_terms.split(","), view_type, group_id, group_owner, db_session, groupOwner, groupId)
+		
+		# Get all graphs that contain all the tag terms
+		tag_result_graphs = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), db_session)
 
-		elif tag_terms:
-			graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), cur)
+		tag_graphs = [x[0] for x in tag_result_graphs]
+		actual = [x[0] for x in actual_graphs]
 
-		else:
-			cur.execute('select g.graph_id, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where exists ( select * from group_to_graph as gg where gg.group_owner= ? and g.user_id = gg.user_id and gg.group_id = ? and gg.graph_id = g.graph_id)', (groupOwner, groupId))
-			graph_data = cur.fetchall()
+		# If it is not already part of final graphs returned, add it in
+		for graph in search_result_graphs:
+			if graph[0] in tag_graphs and graph[0] not in actual:
+				actual_graphs.append(graph)
 
-		if order_by:
-			graph_data = order_information(order_by, search_terms, graph_data)
-		else:
-			graph_data = order_information("modified_descending", search_terms, graph_data)
+		graph_data = actual_graphs
 
-		return graph_data
+	# If only search terms are entered
+	elif search_terms:
+		graph_data = search_result_for_graphs_in_group(uid, search_type, search_terms.split(","), view_type, group_id, group_owner, db_session, groupOwner, groupId)
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
+	# If only tag terms are entered
+	elif tag_terms:
+		graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), db_session)
+	else:
 
-	finally:
-		if con:
-			con.close()
+
+	# If user wants to sort the data
+	if order_by:
+		graph_data = order_information(order_by, search_terms, graph_data)
+	else:
+		graph_data = order_information("modified_descending", search_terms, graph_data)
+
+	return graph_data
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
@@ -2979,31 +2973,29 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 		:return group_info: [{group_name: <name of group>, "graph_shared": boolean}]
 	'''
 	group_info = []
+
+	# Get all groups that the user is a member of or owns
 	groups = get_groups_of_user(graphowner) + get_all_groups_with_member(graphowner)
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
 
-		# For all groups user is a part of, indicate whether specified graph is shared with that group
-		for group in groups:
-			cur.execute('select * from group_to_graph where group_id = ? and group_owner=? and user_id = ? and graph_id = ?', (group[6], group[2], graphowner, graphname))
-			is_shared = cur.fetchone()
+	# Get connection to database
+	db_session = data_connection.new_session()
+	# Determine if a graph is shared with a specific group
+	for group in groups:
+		group_name = group[0]
+		group_id = group[6]
+		group_owner = group[2]
 
-			if is_shared == None:
-				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": False})
-			else:
-				group_info.append({"group_name": group[0], "group_owner": group[2], "group_id": group[6], "graph_shared": True})
+		# Check if graph is shared with this group
+		is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graphname).filter(models.GraphToTag.user_id == graphowner).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).first()
 
-		return group_info
+		# If it is not shared, then set "graph_shared" to False
+		if is_shared_with_group == None:
+				group_info.append({"group_name": group_name, "group_owner": group_owner, "group_id": group_id, "graph_shared": False})
+		else:
+				group_info.append({"group_name": group_name, "group_owner": group_owner, "group_id": group_id, "graph_shared": True})
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
+	db_session.close()
+	return group_info
 
 def updateSharingInformationForGraph(owner, gid, groups_to_share_with, groups_not_to_share_with):
 	'''
@@ -3029,80 +3021,82 @@ def add_user_to_group(username, owner, group):
 		:param group: Group ID
 		:return <Status>
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		cur.execute('select user_id from user where user_id=?', (username, ))
+	user = db_session.query(models.User).filter(models.User.user_id == username).first()
 
-		data = cur.fetchone()
-		if data == None:
-			return "User does not exist!"
+	if user == None:
+		db_session.close()
+		return "User does not exist!"
 
-		# If user exists and the owner of the group is issuing the request, then add the user to the group
-		cur.execute('select group_id from group_to_user where user_id=? and group_id=?', (owner, group, ))
-		isMember = cur.fetchone()
+	# Is user a member of the group
+	isMember = db_session.query(models.GroupToUser.user_id).filter(models.GroupToUser.user_id == username).filter(models.GroupToUser.group_id == group).filter(models.GroupToUser.group_owner == owner).first()
 
-		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group))
-		isOwner = cur.fetchone()
+	if isMember == None:
+		db_session.close()
+		return username + " is not a member of this group."
 
-		if isMember != None or isOwner != None:
-			cur.execute('insert into group_to_user values(?, ?, ?)', (group, owner, username))
-			con.commit();
-			return "Successfully added user " + username + " to " + group + "."
-		else:
-			return "Become the owner/member of this group first!"
+	# Is user an owner of the group
+	isOwner = db_session.query(models.Group.owner_id).filter(models.Group.owner_id == owner).filter(models.Group.group_id == group).first()
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
+	if Owner == None:
+		db_session.close()
+		return "Group does not exist"
 
-	finally:
-		if con:
-			con.close()
+	message = ""
 
-def remove_user_from_group(username, owner, group):
+	# User must be an owner of a member of a group to add members to i
+	if isMember or isOwner:
+		new_group_member = models.GroupToUser(group_id = group, group_owner = owner, user_id = username)
+		db_session.add(new_group_member)
+		db_session.commit()
+		message = "Successfully added user " + username + " to " + group + "."
+	else:
+		message = "Become the owner or a member of this group first!"
+
+	print message, "TESTING"
+	db_session.close()
+	return message
+
+def remove_user_from_group(username, owner, groupId):
 	'''
 		Removes user from group.
 
 		:param username: User to remove
 		:param owner: Owner of group
-		:param group: Group ID
+		:param groupId: Group ID
 		:return <status>
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
 
-		cur.execute('select user_id from user where user_id=?', (username, ))
-		data = cur.fetchone()
+	# Create database connection
+	db_session = data_connection.new_session()
 
+	# Check to see if user exists
+	user = db_session.query(models.User).filter(models.User.user_id == username).first()
 
-		if data == None:
-			return "User does not exist!"
+	if user == None:
+		db_session.close()
+		return "User does not exist!"
 
-		# If user exists and they are owner of the group, delete the requested username from the group
-		data = data[0]
-		cur.execute('select owner_id from \"group\" where owner_id=? and group_id=?', (owner, group, ))
-		isOwner = cur.fetchone()
-		if isOwner != None:
-			isOwner = isOwner[0]
-			cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
-			cur.execute('delete from group_to_graph where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
-			con.commit();
-			return "Successfully removed user " + username + " from " + group + "."
-		else:
-			return "Can't delete user from a group you are not the owner of!"
+	# Check to see if group exists
+	group = db_session.query(models.Group).filter(models.Group.group_id == groupId).filter(models.Group.owner_id == owner).first()
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
+	if group == None:
+		db_session.close()
+		return "Group does not exist!"
 
-	finally:
-		if con:
-			con.close()
+	# Check to see if member in that group actually exists
+	group_member = db_session.query(models.GroupToUser).filter(models.GroupToUser.group_id == groupId).filter(models.GroupToUser.group_owner == owner).first()
+
+	if group_member == None:
+		db_session.close()
+		return "Group member does not exist"
+
+	db_session.delete(group_member)
+	db_session.commit()
+	db_session.close()
+	return "Successfully removed user " + username + " from " + group + "."
 
 def remove_user_through_ui(username, owner, group):
 	'''
@@ -3113,29 +3107,7 @@ def remove_user_through_ui(username, owner, group):
 		:param group: Group ID
 		:return <status>
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute('select user_id from user where user_id=?', (username, ))
-		data = cur.fetchone()
-
-		if data == None:
-			return "User does not exist!"
-
-		cur.execute('delete from group_to_user where user_id=? and group_id=? and group_owner=?', (username, group, owner))
-		cur.execute('delete from group_to_graph where user_id=? and group_id=? and group_owner = ?', (username, group, owner))
-		con.commit();
-		return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
+	return remove_user_from_group(username, owner, group)
 
 def share_graph_with_group(owner, graph, groupId, groupOwner):
 	'''
@@ -3147,41 +3119,30 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 		:param groupOwner: Group Owner
 		:return <status>
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Get graph
+	graph_exists = get_graph(owner, graph)
 
-		# Get graph information ** MUST ALREADY EXIST IN GRAPHSPACE **
-		cur.execute('select * from graph where user_id=? and graph_id=?', (owner, graph))
-		data = cur.fetchone()
-		if data == None:
-			return 'Graph does not exist'
+	if graph_exists == None:
+		return "Graph does not exist"
 
-		isOwner = data[0]
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		# If there is a graph for the owner, then we add that graph to the group that a user is a part of (user or member)
-		if isOwner != None:
-			cur.execute('select user_id from group_to_user where user_id=? and group_id=? and group_owner=?', (owner, groupId, groupOwner))
-			isMember = cur.fetchone()
-			cur.execute('select owner_id from \"group\" where owner_id = ? and group_id = ?', (groupOwner, groupId))
-			isOwner = cur.fetchone()
-			# If the query returns, it means that the owner is a member of that group
-			if isMember != None or isOwner != None:
-				cur.execute('insert into group_to_graph values(?, ?, ?, ?)', (groupId, groupOwner, owner, graph))
-				con.commit()
-				return None
-			else:
-				return "You are not a member of this group!"
-		else:
-			return "You don't own this graph!"
+	# Is a user a member of the group trying to share graph with
+	group_member = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == owner).filter(models.GroupToUser.group_id == groupId).filter(models.GroupToUser.group_owner == groupOwner).first()
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	# Is a user the owner of a group
+	group_owner = db_session.query(models.Group.owner_id).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).first()
 
-	finally:
-		if con:
-			con.close()
+	# If they're an owner or a group member, they can add graph to the group
+	if group_owner != None or group_member != None:
+		new_shared_graph = models.GroupToGraph(group_id = groupId, group_owner = groupOwner, user_id = owner, graph_id = graph)
+
+		db_session.add(new_shared_graph)
+		db_session.commit()
+
+	db_session.close()
+	return None
 
 def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 	'''
@@ -3193,31 +3154,29 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 		:param groupOwner: Group Owner
 		:return <status>
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
 
-		# Get the graph that the user supposedly owns
-		cur.execute('select user_id from graph where user_id=? and graph_id=?', (owner, graph, ))
-		graph_owner = cur.fetchone()
-		cur.execute('select user_id from group_to_graph where graph_id=? and user_id=? and group_id=? and group_owner = ?', (graph, owner, groupId, groupOwner))
-		graph_in_group = cur.fetchone()
-		if graph_owner != None and graph_in_group != None:
-			cur.execute('delete from group_to_graph where group_id=? and group_owner=? and graph_id=? and user_id=?', (groupId, groupOwner, graph, owner))
-			con.commit()
-			return None
-		else:
-			return "You don't own this graph or graph isn't shared with the group yet!"
+	# Get graph
+	graph_exists = get_graph(owner, graph)
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
+	if graph_exists == None:
+		return "Graph does not exist!"
 
-	finally:
-		if con:
-			con.close()
+	# Create database connection
+	db_session = data_connection.new_session()
 
+	# Is this graph already shared with the group?
+	is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).first()
+
+	# If graph is not shared with group
+	if is_shared_with_group == None:
+		db_session.close()
+		return "Can't unshare a graph that is not currently shared with the group"
+
+	# Unshare the graph
+	db_session.delete(is_shared_with_group)
+	db_session.commit()
+	db_session.close()
+	return None
 
 # ---------------- END REST API ------------------------------
 
@@ -3229,33 +3188,39 @@ def view_graphs_of_type(view_type, username):
 		:param username: Name of user
 		:return Graphs: [graphs]
 	'''
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	graphs = []
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Select graphs depending on view_type
+	if view_type == "public":
+		# Get all public graphs
+		try:
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.public == 1).all()
+		except NoResultFound:
+			print "No public graphs"
 
-		# Select graphs depending on view type.
-		if view_type == 'public':
-			cur.execute('select distinct g.graph_id, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.public = 1')
-		elif view_type == 'shared':
-			cur.execute('select distinct g.graph_id, "" as placeholder, datetime(g.modified), g.user_id, g.public from group_to_graph as gg, group_to_user as gu, graph as g where g.graph_id = gg.graph_id and gu.user_id=? and gu.group_id = gg.group_id', (username, ))
-		else:
-			cur.execute('select distinct g.graph_id, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g where g.user_id = ?', (username, ))
+	elif view_type == "shared":
+		try:
+			# Get all shared graphs
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToUser.user_id == username).filter(models.GroupToUser.group_id == models.GroupToGraph.graph_id).all()
+		except NoResultFound:
+			print "No shared graphs"
+	else:
+		try:
+			# Get all my graphs
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.user_id == username).all()
+		except NoResultFound:
+			print "No owned graphs"
 
-		# Go through each graph and retrieve all tags associated with that graph
-		graphs = cur.fetchall()
-		
-		# Return the graph information (including tags) as a list of rows
-		return graphs
+	cleaned_graphs = []
+	for graph in graphs:
+		cleaned_graph = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
+		cleaned_graphs.append(cleaned_graph)
 
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return []
-
-	finally:
-		if con:
-			con.close()
+	db_session.close()
+	return cleaned_graphs
 
 def get_graphs_for_tags(cur, username, tags):
 	'''
@@ -3278,173 +3243,6 @@ def get_graphs_for_tags(cur, username, tags):
 
 	return graphs
 
-def get_graph_info(username, tags):
-	'''
-		Gets graph information about a graph that the user owns having certain tags.
-
-		:param username: Email of user
-		:param tags: Tags of graph to filter
-		:return Graph: [graph information]
-	'''
-
-	graphs = []
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		if tags:
-			all_tag_graphs = get_all_graphs_for_tags(tags)
-			for item in all_tag_graphs:
-				cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g, graph_to_tag as gt where g.graph_id=gt.graph_id and g.user_id=? and gt.graph_id=?', (username, item))
-				data = cur.fetchall()
-				if data != None:
-					for thing in data:
-						if thing[0] in all_tag_graphs and thing not in graphs:
-							graphs.append(thing)
-		else:
-			cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g where g.user_id=?', (username, ))
-			graphs = cur.fetchall()
-
-		if graphs == None:
-			return None
-		
-		cleaned_graph = []
-		for graph in graphs:
-			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
-			tags = cur.fetchall()
-			cleanedtags = []
-
-			for tag in tags:
-				cleanedtags.append(str(tag[0]))
-
-			graph_list = list(graph)
-			if len(cleanedtags) > 0:
-				graph_list.insert(1, cleanedtags)
-				cleaned_graph.append(tuple(graph_list))
-			else:
-				graph_list.insert(1, "")
-				cleaned_graph.append(tuple(graph_list))
-
-		if cleaned_graph != None:
-			return cleaned_graph
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
-def get_public_graph_info(tags):
-	'''
-		Get all public graphs that contain the following tags.
-
-		:param tags: Tags to match the graphs to
-		:return Graphs: [graphs with tags]
-	'''
-
-	con = None
-	graphs = []
-	try:
-		con = lite.connect(DB_NAME)
-
-		cur = con.cursor()
-		if tags:
-			all_tag_graphs = get_all_graphs_for_tags(tags)
-
-			for item in all_tag_graphs:
-				cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g where g.public = ? and g.graph_id=?', (1, item))
-				data = cur.fetchall()
-				if data != None:
-					for thing in data:
-						if thing[0] in all_tag_graphs and thing not in graphs:
-							graphs.append(thing)
-		else:
-			cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g where g.public=?', (1, ))
-			graphs = cur.fetchall()
-
-		if graphs == None:
-			return None
-		
-		cleaned_graph = []
-		for graph in graphs:
-			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
-			tags = cur.fetchall()
-			cleanedtags = []
-
-			for tag in tags:
-				cleanedtags.append(str(tag[0]))
-
-
-			if len(cleanedtags) > 0:
-				# for tag in tags:
-				graph_list = list(graph)
-				graph_list.insert(1, cleanedtags)
-				cleaned_graph.append(tuple(graph_list))
-
-		if len(cleaned_graph) > 0:
-			return cleaned_graph
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
-def get_all_graph_info(tags):
-	'''
-		Gets all the information about a graph that user owns that matches the tags.
-
-		:param tags: Tags that the user owns
-		:return Graphs: [graphs with tags]
-	'''
-
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-
-		cur = con.cursor()
-		cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from graph as g')
-		graphs = cur.fetchall()
-		if graphs == None:
-			return None
-		cleaned_graph = []
-		for graph in graphs:
-			cur.execute('select tag_id from graph_to_tag where graph_id=? and user_id=?', (graph[0], graph[2]))
-			tags = cur.fetchall()
-			cleanedtags = []
-
-			for tag in tags:
-				cleanedtags.append(str(tag[0]))
-
-
-			if len(cleanedtags) > 0:
-				# for tag in tags:
-				graph_list = list(graph)
-				graph_list.insert(1, cleanedtags)
-				cleaned_graph.append(tuple(graph_list))
-
-		if cleaned_graph != None:
-			return cleaned_graph
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
-
 def is_public_graph(username, graph):
 	'''
 		Checks to see if a given graph for a user is public.
@@ -3454,32 +3252,18 @@ def is_public_graph(username, graph):
 		:return boolean: True if public graph
 	'''
 
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Get the graph
+	graph = get_graph(username, graph)
 
-		# If there is a graph with the username and graph, return if it is public or not
-		cur.execute('select public from graph where user_id=? and graph_id=?', (username, graph))
-		public = cur.fetchone()
-
-		if public == None:
-			return None
-
-		public = public[0]
-		
-		if public == 1:
-			return True
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+	# If no graph is found, return None
+	if graph == None:
 		return None
 
-	finally:
-		if con:
-			con.close()
+	# Return true if public, false otherwise
+	if graph.public == 1:
+		return True
+	else:
+		return False
 
 def get_all_groups_for_this_graph(uid, graph):
 	'''
@@ -3490,33 +3274,17 @@ def get_all_groups_for_this_graph(uid, graph):
 		:return Groups: [groups]
 	'''
 
-	con = None
+	# Get database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute('select group_id, group_owner from group_to_graph where graph_id=? and user_id=?', (graph, uid))
-		graphs = cur.fetchall()
-
-		if graphs == None:
-			return None
-		
-		cleaned_graphs = []
-		if graphs != None:
-			for graph in graphs:
-				cleaned_graphs.append((str(graph[0]), str(graph[1])))
-			
-			return cleaned_graphs
-		else:
-			return None
-
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
+		# Get all groups that this graph is shared with
+		shared_groups = db_session.query(models.Group).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == uid).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.GroupToGraph.group_owner == models.Group.owner_id).all()
+		db_session.close()
+		return shared_groups
+	except NoResultFound:
+		db_session.close()
 		return None
-
-	finally:
-		if con:
-			con.close()
 
 def change_graph_visibility(isPublic, user_id, graphName):
 	'''
@@ -3526,75 +3294,24 @@ def change_graph_visibility(isPublic, user_id, graphName):
 		:param user_id ID of owner of graph
 		:param graphName name of graph to make public
 	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
 
-		cur.execute('select graph_id from graph where user_id = ? and graph_id = ?', (user_id, graphName))
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		if len(cur.fetchall()) == 0:
-			return "Graph with name " + graphName + " doesn't exist under " + user_id + '.'
+	# Get the graph
+	graph = db_session.query(models.Graph).filter(models.Graph.graph_id == graphName).filter(models.Graph.user_id == user_id).first()
 
-		cur.execute('update graph set public = ? where user_id = ? and graph_id = ?', (isPublic, user_id, graphName))
-		cur.execute('update layout set public = ? where user_id = ? and graph_id = ? and unlisted = 1', (isPublic, user_id, graphName))
-		con.commit()
+	# If it doesn't exist
+	if graph == None:
+		db_session.close()
+		return "Graph with name " + graphName + " doesn't exist under " + user_id + '.'
 
-	except lite.Error, e:
-		return 'Error %s:' % e.args[0]
-		return e.args[0]
+	# Update property
+	graph.public = int(isPublic)
 
-	finally:
-		if con:
-			con.close()
+	db_session.commit()
+	db_session.close()
 
-def is_layout_shared(layoutId, layoutOwner, uid, graphName):
-	'''
-		Returns if a specified layout is shared
-
-		:param layoutId ID of layout
-		:param layoutOwner owner of layout
-		:param uid person requesting if layout is shared
-		:param graphName graph that layout is associated with
-		:return boolean True if layout is shared with uid
-	'''
-	con = None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		graph_groups = get_all_groups_for_this_graph(uid, graphName)
-		user_groups = get_groups_of_user(layoutOwner) + get_all_groups_with_member(layoutOwner)
-
-		layout_groups = []
-
-		for graph in graph_groups:
-			for user_graph in user_groups:
-				sub_graph_info = (str(user_graph[6]), str(user_graph[2]))
-				if graph == sub_graph_info:
-					cur.execute('select layout_id from layout where layout_id=? and owner_id=? and graph_id=? and user_id=?', (layoutId, layoutOwner, graph[1], uid))
-					data = cur.fetchone()
-					sub_graph_info = list(sub_graph_info)
-					if data != None and len(data) > 0:
-						sub_graph_info.append(True)
-					else:
-						sub_graph_info.append(False)
-
-					sub_graph_info = tuple(sub_graph_info)
-
-					layout_groups.append(sub_graph_info)
-
-		if is_public_graph(uid, graphName):
-			layout_groups.append(("Public", "GraphSpace"))
-
-		return layout_groups
-	except lite.Error, e:
-		print 'Error %s:' % e.args[0]
-		return None
-
-	finally:
-		if con:
-			con.close()
 
 # Changes the name of a layout
 def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
@@ -3607,23 +3324,19 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 		:param new_layout_name: New name of layout
 		:param loggedIn: User making those changes
 	'''
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	con=None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Get the layout
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == old_layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
 
-		cur.execute('update layout set layout_name = ? where owner_id=? and graph_id = ? and layout_name = ? ', (new_layout_name, uid, gid, old_layout_name))
-		con.commit()
+	# Change the name
+	if layout != None:
+		layout.layout_name = new_layout_name
+		db_session.commit()
+		
+	db_session.close()
 
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return None
-	finally:
-		if con:
-			con.close()
-
-# Makes a layout public
 def makeLayoutPublic(uid, gid, public_layout):
 	'''
 		Makes a layout public.
@@ -3632,29 +3345,20 @@ def makeLayoutPublic(uid, gid, public_layout):
 		:param gid: Name of graph
 		:param public_layout: Name of layout
 	'''
-	con=None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		cur.execute('select public from layout where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
-		data = cur.fetchone()
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
 
-		isPublic = data[0]
-
-		if isPublic == 0:
-			cur.execute('update layout set public = 1 where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
+	if layout != None:
+		if layout.public == 1:
+			layout.public = 0
 		else:
-			cur.execute('update layout set public = 0 where owner_id=? and graph_id = ? and layout_name = ? ', (uid, gid, public_layout))
-		con.commit()
+			layout.public = 1
+		db_session.commit()
 
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return None
-	finally:
-		if con:
-			con.close()
-# Saves layout of a specified graph
+	db_session.close()
+
 def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
 	'''
 		Saves layout of specific graph.
@@ -3668,26 +3372,23 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 		:param public: Is layout public or not
 		:param unlisted: Possible deprecated
 	'''
-	con=None
-	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ?', (layout_name, owner, graph))
-		layoutExists = cur.fetchall()
+	# Checks to see if layout for graph already exists
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == graph).first()
 
-		if len(layoutExists) > 0:
-			return "Layout with this name already exists for this graph! Please choose another name."	
+	print layout
 
-		cur.execute("insert into layout values(?,?,?,?,?,?,?,?)", (None, layout_name, owner, graph, user, json, 0, 0))
-		con.commit()
-		return None
-	except lite.Error, e:
-		print "Error %s: " % e.args[0]
-		return e.args[0]
-	finally:
-		if con:
-			con.close()
+	if layout != None:
+		return "Layout with this name already exists for this graph! Please choose another name."
+
+	# Add the new layout
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = owner, graph_id = graph, user_id = user, json = json, public = public, unlisted = unlisted)
+
+	db_session.add(new_layout)
+	db_session.commit()
+	db_session.close()
 
 def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 	'''
@@ -3698,33 +3399,31 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		:param layoutToDelete: name of layout to delete
 		:param loggedIn: User that is deleting the graph
 	'''
-	con=None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-		
-		cur.execute('select layout_id from layout where layout_name = ? and owner_id = ? and graph_id = ?' , (layoutToDelete, uid, gid))
-		data = cur.fetchone()
+		# Get the specific layout
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).one()
 
-		if data:
-			cur.execute('select default_layout_id from graph where graph_id = ? and user_id = ?', (gid, uid))
-			layout_id = cur.fetchone()
+		# Get graph which may contain a layout 
+		graph = get_graph
 
-			if layout_id != None and layout_id[0] == data[0]:
-				cur.execute('update graph set default_layout_id = NULL where graph_id = ? and user_id = ?', (gid, uid))
-				con.commit()
+		if graph == None:
+			return
 
-		cur.execute('delete from layout where layout_name = ? and owner_id = ? and graph_id = ?' , (layoutToDelete, uid, gid))
-		con.commit()
+		# If layout being deleted is graphs default layout, remove both
+		if graph.default_layout_id == layout.layout_id:
+			graph.default_layout_id = None
 
-		return None
-	except lite.Error, e:
-		print "Error %s: " % e.args[0]
-		return e.args[0]
-	finally:
-		if con:
-			con.close()
+		db_session.delete(layout)
+		db_session.commit()
 
+		db_session.close()
+
+	except Exception as ex:
+		db_session.close()
+		return ex
 
 def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 	'''
@@ -3736,31 +3435,18 @@ def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 		:param loggedIn: Logged in user
 		:return Layout: [layout]
 	'''
-	con=None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.owner_id == graph_owner).filter(models.Layout.user_id == loggedIn).one()
 
-		# Get JSON of layout
-		# cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=? and user_id=?", (layout_name, graph_id, graph_owner, loggedIn))
-		cur.execute("select json, unlisted, public, user_id from layout where layout_name =? and graph_id=? and owner_id=?", (layout_name, graph_id, graph_owner))
-		data = cur.fetchone()
+		db_session.close()
+		return cytoscapePresetLayout(json.loads(layout.json))
 
-		if data == None:
-			return None
-
-		if loggedIn != data[3]:
-			if data[1] == 0 and data[2] == 0:
-				return None
-
-		return cytoscapePresetLayout(json.loads(str(data[0])))
-
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return None
-	finally:
-		if con:
-			con.close()
+	except NoResultFound:
+		db_session.close()
+		return None	
 
 def cytoscapePresetLayout(csWebJson):
 	'''
@@ -3778,13 +3464,13 @@ def cytoscapePresetLayout(csWebJson):
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
 
 	for node_position in csWebJson:
+		print node_position
 		csJson[str(node_position['id'])] = {
 			'x': node_position['x'],
 			'y': node_position['y']
 		};
 
 	return json.dumps(csJson)
-
 
 def get_all_layouts_for_graph(uid, gid):
 	'''
@@ -3794,31 +3480,22 @@ def get_all_layouts_for_graph(uid, gid):
 		:param gid: Name of graph
 		:return Layouts: [layouts of graph]
 	'''
-	con=None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).all()
 
-		cur = con.cursor()
-		cur.execute("select layout_name from layout where owner_id =? and graph_id=?", (uid, gid))
-		
-		data = cur.fetchall()
+		cleaned_layouts = []
+		for layout in layouts:
+			cleaned_layouts.append(layout.layout_name)
 
-		if data == None:
-			return None
+		db_session.close()
+		return layout
 
-		cleaned_data = []
-		for graphs in data:
-			graphs = str(graphs[0])
-			cleaned_data.append(graphs)
-
-		return cleaned_data
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return None
-	finally:
-		if con:
-			con.close()
-
+	except NoResultFound:
+		db_session.close()
+		return None	
 
 def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 	'''
@@ -3828,31 +3505,29 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 		:param gid: Name of graph
 		:param layoutId: LayoutID of the graph
 	'''
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	con=None
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-		
-		cur.execute('select unlisted from layout where owner_id=? and graph_id = ? and layout_name = ? ', (owner, gid, layoutId))
-		data = cur.fetchone()
+		layout = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).one()
 
-		isListed = data[0]
-
-		if isListed == 0:
-			cur.execute('update layout set unlisted = 1 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
+		# If the current layout is not shared with the group, share it
+		if layout.unlisted == 0:
+			layout.unlisted = 1
 		else:
-			cur.execute('update layout set unlisted = 0 where layout_name = ? and owner_id = ? and graph_id = ?', (layoutId, owner, gid))
-			cur.execute('update graph set default_layout_id=NULL where graph_id = ? and user_id = ?', (gid, owner))
+			# If it is shared, then unshare it
+			layout.unlisted = 0
 
-		con.commit()
-		
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
+			# If layout was the default graph layout, then we have to clear that entry
+			graph = get_graph(uid, gid)
+			graph.default_layout_id = None
+
+		db_session.commit()
+		db_session.close()	
+
+	except NoResultFound:
+		db_session.close()
 		return None
-	finally:
-		if con:
-			con.close()
 
 # Gets my layouts for a graph
 def get_my_layouts_for_graph(uid, gid, loggedIn):
@@ -3864,31 +3539,24 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 		:param loggedIn: Current user of graphspace
 		:return Layouts: [my layouts of graph]
 	'''
-	con=None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		# Get all layouts for graph that user created
+		layouts = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.unlisted == 0).filter(models.Layout.public == 0).all()
 
-		# Get my layouts
-		cur = con.cursor()
-		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and user_id=? and unlisted = 0 and public=0", (uid, gid, loggedIn))
-		
-		data = cur.fetchall()
+		cleaned_layouts = []
 
-		if data == None:
-			return None
+		for layout_name in cleaned_layouts:
+			cleaned_layouts += layout_name[0]
 
-		cleaned_data = []
-		for graphs in data:
-			graphs = str(graphs[0])
-			cleaned_data.append(graphs)
+		db_session.close()
+		return cleaned_layouts
 
-		return cleaned_data
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
+	except NoResultFound:
+		db_session.close()
 		return None
-	finally:
-		if con:
-			con.close()
 
 def get_shared_layouts_for_graph(uid, gid, loggedIn):
 	'''
@@ -3899,49 +3567,32 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 		:param loggedIn: Current user of graphspace
 		:return Layouts: [shared layouts of graph]
 	'''
-	# # Get all shared groups for this graph
-	# all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
-	# shared_graphs = []
-	# # Get all members of the shared groups
-	# for group in all_groups_for_graph:
-	# 	members = get_group_members(group[0], group[1])
-	# 	if loggedIn in members:
-	# 		for member in members:
-	# 			if loggedIn != member:
-	# 				shared_graphs += get_my_layouts_for_graph(uid, gid, member)
 
-	# return shared_graphs
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	con=None
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
+		# Get all groups this graph is shared with
 		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
 
-		for group in all_groups_for_graph:
-			members = get_group_members(group[1], group[0])
-			if loggedIn in members:
-				cur.execute("select layout_name from layout where owner_id =? and graph_id=? and unlisted=1", (uid, gid))
-				data = cur.fetchall()
+		# Get all groups that the user is a member of
+		all_groups_for_user = get_all_groups_with_member(loggedIn)
 
-				if data == None:
-					return []
+		cleaned_layout_names = []
 
-				cleaned_data = []
-				for layouts in data:
-					layouts = str(layouts[0])
-					cleaned_data.append(layouts)
+		# If the current user is a member of any groups that have current graph shared in
+		# for group in all_groups_for_graph:
+		if intersect(all_groups_for_graph, all_groups_for_user):
+			layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).all()
 
-				return cleaned_data
+			for name in layout_names:
+				cleaned_layout_names += name[0]
 
+		db_session.close()
+		return cleaned_layout_names
+	except NoResultFound:
+		db_session.close()
 		return []
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return []
-	finally:
-		if con:
-			con.close()
 
 def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 	'''
@@ -3952,63 +3603,31 @@ def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 		:param loggedIn: Current user of graphspace
 		:return Layouts: [shared layouts of graph]
 	'''
-	# # Get all shared groups for this graph
-	# all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
-	# shared_graphs = []
-	# # Get all members of the shared groups
-	# for group in all_groups_for_graph:
-	# 	members = get_group_members(group[0], group[1])
-	# 	if loggedIn in members:
-	# 		for member in members:
-	# 			if loggedIn != member:
-	# 				shared_graphs += get_my_layouts_for_graph(uid, gid, member)
 
-	# return shared_graphs
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	con=None
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# In the database, we define unlisted as the parameter to determine if a certain
+		# layout is shared within all groups that the graph is shared with and 
+		# public to determine whether everyone is allowed access to the layout.
+		# If the graph is public, all shared layouts should be public as well, therefore
+		# we collect all shared and public layouts.
+		# Note: This is done as a second-measure step and it shouldn't ever matter
+		# because all layouts are set to public when the graph is set to public
+		shared_layouts_uncleaned = db_session.query(models.Layout.layout_name).distinct(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.unlisted == 1, models.Layout.public == 1)).all()
 
-		cur.execute("select distinct layout_name from layout where owner_id =? and graph_id=? and user_id=? and (unlisted = 1 or public = 1)", (uid, gid, loggedIn))
-		
-		data = cur.fetchall()
+		# Get rid of unicode
+		shared_layouts = []
+		for shared_layout in shared_layouts_uncleaned:
+			shared_layouts.append(shared_layout[0])
 
-		if data == None:
-			return []
+		db_session.close()
+		return shared_layouts
+	except NoResultFound:
+		db_session.close()
+		return None
 
-		cleaned_data = []
-
-		for layouts in data:
-			layouts = str(layouts[0])
-			cleaned_data.append(layouts)
-		
-		return cleaned_data
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
-		return []
-	finally:
-		if con:
-			con.close()
-
-# def share_layout_with_group(layoutId, layoutOwner, graphId, groupId, groupOwner):
-
-# 	con=None
-# 	try:
-# 		con = lite.connect(DB_NAME)
-
-# 		# Get my layouts
-# 		cur = con.cursor()
-
-# 		cur.execute('insert into layout values(?, ?,?,?,?)', (layoutOwner, ))
-
-# 	except lite.Error, e:
-# 		print "Error %s: " %e.args[0]
-# 		return None
-# 	finally:
-# 		if con:
-# 			con.close()
-			
 def get_public_layouts_for_graph(uid, gid):
 	'''
 		Get public layouts for this graph.
@@ -4017,32 +3636,24 @@ def get_public_layouts_for_graph(uid, gid):
 		:param gid: Name of graph
 		:return Layouts: [public layouts of graph]
 	'''
-	con=None
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
+		public_layouts = []
 
-		# Get public layouts
-		cur = con.cursor()
-		cur.execute("select layout_name from layout where owner_id =? and graph_id=? and public=1", (uid, gid))
-		
-		data = cur.fetchall()
+		# Get all the public layouts for a specific graph
+		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
 
-		if data == None:
-			return []
+		# Go through and remove the unicode
+		for public_layout in public_layout_uncleaned:
+			public_layouts.append(public_layout[0])
 
-		# Replace any spaces with html equivalent
-		cleaned_data = []
-		for graphs in data:
-			graphs = str(graphs[0])
-			cleaned_data.append(graphs)
-
-		return cleaned_data
-	except lite.Error, e:
-		print "Error %s: " %e.args[0]
+		db_session.close()
+		return public_layouts
+	except NoResultFound:
+		db_session.close()
 		return []
-	finally:
-		if con:
-			con.close()
 
 def get_all_graphs_for_tags(tags):
 	'''
@@ -4058,42 +3669,38 @@ def get_all_graphs_for_tags(tags):
 		for i in xrange(len(tag_terms)):
 			tag_terms[i] = tag_terms[i].strip()
 
-		con=None
-		try:
-			con = lite.connect(DB_NAME)
-			cur = con.cursor()
+		# Create database connection
+		db_session = data_connection.new_session()
 
-			graphs_for_tag_list = []
-			actual_graphs_for_tags = []
-			# Search for graphs for each tag term and append them to list
-			for tag_id in tag_terms:
-				cur.execute('select distinct g.graph_id from graph as g, graph_to_tag as gt where gt.tag_id=? and g.graph_id = gt.graph_id', (tag_id, ))
-				data = cur.fetchall()
-				if data != None:
-					for item in data:
-						graphs_for_tag_list.append(item[0])
+		try:
+			graph_list = []
+			actual_graphs_for_tags_list = []
+
+			# Go through each individual tag
+			for tag in tag_terms:
+				# Get all graphs that contain the specific tag we are searching for
+				graph_list += db_session.query(models.Graph.graph_id).distinct(models.Graph.graph_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).all()
+
+			# Remove all duplicates
+			graph_list = add_unique_to_list(graph_list)
 
 			# Get number of times the graph names appear.
 			# If they appear the same number of times as the lenght of the tag terms
 			# it implicitly means that the graph has all of the tags that are being searched for.
-			# Those graphs that pass the length check are returned as having all of the tags
 			accurate_tags = Counter(graphs_for_tag_list)
 			for graph in graphs_for_tag_list:
 				if accurate_tags[graph] == len(tag_terms):
-					actual_graphs_for_tags.append(graph)
+					actual_graphs_for_tags.append(graph[0])
 
+			db_session.close()
 			return actual_graphs_for_tags
 
-		except lite.Error, e:
-			print "Error %s: " %e.args[0]
+		except NoResultFound:
+			db_session.close()
 			return None
-		finally:
-			if con:
-				con.close()
 	else:
 		return None
 
-# find all tags for a user
 def get_all_tags_for_user(username):
 	'''
 		Return all tags that a user has for their graphs.
@@ -4101,28 +3708,24 @@ def get_all_tags_for_user(username):
 		:param username: Email of user in GraphSpace
 		:return Tags: [tags]
 	'''
+	# Get database connection
+	db_session = data_connection.new_session()
 
-	con = None
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
 		# Get tags that the user has and return them
-		tags_list = []
-		cur.execute('select distinct tag_id from graph_to_tag where user_id = ?', (username, ))
-		data = cur.fetchall()
-		if data != None:
-			for item in data:
-				tags_list.append(item[0])
+		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).all()
 
-		return tags_list
+		cleaned_tag_list = []
 
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		# Get string from unicode so that I can parse it easier
+		for tag in tag_list:
+			cleaned_tag_list.append(str(tag[0]))
+
+		db_session.close()
+		return cleaned_tag_list
+	except NoResultFound:
+		db_session.close()
+		return None
 
 def get_all_tags_for_graph(graphname, username):
 	'''
@@ -4132,29 +3735,24 @@ def get_all_tags_for_graph(graphname, username):
 		:param username: Email of user in GraphSpace
 		:return Tags: [tags of graph]
 	'''
-	con = None
+	# Get database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Retrieves all tags that match a given graph
+		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
+		
+		cleaned_tag_list = []
 
-		tags_list = []
+		# Get string from unicode so that I can parse it easier
+		for tag in tag_list:
+			cleaned_tag_list.append(str(tag[0]))
 
-		# Get all tags for specified graph and return it
-		cur.execute('select distinct tag_id from graph_to_tag where user_id = ? and graph_id=?', (username, graphname))
-		data = cur.fetchall()
-
-		if data != None:
-			for item in data:
-				tags_list.append(str(item[0]))
-
-		return tags_list
-
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		db_session.close()
+		return cleaned_tag_list
+	except NoResultFound:
+		db_session.close()
+		return None
 
 def change_graph_visibility_for_tag(isPublic, tagname, username):
 	'''
@@ -4165,32 +3763,44 @@ def change_graph_visibility_for_tag(isPublic, tagname, username):
 		:param username: Email of user in GraphSpace
 		:return <Message>
 	'''
-	con = None
+	# Get database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get all the graphs that user OWNS which contain the matched tags
+		# Note: Two people using same tag don't have to worry about their 
+		# graphs changing visiblity because we only change the visibility 
+		# of the graph the person is making the request owns
 
-		graph_list = []
+		# Go through all these graphs and change their public column. 
+		# This means that they are visible or private depending on the boolean bit
+		# associated in their public column (See Graph table)
+		graph_list = db_session.query(models.Graph).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Graph.user_id == username).filter(models.Graph.graph_id == models.GraphToTag.graph_id).all()
 
-		cur.execute('select user_id from graph_to_tag where tag_id = ? and user_id = ?', (tagname, username))
-		data = cur.fetchall()
+		for graph in graph_list:
+			graph.public = isPublic
 
-		if len(data) == 0:
-			return "No graphs exist for " + username + " for tag: " + tagname + '.'
+		# Go through all these nodes for graphs and change their public column. 
+		# This means that they are visible or private depending on the boolean bit
+		# associated in their public column (See Graph table)
+		# NOTE: I had this originally, but is this even necessary?
+		node_list = db_session.query(models.Node).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Node.user_id == username).filter(models.Node.graph_id == models.GraphToTag.graph_id).all()
 
-		# Get all tags for specified graph and return it
-		cur.execute('update graph set public = ? where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (isPublic, tagname, username, tagname, username))
-		cur.execute('update node set public = ? where user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (isPublic, tagname, username, tagname, username))
-		cur.execute('update layout set public = ? where owner_id = ? and user_id in (select user_id from graph_to_tag where tag_id=? and user_id=?) and graph_id in (select graph_id from graph_to_tag where tag_id=? and user_id=?)', (username, isPublic, tagname, username, tagname, username))
+		for node_graph in node_list:
+			node_graph.public = isPublic
 
-		con.commit()
+		# Change the visibility of all the layouts that are associated with a graph
+		layout_list = db_session.query(models.Layout).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Layout.owner_id == username).filter(models.Layout.graph_id == models.GraphToTag.graph_id).all()
 
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		for layout_graph in layout_list:
+			layout_graph.public = isPublic
+
+		db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		print "No graphs that match those tags for the user"
+		db_session.close()
+		return None
 
 def delete_all_graphs_for_tag(tagname, username):
 	'''
@@ -4200,84 +3810,106 @@ def delete_all_graphs_for_tag(tagname, username):
 		:param username: Email of user in GraphSpace
 		:return <Message>
 	'''
-	con = None
+	# Create connection to database
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
+		# Get all the graphs that the user owns which match the tag
+		graph_list = db_session.query(models.Graph).filter(graph_to_tag.c.tag_id == tagname).filter(graph_to_tag.c.user_id == username).filter(models.Graph.graph_id == graph_to_tag.c.graph_id).filter(models.Graph.user_id == graph_to_tag.c.user_id).all()
 
-		graph_list = []
+		# Delete all these graphs from the graphs table
+		for graph in graph_list:
+			db_session.delete(graph)
 
-		# Get all tags for specified graph and return it
-		cur.execute('delete from graph where graph_id = (select graph_id from graph_to_tag where tag_id=? and user_id=?) and user_id = (select user_id from graph_to_tag where tag_id=? and user_id=?)', (tagname, username, tagname, username))
-		cur.execute('delete from graph_to_tag where tag_id=? and user_id=?', (tagname, username))
+		# Get all the rows in graph_to_tag that the user owns
+		delete_tags = db_session.query(models.GraphToTag).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).all()
 
-		con.commit()
+		# Delete all those rows from graph_to_tag database
+		for tag_to_delete in delete_tags:
+			db_session.delete(tag_to_delete)
+
+		db_session.commit()
+		db_session.close()
 		return "Done"
-
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+	except Exception as ex:
+		print ex
+		db_session.close()
+		return None
 
 def getGraphInfo(uid, gid):
-	con = None
+	'''
+		Returns the json, visibility, and Id of the graph.
+
+		:param uid: Owner of graph
+		:param gid: Graph Id
+
+		:return json, visibility, graph_id 
+	'''
+
+	# Create connection with database
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute('select json, public, graph_id from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
-
-		if data == None:
-			return None
-		else:
-			return data
-
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		# Retrieves json, public (visibility), and graph id of graph
+		data = db_session.query(models.Graph.json, models.Graph.public, models.Graph.graph_id).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).one()
+		db_session.close()
+		return data
+	except Exception as ex:
+		print ex
+		db_session.close()
+		return None
 
 def retrieveJSON(uid, gid):
-	con = None
+	'''
+		Retrieves JSON of graph.
+
+		:param uid: Graph owner
+		:param gid: Graph Id
+
+		:return JSON
+	'''
+	# Create connection with database
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute('select json from graph where user_id = ? and graph_id = ?', (uid, gid))
-		data = cur.fetchone()
-
-		if data == None:
-			return None
-		else:
-			return data
-
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		# Returns json if it exists, otherwise nothing
+		data =  db_session.query(models.Graph.json).filter(models.Graph.user_id == uid).filter(models.Graph.graph_id == gid).one()
+		db_session.close()
+		return data
+	except Exception as ex:
+		print "No JSON found for " + gid
+		print "Error " + ex
+		db_session.close()
+		return None
 
 def insert_user(user_id, password, activated, activate_code, public, unlisted, admin):
-	con = None
+	'''
+		Inserts user into database if they do not exist.
+
+		:param user_id: Email of user
+		:param password: Password of user
+		:param activated: Ask Murali?
+		:param activate_code: Ask Murali?
+		:param public: Ask Murali?
+		:param unlisted: Ask Murali?
+		:param admin: is user an admin?
+
+		:return None if user already exists
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
 	try:
-		con = lite.connect(DB_NAME)
-		cur = con.cursor()
-
-		cur.execute('insert into user values (?,?,?,?,?,?,?)', (user_id, password, activated, activate_code, public, unlisted, admin))
-		con.commit()
-
-	except lite.Error, e:
-			print "Error %s: " %e.args[0]
-			return None
-	finally:
-		if con:
-			con.close()
+		# Creates a new user with given information
+		new_user = models.User(user_id=user_id, password = password, activated = activated, activate_code = activate_code, public = public, unlisted = unlisted, admin = admin)
+		db_session.add(new_user)
+		db_session.commit()
+		db_session.close()
+	except Exception as ex:
+		# If user already exists, don't create another user with same email
+		print ex
+		db_session.close()
+		return None
 
 def usernameMismatchError():
 	'''

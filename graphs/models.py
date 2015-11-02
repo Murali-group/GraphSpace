@@ -36,39 +36,43 @@ Base = declarative_base()
 # primary key. 'user_id' is a foreign key referring to the 'user_id' column in 
 # the 'user' table. 'group_id' is a foreign key referring to the 'group_id' column 
 # in the 'group' table.
-group_to_user = Table('group_to_user', Base.metadata,
-            Column('user_id', String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True),
-            Column('group_id', String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True),
-            Column('group_owner', String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-        )
         
 # For each graph, this table stores the groups that the graph belongs to. 
 # Note that a graph may belong to multiple groups. 
-group_to_graph = Table('group_to_graph', Base.metadata,
-            Column('group_id', String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True),
-            Column('group_owner', String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True),
-            Column('graph_id', String, primary_key=True),
-            Column('user_id', String, primary_key=True),
-            # We need to specify this foreign key constraint outside the column 
-            # definitions since (graph_id, user_id) is a composite primary key 
-            # in the graph table.
-            ForeignKeyConstraint(['graph_id', 'user_id'], ['graph.graph_id', 'graph.user_id'], ondelete="CASCADE", onupdate="CASCADE")
-            # ForeignKeyConstraint(['group_id', 'group_owner'], ['group.group_id', 'group.group_owner'], ondelete="CASCADE", onupdate="CASCADE")
-        )
+
 # For each graph, this table stores tags that the graph has. A graph can have i
 # many tags, and a tag can belong to many graphs.
-graph_to_tag = Table('graph_to_tag', Base.metadata,
-            Column('graph_id', String, primary_key=True),
-            Column('user_id', String, primary_key=True),
-            Column('tag_id', String, ForeignKey('graph_tag.tag_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True),
-            
-            # Composite foreign key definition for Graph table. 
-            ForeignKeyConstraint(['graph_id', 'user_id'], ['graph.graph_id', 'graph.user_id'], ondelete="CASCADE", onupdate="CASCADE")
-        )
+
 
 #=================== End of Junction Tables ===================
 
 # ================== Table Definitions ===================
+class GroupToUser(Base):
+    '''The class representing the schema of the group_to_user table.'''
+    __tablename__ = 'group_to_user'
+
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+       
+
+class GroupToGraph(Base):
+    '''The class representing the schema of the group_to_graph table.'''
+    __tablename__ = 'group_to_graph'
+
+    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    user_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+
+class GraphToTag(Base):
+    '''The class representing the schema of the graph_to_tag table.'''
+    __tablename__ = 'graph_to_tag'
+
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    tag_id = Column(String, ForeignKey('graph_tag.tag_id'), primary_key=True)
+
 class User(Base):
     '''The class representing the schema of the user table.'''
     __tablename__ = 'user'
@@ -118,7 +122,7 @@ class Group(Base):
     # to 'group_to_user'. An equivalent way to link the two classes is to instead 
     # add the following line to User:
     # groups = relationship('Group', secondary=group_to_user, backref='user')
-    users = relationship('User', backref='group')
+    # users = relationship('User', backref='group')
     # # specifies many-to-many relationship with Graph table
     # graphs = relationship('Graph', backref='group')
 
@@ -136,14 +140,14 @@ class Graph(Base):
     default_layout_id = Column(String, nullable = True)
 
     # specify one to many relationships
-    layouts = relationship("Layout")
-    # Each node can belong to at most one graph. See the 'Node' class for details.
-    nodes = relationship("Node")
+    # layouts = relationship("Layout")
+    # # Each node can belong to at most one graph. See the 'Node' class for details.
+    # nodes = relationship("Node")
 
     # groups = relationship("Group", backref='graph')
     
     #specify many to many relationship with GraphTag
-    tags = relationship("GraphTag", secondary=graph_to_tag, backref='graph')
+    # tags = relationship("GraphTag", secondary=graph_to_tag, backref='graph')
 
 class GraphTag(Base):
     '''
@@ -196,11 +200,11 @@ class Node(Base):
 
     # The primary key contains three columns: node_id, graph_id, and user_id. The same node may appear in different graphs but we consider them to be distinct.
     node_id = Column(String, primary_key = True)
-    # ???
     label = Column(String, nullable = False)
     user_id = Column(String, primary_key = True)
     graph_id = Column(String, primary_key = True)
-    
+    modified = Column(TIMESTAMP, primary_key = True)
+    public = Column(Integer, primary_key = True)
     # Foregin key contraint to idientify the graph that this node belong to
     __table_args__ = (ForeignKeyConstraint([user_id, graph_id], [Graph.user_id, Graph.graph_id], ondelete="CASCADE", onupdate="CASCADE"), {})
 

@@ -141,48 +141,58 @@ def _graphs_page(request, view_type):
         :param request: HTTP GET Request
         :param view_type: Type of view for graph (Ex: my graphs, shared, public)
     '''
-    #context of the view to be passed in for rendering
+    # context of the view to be passed in for rendering
     context = {}
+
+    # List of graphs that will be returned by the request
     graph_list = None
 
-    #handle login
+    # handle login
     context = login(request)
 
-    #Send view_type to front end to tell the user (through button color) where they are
+    # Send view_type to front end to tell the user (through button color) where they are
+    # The view_type refers to which category of graphs are being viewed (public, shared, my graphs)
     context['view_type'] = view_type
 
+    # If there is an error, display the error 
     if context['Error']:
         return render(request, 'graphs/error.html', context)
 
-    #check for authentication
+    # Checks to see if a user is currently logged on
     uid = request.session['uid']
 
-    # pass the tag information to the front-end
-    context['all_tags'] = []#db.get_all_tags(uid, view_type)
-
-    # Set the base URL's so that the links point to the correct view types
-    context['base_url'] = [] #db.get_base_urls(view_type)
-
+    # Placeholder to keep track of 
+    # whether we are partially searching or
+    # exact searching
     search_type = None
 
+    # Partial search may be thought of as "contains" matching
+    # Exact search may be though of as "identical" matching
     if 'partial_search' in request.GET:
         search_type = 'partial_search'
     elif 'full_search' in request.GET:
         search_type = 'full_search'
 
     # Set all information abouut graphs to the front-end
+    # Information of graphs consists of all data for an individual graph
+    # as well as any search queries and tag queries being performed
     context = db.get_graphs_for_view_type(context, view_type, uid, request)
 
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
+    # Checks to see if there are any tags that the user wants to search for
     request_tags = request.GET.get('tags') or request.GET.get('tag') or None
 
+    # If there are no graphs returned by the query, then display message on
+    # how to add graphs
     if len(context['graph_list']) == 0:
         context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
 
+    # Holds the amount of times a tag appears for a graph 
     all_tags = {}
     
+    # Goes through all the graphs that are currently on a page
     if context['graph_list'] != None:
         pager_context = pager(request, context['graph_list'])
         if type(pager_context) is dict:
@@ -217,7 +227,7 @@ def _graphs_page(request, view_type):
     all_tags_refined = [i[0] for i in sorted_tags]
 
     # Populates tags search bar with most used tags of last 250 graphs
-    context['all_tags'] = all_tags_refined #list(set(all_tags))[:10]
+    context['all_tags'] = all_tags_refined
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
@@ -310,10 +320,11 @@ def view_graph(request, uid, gid):
         # If the user is member of group where this graph is shared
         user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
 
-        # if admin, then they can see everything
-        if db.is_admin(request.session['uid']) == 1 or request.session['uid'] == uid or user_is_member == True:
-            if db.getGraphInfo(uid, gid) != None:
-                graph_to_view =  db.getGraphInfo(uid, gid)
+        # if user is owner of graph or a member of group that shares graph
+        if request.session['uid'] == uid or user_is_member == True:
+            graph_info = db.getGraphInfo(uid, gid)
+            if graph_info != None:
+                graph_to_view =  graph_info
             else: 
                 context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
                 return render(request, 'graphs/error.html', context)
@@ -335,7 +346,7 @@ def view_graph(request, uid, gid):
 
     format_shared_groups = []
     for shared_group in shared_groups:
-        format_shared_groups.append((shared_group[0], shared_group[1]))
+        format_shared_groups.append((shared_group.group_id, shared_group.owner_id))
 
     context['shared_groups'] = format_shared_groups
 
@@ -1102,6 +1113,7 @@ def add_member_through_ui(request):
     # If request is a POST request, add it to the server
     if request.method == 'POST':
         result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
+        print result
         return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
 
 def remove_member_through_ui(request):

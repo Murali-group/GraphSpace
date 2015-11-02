@@ -42,17 +42,6 @@ $(document).ready(function() {
     clearTagTerms();
   });
 
-
-  // $(".search").click(function (e) {
-  //    e.preventDefault();
-  //    modifyQueryTerms($('input[name=match]:checked').val(), $(this).attr('id'));
-  // });
-
-  // $(".tags").click(function (e) {
-  //    e.preventDefault();
-  //    modifyQueryTerms('tags', $(this).attr('id'));
-  // });
-
   if (getQueryVariable($('input[name=match]:checked').val())) {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
   }

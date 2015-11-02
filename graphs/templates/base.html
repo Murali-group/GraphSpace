@@ -115,14 +115,7 @@
                     {% endif %}
                     <li><a href="{% url 'features' %}">Features</a></li>
                     <li><a href="{% url 'help_tutorial' %}">Help</a></li>
-                    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
-
-                    <!-- menu item to indicate login status. WILL BE REMOVED -->
-                    <!-- {% if uid != None %} 
-                    <li><a href="#">Welcome, {{ uid }}</a></li>
-                    {% else %}
-                    <li><a href="{% url 'register' %}">Create Account</a></li>
-                    {% endif %} -->                        
+                    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>                     
                 </ul>
 
                 <!-- display login form if not logged in -->
