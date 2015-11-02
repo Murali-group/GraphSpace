@@ -1316,7 +1316,7 @@ def combine_similar_graphs(matched_graphs):
 				graph_info = get_graph(graph.head_user_id, graph.head_graph_id)
 
 				# Construct new entry
-				new_graph_entry = (graph.head_graph_id, graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")", head.label, graph_info.modified, graph_info.user_id, graph_info.public)
+				new_graph_entry = (graph.head_graph_id, graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")", graph.label, graph_info.modified, graph_info.user_id, graph_info.public)
 
 				# Add to dict
 				graph_entry[key] = new_graph_entry
@@ -2460,7 +2460,7 @@ def get_group(group_owner, groupId):
 	cleaned_data['group_id'] = group.group_id
 	cleaned_data['description'] = group.description
 
-	# Get all graph anmes for group
+	# Get all graph names for group
 	graphs = get_graphs_in_group(group.group_id, group.owner_id)
 
 	graph_names = []
@@ -2632,129 +2632,7 @@ def groups_for_user(username):
 	db_session.close()
 	return cleaned_group_data
 
-def find_edges_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
-	initial_graphs_with_edges = []
-	node_ids = word.split(':')
-
-	head_node = node_ids[0]
-	tail_node = node_ids[1]
-
-	head_node_ids = []
-	tail_node_ids = []
-
-	if search_type == 'full_search':
-		# treat id's as labels
-		cur.execute('select n.node_id from node as n where n.label = ?', (head_node, ))
-		head_node_label_data = cur.fetchall()
-		head_node_ids = []
-		for node in head_node_label_data:
-			head_node_ids.append(str(node[0]))
-
-		cur.execute('select n.node_id from node as n where n.label = ?', (tail_node, ))
-		tail_node_label_data = cur.fetchall()
-		tail_node_ids = []
-		for node in tail_node_label_data:
-			tail_node_ids.append(str(node[0]))
-
-		# treat id's as node_id's
-		cur.execute('select n.node_id from node as n where n.node_id = ?', (head_node, ))
-		head_node_id_data = cur.fetchall()
-		for node in head_node_id_data:
-			head_node_ids.append(str(node[0]))
-
-		cur.execute('select n.node_id from node as n where n.node_id = ?', (tail_node, ))
-		tail_node_id_data = cur.fetchall()
-		for node in tail_node_id_data:
-			tail_node_ids.append(str(node[0]))
-	elif search_type == 'partial_search':
-		# treat id's as labels
-		cur.execute('select n.node_id from node as n where n.label LIKE ?', ('%' + head_node + '%', ))
-		head_node_label_data = cur.fetchall()
-		head_node_ids = []
-		for node in head_node_label_data:
-			head_node_ids.append(str(node[0]))
-
-		cur.execute('select n.node_id from node as n where n.label LIKE ?', ('%' + tail_node + '%', ))
-		tail_node_label_data = cur.fetchall()
-		tail_node_ids = []
-		for node in tail_node_label_data:
-			tail_node_ids.append(str(node[0]))
-
-		# treat id's as node_id's
-		cur.execute('select n.node_id from node as n where n.node_id LIKE ?', ('%' + head_node + '%', ))
-		head_node_id_data = cur.fetchall()
-		for node in head_node_id_data:
-			head_node_ids.append(str(node[0]))
-
-		cur.execute('select n.node_id from node as n where n.node_id LIKE ?', ('%' + tail_node + '%', ))
-		tail_node_id_data = cur.fetchall()
-		for node in tail_node_id_data:
-			tail_node_ids.append(str(node[0]))
-
-	head_node_ids = list(set(head_node_ids))
-	tail_node_ids = list(set(tail_node_ids))
-
-
-	# If there are any graphs that fit the criteria, 
-	# return the graphs that are under the type of graphs
-	# that the user wants to see (his/her graphs, or public etc)
-	if len(head_node_ids) > 0 and len(tail_node_ids) > 0:
-		for i in xrange(len(head_node_ids)):
-			for j in xrange(len(tail_node_ids)):
-				cur.execute('select e.head_graph_id, e.head_id, e.label, datetime(g.modified) e.head_user_id, g.public from edge as e, graph as g, group_to_graph as gg where e.head_graph_id = gg.graph_id and e.head_id = ? and e.tail_id = ? and e.head_graph_id = g.graph_id and group_id = ? and gg.group_owner = ?', (head_node_ids[i], tail_node_ids[j], groupId, groupOwner))
-
-				data = cur.fetchall()
-				initial_graphs_with_edges = add_unique_to_list(initial_graphs_with_edges, data)
-				
-	actual_graph_with_edges = []
-	for graph in initial_graphs_with_edges:
-		graph_list = list(graph)
-		# Appending the nodes that are being searched for
-		graph_list[1] = graph_list[2] + ' (' + head_node + '-' + tail_node + ')'
-		actual_graph_with_edges.append(tuple(graph_list))
-
-	return actual_graph_with_edges
-
-
-def find_nodes_for_graphs_in_group(groupOwner, groupId, search_type, word, cur):
-	labels_and_id_matched_graphs = []
-
-	if search_type == 'partial_search':
-
-		cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, datetime(n.modified), n.user_id, n.public from node as n, group_to_graph as gg where n.label Like ? and gg.graph_id = n.graph_id and gg.user_id = n.user_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
-		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
-
-		cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, datetime(n.modified), n.user_id, n.public from node as n, group_to_graph as gg where n.node_id Like ? and gg.graph_id = n.graph_id and gg.user_id = n.user_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
-		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
-
-	elif search_type == 'full_search':
-		cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, datetime(n.modified), n.user_id, n.public from node as n, group_to_graph as gg where n.label = ? and gg.graph_id = n.graph_id and gg.user_id = n.user_id and gg.group_id = ? and gg.group_owner = ?', (word, groupId, groupOwner))
-		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
-
-		cur.execute('select n.graph_id, n.node_id || " (" || n.label || ")", n.label, datetime(n.modified), n.user_id, n.public from node as n, group_to_graph as gg where n.node_id = ? and gg.graph_id = n.graph_id and gg.user_id = n.user_id and gg.group_id = ? and gg.group_owner = ?', (word, groupId, groupOwner))
-		labels_and_id_matched_graphs = add_unique_to_list(labels_and_id_matched_graphs, cur.fetchall())
-	
-	# actual_graph_with_nodes = []
-	# for graph in labels_and_id_matched_graphs:
-	# 	graph_list = list(graph)
-	# 	graph_list[1] = graph_list[1] + ' (' + graph_list[2] + ')'
-	# 	actual_graph_with_nodes.append(tuple(graph_list))
-	intial_graph_with_nodes = add_unique_nodes_to_list(intial_graph_with_nodes)
-	return labels_and_id_matched_graphs
-
-def find_graphs_for_group_using_names(uid, groupOwner, groupId, search_type, word, cur):
-	intial_graph_names = []
-
-	if search_type == 'partial_search':
-		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id LIKE ? and g.graph_id = gg.graph_id and g.user_id = gg.user_id and gg.group_id = ? and gg.group_owner = ?', ('%' + word + '%', groupId, groupOwner))
-	elif search_type == 'full_search':
-		cur.execute('select g.graph_id, "" as placeholder, "" as placeholder, datetime(g.modified), g.user_id, g.public from graph as g, group_to_graph as gg where g.graph_id = ? and g.user_id = gg.user_id and g.graph_id = gg.graph_id and gg.group_id = ? and gg.group_owner = ?', (word, groupId, groupOwner))
-
-	intial_graph_names = add_unique_to_list(intial_graph_names, cur.fetchall())
-	
-	return intial_graph_names
-
-def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, search_terms, db_session, groupOwner, groupId):
+def search_result_for_graphs_in_group(uid, search_type, search_terms, db_session, groupOwner, groupId):
 
 	# If it is a search type that is not recognized, return empty list
 	if search_type != 'partial_search' and search_type !=  'full_search':
@@ -2779,15 +2657,15 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, sea
 			# matched_graphs contains a list of all graphs that match the specific search term
 			matched_graphs = []
 			# First, we check to see if there are any graphs that have a graph name that matches the search term
-			matched_graphs += find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+			matched_graphs += find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, data_session, groupOwner, groupId)
 
 			# ":" indicates that search_word may be an edge
 			if ':' in search_word:
 				# append all graphs that contain an edge which matches the search_word
-				matched_graphs += find_all_graphs_containing_edges_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+				matched_graphs += find_all_graphs_containing_edges_in_group(uid, search_type, search_word, data_session, groupOwner, groupId)
 			# otherwise append all graphs that contain a node which matches the search word
 			else:
-				matched_graphs += find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId)
+				matched_graphs += find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, data_session, groupOwner, groupId)
 
 			# Go through all matched graphs
 			# If there is a graph that appears multiple times in the list
@@ -2806,6 +2684,7 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, sea
 			key = graph_tuple[0] + graph_tuple[4]
 			graph_repititions[key] += 1
 
+		print graph_repititions
 		# Go through and aggregate all graph together
 		graph_mappings = defaultdict(list)
 
@@ -2845,56 +2724,157 @@ def search_result_for_graphs_in_group(uid, groupOwner, groupId, search_type, sea
 	else:
 		return []
 
-def find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, view_type, data_session, groupOwner, groupId):
+def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
+
+	# List to keep track of all graphs that contain edges that match the search_word
+	initial_graphs_matching_edges = []
+
+	# Separate the edge into its two node ID's
+	# This is done because in the database, an edge ID is comprised of target:source nodes
+	node_ids = search_word.split(":")
+
+	# Get head and tail node references
+	head_node = node_ids[0]
+	tail_node = node_ids[1]
+
+	# List of all head node ids
+	head_nodes = []
+
+	# List of all tail node ids
+	tail_nodes = []
+
+	# Match all edges that contain the edges that exactly match the search_word
+	if search_type == "full_search":
+
+		# Get all (head) nodes that contain a label matching search_word
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == head_node).all()
+		
+		# Get all (tail) nodes that contain a label matching search_word
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == tail_node).all()
+
+		# Get all (head) nodes that contain a node id matching search_word 
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == head_node).all()
+
+		# Get all (tail) nodes that contain a node id matched search_word 
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == tail_node).all()
+		
+	elif search_type == "partial_search":
+
+		# Get all (head) nodes that contain a partially matching label
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + head_node + "%")).all()
+		
+		# Get all (tail) nodes that contain a label partially matching label
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + tail_node + "%")).all()
+
+		# Get all (head) nodes that contain a node id partially matching search_word 
+		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + head_node + "%")).all()
+		
+		# Get all (head) nodes that contain a node id partially matching search_word 
+		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + tail_node + "%")).all()
+
+	# Remove all the duplicates
+	head_nodes = list(set(head_nodes))
+	tail_nodes = list(set(tail_nodes))
+
+	# Go through head and tail nodes to see if there are any graphs
+	# that match the given view type (my graphs, shared, public).
+	# In other words, return all graphs that having matching edges
+	# for the given view type.
+
+	# TODO: ASK MURALI ABOUT BIDIRECTION EDGES
+
+	# If there are both head and tail nodes
+	if len(head_nodes) > 0 and len(tail_nodes) > 0:
+		# Go through all permutations of these nodes
+		# compile graphs that match the given view_type (my graphs, shared, public)
+		for i in xrange(len(head_nodes)):
+			for j in xrange(len(tail_nodes)):
+				h_node =  head_nodes[i][0]
+				t_node =  tail_nodes[j][0]
+				
+				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.head_user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+		return initial_graphs_matching_edges
+	else:
+		return []
+
+
+def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
+
+	node_data = []
+
+	if search_type == 'partial_search':
+		node_data = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+		node_data += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+	else:
+		node_data = db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+		node_data += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+	return node_data
+
+def find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
 
 	matched_graphs = []
 	# Return all graphs that have a graph name that partially matches the search word
 	if search_type == 'partial_search':
-	
+		try:
+
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+		except NoResultFound:
+			print "No shared graphs matching search term"
 
 	# Return all graphs that have a gaph name that exactly matches the search word
 	elif search_type == 'full_search':
-		matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
+		try:
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+
+		except NoResultFound:
+			print "No shared graphs matching search term"
 
 	return matched_graphs
 
+def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, db_session):
 
-def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, cur):
+	intial_graphs_with_tags = []
 
-	initial_graphs_with_tags = []
+	if len(tag_terms) > 0:
+		for tag in tag_terms:
+			try:
+				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
-	for tag in tag_terms:
-		cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = ? and gg.group_owner = ? and gg.graph_id = gt.graph_id and gt.tag_id = ? and gt.graph_id = g.graph_id and gt.user_id = g.user_id', (groupId, groupOwner, tag))
-		initial_graphs_with_tags += cur.fetchall()
+			except NoResultFound:
+				print "No shared graphs with tag"
 
-	# After all the SQL statements have ran for all of the tags, count the number of times
-	# a graph appears in the initial list. If it appears as many times as there are 
-	# tag terms, then that graph matches all the tag terms and it should be returned
-	graph_repititions = defaultdict(int)
-	graph_mappings = defaultdict(list)
-	# Counting the number of occurences
-	for graph_tuple in initial_graphs_with_tags:
-		graph_repititions[graph_tuple[0]] += 1
+		# Go through and count the list of occurrences of matched graph
+		graph_repititions = defaultdict(int)
 
-	for graph_tuple in initial_graphs_with_tags:
-		graph_list = graph_mappings.get(graph_tuple[0], [])
-		graph_list.append(graph_tuple)
-		graph_mappings[graph_tuple[0]] = graph_list
+		# Counting the number of occurences
+		for graph in intial_graphs_with_tags:
+			graph_repititions[graph] += 1
 
-	# If value appears the number of times as there are tags, 
-	# then append that to the actual list of graphs to be returned.
-	actual_graphs_for_tags = []
-	for key, value in graph_repititions.iteritems():
-		if value == len(tag_terms):
-			key_tuples = graph_mappings[key]
-			for key_tuple in key_tuples:
-				# Insert all tags for the graph in the first index
-				key_with_tag = list(key_tuple)
-				key_with_tag.insert(1, get_all_tags_for_graph(key_with_tag[0], key_with_tag[2]))
-				key_with_tag = tuple(key_with_tag)
-				actual_graphs_for_tags.append(key_with_tag)
+		# Go through and aggregate all graph together
+		graph_mappings = defaultdict(list)
 
-	return actual_graphs_for_tags
+		# If the number of times a graph appears matches the number of search terms
+		# it is a graph we want (simulating the and operator for all search terms)
+		for graph in intial_graphs_with_tags:
+
+			graph_tuple = (graph.graph_id, get_all_tags_for_graph(graph.graph_id, graph.user_id), graph.modified, graph.user_id, graph.public)
+
+			# Graph matches all search terms
+			if graph_repititions[graph] == len(tag_terms):
+
+				# If we haven't seen this graph yet 
+				if graph not in graph_mappings:
+					graph_mappings[graph] = graph_tuple
+				
+		# Go through all the graphs and insert tags for the graphs that match all search terms
+		return graph_mappings.values()
+	else:
+		return []
 
 def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	'''
@@ -2908,7 +2888,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	'''
 
 	# Get connection to databse
-	data_session = data_connection.new_session()
+	db_session = data_connection.new_session()
 
 	# Set search type
 	search_type = None
@@ -2924,16 +2904,40 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 
 	graph_data = []
 
+	if tag_terms and len(tag_terms) > 0:
+		cleaned_tags = tag_terms.split(',')
+		# Goes through each tag, making it a string
+		# so the url will contain those tags as a part
+		# of the query string
+		for tags in xrange(len(cleaned_tags)):
+		    cleaned_tags[tags] = cleaned_tags[tags].strip()
+		    # If user enters in a blank tag, delete it
+		    if len(cleaned_tags[tags]) == 0:
+		    	del cleaned_tags[tags]
+
+ 	if search_terms and len(search_terms) > 0:
+
+		# Split up search terms by comma
+		cleaned_search_terms = search_terms.split(',')
+
+		# Goes through each search term, making it a string
+		# so the url will contain those searches as a part
+		# of the query string
+		for i in xrange(len(cleaned_search_terms)):
+			cleaned_search_terms[i] = cleaned_search_terms[i].strip()
+			# Deleted no length search terms
+			if len(cleaned_search_terms[i]) == 0:
+				del cleaned_search_terms[i]
+
 	# If both a tag term and search term are entered
 	if search_terms and tag_terms and len(search_terms) > 0 and len(tag_terms) > 0:
 		actual_graphs = []
 
 		# Get all graphs that contain all the search terms
-		uid, search_type, search_word, view_type, group_id, group_owner, db_session
-		search_result_graphs = search_result_for_graphs_in_group(uid, search_type, search_terms.split(","), view_type, group_id, group_owner, db_session, groupOwner, groupId)
+		search_result_graphs = search_result_for_graphs_in_group(uid, search_type, cleaned_search_terms, db_session, groupId, groupOwner)
 		
 		# Get all graphs that contain all the tag terms
-		tag_result_graphs = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), db_session)
+		tag_result_graphs = tag_result_for_graphs_in_group(groupOwner, groupId, cleaned_tags, db_session)
 
 		tag_graphs = [x[0] for x in tag_result_graphs]
 		actual = [x[0] for x in actual_graphs]
@@ -2947,13 +2951,25 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 
 	# If only search terms are entered
 	elif search_terms:
-		graph_data = search_result_for_graphs_in_group(uid, search_type, search_terms.split(","), view_type, group_id, group_owner, db_session, groupOwner, groupId)
+		graph_data = search_result_for_graphs_in_group(uid, search_type, cleaned_search_terms, db_session, groupId, groupOwner)
 
 	# If only tag terms are entered
 	elif tag_terms:
-		graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms.split(','), db_session)
+		graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, cleaned_tags, db_session)
 	else:
+		try:
+			graph_data = db_session.query(models.Graph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).all()
 
+		except NoResultFound:
+			print 'no result found'
+
+		graph_tuples = []
+
+		for graph in graph_data:
+			graph_tuple = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
+			graph_tuples.append(graph_tuple)
+
+		graph_data = graph_tuples
 
 	# If user wants to sort the data
 	if order_by:
@@ -2961,6 +2977,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	else:
 		graph_data = order_information("modified_descending", search_terms, graph_data)
 
+	db_session.close()
 	return graph_data
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
@@ -3680,9 +3697,6 @@ def get_all_graphs_for_tags(tags):
 			for tag in tag_terms:
 				# Get all graphs that contain the specific tag we are searching for
 				graph_list += db_session.query(models.Graph.graph_id).distinct(models.Graph.graph_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).all()
-
-			# Remove all duplicates
-			graph_list = add_unique_to_list(graph_list)
 
 			# Get number of times the graph names appear.
 			# If they appear the same number of times as the lenght of the tag terms
