@@ -109,7 +109,7 @@ class Group(Base):
     name = Column(String, nullable = False)
     # Each group has one owner, who must be in the user table. The foreign key 
     # statement corresponds to the owned_groups relationship in the 'User' class.
-    owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False, primary_key = True)
     description = Column(String, nullable = False)
     public = Column(Integer, nullable = True)
     unlisted = Column(Integer, nullable = True)

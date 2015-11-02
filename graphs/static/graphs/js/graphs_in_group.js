@@ -81,8 +81,8 @@ $(document).ready(function() {
         "groupId": groupId,
         "groupOwner": groupOwner
       }, function (data) {
-        console.log(data);
-          if(data.Message == 'Become the owner/member of this group first!') {
+
+          if(data.Message == 'Become the owner/member of this group first!' || data.Message == "User does not exist!") {
               return alert(data.Message);
             } else {
               location.reload();          

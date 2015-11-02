@@ -297,7 +297,7 @@ $(document).ready(function() {
   function clearTagTerms() {
     if (document.URL.indexOf('?') > -1 && document.URL.indexOf('tags') > -1) {
       var linkToGraph = removeURLParameter(document.URL, "tags");
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+      // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
     } else {
       var linkToGraph = document.URL;
     }
@@ -309,10 +309,10 @@ $(document).ready(function() {
     if (document.URL.indexOf('?') > -1) {
       if (getQueryVariable("partial_search")) {
         var linkToGraph = removeURLParameter(document.URL, "partial_search");
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
       } else if (getQueryVariable("full_search")) {
         var linkToGraph = removeURLParameter(document.URL, "full_search");
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
       } else {
         var linkToGraph = document.URL;
       }

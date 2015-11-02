@@ -443,7 +443,6 @@ $(document).ready(function() {
         "public": 0,
         "unlisted": 0
       }, function (data) {
-
         if (data.Error) {
           return alert(data.Error);
         }
@@ -579,6 +578,7 @@ $(document).ready(function() {
       e.preventDefault();
 
       var paths = document.URL.split('/')
+      console.log(paths);
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
       var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
@@ -703,22 +703,6 @@ $(document).ready(function() {
       });
 
     });
-
-    // $("#share_layout_with_selected_groups").click(function(e) {
-    //   var paths = document.URL.split('/')
-    //   var ownerId = decodeURIComponent(paths[paths.length - 3])
-    //   var gid = decodeURIComponent(paths[paths.length - 2])
-
-    //   $.post('../../../shareLayoutWithGroups/', {
-    //     'layoutId': $("#layoutId").text(),
-    //     'gid': gid,
-    //     'owner': ownerId
-    //   }, function (data) {
-    //     console.log(data);
-    //     // window.location.reload();
-    //   });
-    // });
-
 
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')

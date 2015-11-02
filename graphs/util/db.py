@@ -760,7 +760,7 @@ def set_layout_context(request, context, uid, gid):
 
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
-		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid)))
+		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + get_my_shared_layouts_for_graph(uid, gid, context['uid'])))
 		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
 	else:
 		context['my_layouts'] = []
@@ -1138,7 +1138,10 @@ def tag_result(uid, tag_terms, view_type):
 					print 'No graphs that you own match the tag term'
 
 			elif view_type == 'shared':
-				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.Graph.user_id == models.GroupToUser.user_id).filter(models.GraphTag.tag_id == tag).filter(models.GroupToUser.user_id == uid).all()
+
+				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GraphToTag.user_id == models.Graph.user_id).all()
+
+				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.Group.owner_id == uid).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GraphToTag.user_id == models.Graph.user_id).all()
 			else:
 				try:
 					intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.public == 1).all()
@@ -1364,7 +1367,10 @@ def find_all_graphs_containing_search_word(uid, search_type, search_word, view_t
 		if view_type == "my graphs":
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.user_id == uid).all()
 		elif view_type == "shared":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
+			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.GroupToUser.user_id == uid).filter(models.GroupToUser.group_id == models.GroupToGraph.group_id).filter(models.GroupToUser.group_owner == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
+
+			matched_graphs += db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
+
 		elif view_type == "public":
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.public == 1).all()
 
@@ -1374,7 +1380,11 @@ def find_all_graphs_containing_search_word(uid, search_type, search_word, view_t
 		if view_type == "my graphs":
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.Graph.user_id == uid).all()
 		elif view_type == "shared":
+
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
+
+			matched_graphs += db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
+
 		elif view_type == "public":
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id ==search_word).filter(models.Graph.public == 1).all()
 
@@ -1501,21 +1511,29 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 	# Shared graphs
 	elif view_type == "shared":
 		# Get all the groups that a user is a member of
-		groups_user_belongs_to = db_session.query(group_to_user.c.group_id, group_to_user.c.group_owner).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_owner != uid).all()
+		groups_user_belongs_to = db_session.query(models.GroupToUser.group_id, models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).all()
+
+		print groups_user_belongs_to
 
 		# Get all graphs that are part of groups that the user belongs to
 		graphs_in_group = list()
 
 		# Go through each group and add graphs keys to the set
 		for single_group in groups_user_belongs_to:
-			group_id = single_group[0]
-			group_owner = single_group[1]
+			group_id = single_group.group_id
+			group_owner = single_group.group_owner
 
 			graphs_in_group += db_session.query(group_to_graph.c.graph_id, group_to_graph.c.user_id).filter(group_to_graph.c.group_id == group_id).filter(group_to_graph.c.group_owner == group_owner).all()
 
+		# Go through all groups that the user owns
+		groups_user_owns = db_session.query(models.Group).filter(models.Group.owner_id == uid).all()
+
+		for single_group in groups_user_owns:
+			graphs_in_group += db_session.query(group_to_graph.c.graph_id, group_to_graph.c.user_id).filter(group_to_graph.c.group_id == single_group.group_id).filter(group_to_graph.c.group_owner == single_group.owner_id).all()
+
 		if search_type == "partial_search":
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id != uid).all()
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1528,7 +1546,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id != uid).all()
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1540,7 +1558,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 			initial_graphs_matching_nodes = final_graphs
 		else:
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.user_id != uid).all()
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label == search_word).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1553,7 +1571,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.user_id != uid).all()
+			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id == search_word).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1766,7 +1784,7 @@ def create_public_user(public_user_id):
 
 	try:
 		# Create a public user and add to database
-		public_user = User(public_user_id, "public", 1, 1, 1, 1, 0)
+		public_user = models.User(user_id = public_user_id, password = "public", activated = 1, activate_code = 1, public =  1, unlisted = 1, admin = 0)
 		db_session.add(public_user)
 		db_session.commit()
 		db_session.close()
@@ -2209,42 +2227,43 @@ def delete_graph(username, graphname):
 		# Delete graph 
 		db_session.delete(graph)
 
+		db_session.commit()
 		# Delete from graph_to_tag
 		gt = db_session.query(models.GraphToTag).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
 
 		for g_tags in gt:
 			db_session.delete(g_tags)
-
+			db_session.commit()
 		# Delete from group_to_graph
 		gg = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.user_id == username).filter(models.GroupToGraph.graph_id == graphname).all()
 
 		for g_gruop in gg:
 			db_session.delete(g_gruop)
-
+			db_session.commit()
 		# Delete from edge
 		edge = db_session.query(models.Edge).filter(models.Edge.head_graph_id == graphname).filter(models.Edge.head_user_id == username).all()
 
 		for e in edge:
 			db_session.delete(e)
+			db_session.commit()
 
 		# Delete from node
 		node = db_session.query(models.Node).filter(models.Node.user_id == username).filter(models.Node.graph_id == graphname).all()
 
 		for n in node:
 			db_session.delete(n)
-
+			db_session.commit()
 		# Delete from layout
 		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == username).filter(models.Layout.user_id == username).all()
 
 		for l in layout:
 			db_session.delete(l)
-
+			db_session.commit()
 		db_session.commit()
 		db_session.close()
 
 	except Exception as ex:
 		print ex
-		db_session.commit()
 		db_session.close()
 		return	
 
@@ -2348,7 +2367,7 @@ def get_cleaned_group_data(data, db_session):
 
 	return complete_group_information
 
-def get_all_groups_with_member(user_id):
+def get_all_groups_with_member(user_id, skip = None):
 	'''
 		Get all groups that has the user as a member in that group.
 
@@ -2359,11 +2378,17 @@ def get_all_groups_with_member(user_id):
 	db_session = data_connection.new_session()
 
 	try:
+		cleaned_groups = []
 		# Get all groups that the user is a member of
 		groups_with_member = db_session.query(models.Group).filter(models.Group.group_id == models.GroupToUser.group_id).filter(models.Group.owner_id == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == user_id).all()
 
-		# Format group information
-		cleaned_groups = get_cleaned_group_data(groups_with_member, db_session)
+		if skip == None:
+			# Format group information
+			cleaned_groups = get_cleaned_group_data(groups_with_member, db_session)
+		else:
+			# Get all groups that the user is a member of
+			groups_with_member += db_session.query(models.Group).filter(models.Group.owner_id == user_id).all()
+			cleaned_groups = groups_with_member
 
 		db_session.close()
 		return cleaned_groups
@@ -2487,7 +2512,7 @@ def get_group_members(groupOwner, groupId):
 		group_members = db_session.query(models.User).filter(models.User.user_id == models.GroupToUser.user_id).filter(models.GroupToUser.group_owner == groupOwner).filter(models.GroupToUser.group_id == groupId).all()
 
 		# Also get owns of the group as well since owners are technically members of the group too
-		group_members += db_session.query(models.User).filter(models.User.user_id == models.GroupToUser.user_id).filter(models.GroupToUser.group_owner == groupOwner).filter(models.GroupToUser.group_id == groupId).all()
+		# group_members += db_session.query(models.User).filter(models.User.user_id == models.GroupToUser.user_id).filter(models.GroupToUser.group_owner == groupOwner).filter(models.GroupToUser.group_id == groupId).all()
 
 		db_session.close()
 		return group_members
@@ -2509,9 +2534,15 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
 	if len(groups) > 0:
 		for group in groups:
+			
+			if logged_in_user == group.owner_id:
+				return True
 			members = get_group_members(group.owner_id, group.group_id)
-	        if logged_in_user in members:
-	            return True
+
+			for member in members:
+				print member.user_id
+				if logged_in_user == member.user_id:
+					return True
 
 	return None
 
@@ -3003,7 +3034,7 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 		group_owner = group[2]
 
 		# Check if graph is shared with this group
-		is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graphname).filter(models.GraphToTag.user_id == graphowner).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).first()
+		is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graphname).filter(models.GroupToGraph.user_id == graphowner).filter(models.GraphToTag.user_id == graphowner).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).first()
 
 		# If it is not shared, then set "graph_shared" to False
 		if is_shared_with_group == None:
@@ -3048,23 +3079,15 @@ def add_user_to_group(username, owner, group):
 		return "User does not exist!"
 
 	# Is user a member of the group
-	isMember = db_session.query(models.GroupToUser.user_id).filter(models.GroupToUser.user_id == username).filter(models.GroupToUser.group_id == group).filter(models.GroupToUser.group_owner == owner).first()
-
-	if isMember == None:
-		db_session.close()
-		return username + " is not a member of this group."
+	isMember = db_session.query(models.GroupToUser.user_id).filter(models.GroupToUser.user_id == owner).filter(models.GroupToUser.group_id == group).first()
 
 	# Is user an owner of the group
 	isOwner = db_session.query(models.Group.owner_id).filter(models.Group.owner_id == owner).filter(models.Group.group_id == group).first()
 
-	if Owner == None:
-		db_session.close()
-		return "Group does not exist"
-
 	message = ""
 
-	# User must be an owner of a member of a group to add members to i
-	if isMember or isOwner:
+	# User must be an owner of a member of a group to add members to it
+	if isMember != None or isOwner != None:
 		new_group_member = models.GroupToUser(group_id = group, group_owner = owner, user_id = username)
 		db_session.add(new_group_member)
 		db_session.commit()
@@ -3072,7 +3095,6 @@ def add_user_to_group(username, owner, group):
 	else:
 		message = "Become the owner or a member of this group first!"
 
-	print message, "TESTING"
 	db_session.close()
 	return message
 
@@ -3113,7 +3135,7 @@ def remove_user_from_group(username, owner, groupId):
 	db_session.delete(group_member)
 	db_session.commit()
 	db_session.close()
-	return "Successfully removed user " + username + " from " + group + "."
+	return "Successfully removed user " + username + " from " + groupId + "."
 
 def remove_user_through_ui(username, owner, group):
 	'''
@@ -3144,6 +3166,13 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 
 	# Create database connection
 	db_session = data_connection.new_session()
+
+	# Is graph already shared
+	shared_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).first()
+
+	# Graph is already shared
+	if shared_graph != None:
+		return None
 
 	# Is a user a member of the group trying to share graph with
 	group_member = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == owner).filter(models.GroupToUser.group_id == groupId).filter(models.GroupToUser.group_owner == groupOwner).first()
@@ -3214,27 +3243,32 @@ def view_graphs_of_type(view_type, username):
 	if view_type == "public":
 		# Get all public graphs
 		try:
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.public == 1).all()
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.public == 1).all()
 		except NoResultFound:
 			print "No public graphs"
 
 	elif view_type == "shared":
 		try:
-			# Get all shared graphs
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToUser.user_id == username).filter(models.GroupToUser.group_id == models.GroupToGraph.graph_id).all()
+			# Get all shared graphs from groups you are a member of
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToUser.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == username).all()
+
+			# Get all shared graphs from groups you own
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.Group.owner_id == username).all()
+
 		except NoResultFound:
 			print "No shared graphs"
 	else:
 		try:
 			# Get all my graphs
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id).filter(models.Graph.user_id == username).all()
+			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.user_id == username).all()
 		except NoResultFound:
 			print "No owned graphs"
 
 	cleaned_graphs = []
 	for graph in graphs:
 		cleaned_graph = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
-		cleaned_graphs.append(cleaned_graph)
+		if cleaned_graph not in cleaned_graphs:
+			cleaned_graphs.append(cleaned_graph)
 
 	db_session.close()
 	return cleaned_graphs
@@ -3421,13 +3455,16 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 
 	try:
 		# Get the specific layout
-		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).one()
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+
+		if layout == None:
+			return None
 
 		# Get graph which may contain a layout 
-		graph = get_graph
+		graph = db_session.query(models.Graph).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).first()
 
 		if graph == None:
-			return
+			return None
 
 		# If layout being deleted is graphs default layout, remove both
 		if graph.default_layout_id == layout.layout_id:
@@ -3437,7 +3474,7 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		db_session.commit()
 
 		db_session.close()
-
+		return None
 	except Exception as ex:
 		db_session.close()
 		return ex
@@ -3536,7 +3573,7 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 			layout.unlisted = 0
 
 			# If layout was the default graph layout, then we have to clear that entry
-			graph = get_graph(uid, gid)
+			graph = get_graph(owner, gid)
 			graph.default_layout_id = None
 
 		db_session.commit()
@@ -3565,9 +3602,9 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 		cleaned_layouts = []
 
-		for layout_name in cleaned_layouts:
-			cleaned_layouts += layout_name[0]
-
+		for layout_name in layouts:
+			cleaned_layouts += layout_name
+		print cleaned_layouts
 		db_session.close()
 		return cleaned_layouts
 
@@ -3593,17 +3630,29 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
 
 		# Get all groups that the user is a member of
-		all_groups_for_user = get_all_groups_with_member(loggedIn)
+		all_groups_for_user = get_all_groups_with_member(loggedIn, skip = True)
 
 		cleaned_layout_names = []
 
-		# If the current user is a member of any groups that have current graph shared in
-		# for group in all_groups_for_graph:
-		if intersect(all_groups_for_graph, all_groups_for_user):
-			layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).all()
+		group_dict = dict()
 
-			for name in layout_names:
-				cleaned_layout_names += name[0]
+		for group in all_groups_for_graph:
+			key = group.group_id + group.owner_id
+
+			if key not in group_dict:
+				group_dict[key] = group
+
+		for group in all_groups_for_user:
+			key = group.group_id + group.owner_id
+
+			if key in group_dict:
+
+				# If the current user is a member of any groups that have current graph shared in
+				# for group in all_groups_for_graph:
+				layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).all()
+
+				for name in layout_names:
+					cleaned_layout_names += name
 
 		db_session.close()
 		return cleaned_layout_names
