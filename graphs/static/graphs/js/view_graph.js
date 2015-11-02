@@ -333,8 +333,6 @@ $(document).ready(function() {
         }
       });
 
-
-
       // //If ther are any terms to be searched for, highlight those terms, if found
       if (getQueryVariable('partial_search')) {
           // Initially set search to full matching
@@ -447,7 +445,13 @@ $(document).ready(function() {
           return alert(data.Error);
         }
 
-        var layoutUrl = window.location.pathname + "?layout=" + layoutName;
+        var layoutUrl = window.location.pathname;
+
+        if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
+          layoutUrl = layoutUrl.substring(0, layoutUrl.length - 1);
+        }
+
+        layoutUrl += "?layout=" + layoutName;
 
         var searchTerms = getHighlightedTerms();
         if (searchTerms[0].length > 0) {
