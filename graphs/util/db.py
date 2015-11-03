@@ -333,6 +333,7 @@ def resetPassword(username, password):
 		db_session.close()
 		return None
 
+#### ONE TIME CODE -- KEEP FOR REFERENCE
 def reUploadInconsistentGraphs(data):
 	con = None
 	try: 
@@ -455,7 +456,8 @@ def checkNodeEdgeConsistencyOfUser(user_id):
 			con.close()
 
 
-			# END CONVERSIONS
+	# END CONVERSIONS
+
 ##################################################
 # This section contains methods to validate JSON 
 def validate_json(jsonString):
@@ -951,11 +953,11 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 			context['public_graphs'] = len(context['graph_list'])
 
 	#If user has requested the graphs to be ordered in a certain manner, order them as requested
-	if order_by:
-		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
-	else:
-		# By default, all graphs are ordered via descending modified date (as per Anna's request)
-		context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
+	# if order_by:
+	# 	context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
+	# else:
+	# 	# By default, all graphs are ordered via descending modified date (as per Anna's request)
+	# 	context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
 	
 	return context	
 
@@ -1057,7 +1059,7 @@ def order_information(order_term, search_terms, graphs_list):
 		elif order_term == 'graph_descending':
 			return sorted(graphs_list, key=lambda graph: graph.graph_id, reverse=True)
 		elif order_term == 'modified_ascending':
-			return sorted(graphs_list, key=lambda graph: graph[2])
+			return sorted(graphs_list, key=lambda graph: graph.modified)
 		elif order_term == 'modified_descending':
 			return sorted(graphs_list, key=lambda graph: graph.modified, reverse=True)
 		elif order_term == 'owner_ascending':
@@ -1130,18 +1132,18 @@ def tag_result(uid, tag_terms, view_type):
 
 			if view_type == 'my graphs':
 				try:
-					intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.user_id == uid).all()
+					intial_graphs_with_tags += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.user_id == uid).all()
 				except NoResultFound:
 					print 'No graphs that you own match the tag term'
 
 			elif view_type == 'shared':
 
-				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GraphToTag.user_id == models.Graph.user_id).all()
+				intial_graphs_with_tags += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.GroupToGraph.graph_id).filter(models.GraphToTag.user_id == models.GroupToGraph.user_id).all()
 
-				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.Group.owner_id == uid).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.Graph.graph_id).filter(models.GraphToTag.user_id == models.Graph.user_id).all()
+				intial_graphs_with_tags += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.Group.owner_id == uid).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.GroupToGraph.graph_id).filter(models.GraphToTag.user_id == models.GroupToGraph.user_id).all()
 			else:
 				try:
-					intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.public == 1).all()
+					intial_graphs_with_tags += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.Graph.public == 1).all()
 				except NoResultFound:
 					print 'No graphs that you own match the tag term'
 
@@ -1159,14 +1161,12 @@ def tag_result(uid, tag_terms, view_type):
 		# it is a graph we want (simulating the and operator for all search terms)
 		for graph in intial_graphs_with_tags:
 
-			graph_tuple = (graph.graph_id, get_all_tags_for_graph(graph.graph_id, graph.user_id), graph.modified, graph.user_id, graph.public)
-
 			# Graph matches all search terms
 			if graph_repititions[graph] == len(tag_terms):
 
 				# If we haven't seen this graph yet 
 				if graph not in graph_mappings:
-					graph_mappings[graph] = graph_tuple
+					graph_mappings[graph] = graph
 				
 		# Go through all the graphs and insert tags for the graphs that match all search terms
 		return graph_mappings.values()
@@ -3036,18 +3036,18 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, cleaned_tags, db_session)
 	else:
 		try:
-			graph_data = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).all()
+			graph_data = db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		except NoResultFound:
 			print 'no result found'
 
-		graph_tuples = []
+		# graph_tuples = []
 
-		for graph in graph_data:
-			graph_tuple = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
-			graph_tuples.append(graph_tuple)
+		# for graph in graph_data:
+		# 	graph_tuple = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
+		# 	graph_tuples.append(graph_tuple)
 
-		graph_data = graph_tuples
+		# graph_data = graph_tuples
 
 	# If user wants to sort the data
 	if order_by:
@@ -3055,6 +3055,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	else:
 		graph_data = order_information("modified_descending", search_terms, graph_data)
 
+	print graph_data
 	db_session.close()
 	return graph_data
 

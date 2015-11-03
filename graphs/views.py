@@ -31,7 +31,6 @@ def index(request):
 
         :param request: HTTP GET Request
     '''
-    # db.add_everyone_to_password_reset()
     # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
     # that means that the user is trying to log on to GraphSpace.
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
@@ -192,7 +191,7 @@ def _graphs_page(request, view_type):
                 graph_tags = []
                 if request.GET.get(search_type):
                     graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
-                    grap[1] = graph_tags
+                    graph[1] = graph_tags
                 else:
                     graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
                     graph.insert(1, graph_tags)
@@ -635,24 +634,22 @@ def graphs_in_group(request, group_owner, group_id):
 
             all_tags = []
 
-            #Divide the results of the query into pages. Currently has poor performance
-            #because the page processes a query (which may take long)
-            #everytime the page loads. I think that this can be improved if
-            #I store the query result in the session such that it doesn't
-            #process the query unnecessarily.
+            # Goes through all the graphs that are currently on a page
             pager_context = pager(request, graph_data)
             if type(pager_context) is dict:
                 context.update(pager_context)
                 for i in xrange(len(context['current_page'].object_list)):
                     graph = list(context['current_page'][i])
-                    if request.GET.get(search_type):
-                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[5])
-                        all_tags += graph[1]
-                    else:
-                        graph[1] = db.get_all_tags_for_graph(graph[0], graph[3])
-                        all_tags += graph[1]
 
-                    graph = tuple(graph)
+                    graph_tags = []
+                    if request.GET.get(search_type):
+                        graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+                        graph[1] = graph_tags
+                    else:
+                        graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
+                        graph.insert(1, graph_tags)
+                    all_tags += graph_tags
+
                     context['current_page'].object_list[i] = graph
 
             context['all_tags'] = list(set(all_tags))
@@ -663,9 +660,7 @@ def graphs_in_group(request, group_owner, group_id):
         # if the group name is one of the designated names, display
         # appropriate vies for each
         else:
-            if group_id == 'all':
-                return all_groups(request)
-            elif group_id == 'member':
+            if group_id == 'member':
                 return groups_member(request)
             else:
                 return public_groups(request)
