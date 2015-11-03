@@ -252,6 +252,39 @@ class Edge(Base):
             ForeignKeyConstraint([tail_user_id, tail_graph_id, tail_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
 
+#Create indices
+Index('graph_public_idx', Graph.public)
+Index('graph_owner_idx', Graph.user_id)
+# Table: group. Columns: owner_id
+Index('group_idx_owner_id_group_id', Group.owner_id, Group.group_id)
+# Table: graph. Columns: user_id
+Index('graph_idx_user_graph_id', Graph.user_id, Graph.graph_id)
+# Table: graph. Columns: user_id, modified, public
+Index('graph_idx_user_id_modified_id_public', Graph.user_id, Graph.graph_id, Graph.modified, Graph.public)
+# Table: graph. Columns: modified, user_id, graph_id, public
+# Table: graph_to_tag. Columns: graph_id, user_id
+Index('graph_to_tag_idx_graph_id_user_id', GraphToTag.graph_id, GraphToTag.user_id, GraphToTag.tag_id)
+# Table: graph_to_tag. Columns: tag_id
+Index('graph_to_tag_idx_tag_id', GraphToTag.tag_id)
+Index('graph_to_tag_idx_user_id', GraphToTag.user_id, GraphToTag.graph_id)
+# Table: group_to_graph. Columns: graph_id, user_id
+Index('group_to_graph_idx_graph_id_user_id', GroupToGraph.graph_id, GroupToGraph.user_id, GroupToGraph.group_id, GroupToGraph.group_owner)
+# Table: group_to_graph. Columns: group_id
+Index('group_to_graph_idx_group_id', GroupToGraph.group_id, GroupToGraph.group_owner)
+# Table: group_to_graph. Columns: graph_id, user_id, group_id.
+# Table: group_to_user. Columns: group_id
+Index('group_to_user_idx_group_id', GroupToUser.group_id, GroupToUser.user_id, GroupToUser.group_owner)
+# Table: group_to_user. Columns: user_id
+Index('group_to_user_idx_user_id', GroupToUser.user_id)
+# Table: layout. Columns: graph_id, user_id
+Index('layout_idx_graph_id_user_id', Layout.graph_id, Layout.user_id)
+# Table: layout. Columns: owner_id
+Index('layout_idx_owner_id', Layout.owner_id)
+# Table: node. Columns: graph_id, user_id
+Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id, Node.node_id, Node.label)
+Index('node_index_label_graph_id', Node.label)
+Index('node_index_node_id_graph_id', Node.node_id)
+
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
 engine = create_engine(settings.DATABASE_LOCATION, echo=False)
@@ -260,43 +293,9 @@ engine = create_engine(settings.DATABASE_LOCATION, echo=False)
 # statements in raw SQL.
 Base.metadata.create_all(engine)
 
-# #Create indices
-# # Table: group. Columns: owner_id
-# Index('group_idx_owner_id', Group.owner_id)
-# # Table: graph. Columns: user_id
-# Index('graph_idx_user_id', Graph.user_id)
-# # Table: graph. Columns: user_id, modified, public
-# Index('graph_idx_user_id_modified_id_public', Graph.user_id, Graph.graph_id, Graph.modified, Graph.public)
-# # Table: graph. Columns: modified, user_id, graph_id, public
-# Index('graph_idx_modified_user_id_id_public', Graph.modified, Graph.user_id, Graph.graph_id, Graph.public)
-# # Table: graph. Columns: graph_id, user_id, modified, public
-# Index('graph_idx_id_user_id_modified_public', Graph.graph_id, Graph.user_id, Graph.modified, Graph.public)
-# # Table: graph_to_tag. Columns: graph_id, user_id
-# Index('graph_to_tag_idx_graph_id_user_id', graph_to_tag.c.graph_id, graph_to_tag.c.user_id)
-# # Table: graph_to_tag. Columns: tag_id
-# Index('graph_to_tag_idx_tag_id', graph_to_tag.c.tag_id)
-# # Table: group_to_graph. Columns: graph_id, user_id
-# Index('group_to_graph_idx_graph_id_user_id', group_to_graph.c.graph_id, group_to_graph.c.user_id)
-# # Table: group_to_graph. Columns: group_id
-# Index('group_to_graph_idx_group_id', group_to_graph.c.group_id)
-# # Table: group_to_graph. Columns: graph_id, user_id, group_id.
-# Index('group_to_graph_idx_graph_id_user_id_group_id', group_to_graph.c.graph_id, group_to_graph.c.user_id, group_to_graph.c.group_id)
-# # Table: group_to_user. Columns: group_id
-# Index('group_to_user_idx_group_id', group_to_user.c.group_id)
-# # Table: group_to_user. Columns: user_id
-# Index('group_to_user_idx_user_id', group_to_user.c.user_id)
-# # Table: layout. Columns: graph_id, user_id
-# Index('layout_idx_graph_id_user_id', Layout.graph_id, Layout.user_id)
-# # Table: layout. Columns: owner_id
-# Index('layout_idx_owner_id', Layout.owner_id)
-# # Table: node. Columns: graph_id, user_id
-# Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id)
-# Index('node_index_label_graph_id', Node.label, Node.graph_id)
-# Index('node_index_node_id_graph_id', Node.node_id, Node.graph_id)
-
-# # not sure if needed
-# # Table: edge. Columns: head_id, head_user_id, head_graph_id
-# # Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
+# not sure if needed
+# Table: edge. Columns: head_id, head_user_id, head_graph_id
+# Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
 # Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head_graph_id)
-# # Table: edge. Column: tail_id, tail_user_id, tail_graph_id
-# # Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)
+# Table: edge. Column: tail_id, tail_user_id, tail_graph_id
+# Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)

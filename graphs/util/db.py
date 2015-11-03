@@ -196,24 +196,19 @@ def add_user_to_password_reset(email, db_session=None):
 	# Get database connection
 	db_session = db_session or data_connection.new_session()
 
-	try:
-		# Get the user if they exist
-		user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).one()
-		
-		# Generate unique code that GraphSpace will use to identify
-		# which user is trying to reset their password
-		code = id_generator()
+	# Get the user if they exist
+	user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).first()
+	
+	# Generate unique code that GraphSpace will use to identify
+	# which user is trying to reset their password
+	code = id_generator()
 
-		# Create new entry to be inserted into password_reset table
-		reset_user = models.PasswordReset(id = None, user_id = email, code = code, created = datetime.now())
-		
-		# Commit the changes to the database
-		db_session.add(reset_user)
-		db_session.commit()
-
-	except NoResultFound:
-		print "User: " + email + " not found!"
-		return None
+	# Create new entry to be inserted into password_reset table
+	reset_user = models.PasswordReset(id = None, user_id = email, code = code, created = datetime.now())
+	
+	# Commit the changes to the database
+	db_session.add(reset_user)
+	db_session.commit()
 
 def emailExists(email):
 	'''
@@ -748,7 +743,6 @@ def set_layout_context(request, context, uid, gid):
 	context['default_layout_name'] = get_default_layout_name(uid, gid)
 	# send layout information to the front-end
 
-	print "LAYOUT: "  + layout_to_view
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "?layout="
 
@@ -761,9 +755,7 @@ def set_layout_context(request, context, uid, gid):
 
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
-		print context['my_layouts']
 		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + get_my_shared_layouts_for_graph(uid, gid, context['uid'])))
-		print context['shared_layouts']
 		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
 	else:
 		context['my_layouts'] = []
@@ -1027,7 +1019,6 @@ def removeDefaultLayout(layoutName, graph_id, graph_owner):
 		if layout.layout_name == layoutName:
 			graph.default_layout_id = None
 			db_session.commit()
-		print graph.default_layout_id
 		db_session.close()
 		return None
 	except Exception as ex:
@@ -2134,20 +2125,17 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		# TRICKY NOTE: An edge's ID is used as the label property
 		# The reason is because edge uses an 'id' column as the primary key.
 		# The label was the column I decided to avoid completely reconstructing the database
-
-		# If edge is bidirectional, we insert two edges with inverse source and target nodes
+		# POSSIBLE SOLUTION: If edge is bidirectional, we insert two edges with inverse source and target nodes
 		if is_directed == 0:
 			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
-
 			db_session.add(new_edge)
 
-			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['target'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['source'], label = edge['data']['id'], directed = is_directed, id = None)
-
-			db_session.add(new_edge)
+			# ASK MURALI ABOUT THIS
+			# new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['target'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['source'], label = edge['data']['id'], directed = is_directed, id = None)
+			# db_session.add(new_edge)
 
 		else:
 			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
-
 			db_session.add(new_edge)
 
 		db_session.commit()
@@ -2578,7 +2566,6 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 			members = get_group_members(group.owner_id, group.group_id)
 
 			for member in members:
-				print member.user_id
 				if logged_in_user == member.user_id:
 					return True
 
@@ -2753,7 +2740,6 @@ def search_result_for_graphs_in_group(uid, search_type, search_terms, db_session
 			key = graph_tuple[0] + graph_tuple[4]
 			graph_repititions[key] += 1
 
-		print graph_repititions
 		# Go through and aggregate all graph together
 		graph_mappings = defaultdict(list)
 
@@ -3307,6 +3293,7 @@ def view_graphs_of_type(view_type, username):
 	db_session = data_connection.new_session()
 
 	graphs = []
+
 	# Select graphs depending on view_type
 	if view_type == "public":
 		# Get all public graphs
@@ -3328,7 +3315,7 @@ def view_graphs_of_type(view_type, username):
 	else:
 		try:
 			# Get all my graphs
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.user_id == username).all()
+			graphs += db_session.query(models.Graph).filter(models.Graph.user_id == username).all()
 		except NoResultFound:
 			print "No owned graphs"
 
@@ -3600,7 +3587,6 @@ def cytoscapePresetLayout(csWebJson):
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
 
 	for node_position in csWebJson:
-		print node_position
 		csJson[str(node_position['id'])] = {
 			'x': node_position['x'],
 			'y': node_position['y']
@@ -3643,8 +3629,6 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
-
-	print 'here'
 
 	# If layout was the default graph layout, then we have to clear that entry
 	graph = db_session.query(models.Graph).filter(models.Graph.user_id == owner).filter(models.Graph.graph_id == gid).first()
@@ -3693,7 +3677,6 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 		for layout_name in layouts:
 			cleaned_layouts += layout_name
-		print cleaned_layouts
 		db_session.close()
 		return cleaned_layouts
 
