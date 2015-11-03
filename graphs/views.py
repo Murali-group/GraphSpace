@@ -210,24 +210,24 @@ def _graphs_page(request, view_type):
 
     recent_graphs.sort(key=lambda r: r[2], reverse=True)
 
-    if len(recent_graphs) > 250:
-        recent_graphs = recent_graphs[:250]
+    # if len(recent_graphs) > 250:
+    #     recent_graphs = recent_graphs[:250]
 
     # for graph in recent_graphs:
 
-        # Check to see if graph returned has any matching search terms
-        # since if it does, we add two more columns to show which terms
-        # matched the query
-        # if len(list(graph)) == 5:
-        #     graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
-        # else:
-        #     graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
-        # for tag in graph_tags:
-        #     if len(tag) > 0:
-        #         if tag in all_tags:
-        #             all_tags[tag] += 1
-        #         else:
-        #             all_tags[tag] = 1
+    #     #Check to see if graph returned has any matching search terms
+    #    # since if it does, we add two more columns to show which terms
+    #     #matched the query
+    #     if len(list(graph)) == 5:
+    #         graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
+    #     else:
+    #         graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+    #     for tag in graph_tags:
+    #         if len(tag) > 0:
+    #             if tag in all_tags:
+    #                 all_tags[tag] += 1
+    #             else:
+    #                 all_tags[tag] = 1
 
     sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
 

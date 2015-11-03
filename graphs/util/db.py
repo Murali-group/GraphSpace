@@ -18,7 +18,7 @@ import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, tuple_
 from sqlalchemy import distinct
 
 import graphs.models as models
@@ -2333,7 +2333,7 @@ def get_graphs_in_group(group_id, group_owner):
 
 	try:
 		# Gets all the graphs in the group
-		graphs_in_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).all()
+		graphs_in_group = db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).all()
 		
 		db_session.close()
 		return graphs_in_group
@@ -2382,7 +2382,7 @@ def get_cleaned_group_data(data, db_session):
 		cleaned_group.append(group.description)
 		cleaned_group.append(group.owner_id)
 
-		graphs = db_session.query(models.Graph).filter(models.GroupToGraph.group_id == group.group_id).filter(models.GroupToGraph.group_owner == group.owner_id).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).all()
+		graphs = db_session.query(models.Graph.graph_id).filter(models.GroupToGraph.group_id == group.group_id).filter(models.GroupToGraph.group_owner == group.owner_id).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).all()
 
 		cleaned_group.append(len(graphs))
 
@@ -3043,7 +3043,7 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		graph_data = tag_result_for_graphs_in_group(groupOwner, groupId, cleaned_tags, db_session)
 	else:
 		try:
-			graph_data = db_session.query(models.Graph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).all()
+			graph_data = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).all()
 
 		except NoResultFound:
 			print 'no result found'
@@ -3298,24 +3298,27 @@ def view_graphs_of_type(view_type, username):
 	if view_type == "public":
 		# Get all public graphs
 		try:
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.public == 1).all()
+			graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).distinct(models.Graph.graph_id).filter(models.Graph.public == 1).all()
 		except NoResultFound:
 			print "No public graphs"
 
 	elif view_type == "shared":
 		try:
 			# Get all shared graphs from groups you are a member of
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToUser.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == username).all()
+			member_of = db_session.query(models.GroupToUser.group_id, models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == username).all()
 
-			# Get all shared graphs from groups you own
-			graphs += db_session.query(models.Graph).distinct(models.Graph.graph_id, models.Graph.user_id).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).filter(models.Graph.user_id == models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.Group.owner_id == username).all()
+			# Go through and get graphs shared with groups
+			graphs_shared_with_group = []
+
+			for group in member_of:
+				graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.GroupToGraph.group_id == group.group_id).filter(models.GroupToGraph.group_owner == group.group_owner).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).all()
 
 		except NoResultFound:
 			print "No shared graphs"
 	else:
 		try:
 			# Get all my graphs
-			graphs += db_session.query(models.Graph).filter(models.Graph.user_id == username).all()
+			graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.Graph.user_id == username).all()
 		except NoResultFound:
 			print "No owned graphs"
 

@@ -204,7 +204,7 @@ class Node(Base):
     user_id = Column(String, primary_key = True)
     graph_id = Column(String, primary_key = True)
     modified = Column(TIMESTAMP, primary_key = True)
-    public = Column(Integer, primary_key = True)
+    public = Column(Integer, nullable = True)
     # Foregin key contraint to idientify the graph that this node belong to
     __table_args__ = (ForeignKeyConstraint([user_id, graph_id], [Graph.user_id, Graph.graph_id], ondelete="CASCADE", onupdate="CASCADE"), {})
 
@@ -252,6 +252,25 @@ class Edge(Base):
             ForeignKeyConstraint([tail_user_id, tail_graph_id, tail_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
 
+
+# CREATE INDEX graph_id_modified_user_id_public on graph(graph_id, modified, user_id, public);
+# CREATE INDEX graph_data_idx on graph(graph_id, modified, user_id, public);
+# CREATE INDEX password_reset_idx_user_id ON password_reset (user_id);
+# CREATE INDEX password_reset_idx_user_id ON password_reset (user_id);
+
+# CREATE INDEX edge_search on edge(head_id, tail_id);
+# CREATE INDEX edge_idx on edge(head_id, tail_id, head_graph_id);
+
+# CREATE INDEX group_to_graph_graph_id_idx on group_to_graph(graph_id);
+# CREATE INDEX group_to_graph_idx on group_to_graph(group_id);
+# CREATE INDEX group_to_graph_user_id_idx on group_to_graph(user_id);
+# CREATE INDEX node_idx_label on node(label);
+
+# CREATE INDEX group_to_user_idx on group_to_user(user_id);
+
+# CREATE INDEX tag_id_on_graph_to_tag on graph_to_tag(tag_id);
+# CREATE INDEX graph_to_tag_idx on graph_to_tag(tag_id);
+
 #Create indices
 Index('graph_public_idx', Graph.public)
 Index('graph_owner_idx', Graph.user_id)
@@ -271,6 +290,9 @@ Index('graph_to_tag_idx_user_id', GraphToTag.user_id, GraphToTag.graph_id)
 Index('group_to_graph_idx_graph_id_user_id', GroupToGraph.graph_id, GroupToGraph.user_id, GroupToGraph.group_id, GroupToGraph.group_owner)
 # Table: group_to_graph. Columns: group_id
 Index('group_to_graph_idx_group_id', GroupToGraph.group_id, GroupToGraph.group_owner)
+Index('group_to_graph_graph_idx', GroupToGraph.graph_id)
+Index('group_to_graph_group_idx', GroupToGraph.group_id)
+Index('group_to_graph_user_idx', GroupToGraph.user_id)
 # Table: group_to_graph. Columns: graph_id, user_id, group_id.
 # Table: group_to_user. Columns: group_id
 Index('group_to_user_idx_group_id', GroupToUser.group_id, GroupToUser.user_id, GroupToUser.group_owner)
@@ -289,13 +311,13 @@ Index('node_index_node_id_graph_id', Node.node_id)
 # sqlalchemy_example.db file.
 engine = create_engine(settings.DATABASE_LOCATION, echo=False)
  
-# Create all tables in the engine. This is equivalent to "Create Table"
-# statements in raw SQL.
+# # Create all tables in the engine. This is equivalent to "Create Table"
+# # statements in raw SQL.
 Base.metadata.create_all(engine)
 
-# not sure if needed
-# Table: edge. Columns: head_id, head_user_id, head_graph_id
-# Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
-# Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head_graph_id)
-# Table: edge. Column: tail_id, tail_user_id, tail_graph_id
-# Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)
+# # not sure if needed
+# # Table: edge. Columns: head_id, head_user_id, head_graph_id
+# # Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
+# # Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head_graph_id)
+# # Table: edge. Column: tail_id, tail_user_id, tail_graph_id
+# # Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)

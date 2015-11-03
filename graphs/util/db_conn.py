@@ -17,7 +17,7 @@ class Database(object):
         self.connection = None
 
         if self.db == 'prod':
-            self.engine = create_engine(_originaldb, echo=True)
+            self.engine = create_engine(_originaldb, echo=False)
         else:
             self.engine = create_engine('sqlite:///:memory:', echo=False)
 
