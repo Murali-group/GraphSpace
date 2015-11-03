@@ -950,7 +950,7 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 			context['shared_graphs'] = len(view_graphs(uid, search_type, search_list, tag_list, 'shared'))
 			context['public_graphs'] = len(context['graph_list'])
 
-	# If user has requested the graphs to be ordered in a certain manner, order them as requested
+	#If user has requested the graphs to be ordered in a certain manner, order them as requested
 	if order_by:
 		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
 	else:
@@ -1038,35 +1038,34 @@ def order_information(order_term, search_terms, graphs_list):
 
 	if search_terms:
 		if order_term == 'graph_ascending':
-			return sorted(graphs_list, key=lambda graph: graph[0])
+			return sorted(graphs_list, key=lambda graph: graph.graph_id)
 		elif order_term == 'graph_descending':
-			return sorted(graphs_list, key=lambda graph: graph[0], reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph.graph_id, reverse=True)
 		elif order_term == 'modified_ascending':
 			return sorted(graphs_list, key=lambda graph: graph[4])
 		elif order_term == 'modified_descending':
 			return sorted(graphs_list, key=lambda graph: graph[4], reverse=True)
 		elif order_term == 'owner_ascending':
-			return sorted(graphs_list, key=lambda graph: graph[5])
+			return sorted(graphs_list, key=lambda graph: graph.user_id)
 		elif order_term == 'owner_descending':
-			return sorted(graphs_list, key=lambda graph: graph[5], reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph.user_id, reverse=True)
 		else:
 			return graphs_list
 	else:
 		if order_term == 'graph_ascending':
-			return sorted(graphs_list, key=lambda graph: graph[0])
+			return sorted(graphs_list, key=lambda graph: graph.graph_id)
 		elif order_term == 'graph_descending':
-			return sorted(graphs_list, key=lambda graph: graph[0], reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph.graph_id, reverse=True)
 		elif order_term == 'modified_ascending':
 			return sorted(graphs_list, key=lambda graph: graph[2])
 		elif order_term == 'modified_descending':
-			return sorted(graphs_list, key=lambda graph: graph[2], reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph.modified, reverse=True)
 		elif order_term == 'owner_ascending':
-			return sorted(graphs_list, key=lambda graph: graph[3])
+			return sorted(graphs_list, key=lambda graph: graph.user_id)
 		elif order_term == 'owner_descending':
-			return sorted(graphs_list, key=lambda graph: graph[3], reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph.user_id, reverse=True)
 		else:
 			return graphs_list
-
 
 def view_graphs(uid, search_type, search_terms, tag_terms, view_type):
 	'''
@@ -1340,7 +1339,7 @@ def combine_similar_graphs(matched_graphs):
 			# If graph has not yet been encountered, append tuple to list of graphs encountered
 			if key not in graph_entry:
 				# Create new entry
-				new_graph_entry = (graph.graph_id, "", "", graph.modified, graph.user_id, graph.public)
+				new_graph_entry = (graph.graph_id, "", "", graph.modified, graph.user_id)
 
 				# Add new entry to dict
 				graph_entry[key] = new_graph_entry
@@ -1363,29 +1362,23 @@ def find_all_graphs_containing_search_word(uid, search_type, search_word, view_t
 	if search_type == 'partial_search':
 		# Select graphs that match the given view type
 		if view_type == "my graphs":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.user_id == uid).all()
+			matched_graphs = db_session.query(models.Graph.graph_id, models.Graph.user_id, models.Graph.modified).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.user_id == uid).all()
 		elif view_type == "shared":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.GroupToUser.user_id == uid).filter(models.GroupToUser.group_id == models.GroupToGraph.group_id).filter(models.GroupToUser.group_owner == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
-
-			matched_graphs += db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
-
+			matched_graphs = db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id, models.GroupToGraph.modified).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GroupToGraph.graph_id.like("%" + search_word + "%")).all()
+			matched_graphs += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id, models.GroupToGraph.modified).filter(models.GroupToGraph.graph_id.like("%" + search_word + "%")).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).all()
 		elif view_type == "public":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.public == 1).all()
+			matched_graphs = db_session.query(models.Graph.graph_id, models.Graph.user_id, models.Graph.modified, models.Graph.public).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.Graph.public == 1).all()
 
 	# Return all graphs that have a gaph name that exactly matches the search word
 	elif search_type == 'full_search':
 		# Select graphs that match the given view type
 		if view_type == "my graphs":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.Graph.user_id == uid).all()
+			matched_graphs = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.Graph.graph_id == search_word).filter(models.Graph.user_id == uid).all()
 		elif view_type == "shared":
-
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(group_to_user.c.user_id == uid).filter(group_to_user.c.group_id == group_to_graph.c.group_id).filter(group_to_user.c.group_owner == group_to_graph.c.group_owner).filter(models.Graph.graph_id == group_to_graph.c.graph_id).all()
-
-			matched_graphs += db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).filter(models.Graph.graph_id == models.GroupToGraph.graph_id).all()
-
+			matched_graphs = db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id, models.GroupToGraph.modified).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GroupToGraph.graph_id == search_word).all()
+			matched_graphs += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id, models.GroupToGraph.modified).filter(models.GroupToGraph.graph_id == search_word).filter(models.Group.owner_id == uid).filter(models.Group.group_id == models.GroupToGraph.group_id).filter(models.Group.owner_id == models.GroupToGraph.group_owner).all()
 		elif view_type == "public":
-			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id ==search_word).filter(models.Graph.public == 1).all()
-
+			matched_graphs = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.Graph.graph_id == search_word).filter(models.Graph.public == 1).all()
 
 	graph_dict = dict()
 
@@ -1477,11 +1470,11 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
 				if view_type == "public":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
 				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(group_to_graph.c.user_id == uid).filter(models.Edge.head_graph_id == group_to_graph.c.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(group_to_graph.c.user_id == uid).filter(models.Edge.head_graph_id == group_to_graph.c.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
 				else:
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
 
 
 		graph_dict = dict()
@@ -1518,16 +1511,16 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 
 		if search_type == "partial_search":
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
 			
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
 		else:
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).filter(models.Node.user_id == uid).all()
 			
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).filter(models.Node.user_id == uid).all()
 	
 	# Shared graphs
 	elif view_type == "shared":
@@ -1552,7 +1545,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 
 		if search_type == "partial_search":
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1565,7 +1558,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1577,7 +1570,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 			initial_graphs_matching_nodes = final_graphs
 		else:
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.label == search_word).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1590,7 +1583,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node).filter(models.Node.node_id == search_word).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1604,16 +1597,16 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 	else:
 		if search_type == "partial_search":
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 		else:
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 	graph_dict = dict()
 
@@ -3298,35 +3291,23 @@ def view_graphs_of_type(view_type, username):
 	if view_type == "public":
 		# Get all public graphs
 		try:
-			graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).distinct(models.Graph.graph_id).filter(models.Graph.public == 1).all()
+			graphs = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id).distinct(models.Graph.graph_id).filter(models.Graph.public == 1).all()
 		except NoResultFound:
 			print "No public graphs"
 
 	elif view_type == "shared":
 		try:
-			# Get all shared graphs from groups you are a member of
-			member_of = db_session.query(models.GroupToUser.group_id, models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == username).all()
-
-			# Go through and get graphs shared with groups
-			graphs_shared_with_group = []
-
-			for group in member_of:
-				graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.GroupToGraph.group_id == group.group_id).filter(models.GroupToGraph.group_owner == group.group_owner).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).all()
-
+			graphs = db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).distinct(models.GroupToGraph.graph_id, models.GroupToGraph.user_id, models.GroupToGraph.modified).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == username).all()
 		except NoResultFound:
 			print "No shared graphs"
 	else:
 		try:
 			# Get all my graphs
-			graphs += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id, models.Graph.public).filter(models.Graph.user_id == username).all()
+			graphs = db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id).filter(models.Graph.user_id == username).all()
 		except NoResultFound:
 			print "No owned graphs"
 
-	cleaned_graphs = []
-	for graph in graphs:
-		cleaned_graph = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
-		if cleaned_graph not in cleaned_graphs:
-			cleaned_graphs.append(cleaned_graph)
+	return graphs
 
 	db_session.close()
 	return cleaned_graphs

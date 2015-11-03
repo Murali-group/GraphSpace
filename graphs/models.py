@@ -64,6 +64,7 @@ class GroupToGraph(Base):
     group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     user_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    modified = Column(TIMESTAMP, nullable = False)
 
 class GraphToTag(Base):
     '''The class representing the schema of the graph_to_tag table.'''

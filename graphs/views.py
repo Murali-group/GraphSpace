@@ -178,6 +178,27 @@ def _graphs_page(request, view_type):
     # as well as any search queries and tag queries being performed
     context = db.get_graphs_for_view_type(context, view_type, uid, request)
 
+    # Holds the amount of times a tag appears for a graph 
+    all_tags = {}
+
+    # Goes through all the graphs that are currently on a page
+    if context['graph_list'] != None:
+        pager_context = pager(request, context['graph_list'])
+        if type(pager_context) is dict:
+            context.update(pager_context)
+            for i in xrange(len(context['current_page'].object_list)):
+                graph = list(context['current_page'][i])
+
+                graph_tags = []
+                if request.GET.get(search_type):
+                    graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+                    grap[1] = graph_tags
+                else:
+                    graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
+                    graph.insert(1, graph_tags)
+
+                context['current_page'].object_list[i] = graph
+
     # reset the search form
     context['search_form'] = SearchForm(placeholder='Search...')
 
@@ -189,52 +210,33 @@ def _graphs_page(request, view_type):
     if len(context['graph_list']) == 0:
         context = constructGraphMessage(context, view_type, request.GET.get(search_type), request_tags)
 
-    # Holds the amount of times a tag appears for a graph 
-    all_tags = {}
-    
-    # Goes through all the graphs that are currently on a page
-    if context['graph_list'] != None:
-        pager_context = pager(request, context['graph_list'])
-        if type(pager_context) is dict:
-            context.update(pager_context)
-            for i in xrange(len(context['current_page'].object_list)):
-                graph = list(context['current_page'][i])
-                if request.GET.get(search_type):
-                    graph[1] = ""#db.get_all_tags_for_graph(graph[0], graph[5])
-                else:
-                    graph[1] = ""#db.get_all_tags_for_graph(graph[0], graph[3])
-                graph = tuple(graph)
-                context['current_page'].object_list[i] = graph
-
     recent_graphs = context['graph_list']
 
     recent_graphs.sort(key=lambda r: r[2], reverse=True)
 
-    # if len(recent_graphs) > 250:
-    #     recent_graphs = recent_graphs[:250]
+    if len(recent_graphs) > 250:
+        recent_graphs = recent_graphs[:250]
 
-    # for graph in recent_graphs:
+    for graph in recent_graphs:
 
-    #     #Check to see if graph returned has any matching search terms
-    #    # since if it does, we add two more columns to show which terms
-    #     #matched the query
-    #     if len(list(graph)) == 5:
-    #         graph_tags = db.get_all_tags_for_graph(graph[0], graph[3])
-    #     else:
-    #         graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
-    #     for tag in graph_tags:
-    #         if len(tag) > 0:
-    #             if tag in all_tags:
-    #                 all_tags[tag] += 1
-    #             else:
-    #                 all_tags[tag] = 1
+        if request.GET.get(search_type):
+            graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+        else:
+            graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
+
+        for tag in graph_tags:
+            if len(tag) > 0:
+                if tag in all_tags:
+                    all_tags[tag] += 1
+                else:
+                    all_tags[tag] = 1
 
     sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
 
     all_tags_refined = [i[0] for i in sorted_tags]
 
     # Populates tags search bar with most used tags of last 250 graphs
-    context['all_tags'] = all_tags_refined
+    context['all_tags'] = all_tags_refined #list(set(all_tags))[:10]
 
     # indicator to include css/js footer for side menu support etc.
     context['footer'] = True
