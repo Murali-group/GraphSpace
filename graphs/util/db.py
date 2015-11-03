@@ -1337,7 +1337,7 @@ def combine_similar_graphs(matched_graphs):
 					cur_graph_entry[1] += graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")"
 					cur_graph_entry[2] += graph.label
 				else:
-					cur_graph_entry[1] += ", " + graph.node_id + "(" + graph.label + ")"
+					cur_graph_entry[1] += ", " + graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")"
 					cur_graph_entry[2] += ", " + graph.label
 
 				# Add appended entry
@@ -1395,7 +1395,18 @@ def find_all_graphs_containing_search_word(uid, search_type, search_word, view_t
 		elif view_type == "public":
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id ==search_word).filter(models.Graph.public == 1).all()
 
-	return matched_graphs
+
+	graph_dict = dict()
+
+	# Remove duplicates for all graphs that match have the same graph matching search term
+	for graph in matched_graphs:
+		key = graph.graph_id + graph.user_id
+		if key in graph_dict:
+			continue
+		else:
+			graph_dict[key] = graph
+
+	return graph_dict.values()
 
 def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, db_session):
 	'''
@@ -1481,7 +1492,18 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 				else:
 					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
 
-		return initial_graphs_matching_edges
+
+		graph_dict = dict()
+
+		# Remove duplicates for all graphs that match have the same edge matching search term
+		for graph in initial_graphs_matching_edges:
+			key = graph.head_id + graph.head_graph_id + graph.head_user_id + graph.tail_id + graph.tail_graph_id + graph.tail_user_id + graph.label
+			if key in graph_dict:
+				continue
+			else:
+				graph_dict[key] = graph
+
+		return graph_dict.values()
 	else:
 		return []
 
@@ -1602,7 +1624,17 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 			# Get all partially matching nodes containing the node id
 			initial_graphs_matching_nodes += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
-	return initial_graphs_matching_nodes
+	graph_dict = dict()
+
+	# Remove duplicates for all graphs that match have the same node id and label matching search term
+	for graph in initial_graphs_matching_nodes:
+		key = graph.graph_id + graph.user_id + str(graph.public) + graph.label + graph.node_id
+		if key in graph_dict:
+			continue
+		else:
+			graph_dict[key] = graph
+
+	return graph_dict.values()
 
 def uploadCyjsFile(username, graphJSON, title):
 	'''
@@ -2831,7 +2863,16 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 				
 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.head_user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
-		return initial_graphs_matching_edges
+		graph_dict = dict()
+		# Remove duplicates for all graphs that match have the same edge matching search term
+		for graph in initial_graphs_matching_edges:
+			key = graph.head_id + graph.head_graph_id + graph.head_user_id + graph.tail_id + graph.tail_graph_id + graph.tail_user_id + graph.label
+			if key in graph_dict:
+				continue
+			else:
+				graph_dict[key] = graph
+
+		return graph_dict.values()
 	else:
 		return []
 
@@ -2849,7 +2890,17 @@ def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_
 
 		node_data += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
-	return node_data
+	graph_dict = dict()
+
+	# Remove duplicates for all graphs that match have the same node id and label matching search term
+	for graph in node_data:
+		key = graph.graph_id + graph.user_id + str(graph.public) + graph.label + graph.node_id
+		if key in graph_dict:
+			continue
+		else:
+			graph_dict[key] = graph
+
+	return graph_dict.values()
 
 def find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
 
@@ -2871,7 +2922,18 @@ def find_all_graphs_containing_search_word_in_group(uid, search_type, search_wor
 		except NoResultFound:
 			print "No shared graphs matching search term"
 
-	return matched_graphs
+
+	graph_dict = dict()
+
+	# Remove duplicates for all graphs that match have the same graph matching search term
+	for graph in matched_graphs:
+		key = graph.graph_id + graph.user_id
+		if key in graph_dict:
+			continue
+		else:
+			graph_dict[key] = graph
+
+	return graph_dict.values()
 
 def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, db_session):
 
