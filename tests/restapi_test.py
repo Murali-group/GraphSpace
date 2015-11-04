@@ -89,6 +89,7 @@ def testAddGraph(email, password, filename):
 	register_openers()
 	
 	datagen, headers = multipart_encode({"username": email, "password": password, "graphname": open(filename, "r")})
+
 	url = URL_PATH + "api/users/" + email + "/graph/add/" + filename + "/"
 	
 	request = urllib2.Request(url, datagen, headers)
@@ -500,7 +501,38 @@ def testMakeGraphsWithTagPrivate(email, password, tag, filename):
 			if con:
 				con.close()
 
-# def testDeleteGraphsWithTag():
+def testDeleteGraphsWithTag(email, password, tag):
+	register_openers()
+	
+	datagen, headers = multipart_encode({"username": email, "password": password})
+	url = URL_PATH + "api/tags/user/" + email + "/" + tag + "/delete/"
+
+	request = urllib2.Request(url, datagen, headers)
+
+	response = byteify(json.loads(urllib2.urlopen(request).read()))
+
+	if 'Error' in response:
+		print "Error in testDeleteGraphsWithTag: " + response['Error']
+
+	con = None
+	try:
+		con = lite.connect(DB_FULL_PATH)
+		cur = con.cursor()
+
+		cur.execute('select * from graph_to_tag where tag_id = ? and user_id = ?', (tag, email))
+		data = cur.fetchone()
+
+		if data == None:
+			print "Passed testDeleteGraphsWithTag test!"
+		else:
+			print "Error in testDeleteGraphsWithTag"
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
 
 if __name__ == '__main__':
 
@@ -513,10 +545,12 @@ if __name__ == '__main__':
 	group_name = "test_group"
 	graph_name = "example.json"
 
+	tag = "tutorial"
+
 	testCreateUser(email, password)
 	testCreateUser(email_other, password)
 
-	# Graph API Tests
+	# # Graph API Tests
 	testAddGraph(email, password, graph_name)
 	testGetGraph(email, password, graph_name)
 	testUpdateGraph(email, password, graph_name)
@@ -537,10 +571,10 @@ if __name__ == '__main__':
 	# Tags API Tests
 	testGetTagsForUser(email, password)
 	testGetTagsForGraph(email, password, graph_name)
-	testMakeGraphsWithTagPublic(email, password, 'tutorial', graph_name)
-	testMakeGraphsWithTagPrivate(email, password, 'tutorial', graph_name)
-
-	testRemoveGraph(email, password, graph_name)
+	testMakeGraphsWithTagPublic(email, password, tag, graph_name)
+	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
+	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
+	testDeleteGraphsWithTag(email, password, tag)
 	
 	testRemoveUser(email, password)
 	testRemoveUser(email_other, password)
