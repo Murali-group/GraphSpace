@@ -25,17 +25,6 @@ import graphs.models as models
 
 data_connection = db_init.db
 
-#get tables from the database
-graph = db_init.graph
-node = db_init.node
-edge = db_init.edge
-user = db_init.user
-group = db_init.group
-group_to_graph = db_init.group_to_graph
-group_to_user = db_init.group_to_user
-password_reset = db_init.password_reset
-graph_to_tag = db_init.graph_to_tag
-
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
@@ -169,7 +158,7 @@ def add_everyone_to_password_reset():
 	
 	try:
 		# Get all users that are currently in the user table
-		user_ids = db_session.query(user.c.user_id).all()
+		user_ids = db_session.query(models.User.user_id).all()
 		
 		# Go through each username and add it to the password_reset table
 		for user_id in user_ids:
@@ -197,7 +186,7 @@ def add_user_to_password_reset(email, db_session=None):
 	db_session = db_session or data_connection.new_session()
 
 	# Get the user if they exist
-	user_id = db_session.query(user.c.user_id).filter(user.c.user_id == email).first()
+	user_id = db_session.query(models.User.user_id).filter(models.User.user_id == email).first()
 	
 	# Generate unique code that GraphSpace will use to identify
 	# which user is trying to reset their password
@@ -242,7 +231,7 @@ def need_to_reset_password(email):
 
 	try:
 		# If email exists in password_reset table, then the user has to reset their password
-		user_id = db_session.query(password_reset.c.user_id).filter(password_reset.c.user_id == email).one()
+		user_id = db_session.query(models.PasswordReset.user_id).filter(models.PasswordReset.user_id == email).one()
 		return True
 	except NoResultFound:
 		print "User: " + email + " not found!"
@@ -262,7 +251,7 @@ def sendForgotEmail(email):
 
 	try:
 		# Retrieve reset code attached to email
-		reset_code = db_session.query(password_reset.c.code).filter(password_reset.c.user_id == email).one()
+		reset_code = db_session.query(models.PasswordReset.code).filter(models.PasswordReset.user_id == email).one()
 
 		# Construct email message
 		mail_title = 'Password Reset Information for GraphSpace!'
@@ -292,7 +281,7 @@ def retrieveResetInfo(reset_code):
 	try:
 		# Obtain email attached to code -> code that was send to email address
 		# This is a verification step to ensure code is legit
-		user_id_to_reset = db_session.query(password_reset.c.user_id).filter(password_reset.c.code == reset_code).one()
+		user_id_to_reset = db_session.query(models.PasswordReset.user_id).filter(models.PasswordReset.code == reset_code).one()
 		# Retrieve string from unicode
 		user_id_to_reset = user_id_to_reset[0]
 		db_session.close()
@@ -1472,7 +1461,7 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 				if view_type == "public":
 					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
 				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(group_to_graph.c.user_id == uid).filter(models.Edge.head_graph_id == group_to_graph.c.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.GroupToGraphuser_id == uid).filter(models.Edge.head_graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
 				else:
 					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
 
@@ -1535,13 +1524,13 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 			group_id = single_group.group_id
 			group_owner = single_group.group_owner
 
-			graphs_in_group += db_session.query(group_to_graph.c.graph_id, group_to_graph.c.user_id).filter(group_to_graph.c.group_id == group_id).filter(group_to_graph.c.group_owner == group_owner).all()
+			graphs_in_group += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == group_id).filter(models.GroupToGraph.group_owner == group_owner).all()
 
 		# Go through all groups that the user owns
 		groups_user_owns = db_session.query(models.Group).filter(models.Group.owner_id == uid).all()
 
 		for single_group in groups_user_owns:
-			graphs_in_group += db_session.query(group_to_graph.c.graph_id, group_to_graph.c.user_id).filter(group_to_graph.c.group_id == single_group.group_id).filter(group_to_graph.c.group_owner == single_group.owner_id).all()
+			graphs_in_group += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == single_group.group_id).filter(models.GroupToGraph.group_owner == single_group.owner_id).all()
 
 		if search_type == "partial_search":
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
@@ -3935,7 +3924,7 @@ def delete_all_graphs_for_tag(tagname, username):
 
 	try:
 		# Get all the graphs that the user owns which match the tag
-		graph_list = db_session.query(models.Graph).filter(graph_to_tag.c.tag_id == tagname).filter(graph_to_tag.c.user_id == username).filter(models.Graph.graph_id == graph_to_tag.c.graph_id).filter(models.Graph.user_id == graph_to_tag.c.user_id).all()
+		graph_list = db_session.query(models.Graph).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphTag.user_id == username).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).all()
 
 		# Delete all these graphs from the graphs table
 		for graph in graph_list:
