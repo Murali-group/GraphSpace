@@ -11,11 +11,13 @@ $(document).ready(function() {
 		var password = $("#password").val()
 		var verifyPass = $("#verifyPass").val()
 
+		//If there is a password and verify password that are both the same
 		if (password.length == 0 || verifyPass.length == 0) {
 			return alert("Please enter a password in both fields!");
 		} else if (password !== verifyPass) {
 			return alert("Please make sure both fields have the same value!");
 		} else {
+			//Send reset request via email
 			$.post("../resetPassword/", {
 				email: $("#reset_email").val(),
 				password: password

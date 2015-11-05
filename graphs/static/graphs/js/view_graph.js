@@ -252,17 +252,24 @@ $(document).ready(function() {
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
+
+        //If edges don't have an ID, generate one
         if (testEdges.indexOf(edgeData['id']) == -1) {
           testEdges.push(edgeData['id']);
         } else {
           edgeData['id'] = edgeData['id'] + i;
         }
+
+        //If edges don't have any color properties, choose default 
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
           edgeData['line_color'] = "black";
         } else {
+          //Color property maps to line_color
+          //DONE TO SUPPORT OLD GRAPHS
           if (edgeData.hasOwnProperty('color')) {
             edgeData['line_color'] = edgeData['color'];
           }
+          //Converts the line color into Hexadecimal so CytoscapeJS can user it
           var hexCode = colourNameToHex(edgeData['line_color']);
            if (hexCode != false) {
             edgeData['line_color'] = hexCode;
@@ -273,6 +280,7 @@ $(document).ready(function() {
            }
         }
 
+        //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
         if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
           edgeData['target_arrow_shape'] = 'none';
         } else if (edgeData['directed'] == true) {
@@ -300,25 +308,19 @@ $(document).ready(function() {
         if ( target !== this ) {
             var popup = target._private.data.popup
 
+            //When user clicks an element, turn that element red
             window.cy.$('[id="' + target._private.data.id + '"]').css('color', 'red');
 
+            //If there is no embedded content, don't display anything
             if (popup == null || popup.length == 0) {
                 return;
             }
 
+            //Display embedded content if there is any
             if (target._private.data.popup != null && target._private.data.popup.length > 0) {
               $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
             if (target._private.group == 'edges') {
-              // $.post("../../../retrieveIDs/", {
-              //   'values': [target._private.data.source, target._private.data.target],
-              //   "gid": decodeURIComponent(paths[paths.length - 2]),
-              //   "uid": decodeURIComponent(paths[paths.length - 3]),
-              //   "search_type": "full_search" 
-              // }, function (data) {
-              //   console.log(data);
-              // });
-              
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
               $('#dialog').dialog('option', 'title', target._private.data.content);
@@ -329,6 +331,7 @@ $(document).ready(function() {
             $('#dialog').dialog('open');
 
         } else {
+          //If another element was clicked, remove the red color from previously clicked element
           window.cy.elements().removeCss('color');
         }
       });
@@ -344,25 +347,30 @@ $(document).ready(function() {
           $("#partial_search").attr('checked', true);
        }
 
+       //Searches through the graph for nodes/edges that match the search term
        searchOnLoad();
 
+       //If num_paths in query, set the k value 
        if (getQueryVariable('num_paths')) {
         if ($("#input_k").val()) {
           $("#input_k").val(getQueryVariable("num_paths"));
         }
        }
 
+       //If max_paths in query, set the k value 
        if (getQueryVariable('max_paths')) {
         if ($("#input_max").val()) {
           $("#input_max").val(getQueryVariable("max_paths"));
         }
        }
 
+       //Re-render graph allowing for a maximum of k
        applyMax(graph_json.graph);
 
     } // end ready: function()
     });
 
+    //Allow a user to select multiple elements by dragging cursor across
     cy.boxSelectionEnabled(true);
 
     //setup popup dialog for displaying dialog when nodes/edges
@@ -447,12 +455,18 @@ $(document).ready(function() {
 
         var layoutUrl = window.location.pathname;
 
+        //Get rid of trailing '/' character
         if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
           layoutUrl = layoutUrl.substring(0, layoutUrl.length - 1);
         }
 
+        //If layout, append layout URL
         layoutUrl += "?layout=" + layoutName;
 
+        //Get all highlighted terms and append them to the 
+        //url of each layout.
+        //Done so the highlighted elements stay highlighted
+        //when user clicks a layout
         var searchTerms = getHighlightedTerms();
         if (searchTerms[0].length > 0) {
           layoutUrl += '&partial_search=';
@@ -465,14 +479,18 @@ $(document).ready(function() {
           }      
         } 
 
-        if (searchTerms[1].length > 0) {
-          layoutUrl += '&full_search=';
-          for (var i = 0; i < searchTerms[1].length; i++) {
-            if (i < searchTerms[1].length - 1) {
-              layoutUrl += searchTerms[1][i] + ',';
-            } else {
-              layoutUrl += searchTerms[1][i];
-            }
+          //Get all highlighted terms and append them to the 
+          //url of each layout.
+          //Done so the highlighted elements stay highlighted
+          //when user clicks a layout        
+          if (searchTerms[1].length > 0) {
+            layoutUrl += '&full_search=';
+            for (var i = 0; i < searchTerms[1].length; i++) {
+              if (i < searchTerms[1].length - 1) {
+                layoutUrl += searchTerms[1][i] + ',';
+              } else {
+                layoutUrl += searchTerms[1][i];
+              }
           }      
         } 
         window.location.replace(layoutUrl);
@@ -488,10 +506,13 @@ $(document).ready(function() {
       }
      });
 
+    //Highlights appropriate radio button based on search term
     if (getQueryVariable($('input[name=match]:checked').val())) {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
+    //DEPRECATED: HERE FOR REFERENCE PURPOSES ONLY
+    //Originally used as an attempt to get a PDF image of graph
     $("#pdf").click(function (e) {
       html2canvas($("#csjs").first(), {
         onrendered: function(canvas) {
@@ -503,6 +524,7 @@ $(document).ready(function() {
       });
     });
 
+    //Goes to appropriate help section
     $(".help").click(function (e) {
       e.preventDefault();
       window.location.href = "../../../help/#graph_panels";

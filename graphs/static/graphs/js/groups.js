@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-
+  //Change icons depending on the type of sorting the user wants
   setIcons();
 
   /**
