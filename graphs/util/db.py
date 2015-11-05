@@ -405,7 +405,7 @@ def checkPublicNodeEdgeConsistency():
 		con = lite.connect(DB_NAME)
 		cur = con.cursor()
 
-		cur.execute('select * from graph where user_id <> ? and user_id <> ? and user_id <> ?', ("annaritz@vt.edu", "ategge@vt.edu", "craigy@vt.edu"))
+		cur.execute('select * from graph')
 		data = cur.fetchall()
 
 		if data == None:
