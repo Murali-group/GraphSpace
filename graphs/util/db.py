@@ -448,6 +448,7 @@ def checkNodeEdgeConsistencyOfUser(user_id):
 	# END CONVERSIONS
 
 ##################################################
+
 # This section contains methods to validate JSON 
 def validate_json(jsonString):
 	'''
@@ -523,6 +524,7 @@ def checkUniqueID(elements):
 	'''
 	id_map = []
 
+	# If element is already in the dictionary, there are two nodes with same ID, huge error
 	for element in elements:
 		if element['data']['id'] not in id_map:
 			id_map.append(element['data']['id'])
@@ -538,8 +540,10 @@ def checkShapes(elements):
 		:param elements: JSON of nodes
 		:return Error: <message>
 	'''
+	# Add more shapes as Cytoscapejs decides to support other shapes
 	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond"]
 
+	# Checks to see if the shapes are allowed
 	for element in elements:
 		if element['data']['shape'] not in allowed_shapes:
 			return "illegal shape: " + element['data']['shape'] + ' for a node'
@@ -557,6 +561,8 @@ def propertyInJSON(elements, properties, elementType):
 		:return Error|None: <Property x not in JSON for element | node>
 	'''
 
+	# Go through all elements in JSON and check to see 
+	# if all elemnts have minimum set of properties
 	for element in elements:
 		met_all_properties = []
 
@@ -644,6 +650,8 @@ def get_default_layout(uid, gid):
 		# Retrieve the saved layout from the database
 		default_layout = db_session.query(models.Layout).filter(models.Layout.layout_id == graph_being_searched.default_layout_id).one()
 		db_session.close()
+
+		# Convert JSON to cytoscape recognized format
 		return json.dumps({"json": cytoscapePresetLayout(json.loads(default_layout.json))})
 	except NoResultFound:
 		db_session.close()
@@ -710,23 +718,43 @@ def set_layout_context(request, context, uid, gid):
 	'''
 	layout_to_view = None
 
-    # if there is a layout specified, then render that layout
+    # if there is a layout specified in the request (query term), then render that layout
 	if len(request.GET.get('layout', '')) > 0:
+
+		# If the layout is not one of the automatic layout algorithms
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
+		    
+		    # Check to see if the user is logged in
 		    temp_uid = None
 		    if 'uid' in context:
 		    	temp_uid = context['uid']
+
+	    	# Based on the logged in user and the graph, check to see if 
+	    	# there exists a layout that matches the query term
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, temp_uid)
+		    
+		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
+		    
+	    	# Return layout JSON
 		    layout_to_view = json.dumps({"json": graph_json})
+
+		    # Still set the default layout for the graph, if it exists
 		    context['default_layout'] = get_default_layout_id(uid, gid)
 		else:
-			layout_to_view = get_default_layout(uid, gid)
-			context['default_layout'] = get_default_layout_id(uid, gid)
 
+			# If there is a layout that is an automatic algorithm, simply
+			# return the default layout because the front-end JavaScript library
+			# handles the movement clientside
+			layout_to_view = get_default_layout(uid, gid)
+			context['default_layout'] = layout_to_view
+
+		# Set layout name to add to the query term 
 		context['layout_name'] = request.GET.get('layout')
 	else:
+		# If there is no layout specified, simply return the default layout
+		# if it exists
 		layout_to_view = get_default_layout(uid, gid)
 		context['default_layout'] = get_default_layout_id(uid, gid)
 		context['layout_name'] = get_default_layout_name(uid, gid)
@@ -734,21 +762,25 @@ def set_layout_context(request, context, uid, gid):
 	context['default_layout_name'] = get_default_layout_name(uid, gid)
 	# send layout information to the front-end
 
+	# Pass information to the template
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "?layout="
 
 	search_type = None
 
+	# Get the search term to highlight once we load the layout for the graph
 	if 'partial_search' in request.GET:
 	    search_type = 'partial_search'
 	elif 'full_search' in request.GET:
 	    search_type = 'full_search'
 
+    # If user is logged in, display my layouts and shared layouts
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
 		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + get_my_shared_layouts_for_graph(uid, gid, context['uid'])))
 		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
 	else:
+		# Otherwise only display public layouts
 		context['my_layouts'] = []
 		context['shared_layouts'] = get_public_layouts_for_graph(uid, gid)
 
@@ -916,6 +948,10 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 	# In order to produce the number of graphs returned that match the query 
 	# (for the My Graphs, Shared, and Public buttons), I am also retrieving the len
 	# of matched graphs for each view_type.  This feature was requesed by Murali
+
+	# For every query, we need to make request for all the view types (shared, public, my graphs)
+	# because we want to notify the user the number of graphs that are available for each view
+	# that matches the queries
 	if uid == None:
 		context['graph_list'] = view_graphs(uid, search_type, search_terms, tag_list, 'public')
 		context['my_graphs'] = 0
@@ -974,6 +1010,7 @@ def setDefaultLayout(layoutName, graph_id, graph_owner):
 		if layout == None:
 			return "You can't set a layout as default layout for graph unless layout is shared and the graph is public!"
 
+		# Update the default layout of the current graph
 		graph.default_layout_id = layout.layout_id
 
 		db_session.commit()
@@ -1007,6 +1044,8 @@ def removeDefaultLayout(layoutName, graph_id, graph_owner):
 		return "Layout does not exist for this graph!"
 
 	try:
+		# If the default layout is deleted, update 
+		# graph so that it has no default layout
 		if layout.layout_name == layoutName:
 			graph.default_layout_id = None
 			db_session.commit()
@@ -1027,6 +1066,7 @@ def order_information(order_term, search_terms, graphs_list):
 		:return sorted_list Sorted list of graph tuples according to order_term
 	'''
 
+	# Each order_term corresponds to sortable columns in the graph tables
 	if search_terms:
 		if order_term == 'graph_ascending':
 			return sorted(graphs_list, key=lambda graph: graph.graph_id)
@@ -1127,8 +1167,9 @@ def tag_result(uid, tag_terms, view_type):
 
 			elif view_type == 'shared':
 
+				# Append all graphs that are shared with groups that the user is a member of
 				intial_graphs_with_tags += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.GroupToUser.group_id).filter(models.GroupToGraph.group_owner == models.GroupToUser.group_owner).filter(models.GroupToUser.user_id == uid).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.GroupToGraph.graph_id).filter(models.GraphToTag.user_id == models.GroupToGraph.user_id).all()
-
+				# Append all graphs that the user shared for any groups that they own
 				intial_graphs_with_tags += db_session.query(models.GroupToGraph.graph_id, models.GroupToGraph.modified, models.GroupToGraph.user_id).filter(models.GroupToGraph.group_id == models.Group.group_id).filter(models.Group.owner_id == uid).filter(models.GroupToGraph.group_owner == models.Group.owner_id).filter(models.GraphToTag.tag_id == tag).filter(models.GraphToTag.graph_id == models.GroupToGraph.graph_id).filter(models.GraphToTag.user_id == models.GroupToGraph.user_id).all()
 			else:
 				try:
@@ -1762,6 +1803,7 @@ def delete_30_day_old_anon_graphs():
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	# If there are any graphs owned by a public user that are older than 30 days, delete them
 	try:
 		graph = db_session.query(models.Graph).filter(models.Graph.user_id.like("%Public_User_%")).filter(models.Graph.created >= date('now', '-30 day'))
 
@@ -1772,6 +1814,8 @@ def delete_30_day_old_anon_graphs():
 		db_session.close()
 
 def rgb_to_hex(rgb):
+	# Quick wrapper method to 
+	# convert rgb values to hex values
 	rgbTuple = rgb.split(',')
 	rgbNum = []
 	for tup in rgbTuple:
@@ -1813,6 +1857,7 @@ def delete_public_user():
 	db_session = data_connection.new_session()
 
 	try:
+		# Delete all public users
 		public_users = db_session.query(models.User).filter(models.User.password == "public").all()
 
 		for user in public_user:
@@ -2160,9 +2205,10 @@ def update_graph(username, graphname, graph_json):
 	db_session.commit()
 
 	try:
-		# Delete from graph to tag
+		# Get all tags for the graph
 		gt_to_delete = db_session.query(models.GraphToTag).filter(models.GraphToTag.graph_id == graphname).filter(models.GraphToTag.user_id == username).all()
 
+		# Remove all graph_to_tag associations
 		for gt in gt_to_delete:
 			db_session.delete(gt)
 			db_session.commit()
@@ -2358,6 +2404,10 @@ def get_cleaned_group_data(data, db_session):
 	# Get information about how many graphs each group contains
 	complete_group_information = []
 
+	# For each group that is provided, append the amount of graphs that belong in the group
+	# and return it as a tuple
+
+	# Used as the primary method for /groups page
 	for group in data:
 		cleaned_group = []
 		cleaned_group.append(group.name)
@@ -2421,6 +2471,7 @@ def change_description(username, groupId, groupOwner, desc):
 		if username != groupOwner:
 			return "You can only change description of group that you own!"
 
+		# Get the group to change the description of
 		group = db_session.query(models.Group).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).one()
 
 		group.description = desc
@@ -2488,6 +2539,7 @@ def get_group(group_owner, groupId):
 
 	cleaned_data = {}
 
+	# Set all properties that are used in the /groups page
 	cleaned_data['members'] = get_group_members(group_owner, groupId)
 	cleaned_data['owner'] = group.owner_id
 	cleaned_data['group_id'] = group.group_id
@@ -2539,14 +2591,24 @@ def can_see_shared_graph(logged_in_user, graph_owner, graphname):
 		:return boolean: True if can see it, false otherwise
 	'''
 
+	# Get all groups that this graph is shared with
 	groups = get_all_groups_for_this_graph(graph_owner, graphname)
+
+	# If there are any groups that share this graph
+	# check to see if the logged in user is a member in that group.
+	# If they are, then they are allowed to see the graph
 	if len(groups) > 0:
 		for group in groups:
 			
+			# If logged in user owns a group that the graph is shared with
 			if logged_in_user == group.owner_id:
 				return True
+
+			# Get all members of the group
 			members = get_group_members(group.owner_id, group.group_id)
 
+			# If the user is a member of a group that graph is shared with,
+			# the user may view this graph
 			for member in members:
 				if logged_in_user == member.user_id:
 					return True
@@ -2610,6 +2672,7 @@ def create_group(username, groupId):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	# Check to see if group exists
 	group = db_session.query(models.Group).filter(models.Group.group_id == cleanGroupName(groupId)).filter(models.Group.owner_id == username).first()
 
 	# Group already exists in database
@@ -2651,6 +2714,7 @@ def groups_for_user(username):
 		# Get all groups that the user is a member of
 		member_of_groups = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == username).all()
 
+		# Appeend tuple that describes ID of group and the owner of the group
 		for group in member_of_groups:
 			cleaned_group_data.append({"groupId": group.group_id, "group_owner": group.group_owner})
 
@@ -2660,7 +2724,8 @@ def groups_for_user(username):
 	try:
 		# Get all groups that the user owns
 		owned_groups = db_session.query(models.Group).filter(models.Group.owner_id == username).all()
-
+	
+		# Appeend tuple that describes ID of group and the owner of the group
 		for group in owned_groups:
 			cleaned_group_data.append({"groupId": group.group_id, "group_owner": group.owner_id})
 
@@ -2671,6 +2736,17 @@ def groups_for_user(username):
 	return cleaned_group_data
 
 def search_result_for_graphs_in_group(uid, search_type, search_terms, db_session, groupOwner, groupId):
+	'''
+		Search method for the graphs in group page.
+		Emulates search functionality in graphs page except for a particular group.
+
+		@param uid: Logged in user
+		@param search_type: Type of search (partial_search or full_search)
+		@param search_terms: All terms being searched for
+		@param db_session: Database connection
+		@param groupOwner: Owner of group
+		@param groupId: ID of group
+	'''
 
 	# If it is a search type that is not recognized, return empty list
 	if search_type != 'partial_search' and search_type !=  'full_search':
@@ -2762,7 +2838,17 @@ def search_result_for_graphs_in_group(uid, search_type, search_terms, db_session
 		return []
 
 def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
+	'''
+		Finds all edges that match search terms that are shared with group.
+		Emulates search functionality in graphs page except for a particular group.
 
+		@param uid: Logged in user
+		@param search_type: Type of search (partial_search or full_search)
+		@param search_word: Term to search for in edge
+		@param db_session: Database connection
+		@param groupOwner: Owner of group
+		@param groupId: ID of group
+	'''
 	# List to keep track of all graphs that contain edges that match the search_word
 	initial_graphs_matching_edges = []
 
@@ -2846,16 +2932,32 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 
 
 def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
+	'''
+		Finds all nodes that match search terms that are shared with group.
+		Emulates search functionality in graphs page except for a particular group.
 
+		@param uid: Logged in user
+		@param search_type: Type of search (partial_search or full_search)
+		@param search_word: Term to search for in node
+		@param db_session: Database connection
+		@param groupOwner: Owner of group
+		@param groupId: ID of group
+	'''
 	node_data = []
 
+	# If we only want partially matched nodes
 	if search_type == 'partial_search':
+
+		# Get all nodes that have a partially matching label
 		node_data = db_session.query(models.Node).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
+		# Get all nodes that have a partially matching node id
 		node_data += db_session.query(models.Node).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 	else:
+		# Get all nodes that have an exact matching label
 		node_data = db_session.query(models.Node).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
-
+	
+		# Get all nodes that have an exact matching node id
 		node_data += db_session.query(models.Node).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.GroupToGraph.graph_id).filter(models.GroupToGraph.user_id == models.Node.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 	graph_dict = dict()
@@ -2871,20 +2973,30 @@ def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_
 	return graph_dict.values()
 
 def find_all_graphs_containing_search_word_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
+	'''
+		Finds all graphs with names that match search terms that are shared with group.
+		Emulates search functionality in graphs page except for a particular group.
 
+		@param uid: Logged in user
+		@param search_type: Type of search (partial_search or full_search)
+		@param search_word: Term to search for in graph name
+		@param db_session: Database connection
+		@param groupOwner: Owner of group
+		@param groupId: ID of group
+	'''
 	matched_graphs = []
 	# Return all graphs that have a graph name that partially matches the search word
 	if search_type == 'partial_search':
 		try:
-
+			#Get all graphs that have ID that partially match search term
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id.like("%" + search_word + "%")).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		except NoResultFound:
 			print "No shared graphs matching search term"
 
-	# Return all graphs that have a gaph name that exactly matches the search word
 	elif search_type == 'full_search':
 		try:
+			# Return all graphs that have a graph name that exactly matches the search word
 			matched_graphs = db_session.query(models.Graph).filter(models.Graph.graph_id == search_word).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		except NoResultFound:
@@ -2904,12 +3016,20 @@ def find_all_graphs_containing_search_word_in_group(uid, search_type, search_wor
 	return graph_dict.values()
 
 def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, db_session):
+	'''
+		Finds all graphs with graphs that have matching tag.
 
+		@param groupOwner: Owner of group
+		@param groupId: ID of group
+		@param tag_terms: Tag terms to search for
+		@param db_session: Database connection
+	'''
 	intial_graphs_with_tags = []
 
 	if len(tag_terms) > 0:
 		for tag in tag_terms:
 			try:
+				# Find graphs that have tag being searched for
 				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 			except NoResultFound:
@@ -2965,6 +3085,8 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	elif 'full_search' in request.GET:
 		search_type = 'full_search'
 
+	# Check to see if query has search terms, tag terms, or 
+	# user wants to sort graphs
 	search_terms = request.GET.get(search_type)
 	tag_terms = request.GET.get('tags') or request.GET.get('tag')
 	order_by = request.GET.get('order')
@@ -3302,27 +3424,6 @@ def view_graphs_of_type(view_type, username):
 	db_session.close()
 	return cleaned_graphs
 
-def get_graphs_for_tags(cur, username, tags):
-	'''
-		Returns graphs that match the tags.
-
-		:param cur: Database cursor
-		:param username: Name of User
-		:param tags: tags to match graphs to
-		:return Graphs: [graphs]
-	'''
-	graphs = []
-	all_tag_graphs = get_all_graphs_for_tags(tags)
-	for item in all_tag_graphs:
-		cur.execute('select distinct g.graph_id, datetime(g.modified), g.user_id, g.public from group_to_user as gu, graph as g, graph_to_tag as gt, group_to_graph as gg where gg.group_id = gu.group_id and gt.graph_id=g.graph_id and gg.graph_id=g.graph_id and gt.tag_id = ? and gu.user_id=?', (item, username))
-		data = cur.fetchall()
-		if data != None:
-			for thing in data:
-				if thing[0] in all_tag_graphs and thing not in graphs:
-					graphs.append(thing)
-
-	return graphs
-
 def is_public_graph(username, graph):
 	'''
 		Checks to see if a given graph for a user is public.
@@ -3391,6 +3492,7 @@ def change_graph_visibility(isPublic, user_id, graphName):
 	db_session.commit()
 
 	try:
+		# Change all layouts visibility for a graph
 		layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == graphName).filter(models.Layout.user_id == user_id).filter(models.Layout.unlisted == 1).all()
 		for layout in layouts:
 			layout.public = isPublic
@@ -3437,13 +3539,18 @@ def makeLayoutPublic(uid, gid, public_layout):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	# Get layouts to make public
 	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+	
+	# If layout exists, make it public
 	if layout != None:
 		if layout.public == 1:
 			layout.public = 0
 
+			# Get graph 
 			graph = db_session.query(models.Graph).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).first()
 
+			# If layout isn't public, remove it as default id
 			if graph != None:
 				if graph.default_layout_id == layout.layout_id:
 					graph.default_layout_id = None
@@ -3536,6 +3643,7 @@ def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
 	db_session = data_connection.new_session()
 
 	try:
+		# Get layout for graph if it exists
 		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.owner_id == graph_owner).one()
 
 		db_session.close()
@@ -3580,8 +3688,10 @@ def get_all_layouts_for_graph(uid, gid):
 	db_session = data_connection.new_session()
 
 	try:
+		# Get layouts for graph 
 		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).all()
 
+		# Get rid of unicode
 		cleaned_layouts = []
 		for layout in layouts:
 			cleaned_layouts.append(layout.layout_name)
@@ -3610,6 +3720,7 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 	if graph == None:
 		return None
 
+	# Get layout if it exists
 	layout = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).first()
 
 	if layout == None:
@@ -3682,12 +3793,14 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 		group_dict = dict()
 
+		# Get all groups shared with this graph, removing all duplicates
 		for group in all_groups_for_graph:
 			key = group.group_id + group.owner_id
 
 			if key not in group_dict:
 				group_dict[key] = group
 
+		# Get all groups that the user can see
 		for group in all_groups_for_user:
 			key = group.group_id + group.owner_id
 
