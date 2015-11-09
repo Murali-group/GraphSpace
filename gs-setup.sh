@@ -1,11 +1,32 @@
 #!/bin/bash
 
-export SECRET_KEY='io#=lvucky-+r=8hif7vl7kv@y(iv6=b0sjk@x9885t(4)%2i0'
-export GOOGLE_ANALYTICS_PROPERTY_ID='UA-69100112-1'
+# Generates a new secret key
+python setup/generate_secret_key.py
+
+while read line
+do
+	secret_key = line
+done < secret.txt
+
+rm secret.txt
+
+export SECRET_KEY=secret_key
+
+# Email functionality tested only on gmail
 export EMAIL_HOST='smtp.gmail.com'
-export EMAIL_HOST_USER='graphspacevt@gmail.com'
-export EMAIL_HOST_PASSWORD='vtresearch'
+
+# REPLACE THE FOLLOWING TWO PROPERTIES WITH 
+# EMAIL ADDRESS AND PASSWORD TO EMAIL ADDRESS
+# TO ALLOW GRAPHSPACE TO SEND EMAILS THROUGH
+# SPECIFIED ACCOUNTc
+export EMAIL_HOST_USER='None'
+export EMAIL_HOST_PASSWORD='None'
 
 # You should not need to modify any of the lines below
 export DEBUG=False
 export TEMPLATE_DEBUG=False
+
+# Runs configuration script 
+# and installs all the necessary dependencies
+# It also creates a database
+python setup/configure.py

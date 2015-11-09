@@ -3,7 +3,6 @@
 <!-- Base template for web pages used in GraphSpace. Every pages in 
      GraphSpace are based on this htmll template. -->
 {% load staticfiles %}
-{% load google_analytics %}
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -26,9 +25,6 @@
     <script src="{% static 'graphs/js/cola.v3.min.js' %}"></script>
     <script src="{% static 'graphs/js/dagre.js' %}"></script>
     <script src="{% static 'graphs/js/springy.js' %}"></script>
-
-    {% google_analytics %}
-
 
     <!-- Came with Bootstrap template -->
     <!-- Just for debugging purposes. Don't actually copy this line! -->

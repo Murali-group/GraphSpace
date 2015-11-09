@@ -33,12 +33,9 @@ DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
 URL_PATH = "http://localhost:8000/"
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
 
-GOOGLE_ANALYTICS_PROPERTY_ID = os.environ.get('GOOGLE_ANALYTICS_PROPERTY_ID')
-
 # Application definition
 
 INSTALLED_APPS = (
-    'analytical',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

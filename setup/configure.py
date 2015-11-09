@@ -13,25 +13,28 @@ def get_pip():
 	pip_file.close()
 	subprocess.check_call(["sudo", sys.executable, "get-pip.py"])
 
-def launch_server():
-	subprocess.check_output([sys.executable, "manage.py", "runserver"])
+def syncdb():
+	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
 
 def run_tests():
 	os.system("python tests/restapi_test.py")
 
 def install(package):
-    pip.main(["install", package])		
+	subprocess.call(["sudo", "pip", "install", package])
 
 if __name__ == "__main__":
 	get_pip()
+
+	# IF ANY OF THE BELOW PACKAGES DO NOT INSTALL
+	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL 
+	# sudo pip install django
+	# sudo pip install py-bcrypt
+	# sudo pip install django-analytical
 
 	install("django")
 	install("py-bcrypt")
 	install("django-analytical")
 
-	# subprocess.check_call(["mv", "startup.db", "graphspace.db"])
-	subprocess.check_call([sys.executable, "manage.py", "migrate"])
-
-	print "All dependencies have successfully been installed."
-	print "\n"
-	print "**Please modify all environtment variables in gs-setup.sh and run command: '. gs-setup.sh' **"
+	syncdb()
+	
+	print "All dependencies have successfully been installed.  Please type 'python manage.py runserver' to start GraphSpace server on a local machine"
