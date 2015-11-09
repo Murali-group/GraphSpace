@@ -36,7 +36,6 @@ def index(request):
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
     # The password_reset table contains all the users whose passwords need to be updated.
     # Once the user has updated their password, their name is removed from the password_reset table
-    db.checkPublicNodeEdgeConsistency()
 
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
