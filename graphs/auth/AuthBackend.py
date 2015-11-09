@@ -14,10 +14,6 @@ def authenticate(username=None, password=None):
             user_obj = {}
             user_obj['user_id'] = user.user_id
             user_obj['password'] = user.password
-            user_obj['activated'] = user.activated
-            user_obj['activate_code'] = user.activate_code
-            user_obj['public'] = user.public
-            user_obj['unlisted'] = user.unlisted
             user_obj['admin'] = user.admin
 
             return user_obj

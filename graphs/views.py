@@ -803,13 +803,9 @@ def register(request):
             hashed_pw = bcrypt.hashpw(
                             register_form.cleaned_data['password'], 
                             bcrypt.gensalt())
-            activated = 1
-            activate_code = 'activate_code'
-            public = 0
-            unlisted = 0
             admin = 0
 
-            db.insert_user(user_id, hashed_pw, activated, activate_code, public, unlisted, admin)
+            db.insert_user(user_id, hashed_pw, admin)
 
             # should display success message. not there yet.
             return HttpResponseRedirect('/index/')
@@ -1132,7 +1128,6 @@ def add_member_through_ui(request):
     # If request is a POST request, add it to the server
     if request.method == 'POST':
         result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
-        print result
         return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
 
 def remove_member_through_ui(request):

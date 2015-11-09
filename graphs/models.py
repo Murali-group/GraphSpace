@@ -80,15 +80,6 @@ class User(Base):
 
     user_id = Column(String, primary_key = True)
     password = Column(String, nullable = False)
-    # column to tell whether the user account has been activated.
-    activated = Column(Integer, nullable = False)
-    # activate code to activate the user's account
-    activate_code = Column(String, nullable = True)
-    # ??? TODO: does any query use this field?
-    public = Column(Integer, nullable = True)
-    # ???
-    unlisted = Column(Integer, nullable = True)
-    # Is the user an administrator?
     admin = Column(Integer, nullable = True)
 
     # one to many relationships. TODO: add cascades
@@ -112,8 +103,6 @@ class Group(Base):
     # statement corresponds to the owned_groups relationship in the 'User' class.
     owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False, primary_key = True)
     description = Column(String, nullable = False)
-    public = Column(Integer, nullable = True)
-    unlisted = Column(Integer, nullable = True)
 
     # This line creates the many-to-many relationship between the User class and the i
     # Group class through the group_to_user junction table. Specifically, 
@@ -137,7 +126,7 @@ class Graph(Base):
     created = Column(TIMESTAMP, nullable = False)
     modified = Column(TIMESTAMP, nullable = False)
     public = Column(Integer, nullable = True)
-    unlisted = Column(Integer, nullable = True)
+    shared_with_groups = Column(Integer, nullable = True)
     default_layout_id = Column(String, nullable = True)
 
     # specify one to many relationships
@@ -184,10 +173,8 @@ class Layout(Base):
     user_id = Column(String, nullable = False)
     # graph layout data in JSON format
     json = Column(String, nullable = False)
-    # ???
     public = Column(Integer, nullable = True)
-    # ???
-    unlisted = Column(Integer, nullable = True)
+    shared_with_groups = Column(Integer, nullable = True)
 
     # SQLAlchemy's way of creating a multi-column foreign key constraint.
     __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
@@ -205,13 +192,13 @@ class Node(Base):
     user_id = Column(String, primary_key = True)
     graph_id = Column(String, primary_key = True)
     modified = Column(TIMESTAMP, primary_key = True)
-    public = Column(Integer, nullable = True)
+
     # Foregin key contraint to idientify the graph that this node belong to
     __table_args__ = (ForeignKeyConstraint([user_id, graph_id], [Graph.user_id, Graph.graph_id], ondelete="CASCADE", onupdate="CASCADE"), {})
 
     # one to many relationship with Edge, since a node can have many edges.
-    heads = relationship("Edge", foreign_keys="[Edge.head_user_id, Edge.head_graph_id, Edge.head_id]")
-    tails = relationship("Edge", foreign_keys="[Edge.tail_user_id, Edge.tail_user_id, Edge.tail_id]")
+    heads = relationship("Edge", foreign_keys="[Edge.user_id, Edge.graph_id, Edge.head_node_id]")
+    tails = relationship("Edge", foreign_keys="[Edge.user_id, Edge.graph_id, Edge.head_node_id]")
 
 class PasswordReset(Base):
     __tablename__ = 'password_reset'
@@ -232,16 +219,15 @@ class Edge(Base):
     # 3 column primary keys are used to determine which two nodes that this edge connect.
     # each edge connects a head node to a tail node.
     # head node
-    head_user_id = Column(String, nullable = False)
-    head_graph_id = Column(String, nullable = False)
-    head_id = Column(String, nullable = False)
+    user_id = Column(String, nullable = False)
+    graph_id = Column(String, nullable = False)
+    head_node_id = Column(String, nullable = False)
 
     # tail node
-    tail_user_id = Column(String, nullable = False)
-    tail_graph_id = Column(String, nullable = False)
-    tail_id = Column(String, nullable = False)
+    tail_node_id = Column(String, nullable = False)
+
     # label of this edge
-    label = Column(String, nullable = True)
+    edge_id = Column(String, nullable = True)
     # inicates whether this edge is directed or not.
     directed = Column(Integer, nullable = True)
 
@@ -249,8 +235,8 @@ class Edge(Base):
     
     # Foreign key contraints to determine each node.
     __table_args__ = (
-            ForeignKeyConstraint([head_user_id, head_graph_id, head_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
-            ForeignKeyConstraint([tail_user_id, tail_graph_id, tail_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+            ForeignKeyConstraint([user_id, graph_id, head_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
+            ForeignKeyConstraint([user_id, graph_id, tail_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
 
 
@@ -312,13 +298,6 @@ Index('node_index_node_id_graph_id', Node.node_id)
 # sqlalchemy_example.db file.
 engine = create_engine(settings.DATABASE_LOCATION, echo=False)
  
-# # Create all tables in the engine. This is equivalent to "Create Table"
-# # statements in raw SQL.
+# Create all tables in the engine. This is equivalent to "Create Table"
+# statements in raw SQL.
 Base.metadata.create_all(engine)
-
-# # not sure if needed
-# # Table: edge. Columns: head_id, head_user_id, head_graph_id
-# # Index('edge_idx_head_id_head_user_id_head_graph_id', Edge.head_id, Edge.head_user_id, Edge.head_graph_id)
-# # Index('edge_idx_head_id_tail_id_graph_id', Edge.head_id, Edge.tail_id, Edge.head_graph_id)
-# # Table: edge. Column: tail_id, tail_user_id, tail_graph_id
-# # Index('edge_idx_tail_id_tail_user_id_tail_graph_id', Edge.tail_id, Edge.tail_user_id, Edge.tail_graph_id)

@@ -705,6 +705,7 @@ $(document).ready(function() {
         var group_options = "";
         if (data['Group_Information'].length > 0) {
           for (var i = 0; i < data['Group_Information'].length; i++) {
+            console.log(data['Group_Information'][i]);
             if (data['Group_Information'][i]['graph_shared'] == true) {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
@@ -1325,8 +1326,16 @@ function colourNameToHex(colour)
 */
 $(".default").click(function(e) {
   var paths = document.URL.split('/')
+
     var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+
+    if (gid.charAt(gid.length - 1) == '/') {
+      gid = gid.substring(0, gid.length - 1);
+    }
+    
     var ownerId = decodeURIComponent(paths[paths.length - 2]);
+
+    console.log('GID: ' + gid + ", UID: " + ownerId);
 
   $.post('../../../setDefaultLayout/', {
     'layoutId': $(this).val(),

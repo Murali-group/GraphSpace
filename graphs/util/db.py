@@ -375,7 +375,7 @@ def reUploadInconsistentGraphs(data):
 				incosistent_graphs.write(graph_id + '\t' + user_id + "\t" + created + "\t" + modified + "\t" + unspecified_nodes + "\n" )
 				cur.execute('delete from graph where graph_id = ? and user_id = ?', (graph_id, user_id))
 				cur.execute('delete from node where graph_id = ? and user_id = ?', (graph_id, user_id))
-				cur.execute('delete from edge where head_graph_id = ? and head_user_id = ?', (graph_id, user_id))
+				cur.execute('delete from edge where graph_id = ? and user_id = ?', (graph_id, user_id))
 				cur.execute('delete from graph_to_tag where graph_id=? and  user_id=?', (graph_id, user_id))
 				con.commit()
 				result = insert_graph(user_id, graph_id, graph[2], created=created, modified=modified, public=public, unlisted=unlisted, default_layout_id=default_layout_id, skip=True)
@@ -1005,7 +1005,7 @@ def setDefaultLayout(layoutName, graph_id, graph_owner):
 			return "It appears as if the graph requested does not exist."
 
 		# Check to see if the layout is either shared or exists in the database
-		layout = db_session.query(models.Layout).filter(models.Layout.user_id == graph_owner).filter(models.Layout.graph_id == graph_id).filter(models.Layout.layout_name == layoutName).filter(or_(models.Layout.unlisted == 1, models.Layout.public == 1)).first()
+		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graph_id).filter(models.Layout.layout_name == layoutName).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).first()
 
 		if layout == None:
 			return "You can't set a layout as default layout for graph unless layout is shared and the graph is public!"
@@ -1320,7 +1320,7 @@ def combine_similar_graphs(matched_graphs):
 			# If graph has not been encountered yet, insert new tuple
 			if key not in graph_entry:
 				# Construct new entry
-				new_graph_entry = (graph.graph_id, graph.node_id + "(" + graph.label + ")", graph.label, graph.modified, graph.user_id, graph.public)
+				new_graph_entry = (graph.graph_id, graph.node_id + "(" + graph.label + ")", graph.label, graph.modified, graph.user_id)
 
 				# Add to dict
 				graph_entry[key] = new_graph_entry
@@ -1338,15 +1338,15 @@ def combine_similar_graphs(matched_graphs):
 				graph_entry[key] = tuple(cur_graph_entry)
 
 		# If graph contains a matching edge
-		elif hasattr(graph, 'head_graph_id'):
-			key = graph.head_graph_id + graph.head_user_id
+		elif hasattr(graph, 'head_node_id'):
+			key = graph.graph_id + graph.user_id
 
 			# If graph has been encountered yet, insert new tuple
 			if key not in graph_entry:
-				graph_info = get_graph(graph.head_user_id, graph.head_graph_id)
+				graph_info = get_graph(graph.user_id, graph.graph_id)
 
 				# Construct new entry
-				new_graph_entry = (graph.head_graph_id, graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")", graph.label, graph_info.modified, graph_info.user_id, graph_info.public)
+				new_graph_entry = (graph.graph_id, graph.edge_id + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")", graph.edge_id, graph_info.modified, graph_info.user_id, graph_info.public)
 
 				# Add to dict
 				graph_entry[key] = new_graph_entry
@@ -1354,10 +1354,10 @@ def combine_similar_graphs(matched_graphs):
 				# If graph already has been encountered
 				cur_graph_entry = list(graph_entry[key])
 				if len(cur_graph_entry[1]) == 0:
-					cur_graph_entry[1] += graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")"
+					cur_graph_entry[1] += graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
 					cur_graph_entry[2] += graph.label
 				else:
-					cur_graph_entry[1] += ", " + graph.label + "(" + graph.head_id + "-" + graph.tail_id + ")"
+					cur_graph_entry[1] += ", " + graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
 					cur_graph_entry[2] += ", " + graph.label
 
 				# Add appended entry
@@ -1500,22 +1500,22 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
 				if view_type == "public":
-					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
 				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.GroupToGraphuser_id == uid).filter(models.Edge.head_graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
 				else:
-					initial_graphs_matching_edges += db_session.query(models.Edge.head_graph_id, models.Edge.head_user_id).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.Graph.graph_id).filter(models.Edge.head_user_id == uid).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
 
 
 		graph_dict = dict()
 
 		# Remove duplicates for all graphs that match have the same edge matching search term
-		for graph in initial_graphs_matching_edges:
-			key = graph.head_id + graph.head_graph_id + graph.head_user_id + graph.tail_id + graph.tail_graph_id + graph.tail_user_id + graph.label
+		for edge in initial_graphs_matching_edges:
+			key = edge.head_node_id + edge.graph_id + edge.user_id + edge.tail_node_id + edge.edge_id
 			if key in graph_dict:
 				continue
 			else:
-				graph_dict[key] = graph
+				graph_dict[key] = edge
 
 		return graph_dict.values()
 	else:
@@ -1541,16 +1541,16 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 
 		if search_type == "partial_search":
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
 			
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.user_id == uid).all()
 		else:
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label == search_word).filter(models.Node.user_id == uid).all()
 			
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).filter(models.Node.user_id == uid).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id == search_word).filter(models.Node.user_id == uid).all()
 	
 	# Shared graphs
 	elif view_type == "shared":
@@ -1575,7 +1575,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 
 		if search_type == "partial_search":
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label.like("%" + search_word + "%")).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1588,7 +1588,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id.like("%" + search_word + "%")).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1600,7 +1600,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 			initial_graphs_matching_nodes = final_graphs
 		else:
 			# Get all graphs that contain a partially matched label and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label == search_word).all()
 
 			# Collect all graphs that are shared with user and matches terms
 			final_graphs = []
@@ -1613,7 +1613,7 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 					final_graphs.append(matched)
 
 			# Get all graphs that contain a partially matched node and user does not own (since it's shared)
-			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).all()
+			all_matched_node_graphs = db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id == search_word).all()
 
 			# Go through all matched graphs to see which graphs 
 			# are also shared with user and take the intersection
@@ -1627,22 +1627,22 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 	else:
 		if search_type == "partial_search":
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id.like("%" + search_word + "%")).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 		else:
 			# Get all partially matching nodes containing the label
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.label == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 			# Get all partially matching nodes containing the node id
-			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id, models.Node.public).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
+			initial_graphs_matching_nodes += db_session.query(models.Node.graph_id, models.Node.node_id, models.Node.label, models.Node.modified, models.Node.user_id).filter(models.Node.node_id == search_word).filter(models.Node.graph_id == models.Graph.graph_id).filter(models.Node.user_id == models.Graph.user_id).filter(models.Graph.public == 1).all()
 
 	graph_dict = dict()
 
 	# Remove duplicates for all graphs that match have the same node id and label matching search term
 	for graph in initial_graphs_matching_nodes:
-		key = graph.graph_id + graph.user_id + str(graph.public) + graph.label + graph.node_id
+		key = graph.graph_id + graph.user_id + graph.label + graph.node_id
 		if key in graph_dict:
 			continue
 		else:
@@ -1839,7 +1839,7 @@ def create_public_user(public_user_id):
 
 	try:
 		# Create a public user and add to database
-		public_user = models.User(user_id = public_user_id, password = "public", activated = 1, activate_code = 1, public =  1, unlisted = 1, admin = 0)
+		public_user = models.User(user_id = public_user_id, password = "public", admin = 0)
 		db_session.add(public_user)
 		db_session.commit()
 		db_session.close()
@@ -1907,7 +1907,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 					try:
 						# Aggregate all matching edges
-						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_id == head_nodes[j]).filter(models.Edge.tail_id == tail_nodes[i]).filter(models.Edge.head_user_id == uid).filter(models.Edge.head_graph_id == gid).all()
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_nodes[j]).filter(models.Edge.tail_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 
 						edge_list += matching_edges
 
@@ -1929,7 +1929,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 					try:
 						# Aggregate all matching edges
-						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_id == head_node).filter(models.Edge.tail_id == tail_node).filter(models.Edge.head_user_id == uid).filter(models.Edge.head_graph_id == gid).all()
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_node).filter(models.Edge.tail_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 
 						edge_list += matching_edges
 
@@ -1939,7 +1939,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 	# Get all labels from edges
 	edge_labels = []
 	for edge in edge_list:
-		edge_labels.append(edge.label)
+		edge_labels.append(edge.edge_id)
 
 	return edge_labels
 
@@ -2071,7 +2071,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 		created = curTime
 
 	# Construct new graph to add to database
-	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, unlisted = unlisted, default_layout_id = default_layout_id)
+	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, shared_with_groups = unlisted, default_layout_id = default_layout_id)
 
 	db_session.add(new_graph)
 	db_session.commit()
@@ -2154,15 +2154,15 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		# The label was the column I decided to avoid completely reconstructing the database
 		# POSSIBLE SOLUTION: If edge is bidirectional, we insert two edges with inverse source and target nodes
 		if is_directed == 0:
-			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
+			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = edge['data']['source'], tail_node_id = edge['data']['target'], edge_id = edge['data']['id'], directed = is_directed, id = None)
 			db_session.add(new_edge)
 
 			# ASK MURALI ABOUT THIS
-			# new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['target'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['source'], label = edge['data']['id'], directed = is_directed, id = None)
+			# new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = edge['data']['target'], tail_node_id = edge['data']['source'], edge_id = edge['data']['id'], directed = is_directed, id = None)
 			# db_session.add(new_edge)
 
 		else:
-			new_edge = models.Edge(head_user_id = username, head_graph_id = graphname, head_id = edge['data']['source'], tail_user_id = username, tail_graph_id = graphname, tail_id = edge['data']['target'], label = edge['data']['id'], directed = is_directed, id = None)
+			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = edge['data']['source'], tail_node_id = edge['data']['target'], edge_id = edge['data']['id'], directed = is_directed, id = None)
 			db_session.add(new_edge)
 
 		db_session.commit()
@@ -2176,7 +2176,7 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 			del node['data']['label']
 
 		# Add node to table
-		new_node = models.Node(node_id = node['data']['id'], label = node['data']['content'], user_id = username, graph_id = graphname, modified = modified, public = public)
+		new_node = models.Node(node_id = node['data']['id'], label = node['data']['content'], user_id = username, graph_id = graphname, modified = modified)
 
 		db_session.add(new_node)
 		db_session.commit()
@@ -2218,7 +2218,7 @@ def update_graph(username, graphname, graph_json):
 
 	try:
 		# Delete from edge
-		edges_to_delete = db_session.query(models.Edge).filter(models.Edge.head_graph_id == graphname).filter(models.Edge.head_user_id == username).all()
+		edges_to_delete = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).all()
 
 		for edge in edges_to_delete:
 			db_session.delete(edge)
@@ -2239,7 +2239,7 @@ def update_graph(username, graphname, graph_json):
 		print "No nodes in graph to delete"
 
 	# Re-insert graph
-	result = insert_graph(username, graphname, graph_json, graph.created, datetime.now(), graph.public, graph.unlisted, graph.default_layout_id)
+	result = insert_graph(username, graphname, graph_json, graph.created, datetime.now(), graph.public, graph.shared_with_groups, graph.default_layout_id)
 
 	return result
 
@@ -2295,7 +2295,7 @@ def delete_graph(username, graphname):
 			db_session.delete(g_gruop)
 			db_session.commit()
 		# Delete from edge
-		edge = db_session.query(models.Edge).filter(models.Edge.head_graph_id == graphname).filter(models.Edge.head_user_id == username).all()
+		edge = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).all()
 
 		for e in edge:
 			db_session.delete(e)
@@ -2418,8 +2418,8 @@ def get_cleaned_group_data(data, db_session):
 
 		cleaned_group.append(len(graphs))
 
-		cleaned_group.append(group.public)
-		cleaned_group.append(group.unlisted)
+		# cleaned_group.append(group.public)
+		# cleaned_group.append(group.shared_with_groups)
 		cleaned_group.append(group.group_id)
 		complete_group_information.append(tuple(cleaned_group))
 
@@ -2681,7 +2681,7 @@ def create_group(username, groupId):
 		return None
 
 	# Create new group
-	new_group = models.Group(group_id = cleanGroupName(groupId), name = groupId, owner_id = username, description = "", public = 0, unlisted = 1)
+	new_group = models.Group(group_id = cleanGroupName(groupId), name = groupId, owner_id = username, description = "")
 
 	# Add to database
 	db_session.add(new_group)
@@ -2915,12 +2915,12 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
 				
-				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_id == h_node).filter(models.Edge.tail_id == t_node).filter(models.Edge.head_graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.head_user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		graph_dict = dict()
 		# Remove duplicates for all graphs that match have the same edge matching search term
 		for graph in initial_graphs_matching_edges:
-			key = graph.head_id + graph.head_graph_id + graph.head_user_id + graph.tail_id + graph.tail_graph_id + graph.tail_user_id + graph.label
+			key = graph.head_node_id + graph.graph_id + graph.user_id + graph.tail_node_id + graph.edge_id
 			if key in graph_dict:
 				continue
 			else:
@@ -2964,7 +2964,7 @@ def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_
 
 	# Remove duplicates for all graphs that match have the same node id and label matching search term
 	for graph in node_data:
-		key = graph.graph_id + graph.user_id + str(graph.public) + graph.label + graph.node_id
+		key = graph.graph_id + graph.user_id + graph.label + graph.node_id
 		if key in graph_dict:
 			continue
 		else:
@@ -3152,21 +3152,12 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 		except NoResultFound:
 			print 'no result found'
 
-		# graph_tuples = []
-
-		# for graph in graph_data:
-		# 	graph_tuple = (graph.graph_id, "", graph.modified, graph.user_id, graph.public)
-		# 	graph_tuples.append(graph_tuple)
-
-		# graph_data = graph_tuples
-
 	# If user wants to sort the data
 	if order_by:
 		graph_data = order_information(order_by, search_terms, graph_data)
 	else:
 		graph_data = order_information("modified_descending", search_terms, graph_data)
 
-	print graph_data
 	db_session.close()
 	return graph_data
 
@@ -3189,7 +3180,7 @@ def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	# Determine if a graph is shared with a specific group
 	for group in groups:
 		group_name = group[0]
-		group_id = group[6]
+		group_id = group[4]
 		group_owner = group[2]
 
 		# Check if graph is shared with this group
@@ -3317,6 +3308,7 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 		:param groupOwner: Group Owner
 		:return <status>
 	'''
+
 	# Get graph
 	graph_exists = get_graph(owner, graph)
 
@@ -3493,7 +3485,7 @@ def change_graph_visibility(isPublic, user_id, graphName):
 
 	try:
 		# Change all layouts visibility for a graph
-		layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == graphName).filter(models.Layout.user_id == user_id).filter(models.Layout.unlisted == 1).all()
+		layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == graphName).filter(models.Layout.user_id == user_id).filter(models.Layout.shared_with_groups == 1).all()
 		for layout in layouts:
 			layout.public = isPublic
 			db_session.commit()
@@ -3561,7 +3553,7 @@ def makeLayoutPublic(uid, gid, public_layout):
 
 	db_session.close()
 
-def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlisted):
+def save_layout(layout_id, layout_name, owner, graph, user, json, public, shared_with_groups):
 	'''
 		Saves layout of specific graph.
 
@@ -3572,7 +3564,7 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 		:param user: user making those changes
 		:param json: JSON of the graph
 		:param public: Is layout public or not
-		:param unlisted: Possible deprecated
+		:param shared_with_groups: Is layout shared with groups
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3584,7 +3576,7 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, unlist
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = owner, graph_id = graph, user_id = user, json = json, public = public, unlisted = unlisted)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = owner, graph_id = graph, user_id = user, json = json, public = public, shared_with_groups = shared_with_groups)
 
 	db_session.add(new_layout)
 	db_session.commit()
@@ -3721,22 +3713,26 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 		return None
 
 	# Get layout if it exists
-	layout = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).first()
 
 	if layout == None:
 		return None
 
-	if graph.default_layout_id == layout.layout_id:
-			graph.default_layout_id = None
-
 	# If the current layout is not shared with the group, share it
-	if layout.unlisted == 0:
-		layout.unlisted = 1
+	if layout.shared_with_groups == 0:
+		layout.shared_with_groups = 1
 	else:
 		# If it is shared, then unshare it
-		layout.unlisted = 0
+		layout.shared_with_groups = 0
 		layout.public = 0
 
+		# If layout to be unshared is a default layout
+		# remove it as a default layout
+		if graph.default_layout_id == layout.layout_id:
+				graph.default_layout_id = None
+				db_session.commit()
+				
+	print graph.default_layout_id
 	db_session.commit()
 	db_session.close()
 	return None	
@@ -3756,7 +3752,7 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 	try:
 		# Get all layouts for graph that user created
-		layouts = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.unlisted == 0).filter(models.Layout.public == 0).all()
+		layouts = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.shared_with_groups == 0).filter(models.Layout.public == 0).all()
 
 		cleaned_layouts = []
 
@@ -3808,7 +3804,7 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 				# If the current user is a member of any groups that have current graph shared in
 				# for group in all_groups_for_graph:
-				layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.unlisted == 1).all()
+				layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
 
 				for name in layout_names:
 					cleaned_layout_names += name
@@ -3840,7 +3836,7 @@ def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 		# we collect all shared and public layouts.
 		# Note: This is done as a second-measure step and it shouldn't ever matter
 		# because all layouts are set to public when the graph is set to public
-		shared_layouts_uncleaned = db_session.query(models.Layout.layout_name).distinct(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.unlisted == 1, models.Layout.public == 1)).all()
+		shared_layouts_uncleaned = db_session.query(models.Layout.layout_name).distinct(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).all()
 
 		# Get rid of unicode
 		shared_layouts = []
@@ -4008,9 +4004,6 @@ def change_graph_visibility_for_tag(isPublic, tagname, username):
 		# NOTE: I had this originally, but is this even necessary?
 		node_list = db_session.query(models.Node).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Node.user_id == username).filter(models.Node.graph_id == models.GraphToTag.graph_id).all()
 
-		for node_graph in node_list:
-			node_graph.public = isPublic
-
 		# Change the visibility of all the layouts that are associated with a graph
 		layout_list = db_session.query(models.Layout).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Layout.user_id == username).filter(models.Layout.graph_id == models.GraphToTag.graph_id).all()
 
@@ -4104,16 +4097,12 @@ def retrieveJSON(uid, gid):
 		db_session.close()
 		return None
 
-def insert_user(user_id, password, activated, activate_code, public, unlisted, admin):
+def insert_user(user_id, password, admin):
 	'''
 		Inserts user into database if they do not exist.
 
 		:param user_id: Email of user
 		:param password: Password of user
-		:param activated: Ask Murali?
-		:param activate_code: Ask Murali?
-		:param public: Ask Murali?
-		:param unlisted: Ask Murali?
 		:param admin: is user an admin?
 
 		:return None if user already exists
@@ -4123,7 +4112,7 @@ def insert_user(user_id, password, activated, activate_code, public, unlisted, a
 
 	try:
 		# Creates a new user with given information
-		new_user = models.User(user_id=user_id, password = password, activated = activated, activate_code = activate_code, public = public, unlisted = unlisted, admin = admin)
+		new_user = models.User(user_id=user_id, password = password, admin = admin)
 		db_session.add(new_user)
 		db_session.commit()
 		db_session.close()

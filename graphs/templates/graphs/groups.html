@@ -185,14 +185,14 @@
     </tr>
 {% for g in current_page %}
     <tr> 
-        <td><a href="{% url 'graphs_in_group' group_owner=g.2 group_id=g.6%}">{{g.0}}</a></td>
+        <td><a href="{% url 'graphs_in_group' group_owner=g.2 group_id=g.4%}">{{g.0}}</a></td>
         <td>{{ g.1 }}</td>
         <td>{{ g.2 }}</td>
         <td>{{ g.3 }}</td>
         {% if g.2 == uid %}
-            <td><button class="btn btn-default delete" id="{{ g.6 }}concat_val_buffer{{ g.2 }}">Delete</button></td>
+            <td><button class="btn btn-default delete" id="{{ g.4 }}concat_val_buffer{{ g.2 }}">Delete</button></td>
         {% else %}
-            <td><button class="btn btn-default remove" id="{{ g.6 }}concat_val_buffer{{ g.2 }}">Unfollow group</button></td>
+            <td><button class="btn btn-default remove" id="{{ g.4 }}concat_val_buffer{{ g.2 }}">Unfollow group</button></td>
         {% endif %}
     </tr>
 {% endfor %}
