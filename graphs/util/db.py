@@ -978,11 +978,11 @@ def get_graphs_for_view_type(context, view_type, uid, request):
 			context['public_graphs'] = len(context['graph_list'])
 
 	#If user has requested the graphs to be ordered in a certain manner, order them as requested
-	# if order_by:
-	# 	context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
-	# else:
-	# 	# By default, all graphs are ordered via descending modified date (as per Anna's request)
-	# 	context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
+	if order_by:
+		context['graph_list'] = order_information(order_by, search_terms, context['graph_list'])
+	else:
+		# By default, all graphs are ordered via descending modified date (as per Anna's request)
+		context['graph_list'] = order_information("modified_descending", search_terms, context['graph_list'])
 	
 	return context	
 
