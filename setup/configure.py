@@ -12,6 +12,7 @@ def get_pip():
 	pip_file.write(code)
 	pip_file.close()
 	subprocess.check_call(["sudo", sys.executable, "get-pip.py"])
+	os.remove("get-pip.py")
 
 def syncdb():
 	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
