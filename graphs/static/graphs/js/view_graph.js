@@ -535,12 +535,17 @@ $(document).ready(function() {
       window.location.href = "../../../help/#sharing_panel";
     });
 
+    //if there are multiple search terms, append the search term
+    //to the URL.  Be sure to track for if its a partial or exact search
     $(".highlight").click(function (e) {
       e.preventDefault();
       linkToGraph = $(this).attr('id') + ',';
 
+      //Get all labels form search term
       var labels = $("#search").val().split(',');
 
+      //If partial is checked append all search terms,
+      //otherwise append all search terms for full search
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
             linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
@@ -565,6 +570,8 @@ $(document).ready(function() {
 
       linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
+      //When appropriate icon is clicked, show link
+      //otherwise hide it.
       $("#layout_link").attr('href', linkToGraph);
       if ($("#layout_link").html().length > 0) {
         $("#layout_link").html("");
@@ -575,12 +582,14 @@ $(document).ready(function() {
       $("#layout_link").width(20);
     });
 
+    //Shows modal that allows user to change name of layout
     $(".change").click(function (e) {
       e.preventDefault();
       $("#change_modal").modal('toggle');
       $("#change_layout").val($(this).val());
     });
 
+    //Changes the name of the current layout
     $("#change_layout").click(function (e) {
       var paths = document.URL.split('/')
       var new_layout_name = $("#new_layout_name").val();
@@ -600,6 +609,7 @@ $(document).ready(function() {
       }
     });
 
+    //Deletes the current layout from graph
     $(".remove").click(function (e) {
       e.preventDefault();
 
@@ -623,8 +633,11 @@ $(document).ready(function() {
       })
     });
 
+    //Tells what each icon for layout does
     $(".layout_links").tooltip();
 
+    //If clicked, graph re-renders with correct layout
+    //including all search terms
     $(".layout_buttons").click(function (e) {
       e.preventDefault();
       // var searchTerms = getHighlightedTerms();
@@ -667,6 +680,7 @@ $(document).ready(function() {
       }
     });
 
+    //If clicked, it shares layouts with all groups
     $(".public").click(function (e) {
       e.preventDefault();
 
@@ -689,6 +703,7 @@ $(document).ready(function() {
       });
     });
 
+    //Reveals modal of all groups user is a member/owner of
     $("#share_graph").click(function (e) {
       e.preventDefault();
 
@@ -731,6 +746,7 @@ $(document).ready(function() {
 
     });
 
+    //Shares graphs with specified groups user is a member/owner of
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')
       var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
@@ -765,9 +781,14 @@ $(document).ready(function() {
       });
     });
 
+    //Hides appropriate nodes based on k value
     $("#input_k").val(getLargestK(graph_json.graph));
+
+    //Shows up to maximum k values 
     $("#input_max").val(getLargestK(graph_json.graph));
 
+    //When user slides, it changes value of slider as well
+    //as updates graph to reflect max k values allowed in subgraph
     $("#slider_max").slider({
       step:1,
       min: 0,
@@ -792,6 +813,8 @@ $(document).ready(function() {
           }
     });
 
+    //When user slides, it changes value of slider as well
+    //as updates graph to reflect max k values allowed in subgraph
     $("#slider").slider({
       value: $("#slider_max").slider('value'),
       max: $("#slider_max").slider('value'),
@@ -813,6 +836,7 @@ $(document).ready(function() {
     });
 });
 
+//Clears search terms
 $("#clear_search").click(function (e) {
   e.preventDefault();
   clearSearchTerms();
@@ -844,6 +868,8 @@ function fireEvent(obj,evt){
   }
 }
 
+//When graph is loaded, go through query string
+//and highlight appropriate variables
 function searchOnLoad() {
 
   if (getQueryVariable('partial_search')) {
@@ -857,6 +883,7 @@ function searchOnLoad() {
   }
 }
 
+//Go through graph and find the k value of a label 
 function findKValueOfLabel(label) {
   for (edge in graph_json['graph']['edges']) {
     if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
@@ -1277,6 +1304,9 @@ function getLayoutFromQuery() {
     return graph_layout;
 }
 
+/*
+* Clears all search term from graph.
+*/
 function clearSearchTerms() {
   window.cy.elements().removeCss();
   $("#search").val("");
@@ -1416,10 +1446,16 @@ function setDefaultNodeProperties(nodeJSON) {
   }
 }
 
+/*
+* When input_k bar is changed, update the nodes shown in the graph.
+*/
 $("#input_k").bind("change", function() {
   setInputK();
 });
 
+/*
+* Updates the text box when the user slides the bar.
+*/
 function setInputK() {
   if ($("#input_k").val() < 0) {
    $("#input_k").val(0);
@@ -1432,6 +1468,10 @@ function setInputK() {
   $("#slider").slider({value: $("#input_k").val(), max: $('#input_max').val()});
 }
 
+/**
+* When the input max bar changes from user, invoke changes to the graph 
+* as well as position the slider in its appropriate value.
+*/
 $("#input_max").bind("change", function() {
   if ($(this).val() < 0) {
    $(this).val(0);
@@ -1445,6 +1485,11 @@ $("#input_max").bind("change", function() {
   setInputK();
 });
 
+/**
+* If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
+* inputId the id of the input bar
+* barId  the id of the max paths shown bar.
+*/
 function setBarToValue(inputId, barId) {
   var slider_max = $("#slider_max").slider("option", "max");
   if ($(inputId).val() > slider_max) {
