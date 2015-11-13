@@ -550,30 +550,30 @@ if __name__ == '__main__':
 	testCreateUser(email, password)
 	testCreateUser(email_other, password)
 
-	# # Graph API Tests
+	# Graph API Tests
 	testAddGraph(email, password, graph_name)
-	# testGetGraph(email, password, graph_name)
-	# testUpdateGraph(email, password, graph_name)
-	# testMakeGraphPublic(email, password, graph_name)
-	# testMakeGraphPrivate(email, password, graph_name)
-	# testGetUserGraphs(email, password)
+	testGetGraph(email, password, graph_name)
+	testUpdateGraph(email, password, graph_name)
+	testMakeGraphPublic(email, password, graph_name)
+	testMakeGraphPrivate(email, password, graph_name)
+	testGetUserGraphs(email, password)
 
-	# # Group API Tests
-	# testCreateGroup(email, password, group_name)
-	# testGetGroup(email, password, group_name)
-	# testAllGroupsForUser(email, password)
-	# testAddUserToGroup(email, password, group_name, email_other)
+	# Group API Tests
+	testCreateGroup(email, password, group_name)
+	testGetGroup(email, password, group_name)
+	testAllGroupsForUser(email, password)
+	testAddUserToGroup(email, password, group_name, email_other)
 	# testRemoveUserFromGroup(email, password, group_name, email_other)
-	# testShareGraphWithGroup(email, password, group_name, graph_name)
+	testShareGraphWithGroup(email, password, group_name, graph_name)
 	# testUnshareGraphWithGroup(email, password, group_name, graph_name)
 	# testRemoveGroup(email, password, group_name)
 
-	# # Tags API Tests
-	# testGetTagsForUser(email, password)
-	# testGetTagsForGraph(email, password, graph_name)
-	# testMakeGraphsWithTagPublic(email, password, tag, graph_name)
-	# testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
-	# testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
+	# Tags API Tests
+	testGetTagsForUser(email, password)
+	testGetTagsForGraph(email, password, graph_name)
+	testMakeGraphsWithTagPublic(email, password, tag, graph_name)
+	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
+	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
 	# testDeleteGraphsWithTag(email, password, tag)
 	
 	# testRemoveUser(email, password)
