@@ -1216,6 +1216,33 @@ def shareLayoutWithGroups(request):
 
 ##### REST API #####
 
+def graph_exists(request, user_id, graphname):
+    '''
+        Checks to see if a graph exists
+
+        @param request: HTTP POST Request
+        @param user_id: Owner of graph
+        @param: graph_name: Name of graph
+    '''
+
+    if request.method == 'POST':
+
+        if request.POST['username'] != user_id:
+            return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        if db.get_valid_user(user_id, request.POST['password']) == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        graph_exists = db.graph_exists(user_id, graphname)
+
+        if graph_exists == None:
+            return HttpResponse(json.dumps(db.throwError(404, "Graph does not exist!"), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Graph exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+    else:
+            return HttpResponse(json.dumps(db.throwError(404, "This route only accepts POST Requests"), indent=4, separators=(',', ': ')), content_type="application/json")
+
 def upload_graph(request, user_id, graphname):
     '''
         Uploads a graph for a user

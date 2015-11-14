@@ -118,6 +118,21 @@ def testGetGraph(email, password, filename):
 	else:
 		print "Error in testAddGraph: Retrieved wrong JSON!"
 
+def testGetGraphExists(email, password, filename):
+	register_openers()
+	
+	datagen, headers = multipart_encode({"username": email, "password": password})
+	url = URL_PATH + "api/users/" + email + "/graph/exists/" + filename + "/"
+	
+	request = urllib2.Request(url, datagen, headers)
+	
+	response = byteify(json.loads(urllib2.urlopen(request).read()))
+
+	if 'Error' in response:
+		print "Error in testGraphExists: " + response['Error']
+	else:
+		print "Passed testGraphExists test!"
+
 def testUpdateGraph(email, password, filename):
 	register_openers()
 	
@@ -553,6 +568,7 @@ if __name__ == '__main__':
 	# Graph API Tests
 	testAddGraph(email, password, graph_name)
 	testGetGraph(email, password, graph_name)
+	testGetGraphExists(email, password, graph_name)
 	testUpdateGraph(email, password, graph_name)
 	testMakeGraphPublic(email, password, graph_name)
 	testMakeGraphPrivate(email, password, graph_name)
@@ -563,18 +579,17 @@ if __name__ == '__main__':
 	testGetGroup(email, password, group_name)
 	testAllGroupsForUser(email, password)
 	testAddUserToGroup(email, password, group_name, email_other)
-	# testRemoveUserFromGroup(email, password, group_name, email_other)
+	testRemoveUserFromGroup(email, password, group_name, email_other)
 	testShareGraphWithGroup(email, password, group_name, graph_name)
-	# testUnshareGraphWithGroup(email, password, group_name, graph_name)
-	# testRemoveGroup(email, password, group_name)
+	testUnshareGraphWithGroup(email, password, group_name, graph_name)
+	testRemoveGroup(email, password, group_name)
 
 	# Tags API Tests
 	testGetTagsForUser(email, password)
 	testGetTagsForGraph(email, password, graph_name)
 	testMakeGraphsWithTagPublic(email, password, tag, graph_name)
 	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
-	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
-	# testDeleteGraphsWithTag(email, password, tag)
+	testDeleteGraphsWithTag(email, password, tag)
 	
-	# testRemoveUser(email, password)
-	# testRemoveUser(email_other, password)
+	testRemoveUser(email, password)
+	testRemoveUser(email_other, password)

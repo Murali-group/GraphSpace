@@ -636,6 +636,20 @@ def get_graph(user_id, graph_id):
 		db_session.close()
 		return None
 
+def graph_exists(user_id, graph_id):
+	'''
+		Checks to if graph exists.
+
+		@param user_id: Owner of graph
+		@param graph_id: ID of graph
+	'''
+	graph = get_graph(user_id, graph_id)
+
+	if graph == None:
+		return False
+	else:
+		return True
+
 def get_default_layout(uid, gid):
 	'''
 		Gets the default layout for a graph.
@@ -4030,7 +4044,7 @@ def delete_all_graphs_for_tag(tagname, username):
 
 	try:
 		# Get all the graphs that the user owns which match the tag
-		graph_list = db_session.query(models.Graph).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphTag.user_id == username).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).all()
+		graph_list = db_session.query(models.Graph).filter(models.GraphToTag.tag_id == tagname).filter(models.GraphToTag.user_id == username).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).all()
 
 		# Delete all these graphs from the graphs table
 		for graph in graph_list:
