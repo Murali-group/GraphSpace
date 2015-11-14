@@ -1224,7 +1224,6 @@ def graph_exists(request, user_id, graphname):
         @param user_id: Owner of graph
         @param: graph_name: Name of graph
     '''
-
     if request.method == 'POST':
 
         if request.POST['username'] != user_id:
@@ -1235,7 +1234,9 @@ def graph_exists(request, user_id, graphname):
 
         graph_exists = db.graph_exists(user_id, graphname)
 
-        if graph_exists == None:
+        print "Graph exists:", graph_exists
+
+        if graph_exists == False:
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph named: " + graphname + " exists for " + user_id + "."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "Graph " + graphname + " exists for " + user_id + "!"), indent=4, separators=(',', ': ')), content_type="application/json")
