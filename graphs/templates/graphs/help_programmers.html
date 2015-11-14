@@ -339,17 +339,17 @@ If JSON fails validation, it should give some sort of error as to why it failed
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="graph_exists">Graph Exists</h3>
 
-Checks to see if there is a graph that a user owns in GraphSpace.  <b>Note</b>: This command <b>only</b> checks for graphs that the user who is making the request currently owns. 
+Checks to see if there is a graph that a user owns in GraphSpace.  <b>Note</b>: This command <b>only</b> checks for graphs owned by the user making the request.
 
 <pre>
-curl -X POST "{{url}}api/users/[graph_owner_email]/graph/exists/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/users/[email]/graph/exists/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:
 
 <pre>
 {
-    "Message": "Graph [graphname] exists for [graph_owner_email]!"",
+    "Message": "User [email] owns a graph with id [graphname]!",
     "StatusCode": 200
 }
 </pre>
@@ -357,17 +357,17 @@ Example successful response:
 Example failed response:
 <pre>
 {
-    "Error": "No Such Graph named: [graphname] exists for [graph_owner_email].",
+    "Error": "User [email] owns a graph with id [graphname]!",
     "StatusCode": 404
 }
 </pre>
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="get_graph">Get graph</h3>
 
-To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.  Here, [graph_owner_email] refers to the owner of the graph whose JSON you are trying to retrieve.  It may or may not be your email.
+To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.  Here, [email] refers to the owner of the graph whose JSON you are trying to retrieve.  It may or may not be your email.
 
 <pre>
-curl -X POST "{{url}}api/users/[graph_owner_email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+curl -X POST "{{url}}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
 </pre>
 
 Example successful response:

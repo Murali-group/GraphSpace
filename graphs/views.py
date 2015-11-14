@@ -1237,10 +1237,9 @@ def graph_exists(request, user_id, graphname):
         print "Graph exists:", graph_exists
 
         if graph_exists == False:
-            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph named: " + graphname + " exists for " + user_id + "."), indent=4, separators=(',', ': ')), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(404, "User " + user_id + " owns no graph with id " + graphname + "!"), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.sendMessage(200, "Graph " + graphname + " exists for " + user_id + "!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
+            return HttpResponse(json.dumps(db.sendMessage(200, "User " + user_id + " owns a graph with id " + graphname + "!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
             return HttpResponse(json.dumps(db.throwError(404, "This route only accepts POST Requests"), indent=4, separators=(',', ': ')), content_type="application/json")
 
