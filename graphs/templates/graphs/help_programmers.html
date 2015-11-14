@@ -339,7 +339,7 @@ If JSON fails validation, it should give some sort of error as to why it failed
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="graph_exists">Graph Exists</h3>
 
-This CURL command returns True if there is a graph that a user owns in GraphSpace.  <b>Note</b>: This command <b>only</b> checks for graphs that the user who is making the request currently owns. 
+Checks to see if there is a graph that a user owns in GraphSpace.  <b>Note</b>: This command <b>only</b> checks for graphs that the user who is making the request currently owns. 
 
 <pre>
 curl -X POST "{{url}}api/users/[graph_owner_email]/graph/exists/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
