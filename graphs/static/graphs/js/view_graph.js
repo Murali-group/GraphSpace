@@ -214,17 +214,6 @@ $(document).ready(function() {
       .selector('edge[mid_target_arrow_fill]').css({
         'mid-target-arrow-fill': 'data(mid_target_arrow_fill)'
       })
-
-      // .selector('node').css({
-        // 'text-valign': 'center'
-      // })
-    // .selector('edge')
-    //   .css({
-    //     'target-arrow-shape': 'data(arrow)',
-    //     'line-color': 'data(color)',
-    //     'source-arrow-color': 'data(color)',
-    //     'target-arrow-color': 'data(color)',
-    //   })
       .selector('node:selected')
         .css({
           'border-width': 3,
@@ -263,17 +252,24 @@ $(document).ready(function() {
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
+
+        //If edges don't have an ID, generate one
         if (testEdges.indexOf(edgeData['id']) == -1) {
           testEdges.push(edgeData['id']);
         } else {
           edgeData['id'] = edgeData['id'] + i;
         }
+
+        //If edges don't have any color properties, choose default 
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
           edgeData['line_color'] = "black";
         } else {
+          //Color property maps to line_color
+          //DONE TO SUPPORT OLD GRAPHS
           if (edgeData.hasOwnProperty('color')) {
             edgeData['line_color'] = edgeData['color'];
           }
+          //Converts the line color into Hexadecimal so CytoscapeJS can user it
           var hexCode = colourNameToHex(edgeData['line_color']);
            if (hexCode != false) {
             edgeData['line_color'] = hexCode;
@@ -284,6 +280,7 @@ $(document).ready(function() {
            }
         }
 
+        //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
         if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
           edgeData['target_arrow_shape'] = 'none';
         } else if (edgeData['directed'] == true) {
@@ -311,25 +308,19 @@ $(document).ready(function() {
         if ( target !== this ) {
             var popup = target._private.data.popup
 
+            //When user clicks an element, turn that element red
             window.cy.$('[id="' + target._private.data.id + '"]').css('color', 'red');
 
+            //If there is no embedded content, don't display anything
             if (popup == null || popup.length == 0) {
                 return;
             }
 
+            //Display embedded content if there is any
             if (target._private.data.popup != null && target._private.data.popup.length > 0) {
               $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
             if (target._private.group == 'edges') {
-              // $.post("../../../retrieveIDs/", {
-              //   'values': [target._private.data.source, target._private.data.target],
-              //   "gid": decodeURIComponent(paths[paths.length - 2]),
-              //   "uid": decodeURIComponent(paths[paths.length - 3]),
-              //   "search_type": "full_search" 
-              // }, function (data) {
-              //   console.log(data);
-              // });
-              
               $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
             } else {
               $('#dialog').dialog('option', 'title', target._private.data.content);
@@ -340,11 +331,10 @@ $(document).ready(function() {
             $('#dialog').dialog('open');
 
         } else {
+          //If another element was clicked, remove the red color from previously clicked element
           window.cy.elements().removeCss('color');
         }
       });
-
-
 
       // //If ther are any terms to be searched for, highlight those terms, if found
       if (getQueryVariable('partial_search')) {
@@ -357,25 +347,30 @@ $(document).ready(function() {
           $("#partial_search").attr('checked', true);
        }
 
+       //Searches through the graph for nodes/edges that match the search term
        searchOnLoad();
 
+       //If num_paths in query, set the k value 
        if (getQueryVariable('num_paths')) {
         if ($("#input_k").val()) {
           $("#input_k").val(getQueryVariable("num_paths"));
         }
        }
 
+       //If max_paths in query, set the k value 
        if (getQueryVariable('max_paths')) {
         if ($("#input_max").val()) {
           $("#input_max").val(getQueryVariable("max_paths"));
         }
        }
 
+       //Re-render graph allowing for a maximum of k
        applyMax(graph_json.graph);
 
     } // end ready: function()
     });
 
+    //Allow a user to select multiple elements by dragging cursor across
     cy.boxSelectionEnabled(true);
 
     //setup popup dialog for displaying dialog when nodes/edges
@@ -454,13 +449,24 @@ $(document).ready(function() {
         "public": 0,
         "unlisted": 0
       }, function (data) {
-
         if (data.Error) {
           return alert(data.Error);
         }
 
-        var layoutUrl = window.location.pathname + "?layout=" + layoutName;
+        var layoutUrl = window.location.pathname;
 
+        //Get rid of trailing '/' character
+        if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
+          layoutUrl = layoutUrl.substring(0, layoutUrl.length - 1);
+        }
+
+        //If layout, append layout URL
+        layoutUrl += "?layout=" + layoutName;
+
+        //Get all highlighted terms and append them to the 
+        //url of each layout.
+        //Done so the highlighted elements stay highlighted
+        //when user clicks a layout
         var searchTerms = getHighlightedTerms();
         if (searchTerms[0].length > 0) {
           layoutUrl += '&partial_search=';
@@ -473,14 +479,18 @@ $(document).ready(function() {
           }      
         } 
 
-        if (searchTerms[1].length > 0) {
-          layoutUrl += '&full_search=';
-          for (var i = 0; i < searchTerms[1].length; i++) {
-            if (i < searchTerms[1].length - 1) {
-              layoutUrl += searchTerms[1][i] + ',';
-            } else {
-              layoutUrl += searchTerms[1][i];
-            }
+          //Get all highlighted terms and append them to the 
+          //url of each layout.
+          //Done so the highlighted elements stay highlighted
+          //when user clicks a layout        
+          if (searchTerms[1].length > 0) {
+            layoutUrl += '&full_search=';
+            for (var i = 0; i < searchTerms[1].length; i++) {
+              if (i < searchTerms[1].length - 1) {
+                layoutUrl += searchTerms[1][i] + ',';
+              } else {
+                layoutUrl += searchTerms[1][i];
+              }
           }      
         } 
         window.location.replace(layoutUrl);
@@ -496,10 +506,13 @@ $(document).ready(function() {
       }
      });
 
+    //Highlights appropriate radio button based on search term
     if (getQueryVariable($('input[name=match]:checked').val())) {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
+    //DEPRECATED: HERE FOR REFERENCE PURPOSES ONLY
+    //Originally used as an attempt to get a PDF image of graph
     $("#pdf").click(function (e) {
       html2canvas($("#csjs").first(), {
         onrendered: function(canvas) {
@@ -511,6 +524,7 @@ $(document).ready(function() {
       });
     });
 
+    //Goes to appropriate help section
     $(".help").click(function (e) {
       e.preventDefault();
       window.location.href = "../../../help/#graph_panels";
@@ -521,12 +535,17 @@ $(document).ready(function() {
       window.location.href = "../../../help/#sharing_panel";
     });
 
+    //if there are multiple search terms, append the search term
+    //to the URL.  Be sure to track for if its a partial or exact search
     $(".highlight").click(function (e) {
       e.preventDefault();
       linkToGraph = $(this).attr('id') + ',';
 
+      //Get all labels form search term
       var labels = $("#search").val().split(',');
 
+      //If partial is checked append all search terms,
+      //otherwise append all search terms for full search
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
             linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
@@ -551,6 +570,8 @@ $(document).ready(function() {
 
       linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
+      //When appropriate icon is clicked, show link
+      //otherwise hide it.
       $("#layout_link").attr('href', linkToGraph);
       if ($("#layout_link").html().length > 0) {
         $("#layout_link").html("");
@@ -561,12 +582,14 @@ $(document).ready(function() {
       $("#layout_link").width(20);
     });
 
+    //Shows modal that allows user to change name of layout
     $(".change").click(function (e) {
       e.preventDefault();
       $("#change_modal").modal('toggle');
       $("#change_layout").val($(this).val());
     });
 
+    //Changes the name of the current layout
     $("#change_layout").click(function (e) {
       var paths = document.URL.split('/')
       var new_layout_name = $("#new_layout_name").val();
@@ -586,10 +609,12 @@ $(document).ready(function() {
       }
     });
 
+    //Deletes the current layout from graph
     $(".remove").click(function (e) {
       e.preventDefault();
 
       var paths = document.URL.split('/')
+      console.log(paths);
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
       var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
@@ -608,8 +633,11 @@ $(document).ready(function() {
       })
     });
 
+    //Tells what each icon for layout does
     $(".layout_links").tooltip();
 
+    //If clicked, graph re-renders with correct layout
+    //including all search terms
     $(".layout_buttons").click(function (e) {
       e.preventDefault();
       // var searchTerms = getHighlightedTerms();
@@ -652,6 +680,7 @@ $(document).ready(function() {
       }
     });
 
+    //If clicked, it shares layouts with all groups
     $(".public").click(function (e) {
       e.preventDefault();
 
@@ -674,6 +703,7 @@ $(document).ready(function() {
       });
     });
 
+    //Reveals modal of all groups user is a member/owner of
     $("#share_graph").click(function (e) {
       e.preventDefault();
 
@@ -690,6 +720,7 @@ $(document).ready(function() {
         var group_options = "";
         if (data['Group_Information'].length > 0) {
           for (var i = 0; i < data['Group_Information'].length; i++) {
+            console.log(data['Group_Information'][i]);
             if (data['Group_Information'][i]['graph_shared'] == true) {
               if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
@@ -715,22 +746,7 @@ $(document).ready(function() {
 
     });
 
-    // $("#share_layout_with_selected_groups").click(function(e) {
-    //   var paths = document.URL.split('/')
-    //   var ownerId = decodeURIComponent(paths[paths.length - 3])
-    //   var gid = decodeURIComponent(paths[paths.length - 2])
-
-    //   $.post('../../../shareLayoutWithGroups/', {
-    //     'layoutId': $("#layoutId").text(),
-    //     'gid': gid,
-    //     'owner': ownerId
-    //   }, function (data) {
-    //     console.log(data);
-    //     // window.location.reload();
-    //   });
-    // });
-
-
+    //Shares graphs with specified groups user is a member/owner of
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')
       var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
@@ -765,9 +781,14 @@ $(document).ready(function() {
       });
     });
 
+    //Hides appropriate nodes based on k value
     $("#input_k").val(getLargestK(graph_json.graph));
+
+    //Shows up to maximum k values 
     $("#input_max").val(getLargestK(graph_json.graph));
 
+    //When user slides, it changes value of slider as well
+    //as updates graph to reflect max k values allowed in subgraph
     $("#slider_max").slider({
       step:1,
       min: 0,
@@ -792,6 +813,8 @@ $(document).ready(function() {
           }
     });
 
+    //When user slides, it changes value of slider as well
+    //as updates graph to reflect max k values allowed in subgraph
     $("#slider").slider({
       value: $("#slider_max").slider('value'),
       max: $("#slider_max").slider('value'),
@@ -813,6 +836,7 @@ $(document).ready(function() {
     });
 });
 
+//Clears search terms
 $("#clear_search").click(function (e) {
   e.preventDefault();
   clearSearchTerms();
@@ -844,6 +868,8 @@ function fireEvent(obj,evt){
   }
 }
 
+//When graph is loaded, go through query string
+//and highlight appropriate variables
 function searchOnLoad() {
 
   if (getQueryVariable('partial_search')) {
@@ -857,6 +883,7 @@ function searchOnLoad() {
   }
 }
 
+//Go through graph and find the k value of a label 
 function findKValueOfLabel(label) {
   for (edge in graph_json['graph']['edges']) {
     if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
@@ -1277,6 +1304,9 @@ function getLayoutFromQuery() {
     return graph_layout;
 }
 
+/*
+* Clears all search term from graph.
+*/
 function clearSearchTerms() {
   window.cy.elements().removeCss();
   $("#search").val("");
@@ -1326,8 +1356,16 @@ function colourNameToHex(colour)
 */
 $(".default").click(function(e) {
   var paths = document.URL.split('/')
+
     var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+
+    if (gid.charAt(gid.length - 1) == '/') {
+      gid = gid.substring(0, gid.length - 1);
+    }
+    
     var ownerId = decodeURIComponent(paths[paths.length - 2]);
+
+    console.log('GID: ' + gid + ", UID: " + ownerId);
 
   $.post('../../../setDefaultLayout/', {
     'layoutId': $(this).val(),
@@ -1408,10 +1446,16 @@ function setDefaultNodeProperties(nodeJSON) {
   }
 }
 
+/*
+* When input_k bar is changed, update the nodes shown in the graph.
+*/
 $("#input_k").bind("change", function() {
   setInputK();
 });
 
+/*
+* Updates the text box when the user slides the bar.
+*/
 function setInputK() {
   if ($("#input_k").val() < 0) {
    $("#input_k").val(0);
@@ -1424,6 +1468,10 @@ function setInputK() {
   $("#slider").slider({value: $("#input_k").val(), max: $('#input_max').val()});
 }
 
+/**
+* When the input max bar changes from user, invoke changes to the graph 
+* as well as position the slider in its appropriate value.
+*/
 $("#input_max").bind("change", function() {
   if ($(this).val() < 0) {
    $(this).val(0);
@@ -1437,6 +1485,11 @@ $("#input_max").bind("change", function() {
   setInputK();
 });
 
+/**
+* If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
+* inputId the id of the input bar
+* barId  the id of the max paths shown bar.
+*/
 function setBarToValue(inputId, barId) {
   var slider_max = $("#slider_max").slider("option", "max");
   if ($(inputId).val() > slider_max) {

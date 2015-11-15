@@ -89,6 +89,7 @@ def testAddGraph(email, password, filename):
 	register_openers()
 	
 	datagen, headers = multipart_encode({"username": email, "password": password, "graphname": open(filename, "r")})
+
 	url = URL_PATH + "api/users/" + email + "/graph/add/" + filename + "/"
 	
 	request = urllib2.Request(url, datagen, headers)
@@ -116,6 +117,21 @@ def testGetGraph(email, password, filename):
 		print "Passed testGetGraph test!"
 	else:
 		print "Error in testAddGraph: Retrieved wrong JSON!"
+
+def testGetGraphExists(email, password, filename):
+	register_openers()
+	
+	datagen, headers = multipart_encode({"username": email, "password": password})
+	url = URL_PATH + "api/users/" + email + "/graph/exists/" + filename + "/"
+	
+	request = urllib2.Request(url, datagen, headers)
+	
+	response = byteify(json.loads(urllib2.urlopen(request).read()))
+
+	if 'Error' in response:
+		print "Error in testGraphExists: " + response['Error']
+	else:
+		print "Passed testGraphExists test!"
 
 def testUpdateGraph(email, password, filename):
 	register_openers()
@@ -169,7 +185,7 @@ def testGetUserGraphs(email, password):
 	elif len(response['Graphs']) == 1:
 		print "Passed testGetUserGraphs test!"
 	else:
-		print "Error in testGetUserGraphs: Incorrect number of graphs returned! Should be 1, got: " + response['Graphs']
+		print "Error in testGetUserGraphs: Incorrect number of graphs returned! Should be 1, got: ", response['Graphs']
 
 def testMakeGraphPublic(email, password, filename):
 	register_openers()
@@ -416,6 +432,8 @@ def testGetTagsForGraph(email, password, graph_name):
 
 	if 'Error' in response:
 		print "Error in testRemoveGroup: " + response['Error']
+	elif 'Tags' not in response: 
+		print "No Tags Found!"
 	elif response['Tags'][0] == 'tutorial':
 		print "Passed testGetTagsForGraph test!"
 	else:
@@ -447,7 +465,7 @@ def testMakeGraphsWithTagPublic(email, password, tag, filename):
 
 			isPublic = data[0]
 
-			if isPublic == 0:
+			if isPublic == 1:
 				print "Passed testMakeGraphsWithTagPublic test!"
 			else:
 				print "Error in testMakeGraphsWithTagPublic: " + filename + " is still not public!"
@@ -498,7 +516,38 @@ def testMakeGraphsWithTagPrivate(email, password, tag, filename):
 			if con:
 				con.close()
 
-# def testDeleteGraphsWithTag():
+def testDeleteGraphsWithTag(email, password, tag):
+	register_openers()
+	
+	datagen, headers = multipart_encode({"username": email, "password": password})
+	url = URL_PATH + "api/tags/user/" + email + "/" + tag + "/delete/"
+
+	request = urllib2.Request(url, datagen, headers)
+
+	response = byteify(json.loads(urllib2.urlopen(request).read()))
+
+	if 'Error' in response:
+		print "Error in testDeleteGraphsWithTag: " + response['Error']
+
+	con = None
+	try:
+		con = lite.connect(DB_FULL_PATH)
+		cur = con.cursor()
+
+		cur.execute('select * from graph_to_tag where tag_id = ? and user_id = ?', (tag, email))
+		data = cur.fetchone()
+
+		if data == None:
+			print "Passed testDeleteGraphsWithTag test!"
+		else:
+			print "Error in testDeleteGraphsWithTag"
+
+	except lite.Error, e:
+		print 'Error %s:' % e.args[0]
+
+	finally:
+		if con:
+			con.close()
 
 if __name__ == '__main__':
 
@@ -511,12 +560,15 @@ if __name__ == '__main__':
 	group_name = "test_group"
 	graph_name = "example.json"
 
+	tag = "tutorial"
+
 	testCreateUser(email, password)
 	testCreateUser(email_other, password)
 
 	# Graph API Tests
 	testAddGraph(email, password, graph_name)
 	testGetGraph(email, password, graph_name)
+	testGetGraphExists(email, password, graph_name)
 	testUpdateGraph(email, password, graph_name)
 	testMakeGraphPublic(email, password, graph_name)
 	testMakeGraphPrivate(email, password, graph_name)
@@ -535,10 +587,9 @@ if __name__ == '__main__':
 	# Tags API Tests
 	testGetTagsForUser(email, password)
 	testGetTagsForGraph(email, password, graph_name)
-	testMakeGraphsWithTagPrivate(email, password, 'tutorial', graph_name)
-	testMakeGraphsWithTagPrivate(email, password, 'tutorial', graph_name)
-
-	testRemoveGraph(email, password, graph_name)
+	testMakeGraphsWithTagPublic(email, password, tag, graph_name)
+	testMakeGraphsWithTagPrivate(email, password, tag, graph_name)
+	testDeleteGraphsWithTag(email, password, tag)
 	
 	testRemoveUser(email, password)
 	testRemoveUser(email_other, password)

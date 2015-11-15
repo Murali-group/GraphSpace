@@ -10,14 +10,13 @@ urlpatterns = patterns('',
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),
         url(r'^download/$', views.download, name='download'),
-                
+
         # graphs page
         url(r'^graphs/$', views.graphs, name='graphs'),
         url(r'^graphs/shared/$', views.shared_graphs, name='shared_graphs'),
         url(r'^graphs/public/$', views.public_graphs, name='public_graphs'),
-        url(r'^graphs/all/$', views.all_graphs, name='all_graphs'),
         url(r'^graphs/upload/$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
-        
+
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/
         # regex from http://www.regular-expressions.info/email.html
@@ -31,7 +30,6 @@ urlpatterns = patterns('',
         # groups page
         url(r'^groups/$', views.groups, name='groups'),
         url(r'^groups/member/$', views.groups_member, name='groups_member'),
-        url(r'^groups/all/$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_owner>.+)/(?P<group_id>.+)/$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)/$', views.create_group, name='create_group'),
         url(r'^delete/group/$', views.delete_group_through_ui, name='delete_group_through_ui'),
@@ -59,7 +57,6 @@ urlpatterns = patterns('',
         # Utility methods 
         url(r'^register/$', views.register, name='register'),
         url(r'^changeLayoutName/$', views.changeLayoutName, name='changeLayoutName'),
-        url(r'^getGroupsWithLayout/$', views.getGroupsWithLayout, name='getGroupsWithLayout'),
         url(r'^deleteLayout/$', views.deleteLayout, name='deleteLayout'),
         url(r'^getGroupsForGraph/$', views.getGroupsForGraph, name='getGroupsForGraph'),
         url(r'^shareGraphWithGroups/$', views.shareGraphWithGroups, name='shareGraphWithGroups'),
@@ -77,6 +74,7 @@ urlpatterns = patterns('',
         # Graph REST API endpoints
         url(r'^api/users/(?P<user_id>.+)/graph/add/(?P<graphname>.+)/$', views.upload_graph, name='upload_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/get/(?P<graphname>.+)/$', views.retrieve_graph, name='retrieve_graph'),
+        url(r'^api/users/(?P<user_id>.+)/graph/exists/(?P<graphname>.+)/$', views.graph_exists, name='graph_exists'),
         url(r'^api/users/(?P<user_id>.+)/graph/update/(?P<graphname>.+)/$', views.update_graph, name='update_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/delete/(?P<graphname>.+)/$', views.remove_graph, name='remove_graph'),
         url(r'^api/users/(?P<user_id>.+)/graph/makeGraphPublic/(?P<graphname>.+)/$', views.make_graph_public, name='make_graph_public'),
@@ -111,7 +109,6 @@ urlpatterns = patterns('',
         url(r'^graphs$', views.graphs, name='graphs'),
         url(r'^graphs/shared$', views.shared_graphs, name='shared_graphs'),
         url(r'^graphs/public$', views.public_graphs, name='public_graphs'),
-        url(r'^graphs/all$', views.all_graphs, name='all_graphs'),
         url(r'^graphs/upload$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
         
         # view graph page. This contains regular expression to catch url in the form of the following:
@@ -127,7 +124,6 @@ urlpatterns = patterns('',
         # groups page
         url(r'^groups$', views.groups, name='groups'),
         url(r'^groups/member$', views.groups_member, name='groups_member'),
-        url(r'^groups/all$', views.all_groups, name='all_groups'),
         url(r'^groups/(?P<group_owner>.+)/(?P<group_id>.+)$', views.graphs_in_group, name="graphs_in_group"),
         url(r'^add/(?P<groupname>.+)$', views.create_group, name='create_group'),
         url(r'^delete/group$', views.delete_group_through_ui, name='delete_group_through_ui'),
@@ -155,7 +151,6 @@ urlpatterns = patterns('',
         # Utility methods 
         url(r'^register$', views.register, name='register'),
         url(r'^changeLayoutName$', views.changeLayoutName, name='changeLayoutName'),
-        url(r'^getGroupsWithLayout$', views.getGroupsWithLayout, name='getGroupsWithLayout'),
         url(r'^deleteLayout$', views.deleteLayout, name='deleteLayout'),
         url(r'^getGroupsForGraph$', views.getGroupsForGraph, name='getGroupsForGraph'),
         url(r'^shareGraphWithGroups$', views.shareGraphWithGroups, name='shareGraphWithGroups'),

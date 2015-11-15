@@ -19,10 +19,13 @@ $(document).ready(function() {
   //When search button on the side gets clicked
   $("#search_button").click(function(e) {
     e.preventDefault();
+    //Get URL removing any previous search query terms
     var newURL = removeURLParameter(document.URL, $('input[name=match]:not(:checked)').val());
+    //Remove the trailing ? character
     if (newURL.charAt(newURL.length - 1) == '?') {
       newURL = newURL.substring(0, newURL.length - 1);
     }
+    //Append new search type (partial or exact)
     urlAppender(newURL, $('input[name=match]:checked').val(), $("#searching").val());
   });
 
@@ -32,35 +35,30 @@ $(document).ready(function() {
     urlAppender(document.URL, 'tags', $("#tags_searching").val());
   });
 
+  //Clears all seach terms
   $("#clear_search").click(function(e) {
     e.preventDefault();
     clearSearchTerms();
   });
 
+  //Clears all tag terms
   $("#clear_tags").click(function(e) {
     e.preventDefault();
     clearTagTerms();
   });
 
-
-  // $(".search").click(function (e) {
-  //    e.preventDefault();
-  //    modifyQueryTerms($('input[name=match]:checked').val(), $(this).attr('id'));
-  // });
-
-  // $(".tags").click(function (e) {
-  //    e.preventDefault();
-  //    modifyQueryTerms('tags', $(this).attr('id'));
-  // });
-
+  //Based on the search term query, it fill in the search input with the searched tersm
   if (getQueryVariable($('input[name=match]:checked').val())) {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
   }
 
+    //Based on the tag term query, it fill in the tag input with the tag terms
   if (getQueryVariable('tags')) {
     $("#tags_searching").val(decodeURIComponent(getQueryVariable('tags')));
   }
 
+  //Places the clickable icons (sorting) in the table
+  //The icons change depending on the type of sorting
   setIcons();
 
   /**
@@ -98,16 +96,24 @@ $(document).ready(function() {
   function modifyQueryTerms(termType, queryTerm) {
     var url = document.URL;
 
+    //Get index of where search terms start and end
     var searchIndex = url.indexOf(termType);
     var endSearchIndex = url.substring(searchIndex).indexOf('&');
 
+    //If there are no more than one search term
     if (endSearchIndex == -1) {
+      //Remove search term from URL
       searchString = url.substring(searchIndex).replace(termType + '=', '').replace(/%20/g, '').split(',');
+      //Add new search term to URL
       searchURL = url.substring(0, searchIndex) + termType + '=';
+      
+      //Get where query term starts
       var indexToRemove = searchString.indexOf(queryTerm);
       if (indexToRemove > -1) {
         searchString.splice(indexToRemove, 1);
       }
+
+      //For all search terms, append with a ",""
       for (var i = 0; i < searchString.length; i++) {
         if (searchString[i].length > 0 && searchString[i] != queryTerm) {
           if (i == 0) {
@@ -117,6 +123,7 @@ $(document).ready(function() {
           }
         }
       }
+      //If there are no search terms, reload page without search term
       if (searchString.length == 0) {
         window.location.href = url.substring(0, searchIndex - 1);
       } else {
@@ -129,6 +136,8 @@ $(document).ready(function() {
       if (indexToRemove > -1) {
         searchString.splice(indexToRemove, 1);
       }
+
+      //For all search terms, append with a ",""
       for (var i = 0; i < searchString.length; i++) {
         if (searchString[i].length > 0 && searchString[i] != queryTerm) {
           if (i == 0) {
@@ -138,6 +147,8 @@ $(document).ready(function() {
           }
         }
       }
+
+      //Add multiple search terms with '&'
       searchURL += url.substring(url.indexOf('&'));
       if (searchString.length == 0) {
         window.location.href = url.substring(0, searchIndex) + url.substring(url.indexOf('&') + 1);
@@ -275,6 +286,7 @@ $(document).ready(function() {
 
   /**
    * Sets the icons at the loading of the page.
+   * Changes the icons depending on the type of sorting the user wants.
    */
   function setIcons() {
     var orderVariable = getQueryVariable("order");
@@ -305,10 +317,12 @@ $(document).ready(function() {
     }
   }
 
+  /**
+  * Clears all tag terms and reloads page without the tag terms.
+  */
   function clearTagTerms() {
     if (document.URL.indexOf('?') > -1 && document.URL.indexOf('tags') > -1) {
       var linkToGraph = removeURLParameter(document.URL, "tags");
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
     } else {
       var linkToGraph = document.URL;
     }
@@ -316,21 +330,27 @@ $(document).ready(function() {
     window.location.href = linkToGraph;
   }
 
+  /**
+  * Clears all search terms and get rid of 
+  * current search terms from the URL.
+  */
   function clearSearchTerms() {
+    //If there is a query term
     if (document.URL.indexOf('?') > -1) {
+      //Remove the partial_search query from the URL
       if (getQueryVariable("partial_search")) {
         var linkToGraph = removeURLParameter(document.URL, "partial_search");
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
       } else if (getQueryVariable("full_search")) {
+        //Remove the full_search query from the URL
         var linkToGraph = removeURLParameter(document.URL, "full_search");
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
       } else {
         var linkToGraph = document.URL;
       }
     } else {
       var linkToGraph = document.URL;
     }
-
+    //Reload page without the search terms
     window.location.href = linkToGraph;
   }
 

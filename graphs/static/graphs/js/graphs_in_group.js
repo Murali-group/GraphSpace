@@ -81,8 +81,8 @@ $(document).ready(function() {
         "groupId": groupId,
         "groupOwner": groupOwner
       }, function (data) {
-        console.log(data);
-          if(data.Message == 'Become the owner/member of this group first!') {
+
+          if(data.Message == 'Become the owner/member of this group first!' || data.Message == "User does not exist!") {
               return alert(data.Message);
             } else {
               location.reload();          
@@ -90,16 +90,21 @@ $(document).ready(function() {
       });
    });
 
+  //Clears search terms
   $("#clear_search").click(function(e) {
     e.preventDefault();
     clearSearchTerms();
   });
 
+  //Clears tag terms
   $("#clear_tags").click(function(e) {
     e.preventDefault();
     clearTagTerms();
   });
 
+  /**
+  * Clears all tag terms from the URL and reloads the page.
+  */
   function clearTagTerms() {
     if (document.URL.indexOf('?') > -1 && document.URL.indexOf('tags') > -1) {
       var linkToGraph = removeURLParameter(document.URL, "tags");
@@ -139,6 +144,9 @@ $(document).ready(function() {
     }
   }
 
+  /**
+  * Clears all search terms from URL and reloads the page.
+  */
   function clearSearchTerms() {
     if (document.URL.indexOf('?') > -1) {
       if (getQueryVariable("partial_search")) {

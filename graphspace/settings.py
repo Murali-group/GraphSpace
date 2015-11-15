@@ -19,48 +19,38 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'io#=lvucky-+r=8hif7vl7kv@y(iv6=b0sjk@x9885t(4)%2i0'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = os.environ.get('TEMPLATE_DEBUG')
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['*']
 
 # GLOBAL VALUES FOR DATABASE AND PATHS
-DB_FULL_PATH = '/Users/Divit/Documents/GRA/GraphSpace/graphspace.db'
+DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
 URL_PATH = "http://localhost:8000/"
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
-
-GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-69001577-1'
 
 # Application definition
 
 INSTALLED_APPS = (
-#    'django.contrib.admin',
-    'analytical',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-#    'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphs',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-#    'django.middleware.csrf.CsrfViewMiddleware',
-#    'django.contrib.auth.middleware.AuthenticationMiddleware',
-#    'django.contrib.messages.middleware.MessageMiddleware',
-#    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.common.CommonMiddleware'
 )
 
 ROOT_URLCONF = 'graphspace.urls'
 
 WSGI_APPLICATION = 'graphspace.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
@@ -70,17 +60,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'graphspace.db'),
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #     'NAME': 'graphspace_db',
-    #     'USER': 'graphspace_admin',
-    #     'PASSWORD': 'murali',
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '5432',
-    # }
 }
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -98,11 +78,10 @@ USE_TZ = True
 
 # Email setup
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'graphspacevt@gmail.com'
-EMAIL_HOST_PASSWORD = 'vtresearch'
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
@@ -128,6 +107,3 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
     'django.contrib.auth.hashers.CryptPasswordHasher',
 )
-
-#custom User model
-#AUTH_USER_MODEL = 'graphs.user_model'
