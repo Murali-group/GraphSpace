@@ -2,7 +2,6 @@ import sys
 import subprocess
 import urllib2
 import time
-import pip
 import os
 
 def get_pip():
@@ -26,14 +25,17 @@ def install(package):
 if __name__ == "__main__":
 	get_pip()
 
+	import pip
 	# IF ANY OF THE BELOW PACKAGES DO NOT INSTALL
 	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL 
 	# sudo pip install django
 	# sudo pip install py-bcrypt
+	# sudo pip install sqlalchemy
 	# sudo pip install django-analytical
 
 	install("django")
 	install("py-bcrypt")
+	install("sqlalchemy")
 	install("django-analytical")
 
 	syncdb()
