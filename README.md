@@ -12,7 +12,7 @@ GraphSpace has three dummy users:
 Running GraphSpace locally
 ===================================
 
-Please install Python and sqlite3, which are pre-requisites for GraphSpace. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
+Please install Python, sqlite3, and python-dev, which are pre-requisites for GraphSpace. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git`
 2. Visit the GraphSpace directory: `cd GraphSpace`
@@ -29,7 +29,7 @@ This section describes the steps required to launch GraphSpace on a server that 
 1. Visit the graphspace directory: `cd GraphSpace/graphspace`
 3. In a text editor, open up `gs-setup.sh` file
 4. Set `DEBUG=False` and `TEMPLATE_DEBUG=False`
-5. Propogate those changes: `./gs-setup.sh`
+5. Propogate those changes: `. gs-setup.sh`
 6. Visit the `apache2` directory: `cd /path_to/apache2`. Typically the full path to this directory is `/etc/apache2`.
 7. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 8. Create a file called `graphspace.conf`
