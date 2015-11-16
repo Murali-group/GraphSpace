@@ -53,6 +53,12 @@ $(document).ready(function() {
       .selector('node[background_image_opacity]').css({
         'background-image-opacity': 'data(background_image_opacity)'
       })
+      .selector('node[background_width]').css({
+        'background-width': 'data(background_width)'
+      })
+      .selector('node[background_height]').css({
+        'background-height': 'data(background_height)'
+      })
       .selector('node[background_fit]').css({
         'background-fit': 'data(background_fit)'
       })
@@ -68,8 +74,6 @@ $(document).ready(function() {
       .selector('node[background_clip]').css({
         'background-clip': 'data(background_clip)'
       })
-
-      //HAVE NOT DONE PIE CHART BACKGROUND
 
       //LABEL PROPERTIES
       .selector('node[color]').css({
@@ -87,10 +91,10 @@ $(document).ready(function() {
       .selector('node[font_style]').css({
         'font-style': 'data(font_style)'
       })
-      .selector('node[font-weight]').css({
+      .selector('node[font_weight]').css({
         'font-weight': 'data(font_weight)'
       })
-      .selector('node[text-transform]').css({
+      .selector('node[text_transform]').css({
         'text-transform': 'data(text_transform)'
       })
       .selector('node[text_wrap]').css({
@@ -102,7 +106,7 @@ $(document).ready(function() {
       .selector('node[edge_text_rotation]').css({
         'edge-text-rotation': 'data(edge_text_rotation)'
       })
-      .selector('node[text-opacity]').css({
+      .selector('node[text_opacity]').css({
         'text-opacity': 'data(text_opacity)'
       })
       .selector('node[text_outline_color]').css({
@@ -158,8 +162,8 @@ $(document).ready(function() {
       .selector('edge[curve_style]').css({
         'curve-style': 'data(curve_style)'
       })
-      .selector('edge[haystack-radius]').css({
-        'haystack-radius': 'data(haystack-radius)'
+      .selector('edge[haystack_radius]').css({
+        'haystack-radius': 'data(haystack_radius)'
       })
       .selector('edge[control_point_step_size]').css({
         'control-point-step-size': 'data(control_point_step_size)'
