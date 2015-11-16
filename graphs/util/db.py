@@ -540,7 +540,9 @@ def checkShapes(elements):
 		:return Error: <message>
 	'''
 	# Add more shapes as Cytoscapejs decides to support other shapes
-	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond"]
+	allowed_shapes = ['rectangle', 'roundrectangle', 'ellipse', 'triangle', 
+                       'pentagon', 'hexagon', 'heptagon', 'octagon', 'star', 
+                       'diamond', 'vee', 'rhomboid']
 
 	# Checks to see if the shapes are allowed
 	for element in elements:

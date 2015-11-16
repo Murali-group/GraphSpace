@@ -32,6 +32,7 @@ if __name__ == "__main__":
 	# sudo pip install sqlalchemy
 	# sudo pip install django-analytical
 	# sudo pip install poster
+	# sudo pip install networkx
 	import pip
 
 	install("django")
@@ -39,6 +40,7 @@ if __name__ == "__main__":
 	install("sqlalchemy")
 	install("django-analytical")
 	install("poster")
+	install("networkx")
 
 	syncdb()
 	

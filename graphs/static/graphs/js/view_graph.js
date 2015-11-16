@@ -1412,13 +1412,6 @@ function setDefaultNodeProperties(nodeJSON) {
         nodeData['shape'] = 'octagon';
       } else if (nodeData['shape'] == 'square') {
           nodeData['shape'] = "rectangle"
-        // if (nodeData['content'].length == 0) {
-        //   nodeData['shape'] = 'rectangle';
-        //   nodeData['height'] = 20;
-        //   nodeData['width'] = 20;
-        // } else {
-        //   nodeData['shape'] = "rectangle"
-        // }
       } else {
         //Make default shape an ellipse
         nodeData['shape'] = 'ellipse';
@@ -1441,6 +1434,14 @@ function setDefaultNodeProperties(nodeJSON) {
           nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
         }
        }
+    }
+
+    if (nodeData['text_halign'] == undefined) {
+      nodeData["text_halign"] = "center";
+    }
+
+    if (nodeData["text_valign"] == undefined) {
+      nodeData["text_valign"] = "center";
     }
   }
 }
