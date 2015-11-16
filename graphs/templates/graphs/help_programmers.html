@@ -92,7 +92,7 @@ Below is a list of the different REST API calls.
 <hr>
 <h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
-<p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.
+<p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.  The documentation below contains some properties and descriptions that were directly found in <a href="http://js.cytoscape.org/">CytoscapeJS</a> documentation.  All credit goes to their awesome documentation and their framework.
 
 <p>The basic structure of a properly formatted JSON in GraphSpace contains the following structure: 
 
@@ -219,7 +219,7 @@ Below is a list of the different REST API calls.
 </table>
 <hr>
 <h4>Edge</h4>
-<p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/edge-line">edge line properties</a> and  <a href="http://js.cytoscape.org/#style/edge-arrow">edge arrow properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
+<p>Below are all of the properties that GraphSpace supports for an Edge element.</p>
 <table class="table">
   <thead>
     <tr> <th> Name </th><td> Description </td> </tr>
@@ -256,12 +256,12 @@ Below is a list of the different REST API calls.
 
 <table class="table">
   <thead>
-    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
+    <tr> <th> Name </th><th> Description </th> </tr>
   </thead>
   <tbody>
-  <tr><td> name</td><td> string</td><td> Name that is displayed on top of graph while viewing it.</td>
-  <tr><td> description</td><td> string</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May simly be a string which contains information such as a legend or significance of the graph.</td>
-  <tr><td> tags</td><td> array of strings</td><td> Used to categorize graphs.  See <a href="{{url}}help/#tags">Tags</a> for more information.</td></tr>
+  <tr><td> name</td><td> Name that is displayed on top of graph while viewing it.</td>
+  <tr><td> description</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May simly be a string which contains information such as a legend or significance of the graph.</td>
+  <tr><td> tags</td><td> Array of strings.  Used to categorize graphs.  See <a href="{{url}}help/#tags">Tags</a> for more information.</td></tr>
   </tbody>
 </table>
 <hr>

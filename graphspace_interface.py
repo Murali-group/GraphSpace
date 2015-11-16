@@ -68,6 +68,9 @@ ALLOWED_TEXT_HALIGN = ['left', 'center', 'right']
 
 ALLOWED_TEXT_VALIGN = ['top', 'center', 'bottom']
 
+## See http://js.cytoscape.org/#style/labels
+ALLOWED_TEXT_WRAP = ['wrap','none']
+
 ## See http://js.cytoscape.org/#style/edge-arrow
 ALLOWED_ARROW_SHAPES = ['tee', 'triangle', 'triangle-tee', 'triangle-backcurve', 
                         'square', 'circle', 'diamond', 'none']
@@ -75,14 +78,7 @@ ALLOWED_ARROW_SHAPES = ['tee', 'triangle', 'triangle-tee', 'triangle-backcurve',
 ## See http://js.cytoscape.org/#style/edge-line
 ALLOWED_EDGE_STYLES = ['solid', 'dotted','dashed']
 
-## See http://js.cytoscape.org/#style/labels
-ALLOWED_TEXT_WRAP = ['wrap','none']
-
-# Minimum set of node properties (See http://graphspace.org/help/programmers#json_ref)
-REQUIRED_NODE_PROPERTIES = ["id"]
-
-# Minimum set of edge properties (See http://graphspace.org/help/programmers#json_ref)
-REQUIRED_EDGE_PROPERTIES = ["source", "target"]
+ALLOWED_ARROW_FILL = ['filled', 'hollow']
 
 
 ## END GLOBAL VARIABLES #############################################
@@ -91,13 +87,23 @@ REQUIRED_EDGE_PROPERTIES = ["source", "target"]
 
 def validate_json(G):
     """
-    Goes through JSON provided and checks to see if all elements 
-    inside JSON meet the requirements.
+    Validates JSON to see if all properties are consistent with API.
+
+    @param G: NetworkX object.
+    """
+
+    # Validate all node properties
+    validate_node_properties(G)
+
+    # Validate all edge properties
+    validate_edge_properties(G)
+
+def validate_edge_properties(G):
+    """
+    Validates all edge properties.
 
     :param G: NetworkX object.
     """
-
-    validate_node_properties(G):
 
     # Go through all edges to verify if edges contain valid properties
     # recognized by CytoscapeJS
@@ -107,6 +113,33 @@ def validate_json(G):
         if "directed" in G.edge[edge_id] and G.edge[edge_id] == "true":
             if "target_arrow_shape" not in G.edge[edge_id]:
                 print "Edge: ", edge_id, "must have a target_arrow_shape property if directed is true"
+
+        if "source_arrow_shape" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+
+        if "mid_source_arrow_shape" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+
+        if "target_arrow_shape" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+
+        if "mid_target_arrow_shape" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+
+        if "line_style" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
+
+        if "source_arrow_fill" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
+
+        if "mid_source_arrow_fill" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
+
+        if "target_arrow_fill" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
+
+        if "mid_target_arrow_fill" in G.edge[edge_id]:
+            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
 
 def validate_node_properties(G):
     """
@@ -121,20 +154,49 @@ def validate_node_properties(G):
 
         # Checks shape of nodes to make sure it contains only legal shapes
         if "shape" in node_data:
-            if node_data["shape"] not in ALLOWED_NODE_SHAPES:
-                print "Node: ", node_data, "contains illegal shape: " + node_data["shape"]
+            find_property_in_array("Node", node_id, node_data, node_data["shape"], ALLOWED_NODE_SHAPES)
 
         # If node contains a border-style property, check to make sure it is 
         # a legal value
         if "border_style" in node_data:
-            if node_data["border_style"] not in ALLOWED_NODE_BORDER_STYLES:
-                print "Node: ", node_data, "contains illegal border_style: " + node_data["border_style"]
+            find_property_in_array("Node", node_id, node_data, node_data["border_style"], ALLOWED_NODE_BORDER_STYLES)
 
         # If node contains a background_black property, check to make sure
         # they have values [-1, 1]
         if "border_blacken" in node_data:
             if node_data["border_blacken"] >= -1 and node_data["border_blacken"] <= -1:
                 print "Node: ", node_data, "contains illegal border_blacken value.  Must be between [-1, 1]."
+
+        if "background_repeat" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["background_repeat"], ALLOWED_NODE_BACKGROUND_REPEAT)
+
+        if "text_transform" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["text_transform"], ALLOWED_NODE_TEXT_TRANSFORM)
+
+        if "text_wrap" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["text_wrap"], ALLOWED_NODE_TEXT_WRAP)
+
+        if "text_background_shape" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["text_background_shape"], ALLOWED_NODE_SHAPES)
+
+        if "text_halign" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["text_halign"], ALLOWED_TEXT_HALIGN)
+
+        if "text_valign" in node_data:
+            find_property_in_array("Node", node_id, node_data, node_data["text_valign"], ALLOWED_TEXT_VALIGN)
+
+def find_property_in_array(elementType, key, value, prop, array):
+    """
+    Goes through array to see if property is contained in the array.
+
+    :param elementType: Node or an Edge
+    :param key: Key to search for in network
+    :param value: Value of key
+    :param prop: Name to search for in array
+    :param array: Array to search for property in
+    """
+    if prop not in array:
+        print elementType + ":", key, "contains illegal", prop, value, "Accepted types are:", arrray
 
         
 ####################################################################
