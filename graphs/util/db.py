@@ -467,16 +467,14 @@ def validate_required_properties(jsonString):
 	# Validates the JSON that is uploaded to make sure
 	# it has the following properties
 	# node:
-	# content,
 	# id have to be unique
 
 	# edge:
-	# (dont need an id) - I auto generate one
 	# source
 	# target
 
 	edge_properties = ['source', 'target']
-	node_properties = ['content', 'id']
+	node_properties = ['id']
 
 	try: 
 		cleaned_json = json.loads(jsonString)
@@ -488,6 +486,7 @@ def validate_required_properties(jsonString):
 		nodes = cleaned_json['graph']['nodes']
 
 		jsonErrors = ""
+
 		# Combines edge and node Errors
 		nodeError = propertyInJSON(nodes, node_properties, 'node')
 		edgeError = propertyInJSON(edges, edge_properties, 'edge')
@@ -508,7 +507,7 @@ def validate_required_properties(jsonString):
 		if len(nodeUniqueIDError) > 0:
 			return nodeUniqueIDError
 		if len(nodeCheckShape) > 0:
-			return  nodeCheckShape
+			return nodeCheckShape
 
 		return None
 	except ValueError, e:
@@ -529,7 +528,7 @@ def checkUniqueID(elements):
 		if element['data']['id'] not in id_map:
 			id_map.append(element['data']['id'])
 		else:
-			return element['data']['id'] + " for a node is duplicated!"
+			return element['data']['id'] + " for element is duplicated!"
 
 	return ""
 
@@ -545,7 +544,7 @@ def checkShapes(elements):
 
 	# Checks to see if the shapes are allowed
 	for element in elements:
-		if element['data']['shape'] not in allowed_shapes:
+		if 'shape' in element['data'] and element['data']['shape'] not in allowed_shapes:
 			return "illegal shape: " + element['data']['shape'] + ' for a node'
 
 	return ""
@@ -569,6 +568,7 @@ def propertyInJSON(elements, properties, elementType):
 		element_data = element['data']
 		for element_property in properties:
 			if element_property not in element_data:
+				# If the user included id property, tell them which element is missing a required property
 				if 'id' in element_data:
 					return "Property '" + element_property +  "' not in JSON for " + elementType + ': ' + element_data['id']
 				else:
@@ -1673,99 +1673,102 @@ def uploadCyjsFile(username, graphJSON, title):
 		@param tile: Title of graph
 	'''
 
-	# Create JSON stucture for GraphSpace recognized JSON
-	parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
+	try:
+		# Create JSON stucture for GraphSpace recognized JSON
+		parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
 
-	# Load JSON from string
-	csjs = json.loads(graphJSON)
+		# Load JSON from string
+		csjs = json.loads(graphJSON)
 
-	# If there is no elements that exist in the provided JSON
-	if 'elements' not in csjs:
-		return {"Error": "No elements property inside of file!"}
+		# If there is no elements that exist in the provided JSON
+		if 'elements' not in csjs:
+			return {"Error": "No elements property inside of file!"}
 
-	# If there is no nodes that exist in the provided JSON
-	if 'nodes' not in csjs['elements']:
-		return {"Error": "File must contain nodes property in elements dictionary!"}
+		# If there is no nodes that exist in the provided JSON
+		if 'nodes' not in csjs['elements']:
+			return {"Error": "File must contain nodes property in elements dictionary!"}
 
-	# If there is no edges that exist in the provided JSON
-	if 'edges' not in csjs['elements']:
-		return {"Error": "File must contain edges property in elements dictionary!"}
+		# If there is no edges that exist in the provided JSON
+		if 'edges' not in csjs['elements']:
+			return {"Error": "File must contain edges property in elements dictionary!"}
 
-	# Go through nodes and translate properties so CytoscapeJS may render
-	for node in csjs['elements']['nodes']:
+		# Go through nodes and translate properties so CytoscapeJS may render
+		for node in csjs['elements']['nodes']:
 
-		# Container for translated node
-		tempNode = {"data": {}}
+			# Container for translated node
+			tempNode = {"data": {}}
 
-		# Copy over ID
-		tempNode['data']['id'] = node['data']['id']
+			# Copy over ID
+			tempNode['data']['id'] = node['data']['id']
 
-		# Change color property to background color 
-		if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
-			# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
-			tempNode['data']['background_color'] = node['data']['node_fillColor']
+			# Change color property to background color 
+			if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
+				# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
+				tempNode['data']['background_color'] = node['data']['node_fillColor']
 
-		# If user wants to display something in node, add 'content'
-		if 'name' in node['data']:
-			tempNode['data']['content'] = node['data']['name']
+			# If user wants to display something in node, add 'content'
+			if 'name' in node['data']:
+				tempNode['data']['content'] = node['data']['name']
 
-		# No shape is provided as far as I know, so I pad in an ellipse
-		tempNode['data']['shape'] = "ellipse"
-		parseJson['graph']['nodes'].append(tempNode)
+			# No shape is provided as far as I know, so I pad in an ellipse
+			tempNode['data']['shape'] = "ellipse"
+			parseJson['graph']['nodes'].append(tempNode)
 
-	# Go through all the edges
-	for edge in csjs['elements']['edges']:
+		# Go through all the edges
+		for edge in csjs['elements']['edges']:
 
-		tempEdge = {"data": {}}
+			tempEdge = {"data": {}}
 
-		# Copy over source and target
-		tempEdge['data']['source'] = edge['data']['source']
-		tempEdge['data']['target'] = edge['data']['target']
+			# Copy over source and target
+			tempEdge['data']['source'] = edge['data']['source']
+			tempEdge['data']['target'] = edge['data']['target']
 
-		# If there is a name property, it will be in a popup
-		if 'name' in edge['data']:
-			tempEdge['data']['popup'] = edge['data']['name']
+			# If there is a name property, it will be in a popup
+			if 'name' in edge['data']:
+				tempEdge['data']['popup'] = edge['data']['name']
 
-		# Add edges to json
-		parseJson['graph']['edges'].append(tempEdge)
+			# Add edges to json
+			parseJson['graph']['edges'].append(tempEdge)
 
-	# If there is a title in the graph
-	if 'name' in csjs['data']:
-		parseJson['metadata']['name'] = csjs['data']['name']
-	else:
-		parseJson['metadata']['name'] = "temp_graph"
-
-	# No tags or description since CYJS doesn't give me any
-	parseJson['metadata']['tags'] = []
-	parseJson['metadata']['description'] = ""
-
-	title = title or parseJson['metadata']['name']
-
-	# Insert converted graph to GraphSpace and provide URL
-	# for logged in user
-	if username != None:
-		result = insert_graph(username, title, json.dumps(parseJson))
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+		# If there is a title in the graph
+		if 'name' in csjs['data']:
+			parseJson['metadata']['name'] = csjs['data']['name']
 		else:
-			return {"Error": result}
-	else:
-		# Create a unique user and insert graph for that name
-		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
-		public_user_id = public_user_id.replace('-', '_')
-		
-		first_request = create_public_user(public_user_id)
+			parseJson['metadata']['name'] = "temp_graph"
 
-		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parseJson))
+		# No tags or description since CYJS doesn't give me any
+		parseJson['metadata']['tags'] = []
+		parseJson['metadata']['description'] = ""
 
-			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
-			else: 
+		title = title or parseJson['metadata']['name']
+
+		# Insert converted graph to GraphSpace and provide URL
+		# for logged in user
+		if username != None:
+			result = insert_graph(username, title, json.dumps(parseJson))
+			if result == None:
+				return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+			else:
 				return {"Error": result}
 		else:
-			return {"Error": result}
+			# Create a unique user and insert graph for that name
+			public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+			public_user_id = public_user_id.replace('-', '_')
+			
+			first_request = create_public_user(public_user_id)
 
+			if first_request == None:
+				result = insert_graph(public_user_id, title, json.dumps(parseJson))
+
+				if result == None: 
+					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
+				else: 
+					return {"Error": result}
+			else:
+				return {"Error": result}
+	except Exception as ex:
+		return {"Error": "Seems to be an error with " + ex + " property."}
+		
 def uploadJSONFile(username, graphJSON, title):
 	'''
 		Uploads JSON file to GraphSpace via /upload.
@@ -1776,42 +1779,45 @@ def uploadJSONFile(username, graphJSON, title):
 
 	'''
 
-	# Loads JSON format
-	parseJson = json.loads(graphJSON)
+	try: 
+		# Loads JSON format
+		parseJson = json.loads(graphJSON)
 
-	# Creates metadata tag
-	if 'metadata' not in parseJson:
-		parseJson['metadata'] = {}
+		# Creates metadata tag
+		if 'metadata' not in parseJson:
+			parseJson['metadata'] = {}
 
-	# If name is not provided, name is data
-	if 'name' not in parseJson['metadata']:
-		parseJson['metadata']['name'] = "graph_" + str(datetime.now())
+		# If name is not provided, name is data
+		if 'name' not in parseJson['metadata']:
+			parseJson['metadata']['name'] = "graph_" + str(datetime.now())
 
-	title = title or parseJson['metadata']['name']
+		title = title or parseJson['metadata']['name']
 
-	# Insert converted graph to GraphSpace and provide URL
-	# for logged in user	
-	if username != None:
-		result = insert_graph(username, title, json.dumps(parseJson))
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
-		else:
-			return {"Error": result}
-	else:
-		# Create a unique user and insert graph for that name
-		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
-		public_user_id = public_user_id.replace('-', '_')
-		
-		first_request = create_public_user(public_user_id)
-
-		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parseJson))
-			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
-			else: 
+		# Insert converted graph to GraphSpace and provide URL
+		# for logged in user	
+		if username != None:
+			result = insert_graph(username, title, json.dumps(parseJson))
+			if result == None:
+				return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+			else:
 				return {"Error": result}
 		else:
-			return {"Error": result}
+			# Create a unique user and insert graph for that name
+			public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+			public_user_id = public_user_id.replace('-', '_')
+			
+			first_request = create_public_user(public_user_id)
+
+			if first_request == None:
+				result = insert_graph(public_user_id, title, json.dumps(parseJson))
+				if result == None: 
+					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
+				else: 
+					return {"Error": result}
+			else:
+				return {"Error": result}
+	except Exception as ex:
+		return {"Error": "Seems to be an error with " + ex + " property."}
 
 def delete_30_day_old_anon_graphs():
 	# Create database connection
@@ -2188,6 +2194,10 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		if 'label' in node['data']:
 			node['data']['content'] = node['data']['label']
 			del node['data']['label']
+
+		# If the node has any content inside of it, display that content, otherwise, just make it an empty string
+		if 'content' not in node['data']:
+			node['data']['content'] = ""
 
 		# Add node to table
 		new_node = models.Node(node_id = node['data']['id'], label = node['data']['content'], user_id = username, graph_id = graphname, modified = modified)

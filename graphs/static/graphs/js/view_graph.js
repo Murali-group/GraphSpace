@@ -233,6 +233,7 @@ $(document).ready(function() {
     // draw graph, handle events etc.
     ready: function(){
 
+      //if there is a title, insert title at top of page
       if ($("#title").text().length > 0) {
         $("#graph_title").html("<h1>" + $("#title").text() + "</h1>");
         $(".side_menu").css("margin-top", -50);
@@ -248,7 +249,11 @@ $(document).ready(function() {
       var testEdges = new Array();
 
       setDefaultNodeProperties(graph_json['graph']['nodes'])
+
       // DONE SO OLD GRAPHS WILL DISPLAY
+      // NEW GRAPHS WILL HAVE EVERYTHING HANDLED AT UPLOAD TIME
+      // THIS IS ONLY AS A SECONDARY CHECK
+
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
@@ -264,6 +269,7 @@ $(document).ready(function() {
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
           edgeData['line_color'] = "black";
         } else {
+
           //Color property maps to line_color
           //DONE TO SUPPORT OLD GRAPHS
           if (edgeData.hasOwnProperty('color')) {
@@ -336,7 +342,7 @@ $(document).ready(function() {
         }
       });
 
-      // //If ther are any terms to be searched for, highlight those terms, if found
+      //If ther are any terms to be searched for, highlight those terms, if found
       if (getQueryVariable('partial_search')) {
           // Initially set search to full matching
           $("#partial_search").attr('checked', true);
@@ -511,19 +517,6 @@ $(document).ready(function() {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
-    //DEPRECATED: HERE FOR REFERENCE PURPOSES ONLY
-    //Originally used as an attempt to get a PDF image of graph
-    $("#pdf").click(function (e) {
-      html2canvas($("#csjs").first(), {
-        onrendered: function(canvas) {
-          var imgData = canvas.toDataURL("image/jpeg");
-          var pdf = new jsPDF('landscape');
-          pdf.addImage(imgData, 'JPEG', 0, 0, 300, 210);
-          pdf.save("download.pdf");
-        }
-      });
-    });
-
     //Goes to appropriate help section
     $(".help").click(function (e) {
       e.preventDefault();
@@ -651,6 +644,7 @@ $(document).ready(function() {
 
       var labels = $("#search").val().split(',');
 
+      //Appends partial search terms as part of query string
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
             linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
@@ -719,6 +713,7 @@ $(document).ready(function() {
       }, function (data) {
         var group_options = "";
         if (data['Group_Information'].length > 0) {
+          //Used for modal to determine if graph is shared with group or not
           for (var i = 0; i < data['Group_Information'].length; i++) {
             console.log(data['Group_Information'][i]);
             if (data['Group_Information'][i]['graph_shared'] == true) {
@@ -762,7 +757,8 @@ $(document).ready(function() {
         }
       });
 
-
+      //If user clicks a group to share with, get all those groups and send
+      //to server so multiple groups can share one graph with one request
       for (var key in all_groups) {
         if (all_groups[key] == true) {
           groups_to_share_with.push(key);
@@ -948,6 +944,7 @@ function searchValues(search_type, labels) {
         $("#search_terms").html(oldHtml);
       }
 
+      //Get the value of k if it exists
       var k_val = $("#input_k").val();
 
 
@@ -1273,14 +1270,6 @@ function getLayoutFromQuery() {
         damping: 0.5
       }
     } else {
-      // var layout = getQueryVariable('layout');
-      // if (layout.hasOwnProperty('json')) {
-      //   console.log(layout.json);
-      //   graph_layout = {
-      //     name: 'preset',
-      //     positions: JSON.parse(layout.json)
-      //   };
-      // }
 
       $("#auto").removeClass('active');
       $("#manual").addClass('active');
@@ -1410,27 +1399,37 @@ function setDefaultNodeProperties(nodeJSON) {
     var nodeData = nodeJSON[i]['data'];
 
     //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+    //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
+    //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
     var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
 
-    if (acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+    //If the node has a shape, make sure that shape is recognized by CytoscapeJS
+    //Otherwise, make shape an ellipse
+    if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
 
+      //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
       if (nodeData['shape'].toLowerCase() == 'diamond') {
         nodeData['shape'] = 'octagon';
       } else if (nodeData['shape'] == 'square') {
-        if (nodeData['content'].length == 0) {
-          nodeData['shape'] = 'rectangle';
-          nodeData['height'] = 20;
-          nodeData['width'] = 20;
-        } else {
           nodeData['shape'] = "rectangle"
-        }
+        // if (nodeData['content'].length == 0) {
+        //   nodeData['shape'] = 'rectangle';
+        //   nodeData['height'] = 20;
+        //   nodeData['width'] = 20;
+        // } else {
+        //   nodeData['shape'] = "rectangle"
+        // }
       } else {
+        //Make default shape an ellipse
         nodeData['shape'] = 'ellipse';
       }
+    } else if (nodeData.hasOwnProperty('shape') == false) {
+      nodeData['shape'] = "ellipse";
     } else {
       nodeData['shape'] = nodeData['shape'].toLowerCase();
     }
 
+    //Pick default color if nothing is provided
     if (nodeData['background_color'] == undefined) {
       nodeData['background_color'] = "yellow";
     } else {
