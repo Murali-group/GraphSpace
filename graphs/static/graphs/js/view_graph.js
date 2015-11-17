@@ -935,12 +935,13 @@ function searchValues(search_type, labels) {
     var k_problems = [];
     for (var i = 0; i < labels.length; i++) {
       if (data[labels[i]].length == 0) {
-        $("#search_error").css("display", "block");
+        console.log("HERE");
         if (labels[i].trim().length == 0) {
           $("#search_error_text").append("Please enter node or edge name!<br>");
         } else {
           $("#search_error_text").append(labels[i] + " not found!<br>");
         }
+        $("#search_error").css("display", "block");
         $("#accordion_search").accordion({
             collapsible: true,
             heightStyle: "content"
@@ -1003,7 +1004,6 @@ function searchValues(search_type, labels) {
       } else {
         message +=  " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
       }
-      
       $("#search_error_text").append(message);
     }
 
