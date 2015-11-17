@@ -201,7 +201,7 @@ def find_property_in_array(elementType, key, prop, value, array):
     """
     if value not in array:
         array_list = ",".join(array)
-        return elementType + " " + key + " contains illegal value for property: " + prop + ".  Value given for this property was: \"" + value + "\".  Accepted values for property: " + prop + " are: [" + array_list + "]"
+        return elementType + " " + key + " contains illegal value for property: " + prop + ".  Value given for this property was: " + value + ".  Accepted values for property: " + prop + " are: [" + array_list + "]"
     else:
         return ""
 
