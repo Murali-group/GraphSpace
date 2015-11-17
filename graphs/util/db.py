@@ -1928,10 +1928,11 @@ def find_edge(uid, gid, edge_to_find, search_type):
 				for j in xrange(len(head_nodes)):
 
 					try:
-						# Aggregate all matching edges
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_nodes[j]).filter(models.Edge.tail_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.tail_node_id == head_nodes[j]).filter(models.Edge.head_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
@@ -1954,10 +1955,11 @@ def find_edge(uid, gid, edge_to_find, search_type):
 				if tail_node != None and head_node != None:
 
 					try:
-						# Aggregate all matching edges
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_node).filter(models.Edge.tail_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.tail_node_id == head_node).filter(models.Edge.head_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
