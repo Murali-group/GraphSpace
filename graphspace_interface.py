@@ -198,7 +198,7 @@ def find_property_in_array(elementType, key, value, prop, array):
     :param array: Array to search for property in
     """
     if prop not in array:
-        print elementType + ":", key, "contains illegal", prop, value, "Accepted types are:", arrray
+        print elementType + ":", key, "contains illegal", prop, value, "Accepted types are:", array
 
         
 ####################################################################
