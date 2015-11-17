@@ -109,39 +109,37 @@ def validate_edge_properties(G):
     # recognized by CytoscapeJS
     for edge_id in G.edge:
 
-        edge_data = G.edge[edge_id]
-
         # If edge is directed, it must have a target_arrow_shape
         if "directed" in G.edge[edge_id] and G.edge[edge_id] == "true":
             if "target_arrow_shape" not in G.edge[edge_id]:
                 print "Edge: ", edge_id, "must have a target_arrow_shape property if directed is true"
 
         if "source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, "source_arrow_shape", G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "mid_source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, "mid_source_arrow_shape", G.edge[edge_id]["mid_source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, "target_arrow_shape", G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "mid_target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, "mid_target_arrow_shape", G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "line_style" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
+            find_property_in_array("Edge", edge_id, "line_style", G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
 
         if "source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, "source_arrow_fill", G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "mid_source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, "mid_source_arrow_fill", G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, "target_arrow_fill", G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "mid_target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, "mid_target_arrow_fill", G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
 
 def validate_node_properties(G):
     """
@@ -156,12 +154,12 @@ def validate_node_properties(G):
 
         # Checks shape of nodes to make sure it contains only legal shapes
         if "shape" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["shape"], ALLOWED_NODE_SHAPES)
+            find_property_in_array("Node", node_id, "shape", node_data["shape"], ALLOWED_NODE_SHAPES)
 
         # If node contains a border-style property, check to make sure it is 
         # a legal value
         if "border_style" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["border_style"], ALLOWED_NODE_BORDER_STYLES)
+            find_property_in_array("Node", node_id, "border_style", node_data["border_style"], ALLOWED_NODE_BORDER_STYLES)
 
         # If node contains a background_black property, check to make sure
         # they have values [-1, 1]
@@ -170,24 +168,24 @@ def validate_node_properties(G):
                 print "Node: ", node_data, "contains illegal border_blacken value.  Must be between [-1, 1]."
 
         if "background_repeat" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["background_repeat"], ALLOWED_NODE_BACKGROUND_REPEAT)
+            find_property_in_array("Node", node_id, "background_repeat", node_data["background_repeat"], ALLOWED_NODE_BACKGROUND_REPEAT)
 
         if "text_transform" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["text_transform"], ALLOWED_NODE_TEXT_TRANSFORM)
+            find_property_in_array("Node", node_id, "text_transform", node_data["text_transform"], ALLOWED_NODE_TEXT_TRANSFORM)
 
         if "text_wrap" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["text_wrap"], ALLOWED_NODE_TEXT_WRAP)
+            find_property_in_array("Node", node_id, "text_wrap", node_data["text_wrap"], ALLOWED_NODE_TEXT_WRAP)
 
         if "text_background_shape" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["text_background_shape"], ALLOWED_NODE_SHAPES)
+            find_property_in_array("Node", node_id, "text_background_shape", node_data["text_background_shape"], ALLOWED_NODE_SHAPES)
 
         if "text_halign" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["text_halign"], ALLOWED_TEXT_HALIGN)
+            find_property_in_array("Node", node_id, "text_halign", node_data["text_halign"], ALLOWED_TEXT_HALIGN)
 
         if "text_valign" in node_data:
-            find_property_in_array("Node", node_id, node_data, node_data["text_valign"], ALLOWED_TEXT_VALIGN)
+            find_property_in_array("Node", node_id, "text_valign", node_data["text_valign"], ALLOWED_TEXT_VALIGN)
 
-def find_property_in_array(elementType, key, value, prop, array):
+def find_property_in_array(elementType, key, prop, value, array):
     """
     Goes through array to see if property is contained in the array.
 
