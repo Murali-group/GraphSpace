@@ -1370,11 +1370,11 @@ def combine_similar_graphs(matched_graphs):
 				# If graph already has been encountered
 				cur_graph_entry = list(graph_entry[key])
 				if len(cur_graph_entry[1]) == 0:
-					cur_graph_entry[1] += graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
-					cur_graph_entry[2] += graph.label
+					cur_graph_entry[1] += graph.edge_id + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
+					cur_graph_entry[2] += graph.edge_id
 				else:
-					cur_graph_entry[1] += ", " + graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
-					cur_graph_entry[2] += ", " + graph.label
+					cur_graph_entry[1] += ", " + graph.edge_id + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
+					cur_graph_entry[2] += ", " + graph.edge_id
 
 				# Add appended entry
 				graph_entry[key] = tuple(cur_graph_entry)
@@ -1515,12 +1515,16 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 			for j in xrange(len(tail_nodes)):
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
+				# For each view type, we query edges twice because we use head:tail and tail:head (to resolve undirected edge search issue)
 				if view_type == "public":
 					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
 				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
 				else:
 					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
 
 
 		graph_dict = dict()
@@ -2949,7 +2953,9 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
 				
+				# We make two queries because we want to have tail:head and head:tail search (to resolve undirected edges searching)
 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		graph_dict = dict()
 		# Remove duplicates for all graphs that match have the same edge matching search term
