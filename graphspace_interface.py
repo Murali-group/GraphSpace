@@ -109,37 +109,39 @@ def validate_edge_properties(G):
     # recognized by CytoscapeJS
     for edge_id in G.edge:
 
+        edge_data = G.edge[edge_id]
+
         # If edge is directed, it must have a target_arrow_shape
         if "directed" in G.edge[edge_id] and G.edge[edge_id] == "true":
             if "target_arrow_shape" not in G.edge[edge_id]:
                 print "Edge: ", edge_id, "must have a target_arrow_shape property if directed is true"
 
         if "source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "mid_source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "mid_target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
         if "line_style" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
 
         if "source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "mid_source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
 
         if "mid_target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, node_data, G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
+            find_property_in_array("Edge", edge_id, edge_data, G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
 
 def validate_node_properties(G):
     """
