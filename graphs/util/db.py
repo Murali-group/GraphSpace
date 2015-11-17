@@ -14,6 +14,7 @@ import sqlite3 as lite
 
 from django.conf import settings
 
+from json_validator import validate_json, assign_edge_ids, convert_json
 import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
@@ -28,122 +29,6 @@ data_connection = db_init.db
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
-
-
-# This file is a wrapper to communicate with sqlite3 database 
-# that does not need authentication for connection.
-
-# It may be viewed as the controller to the database
-
-# --------------- Edge Insertions -----------------------------------
-
-def assign_edge_ids(json_string):
-	'''
-		Modifies all ID's of edges to be the names of the nodes that they are attached to.
-
-		:param json_string: JSON of graph
-		:return json_string: JSON of graph having unique ID's for all edges
-	'''
-	
-	ids = []
-	# Creates ID's for all of the edges by creating utilizing the source and target nodes
-	# The edge ID would have the form: source-target
-	for edge in json_string['graph']['edges']:
-
-		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
-
-		# If the ID has not yet been seen (is unique), simply store the ID 
-		# of that edge as source-target
-		if edge['data']['id'] not in ids:
-			ids.append(edge['data']['id'])
-		else:
-			# Otherwise if there are multiple edges with the same ID,
-			# append a number to the end of the ID so we can distinguish
-			# multiple edges having the same source and target.
-			# This needs to be done because HTML DOM needs unique IDs.
-			counter = 0
-			while edge['data']['id'] in ids:
-				counter += 1
-				edge['data']['id'] = edge['data']['id'] + str(counter)
-			ids.append(edge['data']['id'])
-
-	# Return JSON having all edges containing unique ID's
-	return json_string
-
-# --------------- End Edge Insertions --------------------------------
-
-def convert_json(original_json):
-    '''
-        Converts original_json that's used in Cytoscape Web
-        such that it is compatible with the new Cytoscape.js
-
-        See: http://cytoscape.github.io/cytoscape.js/
-
-        Original json structure used for Cytoscape Web:
-        {
-            "metadata": {
-
-            },
-
-            "graph": {
-                "data": {
-                    "nodes": [ 
-                        { "id": "node1", "label": "n1", ... },
-                        { "id": "node2", "label": "n2", ... },
-                        ...
-                    ],
-                    "edges": [ 
-                        { "id": "edge1", "label": "e1", ... },
-                        { "id": "edge2", "label": "e2", ... },
-                        ...
-                    ]
-                }
-            }
-        }
-
-        New json structure:
-        {
-            "metadata": {
-
-            },
-
-            "graph": {
-                "nodes": [
-                    {"data": {"id": "node1", "label": "n1", ...}},
-                    {"data": {"id": "node2", "label": "n2", ...}},
-                    ...
-                ],
-                "edges": [
-                    {"data": {"id": "edge1", "label": "e1", ...}},
-                    {"data": {"id": "edge2", "label": "e2", ...}},
-                    ...
-                ]
-            }
-        }
-    '''
-
-    #parse old json data
-    old_json = json.loads(original_json)
-    old_nodes = old_json['graph']['data']['nodes']
-    old_edges = old_json['graph']['data']['edges']
-
-    new_nodes, new_edges = [], []
-
-    #format node and edge data
-    for node in old_nodes:
-        new_nodes.append({"data": node})
-
-    for edge in old_edges:
-        new_edges.append({"data": edge})
-
-    #build the new json
-    new_json = {}
-    new_json['metadata'] = old_json['metadata']
-    new_json['graph'] = {}
-    new_json['graph']['nodes'] = new_nodes
-    new_json['graph']['edges'] = new_edges
-
-    return json.dumps(new_json, indent=4)
 
 def add_everyone_to_password_reset():
 	'''
@@ -446,143 +331,6 @@ def checkNodeEdgeConsistencyOfUser(user_id):
 
 
 	# END CONVERSIONS
-
-##################################################
-
-# This section contains methods to validate JSON 
-def validate_json(jsonString):
-	'''
-		JSON Validator. Tells if the graph being inserted is 
-		valid (CytoscapeJS will render it properly).  If not, 
-		it throws an Error
-
-		:param jsonString: JSON of the graph
-		:return Errors | None: [Errors of JSON]
-	'''
-
-	req_error = validate_required_properties(jsonString)
-	return req_error
-
-def validate_required_properties(jsonString):
-	# Validates the JSON that is uploaded to make sure
-	# it has the following properties
-	# node:
-	# id have to be unique
-
-	# edge:
-	# source
-	# target
-
-	edge_properties = ['source', 'target']
-	node_properties = ['id']
-
-	try: 
-		cleaned_json = json.loads(jsonString)
-		# Since there are two types of JSON: one originally submitted
-		if 'data' in cleaned_json['graph']:
-			cleaned_json = json.loads(convert_json(jsonString))
-
-		edges = cleaned_json['graph']['edges']
-		nodes = cleaned_json['graph']['nodes']
-
-		jsonErrors = ""
-
-		# Combines edge and node Errors
-		nodeError = propertyInJSON(nodes, node_properties, 'node')
-		edgeError = propertyInJSON(edges, edge_properties, 'edge')
-
-		# If any of the above errors has > 0 length, we have an error
-		if len(nodeError) > 0:
-			return nodeError
-		if len(edgeError) > 0:
-			return edgeError
-
-		# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-		# TODO: Remove conversion by specifying it when the user creates a graph
-		cleaned_json = assign_edge_ids(cleaned_json)
-
-		nodeUniqueIDError = checkUniqueID(nodes)
-		nodeCheckShape = checkShapes(nodes)
-
-		if len(nodeUniqueIDError) > 0:
-			return nodeUniqueIDError
-		if len(nodeCheckShape) > 0:
-			return nodeCheckShape
-
-		return None
-	except ValueError, e:
-		return e.args[0]
-
-def checkUniqueID(elements):
-	'''
-		Checks to see if all of the elements in the json 
-		have unique ids
-
-		:param elements: JSON of nodes or edges
-		:return Error | None: <ID for node has been dupliated!>
-	'''
-	id_map = []
-
-	# If element is already in the dictionary, there are two nodes with same ID, huge error
-	for element in elements:
-		if element['data']['id'] not in id_map:
-			id_map.append(element['data']['id'])
-		else:
-			return element['data']['id'] + " for element is duplicated!"
-
-	return ""
-
-def checkShapes(elements):
-	'''
-		Checks to see if the shapes for node are valid shapes
-
-		:param elements: JSON of nodes
-		:return Error: <message>
-	'''
-	# Add more shapes as Cytoscapejs decides to support other shapes
-	allowed_shapes = ['rectangle', 'roundrectangle', 'ellipse', 'triangle', 
-                       'pentagon', 'hexagon', 'heptagon', 'octagon', 'star', 
-                       'diamond', 'vee', 'rhomboid']
-
-	# Checks to see if the shapes are allowed
-	for element in elements:
-		if 'shape' in element['data'] and element['data']['shape'] not in allowed_shapes:
-			return "illegal shape: " + element['data']['shape'] + ' for a node'
-
-	return ""
-
-def propertyInJSON(elements, properties, elementType):
-	'''
-		Checks to see if the elements in the graph JSON (nodes and edges)
-		adhere to the properties of CytoscapeJS (ie unique ids, valid shapes)
-
-		:param elements: JSON of the elements (nodes or edges)
-		:param properties: set of properties that element JSON should following
-		:param elementType: Type of element it is (either node or edge)
-		:return Error|None: <Property x not in JSON for element | node>
-	'''
-
-	# Go through all elements in JSON and check to see 
-	# if all elemnts have minimum set of properties
-	for element in elements:
-		met_all_properties = []
-
-		element_data = element['data']
-		for element_property in properties:
-			if element_property not in element_data:
-				# If the user included id property, tell them which element is missing a required property
-				if 'id' in element_data:
-					return "Property '" + element_property +  "' not in JSON for " + elementType + ': ' + element_data['id']
-				else:
-					return "Property '" + element_property +  "' not in JSON for " + elementType
-		
-			met_all_properties.append(element_property)
-
-	return ""
-
-
-
-########### END JSON CHECKING #####################################
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
 	'''
@@ -1823,7 +1571,7 @@ def uploadJSONFile(username, graphJSON, title):
 			else:
 				return {"Error": result}
 	except Exception as ex:
-		return {"Error": "Seems to be an error with " + ex + " property."}
+		return {"Error": ex}
 
 def delete_30_day_old_anon_graphs():
 	# Create database connection
@@ -2051,13 +1799,17 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None, skip=None):
+def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, shared_with_groups=0, default_layout_id=None):
 	'''
 		Inserts a uniquely named graph under a username.
 
 		:param username: Email of user in GraphSpace
 		:param graphname: Name of graph to insert
 		:param graph_json: JSON of graph
+		:param created: When was graph created
+		:param public: Is graph public?
+		:param shared_with_groups: Is graph shared with any groups?
+		:param default_layout_id: Default layout of the graph
 	'''
 
 	# Check to see if graph already exists
@@ -2070,11 +1822,11 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	# Do we want to skip validation checking - Done for CYJS files
-	if skip != True:
-		validationErrors = validate_json(graph_json)
-		if validationErrors != None:
-			return validationErrors
+	validationErrors = validate_json(graph_json)
+
+	print validationErrors
+	if validationErrors != None:
+		return validationErrors 
 
 	# Get the current time
 	curTime = datetime.now()
@@ -2105,7 +1857,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 		created = curTime
 
 	# Construct new graph to add to database
-	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, shared_with_groups = unlisted, default_layout_id = default_layout_id)
+	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, shared_with_groups = shared_with_groups, default_layout_id = default_layout_id)
 
 	db_session.add(new_graph)
 	db_session.commit()
