@@ -38,7 +38,7 @@ sudo apt-get install curl
 <p>Example GET graph request in the documentation is: <br>
 <pre>curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo</pre></p>
 
-<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with password "example_password" would be: <br><pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example" -F "password=example_password"; echo</pre></p>
+<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with password "example_password" would be: <br><pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example@example.com" -F "password=example_password"; echo</pre></p>
 
 <p>In general, API calls using this REST API will have a "StatusCode" property.  This property adheres to the usual <a href="http://www.restapitutorial.com/httpstatuscodes.html">REST API status codes</a>.</p>
 
