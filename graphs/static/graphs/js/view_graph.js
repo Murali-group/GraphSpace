@@ -452,13 +452,13 @@ $(document).ready(function() {
       //Posts information to the server regarding the current display of the graph,
       //including position
       $.post(queryString + "/layout/", {
-        layout_id: "1",
         layout_name: layoutName,
         points: JSON.stringify(layout),
         loggedIn: $("#loggedIn").text(),
         "public": 0,
         "unlisted": 0
       }, function (data) {
+        console.log(data);
         if (data.Error) {
           return alert(data.Error);
         }
@@ -471,7 +471,7 @@ $(document).ready(function() {
         }
 
         //If layout, append layout URL
-        layoutUrl += "?layout=" + layoutName;
+        layoutUrl += "?layout=" + layoutName + "&layout_owner=" + $("#loggedIn").text();
 
         //Get all highlighted terms and append them to the 
         //url of each layout.
@@ -536,7 +536,7 @@ $(document).ready(function() {
     //to the URL.  Be sure to track for if its a partial or exact search
     $(".highlight").click(function (e) {
       e.preventDefault();
-      linkToGraph = $(this).attr('id') + ',';
+      linkToGraph = "?layout=" + $(this).val() + "&layout_owner=" + $(this).attr("id");
 
       //Get all labels form search term
       var labels = $("#search").val().split(',');
@@ -545,27 +545,29 @@ $(document).ready(function() {
       //otherwise append all search terms for full search
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
-            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
             linkToGraph += '&partial_search=';
             for (var i = 0; i < labels.length; i++) {
-              if (labels[i].trim().length > 0) {
+              if (labels[i].trim().length > 0 && i < labels.length - 1) {
                 linkToGraph += labels[i].trim() + ',';
+              } else {
+                linkToGraph += labels[i].trim();
               }
             } 
         }
       } else {
         if (labels.length > 0 && labels[0].length > 0) {
-          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
           linkToGraph += '&full_search=';
           for (var i = 0; i < labels.length; i++) {
-            if (labels[i].trim().length > 0) {
+            if (labels[i].trim().length > 0 && i < labels.length - 1) {
               linkToGraph += labels[i].trim() + ',';
+            } else {
+              linkToGraph += labels[i].trim();
             }
           } 
         }
       }
-
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       //When appropriate icon is clicked, show link
       //otherwise hide it.
@@ -588,17 +590,21 @@ $(document).ready(function() {
 
     //Changes the name of the current layout
     $("#change_layout").click(function (e) {
-      var paths = document.URL.split('/')
       var new_layout_name = $("#new_layout_name").val();
+
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
+      var loggedIn = $("#loggedIn").text();
+      var old_layout_name = $(this).val()
 
       if (new_layout_name.length == 0) {
         return alert("Enter a new layout name!");
       } else {
         $.post('../../../changeLayoutName/', {
-          "gid": decodeURIComponent(paths[paths.length - 1].split("?")[0]),
-          "uid": decodeURIComponent(paths[paths.length - 2]),
-          "loggedIn": $("#loggedIn").text(),
-          "old_layout_name": $(this).val(),
+          "gid": gid,
+          "uid": uid,
+          "loggedIn": loggedIn,
+          "old_layout_name": old_layout_name,
           "new_layout_name": new_layout_name
         }, function (data) {
           window.location.href = data.url; 
@@ -610,18 +616,17 @@ $(document).ready(function() {
     $(".remove").click(function (e) {
       e.preventDefault();
 
-      var paths = document.URL.split('/')
-      console.log(paths);
+      console.log($(this));
       var publicLayout = $(this).val();
-      var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var userId = $(this)[0]["id"];
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../deleteLayout/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
         'layout': publicLayout,
-        'user_id': userId
+        'layout_owner': userId
       }, function (data) {
         if (data.Error) {
           return alert(data.Error);
@@ -637,41 +642,36 @@ $(document).ready(function() {
     //including all search terms
     $(".layout_buttons").click(function (e) {
       e.preventDefault();
-      // var searchTerms = getHighlightedTerms();
-      if (document.URL.indexOf('?') > -1) {
-        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-      } else {
-        var linkToGraph = document.URL;
-      }
-
-      linkToGraph += '?layout=' + $(this).attr('href') + ',';
-
+   
+      var linkToGraph = $(this).attr('href');
       var labels = $("#search").val().split(',');
 
       //Appends partial search terms as part of query string
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
-            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
             linkToGraph += '&partial_search=';
             for (var i = 0; i < labels.length; i++) {
-              if (labels[i].trim().length > 0) {
+              if (labels[i].trim().length > 0 && i < labels.length - 1) {
                 linkToGraph += labels[i].trim() + ',';
+              } else {
+                linkToGraph += labels[i].trim();
               }
             } 
         }
       } else {
         if (labels.length > 0 && labels[0].length > 0) {
-          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
           linkToGraph += '&full_search=';
           for (var i = 0; i < labels.length; i++) {
-            if (labels[i].trim().length > 0) {
+            if (labels[i].trim().length > 0 && i < labels.length - 1) {
               linkToGraph += labels[i].trim() + ',';
+            } else {
+                linkToGraph += labels[i].trim();
             }
           } 
         }
       }
-
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       if (e.target == this) {
         window.location.href = linkToGraph;
@@ -684,15 +684,15 @@ $(document).ready(function() {
 
       var paths = document.URL.split('/');
       var publicLayout = $(this).val();
-      var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var userId = $(this).attr("id");
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../shareLayoutWithGroups/', {
         'layoutId': $(this).val(),
         'gid': gid,
-        'owner': ownerId,
-        'uid': userId
+        'uid': uid,
+        'loggedIn': userId
       }, function (data) {
         if (data.Error) {
           return alert(data.Error);
@@ -708,24 +708,25 @@ $(document).ready(function() {
       var paths = document.URL.split('/')
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../getGroupsForGraph/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
       }, function (data) {
+        console.log(data);
         var group_options = "";
         if (data['Group_Information'].length > 0) {
           //Used for modal to determine if graph is shared with group or not
           for (var i = 0; i < data['Group_Information'].length; i++) {
             console.log(data['Group_Information'][i]);
             if (data['Group_Information'][i]['graph_shared'] == true) {
-              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+              if (uid == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
             } else {
-              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+              if (uid == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
             }
@@ -748,8 +749,8 @@ $(document).ready(function() {
     //Shares graphs with specified groups user is a member/owner of
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       var all_groups = {}
       var groups_to_share_with = [];
@@ -773,7 +774,7 @@ $(document).ready(function() {
 
       $.post('../../../shareGraphWithGroups/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
         'groups_to_share_with' : groups_to_share_with,
         'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
@@ -918,8 +919,8 @@ function searchValues(search_type, labels) {
   //so cytoscape will recognize the correct element
   $.post("../../../retrieveIDs/", {
     'values': labels,
-    "gid": decodeURIComponent(paths[paths.length - 1].split("?")[0]),
-    "uid": decodeURIComponent(paths[paths.length - 2]),
+    "gid": $("#gid").text(),
+    "uid": $("#uid").text(),
     "search_type": search_type 
   }, function (data) {
     console.log(data);
@@ -1037,7 +1038,7 @@ function searchValues(search_type, labels) {
           }
         }
 
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
         $("#url").attr('href', linkToGraph);
         $("#url").css('text-decoration', 'underline');
@@ -1350,20 +1351,19 @@ function colourNameToHex(colour)
 $(".default").click(function(e) {
   var paths = document.URL.split('/')
 
-    var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+    var gid = $("#gid").text();
 
     if (gid.charAt(gid.length - 1) == '/') {
       gid = gid.substring(0, gid.length - 1);
     }
     
-    var ownerId = decodeURIComponent(paths[paths.length - 2]);
-
-    console.log('GID: ' + gid + ", UID: " + ownerId);
+    var uid = $("#uid").text();
 
   $.post('../../../setDefaultLayout/', {
+    'layoutOwner': $(this).attr("id"),
     'layoutId': $(this).val(),
     'gid': gid,
-    'uid': ownerId
+    'uid': uid
   }, function (data) {
     if (data.Error) {
       return alert(data.Error);
@@ -1377,13 +1377,14 @@ $(".default").click(function(e) {
 */
 $(".removeDefault").click(function(e) {
   var paths = document.URL.split('/')
-  var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-  var ownerId = decodeURIComponent(paths[paths.length - 2]);
+  var gid = $("#gid").text();
+  var uid = $("#uid").text();
 
   $.post('../../../removeDefaultLayout/', {
+    'layoutOwner': $(this).attr("id"),
     'layoutId': $(this).val(),
     'gid': gid,
-    'uid': ownerId
+    'uid': uid
   }, function (data) {
     if (data.Error) {
       return alert(data.Error);

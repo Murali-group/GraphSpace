@@ -489,13 +489,13 @@ def set_layout_context(request, context, uid, gid):
 		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
 		    
 		    # Check to see if the user is logged in
-		    temp_uid = None
+		    loggedIn = None
 		    if 'uid' in context:
-		    	temp_uid = context['uid']
+		    	loggedIn = context['uid']
 
 	    	# Based on the logged in user and the graph, check to see if 
 	    	# there exists a layout that matches the query term
-		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, temp_uid)
+		    graph_json = get_layout_for_graph(request.GET.get('layout'), request.GET.get('layout_owner'), gid, uid, loggedIn)
 		    
 		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
 		    if graph_json == None:
@@ -503,6 +503,7 @@ def set_layout_context(request, context, uid, gid):
 		    
 	    	# Return layout JSON
 		    layout_to_view = json.dumps({"json": graph_json})
+		    context["layout_owner"] = request.GET.get('layout_owner')
 
 		    # Still set the default layout for the graph, if it exists
 		    context['default_layout'] = get_default_layout_id(uid, gid)
@@ -541,8 +542,25 @@ def set_layout_context(request, context, uid, gid):
     # If user is logged in, display my layouts and shared layouts
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
-		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + get_my_shared_layouts_for_graph(uid, gid, context['uid'])))
-		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
+		my_shared_layouts = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
+		all_layouts_for_graph = get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + my_shared_layouts
+		unique_layouts = dict()
+
+		# Filter out all the duplicate layouts
+		for layout in all_layouts_for_graph:
+			key = layout.graph_id + layout.user_id + layout.owner_id + layout.layout_name
+			if (key not in unique_layouts):
+				unique_layouts[key] = layout
+
+		context['shared_layouts'] = unique_layouts.values()
+
+		my_shared_layout_names = []
+		# Get names of the layouts for comparison
+		for layout in my_shared_layouts:
+			if layout.layout_name not in my_shared_layout_names:
+				my_shared_layout_names.append(layout.layout_name)
+
+		context['my_shared_layouts'] = my_shared_layout_names
 	else:
 		# Otherwise only display public layouts
 		context['my_layouts'] = []
@@ -3303,7 +3321,7 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 	db_session = data_connection.new_session()
 
 	# Get the layout
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == old_layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == old_layout_name).first()
 
 	# Change the name
 	if layout != None:
@@ -3312,19 +3330,20 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 		
 	db_session.close()
 
-def makeLayoutPublic(uid, gid, public_layout):
+def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 	'''
 		Makes a layout public.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param public_layout: Name of layout
+		:param layout_owner: Owner of layout
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
 	# Get layouts to make public
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == layout_owner).first()
 	
 	# If layout exists, make it public
 	if layout != None:
@@ -3345,15 +3364,14 @@ def makeLayoutPublic(uid, gid, public_layout):
 
 	db_session.close()
 
-def save_layout(layout_id, layout_name, owner, graph, user, json, public, shared_with_groups):
+def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
 	'''
 		Saves layout of specific graph.
 
-		:param layout_id: Id of layout to save
+		:param graph_id: Name of the graph
+		:param graph_owner: Owner of the graph
 		:param layout_name: Name of layout to save
-		:param owner: Owner of the graph
-		:param graph: Name of the graph
-		:param user: user making those changes
+		:param layout_owner: Owner of layout
 		:param json: JSON of the graph
 		:param public: Is layout public or not
 		:param shared_with_groups: Is layout shared with groups
@@ -3361,43 +3379,44 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, shared
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	# Checks to see if layout for graph already exists
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == graph).first()
+	# Checks to see if there is a layout for this specific graph and the same layout name which the person saving the layout already owns
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
 
+	# If no such layout exists, add it
 	if layout != None:
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = owner, graph_id = graph, user_id = user, json = json, public = public, shared_with_groups = shared_with_groups)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups)
 
 	db_session.add(new_layout)
 	db_session.commit()
 	db_session.close()
 
-def deleteLayout(uid, gid, layoutToDelete, loggedIn):
+def deleteLayout(uid, gid, layoutToDelete, layout_owner):
 	'''
 		Deletes layout from graph.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param layoutToDelete: name of layout to delete
-		:param loggedIn: User that is deleting the graph
+		:param layout_owner: User that is deleting the graph
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
 	try:
 		# Get the specific layout
-		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == layout_owner).first()
 
 		if layout == None:
-			return None
+			return "Layout does not exist!"
 
 		# Get graph which may contain a layout 
 		graph = db_session.query(models.Graph).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).first()
 
 		if graph == None:
-			return None
+			return "Graph does not exist!"
 
 		# If layout being deleted is graphs default layout, remove both
 		if graph.default_layout_id == layout.layout_id:
@@ -3413,29 +3432,39 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		db_session.close()
 		return ex
 
-def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
+def get_layout_for_graph(layout_name, layout_owner, graph_id, graph_owner, loggedIn):
 	'''
 		Retrieves specific layout for a certain graph.
 
 		:param layout_name: Name of layout
-		:param layout_graph: Name of graph
 		:param layout_owner: Owner of layout
+		:param graph_id: Name of graph
+		:param graph_owner: Owner of graph
 		:param loggedIn: Logged in user
-		:return Layout: [layout]
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	try:
-		# Get layout for graph if it exists
-		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.owner_id == graph_owner).one()
+	# If the person viewing the layout is not the graph owner or the graph is not public
+	if loggedIn != graph_owner and is_public_graph(graph_owner, graph_id) != True:
+		# Check to see if user is a member of any groups that graph is shared with
+		user_is_member = can_see_shared_graph(loggedIn, graph_owner, graph_id)
 
+		# If user is not a member, don't display layout
+		if user_is_member == None:
+			return None
+	
+	# Get layout for graph if it exists
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.owner_id == layout_owner).first()
+
+	if layout == None:
+		db_session.close()
+		return None
+	else:
 		db_session.close()
 		return cytoscapePresetLayout(json.loads(layout.json))
 
-	except NoResultFound:
-		db_session.close()
-		return None	
+	
 
 def cytoscapePresetLayout(csWebJson):
 	'''
@@ -3487,13 +3516,14 @@ def get_all_layouts_for_graph(uid, gid):
 		db_session.close()
 		return None	
 
-def share_layout_with_all_groups_of_user(owner, gid, layoutId):
+def share_layout_with_all_groups_of_user(owner, gid, layoutId, layout_owner):
 	'''
 		Shares a layout with all the groups that owner of a graph is a part of.
 		
-		:param uid: Owner of graph
+		:param owner: Owner of graph
 		:param gid: Name of graph
-		:param layoutId: LayoutID of the graph
+		:param layoutId: Layout of the graph
+		:param layout_owner: layout_owner of Layout
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3505,7 +3535,7 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 		return None
 
 	# Get layout if it exists
-	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).filter(models.Layout.user_id == owner).filter(models.Layout.owner_id == layout_owner).first()
 
 	if layout == None:
 		return None
@@ -3544,14 +3574,10 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 	try:
 		# Get all layouts for graph that user created
-		layouts = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.shared_with_groups == 0).filter(models.Layout.public == 0).all()
+		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.shared_with_groups == 0).filter(models.Layout.public == 0).all()
 
-		cleaned_layouts = []
-
-		for layout_name in layouts:
-			cleaned_layouts += layout_name
 		db_session.close()
-		return cleaned_layouts
+		return layouts
 
 	except NoResultFound:
 		db_session.close()
@@ -3577,8 +3603,6 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 		# Get all groups that the user is a member of
 		all_groups_for_user = get_all_groups_with_member(loggedIn, skip = True)
 
-		cleaned_layout_names = []
-
 		group_dict = dict()
 
 		# Get all groups shared with this graph, removing all duplicates
@@ -3596,13 +3620,11 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 				# If the current user is a member of any groups that have current graph shared in
 				# for group in all_groups_for_graph:
-				layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
-
-				for name in layout_names:
-					cleaned_layout_names += name
+				layout_names = db_session.query(models.Layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
 
 		db_session.close()
-		return cleaned_layout_names
+		print "Layout names", layout_names
+		return layout_names
 	except NoResultFound:
 		db_session.close()
 		return []
@@ -3628,12 +3650,7 @@ def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 		# we collect all shared and public layouts.
 		# Note: This is done as a second-measure step and it shouldn't ever matter
 		# because all layouts are set to public when the graph is set to public
-		shared_layouts_uncleaned = db_session.query(models.Layout.layout_name).distinct(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).all()
-
-		# Get rid of unicode
-		shared_layouts = []
-		for shared_layout in shared_layouts_uncleaned:
-			shared_layouts.append(shared_layout[0])
+		shared_layouts = db_session.query(models.Layout).distinct(models.Layout.layout_name).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).all()
 
 		db_session.close()
 		return shared_layouts
@@ -3656,7 +3673,7 @@ def get_public_layouts_for_graph(uid, gid):
 		public_layouts = []
 
 		# Get all the public layouts for a specific graph
-		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
+		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
 
 		# Go through and remove the unicode
 		for public_layout in public_layout_uncleaned:
