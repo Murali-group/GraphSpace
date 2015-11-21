@@ -496,7 +496,7 @@ def set_layout_context(request, context, uid, gid):
 	    	# Based on the logged in user and the graph, check to see if 
 	    	# there exists a layout that matches the query term
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), request.GET.get('layout_owner'), gid, uid, loggedIn)
-		    
+
 		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
@@ -3321,14 +3321,22 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 	db_session = data_connection.new_session()
 
 	# Get the layout
-	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == old_layout_name).first()
+	new_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == old_layout_name).first()
+
+	# Check to see if there already is a layout with that name for this user
+	check_layout_name = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == new_layout_name).first()
+
+	if check_layout_name != None:
+		db_session.close()
+		return "Can't change layout name to " + new_layout_name + " because you already have a layout with that name for this graph."
 
 	# Change the name
-	if layout != None:
-		layout.layout_name = new_layout_name
+	if new_layout != None:
+		new_layout.layout_name = new_layout_name
 		db_session.commit()
 		
 	db_session.close()
+	return None
 
 def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 	'''

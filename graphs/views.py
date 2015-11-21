@@ -922,8 +922,11 @@ def changeLayoutName(request):
         new_layout_name = request.POST['new_layout_name']
         loggedIn = request.POST['loggedIn']
 
-        db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
-        return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name + "&layout_owner=" + loggedIn}), content_type="application/json")
+        error = db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
+        if error == None:
+            return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name + "&layout_owner=" + loggedIn}), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json")
 
 def deleteLayout(request):
     '''
@@ -943,8 +946,6 @@ def deleteLayout(request):
         layout_owner = request.POST['layout_owner']
 
         result = db.deleteLayout(uid, gid, layoutToDelete, layout_owner)
-
-        print result
 
         if result == None:
             return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid}), content_type="application/json")

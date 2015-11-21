@@ -607,6 +607,10 @@ $(document).ready(function() {
           "old_layout_name": old_layout_name,
           "new_layout_name": new_layout_name
         }, function (data) {
+          if (data.Error) {
+            alert(data.Error);
+            return;
+          }
           window.location.href = data.url; 
         });
       }
