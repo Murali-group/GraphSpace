@@ -91,9 +91,9 @@ Below is a list of the different REST API calls.
 <hr>
 <h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
-<p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.  The documentation below contains some properties and descriptions that were directly found in <a href="http://js.cytoscape.org/">CytoscapeJS</a> documentation.  All credit goes to their awesome documentation and their framework.
+<p>This section details the structure of the JSON that all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems in rendering the graph. For the sake of completeness, we have copied the description of several of the node and edge attributes directly from the  <a href="http://js.cytoscape.org/">CytoscapeJS</a> documentation. We thank them for the excellent documentation of their framework.
 
-<p>The basic structure of a properly formatted JSON in GraphSpace contains the following structure: 
+<p>A properly formatted JSON for a graph in GraphSpace contains the following structure: 
 
 <pre>
 {
@@ -112,7 +112,7 @@ Below is a list of the different REST API calls.
 <h4>Node</h4>
 <!-- <p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/node-body">node properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
  -->
-<p>Below are all of the properties that GraphSpace supports for a Node element.</p>
+<p>This table lists all the properties that GraphSpace supports for a Node element.</p>
 <table class="table">
   <thead>
     <tr> <th>Property</th><th>Description</th> </tr>
@@ -122,8 +122,10 @@ Below is a list of the different REST API calls.
 
     <tr> <td>content</td><td> The text that is displayed inside of the node. </td> </tr>
 
-    <tr> <td>popup</td><td> Embedded information that will be displayed in a popup window when the node is hovered/clicked. </td> </tr>
+    <tr> <td>popup</td><td> A string that will be displayed in a popup window when the user clicks the node. This string can be HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
 
+    <tr> <td>k</td><td> An integer index for this node. GraphSpace uses this attribute when the user seeks to <a href="{{url}}help/#step_panel">step through the nodes and edges of the graph</a>.  (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+    
     <tr> <td> background_color</td><td> The background color of the node.  It may be the names of colors or <a href="http://www.w3schools.com/tags/ref_colorpicker.asp">hexadecimal</a> values of the colors. </td> </tr>
 
     <tr> <td>height</td><td> The height of the node. </td> </tr>
@@ -132,7 +134,6 @@ Below is a list of the different REST API calls.
 
     <tr> <td>shape</td><td> The shape of the node. May be: rectangle, roundrectangle, ellipse, triangle, pentagon, hexagon, heptagon, octagon, star, diamond, vee, or rhomboid.</td> </tr>
 
-    <tr> <td>k</td><td> Show this node at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information).</td> </tr>
 
     <tr><td>background_blacken</td><td>Blackens the node's body for values from 0 to 1; whitens the node's body for values from 0 to -1.</td></tr>
 
@@ -218,7 +219,7 @@ Below is a list of the different REST API calls.
 </table>
 <hr>
 <h4>Edge</h4>
-<p>Below are all of the properties that GraphSpace supports for an Edge element.</p>
+<p>This table lists all the properties that GraphSpace supports for an Edge element.</p>
 <table class="table">
   <thead>
     <tr> <th> Name </th><td> Description </td> </tr>
@@ -226,7 +227,10 @@ Below is a list of the different REST API calls.
   <tbody>
     <tr> <td> source </td><td> The id of the node where the edge is coming from. (<b>REQUIRED</b>) </td> </tr>
     <tr> <td> target </td><td> The id of the node where edge is going to. (<b>REQUIRED</b>) </td> </tr>
-    <tr> <td> k     </td><td> Show this edge at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information.</td> </tr>
+    <tr> <td>popup</td><td> A string that will be displayed in a popup window when the user clicks the edge. This string can be HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+
+    <tr> <td>k</td><td> An integer index for this edge. GraphSpace uses this attribute when the user seeks to <a href="{{url}}help/#step_panel">step through the nodes and edges of the graph</a>.  (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+    
     <tr><td>width</td><td>The width of an edge's line.</td></tr>
     <tr><td>line_color</td><td>The colour of the edge's line.</td></tr>
     <tr><td>line_style</td><td>The style of the edge's line; may be solid, dotted, or dashed.</td></tr>
