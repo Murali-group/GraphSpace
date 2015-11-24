@@ -473,7 +473,6 @@ def get_default_layout_name(uid, gid):
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
-
 		:param request: HTTP Request of graph to view
 		:param context: Dictionary containing all the variables to send to the front-end
 		:param uid: The owner of the graph
@@ -486,7 +485,7 @@ def set_layout_context(request, context, uid, gid):
 	if len(request.GET.get('layout', '')) > 0:
 
 		# If the layout is not one of the automatic layout algorithms
-		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
+		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_grid':
 		    
 		    # Check to see if the user is logged in
 		    loggedIn = None
@@ -531,14 +530,6 @@ def set_layout_context(request, context, uid, gid):
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "?layout="
 
-	search_type = None
-
-	# Get the search term to highlight once we load the layout for the graph
-	if 'partial_search' in request.GET:
-	    search_type = 'partial_search'
-	elif 'full_search' in request.GET:
-	    search_type = 'full_search'
-
     # If user is logged in, display my layouts and shared layouts
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
@@ -561,6 +552,7 @@ def set_layout_context(request, context, uid, gid):
 				my_shared_layout_names.append(layout.layout_name)
 
 		context['my_shared_layouts'] = my_shared_layout_names
+
 	else:
 		# Otherwise only display public layouts
 		context['my_layouts'] = []

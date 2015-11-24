@@ -11,6 +11,8 @@ $(document).ready(function() {
     window.cy = cytoscape({
       container: $('#csjs')[0],
 
+      elements: graph_json["graph"],
+
       // ** NOTE: REPLACE - WITH _ SO CYTOSCAPEJS WILL RENDER PROPERTIES
 
       //Style properties of NODE body
@@ -233,7 +235,7 @@ $(document).ready(function() {
     
     // default layout set to be arbor
     layout: getLayoutFromQuery(),
-    
+
     // draw graph, handle events etc.
     ready: function(){
 
@@ -648,6 +650,11 @@ $(document).ready(function() {
       e.preventDefault();
    
       var linkToGraph = $(this).attr('href');
+
+      if (linkToGraph == undefined) {
+        //Get hardcoded automatic layout ** doesn't need layout_owner **
+        linkToGraph = window.location.pathname + "?layout=" + $(this).attr("id");
+      }
       var labels = $("#search").val().split(',');
 
       //Appends partial search terms as part of query string
@@ -1224,59 +1231,13 @@ function getLayoutFromQuery() {
         avoidOverlap: true,
         animate: false
       }
-    } else if (query == "default_dagre") {
-       graph_layout = {
-        name: "dagre",
-        fit: true,
-        padding: 10,
-        animate: true,
-        nodeSep: 50,
-        edgeSep: 50
-      }
     } else if (query == 'default_cose') {
       graph_layout = {
-        name: "cose",
-        padding: 10,
-        fit: true,
-        animate: true,
-        nodeOverlap: 30
+        name: "cose"
       }
-    } else if (query == "default_cola") {
+    } else if (query == "default_grid") {
       graph_layout = {
-        name: "cola",        
-        fit: true,
-        nodeSpacing: function( node ){ return 20; },
-        padding: 10,
-        animate: true,
-        avoidOverlap: true
-      }
-    }  else if (query == "default_arbor") {
-      graph_layout = {
-        name: "arbor",
-        padding: 30,
-        fit: false,
-        animate: true,
-        maxSimulationTime: 1000
-      }
-    }  else if (query == "default_springy") {
-      graph_layout = {
-        name: 'springy',
-
-        animate: true, // whether to show the layout as it's running
-        maxSimulationTime: 4000, // max length in ms to run the layout
-        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-        fit: true, // whether to fit the viewport to the graph
-        padding: 30, // padding on fit
-        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-        random: false, // whether to use random initial positions
-        infinite: false, // overrides all other options for a forces-all-the-time mode
-        ready: undefined, // callback on layoutready
-        stop: undefined, // callback on layoutstop
-
-        // springy forces
-        stiffness: 400,
-        repulsion: 400,
-        damping: 0.5
+        name: "grid"
       }
     } else {
 
@@ -1506,4 +1467,3 @@ function setBarToValue(inputId, barId) {
   }
   showOnlyK();
 }
-
