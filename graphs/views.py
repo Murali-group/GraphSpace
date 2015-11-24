@@ -697,6 +697,21 @@ def help(request):
 
     return render(request, 'graphs/help_users.html', context)
 
+def help_anna(request):
+    '''
+        Render the following pages:
+
+        help/anna
+
+        :param request: HTTP GET Request
+
+    '''
+
+    #handle login
+    context = login(request)
+
+    return render(request, 'graphs/help_anna.html', context)
+
 def help_programmers(request):
     '''
         Render the help/tutorials page.
