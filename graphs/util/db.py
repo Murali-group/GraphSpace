@@ -1750,11 +1750,13 @@ def find_node(uid, gid, node_to_find, search_type):
 
 	# Create database connection
 	db_session = data_connection.new_session()
+	print uid, gid, node_to_find, search_type
 
 	try:
 		id_list = []
 		# Filter by search types
 		if search_type == "partial_search":
+
 			# Get all matching labels
 			labels = db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + node_to_find + "%")).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 

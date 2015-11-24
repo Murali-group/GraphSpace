@@ -208,11 +208,11 @@
         <div id="accordion_layouts" class="accordion">
             <h3>Layouts<a class="help" href="../../../help/#layout_panel" style="float: right; color: #0000FF;">Help</a></h3>
             <div class="accordion_content">
+                <p id="uid" style="display:none;">{{owner}}</p>
+                <p id="gid" style="display:none;">{{graph_id}}</p>
                 {% if uid != None %}
                 <div>
                     <p id="loggedIn" style="display:none;">{{uid}}</p>
-                    <p id="gid" style="display:none;">{{graph_id}}</p>
-                    <p id="uid" style="display:none;">{{owner}}</p>
                     <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button>
                 </div>
                 {% endif %}
