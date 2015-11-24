@@ -3605,6 +3605,7 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 	db_session = data_connection.new_session()
 
 	try:
+		layout_names = []
 		# Get all groups this graph is shared with
 		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
 
@@ -3631,7 +3632,6 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 				layout_names = db_session.query(models.Layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
 
 		db_session.close()
-		print "Layout names", layout_names
 		return layout_names
 	except NoResultFound:
 		db_session.close()
