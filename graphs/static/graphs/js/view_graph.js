@@ -1405,6 +1405,11 @@ function setDefaultNodeProperties(nodeJSON) {
        }
     }
 
+    // //Set border color to be black by default
+    // if (nodeData["border_color"] == undefined) {
+    //   nodeData["border_color"] = "#888";
+    // }
+
     if (nodeData['text_halign'] == undefined) {
       nodeData["text_halign"] = "center";
     }

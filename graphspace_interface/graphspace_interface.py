@@ -152,6 +152,8 @@ def validate_node_properties(G):
     for node_id in G.node:
         node_data = G.node[node_id]
 
+        node_id = node_id.replace("\n", "")
+
         # Checks shape of nodes to make sure it contains only legal shapes
         if "shape" in node_data:
             find_property_in_array("Node", node_id, "shape", node_data["shape"], ALLOWED_NODE_SHAPES)
@@ -195,8 +197,8 @@ def find_property_in_array(elementType, key, prop, value, array):
     :param prop: Name to search for in array
     :param array: Array to search for property in
     """
-    if prop not in array:
-        print elementType + ":", key, "contains illegal", prop, value, "Accepted types are:", array
+    if value not in array:
+        raise Exception("%s with ID: \"%s\" contains illegal %s: \"%s\".  Accepted values for this property are: %s." % (elementType, key, prop, value, array))
 
         
 ####################################################################
@@ -235,9 +237,14 @@ def add_node(G,node_id,label='',shape='ellipse',color='#FFFFFF',height=None,\
         add_node_popup(G,node_id,popup)
     if k:
         add_node_k(G,node_id,k)
+    
+    # If bubble is specified, use the provided color,
+    # otherwise set border color of node to be black by default
     if bubble:
-        bubble_effect(G,node_id,textoutlinecolor,whitetext=False)
-        
+        bubble_effect(G,node_id,bubble,whitetext=False)
+    else:
+        add_node_border_color(G,node_id,"#888")
+
     ## set height and width if len(label)==0 and height/width
     ## are None (auto-resize).  Make them very small nodes.
     ## height=width=5
@@ -414,7 +421,7 @@ def add_node_border_style(G,node_id,style):
         raise Exception('"%s" is not an allowed border style.' % (style))
     G.node[node_id]['border_style'] = style
 
-def add_node_border_color(G,node_id,color):
+def add_node_border_color(G,node_id,color,border_width=2):
     '''
     Set the border color for node "node_id" in graph "G".
     :param G: NetworkX object.
@@ -422,7 +429,7 @@ def add_node_border_color(G,node_id,color):
     :param color: string -- hexadecimal representation of the text outline color (e.g., #FFFFFF) or a color name.
     '''
     G.node[node_id]['border_color'] = color
-
+    G.node[node_id]['border_width'] = border_width
 ## Get any attribute of a node
 def get_node_attribute(G,node_id,attr):
     '''
@@ -742,7 +749,8 @@ def postGraph(G,graphid,outfile,user,password,metadata=None,logfile=None):
     graph_exists = False
     cmd = _constructExistsCommand(graphid,user,password)
     outstring = execute(cmd,logout)
-    if '"StatusCode": 200' in outstring:
+    outstring = json.loads(outstring)
+    if outstring["StatusCode"] == 200:
         # a status code of 200 indicates that a graph already exists.
         graph_exists = True
 
@@ -918,11 +926,11 @@ def main(args):
         add_edge(G,random.choice(nodeids),random.choice(nodeids),width=random.choice([1,2,3,4,5]),directed=True)
     
     validate_json(G)
-    # postGraph(G,graphid,outfile=outfile,user=user,password=password,logfile='tmp.log')
-    # if group != None:
-    #     shareGraph(graphid,user=user,password=password,group=group)
+    postGraph(G,graphid,outfile=outfile,user=user,password=password,logfile='tmp.log')
+    if group != None:
+        shareGraph(graphid,user=user,password=password,group=group)
 
-    print 'DONE\n'
+    print 'DONE'
 
 #######################################################
 if __name__=='__main__':

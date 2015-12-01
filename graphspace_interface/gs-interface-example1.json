@@ -1,0 +1,563 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "content": "node\nQ13158", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q13158", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n119369", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "119369", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nO14949", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "O14949", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP35542", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P35542", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n100126334", 
+                    "width": 135, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "100126334", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nB2RTY4", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "B2RTY4", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP06400", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P06400", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ14344", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q14344", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP35998", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P35998", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP42684", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P42684", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ96A56", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q96A56", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ13546", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q13546", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ15022", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q15022", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n145781", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "145781", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP61586", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P61586", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n120329", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "120329", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP17947", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P17947", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n145624", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "145624", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n100302193", 
+                    "width": 135, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "100302193", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP55211", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P55211", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP55210", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P55210", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP24941", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P24941", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n114614", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "114614", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n100302187", 
+                    "width": 135, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "100302187", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n10984", 
+                    "width": 75, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "10984", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nP05090", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "P05090", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nO15304", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "O15304", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ9H9Z2", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q9H9Z2", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\nQ14164", 
+                    "width": 90, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "Q14164", 
+                    "height": 40
+                }
+            }, 
+            {
+                "data": {
+                    "content": "node\n100033819", 
+                    "width": 135, 
+                    "shape": "rectangle", 
+                    "text_wrap": "wrap", 
+                    "background_color": "#ACFA58", 
+                    "id": "100033819", 
+                    "height": 40
+                }
+            }
+        ], 
+        "edges": [
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "119369", 
+                    "target": "P35542", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "100126334", 
+                    "target": "P24941", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145781", 
+                    "target": "P05090", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145781", 
+                    "target": "O14949", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145781", 
+                    "target": "B2RTY4", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145781", 
+                    "target": "P35998", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145781", 
+                    "target": "O15304", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "120329", 
+                    "target": "P55211", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "120329", 
+                    "target": "P55210", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "145624", 
+                    "target": "Q14344", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "100302193", 
+                    "target": "Q9H9Z2", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "P17947", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "Q13158", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "Q96A56", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "Q13546", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "P61586", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "114614", 
+                    "target": "Q14164", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "100302187", 
+                    "target": "P42684", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "10984", 
+                    "target": "Q15022", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "directed": "true", 
+                    "source": "100033819", 
+                    "target": "P06400", 
+                    "line_color": "#000000", 
+                    "width": 2, 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }
+        ]
+    }, 
+    "metadata": {
+        "title": "", 
+        "description": "", 
+        "tags": []
+    }
+}

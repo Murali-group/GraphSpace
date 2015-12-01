@@ -81,7 +81,7 @@ G = nx.DiGraph(directed=True)
 # add 10 nodes
 nodeids = ['node\n%d' % (i) for i in range(10)]
 for n in nodeids:
-    interface.add_node(G,n,label=n,bubble=True,color='yellow')
+    interface.add_node(G,n,label=n,bubble="#880",color='yellow')
 for i in range(20): # randomly add 20 edges
     interface.add_edge(G,random.choice(nodeids),random.choice(nodeids),width=random.choice([1,2,3,4,5]),directed=True)
 
