@@ -57,7 +57,11 @@ This section describes the steps required to launch GraphSpace on a server that 
   </Directory>
  ```
 10. Save the file
-11. Restart the apache server
+11. Give permissions for server to access database: `chmod 777 graphspace.db`
+12. Navigate to GraphSpace/graphspace and open up up settings.py in text editor
+13. Replace URL_PATH with IP or domain name of where apache2 server is running. Ex: "http://graphspace.org/"
+14. Save file
+15. Restart the apache server
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
