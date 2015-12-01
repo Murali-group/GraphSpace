@@ -12,12 +12,12 @@ GraphSpace has three dummy users:
 Running GraphSpace locally
 ===================================
 
-Please install Python and sqlite3, which are pre-requisites for GraphSpace. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
+Please install Python, sqlite3, and python-dev, which are pre-requisites for GraphSpace. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. GraphSpace performs best on either Mozilla Firefox or Google Chrome browsers. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git`
 2. Visit the GraphSpace directory: `cd GraphSpace`
-3. Modify the `gs-setup.sh` file by populating `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address to send emails through.`
-4. Propogate changes to these variables in `gs-setup.sh` file to the environment: `./gs-setup.sh`. *This step may require sudo priveleges*
+3. Modify the `gs-setup.sh` file by populating `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address to send emails through.
+4. Propogate changes to these variables in `gs-setup.sh` file to the environment: `. gs-setup.sh`.  Please run `. gs-setup.sh` and not `./gs-setup.sh` as this will not propogate the changes to the environment properly. *This step may require sudo priveleges*
 5. Finally, start the GraphSpace server: `python manage.py runserver`
 6. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
@@ -29,7 +29,7 @@ This section describes the steps required to launch GraphSpace on a server that 
 1. Visit the graphspace directory: `cd GraphSpace/graphspace`
 3. In a text editor, open up `gs-setup.sh` file
 4. Set `DEBUG=False` and `TEMPLATE_DEBUG=False`
-5. Propogate those changes: `./gs-setup.sh`
+5. Propogate those changes: `. gs-setup.sh`
 6. Visit the `apache2` directory: `cd /path_to/apache2`. Typically the full path to this directory is `/etc/apache2`.
 7. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 8. Create a file called `graphspace.conf`

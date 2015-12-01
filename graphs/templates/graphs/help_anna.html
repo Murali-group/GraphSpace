@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container graphs">
+
+<ul class="nav nav-pills">
+    <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
+    <li><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
+    <li><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
+    <li class="active"><a href="{% url 'help_anna' %}" style="text-align:center">Anna's Section</a></li>
+</ul>
+<hr>
+
+<h1>Have fun with documentation :P</h1>
+
+{% endblock %}

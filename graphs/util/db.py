@@ -14,6 +14,7 @@ import sqlite3 as lite
 
 from django.conf import settings
 
+from json_validator import validate_json, assign_edge_ids, convert_json
 import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
@@ -28,122 +29,6 @@ data_connection = db_init.db
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
-
-
-# This file is a wrapper to communicate with sqlite3 database 
-# that does not need authentication for connection.
-
-# It may be viewed as the controller to the database
-
-# --------------- Edge Insertions -----------------------------------
-
-def assign_edge_ids(json_string):
-	'''
-		Modifies all ID's of edges to be the names of the nodes that they are attached to.
-
-		:param json_string: JSON of graph
-		:return json_string: JSON of graph having unique ID's for all edges
-	'''
-	
-	ids = []
-	# Creates ID's for all of the edges by creating utilizing the source and target nodes
-	# The edge ID would have the form: source-target
-	for edge in json_string['graph']['edges']:
-
-		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
-
-		# If the ID has not yet been seen (is unique), simply store the ID 
-		# of that edge as source-target
-		if edge['data']['id'] not in ids:
-			ids.append(edge['data']['id'])
-		else:
-			# Otherwise if there are multiple edges with the same ID,
-			# append a number to the end of the ID so we can distinguish
-			# multiple edges having the same source and target.
-			# This needs to be done because HTML DOM needs unique IDs.
-			counter = 0
-			while edge['data']['id'] in ids:
-				counter += 1
-				edge['data']['id'] = edge['data']['id'] + str(counter)
-			ids.append(edge['data']['id'])
-
-	# Return JSON having all edges containing unique ID's
-	return json_string
-
-# --------------- End Edge Insertions --------------------------------
-
-def convert_json(original_json):
-    '''
-        Converts original_json that's used in Cytoscape Web
-        such that it is compatible with the new Cytoscape.js
-
-        See: http://cytoscape.github.io/cytoscape.js/
-
-        Original json structure used for Cytoscape Web:
-        {
-            "metadata": {
-
-            },
-
-            "graph": {
-                "data": {
-                    "nodes": [ 
-                        { "id": "node1", "label": "n1", ... },
-                        { "id": "node2", "label": "n2", ... },
-                        ...
-                    ],
-                    "edges": [ 
-                        { "id": "edge1", "label": "e1", ... },
-                        { "id": "edge2", "label": "e2", ... },
-                        ...
-                    ]
-                }
-            }
-        }
-
-        New json structure:
-        {
-            "metadata": {
-
-            },
-
-            "graph": {
-                "nodes": [
-                    {"data": {"id": "node1", "label": "n1", ...}},
-                    {"data": {"id": "node2", "label": "n2", ...}},
-                    ...
-                ],
-                "edges": [
-                    {"data": {"id": "edge1", "label": "e1", ...}},
-                    {"data": {"id": "edge2", "label": "e2", ...}},
-                    ...
-                ]
-            }
-        }
-    '''
-
-    #parse old json data
-    old_json = json.loads(original_json)
-    old_nodes = old_json['graph']['data']['nodes']
-    old_edges = old_json['graph']['data']['edges']
-
-    new_nodes, new_edges = [], []
-
-    #format node and edge data
-    for node in old_nodes:
-        new_nodes.append({"data": node})
-
-    for edge in old_edges:
-        new_edges.append({"data": edge})
-
-    #build the new json
-    new_json = {}
-    new_json['metadata'] = old_json['metadata']
-    new_json['graph'] = {}
-    new_json['graph']['nodes'] = new_nodes
-    new_json['graph']['edges'] = new_edges
-
-    return json.dumps(new_json, indent=4)
 
 def add_everyone_to_password_reset():
 	'''
@@ -447,141 +332,6 @@ def checkNodeEdgeConsistencyOfUser(user_id):
 
 	# END CONVERSIONS
 
-##################################################
-
-# This section contains methods to validate JSON 
-def validate_json(jsonString):
-	'''
-		JSON Validator. Tells if the graph being inserted is 
-		valid (CytoscapeJS will render it properly).  If not, 
-		it throws an Error
-
-		:param jsonString: JSON of the graph
-		:return Errors | None: [Errors of JSON]
-	'''
-
-	req_error = validate_required_properties(jsonString)
-	return req_error
-
-def validate_required_properties(jsonString):
-	# Validates the JSON that is uploaded to make sure
-	# it has the following properties
-	# node:
-	# content,
-	# id have to be unique
-
-	# edge:
-	# (dont need an id) - I auto generate one
-	# source
-	# target
-
-	edge_properties = ['source', 'target']
-	node_properties = ['content', 'id']
-
-	try: 
-		cleaned_json = json.loads(jsonString)
-		# Since there are two types of JSON: one originally submitted
-		if 'data' in cleaned_json['graph']:
-			cleaned_json = json.loads(convert_json(jsonString))
-
-		edges = cleaned_json['graph']['edges']
-		nodes = cleaned_json['graph']['nodes']
-
-		jsonErrors = ""
-		# Combines edge and node Errors
-		nodeError = propertyInJSON(nodes, node_properties, 'node')
-		edgeError = propertyInJSON(edges, edge_properties, 'edge')
-
-		# If any of the above errors has > 0 length, we have an error
-		if len(nodeError) > 0:
-			return nodeError
-		if len(edgeError) > 0:
-			return edgeError
-
-		# We have to check to see if it is compatible with CytoscapeJS, if it isn't we convert it to be
-		# TODO: Remove conversion by specifying it when the user creates a graph
-		cleaned_json = assign_edge_ids(cleaned_json)
-
-		nodeUniqueIDError = checkUniqueID(nodes)
-		nodeCheckShape = checkShapes(nodes)
-
-		if len(nodeUniqueIDError) > 0:
-			return nodeUniqueIDError
-		if len(nodeCheckShape) > 0:
-			return  nodeCheckShape
-
-		return None
-	except ValueError, e:
-		return e.args[0]
-
-def checkUniqueID(elements):
-	'''
-		Checks to see if all of the elements in the json 
-		have unique ids
-
-		:param elements: JSON of nodes or edges
-		:return Error | None: <ID for node has been dupliated!>
-	'''
-	id_map = []
-
-	# If element is already in the dictionary, there are two nodes with same ID, huge error
-	for element in elements:
-		if element['data']['id'] not in id_map:
-			id_map.append(element['data']['id'])
-		else:
-			return element['data']['id'] + " for a node is duplicated!"
-
-	return ""
-
-def checkShapes(elements):
-	'''
-		Checks to see if the shapes for node are valid shapes
-
-		:param elements: JSON of nodes
-		:return Error: <message>
-	'''
-	# Add more shapes as Cytoscapejs decides to support other shapes
-	allowed_shapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond"]
-
-	# Checks to see if the shapes are allowed
-	for element in elements:
-		if element['data']['shape'] not in allowed_shapes:
-			return "illegal shape: " + element['data']['shape'] + ' for a node'
-
-	return ""
-
-def propertyInJSON(elements, properties, elementType):
-	'''
-		Checks to see if the elements in the graph JSON (nodes and edges)
-		adhere to the properties of CytoscapeJS (ie unique ids, valid shapes)
-
-		:param elements: JSON of the elements (nodes or edges)
-		:param properties: set of properties that element JSON should following
-		:param elementType: Type of element it is (either node or edge)
-		:return Error|None: <Property x not in JSON for element | node>
-	'''
-
-	# Go through all elements in JSON and check to see 
-	# if all elemnts have minimum set of properties
-	for element in elements:
-		met_all_properties = []
-
-		element_data = element['data']
-		for element_property in properties:
-			if element_property not in element_data:
-				if 'id' in element_data:
-					return "Property '" + element_property +  "' not in JSON for " + elementType + ': ' + element_data['id']
-				else:
-					return "Property '" + element_property +  "' not in JSON for " + elementType
-		
-			met_all_properties.append(element_property)
-
-	return ""
-
-
-
-########### END JSON CHECKING #####################################
-
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
 	'''
 		Generates an unique alphanumeric ID of specific size.
@@ -723,7 +473,6 @@ def get_default_layout_name(uid, gid):
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
-
 		:param request: HTTP Request of graph to view
 		:param context: Dictionary containing all the variables to send to the front-end
 		:param uid: The owner of the graph
@@ -736,23 +485,24 @@ def set_layout_context(request, context, uid, gid):
 	if len(request.GET.get('layout', '')) > 0:
 
 		# If the layout is not one of the automatic layout algorithms
-		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_dagre' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_cola' and request.GET.get('layout') != 'default_arbor' and request.GET.get('layout') != 'default_springy':
+		if request.GET.get('layout') != 'default_breadthfirst' and request.GET.get('layout') != 'default_concentric' and request.GET.get('layout') != 'default_circle' and request.GET.get('layout') != 'default_cose' and request.GET.get('layout') != 'default_grid':
 		    
 		    # Check to see if the user is logged in
-		    temp_uid = None
+		    loggedIn = None
 		    if 'uid' in context:
-		    	temp_uid = context['uid']
+		    	loggedIn = context['uid']
 
 	    	# Based on the logged in user and the graph, check to see if 
 	    	# there exists a layout that matches the query term
-		    graph_json = get_layout_for_graph(request.GET.get('layout'), gid, uid, temp_uid)
-		    
+		    graph_json = get_layout_for_graph(request.GET.get('layout'), request.GET.get('layout_owner'), gid, uid, loggedIn)
+
 		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    
 	    	# Return layout JSON
 		    layout_to_view = json.dumps({"json": graph_json})
+		    context["layout_owner"] = request.GET.get('layout_owner')
 
 		    # Still set the default layout for the graph, if it exists
 		    context['default_layout'] = get_default_layout_id(uid, gid)
@@ -780,19 +530,29 @@ def set_layout_context(request, context, uid, gid):
 	context['layout_to_view'] = layout_to_view
 	context['layout_urls'] = URL_PATH + "graphs/" + uid + "/" + gid + "?layout="
 
-	search_type = None
-
-	# Get the search term to highlight once we load the layout for the graph
-	if 'partial_search' in request.GET:
-	    search_type = 'partial_search'
-	elif 'full_search' in request.GET:
-	    search_type = 'full_search'
-
     # If user is logged in, display my layouts and shared layouts
 	if 'uid' in context:
 		context['my_layouts'] = get_my_layouts_for_graph(uid, gid, context['uid'])
-		context['shared_layouts'] = list(set(get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + get_my_shared_layouts_for_graph(uid, gid, context['uid'])))
-		context['my_shared_layouts'] = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
+		my_shared_layouts = get_my_shared_layouts_for_graph(uid, gid, context['uid'])
+		all_layouts_for_graph = get_shared_layouts_for_graph(uid, gid, context['uid']) + get_public_layouts_for_graph(uid, gid) + my_shared_layouts
+		unique_layouts = dict()
+
+		# Filter out all the duplicate layouts
+		for layout in all_layouts_for_graph:
+			key = layout.graph_id + layout.user_id + layout.owner_id + layout.layout_name
+			if (key not in unique_layouts):
+				unique_layouts[key] = layout
+
+		context['shared_layouts'] = unique_layouts.values()
+
+		my_shared_layout_names = []
+		# Get names of the layouts for comparison
+		for layout in my_shared_layouts:
+			if layout.layout_name not in my_shared_layout_names:
+				my_shared_layout_names.append(layout.layout_name)
+
+		context['my_shared_layouts'] = my_shared_layout_names
+
 	else:
 		# Otherwise only display public layouts
 		context['my_layouts'] = []
@@ -1368,11 +1128,11 @@ def combine_similar_graphs(matched_graphs):
 				# If graph already has been encountered
 				cur_graph_entry = list(graph_entry[key])
 				if len(cur_graph_entry[1]) == 0:
-					cur_graph_entry[1] += graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
-					cur_graph_entry[2] += graph.label
+					cur_graph_entry[1] += graph.edge_id + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
+					cur_graph_entry[2] += graph.edge_id
 				else:
-					cur_graph_entry[1] += ", " + graph.label + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
-					cur_graph_entry[2] += ", " + graph.label
+					cur_graph_entry[1] += ", " + graph.edge_id + "(" + graph.head_node_id + "-" + graph.tail_node_id + ")"
+					cur_graph_entry[2] += ", " + graph.edge_id
 
 				# Add appended entry
 				graph_entry[key] = tuple(cur_graph_entry)
@@ -1513,12 +1273,16 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 			for j in xrange(len(tail_nodes)):
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
+				# For each view type, we query edges twice because we use head:tail and tail:head (to resolve undirected edge search issue)
 				if view_type == "public":
 					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
 				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
 				else:
 					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
+					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
 
 
 		graph_dict = dict()
@@ -1673,99 +1437,102 @@ def uploadCyjsFile(username, graphJSON, title):
 		@param tile: Title of graph
 	'''
 
-	# Create JSON stucture for GraphSpace recognized JSON
-	parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
+	try:
+		# Create JSON stucture for GraphSpace recognized JSON
+		parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
 
-	# Load JSON from string
-	csjs = json.loads(graphJSON)
+		# Load JSON from string
+		csjs = json.loads(graphJSON)
 
-	# If there is no elements that exist in the provided JSON
-	if 'elements' not in csjs:
-		return {"Error": "No elements property inside of file!"}
+		# If there is no elements that exist in the provided JSON
+		if 'elements' not in csjs:
+			return {"Error": "No elements property inside of file!"}
 
-	# If there is no nodes that exist in the provided JSON
-	if 'nodes' not in csjs['elements']:
-		return {"Error": "File must contain nodes property in elements dictionary!"}
+		# If there is no nodes that exist in the provided JSON
+		if 'nodes' not in csjs['elements']:
+			return {"Error": "File must contain nodes property in elements dictionary!"}
 
-	# If there is no edges that exist in the provided JSON
-	if 'edges' not in csjs['elements']:
-		return {"Error": "File must contain edges property in elements dictionary!"}
+		# If there is no edges that exist in the provided JSON
+		if 'edges' not in csjs['elements']:
+			return {"Error": "File must contain edges property in elements dictionary!"}
 
-	# Go through nodes and translate properties so CytoscapeJS may render
-	for node in csjs['elements']['nodes']:
+		# Go through nodes and translate properties so CytoscapeJS may render
+		for node in csjs['elements']['nodes']:
 
-		# Container for translated node
-		tempNode = {"data": {}}
+			# Container for translated node
+			tempNode = {"data": {}}
 
-		# Copy over ID
-		tempNode['data']['id'] = node['data']['id']
+			# Copy over ID
+			tempNode['data']['id'] = node['data']['id']
 
-		# Change color property to background color 
-		if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
-			# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
-			tempNode['data']['background_color'] = node['data']['node_fillColor']
+			# Change color property to background color 
+			if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
+				# tempNode['data']['background_color'] = rgb_to_hex(node['data']['node_fillColor'])
+				tempNode['data']['background_color'] = node['data']['node_fillColor']
 
-		# If user wants to display something in node, add 'content'
-		if 'name' in node['data']:
-			tempNode['data']['content'] = node['data']['name']
+			# If user wants to display something in node, add 'content'
+			if 'name' in node['data']:
+				tempNode['data']['content'] = node['data']['name']
 
-		# No shape is provided as far as I know, so I pad in an ellipse
-		tempNode['data']['shape'] = "ellipse"
-		parseJson['graph']['nodes'].append(tempNode)
+			# No shape is provided as far as I know, so I pad in an ellipse
+			tempNode['data']['shape'] = "ellipse"
+			parseJson['graph']['nodes'].append(tempNode)
 
-	# Go through all the edges
-	for edge in csjs['elements']['edges']:
+		# Go through all the edges
+		for edge in csjs['elements']['edges']:
 
-		tempEdge = {"data": {}}
+			tempEdge = {"data": {}}
 
-		# Copy over source and target
-		tempEdge['data']['source'] = edge['data']['source']
-		tempEdge['data']['target'] = edge['data']['target']
+			# Copy over source and target
+			tempEdge['data']['source'] = edge['data']['source']
+			tempEdge['data']['target'] = edge['data']['target']
 
-		# If there is a name property, it will be in a popup
-		if 'name' in edge['data']:
-			tempEdge['data']['popup'] = edge['data']['name']
+			# If there is a name property, it will be in a popup
+			if 'name' in edge['data']:
+				tempEdge['data']['popup'] = edge['data']['name']
 
-		# Add edges to json
-		parseJson['graph']['edges'].append(tempEdge)
+			# Add edges to json
+			parseJson['graph']['edges'].append(tempEdge)
 
-	# If there is a title in the graph
-	if 'name' in csjs['data']:
-		parseJson['metadata']['name'] = csjs['data']['name']
-	else:
-		parseJson['metadata']['name'] = "temp_graph"
-
-	# No tags or description since CYJS doesn't give me any
-	parseJson['metadata']['tags'] = []
-	parseJson['metadata']['description'] = ""
-
-	title = title or parseJson['metadata']['name']
-
-	# Insert converted graph to GraphSpace and provide URL
-	# for logged in user
-	if username != None:
-		result = insert_graph(username, title, json.dumps(parseJson))
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+		# If there is a title in the graph
+		if 'name' in csjs['data']:
+			parseJson['metadata']['name'] = csjs['data']['name']
 		else:
-			return {"Error": result}
-	else:
-		# Create a unique user and insert graph for that name
-		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
-		public_user_id = public_user_id.replace('-', '_')
-		
-		first_request = create_public_user(public_user_id)
+			parseJson['metadata']['name'] = "temp_graph"
 
-		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parseJson))
+		# No tags or description since CYJS doesn't give me any
+		parseJson['metadata']['tags'] = []
+		parseJson['metadata']['description'] = ""
 
-			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
-			else: 
+		title = title or parseJson['metadata']['name']
+
+		# Insert converted graph to GraphSpace and provide URL
+		# for logged in user
+		if username != None:
+			result = insert_graph(username, title, json.dumps(parseJson))
+			if result == None:
+				return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+			else:
 				return {"Error": result}
 		else:
-			return {"Error": result}
+			# Create a unique user and insert graph for that name
+			public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+			public_user_id = public_user_id.replace('-', '_')
+			
+			first_request = create_public_user(public_user_id)
 
+			if first_request == None:
+				result = insert_graph(public_user_id, title, json.dumps(parseJson))
+
+				if result == None: 
+					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
+				else: 
+					return {"Error": result}
+			else:
+				return {"Error": result}
+	except Exception as ex:
+		return {"Error": "Seems to be an error with " + ex + " property."}
+		
 def uploadJSONFile(username, graphJSON, title):
 	'''
 		Uploads JSON file to GraphSpace via /upload.
@@ -1776,42 +1543,45 @@ def uploadJSONFile(username, graphJSON, title):
 
 	'''
 
-	# Loads JSON format
-	parseJson = json.loads(graphJSON)
+	try: 
+		# Loads JSON format
+		parseJson = json.loads(graphJSON)
 
-	# Creates metadata tag
-	if 'metadata' not in parseJson:
-		parseJson['metadata'] = {}
+		# Creates metadata tag
+		if 'metadata' not in parseJson:
+			parseJson['metadata'] = {}
 
-	# If name is not provided, name is data
-	if 'name' not in parseJson['metadata']:
-		parseJson['metadata']['name'] = "graph_" + str(datetime.now())
+		# If name is not provided, name is data
+		if 'name' not in parseJson['metadata']:
+			parseJson['metadata']['name'] = "graph_" + str(datetime.now())
 
-	title = title or parseJson['metadata']['name']
+		title = title or parseJson['metadata']['name']
 
-	# Insert converted graph to GraphSpace and provide URL
-	# for logged in user	
-	if username != None:
-		result = insert_graph(username, title, json.dumps(parseJson))
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title}
-		else:
-			return {"Error": result}
-	else:
-		# Create a unique user and insert graph for that name
-		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
-		public_user_id = public_user_id.replace('-', '_')
-		
-		first_request = create_public_user(public_user_id)
-
-		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parseJson))
-			if result == None: 
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
-			else: 
+		# Insert converted graph to GraphSpace and provide URL
+		# for logged in user	
+		if username != None:
+			result = insert_graph(username, title, json.dumps(parseJson))
+			if result == None:
+				return {"Success": URL_PATH + "graphs/" + username + "/" + title}
+			else:
 				return {"Error": result}
 		else:
-			return {"Error": result}
+			# Create a unique user and insert graph for that name
+			public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+			public_user_id = public_user_id.replace('-', '_')
+			
+			first_request = create_public_user(public_user_id)
+
+			if first_request == None:
+				result = insert_graph(public_user_id, title, json.dumps(parseJson))
+				if result == None: 
+					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
+				else: 
+					return {"Error": result}
+			else:
+				return {"Error": result}
+	except Exception as ex:
+		return {"Error": ex}
 
 def delete_30_day_old_anon_graphs():
 	# Create database connection
@@ -1920,10 +1690,13 @@ def find_edge(uid, gid, edge_to_find, search_type):
 				for j in xrange(len(head_nodes)):
 
 					try:
-						# Aggregate all matching edges
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_nodes[j]).filter(models.Edge.tail_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
-
 						edge_list += matching_edges
+
+						# # Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
+						# matching_edges = db_session.query(models.Edge).filter(models.Edge.tail_node_id == head_nodes[j]).filter(models.Edge.head_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
+						# edge_list += matching_edges
 
 					except NoResultFound:
 						print "No matching edges"
@@ -1942,10 +1715,13 @@ def find_edge(uid, gid, edge_to_find, search_type):
 				if tail_node != None and head_node != None:
 
 					try:
-						# Aggregate all matching edges
+						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
 						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_node).filter(models.Edge.tail_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
-
 						edge_list += matching_edges
+
+						# # Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
+						# matching_edges = db_session.query(models.Edge).filter(models.Edge.tail_node_id == head_node).filter(models.Edge.head_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
+						# edge_list += matching_edges
 
 					except NoResultFound:
 						print "No matching edges"
@@ -1972,11 +1748,13 @@ def find_node(uid, gid, node_to_find, search_type):
 
 	# Create database connection
 	db_session = data_connection.new_session()
+	print uid, gid, node_to_find, search_type
 
 	try:
 		id_list = []
 		# Filter by search types
 		if search_type == "partial_search":
+
 			# Get all matching labels
 			labels = db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + node_to_find + "%")).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
@@ -2031,13 +1809,17 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, unlisted=1, default_layout_id=None, skip=None):
+def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, shared_with_groups=0, default_layout_id=None):
 	'''
 		Inserts a uniquely named graph under a username.
 
 		:param username: Email of user in GraphSpace
 		:param graphname: Name of graph to insert
 		:param graph_json: JSON of graph
+		:param created: When was graph created
+		:param public: Is graph public?
+		:param shared_with_groups: Is graph shared with any groups?
+		:param default_layout_id: Default layout of the graph
 	'''
 
 	# Check to see if graph already exists
@@ -2050,11 +1832,11 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	# Do we want to skip validation checking - Done for CYJS files
-	if skip != True:
-		validationErrors = validate_json(graph_json)
-		if validationErrors != None:
-			return validationErrors
+	validationErrors = validate_json(graph_json)
+
+	print validationErrors
+	if validationErrors != None:
+		return validationErrors 
 
 	# Get the current time
 	curTime = datetime.now()
@@ -2085,7 +1867,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 		created = curTime
 
 	# Construct new graph to add to database
-	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, shared_with_groups = unlisted, default_layout_id = default_layout_id)
+	new_graph = models.Graph(graph_id = graphname, user_id = username, json = json.dumps(graphJson, sort_keys=True, indent=4), created = created, modified = modified, public = public, shared_with_groups = shared_with_groups, default_layout_id = default_layout_id)
 
 	db_session.add(new_graph)
 	db_session.commit()
@@ -2188,6 +1970,10 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		if 'label' in node['data']:
 			node['data']['content'] = node['data']['label']
 			del node['data']['label']
+
+		# If the node has any content inside of it, display that content, otherwise, just make it an empty string
+		if 'content' not in node['data']:
+			node['data']['content'] = ""
 
 		# Add node to table
 		new_node = models.Node(node_id = node['data']['id'], label = node['data']['content'], user_id = username, graph_id = graphname, modified = modified)
@@ -2929,7 +2715,9 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 				h_node =  head_nodes[i][0]
 				t_node =  tail_nodes[j][0]
 				
+				# We make two queries because we want to have tail:head and head:tail search (to resolve undirected edges searching)
 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.user_id == uid).filter(models.GroupToGraph.user_id == models.Edge.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 		graph_dict = dict()
 		# Remove duplicates for all graphs that match have the same edge matching search term
@@ -3525,28 +3313,37 @@ def changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn):
 	db_session = data_connection.new_session()
 
 	# Get the layout
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == old_layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+	new_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == old_layout_name).first()
+
+	# Check to see if there already is a layout with that name for this user
+	check_layout_name = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.layout_name == new_layout_name).first()
+
+	if check_layout_name != None:
+		db_session.close()
+		return "Can't change layout name to " + new_layout_name + " because you already have a layout with that name for this graph."
 
 	# Change the name
-	if layout != None:
-		layout.layout_name = new_layout_name
+	if new_layout != None:
+		new_layout.layout_name = new_layout_name
 		db_session.commit()
 		
 	db_session.close()
+	return None
 
-def makeLayoutPublic(uid, gid, public_layout):
+def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 	'''
 		Makes a layout public.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param public_layout: Name of layout
+		:param layout_owner: Owner of layout
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
 	# Get layouts to make public
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == public_layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == layout_owner).first()
 	
 	# If layout exists, make it public
 	if layout != None:
@@ -3567,15 +3364,14 @@ def makeLayoutPublic(uid, gid, public_layout):
 
 	db_session.close()
 
-def save_layout(layout_id, layout_name, owner, graph, user, json, public, shared_with_groups):
+def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
 	'''
 		Saves layout of specific graph.
 
-		:param layout_id: Id of layout to save
+		:param graph_id: Name of the graph
+		:param graph_owner: Owner of the graph
 		:param layout_name: Name of layout to save
-		:param owner: Owner of the graph
-		:param graph: Name of the graph
-		:param user: user making those changes
+		:param layout_owner: Owner of layout
 		:param json: JSON of the graph
 		:param public: Is layout public or not
 		:param shared_with_groups: Is layout shared with groups
@@ -3583,43 +3379,44 @@ def save_layout(layout_id, layout_name, owner, graph, user, json, public, shared
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	# Checks to see if layout for graph already exists
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == graph).first()
+	# Checks to see if there is a layout for this specific graph and the same layout name which the person saving the layout already owns
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
 
+	# If no such layout exists, add it
 	if layout != None:
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = owner, graph_id = graph, user_id = user, json = json, public = public, shared_with_groups = shared_with_groups)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups)
 
 	db_session.add(new_layout)
 	db_session.commit()
 	db_session.close()
 
-def deleteLayout(uid, gid, layoutToDelete, loggedIn):
+def deleteLayout(uid, gid, layoutToDelete, layout_owner):
 	'''
 		Deletes layout from graph.
 
 		:param uid: Owner of graph
 		:param gid: Name of graph
 		:param layoutToDelete: name of layout to delete
-		:param loggedIn: User that is deleting the graph
+		:param layout_owner: User that is deleting the graph
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
 	try:
 		# Get the specific layout
-		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).first()
+		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layoutToDelete).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == layout_owner).first()
 
 		if layout == None:
-			return None
+			return "Layout does not exist!"
 
 		# Get graph which may contain a layout 
 		graph = db_session.query(models.Graph).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).first()
 
 		if graph == None:
-			return None
+			return "Graph does not exist!"
 
 		# If layout being deleted is graphs default layout, remove both
 		if graph.default_layout_id == layout.layout_id:
@@ -3635,29 +3432,39 @@ def deleteLayout(uid, gid, layoutToDelete, loggedIn):
 		db_session.close()
 		return ex
 
-def get_layout_for_graph(layout_name, graph_id, graph_owner, loggedIn):
+def get_layout_for_graph(layout_name, layout_owner, graph_id, graph_owner, loggedIn):
 	'''
 		Retrieves specific layout for a certain graph.
 
 		:param layout_name: Name of layout
-		:param layout_graph: Name of graph
 		:param layout_owner: Owner of layout
+		:param graph_id: Name of graph
+		:param graph_owner: Owner of graph
 		:param loggedIn: Logged in user
-		:return Layout: [layout]
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	try:
-		# Get layout for graph if it exists
-		layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.owner_id == graph_owner).one()
+	# If the person viewing the layout is not the graph owner or the graph is not public
+	if loggedIn != graph_owner and is_public_graph(graph_owner, graph_id) != True:
+		# Check to see if user is a member of any groups that graph is shared with
+		user_is_member = can_see_shared_graph(loggedIn, graph_owner, graph_id)
 
+		# If user is not a member, don't display layout
+		if user_is_member == None:
+			return None
+	
+	# Get layout for graph if it exists
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.owner_id == layout_owner).first()
+
+	if layout == None:
+		db_session.close()
+		return None
+	else:
 		db_session.close()
 		return cytoscapePresetLayout(json.loads(layout.json))
 
-	except NoResultFound:
-		db_session.close()
-		return None	
+	
 
 def cytoscapePresetLayout(csWebJson):
 	'''
@@ -3709,13 +3516,14 @@ def get_all_layouts_for_graph(uid, gid):
 		db_session.close()
 		return None	
 
-def share_layout_with_all_groups_of_user(owner, gid, layoutId):
+def share_layout_with_all_groups_of_user(owner, gid, layoutId, layout_owner):
 	'''
 		Shares a layout with all the groups that owner of a graph is a part of.
 		
-		:param uid: Owner of graph
+		:param owner: Owner of graph
 		:param gid: Name of graph
-		:param layoutId: LayoutID of the graph
+		:param layoutId: Layout of the graph
+		:param layout_owner: layout_owner of Layout
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3727,7 +3535,7 @@ def share_layout_with_all_groups_of_user(owner, gid, layoutId):
 		return None
 
 	# Get layout if it exists
-	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).first()
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.layout_name == layoutId).filter(models.Layout.user_id == owner).filter(models.Layout.owner_id == layout_owner).first()
 
 	if layout == None:
 		return None
@@ -3766,14 +3574,10 @@ def get_my_layouts_for_graph(uid, gid, loggedIn):
 
 	try:
 		# Get all layouts for graph that user created
-		layouts = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.shared_with_groups == 0).filter(models.Layout.public == 0).all()
+		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.shared_with_groups == 0).filter(models.Layout.public == 0).all()
 
-		cleaned_layouts = []
-
-		for layout_name in layouts:
-			cleaned_layouts += layout_name
 		db_session.close()
-		return cleaned_layouts
+		return layouts
 
 	except NoResultFound:
 		db_session.close()
@@ -3793,13 +3597,12 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 	db_session = data_connection.new_session()
 
 	try:
+		layout_names = []
 		# Get all groups this graph is shared with
 		all_groups_for_graph = get_all_groups_for_this_graph(uid, gid)
 
 		# Get all groups that the user is a member of
 		all_groups_for_user = get_all_groups_with_member(loggedIn, skip = True)
-
-		cleaned_layout_names = []
 
 		group_dict = dict()
 
@@ -3818,13 +3621,10 @@ def get_shared_layouts_for_graph(uid, gid, loggedIn):
 
 				# If the current user is a member of any groups that have current graph shared in
 				# for group in all_groups_for_graph:
-				layout_names = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
-
-				for name in layout_names:
-					cleaned_layout_names += name
+				layout_names = db_session.query(models.Layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.shared_with_groups == 1).all()
 
 		db_session.close()
-		return cleaned_layout_names
+		return layout_names
 	except NoResultFound:
 		db_session.close()
 		return []
@@ -3850,12 +3650,7 @@ def get_my_shared_layouts_for_graph(uid, gid, loggedIn):
 		# we collect all shared and public layouts.
 		# Note: This is done as a second-measure step and it shouldn't ever matter
 		# because all layouts are set to public when the graph is set to public
-		shared_layouts_uncleaned = db_session.query(models.Layout.layout_name).distinct(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.user_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).all()
-
-		# Get rid of unicode
-		shared_layouts = []
-		for shared_layout in shared_layouts_uncleaned:
-			shared_layouts.append(shared_layout[0])
+		shared_layouts = db_session.query(models.Layout).distinct(models.Layout.layout_name).filter(models.Layout.user_id == uid).filter(models.Layout.owner_id == loggedIn).filter(models.Layout.graph_id == gid).filter(or_(models.Layout.shared_with_groups == 1, models.Layout.public == 1)).all()
 
 		db_session.close()
 		return shared_layouts
@@ -3878,7 +3673,7 @@ def get_public_layouts_for_graph(uid, gid):
 		public_layouts = []
 
 		# Get all the public layouts for a specific graph
-		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
+		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
 
 		# Go through and remove the unicode
 		for public_layout in public_layout_uncleaned:

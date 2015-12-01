@@ -7,7 +7,7 @@ import bcrypt
 import os
 
 URL_PATH = "http://localhost:8000/"
-DB_FULL_PATH = '/Users/Divit/Documents/GRA/GraphSpace/graphspace.db'
+DB_FULL_PATH = os.path.dirname(os.path.realpath("../graphspace.db")) + "/graphspace.db"
 
 def byteify(input):
     if isinstance(input, dict):
@@ -561,6 +561,8 @@ if __name__ == '__main__':
 	graph_name = "example.json"
 
 	tag = "tutorial"
+
+	print DB_FULL_PATH
 
 	testCreateUser(email, password)
 	testCreateUser(email_other, password)

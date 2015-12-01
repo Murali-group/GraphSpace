@@ -11,6 +11,8 @@ $(document).ready(function() {
     window.cy = cytoscape({
       container: $('#csjs')[0],
 
+      elements: graph_json["graph"],
+
       // ** NOTE: REPLACE - WITH _ SO CYTOSCAPEJS WILL RENDER PROPERTIES
 
       //Style properties of NODE body
@@ -53,6 +55,12 @@ $(document).ready(function() {
       .selector('node[background_image_opacity]').css({
         'background-image-opacity': 'data(background_image_opacity)'
       })
+      .selector('node[background_width]').css({
+        'background-width': 'data(background_width)'
+      })
+      .selector('node[background_height]').css({
+        'background-height': 'data(background_height)'
+      })
       .selector('node[background_fit]').css({
         'background-fit': 'data(background_fit)'
       })
@@ -68,8 +76,6 @@ $(document).ready(function() {
       .selector('node[background_clip]').css({
         'background-clip': 'data(background_clip)'
       })
-
-      //HAVE NOT DONE PIE CHART BACKGROUND
 
       //LABEL PROPERTIES
       .selector('node[color]').css({
@@ -87,10 +93,10 @@ $(document).ready(function() {
       .selector('node[font_style]').css({
         'font-style': 'data(font_style)'
       })
-      .selector('node[font-weight]').css({
+      .selector('node[font_weight]').css({
         'font-weight': 'data(font_weight)'
       })
-      .selector('node[text-transform]').css({
+      .selector('node[text_transform]').css({
         'text-transform': 'data(text_transform)'
       })
       .selector('node[text_wrap]').css({
@@ -102,7 +108,7 @@ $(document).ready(function() {
       .selector('node[edge_text_rotation]').css({
         'edge-text-rotation': 'data(edge_text_rotation)'
       })
-      .selector('node[text-opacity]').css({
+      .selector('node[text_opacity]').css({
         'text-opacity': 'data(text_opacity)'
       })
       .selector('node[text_outline_color]').css({
@@ -158,8 +164,8 @@ $(document).ready(function() {
       .selector('edge[curve_style]').css({
         'curve-style': 'data(curve_style)'
       })
-      .selector('edge[haystack-radius]').css({
-        'haystack-radius': 'data(haystack-radius)'
+      .selector('edge[haystack_radius]').css({
+        'haystack-radius': 'data(haystack_radius)'
       })
       .selector('edge[control_point_step_size]').css({
         'control-point-step-size': 'data(control_point_step_size)'
@@ -229,10 +235,11 @@ $(document).ready(function() {
     
     // default layout set to be arbor
     layout: getLayoutFromQuery(),
-    
+
     // draw graph, handle events etc.
     ready: function(){
 
+      //if there is a title, insert title at top of page
       if ($("#title").text().length > 0) {
         $("#graph_title").html("<h1>" + $("#title").text() + "</h1>");
         $(".side_menu").css("margin-top", -50);
@@ -248,7 +255,11 @@ $(document).ready(function() {
       var testEdges = new Array();
 
       setDefaultNodeProperties(graph_json['graph']['nodes'])
+
       // DONE SO OLD GRAPHS WILL DISPLAY
+      // NEW GRAPHS WILL HAVE EVERYTHING HANDLED AT UPLOAD TIME
+      // THIS IS ONLY AS A SECONDARY CHECK
+
       //If the EDGES in graphs already in database don't have color have a default value
       for (var i = 0; i < graph_json['graph']['edges'].length; i++) {
         var edgeData = graph_json['graph']['edges'][i]['data'];
@@ -264,6 +275,7 @@ $(document).ready(function() {
         if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
           edgeData['line_color'] = "black";
         } else {
+
           //Color property maps to line_color
           //DONE TO SUPPORT OLD GRAPHS
           if (edgeData.hasOwnProperty('color')) {
@@ -336,7 +348,7 @@ $(document).ready(function() {
         }
       });
 
-      // //If ther are any terms to be searched for, highlight those terms, if found
+      //If ther are any terms to be searched for, highlight those terms, if found
       if (getQueryVariable('partial_search')) {
           // Initially set search to full matching
           $("#partial_search").attr('checked', true);
@@ -442,13 +454,13 @@ $(document).ready(function() {
       //Posts information to the server regarding the current display of the graph,
       //including position
       $.post(queryString + "/layout/", {
-        layout_id: "1",
         layout_name: layoutName,
         points: JSON.stringify(layout),
         loggedIn: $("#loggedIn").text(),
         "public": 0,
         "unlisted": 0
       }, function (data) {
+        console.log(data);
         if (data.Error) {
           return alert(data.Error);
         }
@@ -461,7 +473,7 @@ $(document).ready(function() {
         }
 
         //If layout, append layout URL
-        layoutUrl += "?layout=" + layoutName;
+        layoutUrl += "?layout=" + layoutName + "&layout_owner=" + $("#loggedIn").text();
 
         //Get all highlighted terms and append them to the 
         //url of each layout.
@@ -511,19 +523,6 @@ $(document).ready(function() {
     $("#searching").val(decodeURIComponent(getQueryVariable($('input[name=match]:checked').val())));
    }
 
-    //DEPRECATED: HERE FOR REFERENCE PURPOSES ONLY
-    //Originally used as an attempt to get a PDF image of graph
-    $("#pdf").click(function (e) {
-      html2canvas($("#csjs").first(), {
-        onrendered: function(canvas) {
-          var imgData = canvas.toDataURL("image/jpeg");
-          var pdf = new jsPDF('landscape');
-          pdf.addImage(imgData, 'JPEG', 0, 0, 300, 210);
-          pdf.save("download.pdf");
-        }
-      });
-    });
-
     //Goes to appropriate help section
     $(".help").click(function (e) {
       e.preventDefault();
@@ -539,7 +538,7 @@ $(document).ready(function() {
     //to the URL.  Be sure to track for if its a partial or exact search
     $(".highlight").click(function (e) {
       e.preventDefault();
-      linkToGraph = $(this).attr('id') + ',';
+      linkToGraph = "?layout=" + $(this).val() + "&layout_owner=" + $(this).attr("id");
 
       //Get all labels form search term
       var labels = $("#search").val().split(',');
@@ -548,27 +547,29 @@ $(document).ready(function() {
       //otherwise append all search terms for full search
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
-            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
             linkToGraph += '&partial_search=';
             for (var i = 0; i < labels.length; i++) {
-              if (labels[i].trim().length > 0) {
+              if (labels[i].trim().length > 0 && i < labels.length - 1) {
                 linkToGraph += labels[i].trim() + ',';
+              } else {
+                linkToGraph += labels[i].trim();
               }
             } 
         }
       } else {
         if (labels.length > 0 && labels[0].length > 0) {
-          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
           linkToGraph += '&full_search=';
           for (var i = 0; i < labels.length; i++) {
-            if (labels[i].trim().length > 0) {
+            if (labels[i].trim().length > 0 && i < labels.length - 1) {
               linkToGraph += labels[i].trim() + ',';
+            } else {
+              linkToGraph += labels[i].trim();
             }
           } 
         }
       }
-
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       //When appropriate icon is clicked, show link
       //otherwise hide it.
@@ -591,19 +592,27 @@ $(document).ready(function() {
 
     //Changes the name of the current layout
     $("#change_layout").click(function (e) {
-      var paths = document.URL.split('/')
       var new_layout_name = $("#new_layout_name").val();
+
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
+      var loggedIn = $("#loggedIn").text();
+      var old_layout_name = $(this).val()
 
       if (new_layout_name.length == 0) {
         return alert("Enter a new layout name!");
       } else {
         $.post('../../../changeLayoutName/', {
-          "gid": decodeURIComponent(paths[paths.length - 1].split("?")[0]),
-          "uid": decodeURIComponent(paths[paths.length - 2]),
-          "loggedIn": $("#loggedIn").text(),
-          "old_layout_name": $(this).val(),
+          "gid": gid,
+          "uid": uid,
+          "loggedIn": loggedIn,
+          "old_layout_name": old_layout_name,
           "new_layout_name": new_layout_name
         }, function (data) {
+          if (data.Error) {
+            alert(data.Error);
+            return;
+          }
           window.location.href = data.url; 
         });
       }
@@ -613,18 +622,17 @@ $(document).ready(function() {
     $(".remove").click(function (e) {
       e.preventDefault();
 
-      var paths = document.URL.split('/')
-      console.log(paths);
+      console.log($(this));
       var publicLayout = $(this).val();
-      var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var userId = $(this)[0]["id"];
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../deleteLayout/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
         'layout': publicLayout,
-        'user_id': userId
+        'layout_owner': userId
       }, function (data) {
         if (data.Error) {
           return alert(data.Error);
@@ -640,40 +648,41 @@ $(document).ready(function() {
     //including all search terms
     $(".layout_buttons").click(function (e) {
       e.preventDefault();
-      // var searchTerms = getHighlightedTerms();
-      if (document.URL.indexOf('?') > -1) {
-        var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-      } else {
-        var linkToGraph = document.URL;
+   
+      var linkToGraph = $(this).attr('href');
+
+      if (linkToGraph == undefined) {
+        //Get hardcoded automatic layout ** doesn't need layout_owner **
+        linkToGraph = window.location.pathname + "?layout=" + $(this).attr("id");
       }
-
-      linkToGraph += '?layout=' + $(this).attr('href') + ',';
-
       var labels = $("#search").val().split(',');
 
+      //Appends partial search terms as part of query string
       if ($("#partial_search").is(':checked')) {
         if (labels.length > 0 && labels[0].length > 0) {
-            linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+            // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
             linkToGraph += '&partial_search=';
             for (var i = 0; i < labels.length; i++) {
-              if (labels[i].trim().length > 0) {
+              if (labels[i].trim().length > 0 && i < labels.length - 1) {
                 linkToGraph += labels[i].trim() + ',';
+              } else {
+                linkToGraph += labels[i].trim();
               }
             } 
         }
       } else {
         if (labels.length > 0 && labels[0].length > 0) {
-          linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+          // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
           linkToGraph += '&full_search=';
           for (var i = 0; i < labels.length; i++) {
-            if (labels[i].trim().length > 0) {
+            if (labels[i].trim().length > 0 && i < labels.length - 1) {
               linkToGraph += labels[i].trim() + ',';
+            } else {
+                linkToGraph += labels[i].trim();
             }
           } 
         }
       }
-
-      linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
       if (e.target == this) {
         window.location.href = linkToGraph;
@@ -686,15 +695,15 @@ $(document).ready(function() {
 
       var paths = document.URL.split('/');
       var publicLayout = $(this).val();
-      var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var userId = $(this).attr("id");
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../shareLayoutWithGroups/', {
         'layoutId': $(this).val(),
         'gid': gid,
-        'owner': ownerId,
-        'uid': userId
+        'uid': uid,
+        'loggedIn': userId
       }, function (data) {
         if (data.Error) {
           return alert(data.Error);
@@ -710,23 +719,25 @@ $(document).ready(function() {
       var paths = document.URL.split('/')
       var publicLayout = $(this).val();
       var userId = $("#loggedIn").text();
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       $.post('../../../getGroupsForGraph/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
       }, function (data) {
+        console.log(data);
         var group_options = "";
         if (data['Group_Information'].length > 0) {
+          //Used for modal to determine if graph is shared with group or not
           for (var i = 0; i < data['Group_Information'].length; i++) {
             console.log(data['Group_Information'][i]);
             if (data['Group_Information'][i]['graph_shared'] == true) {
-              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+              if (uid == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
             } else {
-              if (ownerId == userId || data['Group_Information'][i]['group_owner'] == userId) {
+              if (uid == userId || data['Group_Information'][i]['group_owner'] == userId) {
                 group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
               } 
             }
@@ -749,8 +760,8 @@ $(document).ready(function() {
     //Shares graphs with specified groups user is a member/owner of
     $("#share_graph_with_selected_groups").click(function (e) {
       var paths = document.URL.split('/')
-      var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-      var ownerId = decodeURIComponent(paths[paths.length - 2]);
+      var gid = $("#gid").text();
+      var uid = $("#uid").text();
 
       var all_groups = {}
       var groups_to_share_with = [];
@@ -762,7 +773,8 @@ $(document).ready(function() {
         }
       });
 
-
+      //If user clicks a group to share with, get all those groups and send
+      //to server so multiple groups can share one graph with one request
       for (var key in all_groups) {
         if (all_groups[key] == true) {
           groups_to_share_with.push(key);
@@ -773,7 +785,7 @@ $(document).ready(function() {
 
       $.post('../../../shareGraphWithGroups/', {
         'gid': gid,
-        'owner': ownerId,
+        'owner': uid,
         'groups_to_share_with' : groups_to_share_with,
         'groups_not_to_share_with': groups_not_to_share_with
       }, function (data) {
@@ -918,8 +930,8 @@ function searchValues(search_type, labels) {
   //so cytoscape will recognize the correct element
   $.post("../../../retrieveIDs/", {
     'values': labels,
-    "gid": decodeURIComponent(paths[paths.length - 1].split("?")[0]),
-    "uid": decodeURIComponent(paths[paths.length - 2]),
+    "gid": $("#gid").text(),
+    "uid": $("#uid").text(),
     "search_type": search_type 
   }, function (data) {
     console.log(data);
@@ -935,12 +947,12 @@ function searchValues(search_type, labels) {
     var k_problems = [];
     for (var i = 0; i < labels.length; i++) {
       if (data[labels[i]].length == 0) {
-        $("#search_error").css("display", "block");
         if (labels[i].trim().length == 0) {
           $("#search_error_text").append("Please enter node or edge name!<br>");
         } else {
           $("#search_error_text").append(labels[i] + " not found!<br>");
         }
+        $("#search_error").css("display", "block");
         $("#accordion_search").accordion({
             collapsible: true,
             heightStyle: "content"
@@ -948,6 +960,7 @@ function searchValues(search_type, labels) {
         $("#search_terms").html(oldHtml);
       }
 
+      //Get the value of k if it exists
       var k_val = $("#input_k").val();
 
 
@@ -1002,7 +1015,6 @@ function searchValues(search_type, labels) {
       } else {
         message +=  " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
       }
-      
       $("#search_error_text").append(message);
     }
 
@@ -1036,7 +1048,7 @@ function searchValues(search_type, labels) {
           }
         }
 
-        linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
+        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
         $("#url").attr('href', linkToGraph);
         $("#url").css('text-decoration', 'underline');
@@ -1218,69 +1230,15 @@ function getLayoutFromQuery() {
         avoidOverlap: true,
         animate: false
       }
-    } else if (query == "default_dagre") {
-       graph_layout = {
-        name: "dagre",
-        fit: true,
-        padding: 10,
-        animate: true,
-        nodeSep: 50,
-        edgeSep: 50
-      }
     } else if (query == 'default_cose') {
       graph_layout = {
-        name: "cose",
-        padding: 10,
-        fit: true,
-        animate: true,
-        nodeOverlap: 30
+        name: "cose"
       }
-    } else if (query == "default_cola") {
+    } else if (query == "default_grid") {
       graph_layout = {
-        name: "cola",        
-        fit: true,
-        nodeSpacing: function( node ){ return 20; },
-        padding: 10,
-        animate: true,
-        avoidOverlap: true
-      }
-    }  else if (query == "default_arbor") {
-      graph_layout = {
-        name: "arbor",
-        padding: 30,
-        fit: false,
-        animate: true,
-        maxSimulationTime: 1000
-      }
-    }  else if (query == "default_springy") {
-      graph_layout = {
-        name: 'springy',
-
-        animate: true, // whether to show the layout as it's running
-        maxSimulationTime: 4000, // max length in ms to run the layout
-        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-        fit: true, // whether to fit the viewport to the graph
-        padding: 30, // padding on fit
-        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-        random: false, // whether to use random initial positions
-        infinite: false, // overrides all other options for a forces-all-the-time mode
-        ready: undefined, // callback on layoutready
-        stop: undefined, // callback on layoutstop
-
-        // springy forces
-        stiffness: 400,
-        repulsion: 400,
-        damping: 0.5
+        name: "grid"
       }
     } else {
-      // var layout = getQueryVariable('layout');
-      // if (layout.hasOwnProperty('json')) {
-      //   console.log(layout.json);
-      //   graph_layout = {
-      //     name: 'preset',
-      //     positions: JSON.parse(layout.json)
-      //   };
-      // }
 
       $("#auto").removeClass('active');
       $("#manual").addClass('active');
@@ -1357,20 +1315,19 @@ function colourNameToHex(colour)
 $(".default").click(function(e) {
   var paths = document.URL.split('/')
 
-    var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
+    var gid = $("#gid").text();
 
     if (gid.charAt(gid.length - 1) == '/') {
       gid = gid.substring(0, gid.length - 1);
     }
     
-    var ownerId = decodeURIComponent(paths[paths.length - 2]);
-
-    console.log('GID: ' + gid + ", UID: " + ownerId);
+    var uid = $("#uid").text();
 
   $.post('../../../setDefaultLayout/', {
+    'layoutOwner': $(this).attr("id"),
     'layoutId': $(this).val(),
     'gid': gid,
-    'uid': ownerId
+    'uid': uid
   }, function (data) {
     if (data.Error) {
       return alert(data.Error);
@@ -1384,13 +1341,14 @@ $(".default").click(function(e) {
 */
 $(".removeDefault").click(function(e) {
   var paths = document.URL.split('/')
-  var gid = decodeURIComponent(paths[paths.length - 1].split("?")[0]);
-  var ownerId = decodeURIComponent(paths[paths.length - 2]);
+  var gid = $("#gid").text();
+  var uid = $("#uid").text();
 
   $.post('../../../removeDefaultLayout/', {
+    'layoutOwner': $(this).attr("id"),
     'layoutId': $(this).val(),
     'gid': gid,
-    'uid': ownerId
+    'uid': uid
   }, function (data) {
     if (data.Error) {
       return alert(data.Error);
@@ -1410,27 +1368,30 @@ function setDefaultNodeProperties(nodeJSON) {
     var nodeData = nodeJSON[i]['data'];
 
     //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+    //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
+    //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
     var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
 
-    if (acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+    //If the node has a shape, make sure that shape is recognized by CytoscapeJS
+    //Otherwise, make shape an ellipse
+    if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
 
+      //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
       if (nodeData['shape'].toLowerCase() == 'diamond') {
         nodeData['shape'] = 'octagon';
       } else if (nodeData['shape'] == 'square') {
-        if (nodeData['content'].length == 0) {
-          nodeData['shape'] = 'rectangle';
-          nodeData['height'] = 20;
-          nodeData['width'] = 20;
-        } else {
           nodeData['shape'] = "rectangle"
-        }
       } else {
+        //Make default shape an ellipse
         nodeData['shape'] = 'ellipse';
       }
+    } else if (nodeData.hasOwnProperty('shape') == false) {
+      nodeData['shape'] = "ellipse";
     } else {
       nodeData['shape'] = nodeData['shape'].toLowerCase();
     }
 
+    //Pick default color if nothing is provided
     if (nodeData['background_color'] == undefined) {
       nodeData['background_color'] = "yellow";
     } else {
@@ -1442,6 +1403,19 @@ function setDefaultNodeProperties(nodeJSON) {
           nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
         }
        }
+    }
+
+    // //Set border color to be black by default
+    // if (nodeData["border_color"] == undefined) {
+    //   nodeData["border_color"] = "#888";
+    // }
+
+    if (nodeData['text_halign'] == undefined) {
+      nodeData["text_halign"] = "center";
+    }
+
+    if (nodeData["text_valign"] == undefined) {
+      nodeData["text_valign"] = "center";
     }
   }
 }
@@ -1497,4 +1471,3 @@ function setBarToValue(inputId, barId) {
   }
   showOnlyK();
 }
-

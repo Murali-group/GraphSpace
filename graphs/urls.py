@@ -42,6 +42,7 @@ urlpatterns = patterns('',
 
         # help page
         url(r'^help/$', views.help, name='help'),
+        url(r'^help/anna$', views.help_anna, name='help_anna'),
         url(r'^help/tutorial$', views.help_tutorial, name='help_tutorial'),
         url(r'^help/programmers/$', views.help_programmers, name='help_programmers'),
         url(r'^help/graphs/$', views.help_graphs, name='help_graphs'),

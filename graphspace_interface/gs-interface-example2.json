@@ -1,0 +1,361 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n4", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n4"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n5", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n5"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n6", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n6"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n7", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n7"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n0", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n0"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n1", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n1"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n2", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n2"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n3", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n3"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n8", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n8"
+                }
+            }, 
+            {
+                "data": {
+                    "text_outline_color": "#880", 
+                    "border_color": "#880", 
+                    "height": 40, 
+                    "content": "node\n9", 
+                    "width": 60, 
+                    "shape": "ellipse", 
+                    "text_wrap": "wrap", 
+                    "text_outline_width": 4, 
+                    "border_width": 2, 
+                    "background_color": "yellow", 
+                    "id": "node\n9"
+                }
+            }
+        ], 
+        "edges": [
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n4", 
+                    "target": "node\n5", 
+                    "width": 1, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n4", 
+                    "target": "node\n7", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n4", 
+                    "target": "node\n2", 
+                    "width": 4, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n6", 
+                    "target": "node\n7", 
+                    "width": 2, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n6", 
+                    "target": "node\n0", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n7", 
+                    "target": "node\n5", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n1", 
+                    "target": "node\n4", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n1", 
+                    "target": "node\n8", 
+                    "width": 3, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n2", 
+                    "target": "node\n0", 
+                    "width": 4, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n2", 
+                    "target": "node\n8", 
+                    "width": 4, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n2", 
+                    "target": "node\n2", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n3", 
+                    "target": "node\n4", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n3", 
+                    "target": "node\n7", 
+                    "width": 1, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n8", 
+                    "target": "node\n5", 
+                    "width": 2, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n8", 
+                    "target": "node\n7", 
+                    "width": 2, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n8", 
+                    "target": "node\n1", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n9", 
+                    "target": "node\n6", 
+                    "width": 5, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }, 
+            {
+                "data": {
+                    "line_color": "#000000", 
+                    "source": "node\n9", 
+                    "target": "node\n7", 
+                    "width": 1, 
+                    "directed": "true", 
+                    "target_arrow_color": "#000000", 
+                    "target_arrow_shape": "triangle"
+                }
+            }
+        ]
+    }, 
+    "metadata": {
+        "title": "", 
+        "description": "", 
+        "tags": []
+    }
+}
