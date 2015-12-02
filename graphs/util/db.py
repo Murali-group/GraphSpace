@@ -21,6 +21,7 @@ import graphs.util.db_init as db_init
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import and_, or_, tuple_
 from sqlalchemy import distinct
+from sqlalchemy import update
 
 import graphs.models as models
 
