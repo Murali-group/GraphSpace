@@ -1370,20 +1370,23 @@ function setDefaultNodeProperties(nodeJSON) {
     //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
     //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
     //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
-    var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star"];
+    var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid","polygon"];
 
     //If the node has a shape, make sure that shape is recognized by CytoscapeJS
     //Otherwise, make shape an ellipse
     if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
 
       //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
-      if (nodeData['shape'].toLowerCase() == 'diamond') {
-        nodeData['shape'] = 'octagon';
-      } else if (nodeData['shape'] == 'square') {
+      if (nodeData['shape'] == 'square') {
           nodeData['shape'] = "rectangle"
       } else {
         //Make default shape an ellipse
         nodeData['shape'] = 'ellipse';
+      }
+
+      //If shape is not found, default to ellipse
+      if (acceptedShapes.indexOf(nodeData["shape"]) == -1) {
+        nodeData["shape"] = "ellipse";
       }
     } else if (nodeData.hasOwnProperty('shape') == false) {
       nodeData['shape'] = "ellipse";

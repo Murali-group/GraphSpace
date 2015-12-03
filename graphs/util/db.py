@@ -134,23 +134,21 @@ def sendForgotEmail(email):
 	#create a new db session
 	db_session = data_connection.new_session()
 
-	try:
-		# Retrieve reset code attached to email
-		reset_code = db_session.query(models.PasswordReset.code).filter(models.PasswordReset.user_id == email).one()
+	# Retrieve reset code attached to email
+	reset_code = db_session.query(models.PasswordReset.code).filter(models.PasswordReset.user_id == email).first()
 
-		# Construct email message
-		mail_title = 'Password Reset Information for GraphSpace!'
-		message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + reset_code[0]
-		emailFrom = "GraphSpace Admin"
-		
-		# Sends email to respective user
-		send_mail(mail_title, message, emailFrom, [email], fail_silently=True)
-		db_session.close()
-		return "Email Sent!"
-	except NoResultFound:
-		print "User " + email + " does not exist"
-		db_session.close()
+	if reset_code == None:
 		return None
+
+	# Construct email message
+	mail_title = 'Password Reset Information for GraphSpace!'
+	message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + reset_code[0]
+	emailFrom = "GraphSpace Admin"
+	
+	# Sends email to respective user
+	send_mail(mail_title, message, emailFrom, [email], fail_silently=False)
+	db_session.close()
+	return "Email Sent!"
 
 def retrieveResetInfo(reset_code):
 	'''
@@ -3670,14 +3668,8 @@ def get_public_layouts_for_graph(uid, gid):
 	db_session = data_connection.new_session()
 
 	try:
-		public_layouts = []
-
 		# Get all the public layouts for a specific graph
-		public_layout_uncleaned = db_session.query(models.Layout.layout_name).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
-
-		# Go through and remove the unicode
-		for public_layout in public_layout_uncleaned:
-			public_layouts.append(public_layout[0])
+		public_layouts = db_session.query(models.Layout).filter(models.Layout.user_id == uid).filter(models.Layout.graph_id == gid).filter(models.Layout.public == 1).all()
 
 		db_session.close()
 		return public_layouts
