@@ -3870,7 +3870,8 @@ def getGraphInfo(uid, gid):
 	try:
 		# Retrieves json, public (visibility), and graph id of graph
 		data = db_session.query(models.Graph.json, models.Graph.public, models.Graph.graph_id).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).one()
-		data[0] = graph.json = verify_json(data[0])
+		data = list(data)
+		data[0] = verify_json(data[0])
 
 		db_session.close()
 		return data
