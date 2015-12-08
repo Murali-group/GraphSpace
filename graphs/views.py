@@ -396,7 +396,6 @@ def view_graph(request, uid, gid):
     if request.method == "GET" and 'view_json' in request.GET:
         return HttpResponseRedirect("/json/%s/%s" % (uid, gid))
 
-    print context
     return render(request, 'graphs/view_graph.html', context)
 
 def view_json(request, uid, gid):

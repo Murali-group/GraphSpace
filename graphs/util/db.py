@@ -14,7 +14,7 @@ import sqlite3 as lite
 
 from django.conf import settings
 
-from json_validator import validate_json, assign_edge_ids, convert_json
+from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
 import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
@@ -605,6 +605,8 @@ def get_all_info_for_graph(uid, gid):
 
 	if graph == None:
 		return None
+
+	graph.json = verify_json(graph.json)
 
 	return (graph.json, graph.public, graph.graph_id)
 
@@ -1833,7 +1835,6 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 
 	validationErrors = validate_json(graph_json)
 
-	print validationErrors
 	if validationErrors != None:
 		return validationErrors 
 
@@ -3869,6 +3870,8 @@ def getGraphInfo(uid, gid):
 	try:
 		# Retrieves json, public (visibility), and graph id of graph
 		data = db_session.query(models.Graph.json, models.Graph.public, models.Graph.graph_id).filter(models.Graph.graph_id == gid).filter(models.Graph.user_id == uid).one()
+		data[0] = graph.json = verify_json(data[0])
+
 		db_session.close()
 		return data
 	except Exception as ex:

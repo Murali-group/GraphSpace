@@ -1367,7 +1367,7 @@ function setDefaultNodeProperties(nodeJSON) {
   for (var i = 0; i < nodeJSON.length; i++) {
     var nodeData = nodeJSON[i]['data'];
 
-    //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.3.9
+    //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
     //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
     //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
     var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid","polygon"];
@@ -1408,10 +1408,10 @@ function setDefaultNodeProperties(nodeJSON) {
        }
     }
 
-    // //Set border color to be black by default
-    // if (nodeData["border_color"] == undefined) {
-    //   nodeData["border_color"] = "#888";
-    // }
+    //Set border color to be black by default
+    if (nodeData["border_color"] == undefined) {
+      nodeData["border_color"] = "#888";
+    }
 
     if (nodeData['text_halign'] == undefined) {
       nodeData["text_halign"] = "center";
@@ -1420,6 +1420,7 @@ function setDefaultNodeProperties(nodeJSON) {
     if (nodeData["text_valign"] == undefined) {
       nodeData["text_valign"] = "center";
     }
+
   }
 }
 

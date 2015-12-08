@@ -31,6 +31,20 @@ ALLOWED_ARROW_FILL = ['filled', 'hollow']
 
 import json
 
+def verify_json(graph_json):
+    graph_json = json.loads(graph_json)
+
+    for node in graph_json["graph"]["nodes"]:
+        node = node["data"]
+        shape = node["shape"].lower()
+
+        if shape not in ALLOWED_NODE_SHAPES:
+            shape = "ellipse"
+
+        node["shape"] = shape
+    
+    return json.dumps(graph_json)
+
 def validate_json(graphJson):
     """
     Validates JSON to see if all properties are consistent with API.
