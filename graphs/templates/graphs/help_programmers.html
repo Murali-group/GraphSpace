@@ -7,16 +7,15 @@
     <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
     <li><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
     <li class="active"><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
-<!--     <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
- -->  </ul>
+    <li><a href="{% url 'help_anna' %}" style="text-align:center">Anna's Section</a></li>
+ </ul>
 <hr>
 
-<b>
-GraphSpace provides a RESTful API for managing your graphs and facilitating graph uploads. <br><br>The API offers the following advantages: <ul><li>A registered user can write software to upload several graphs in an automated manner</li> <li>In the JSON for every uploaded graph, the user may specific the graph’s names, details about it, and information on every node and edge.</li><!-- li>< We provide a simple Python script that abstracts away the details of the REST API and illustrates how a user may upload graphs programmatically.</li> --></ul>
-Graphs are represented in <a href="http://json.org">JSON</a> format.<br><br>
-<p>In order to fully utilize features of this REST API, one must have an account with GraphSpace.</p>
+This page describes the RESTful API provided by GraphSpace for uploading and managing your graphs. This API offers the following advantages: <ul><li>A user with an account can write software to upload several graphs in an automated manner.</li> <li>In the <a href="http://json.org">JSON</a> for every uploaded graph, the user may specific the graph’s names, details about it, and information on every node and edge.</li><!-- li>< We provide a simple Python script that abstracts away the details of the REST API and illustrates how a user may upload graphs programmatically.</li> --></ul>
+<p>In order to fully utilize the features of this RESTful API, you must have an account on GraphSpace.</p>
 </p>
-</b>
+
+
 
 <h3>Prerequisites</h3>
 
@@ -38,7 +37,7 @@ sudo apt-get install curl
 <p>Example GET graph request in the documentation is: <br>
 <pre>curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo</pre></p>
 
-<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with password "example_password" would be: <br><pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example" -F "password=example_password"; echo</pre></p>
+<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with password "example_password" would be: <br><pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example@example.com" -F "password=example_password"; echo</pre></p>
 
 <p>In general, API calls using this REST API will have a "StatusCode" property.  This property adheres to the usual <a href="http://www.restapitutorial.com/httpstatuscodes.html">REST API status codes</a>.</p>
 
@@ -92,12 +91,9 @@ Below is a list of the different REST API calls.
 <hr>
 <h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
-<p>This section details the structure all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems rendering the graph.
+<p>This section details the structure of the JSON that all graphs inserted into GraphSpace should follow.  Any deviation from this schema may result in GraphSpace rejecting the graph or problems in rendering the graph. For the sake of completeness, we have copied the description of several of the node and edge attributes directly from the  <a href="http://js.cytoscape.org/">CytoscapeJS</a> documentation. We thank them for the excellent documentation of their framework.
 
-<p>GraphSpace supports Nody and Edge body properties from <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a>.</p>
-<p><b>Note</b>: All properties supported by CytoscapeJS which contain the '-' character must be specified as the '_' character when constructing the JSON for a graph.  For example, "background-color" is a property that is supported by CytoscapeJS.  In order to utilize this property in GraphSpace, it should be written as "background_color".  Another example is "border-color".  If a user wants to define this property in the JSON of the graph, it should be written as "border_color".</p></p>
-
-<p>The basic structure of a properly formatted JSON in GraphSpace contains the following structure: 
+<p>A properly formatted JSON for a graph in GraphSpace contains the following structure: 
 
 <pre>
 {
@@ -114,39 +110,147 @@ Below is a list of the different REST API calls.
 </pre>
 <hr>
 <h4>Node</h4>
-<p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/node-body">node properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
-
+<!-- <p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/node-body">node properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
+ -->
+<p>This table lists all the properties that GraphSpace supports for a Node element.</p>
 <table class="table">
   <thead>
-    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
+    <tr> <th>Property</th><th>Description</th> </tr>
   </thead>
   <tbody>
-    <tr> <td> id </td> <td> string </td> <td> A unique id representing the node. (<b>REQUIRED</b>) </td> </tr>
-    <tr> <td> content    </td> <td> string </td> <td> The text that is displayed inside of the node. </td> </tr>
-    <tr> <td> popup    </td> <td> string </td> <td> Embedded information that will be displayed in a popup window when the node is hovered/clicked. </td> </tr>
-    <!-- <tr> <td> background_color    </td> <td> string </td> <td> The background color of the node.  It may be the names of colors or <a href="http://www.w3schools.com/tags/ref_colorpicker.asp">hexadecimal</a> values of the colors. </td> </tr> -->
-    <!-- <tr> <td> height     </td> <td> float  </td> <td> The height of the node. </td> </tr> -->
-    <!-- <tr> <td> width     </td> <td> float  </td> <td> The width of the node. </td> </tr> -->
-    <!-- <tr> <td> shape    </td> <td> string </td> <td> The shape of the node. (See <a href="http://js.cytoscape.org/#style/node-body">CytoscapeJS</a> documentation for types of shapes)</td> </tr> -->
-    <tr> <td> k     </td> <td> integer  </td> <td> Show this node at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information).</td> </tr>
+    <tr> <td>id</td><td> A unique id representing the node. (<b>REQUIRED</b>) </td> </tr>
+
+    <tr> <td>content</td><td> The text that is displayed inside of the node. </td> </tr>
+
+    <tr> <td>popup</td><td> A string that will be displayed in a popup window when the user clicks the node. This string can be HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+
+    <tr> <td>k</td><td> An integer index for this node. GraphSpace uses this attribute when the user seeks to <a href="{{url}}help/#step_panel">step through the nodes and edges of the graph</a>.  (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+    
+    <tr> <td> background_color</td><td> The background color of the node.  It may be the names of colors or <a href="http://www.w3schools.com/tags/ref_colorpicker.asp">hexadecimal</a> values of the colors. </td> </tr>
+
+    <tr> <td>height</td><td> The height of the node. </td> </tr>
+
+    <tr> <td>width</td></td> <td> The width of the node. </td> </tr>
+
+    <tr> <td>shape</td><td> The shape of the node. May be: rectangle, roundrectangle, ellipse, triangle, pentagon, hexagon, heptagon, octagon, star, diamond, vee, or rhomboid.</td> </tr>
+
+
+    <tr><td>background_blacken</td><td>Blackens the node's body for values from 0 to 1; whitens the node's body for values from 0 to -1.</td></tr>
+
+   <tr><td>background_opacity</td><td>The opacity level of the node's background colour.</td></tr>
+
+   <tr><td>border_width</td><td>The size of the node's border.</td></tr>
+
+   <tr><td>border_style</td><td>The style of the node's border; may be solid, dotted, dashed, or double.</td></tr>
+
+   <tr><td>border_color</td><td>The colour of the node's border.</td></tr>
+
+   <tr><td>border_opacity</td><td>The opacity of the node's border.</td></tr>
+
+   <tr><td>background_image</td><td>The URL that points to the image that should be used as the node's background. PNG, JPG, and SVG are supported formats. You may use a data URI to use embedded images, thereby saving a HTTP request.</td></tr>
+
+   <tr><td>background_image_opacity</td><td>The opacity of the background image.</td></tr>
+
+   <tr><td>background_width</td><td>Specifies the width of the image. A percent value (e.g. 50%) may be used to set the image width relative to the node width. If used in combination with background-fit, then this value overrides the width of the image in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default, which uses the width of the image.</td></tr>
+
+   <tr><td>background_height</td><td>Specifies the height of the image. A percent value (e.g. 50%) may be used to set the image height relative to the node height. If used in combination with background-fit, then this value overrides the height of the image in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default, which uses the height of the image.</td></tr>
+
+   <tr><td>background_fit</td><td>Specifies the width of the image. A percent value (e.g. 50%) may be used to set the image width relative to the node width. If used in combination with background-fit, then this value overrides the width of the image in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default, which uses the width of the image.</td></tr>
+
+   <tr><td>background_repeat</td><td>Whether to repeat the background image; may be no-repeat, repeat-x, repeat-y, or repeat.</td></tr>
+
+   <tr><td>background_position_x</td><td>The x position of the background image, measured in percent (e.g. 50%) or pixels (e.g. 10px).</td></tr>
+
+   <tr><td>background_position_y</td><td>The y position of the background image, measured in percent (e.g. 50%) or pixels (e.g. 10px).</td></tr>
+
+   <tr><td>background_clip</td><td>How background image clipping is handled; may be node for clipped to node shape or none for no clipping.</td></tr>
+
+   <tr><td>color</td><td>The colour of the nodes's content.</td></tr>
+
+   <tr><td>font_family</td><td>A comma-separated list of font names to use on the node text.</td></tr>
+
+   <tr><td>font_size</td><td>The size of the node text.</td></tr>
+
+   <tr><td>font_style</td><td>A CSS font style to be applied to the node text.</td></tr>
+
+   <tr><td>font_weight</td><td>A CSS font weight to be applied to the node text.</td></tr>
+
+   <tr><td>text_transform</td><td>A transformation to apply to the label text; may be none, uppercase, or lowercase.</td></tr>
+
+   <tr><td>text_wrap</td><td>A wrapping style to apply to the label text; may be none for no wrapping (including manual newlines: \n) or wrap for manual and/or autowrapping.</td></tr>
+
+   <tr><td>text_max_width</td><td>The maximum width for wrapped text, applied when text-wrap is set to wrap. For only manual newlines (i.e. \n), set a very large value like 1000px such that only your newline characters would apply.</td></tr>
+
+   <tr><td>edge_text_rotation</td><td>Whether to rotate edge labels as the relative angle of an edge changes; may be none for page-aligned labels or autorotate for edge-aligned labels. This works best with left-to-right text.</td></tr>
+
+   <tr><td>text_opacity</td><td>The opacity of the label text, including its outline.</td></tr>
+
+   <tr><td>text_outline_color</td><td>The colour of the outline around the element's label text.</td></tr>
+
+   <tr><td>text_outline_opacity</td><td>The opacity of the outline on label text.</td></tr>
+
+   <tr><td>text_outline_width</td><td>The size of the outline on label text.</td></tr>
+
+   <tr><td>text_shadow_blur</td><td>The shadow blur distance.</td></tr>
+
+   <tr><td>text_shadow_color</td><td>The colour of the shadow.</td></tr>
+
+   <tr><td>text_shadow_offset_x</td><td>The x offset relative to the text where the shadow will be displayed, can be negative. If you set blur to 0, add an offset to view your shadow.</td></tr>
+
+   <tr><td>text_shadow_offset_y</td><td> The y offset relative to the text where the shadow will be displayed, can be negative. If you set blur to 0, add an offset to view your shadow.</td></tr>
+
+   <tr><td>text_shadow_opacity</td><td>The opacity of the shadow on the text; the shadow is disabled for 0 (default value).</td></tr>
+
+   <tr><td>text_background_shape</td><td> The shape to use for the label background, can be rectangle or roundrectangle.</td></tr>
+
+   <tr><td>text_border_width</td><td>The width of the border around the label.</td></tr>
+
+   <tr><td>text_border_style</td><td>The style of the border around the label; may be solid, dotted, dashed, or double.</td></tr>
+
+   <tr><td>text_border_color</td><td>The colour of the border around the label.</td></tr>
+
+   <tr><td>min_zoomed_font_size</td><td>If zooming makes the effective font size of the label smaller than this, then no label is shown.</td></tr>
+
+   <tr><td>text_halign</td><td>The vertical alignment of a label; may have value left, center, or right.</td></tr>
+
+   <tr><td>text_valign</td><td>The vertical alignment of a label; may have value top, center, or bottom.</td></tr>
+
  </tbody>
 </table>
 <hr>
 <h4>Edge</h4>
-<p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/edge-line">edge line properties</a> and  <a href="http://js.cytoscape.org/#style/edge-arrow">edge arrow properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
+<p>This table lists all the properties that GraphSpace supports for an Edge element.</p>
 <table class="table">
   <thead>
-    <tr> <th> Name </th> <th> Type </th> <td> Description </td> </tr>
+    <tr> <th> Name </th><td> Description </td> </tr>
   </thead>
   <tbody>
+    <tr> <td> source </td><td> The id of the node where the edge is coming from. (<b>REQUIRED</b>) </td> </tr>
+    <tr> <td> target </td><td> The id of the node where edge is going to. (<b>REQUIRED</b>) </td> </tr>
+    <tr> <td>popup</td><td> A string that will be displayed in a popup window when the user clicks the edge. This string can be HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+
+    <tr> <td>k</td><td> An integer index for this edge. GraphSpace uses this attribute when the user seeks to <a href="{{url}}help/#step_panel">step through the nodes and edges of the graph</a>.  (<b>This attribute is specific to GraphSpace.</b>)</td> </tr>
+    
+    <tr><td>width</td><td>The width of an edge's line.</td></tr>
+    <tr><td>line_color</td><td>The colour of the edge's line.</td></tr>
+    <tr><td>line_style</td><td>The style of the edge's line; may be solid, dotted, or dashed.</td></tr>
+    <tr><td>source_arrow_color</td><td>The colour of the edge's source arrow.</td></tr>
+    <tr><td>source_arrow_shape</td><td>The shape of the edge's source arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square, circle, diamond, or none.</td></tr>
+    <tr><td>source_arrow_fill</td><td>The fill state of the edge's source arrow; may be filled or hollow.</td></tr>
+    <tr><td>mid_source_arrow_color</td><td>The colour of the edge's mid source arrow.</td></tr>
+    <tr><td>mid_source_arrow_shape</td><td>The shape of the edge's mid source arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square, circle, diamond, or none.</td></tr>
+    <tr><td>mid_source_arrow_fill</td><td>The fill state of the edge's mid source arrow; may be filled or hollow.</td></tr>
+    <tr><td>target_arrow_color</td><td>The colour of the edge's target arrow.</td></tr>
+    <tr><td>target_arrow_shape</td><td>The shape of the edge's target arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square, circle, diamond, or none.</td></tr>
+    <tr><td>target_arrow_fill</td><td>The fill state of the edge's target arrow; may be filled or hollow.</td></tr>
+    <tr><td>mid_target_arrow_color</td><td>The colour of the edge's target arrow.</td></tr>
+    <tr><td>mid_target_arrow_shape</td><td>The shape of the edge's target arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square, circle, diamond, or none.</td></tr>
+    <tr><td>mid_target_arrow_fill</td><td>The fill state of the edge's target arrow; may be filled or hollow.</td></tr>
     <!-- <tr> <td> id </td> <td> string </td> <td> The id of the edge. </td> </tr> -->
     <!-- <tr> <td> content    </td> <td> string </td> <td> Text that will be displayed on the edge (usually blank strings)</td> </tr> -->
     <!-- <tr> <td> popup    </td> <td> string </td> <td> The information that will be displayed in a popup when the edge is hovered/clicked. </td> </tr> -->
     <!-- <tr> <td> color    </td> <td> string </td> <td> The color of the edge. </td> </tr> -->
     <!-- <tr> <td> width    </td> <td> float  </td> <td> The width of the edge. </td> </tr> -->
-    <tr> <td> source </td> <td> string    </td> <td> The id of the node where the edge is coming from. (<b>REQUIRED</b>) </td> </tr>
-    <tr> <td> target </td> <td> string    </td> <td> The id of the node where edge is going to. (<b>REQUIRED</b>) </td> </tr>
-    <tr> <td> k     </td> <td> integer  </td> <td> Show this edge at the "kth" step.  Allows one to see all nodes up until the "kth" step.  (See <a href="{{url}}help/#step_panel">Step through Filtering Panel</a> for more information.</td> </tr>
   </tbody>
 </table>
 <hr>
@@ -155,12 +259,12 @@ Below is a list of the different REST API calls.
 
 <table class="table">
   <thead>
-    <tr> <th> Name </th> <th> Type </th> <th> Description </th> </tr>
+    <tr> <th> Name </th><th> Description </th> </tr>
   </thead>
   <tbody>
-  <tr><td> name</td><td> string</td><td> Name that is displayed on top of graph while viewing it.</td>
-  <tr><td> description</td><td> string</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May simly be a string which contains information such as a legend or significance of the graph.</td>
-  <tr><td> tags</td><td> array of strings</td><td> Used to categorize graphs.  See <a href="{{url}}help/#tags">Tags</a> for more information.</td></tr>
+  <tr><td> name</td><td> Name that is displayed on top of graph while viewing it.</td>
+  <tr><td> description</td><td> May be HTML formatted string.  May be link to image hosted elsewhere.  May simly be a string which contains information such as a legend or significance of the graph.</td>
+  <tr><td> tags</td><td> Array of strings.  Used to categorize graphs.  See <a href="{{url}}help/#tags">Tags</a> for more information.</td></tr>
   </tbody>
 </table>
 <hr>
@@ -724,7 +828,7 @@ Example failed response:
 Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
 
 <pre>
-curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=dsingh5270@gmail.com" -F "password=test"; echo
+curl -X POST "{{url}}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=[email]" -F "password=[email]"; echo
 </pre>
 
 Example successful response:
@@ -861,7 +965,7 @@ Example successful response:
 </div>
 <footer class="footer">
 <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
-<br><a href = "http://js.cytoscape.org/">CytoscapeJS 2.4.0</a>
+<br><a href = "http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
 </footer>
 
 {% endblock %}

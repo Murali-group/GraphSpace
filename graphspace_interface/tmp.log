@@ -1,0 +1,5 @@
+curl -X POST http://localhost:8000/api/users/tester@test.com/graph/exists/gs-interface-example2/ -F username=tester@test.com -F password=test ; echo
+{
+    "Message": "User tester@test.com owns a graph with id gs-interface-example2!",
+    "StatusCode": 200
+}
