@@ -914,6 +914,22 @@ function findKValueOfLabel(label) {
 //appropriate one
 function searchValues(search_type, labels) {
 
+  labelCheck = labels.split(",");
+
+  var newLabels = "";
+
+  for (var i = 0; i < labelCheck.length; i++) {
+    if (labelCheck[i].length > 0) {
+      if (newLabels.length == 0) {
+        newLabels += labelCheck[i];
+      } else {
+        newLabels += "," + labelCheck [i];
+      }
+    }
+  }
+
+  labels = newLabels;
+
   //split paths
   var paths = document.URL.split('/');
 
@@ -934,7 +950,6 @@ function searchValues(search_type, labels) {
     "uid": $("#uid").text(),
     "search_type": search_type 
   }, function (data) {
-    console.log(data);
     data = JSON.parse(data);
 
     var displayLink = false;
@@ -1004,7 +1019,7 @@ function searchValues(search_type, labels) {
         maxProblem = Math.max(maxProblem, k_problems[a]);
       }
 
-      if (k_problems.length == 1) {
+      if (k_problems.length > 0) {
         message = "A node or edge matches the search term but is not visible.";
       } else {
         message = "Multiple nodes or edges match the search term but some of them are not visible.";
@@ -1022,10 +1037,11 @@ function searchValues(search_type, labels) {
 
         var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
         var layout = getQueryVariable('layout');
+        var layout_owner = getQueryVariable("layout_owner");
         var highlighted = getHighlightedTerms();
 
         if (layout) {
-          linkToGraph += '?layout=' + layout;
+          linkToGraph += '?layout=' + layout + "&layout_owner=" + layout_owner;
         }
 
         if (search_type == 'partial_search') {
@@ -1042,13 +1058,12 @@ function searchValues(search_type, labels) {
           }
         }
 
+
         for (var i = 0; i < labels.length; i++) {
           if (labels[i].trim().length > 0) {
             linkToGraph += labels[i].trim() + ',';
           }
         }
-
-        // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
 
         $("#url").attr('href', linkToGraph);
         $("#url").css('text-decoration', 'underline');
