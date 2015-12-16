@@ -936,8 +936,6 @@ function searchValues(search_type, labels) {
   var partialDistinction = Array();
   var exactDistinction = Array();  
   
-  // window.cy.elements().removeCss();
-
   $("#search_error_text").text("");
 
   $("#search_error").css("display", "none");
@@ -981,9 +979,7 @@ function searchValues(search_type, labels) {
 
       for (var j = 0; j < data[labels[i]].length; j++) {
         if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
-          // $("#search_error").css("display", "block");
           k_problems.push(findKValueOfLabel(data[labels[i]][j]));
-          // $("#search_error_text").append("Please set 'Number of paths' to atleast " + findKValueOfLabel(data[labels[i]][j]) + " in order to view seached elements for the current network.");
         }
 
         if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
@@ -1030,6 +1026,7 @@ function searchValues(search_type, labels) {
       } else {
         message +=  " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
       }
+
       $("#search_error_text").append(message);
     }
 
