@@ -168,9 +168,7 @@
                           <tr> 
                               <!-- If there is a search term or a tag term -->
                               {% if search_result %}
-                                  <!-- {% with url|add:"graphs/"|add:g.5|add:"/"|add:g.0|add:"/?search="|add:g.3 as final_url %} -->
                                       <td><div class="test"><a href="{{url}}graphs/{{g.5}}/{{g.0}}?{{search_type}}={{g.3}}">{{ g.0 }}</a></div></td>
-                                  <!-- {%endwith %} -->
                                   <td><div class="test">
                                       {% for tag in g.1 %}
                                           <p><a class='tag_links' id='{{tag}}'>{{tag}}</a></p>
@@ -254,24 +252,6 @@
                   <div style="text-align: center;">
                     <button class="btn btn-default" style="width: 100%;" id="clear_search">Clear all search terms</button>
                   </div>
-                  <!-- <div id="search_tips" class="alert alert-info alert-dismissable" style="">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <strong>Search tips:</strong><br>
-                    <ul>   
-                      <li>Graphs returned match all search terms</li>
-                      <li>Search for graphs, nodes, and edges.</li>
-                      <li>Edge searching syntax - head:tail</li>
-                      <li>Edge searching example: Example: AKT1:JUN</li>
-                    </ul>
-                  </div> -->
-                   <!-- <ul class="nav nav-pills">
-                    {% if search_word %}
-                        {% for term in search_word_terms %}
-                        <li><a class='search' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
-                        {% endfor %}
-                    {% endif %}
-                  </ul> -->
-                  <!-- <br/> -->
                 </div>
               </div>
             </div>
@@ -296,13 +276,6 @@
                         </span>
                     </div>
                 </form>
-                <!-- <ul class="nav nav-pills">
-                    {% if tags %}
-                        {% for term in tag_terms %}
-                          <li><a class='tags' href="{{ base_url }}" id='{{ term }}'>Clear Search for "{{ term }}"</a></li>
-                        {% endfor %}
-                    {% endif %}
-                  </ul> -->
                   <br>
                 {% for tag in all_tags %}
                     {% with base_url|add:"?tags="|add:tag as tag_url %}
