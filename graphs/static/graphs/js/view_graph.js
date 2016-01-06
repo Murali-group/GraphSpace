@@ -558,6 +558,7 @@ $(document).ready(function() {
             } 
         }
       } else {
+        //The exact search is being used
         if (labels.length > 0 && labels[0].length > 0) {
           // linkToGraph = linkToGraph.substring(0, linkToGraph.length - 1);
           linkToGraph += '&full_search=';
@@ -622,7 +623,6 @@ $(document).ready(function() {
     $(".remove").click(function (e) {
       e.preventDefault();
 
-      console.log($(this));
       var publicLayout = $(this).val();
       var userId = $(this)[0]["id"];
       var gid = $("#gid").text();
@@ -918,6 +918,7 @@ function searchValues(search_type, labels) {
 
   var newLabels = "";
 
+  //Get the labels from array to a string seperated by commas
   for (var i = 0; i < labelCheck.length; i++) {
     if (labelCheck[i].length > 0) {
       if (newLabels.length == 0) {
@@ -928,11 +929,13 @@ function searchValues(search_type, labels) {
     }
   }
 
+
   labels = newLabels;
 
   //split paths
   var paths = document.URL.split('/');
 
+  //Keep track of partial/exact search
   var partialDistinction = Array();
   var exactDistinction = Array();  
   
@@ -959,6 +962,7 @@ function searchValues(search_type, labels) {
     labels = labels.split(',');
     var k_problems = [];
     for (var i = 0; i < labels.length; i++) {
+      //if the labels that are retrieved from server doesn't exist
       if (data[labels[i]].length == 0) {
         if (labels[i].trim().length == 0) {
           $("#search_error_text").append("Please enter node or edge name!<br>");
@@ -976,7 +980,7 @@ function searchValues(search_type, labels) {
       //Get the value of k if it exists
       var k_val = $("#input_k").val();
 
-
+      //Go through all data that is returned from the server and make sure that the k value is <= to what is being shown 
       for (var j = 0; j < data[labels[i]].length; j++) {
         if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
           k_problems.push(findKValueOfLabel(data[labels[i]][j]));
@@ -992,6 +996,9 @@ function searchValues(search_type, labels) {
             displayLink = true;
           }
 
+          //displayLink will display the link to get to this graph (for sharing purposes)
+
+          //Populate the appropriate array according to the search
           if (search_type == 'partial_search') {
             labels[i].replace(" ", "")
             if (partialDistinction.indexOf(labels[i]) == -1) {
@@ -1006,6 +1013,7 @@ function searchValues(search_type, labels) {
       } 
     }
 
+    //If there are any errors, report them to the user
     if (k_problems.length > 0) {
       var message = "";
       $("#search_error").css("display", "block");
@@ -1030,6 +1038,7 @@ function searchValues(search_type, labels) {
       $("#search_error_text").append(message);
     }
 
+    //If link is to be displayed and there are matching elements, generate link including search queries
     if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
 
         var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
@@ -1169,6 +1178,7 @@ function applyMax(graph_layout) {
   // List of node ids that should remain in the graph
   var nodeNames = Array();
 
+  //Get all edges that meet the max quantifier
   for (var i = 0; i < graph_json.graph['edges'].length; i++) {
     var edge_data = graph_json.graph['edges'][i];
     if (edge_data['data']['k'] <= maxVal) {
@@ -1178,6 +1188,7 @@ function applyMax(graph_layout) {
     }
   }
 
+  //Get all nodes that meet the max quantifier
   for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
     var node_data = graph_json.graph['nodes'][i];
     if (nodeNames.indexOf(node_data['data']['id']) > -1) {
