@@ -139,6 +139,50 @@ class Graph(Base):
     #specify many to many relationship with GraphTag
     # tags = relationship("GraphTag", secondary=graph_to_tag, backref='graph')
 
+class Task(Base):
+    '''
+        Table that represents the task table.
+    '''
+    __tablename__ = 'task'
+
+    task_id = Column(Integer, autoincrement=True, primary_key=True)
+    task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    created = Column(TIMESTAMP, nullable = False)
+
+class Event(Base):
+    '''The class representing the schema of the event table.'''
+    __tablename__ = 'event'
+
+    event_id = Column(Integer, primary_key = True, autoincrement = True)
+    # 1 means clickable graph link
+    # 2 means clickable group link
+    # 3 means clickable layout link
+    # 4 means clickable task link
+    # 5 means delete graph
+    # 6 means delete group
+    # 7 means deleted layout from graph
+    # 8 means unshared graph
+    # 9 means new feedback note
+
+    event_type = Column(Integer, nullable = False)
+    created = Column(TIMESTAMP, nullable = False)
+    description = Column(String, nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+    layout_name = Column(String, nullable = True)
+    layout_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+
+class LastAccess(Base):
+    '''The class representing the schema of the last time user accessed notifications page.'''
+    __tablename__ = 'last_accessed'
+
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key = True)
+    accessed = Column(TIMESTAMP, nullable = False)
+
 class GraphTag(Base):
     '''
         Table of tags that are assigned to each graph to categorize them.

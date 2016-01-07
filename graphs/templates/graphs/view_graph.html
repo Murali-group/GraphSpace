@@ -98,6 +98,27 @@
         </div>
     </div>
 </div>
+<!-- Task Modal -->
+<div class="modal fade" id="task_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="changeLabelModal">Launch Task on Amazon Mechanical Turk?</h4>
+            </div>
+            <div class="modal-body">
+                <div class="group_body">
+                    <p>By clicking launch task, your graph will appear as a task on Amazon Mechanical Turk.  From there, workers will work
+                        to generate layouts following guidelines (TODO: CREATE GOOD GUIDELINES)
+                    </p>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="{{graph_id}}" value="{{owner}}" class="btn btn-success launch_task">Launch Task</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container-fluid csjs_container">
     <p id"test"></p>
     <div id="graph_title" >
@@ -150,6 +171,7 @@
                 </ul>
             </div>
         </div>
+        {% if task_view != True %}
         <!-- Export menu -->
         <div id="accordion_export" class="accordion">
             <h3>Export</h3>
@@ -204,7 +226,12 @@
                 {% if uid != None %}
                 <div>
                     <p id="loggedIn" style="display:none;">{{uid}}</p>
-                    <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button>
+                    <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button><br><br>
+                    {% if task_launched %}
+                    <button class="btn btn-default disabled">Task Currently Live</button>
+                    {% else %}
+                    <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
+                    {% endif %}
                 </div>
                 {% endif %}
                 <hr/>
@@ -390,6 +417,94 @@
         <br>
         <br>
         {% endif %}
+        {% else %}
+            <div id="accordion_design" class="accordion">
+              <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
+              <div class="accordion_content test" id="design_accordian">
+                <hr>
+                <h3>Selection</h3>
+                <div style="text-align: center;" id="selection" class="input-group">
+                </div>
+                <br><button class="btn btn-danger" id="unselect">Unselect All</button><br>
+                <hr>
+                <h3>Modify</h3>
+                <div style="text-align: center;" id="modify" class="input-group">
+                  <p style='text-align: left;'>Modify Color:
+                      <input type='text' class='basic' id='selectionPalette' value='red' />
+                  </p>
+
+                  <div class="dropup" style='text-align: left;'>
+                    Modify Shape: 
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                      Shapes
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                      <li><a data-value="rectangle">Rectangle</a></li>
+                      <li><a data-value="roundrectangle">Round Rectangle</a></li>
+                      <li><a data-value="ellipse">Ellipse</a></li>
+                      <li><a data-value="triangle">Triangle</a></li>
+                      <li><a data-value="pentagon">Pentagon</a></li>
+                      <li><a data-value="hexagon">Hexagon</a></li>
+                      <li><a data-value="heptagon">Heptagon</a></li>
+                      <li><a data-value="octagon">Octagon</a></li>
+                      <li><a data-value="star">Star</a></li>
+                      <li><a data-value="diamond">Diamond</a></li>
+                      <li><a data-value="vee">Vee</a></li>
+                      <li><a data-value="rhomboid">Rhomboid</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <hr>
+                <h3>Move</h3>
+                <div id="moveArrows" style="text-align:center;">
+
+                  <table style="margin: 0 auto;">
+                    <tr>
+                      <th></th>
+                      <th>
+                        <button type="button" class="btn btn-default" aria-label="Left Align" id="upArrow">
+                          <span class="glyphicon glyphicon-arrow-up"></span>
+                        </button>
+                      </th>
+                      <th></th>
+                      <th></th>
+                    </tr>
+                    <tr>
+                      <td>
+                        <button type="button" class="btn btn-default" aria-label="Left Align" id="leftArrow">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                        </button>
+                      </td>
+                      <td></td>
+                      <td>
+                        <button type="button" class="btn btn-default" aria-label="Left Align" id="rightArrow">
+                          <span class="glyphicon glyphicon-arrow-right"></span>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td>
+                        <button type="button" class="btn btn-default" aria-label="Left Align" id="downArrow">
+                          <span class="glyphicon glyphicon-arrow-down"></span>
+                        </button>
+                      </td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <button class="btn btn-primary" id="group" style="display: block; margin: 0 auto;">Coalesce Selected Nodes</button><br>
+                      <button class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;">Scatter Selected Nodes</button><br>
+                    </tr>
+                  </table>
+                </div>
+
+                <hr>
+              </div>
+            </div>
+        </div>
+
+        {% endif %}
     </div>
     <!-- end class = side_menu -->
 </div>
@@ -415,7 +530,6 @@
 </script>
 {% endif %}
 {% endfor %}
-
 {% endblock %}
 {% block css-js-footer %}
 <!--jQuery UI, needed for side menu -->

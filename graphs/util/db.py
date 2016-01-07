@@ -557,6 +557,11 @@ def set_layout_context(request, context, uid, gid):
 		context['my_layouts'] = []
 		context['shared_layouts'] = get_public_layouts_for_graph(uid, gid)
 
+	# Check to see if task is launched for graph
+	exists = task_exists(gid, uid)
+
+	context['task_launched'] = exists
+
 	return context
 
 def retrieve_cytoscape_json(graphjson):
@@ -2962,6 +2967,53 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 
 	db_session.close()
 	return graph_data
+
+def task_exists(graph_id, user_id):
+	'''
+		Checks to see if task exists for graph.
+
+		@param graph_id: ID of graph
+		@param user_id: Owner of graph
+
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Check to see if there is a task currently active for the current graph
+	exists = db_session.query(models.Task.created).filter(models.Task.graph_id == graph_id).filter(models.Task.user_id == user_id).first()
+
+	return exists
+
+def launchTask(graph_id, user_id):
+	'''
+		Launches a task on Amazon Mechanical Turk.
+
+		:param graph_id: ID of graph
+		:param user_id: Owner of graph
+
+		:return Error or None if no error
+	'''
+
+	# Check to see if there is a task currently active for the current graph
+	exists = task_exists(graph_id, user_id)
+
+	# If there is already a task for this graph, throw error
+	if exists != None:
+		return "Task currently exists for this graph!"
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	#TODO: ASK IF GROUP OWNER CAN ALSO LAUNCH TASK OR ONLY GRAPH OWNER CAN
+
+	# Get the current time
+	curtime = datetime.now()
+
+	new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime)
+
+	db_session.add(new_task)
+	db_session.commit()
+	db_session.close()
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''

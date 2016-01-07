@@ -322,6 +322,8 @@ def view_graph(request, uid, gid):
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
 
+    #TODO: Create trigger to delete older tasks (3 days)
+
     # if the graph is public, or if a user is a member 
     # of the group where this graph is shared
     # or if he owns this graph, then allow him to view it
@@ -346,6 +348,7 @@ def view_graph(request, uid, gid):
         else:
             context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
             return render(request, 'graphs/error.html', context)
+
     # Get correct layout for the graph to view
     context = db.set_layout_context(request, context, uid, gid)
 
@@ -397,6 +400,69 @@ def view_graph(request, uid, gid):
         return HttpResponseRedirect("/json/%s/%s" % (uid, gid))
 
     return render(request, 'graphs/view_graph.html', context)
+
+def view_task(request, uid, gid):
+    '''
+        View that workers will see for a launched task.
+
+        :param request: HTTP GET Request
+        :param uid: email of the user that owns this graph
+        :param gid: name of graph that the user owns
+    '''
+
+    if 'uid' in request.session:
+        context = login(request)
+        context["task_view"] = True
+
+    else:
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    graph_info = db.getGraphInfo(uid, gid)
+    
+    if graph_info != None:
+        graph_to_view =  graph_info
+    else: 
+        context['Error'] = "Task does not exist anymore!."
+        return render(request, 'graphs/error.html', context)
+
+    # Get correct layout for the graph to view
+    context = db.set_layout_context(request, context, uid, gid)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['draw_graph'] = True
+
+    # TODO: This will eventually get deleted
+
+    json_data = json.loads(context['graph'])
+
+    #add sidebar information to the context for display
+    if 'description' in json_data['metadata']:
+        context['description'] = json_data['metadata']['description'] + "</table></html>"
+    else:
+        context['description'] = ""
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    if 'name' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['name']
+    else:
+        context['graph_name'] = ''
+
+    # graph id
+    context['graph_id'] = gid
+
+    return render(request, 'graphs/view_graph.html', context)
+
 
 def view_json(request, uid, gid):
     '''
@@ -904,6 +970,25 @@ def resetPassword(request):
         return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
 
     return HttpResponse(json.dumps(db.sendMessage(200, "Password updated for " + request.POST['email'])), content_type="application/json");
+
+def launchTask(request):
+    '''
+        Launches a task on Amazon Mechanical Turk.
+
+        :param request: HTTP POST Request containing
+
+        {"graph_id": <graph_id>, "user_id": <owner of graph>}
+
+        :return JSON: {"Error|Success": Error | Task Launched on Amazon Mechanical Turk!"}
+    '''
+
+    # Only 1 task per graph as long as there is a HIT active (3 days)
+    error = db.launchTask(request.POST["graph_id"], request.POST["user_id"])
+
+    if error != None:
+        return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+
+    return HttpResponse(json.dumps(db.sendMessage(201, "Task Launched on Amazon Mechanical Turk!")), content_type="application/json");
 
 def changeLayoutName(request):
     '''
