@@ -6,6 +6,9 @@ $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
 
+    setDefaultNodeProperties(graph_json['graph']['nodes']);
+
+
     //Renders the cytoscape element on the page
     //with the given options
     window.cy = cytoscape({
@@ -254,7 +257,7 @@ $(document).ready(function() {
 
       var testEdges = new Array();
 
-      setDefaultNodeProperties(graph_json['graph']['nodes'])
+      // setDefaultNodeProperties(graph_json['graph']['nodes'])
 
       // DONE SO OLD GRAPHS WILL DISPLAY
       // NEW GRAPHS WILL HAVE EVERYTHING HANDLED AT UPLOAD TIME
@@ -1445,6 +1448,7 @@ function setDefaultNodeProperties(nodeJSON) {
     }
 
   }
+  return nodeJSON;
 }
 
 /*
