@@ -3126,6 +3126,12 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	if graph_exists == None:
 		return "Graph does not exist"
 
+	# Check to see if the group exists
+	group_exists = get_group(groupOwner, groupId)
+
+	if group_exists == None:
+		return "Group does not exist"
+
 	# Create database connection
 	db_session = data_connection.new_session()
 
@@ -3168,6 +3174,12 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 
 	if graph_exists == None:
 		return "Graph does not exist!"
+
+	# Check to see if the group exists
+	group_exists = get_group(groupOwner, groupId)
+
+	if group_exists == None:
+		return "Group does not exist"
 
 	# Create database connection
 	db_session = data_connection.new_session()
