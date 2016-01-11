@@ -1703,6 +1703,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 						print "No matching edges"
 
 	else:	
+
 		# Find node id's that are being searched for (source and target nodes)
 		head_nodes = find_node(uid, gid, head_node, 'full_search')
 		tail_nodes = find_node(uid, gid, tail_node, 'full_search')
@@ -1717,7 +1718,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 					try:
 						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
-						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_node).filter(models.Edge.tail_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_nodes[j]).filter(models.Edge.tail_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
 						# # Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
@@ -1749,7 +1750,6 @@ def find_node(uid, gid, node_to_find, search_type):
 
 	# Create database connection
 	db_session = data_connection.new_session()
-	print uid, gid, node_to_find, search_type
 
 	try:
 		id_list = []
@@ -1772,16 +1772,24 @@ def find_node(uid, gid, node_to_find, search_type):
 
 		else:
 			# Get all matching labels
-			label = db_session.query(models.Node.node_id).filter(models.Node.label == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
+			labels = db_session.query(models.Node.node_id).filter(models.Node.label == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
 			# Get all matching ids
-			node_id = db_session.query(models.Node.node_id).filter(models.Node.node_id == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
+			node_ids = db_session.query(models.Node.node_id).filter(models.Node.node_id == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
-			if label != None and label not in id_list:
-				id_list.append(label[0])
+			# if label != None and label not in id_list:
+			# 	id_list.append(label[0])
 
-			if node_id != None and node_id not in id_list:
-				id_list.append(node_id[0])
+			# if node_id != None and node_id not in id_list:
+			# 	id_list.append(node_id[0])
+
+			for label in labels:
+				if label not in id_list:
+					id_list.append(label[0])
+
+			for node_id in node_ids:
+				if node_id not in id_list:
+					id_list.append(node_id[0])
 
 		db_session.close()
 		return id_list
