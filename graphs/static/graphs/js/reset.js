@@ -24,6 +24,7 @@ $(document).ready(function() {
 			}, function(data) {
 
 				if (data.Error) {
+					console.log(data);
 					return alert(data.Error);
 				} else {
 					alert("Password Updated!");

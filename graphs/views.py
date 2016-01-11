@@ -884,7 +884,6 @@ def resetLink(request):
             return render(request, 'graphs/error.html', context)
 
         context = {"email": email, "url": URL_PATH}
-
         return render(request, 'graphs/reset.html', context)
 
 def resetPassword(request):
@@ -899,6 +898,7 @@ def resetPassword(request):
 
     '''
     resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
+    print resetInfo
 
     if resetInfo == None:
         return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");

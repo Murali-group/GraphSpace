@@ -191,12 +191,13 @@ def resetPassword(username, password):
 		# Hash password
 		password = bcrypt.hashpw(password, bcrypt.gensalt())
 		# Update the password for the user (after encryption of course)
-		user_to_reset_pw_for = db_session.query(models.User).filter(models.User.user_id == username).one()
+		user_to_reset_pw_for = db_session.query(models.User).filter(models.User.user_id == username).first()
 		user_to_reset_pw_for.password = password
 
 		# Remove user's account from password_reset table
-		delete_from_password_reset = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == username).one()
-		db_session.delete(delete_from_password_reset)
+		delete_from_password_reset = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == username).all()
+		for acct in delete_from_password_reset:
+			db_session.delete(acct)
 		db_session.commit()
 		db_session.close()
 		return "Password updated successfully"
