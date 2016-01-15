@@ -7,6 +7,9 @@ $(document).ready(function() {
     // http://cytoscape.github.io/cytoscape.js/
     extractJSONProperties(graph_json.graph);
 
+    setDefaultNodeProperties(graph_json['graph']['nodes']);
+
+
     //Renders the cytoscape element on the page
     //with the given options
     window.cy = cytoscape({
@@ -383,7 +386,7 @@ $(document).ready(function() {
             } // end ready: function()
     });
 
-    
+
 
     //Unselect all nodes/edges when button is clicked
     $("#unselect").click(function(e) {
@@ -432,7 +435,6 @@ $(document).ready(function() {
 
     $(".dropdown-menu li a").click(function() {
         modifiedShape = $(this).data("value");
-        console.log(modifiedShape);
 
         for (var j = 0; j < window.cy.nodes().length; j++) {
             var node = window.cy.nodes()[j];
@@ -509,6 +511,22 @@ $(document).ready(function() {
         }
     }
 
+    function grabNodePositions() {
+        //When save is clicked, it gets location of all the nodes and saves it
+        //so that nodes can be placed in this location later on
+        var nodes = window.cy.elements('node');
+        var layout = [];
+        for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+            var nodeData = {
+                'x': nodes[i]._private.position.x,
+                'y': nodes[i]._private.position.y,
+                'id': nodes[i]._private.data.id
+            };
+            layout.push(nodeData);
+        }
+        return layout;
+    }
+
     function move(direction) {
         var distance = 15;
 
@@ -569,7 +587,7 @@ $(document).ready(function() {
     function intersect(a, b) {
         var t;
         if (b.length > a.length) t = b, b = a, a = t; // indexOf to loop over shorter
-        return a.filter(function (e) {
+        return a.filter(function(e) {
             if (b.indexOf(e) !== -1) return true;
         });
     }
@@ -639,18 +657,7 @@ $(document).ready(function() {
             layoutName = layoutName.replace(" ", "_");
         }
 
-        //When save is clicked, it gets location of all the nodes and saves it
-        //so that nodes can be placed in this location later on
-        var nodes = window.cy.elements('node');
-        var layout = [];
-        for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-            var nodeData = {
-                'x': nodes[i]._private.position.x,
-                'y': nodes[i]._private.position.y,
-                'id': nodes[i]._private.data.id
-            };
-            layout.push(nodeData);
-        }
+        var layout = grabNodePositions();
 
         var queryString = location.href.split(location.host)[1].split("?")[0];
         //Posts information to the server regarding the current display of the graph,
@@ -1368,142 +1375,142 @@ function getQueryVariable(variable) {
 
 /**
  * Get all properties of the JSON
-*/
+ */
 function extractJSONProperties(graphJson) {
-  var nodePropertyDictionary = {};
-  var edgePropertyDictionary = {};
+    var nodePropertyDictionary = {};
+    var edgePropertyDictionary = {};
 
-  //Get all the node properties
-  for (var i = 0; i < graphJson.nodes.length; i++) {
-    var node = graphJson.nodes[i].data;
+    //Get all the node properties
+    for (var i = 0; i < graphJson.nodes.length; i++) {
+        var node = graphJson.nodes[i].data;
 
-    var keys = Object.keys(node);
+        var keys = Object.keys(node);
 
-    for (var j in keys) {
-      var key = keys[j];
-      if (key == "shape" || key == "background_color") {
-        if (nodePropertyDictionary.hasOwnProperty(key)) {
-          var curArray = nodePropertyDictionary[key];
-          if (curArray.indexOf(node[key]) == -1) {
-            curArray.push(node[key]);
-            nodePropertyDictionary[key] = curArray;
-          }
-        } else {
-          nodePropertyDictionary[key] = [node[key]];
+        for (var j in keys) {
+            var key = keys[j];
+            if (key == "shape" || key == "background_color") {
+                if (nodePropertyDictionary.hasOwnProperty(key)) {
+                    var curArray = nodePropertyDictionary[key];
+                    if (curArray.indexOf(node[key]) == -1) {
+                        curArray.push(node[key]);
+                        nodePropertyDictionary[key] = curArray;
+                    }
+                } else {
+                    nodePropertyDictionary[key] = [node[key]];
+                }
+            }
         }
-      }
     }
-  }
 
-  //Get all the edge properties
-  for (var i = 0; i < graphJson.edges.length; i++) {
-    var edge = graphJson.edges[i].data;
-    var keys = Object.keys(edge);
+    //Get all the edge properties
+    for (var i = 0; i < graphJson.edges.length; i++) {
+        var edge = graphJson.edges[i].data;
+        var keys = Object.keys(edge);
 
-    for (var j in keys) {
-      var key = keys[j];
-      if (edgePropertyDictionary.hasOwnProperty(key)) {
-        var curArray = edgePropertyDictionary[key];
-        curArray.push(edge[key]);
-        edgePropertyDictionary[key] = curArray;
-      } else {
-        edgePropertyDictionary[key] = [edge[key]];
-      }
-    }
-  }
-  
-  var layoutPropertyDictionary = {}
-  if (layout) {
-    var parsed_json = JSON.parse(layout.json);
-    for (var i in parsed_json) {
-      var node_obj = parsed_json[i];
-      
-      var colorKey = "background_color";
-      var shapeKey = "shape"
-
-      if (node_obj.hasOwnProperty(colorKey)) {
-        if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
-          var curArray = layoutPropertyDictionary[colorKey];
-          if (curArray.indexOf(node_obj[colorKey]) == -1) {
-            curArray.push(node_obj[colorKey]);
-            layoutPropertyDictionary[colorKey] = curArray;
-          }
-        } else {
-          layoutPropertyDictionary[colorKey] = [node_obj[colorKey]];
+        for (var j in keys) {
+            var key = keys[j];
+            if (edgePropertyDictionary.hasOwnProperty(key)) {
+                var curArray = edgePropertyDictionary[key];
+                curArray.push(edge[key]);
+                edgePropertyDictionary[key] = curArray;
+            } else {
+                edgePropertyDictionary[key] = [edge[key]];
+            }
         }
-      }
-
-      if (node_obj.hasOwnProperty(shapeKey)) {
-        if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
-          var curArray = layoutPropertyDictionary[shapeKey];
-          if (curArray.indexOf(node_obj[shapeKey]) == -1) {
-            curArray.push(node_obj[shapeKey]);
-            layoutPropertyDictionary[shapeKey] = curArray;
-          }
-        } else {
-          layoutPropertyDictionary[shapeKey] = [node_obj[shapeKey]];
-        }
-      }
     }
-  } else {
-    layoutPropertyDictionary = nodePropertyDictionary;
-  }
 
-  //Go through and display all the different properties in template
-  for (var key in layoutPropertyDictionary) {
-    var subtitle = "";
-    if (key == "background_color") {
-      subtitle = "Background Color";
+    var layoutPropertyDictionary = {}
+    if (layout) {
+        var parsed_json = JSON.parse(layout.json);
+        for (var i in parsed_json) {
+            var node_obj = parsed_json[i];
+
+            var colorKey = "background_color";
+            var shapeKey = "shape"
+
+            if (node_obj.hasOwnProperty(colorKey)) {
+                if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
+                    var curArray = layoutPropertyDictionary[colorKey];
+                    if (curArray.indexOf(node_obj[colorKey]) == -1) {
+                        curArray.push(node_obj[colorKey]);
+                        layoutPropertyDictionary[colorKey] = curArray;
+                    }
+                } else {
+                    layoutPropertyDictionary[colorKey] = [node_obj[colorKey]];
+                }
+            }
+
+            if (node_obj.hasOwnProperty(shapeKey)) {
+                if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
+                    var curArray = layoutPropertyDictionary[shapeKey];
+                    if (curArray.indexOf(node_obj[shapeKey]) == -1) {
+                        curArray.push(node_obj[shapeKey]);
+                        layoutPropertyDictionary[shapeKey] = curArray;
+                    }
+                } else {
+                    layoutPropertyDictionary[shapeKey] = [node_obj[shapeKey]];
+                }
+            }
+        }
     } else {
-      subtitle = "Shape";
+        layoutPropertyDictionary = nodePropertyDictionary;
     }
-    $("#selection").append("<p style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
-    var valueArray = layoutPropertyDictionary[key];
-    var checkboxString = "<p style='text-align: left;'>";
 
-    for (var index in valueArray) {
-      var value = valueArray[index];
-      if (key == "background_color") {
-          value = colourNameToHex(value);
+    //Go through and display all the different properties in template
+    for (var key in layoutPropertyDictionary) {
+        var subtitle = "";
+        if (key == "background_color") {
+            subtitle = "Background Color";
+        } else {
+            subtitle = "Shape";
+        }
+        $("#selection").append("<p style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
+        var valueArray = layoutPropertyDictionary[key];
+        var checkboxString = "<p style='text-align: left;'>";
 
-          if (value == false) {
-            value = valueArray[index];
-          }
-          checkboxString += '<input id="'+value.substring(1)+'" type="checkbox" name="colors">&nbsp;<canvas class="canvas" id="'+value.substring(1)+'" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';            
-      } else {
-        checkboxString += '<input id="'+value+'" type="checkbox" name="shapes">&nbsp;'+ value[0].toUpperCase() + value.slice(1) +'&nbsp;&nbsp;&nbsp;';
-      }
-      if ((index+1) % 3 == 0) {
-        checkboxString+="<br><br>";
-      }
+        for (var index in valueArray) {
+            var value = valueArray[index];
+            if (key == "background_color") {
+                value = colourNameToHex(value);
+
+                if (value == false) {
+                    value = valueArray[index];
+                }
+                checkboxString += '<input id="' + value.substring(1) + '" type="checkbox" name="colors">&nbsp;<canvas class="canvas" id="' + value.substring(1) + '" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';
+            } else {
+                checkboxString += '<input id="' + value + '" type="checkbox" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
+            }
+            if ((index + 1) % 3 == 0) {
+                checkboxString += "<br><br>";
+            }
+        }
+        checkboxString += "</p>";
+        $("#selection").append(checkboxString);
+
+        $(".canvas").each(function() {
+            $(this)[0].getContext("2d").fillStyle = "#" + $(this)[0].id;
+            $(this)[0].getContext("2d").fillRect(0, 0, 20, 20);
+        });
     }
-    checkboxString += "</p>";
-    $("#selection").append(checkboxString);
-
-    $(".canvas").each(function() {
-      $(this)[0].getContext("2d").fillStyle = "#"+$(this)[0].id;
-      $(this)[0].getContext("2d").fillRect(0,0,20,20);
-    });
-  }
 };
 
 var colorValues = []
 $('input:checkbox[name=colors]').click(function() {
-  colorValues = $('input:checkbox[name=colors]:checked').map(function() {
-    return "#" + this.id
-  }).get();
-  
-  combineSelections("background-color", colorValues, "shape", shapeValues);
+    colorValues = $('input:checkbox[name=colors]:checked').map(function() {
+        return "#" + this.id
+    }).get();
+
+    combineSelections("background-color", colorValues, "shape", shapeValues);
 
 });
 
 var shapeValues = []
 $('input:checkbox[name=shapes]').click(function() {
-  shapeValues = $('input:checkbox[name=shapes]:checked').map(function() {
-    return this.id
-  }).get();
+    shapeValues = $('input:checkbox[name=shapes]:checked').map(function() {
+        return this.id
+    }).get();
 
-  combineSelections("shape", shapeValues, "background-color", colorValues);
+    combineSelections("shape", shapeValues, "background-color", colorValues);
 });
 
 function combineSelections(selection1, selectionArray1, selection2, selectionArray2) {
@@ -1513,45 +1520,45 @@ function combineSelections(selection1, selectionArray1, selection2, selectionArr
     var shapes = []
     for (var i = 0; i < selectionArray1.length; i++) {
         var shape = selectionArray1[i];
-      for (var j = 0; j < window.cy.nodes().length; j++) {
+        for (var j = 0; j < window.cy.nodes().length; j++) {
             var node = window.cy.nodes()[j];
 
             var nodeShape = node.style(selection1);
             if (selectionArray1.indexOf(nodeShape) != -1) {
-              shapes.push(nodeShape);
-              matching_shape_nodes.push(node["_private"]["data"]["id"]);
+                shapes.push(nodeShape);
+                matching_shape_nodes.push(node["_private"]["data"]["id"]);
             }
-      }
+        }
     }
 
     var matching_color_nodes = []
     var colors = []
     for (var i = 0; i < selectionArray2.length; i++) {
         var color = selectionArray2[i];
-      for (var j = 0; j < window.cy.nodes().length; j++) {
+        for (var j = 0; j < window.cy.nodes().length; j++) {
             var node = window.cy.nodes()[j];
 
             var nodeColor = node.style(selection2);
             if (selectionArray2.indexOf(nodeColor) != -1) {
-              colors.push(nodeColor);
-              matching_color_nodes.push(node["_private"]["data"]["id"]);
+                colors.push(nodeColor);
+                matching_color_nodes.push(node["_private"]["data"]["id"]);
             }
-      }
+        }
     }
 
     matching_nodes = []
     if (selectionArray2.length > 0 && selectionArray1.length > 0) {
-      matching_nodes = intersect(matching_shape_nodes, matching_color_nodes);
+        matching_nodes = intersect(matching_shape_nodes, matching_color_nodes);
     } else if (selectionArray2.length > 0) {
-      matching_nodes = matching_color_nodes;
+        matching_nodes = matching_color_nodes;
     } else {
-      matching_nodes = matching_shape_nodes;
+        matching_nodes = matching_shape_nodes;
     }
 
     cy.nodes().unselect();
 
     for (var i = 0; i < matching_nodes.length; i++) {
-      cy.$("#" + matching_nodes[i]).select();
+        cy.$("#" + matching_nodes[i]).select();
     }
 }
 
@@ -1966,9 +1973,9 @@ function setDefaultNodeProperties(nodeJSON) {
         if (nodeData["text_valign"] == undefined) {
             nodeData["text_valign"] = "center";
         }
-
     }
-}
+    return nodeJSON;
+};
 
 /*
  * When input_k bar is changed, update the nodes shown in the graph.
@@ -2012,6 +2019,22 @@ $("#input_max").bind("change", function() {
     setInputK();
 });
 
+function grabNodePositions2() {
+    //When save is clicked, it gets location of all the nodes and saves it
+    //so that nodes can be placed in this location later on
+    var nodes = window.cy.elements('node');
+    var layout = [];
+    for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+        var nodeData = {
+            'x': nodes[i]._private.position.x,
+            'y': nodes[i]._private.position.y,
+            'id': nodes[i]._private.data.id
+        };
+        layout.push(nodeData);
+    }
+    return layout;
+}
+
 /**
  * Launches task on Amazon Mechanical Turk.
  */
@@ -2024,14 +2047,30 @@ $(".launch_task").click(function(e) {
         return alert("Something went wrong.");
     }
 
+    var layoutArray = [];
+    for (var i = 0; i < 5; i++) {
+        var layout = window.cy.makeLayout({
+            name: "random"
+        });
+        layout.on('layoutstop', function() {
+            console.log('done');
+        });
+        layout.run();
+
+        layoutArray.push(grabNodePositions2());
+    }
+
     $.post('../../../launchTask/', {
         'graph_id': $(this).attr("id"),
         'user_id': $(this).val(),
+        'layout_array': JSON.stringify(layoutArray)
     }, function(data) {
         if (data.Error) {
             return alert(data.Error);
+        } else {
+            alert("Task launched!");
+            window.location.reload();
         }
-        console.log("Nice");
     });
 });
 

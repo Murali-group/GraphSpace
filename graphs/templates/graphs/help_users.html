@@ -3,63 +3,90 @@
 
 <div class="container graphs">
 
-<ul class="nav nav-pills">
-    <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
-    <li class="active"><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
-    <li ><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
-</ul>
-<hr>
-
 <b>This page should help familiarize you with GraphSpace's interface and basic features.</b>
-
-<br/>
-<br/>
+<br><br>
 <ul>
-<li><h4><a href="#graphs">Graphs</a></h4>
-<ul>
-<li><a href="#public_private">Public vs. Private Graphs</a></li>
-<li><a href="#upload_graphs">Uploading Graphs</a></li>
+	<li><h4><a href="#terminology">Terminology</a></h4></li>
+	<ul>
+		<li><a href="#user_type">Anonymous vs. Registered user</a></li>
+		<li><a href="#public_private">Public vs. Private graphs</a></li>
+		<li><a href="{{url}}help#groups">Groups</a></li>
+		<li><a href="{{url}}help#tags">Tags</a></li>
+	</ul>
+	<li><h4><a href="#upload_graphs">Upload graphs</a></h4></li>
 	<ul>
 		<li><a href="#upload_graphs_rest">Via REST API</a></li>
 		<li><a href="#upload_graphs_cyjs">Via Web Interface</a></li>
 	</ul>
-<li><a href="#search">Searching</a></li>
-	<ul>
-		<li><a href="#search_semantics">Semantics</a></li>
-		<li><a href="#search_in_graph">Elements within a graph</a></li>
-		<li><a href="#search_across_graph">Graphs that contain elements</a></li>
-	</ul>
-</li>
-<li><a href="#view_graph">Viewing a graph</a></li>
-	<ul>
-		<li><a href="#embedded_info">Embedded Information</a></li>
-		<li><a href="#graph_panels">Graph Panels</a>
-			<ul>
-				<li><a href="#details_panel">Graph Details Panel</a></li>
-				<li><a href="#search_panel">Search Panel</a></li>
-				<li><a href="#export_panel">Export Panel</a></li>
-				<li><a href="#owner_panel">Owner Panel</a></li>
-				<li><a href="#sharing_panel">Sharing Panel</a></li>
-				<li><a href="#layout_panel">Layouts Panel</a></li>
-				<li><a href="#step_panel">Step through Filtering Panel</a></li>
-			</ul>
-		</li>
-	</ul>
+	<li><h4><a href="#view_graph">Interact with graphs</a></h4></li>
+		<ul>
+			<li><a href="#embedded_info">Embedded Information</a></li>
+			<li><a href="#graph_panels">Graph Panels</a>
+				<ul>
+					<li><a href="#details_panel">Graph Details Panel</a></li>
+					<li><a href="#search_panel">Search Panel</a></li>
+					<li><a href="#export_panel">Export Panel</a></li>
+					<li><a href="#owner_panel">Owner Panel</a></li>
+					<li><a href="#sharing_panel">Sharing Panel</a></li>
+					<li><a href="#layout_panel">Layouts Panel</a></li>
+					<li><a href="#step_panel">Step through Filtering Panel</a></li>
+				</ul>
+			</li>
+		</ul>
+	<li><h4><a href="#share">Share graphs</a></h4></li>
+		<ul>
+			<li><a href="#sharing_graphs">Sharing graphs with group(s)</a></li>
+			<li><a href="#sharing_layouts">Sharing layouts with group(s)</a></li>
+		</ul>
+	<li><h4><a href="#search">Search graphs</a></h4></li>
+		<ul>
+			<li><a href="#search_semantics">Semantics</a></li>
+			<li><a href="#search_in_graph">Elements within a graph</a></li>
+			<li><a href="#search_across_graph">Graphs that contain elements</a></li>
+		</ul>
+	<li><h4><a href="#organize">Organize graphs</a></h4></li>
+		<ul>
+			<li><a href="#tags">Tags</a></li>
+		</ul>
+	<li><h4><a href="#program">Programmatically communicate with GraphSpace</a></h4></li>
 </ul>
-<li><h4><a href="#groups">Groups</a></h4>
-<ul>
-	<li><a href="#sharing_graphs">Sharing graphs</a></li>
-	<li><a href="#sharing_layouts">Group layouts</a></li>
-</ul>
-</li>
-<li><h4><a href="#tags">Tags</a></h4></li>
-</ul>
-
 <hr>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="public_private">Public vs. Private Graphs</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="terminology">Terminology</h3>
+<p>This section describes GraphSpace concepts and terms that are used throughout the documentation.
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="user_type">Anonymous vs. Registered user</h3>
+<p>An <b>anonymous</b> user is anyone that is using GraphSpace without being logged in.  An anonymous user does not have access to the <a href="{{url}}help/programmers">REST API</a> and may not be a member of a <a href="{{url}}help#groups">group</a>.  They may upload graphs anonymously (See <a href="{{url}}help#upload_graphs_cyjs">uploading via web interface</a>).  <b>Note</b>: Graphs that are uploaded by anonymous users will be deleted after <b>30 days</b>.</p>
+<p>A <b>registered</b> user is anyone that is logged into GraphSpace.  By logging into GraphSpace, users have full access to the <a href="{{url}}help/programmers">REST API</a> and are allowed to be members of <a href="{{url}}help#groups">groups</a>.  Graphs uploaded by registered users will remain under a user's account unless they are deleted by the user themselves.   
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="public_private">Public vs. Private graphs</h3>
 <p>When a registered user uploads a graph to GraphSpace either through the <a href="{{url}}help/programmers#add_graph">REST API call</a> found in the <a href="{{url}}help/programmers">Programmer's Guide</a> or through the <a href="{{url}}graphs/upload">web interface</a>, it is by default uploaded as a <b>private</b> graph.  A private graph may only be viewed by the owner of the graph (registered user who uploaded the graph).  The only way a private graph may be viewed by other registered GraphSpace users is if the private graph is shared with a <a href="#groups">group</a>.  If the owner of the graph is part of a group and shares their private graph with the group, all members of the group may view it as well as create their own layouts for the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p>
 
-<p>A <b>public</b> graph is viewable to any person that visits GraphSpace.  In order to make a private graph public, it may be done so through the <a href="{{url}}help/programmers/#make_graph_public">REST API</a>.  By making a graph public, it allows all registered users to share their layouts to the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p> 
+<p>When an anonymous user uploads a graph, it is by default a <b>public</b> graph (See <a href="{{url}}help#upload_graphs_cyjs">uploading via web interface</a>).  A public graph is viewable to any person that visits GraphSpace.  
+
+<p>In order to make a private graph uploaded by a registered user of GraphSpace public, it may be done so through the <a href="{{url}}help/programmers/#make_graph_public">REST API</a>.  By making a graph public, it allows all registered users to share their layouts they create for the graph. (See <a href="#layout_panel">Layouts Panel</a>)</p> 
+
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h3>
+
+<b>Note</b>: GraphSpace account required for this feature
+
+<br><br>
+Groups may be thought of as a collection of GraphSpace users.  For example, if there are multiple researchers who are working on the same project, a group may be created containing all of the researchers.  Once a GraphSpace user is within a group, they may share any graph which they own with the rest of the group.  Only members of the group will be able to see the graph.
+<br><br>
+A <b>group owner</b> is the creator of the group.  They may<ul><li>Invite any GraphSpace user that has an account to be a member of their group <li>Remove any member from their group</li><li>Unshare any graph that has already been shared by the members of their group</li></ul>
+A <b>group member</b> is a user that is a part of a group that is owned by someone else. They may<ul><li>Share their graphs with a group</li><li>Unshare the graphs that they own from the group</li></ul>
+<b>Both groups owners and group members</b> may share layouts of any graph that is already shared with the group.
+
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="tags">Tags</h3>
+
+<p>Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.  Tags are used to organize graphs for a user of GraphSpace, whereas groups are used to share graphs amongst multiple users of GraphSpace.</p>
+
+<p>Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide</p>
+
+<p>All tags associated with a graph must be defined in the metadata for the graph itself.  Refer to <a href="{{url}}help/programmers/#json_ref">JSON Reference</a>.</p>
+
+
 
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="upload_graphs">Uploading graphs</h3>
@@ -82,63 +109,9 @@
 <p>For users who are not registered on GraphSpace, we provide this upload functionality as a tool to obtain a unique URL that contains the content of any .json/.cyjs file that is uploaded via the web interface.</p>
 
 <p><b>Note: all graphs that are uploaded for unregistered users of GraphSpace will be deleted after 30 days.</b></p>
-<hr>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="search">Searching</h3>
-
-<p>The Search panel allows for any user of GraphSpace to search for elements and graphs that matches the criteria of ALL query terms.  A user may search for graphs using the name of a graph as well as a node or an edge which a graph may contain.</p>
-
-
-<h4 style="padding-top: 50px; margin-top: -40px;" id="search_semantics">Semantics</h4>
-<p>GraphSpace supports the searching of <b>multiple queries</b>.  In order to search for multiple terms, simply seperate each search term with a ",".  For example: AKT1, AKT3, CTNNB1".</p>
-<p>In order to search for an <b>edge</b>, use the following syntax [tail: head] where tail is the name of the source node and the head is the name of the target node.</p>
-<p>In order to search for a <b>node</b>, simply enter the node's content. For example: AKT1</p>
-
-<h4 style="padding-top: 50px; margin-top: -40px;" id="search_in_graph">Elements within a graph</h4>
-<p>GraphSpace allows a user to search for a nodes and edges that are inside a graph.  If a search term is found in the graph it is highlighted in the graph.  Multiple nodes and edges may be searched for within a graph by seperating each node/edge with a ",".
-
-<br>
-<p> For example, if a user searched for the node 'TEM1', then the node will look like this:</p><br>
-<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">TEM1 before searching<br><img src="../../static/images/before_searching.png" style="width: 50%"></p>
-
-<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">TEM1 after searching<br><img src="../../static/images/node_search.png" style="width: 50%"></p>
-<p style="clear: both;"></p>
-
-<br><br>
-
-If a user wants to search for edge connection from TEF4 to TEM1, they can do so with the following search command: TEF4:TEM1.  The edge will look like this:
-<br><br>
-
-<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">Before searching for edge<br><img src="../../static/images/before_edge.png" style="width: 60%"></p>
-
-<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">After searching for edge<br><img src="../../static/images/edge_search.png" style="width: 60%"></p>
-<p style="clear: both;"></p>
-
-The <b>Similar</b> option under the search bar allows one to search for all elements within a graph which may have the search term as part of its value.  For example, if there are two nodes CDC5 and CDC55 and the user does a similar search with the term 'CDC', then both CDC5 and CDC55 will be highlighted. 
-<br><br>
-The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be highlighted.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been highlighted since there are no nodes in our example graph which have CDC as their entire value.</p>
-
-<p><b>Note</b>:If there are mulitple search terms, all elements that are contained within the graph that is being searched on will be highlighted.</p>
-
-
-<h4 style="padding-top: 50px; margin-top: -40px;" id="search_across_graph">Graphs that contain elements</h4>
-
-The <b>Similar</b> option under the search bar allows one to search for all graphs that may contain that word in the graph itself.  This option will return all the graphs that may have a node which contains parts of the term(s) being searching, graphs that may contain part of the searched term in its name, as well as if there are edges which contain part of the searched term(s).
-<br><br>
-The <b>Exact</b> option under the search bar allows one to search for all graphs that have exactly what is being searched for.  Graphs returned from this option may have a node, graph name, or an edge which is identical to the searched term(s).
-<br><br>
-To search for graphs that match a graph name, simply type the name or a part of the name of the graph
-<br><br>
-To search for nodes, type the content inside of the node (text that is contained inside of a node)
-<br><br>
-To search for edges, search using the following syntax [tail: head] where tail is the name of the node where the arrow is coming from and head is the name of the node that the arrow is point to.  For example, to search for the edge that connects YEF3 to SIR2, type YEF3:SIR2.  All graphs that contain this edge will be presented to the user.  
-<br><br>
-If searching for multiple values, separate all individual search terms with commas.  Ex: AKT1, AKT3, JUN
-<br><br>
-
-<p><b>Note</b>:If there are multiple search terms (and/or tag terms), all graphs that are returned WILL match all of these terms.  All graphs that are returned by the searches of a node and/or an edge will have all searched terms highlighted inside the graph.</p>
 
 <hr>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Viewing a Graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="view_graph">Interact with graphs</h3>
 
 Consider the follow public <a href="{{url}}graphs/craigy%40vt.edu/linker-q_0.5-query_CDC55-path_k_50/">graph</a>:
 
@@ -214,54 +187,11 @@ If a user of GraphSpace saves their own layout, they are given the following fun
 <br>
 <br>
 <b>Number of highly probably paths</b> reveals interactions (connections) that occur at a certain value.  For example, when <b>Number of highly probable paths</b> was 10, the red node was revealed, however, when Number of highly probable paths was 8, it was hidden.
-<br><!-- <hr>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="finding_graphs">Finding graphs</h3>
-
-Depending on the resolution of the computer that is used to access GraphSpace, one of two navigation bars may be shown at the top of the screen:
-<br><br>
-<img src="../../static/images/navbar.png" style="width: 60%;"><br>
-<br><br>
-or depending on the resolution, may look like:
-<br><br>
-<img src="../../static/images/navbar-2.png" style="width: 60%;"><br>
-<br><br>
-
-If the latter is shown, simply click on the toggle icon on the right of the navigation bar to reveal the links and buttons.
-
-<br><br>
-<img src="../../static/images/navbar-2-circle.png" style="width: 60%;"><br>
-<br><br>
-
-<br><br>
-<img src="../../static/images/navbar-2-graphs.png" style="width: 60%;"><br>
-<br><br>
-
-On your graphs page, you will see buttons at the top of the page called "My Graphs", "Shared with me" and "Public graphs".
-
-<ul>
-
-<li><b><a href="{{url}}graphs/">My Graphs</a></b> will show graphs that you own (you have uploaded). <b>(GraphSpace account required)</b></li>
-
-<li><b><a href="{{url}}graphs/shared/">Shared with me</a></b> will show graphs that have been shared with you through groups [See <a href="#groups">groups</a> below]. <b>(GraphSpace account required)</b></li>
-
-<li><b><a href="{{url}}graphs/public/">Public Graphs</a></b> will show graphs that have been made publicly available on GraphSpace.</li>
-
-</ul>
-
-<p>If a user is logged into GraphSpace, then the graphs link will take them to graphs which they own.  If the user is not logged in, the graphs link will direct them to the public graphs page.</p> -->
+<br>
 
 <hr>
-<h3 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h3>
-
-<b>Note</b>: GraphSpace account required for this feature
-
-<br><br>
-Groups may be thought of as a collection of GraphSpace users.  For example, if there are multiple researchers who are working on the same project, a group may be created containing all of the researchers.  Once a GraphSpace user is within a group, they may share any graph which they own with the rest of the group.  Only members of the group will be able to see the graph.
-<br><br>
-A <b>group owner</b> is the creator of the group.  They may<ul><li>Invite any GraphSpace user that has an account to be a member of their group <li>Remove any member from their group</li><li>Unshare any graph that has already been shared by the members of their group</li></ul>
-A <b>group member</b> is a user that is a part of a group that is owned by someone else. They may<ul><li>Share their graphs with a group</li><li>Unshare the graphs that they own from the group</li></ul>
-<b>Both groups owners and group members</b> may share layouts of any graph that is already shared with the group.
-
+<h3 style="padding-top: 50px; margin-top: -40px;" id="share">Share graphs</h3>
+<p>Share graphs among members of <a href="#groups">groups</a>.  Sharing graphs with a group gives permission to all members of a group to see the graph.</p>
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="sharing_graphs">Sharing graphs with group(s)</h3>
 <p>There are two ways to share a graph that a user owns: <a href='{{url}}help/programmers/#share_graph'>REST API</a> and <a href='{{url}}help/#sharing_panel'>Sharing Panel</a>.</p>
@@ -274,14 +204,67 @@ In order to share a graph, you must own the graph.  In addition, you must be a m
 
 <p>See <a href='{{url}}help/#layout_panel'>Layout Panel</a>.
 <hr>
-<h3 id="tags">Tags</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="search">Search graphs</h3>
 
-<p>Tags are used to categorize graphs.  For example, if a user is uploading multiple graphs to GraphSpace for a specific paper, a tag would be used to categorize all the graphs related to the paper.  On the graphs page, a user can search for graphs that match a tag.  A graph may have any amount of tags that the user sees fit.  It is advantageous for users to group all graphs they upload using tags as it allows for <b>clear organization</b> of work on GraphSpace.  Tags are used to organize graphs for a user of GraphSpace, whereas groups are used to share graphs amongst multiple users of GraphSpace.</p>
+<p>The Search panel allows for any user of GraphSpace to search for elements and graphs that matches the criteria of ALL query terms.  A user may search for graphs using the name of a graph as well as a node or an edge which a graph may contain.</p>
 
-<p>Currently, one has to know the exact tag to search for in order to retrieve all graphs that a user has permission to see which match the searched tag.  If you are searching for multiple tags, separate each individual tag value with commas. Ex: help, tutorial, guide</p>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="search_semantics">Semantics</h3>
+<p>GraphSpace supports the searching of <b>multiple queries</b>.  In order to search for multiple terms, simply seperate each search term with a ",".  For example: AKT1, AKT3, CTNNB1".</p>
+<p>In order to search for an <b>edge</b>, use the following syntax [tail: head] where tail is the name of the source node and the head is the name of the target node.</p>
+<p>In order to search for a <b>node</b>, simply enter the node's content. For example: AKT1</p>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="search_in_graph">Elements within a graph</h3>
+<p>GraphSpace allows a user to search for a nodes and edges that are inside a graph.  If a search term is found in the graph it is highlighted in the graph.  Multiple nodes and edges may be searched for within a graph by seperating each node/edge with a ",".
 
-<p>All tags associated with a graph must be defined in the metadata for the graph itself.  Refer to <a href="{{url}}help/programmers/#json_ref">JSON Reference</a>.</p>
+<br>
+<p> For example, if a user searched for the node 'TEM1', then the node will look like this:</p><br>
+<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">TEM1 before searching<br><img src="../../static/images/before_searching.png" style="width: 50%"></p>
 
+<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">TEM1 after searching<br><img src="../../static/images/node_search.png" style="width: 50%"></p>
+<p style="clear: both;"></p>
+
+<br><br>
+
+If a user wants to search for edge connection from TEF4 to TEM1, they can do so with the following search command: TEF4:TEM1.  The edge will look like this:
+<br><br>
+
+<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;margin-left: 15%;">Before searching for edge<br><img src="../../static/images/before_edge.png" style="width: 60%"></p>
+
+<p style="float: left; font-size: 9pt; text-align: center; width: 30%; margin-right: 1%; margin-bottom: 0.5em;">After searching for edge<br><img src="../../static/images/edge_search.png" style="width: 60%"></p>
+<p style="clear: both;"></p>
+
+The <b>Similar</b> option under the search bar allows one to search for all elements within a graph which may have the search term as part of its value.  For example, if there are two nodes CDC5 and CDC55 and the user does a similar search with the term 'CDC', then both CDC5 and CDC55 will be highlighted. 
+<br><br>
+The <b>Exact</b> option under the search bar allows one to search for all elements within a graph that are identical to the search term. If there are two terms CDC5 and CDC55 and the user does an exact search with the term 'CDC5', only CDC5 will be highlighted.  <b>Note</b>: If the user had searched for the term 'CDC', nothing would have been highlighted since there are no nodes in our example graph which have CDC as their entire value.</p>
+
+<p><b>Note</b>:If there are mulitple search terms, all elements that are contained within the graph that is being searched on will be highlighted.</p>
+
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="search_across_graph">Graphs that contain elements</h3>
+
+The <b>Similar</b> option under the search bar allows one to search for all graphs that may contain that word in the graph itself.  This option will return all the graphs that may have a node which contains parts of the term(s) being searching, graphs that may contain part of the searched term in its name, as well as if there are edges which contain part of the searched term(s).
+<br><br>
+The <b>Exact</b> option under the search bar allows one to search for all graphs that have exactly what is being searched for.  Graphs returned from this option may have a node, graph name, or an edge which is identical to the searched term(s).
+<br><br>
+To search for graphs that match a graph name, simply type the name or a part of the name of the graph
+<br><br>
+To search for nodes, type the content inside of the node (text that is contained inside of a node)
+<br><br>
+To search for edges, search using the following syntax [tail: head] where tail is the name of the node where the arrow is coming from and head is the name of the node that the arrow is point to.  For example, to search for the edge that connects YEF3 to SIR2, type YEF3:SIR2.  All graphs that contain this edge will be presented to the user.  
+<br><br>
+If searching for multiple values, separate all individual search terms with commas.  Ex: AKT1, AKT3, JUN
+<br><br>
+
+<p><b>Note</b>:If there are multiple search terms (and/or tag terms), all graphs that are returned WILL match all of these terms.  All graphs that are returned by the searches of a node and/or an edge will have all searched terms highlighted inside the graph.</p>
+
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="organize">Organize Graphs</h3>
+<p>To aid the organization of graphs, GraphSpace employs the user of <a href="#tags">Tags</a>. When searching for graphs, a user may use tags to narrow down the number of graphs shown.</p>
+
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="program">Programmatically communicate with GraphSpace</h3>
+<p>For registered GraphSpace users that want to write scripts to communicate with GraphSpace, a <a href="{{url}}help/programmers">REST API</a> is provided.  This REST API allows access to almost all of the functionality that is provided through the website.  An example of when it would be advantageous to use the REST API would be for tasks that involve multiple iterative tasks such as uploading many graphs and/or sharing graphs with groups.  Consult the <a href="{{url}}help/programmers">Programmer's Guide"</a> for more information.</p>
 
 </div>
 

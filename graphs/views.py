@@ -950,7 +950,6 @@ def resetLink(request):
             return render(request, 'graphs/error.html', context)
 
         context = {"email": email, "url": URL_PATH}
-
         return render(request, 'graphs/reset.html', context)
 
 def resetPassword(request):
@@ -965,6 +964,7 @@ def resetPassword(request):
 
     '''
     resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
+    print resetInfo
 
     if resetInfo == None:
         return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
@@ -983,7 +983,7 @@ def launchTask(request):
     '''
 
     # Only 1 task per graph as long as there is a HIT active (3 days)
-    error = db.launchTask(request.POST["graph_id"], request.POST["user_id"])
+    error = db.launchTask(request.POST["graph_id"], request.POST["user_id"], request.POST.getlist('layout_array'))
 
     if error != None:
         return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")

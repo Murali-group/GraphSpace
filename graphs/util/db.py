@@ -9,8 +9,13 @@ from collections import Counter, defaultdict
 from operator import itemgetter
 from itertools import groupby
 from datetime import datetime
+
+import time 
 from django.core.mail import send_mail
 import sqlite3 as lite
+
+
+import urllib2, urllib
 
 from django.conf import settings
 
@@ -23,13 +28,21 @@ from sqlalchemy import and_, or_, tuple_
 from sqlalchemy import distinct
 from sqlalchemy import update
 
+import hmac
+from hashlib import sha1
+import requests
+
 import graphs.models as models
+import xml.etree.ElementTree as ET
 
 data_connection = db_init.db
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
+AWSACCESSKEYID = settings.AWSACCESSKEYID
+# SIGNATURE = settings.SIGNATURE
+SECRETKEY = settings.SECRETKEY
 
 def add_everyone_to_password_reset():
 	'''
@@ -191,12 +204,13 @@ def resetPassword(username, password):
 		# Hash password
 		password = bcrypt.hashpw(password, bcrypt.gensalt())
 		# Update the password for the user (after encryption of course)
-		user_to_reset_pw_for = db_session.query(models.User).filter(models.User.user_id == username).one()
+		user_to_reset_pw_for = db_session.query(models.User).filter(models.User.user_id == username).first()
 		user_to_reset_pw_for.password = password
 
 		# Remove user's account from password_reset table
-		delete_from_password_reset = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == username).one()
-		db_session.delete(delete_from_password_reset)
+		delete_from_password_reset = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == username).all()
+		for acct in delete_from_password_reset:
+			db_session.delete(acct)
 		db_session.commit()
 		db_session.close()
 		return "Password updated successfully"
@@ -1708,6 +1722,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 						print "No matching edges"
 
 	else:	
+
 		# Find node id's that are being searched for (source and target nodes)
 		head_nodes = find_node(uid, gid, head_node, 'full_search')
 		tail_nodes = find_node(uid, gid, tail_node, 'full_search')
@@ -1722,7 +1737,7 @@ def find_edge(uid, gid, edge_to_find, search_type):
 
 					try:
 						# Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
-						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_node).filter(models.Edge.tail_node_id == tail_node).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
+						matching_edges = db_session.query(models.Edge).filter(models.Edge.head_node_id == head_nodes[j]).filter(models.Edge.tail_node_id == tail_nodes[i]).filter(models.Edge.user_id == uid).filter(models.Edge.graph_id == gid).all()
 						edge_list += matching_edges
 
 						# # Aggregate all matching edges (DO THIS TWO TIMES SO ORDER OF HEAD OR TAIL NODE DOESN'T MATTER... THIS IS TO RESOLVE UNDIRECTED EDGE SEARCHING)
@@ -1754,7 +1769,6 @@ def find_node(uid, gid, node_to_find, search_type):
 
 	# Create database connection
 	db_session = data_connection.new_session()
-	print uid, gid, node_to_find, search_type
 
 	try:
 		id_list = []
@@ -1777,16 +1791,24 @@ def find_node(uid, gid, node_to_find, search_type):
 
 		else:
 			# Get all matching labels
-			label = db_session.query(models.Node.node_id).filter(models.Node.label == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
+			labels = db_session.query(models.Node.node_id).filter(models.Node.label == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
 			# Get all matching ids
-			node_id = db_session.query(models.Node.node_id).filter(models.Node.node_id == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).first()
+			node_ids = db_session.query(models.Node.node_id).filter(models.Node.node_id == node_to_find).filter(models.Node.user_id == uid).filter(models.Node.graph_id == gid).all()
 
-			if label != None and label not in id_list:
-				id_list.append(label[0])
+			# if label != None and label not in id_list:
+			# 	id_list.append(label[0])
 
-			if node_id != None and node_id not in id_list:
-				id_list.append(node_id[0])
+			# if node_id != None and node_id not in id_list:
+			# 	id_list.append(node_id[0])
+
+			for label in labels:
+				if label not in id_list:
+					id_list.append(label[0])
+
+			for node_id in node_ids:
+				if node_id not in id_list:
+					id_list.append(node_id[0])
 
 		db_session.close()
 		return id_list
@@ -2119,6 +2141,13 @@ def delete_graph(username, graphname):
 			db_session.delete(l)
 			db_session.commit()
 		db_session.commit()
+
+		task = db_session.query(models.Task).filter(models.Task.graph_id == graphname).filter(models.Task.user_id == username).all()
+
+		for t in task:
+			db_session.delete(t)
+			db_session.commit()
+
 		db_session.close()
 
 	except Exception as ex:
@@ -2984,12 +3013,37 @@ def task_exists(graph_id, user_id):
 
 	return exists
 
-def launchTask(graph_id, user_id):
+def generateTimeStampAndSignature(secretKey, operation):
+	'''
+		Generates common parameters as defined in (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CommonParametersArticle.html)
+
+		@param secretKey: Secret Key given by AWS when creating account
+		@param operation: Operation of call (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_OperationsArticle.html)
+		@return (Timestamp, Signature) following AWS semantics
+	'''
+
+	# Get current timestamp 
+	cur_date = datetime.utcnow()
+	timestamp = datetime.strftime(cur_date, "%Y-%m-%dT%H:%M:%S") + "Z"
+
+	# Create signature based on service, operation and timestamp
+	signature = "AWSMechanicalTurkRequester" + operation + timestamp
+
+	# Encrypt with HMAC-SHA1 in base64, then URL encode
+	# (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkRequester/MakingRequests_RequestAuthenticationArticle.html#CalcReqSig)
+	signature = hmac.new(secretKey, signature, sha1).digest().encode("base64").rstrip("\n")
+	signature = urllib.urlencode({"code": signature})[5:]
+
+	return (timestamp, signature)
+
+
+def launchTask(graph_id, user_id, layout_array):
 	'''
 		Launches a task on Amazon Mechanical Turk.
 
 		:param graph_id: ID of graph
 		:param user_id: Owner of graph
+		:param layout_array: Array of layouts to be saved when task is launched
 
 		:return Error or None if no error
 	'''
@@ -3011,9 +3065,49 @@ def launchTask(graph_id, user_id):
 
 	new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime)
 
-	db_session.add(new_task)
-	db_session.commit()
-	db_session.close()
+	layout_array = json.loads(layout_array[0])
+	
+	# Go through each layout and save it
+	# for layout in layout_array:
+	# 	new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0)
+	# 	db_session.add(new_layout)
+	# 	db_session.commit()
+
+	# If the proper environment variables are set in gs-setup
+	if AWSACCESSKEYID != None and SECRETKEY != None:
+
+		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
+
+		# Current as of 12/14/2016
+		version = "2014-08-15"
+		operation = "CreateHIT"
+
+		# Duration of both task and how long it is to be alive (for now same value)
+		duration = "3000"
+
+		# Title of task and description of task
+		title = "TEST"
+		description = "TEST"
+
+		# Generate link back to GS that worker will follow
+		link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id
+
+		# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
+		question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[Testing<a href="''' + link_to_graphspace + '''">GraphSpace Link</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="2" /></Constraints><DefaultText>C1</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+
+		# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+		xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
+		
+		# Generate MechTurkRequest
+		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+
+		r = requests.get(request, allow_redirects=False)
+
+		print r.text
+
+	# # db_session.add(new_task)
+	# # db_session.commit()
+	# # db_session.close()
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
@@ -3169,6 +3263,12 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	if graph_exists == None:
 		return "Graph does not exist"
 
+	# Check to see if the group exists
+	group_exists = get_group(groupOwner, groupId)
+
+	if group_exists == None:
+		return "Group does not exist"
+
 	# Create database connection
 	db_session = data_connection.new_session()
 
@@ -3211,6 +3311,12 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 
 	if graph_exists == None:
 		return "Graph does not exist!"
+
+	# Check to see if the group exists
+	group_exists = get_group(groupOwner, groupId)
+
+	if group_exists == None:
+		return "Group does not exist"
 
 	# Create database connection
 	db_session = data_connection.new_session()
