@@ -10,6 +10,9 @@ done < secret.txt
 
 rm secret.txt
 
+export AWSACCESSKEYID='None'
+export SECRETKEY='None'
+
 export SECRET_KEY=secret_key
 
 # Email functionality tested only on gmail
