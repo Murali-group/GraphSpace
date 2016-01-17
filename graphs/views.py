@@ -410,6 +410,7 @@ def view_task(request, uid, gid):
         :param gid: name of graph that the user owns
     '''
 
+    db.getAssignmentsForGraph(uid, gid)
     if 'uid' in request.session:
         context = login(request)
         context["task_view"] = True
@@ -431,7 +432,7 @@ def view_task(request, uid, gid):
         return render(request, 'graphs/error.html', context)
 
     # Get correct layout for the graph to view
-    context = db.set_layout_context(request, context, uid, gid)
+    context = db.set_task_layout_context(request, context, uid, gid)
 
     if context['Error']:
         return render(request, 'graphs/error.html', context)
@@ -461,8 +462,31 @@ def view_task(request, uid, gid):
     # graph id
     context['graph_id'] = gid
 
+    # owner
+    context["owner"] = uid
+
     return render(request, 'graphs/view_graph.html', context)
 
+def retrieveTaskCode(request):
+    '''
+        Retrieves code for a task when worker has completed task.
+
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+
+        if not gid or not uid:
+            return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
+        
+        surveyCode = db.retrieveTaskCode(uid, gid)
+
+        return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
+
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
 
 def view_json(request, uid, gid):
     '''

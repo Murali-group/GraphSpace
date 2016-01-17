@@ -69,6 +69,7 @@ urlpatterns = patterns('',
         url(r'^reset/$', views.resetLink, name='reset'),
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
         url(r'^launchTask/$', views.launchTask, name='launchTask'),
+        url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
 
         #REST API
 

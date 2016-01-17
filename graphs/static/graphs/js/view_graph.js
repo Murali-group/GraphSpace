@@ -6,8 +6,8 @@ $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
     extractJSONProperties(graph_json.graph);
-
     setDefaultNodeProperties(graph_json['graph']['nodes']);
+    startTimer(5);
 
 
     //Renders the cytoscape element on the page
@@ -2086,3 +2086,59 @@ function setBarToValue(inputId, barId) {
     }
     showOnlyK();
 }
+
+/**
+* When task view is launched it starts a timer.
+* @param duration Duration of countdown
+*/
+function startTimer(duration) {
+    var path = location.href.split("/");
+    if (path[3] == "task") {
+        var timer = duration, minutes, seconds;
+        var timeLeft = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            $("#timer").html(minutes + ":" + seconds);
+
+            if (--timer < 0) {
+                $("#overlay").show();
+                clearInterval(timeLeft);
+                retrieveTaskCode();
+            }
+        }, 1000);
+    }
+}
+
+/**
+* Retrieves new task code. Called when task is completed.
+*/
+function retrieveTaskCode() {
+    var gid = $("#gid").text();
+    var uid = $("#uid").text();
+
+    if (gid.length == 0 || uid.length == 0) {
+        return alert("Something is not right...");
+    }
+
+    $.post("../../../retrieveTaskCode/", {"graph_id": gid, "user_id": uid}, function(data) {
+        if (data.hasOwnProperty("Message")) {
+            $("#code").val(data.Message);
+            $("#codeModal").modal('toggle');
+            $("#exit").click(function() {
+                var pathArray = location.href.split( '/' );
+                var protocol = pathArray[0];
+                var host = pathArray[2];
+                var url = protocol + '//' + host;
+                window.location.href = url
+            });
+        } else {
+            return alert(data.Error);
+        }
+    });
+}
+
+

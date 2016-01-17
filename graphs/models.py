@@ -74,6 +74,15 @@ class GraphToTag(Base):
     user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     tag_id = Column(String, ForeignKey('graph_tag.tag_id'), primary_key=True)
 
+class TaskCode(Base):
+    '''The class representing the schema of the task_code table.'''
+    __tablename__ = 'task_code'
+    hit_id = Column(String, ForeignKey('task.hit_id', ondelete="CASCADE", onupdate="CASCADE"))
+    code = Column(String, primary_key = True)
+    created = Column(TIMESTAMP, nullable = False)
+    used = Column(Integer, nullable = False)
+    expires = Column(TIMESTAMP, nullable = False)
+
 class User(Base):
     '''The class representing the schema of the user table.'''
     __tablename__ = 'user'
@@ -150,6 +159,7 @@ class Task(Base):
     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     created = Column(TIMESTAMP, nullable = False)
+    hit_id=Column(String, nullable=False)
 
 class Event(Base):
     '''The class representing the schema of the event table.'''

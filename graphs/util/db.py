@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 from operator import itemgetter
 from itertools import groupby
 from datetime import datetime
+from datetime import timedelta
 
 import time 
 from django.core.mail import send_mail
@@ -482,6 +483,14 @@ def get_default_layout_name(uid, gid):
 			return default_layout.layout_name
 	else:
 		return None
+
+def set_task_layout_context(request, context, uid, gid):
+	context["Error"] = None
+	layout_to_view = get_default_layout(uid, gid)
+	context['default_layout'] = get_default_layout_id(uid, gid)
+	context['layout_name'] = get_default_layout_name(uid, gid)
+	context['layout_to_view'] = layout_to_view
+	return context
 
 def set_layout_context(request, context, uid, gid):
 	'''
@@ -3010,7 +3019,6 @@ def task_exists(graph_id, user_id):
 
 	# Check to see if there is a task currently active for the current graph
 	exists = db_session.query(models.Task.created).filter(models.Task.graph_id == graph_id).filter(models.Task.user_id == user_id).first()
-
 	return exists
 
 def generateTimeStampAndSignature(secretKey, operation):
@@ -3063,11 +3071,9 @@ def launchTask(graph_id, user_id, layout_array):
 	# Get the current time
 	curtime = datetime.now()
 
-	new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime)
-
 	layout_array = json.loads(layout_array[0])
 	
-	# Go through each layout and save it
+	#Go through each layout and save it
 	# for layout in layout_array:
 	# 	new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0)
 	# 	db_session.add(new_layout)
@@ -3086,14 +3092,14 @@ def launchTask(graph_id, user_id, layout_array):
 		duration = "3000"
 
 		# Title of task and description of task
-		title = "TEST"
-		description = "TEST"
+		title = urllib.urlencode({"title": "GraphSpace Layout Task"})[6:].replace("+", "%20")
+		description = urllib.urlencode({"description": "Move nodes and edges in a graph following guidelines"})[12:]
 
 		# Generate link back to GS that worker will follow
 		link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id
 
 		# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
-		question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[Testing<a href="''' + link_to_graphspace + '''">GraphSpace Link</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="2" /></Constraints><DefaultText>C1</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+		question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100" /></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
 
 		# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
 		xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
@@ -3101,13 +3107,80 @@ def launchTask(graph_id, user_id, layout_array):
 		# Generate MechTurkRequest
 		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
 
-		r = requests.get(request, allow_redirects=False)
+		response = requests.get(request, allow_redirects=False)
+		print response.text
+		root = ET.fromstring(response.text)
 
-		print r.text
+		try:
+			isValid = root[1][0][0].text
+			if isValid == "True":
 
-	# # db_session.add(new_task)
-	# # db_session.commit()
-	# # db_session.close()
+				new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime, hit_id=root[1][1].text)
+				db_session.add(new_task)
+				db_session.commit()
+				db_session.close()
+
+		except Exception as e:
+			print e
+			return e
+
+		db_session.close()
+
+def getAssignmentsForGraph(uid, gid):
+	'''
+		Gets all assignments(work done by MTURk workers) for a particular graph
+		@param uid: Owner of graph
+		@param gid: Graph name
+	'''
+	# If the proper environment variables are set in gs-setup
+	if AWSACCESSKEYID != None and SECRETKEY != None:
+
+		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "GetAssignmentsForHIT")
+
+		# Create database connection
+		db_session = data_connection.new_session()
+
+		# Get the HIT ID for graph
+		task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+
+		if task != None:
+			hitID = task.hit_id
+
+		else:
+			return "Task found for this graph"
+
+		print hitID
+		# Current as of 12/14/2016
+		version = "2014-08-15"
+		operation = "GetAssignmentsForHIT"
+
+		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=GetAssignmentsForHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitID + '&Signature=' + signature
+
+		response = requests.get(request, allow_redirects=False)
+
+		# print response.text
+		root = ET.fromstring(response.text)[1]
+
+		numResults = root[1]
+		totalResults = root[2]
+
+		numResults = int(numResults.text)
+		totalResults =  int(totalResults.text)
+
+		if numResults > 0:
+
+			# Go through all assignments returned by this call
+			for i in range(4, totalResults + 4):
+				assignment_id = root[i][0]
+				worker_id = root[i][1]
+				hit_id = root[i][2]
+				assignment_status = root[i][3]
+				answer = root[i][7]
+
+				answerRoot = ET.fromstring(answer.text)
+				task_code answerRoot[0][1].text
+
+				
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
@@ -4085,6 +4158,36 @@ def insert_user(user_id, password, admin):
 		print ex
 		db_session.close()
 		return None
+
+def retrieveTaskCode(uid, gid):
+	'''
+		Retrieves task code.
+	'''
+
+	# Generate task code
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+
+	if task == None:
+		return None
+
+	# Check to see if survey code doesn't already exist
+	try:
+		expires = datetime.now() + timedelta(hours=6)
+		new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
+		db_session.add(new_code)
+		db_session.commit()
+		db_session.close()
+		return taskCode
+	except Exception as ex:
+		# If code already exists, try again?
+		print ex
+		return retrieveTaskCode(uid, gid)
 
 def usernameMismatchError():
 	'''
