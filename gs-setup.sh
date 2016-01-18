@@ -19,8 +19,12 @@ export EMAIL_HOST='smtp.gmail.com'
 # EMAIL ADDRESS AND PASSWORD TO EMAIL ADDRESS
 # TO ALLOW GRAPHSPACE TO SEND EMAILS THROUGH
 # SPECIFIED ACCOUNTc
-export EMAIL_HOST_USER='None'
-export EMAIL_HOST_PASSWORD='None'
+export EMAIL_HOST_USER='graphspacevt@gmail.com'
+export EMAIL_HOST_PASSWORD='vtresearch'
+
+export AWSACCESSKEYID='AKIAIXGERT2KRCU3ZXIQ'
+export SECRETKEY='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'
+# export SIGNATURE='L9RR05NHSeyI%2FkrxQY2a1qNHUdU%3D'
 
 # You should not need to modify any of the lines below
 export DEBUG=False
