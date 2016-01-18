@@ -3082,6 +3082,7 @@ def launchTask(graph_id, user_id, layout_array):
 	# If the proper environment variables are set in gs-setup
 	if AWSACCESSKEYID != None and SECRETKEY != None:
 
+		# Get the common parameters
 		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
 
 		# Current as of 12/14/2016
@@ -3109,8 +3110,10 @@ def launchTask(graph_id, user_id, layout_array):
 
 		response = requests.get(request, allow_redirects=False)
 		print response.text
+		# Parse XML
 		root = ET.fromstring(response.text)
 
+		# Depending on XML response, handle task creation
 		try:
 			isValid = root[1][0][0].text
 			if isValid == "True":
@@ -3121,8 +3124,8 @@ def launchTask(graph_id, user_id, layout_array):
 				db_session.close()
 
 		except Exception as e:
-			print e
-			return e
+			print "Error is", e
+			return root[0][1][0][1].text
 
 		db_session.close()
 
@@ -3135,6 +3138,7 @@ def getAssignmentsForGraph(uid, gid):
 	# If the proper environment variables are set in gs-setup
 	if AWSACCESSKEYID != None and SECRETKEY != None:
 
+		# Get common parameters
 		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "GetAssignmentsForHIT")
 
 		# Create database connection
@@ -3149,7 +3153,6 @@ def getAssignmentsForGraph(uid, gid):
 		else:
 			return "Task found for this graph"
 
-		print hitID
 		# Current as of 12/14/2016
 		version = "2014-08-15"
 		operation = "GetAssignmentsForHIT"
@@ -3171,17 +3174,31 @@ def getAssignmentsForGraph(uid, gid):
 
 			# Go through all assignments returned by this call
 			for i in range(4, totalResults + 4):
+
+				# Get assignment information
 				assignment_id = root[i][0]
 				worker_id = root[i][1]
 				hit_id = root[i][2]
 				assignment_status = root[i][3]
 				answer = root[i][7]
 
+				# Get the task code that user obtained from GS (after completing the task)
 				answerRoot = ET.fromstring(answer.text)
-				task_code answerRoot[0][1].text
+				task_code = answerRoot[0][1].text
 
-				
+				# Check to see if the task code exists and matches the hit id associated with it
+				code_exists = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code).first()
 
+				# If the code checks out, pay them!
+				if code_exists:
+					# Get new signature and timestamp for different API call
+					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
+
+				else:
+					# Reject them
+					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
+
+					
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
 		Gets all groups that a user owns or is a member of,
