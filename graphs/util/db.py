@@ -533,7 +533,7 @@ def set_layout_context(request, context, uid, gid):
 	    	# there exists a layout that matches the query term
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), request.GET.get('layout_owner'), gid, uid, loggedIn)
 
-		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
+		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an error
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    
@@ -598,9 +598,29 @@ def set_layout_context(request, context, uid, gid):
 	# Check to see if task is launched for graph
 	exists = task_exists(gid, uid)
 
+	context["crowd_layouts"] = get_crowd_layouts_for_graph("MTURK_Worker", gid)
 	context['task_launched'] = exists
 
 	return context
+
+def get_crowd_layouts_for_graph(uid, gid):
+	'''
+		Gets all the layouts submitted by crowdworkers.
+		@param uid: Owner of graph
+		@param gid: Name of graph
+	'''
+	# Get database connection
+	db_session = data_connection.new_session()
+
+	try:
+
+		# Get all the layouts for this graph.
+		crowd_layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).all()
+		db_session.close()
+		return crowd_layouts
+	except NoResultFound:
+		db_session.close()
+		return []
 
 def retrieve_cytoscape_json(graphjson):
 	'''

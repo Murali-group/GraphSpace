@@ -151,18 +151,19 @@
         <h1 id="title" style="display:none;">{{graph_name}}</h1>
     </div>
     <div class="csjs" id="csjs">    
-    <!-- {% if task_view != None %}
+    {% if task_view != None %}
         <div id="timer" style="text-align:right; margin-top:-20px; font-size:25px;color:red;"></div>
         <script type="text/javascript">
             var task_layout_name = "{{layout_name}}";
         </script>
-    {% endif %} -->
+    {% endif %}
     </div>
     <!-- side menu must be on top for 'float' to work properly -->
     <div class="side_menu">
         <!-- div classes are used to style these menu items,
             ids are used for accordian jQuery functions. -->
         <!-- Graph Details menu -->
+        {% if task_view != True %}
         <div id="accordion_graph_details" class="accordion">
             <h3>Graph Details</h3>
             <div class="accordion_content">
@@ -204,7 +205,6 @@
                 </ul>
             </div>
         </div>
-        {% if task_view != True %}
         <!-- Export menu -->
         <div id="accordion_export" class="accordion">
             <h3>Export</h3>
@@ -271,7 +271,7 @@
                         <a id='layout_link' href=""></a>
                         <li id="auto"><a href="#builtin" data-toggle="tab">Auto</a></li>
                         <li id="manual"><a href="#custom" data-toggle="tab">Manual</a></li>
-                        <li id="crowd"><a href="#custom" data-toggle="tab">Crowd</a></li>
+                        <li id="crowd"><a href="#mturk_pane" data-toggle="tab">Crowd</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane" id="builtin">
@@ -421,6 +421,11 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="mturk_pane">
+                        {% for o in crowd_layouts %}
+                            <h1>{{o}}</h1>
+                        {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -450,14 +455,14 @@
         <br>
         {% endif %}
         {% else %}
-            <div id="accordion_design" class="accordion">
+            <!-- <div id="accordion_design" class="accordion">
               <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
               <div class="accordion_content test" id="design_accordian">
-                <hr>
-                <h3>Selection</h3>
+                <hr> -->
+                <h3>Select</h3>
                 <div style="text-align: center;" id="selection" class="input-group">
                 </div>
-                <br><button class="btn btn-danger" id="unselect">Unselect All</button><br>
+                <button class="btn btn-danger" id="unselect">Unselect All</button><br>
                 <hr>
                 <h3>Modify</h3>
                 <div style="text-align: center;" id="modify" class="input-group">
@@ -533,8 +538,8 @@
 
                 <hr>
               </div>
-            </div>
-        </div>
+            <!-- </div>
+        </div> -->
 
         {% endif %}
     </div>
@@ -566,6 +571,7 @@
 {% block css-js-footer %}
 <!--jQuery UI, needed for side menu -->
 <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/spectrum.js' %}"></script>
 <link rel="stylesheet" href="{% static 'graphs/css/cytoscape.js-panzoom.css' %}">
 <!-- jQuery UI style sheet -->
 <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
@@ -581,6 +587,7 @@
 <script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
 <!-- stylesheet for view_graph page -->
 <link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}">
+<link rel="stylesheet" href="{% static 'graphs/css/spectrum.css' %}">
 <!-- stylesheet for side menus -->
 <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
 {% if search_result %}

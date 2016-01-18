@@ -5,9 +5,9 @@ Consult the API: http://api.jquery.com/ready/
 $(document).ready(function() {
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
-    extractJSONProperties(graph_json.graph);
     setDefaultNodeProperties(graph_json['graph']['nodes']);
-    // startTimer(5);
+    extractJSONProperties(graph_json.graph);
+    startTimer(15);
 
 
     //Renders the cytoscape element on the page
@@ -411,25 +411,25 @@ $(document).ready(function() {
 
     var modifiedColor;
 
-    // $("#selectionPalette").spectrum({
-    //     showPalette: true,
-    //     palette: [],
-    //     showSelectionPalette: true, // true by default
-    //     change: function(color) {
-    //         modifiedColor = color.toHexString();
+    $("#selectionPalette").spectrum({
+        showPalette: true,
+        palette: [],
+        showSelectionPalette: true, // true by default
+        change: function(color) {
+            modifiedColor = color.toHexString();
 
-    //         for (var j = 0; j < window.cy.nodes().length; j++) {
-    //             var node = window.cy.nodes()[j];
+            for (var j = 0; j < window.cy.nodes().length; j++) {
+                var node = window.cy.nodes()[j];
 
-    //             if (node.selected()) {
-    //                 node.style("background-color", modifiedColor);
-    //                 node.style("border-color", modifiedColor);
-    //                 node.style("text-outline-color", modifiedColor);
-    //             }
-    //         }
-    //     }
+                if (node.selected()) {
+                    node.style("background-color", modifiedColor);
+                    node.style("border-color", modifiedColor);
+                    node.style("text-outline-color", modifiedColor);
+                }
+            }
+        }
 
-    // });
+    });
 
     var modifiedShape;
 
@@ -605,10 +605,10 @@ $(document).ready(function() {
 
     $('#accordion_design').accordion({
         collapsible: true,
-        heightStyle: "content",
-        autoHeight: false,
+        heightStyle: "auto",
+        // autoHeight: false,
         clearStyle: true,
-        active: 0
+        // active: 0
     });
 
     //these accordions make up the side menu
@@ -1065,7 +1065,25 @@ $(document).ready(function() {
             }
         }
     });
-});
+
+    var colorValues = []
+    $('input:checkbox[name=colors]').click(function() {
+        colorValues = $('input:checkbox[name=colors]:checked').map(function() {
+            return "#" + this.id
+        }).get();
+
+        combineSelections("background-color", colorValues, "shape", shapeValues);
+
+    });
+
+    var shapeValues = []
+    $('input:checkbox[name=shapes]').click(function() {
+        shapeValues = $('input:checkbox[name=shapes]:checked').map(function() {
+            return this.id
+        }).get();
+
+        combineSelections("shape", shapeValues, "background-color", colorValues);
+    });
 
 //Clears search terms
 $("#clear_search").click(function(e) {
@@ -1424,36 +1442,37 @@ function extractJSONProperties(graphJson) {
     var layoutPropertyDictionary = {};
     if (layout) {
         var parsed_json = JSON.parse(layout.json);
-        console.log(parsed_json);
         for (var i in parsed_json) {
             var node_obj = parsed_json[i];
-            console.log(node_obj);
             var colorKey = "background_color";
-            var shapeKey = "shape"
+            var shapeKey = "shape";
 
-            if (node_obj.hasOwnProperty(colorKey)) {
-                if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
-                    var curArray = layoutPropertyDictionary[colorKey];
-                    if (curArray.indexOf(node_obj[colorKey]) == -1) {
-                        curArray.push(node_obj[colorKey]);
-                        layoutPropertyDictionary[colorKey] = curArray;
-                    }
+            if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
+                var curArray = layoutPropertyDictionary[colorKey];
+
+                if (node_obj.hasOwnProperty(colorKey)) {
+                    curArray.push(node_obj[colorKey]);
+                    layoutPropertyDictionary[colorKey] = curArray;
                 } else {
-                    layoutPropertyDictionary[colorKey] = [node_obj[colorKey]];
+                    layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
                 }
+            } else {
+                layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
             }
 
-            if (node_obj.hasOwnProperty(shapeKey)) {
-                if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
-                    var curArray = layoutPropertyDictionary[shapeKey];
-                    if (curArray.indexOf(node_obj[shapeKey]) == -1) {
-                        curArray.push(node_obj[shapeKey]);
-                        layoutPropertyDictionary[shapeKey] = curArray;
-                    }
+            if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
+                var curArray = layoutPropertyDictionary[shapeKey];
+
+                if (node_obj.hasOwnProperty(shapeKey)) {
+                    curArray.push(node_obj[shapeKey]);
+                    layoutPropertyDictionary[shapeKey] = curArray;
                 } else {
-                    layoutPropertyDictionary[shapeKey] = [node_obj[shapeKey]];
+                    layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
                 }
+            } else {
+                layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
             }
+
         }
     } else {
         layoutPropertyDictionary = nodePropertyDictionary;
@@ -1495,27 +1514,7 @@ function extractJSONProperties(graphJson) {
             $(this)[0].getContext("2d").fillRect(0, 0, 20, 20);
         });
     }
-    console.log("TESTING");
 };
-
-var colorValues = []
-$('input:checkbox[name=colors]').click(function() {
-    colorValues = $('input:checkbox[name=colors]:checked').map(function() {
-        return "#" + this.id
-    }).get();
-
-    combineSelections("background-color", colorValues, "shape", shapeValues);
-
-});
-
-var shapeValues = []
-$('input:checkbox[name=shapes]').click(function() {
-    shapeValues = $('input:checkbox[name=shapes]:checked').map(function() {
-        return this.id
-    }).get();
-
-    combineSelections("shape", shapeValues, "background-color", colorValues);
-});
 
 function combineSelections(selection1, selectionArray1, selection2, selectionArray2) {
 
@@ -1560,6 +1559,8 @@ function combineSelections(selection1, selectionArray1, selection2, selectionArr
     }
 
     cy.nodes().unselect();
+
+    console.log(matching_nodes);
 
     for (var i = 0; i < matching_nodes.length; i++) {
         cy.$("#" + matching_nodes[i]).select();
@@ -2171,3 +2172,5 @@ function retrieveTaskCode() {
         }
     });
 }
+
+});
