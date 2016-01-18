@@ -489,7 +489,22 @@ def set_task_layout_context(request, context, uid, gid):
 	layout_to_view = get_default_layout(uid, gid)
 	context['default_layout'] = get_default_layout_id(uid, gid)
 	context['layout_name'] = get_default_layout_name(uid, gid)
-	context['layout_to_view'] = layout_to_view
+
+	# Get all of the available layouts for this graph
+	db_session = data_connection.new_session()
+
+	try:
+		# Get the oldest layout and show that as the task layout to be worked on
+		oldest_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).order_by(models.Layout.modified).limit(1).one()
+		graph_json = get_layout_for_graph(oldest_layout.layout_name, oldest_layout.owner_id, gid, uid, oldest_layout.user_id)
+		layout_to_view = json.dumps({"json": graph_json})
+		context['layout_name'] = oldest_layout.layout_name
+		context['layout_owner'] = oldest_layout.owner_id
+		context["layout_to_view"] = layout_to_view
+
+	except Exception:
+		print "No Results found"
+
 	return context
 
 def set_layout_context(request, context, uid, gid):
@@ -3074,10 +3089,10 @@ def launchTask(graph_id, user_id, layout_array):
 	layout_array = json.loads(layout_array[0])
 	
 	#Go through each layout and save it
-	# for layout in layout_array:
-	# 	new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0)
-	# 	db_session.add(new_layout)
-	# 	db_session.commit()
+	for layout in layout_array:
+		new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, modified=datetime.now())
+		db_session.add(new_layout)
+		db_session.commit()
 
 	# If the proper environment variables are set in gs-setup
 	if AWSACCESSKEYID != None and SECRETKEY != None:
@@ -3157,10 +3172,10 @@ def getAssignmentsForGraph(uid, gid):
 		version = "2014-08-15"
 		operation = "GetAssignmentsForHIT"
 
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=GetAssignmentsForHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitID + '&Signature=' + signature
+		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitID + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
-
+		print response.text
 		# print response.text
 		root = ET.fromstring(response.text)[1]
 
@@ -3170,35 +3185,53 @@ def getAssignmentsForGraph(uid, gid):
 		numResults = int(numResults.text)
 		totalResults =  int(totalResults.text)
 
+		print numResults
+
 		if numResults > 0:
 
 			# Go through all assignments returned by this call
-			for i in range(4, totalResults + 4):
-
+			i = 4
+			# Go through the total results and approve or deny them based on if the code associated with the HIT matches up
+			while i < numResults + 4:
 				# Get assignment information
-				assignment_id = root[i][0]
-				worker_id = root[i][1]
-				hit_id = root[i][2]
-				assignment_status = root[i][3]
-				answer = root[i][7]
+				assignment_id = root[i][0].text
+				worker_id = root[i][1].text
+				hit_id = root[i][2].text
+				assignment_status = root[i][3].text
+				answer = root[i][8].text
+
+				print answer, "TESTING", root[i][8].text
 
 				# Get the task code that user obtained from GS (after completing the task)
-				answerRoot = ET.fromstring(answer.text)
+				answerRoot = ET.fromstring(answer)
 				task_code = answerRoot[0][1].text
 
 				# Check to see if the task code exists and matches the hit id associated with it
-				code_exists = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code).first()
+				code = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code == task_code).first()
+				code_exists = None
+				if code != None:
+					code_exists = code.code
 
 				# If the code checks out, pay them!
 				if code_exists:
 					# Get new signature and timestamp for different API call
 					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-
+					operation = "ApproveAssignment"
+					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+					# Delete task code from database so it can't be reused
+					db_session.delete(code)
+					db_session.commit()
 				else:
 					# Reject them
 					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
+					operation = "RejectAssignment"
+					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 
-					
+				response = requests.get(request, allow_redirects=False)
+				i += 1
+		
+		db_session.close()
+
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
 		Gets all groups that a user owns or is a member of,
@@ -3612,6 +3645,41 @@ def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 
 	db_session.close()
 
+def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
+	'''
+		Saves layout of specific graph.
+
+		:param graph_id: Name of the graph
+		:param graph_owner: Owner of the graph
+		:param layout_name: Name of layout to save
+		:param layout_owner: Owner of layout
+		:param json: JSON of the graph
+		:param public: Is layout public or not
+		:param shared_with_groups: Is layout shared with groups
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Checks to see if there is a layout for this specific graph and the same layout name which the person saving the layout already owns
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+
+	# If no such layout exists, add it
+	if layout != None:
+		layout.graph_id = graph_id
+		layout.user_id = graph_owner
+		layout.layout_name = layout_name
+		layout.layout_owner = layout_owner
+		layout.json = json
+		layout.public = public
+		layout.shared_with_groups = shared_with_groups
+		layout.modified = datetime.now()
+		db_session.commit()
+
+	else:
+		return "Layout not found!"
+
+	db_session.close()
+
 def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
 	'''
 		Saves layout of specific graph.
@@ -3635,7 +3703,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, modified=datetime.now())
 
 	db_session.add(new_layout)
 	db_session.commit()
@@ -3723,7 +3791,6 @@ def cytoscapePresetLayout(csWebJson):
 		:param csWebJson: A CytoscapeWeb compatible layout json containing coordinates of the nodes
 		:return csJson: A CytoscapeJS compatible layout json containing coordinates of the nodes
 	'''
-
 	csJson = {}
 
 	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]

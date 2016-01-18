@@ -298,11 +298,27 @@ def save_layout(request, uid, gid):
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
 
-    result = db.save_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
-    if result == None:
+    error = db.save_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
+    if error == None:
         return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
     
-    return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json");
+    return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json");
+
+def update_layout(request, uid, gid):
+    '''
+        Updates a layout for a graph.
+
+        :param HTTP POST Request
+
+    '''
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    error = db.update_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
+    if error == None:
+        return HttpResponse(json.dumps(db.sendMessage(200, "Layout updated!")), content_type="application/json")
+    
+    return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json");
 
 
 def view_graph(request, uid, gid):
@@ -410,7 +426,7 @@ def view_task(request, uid, gid):
         :param gid: name of graph that the user owns
     '''
 
-    db.getAssignmentsForGraph(uid, gid)
+    # db.getAssignmentsForGraph(uid, gid)
     if 'uid' in request.session:
         context = login(request)
         context["task_view"] = True

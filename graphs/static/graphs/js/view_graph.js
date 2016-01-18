@@ -7,7 +7,7 @@ $(document).ready(function() {
     // http://cytoscape.github.io/cytoscape.js/
     extractJSONProperties(graph_json.graph);
     setDefaultNodeProperties(graph_json['graph']['nodes']);
-    startTimer(5);
+    // startTimer(5);
 
 
     //Renders the cytoscape element on the page
@@ -520,7 +520,9 @@ $(document).ready(function() {
             var nodeData = {
                 'x': nodes[i]._private.position.x,
                 'y': nodes[i]._private.position.y,
-                'id': nodes[i]._private.data.id
+                'id': nodes[i]._private.data.id,
+                'background_color': nodes[i]._private['style']['background-color']['strValue'],
+                'shape': nodes[i]._private['style']['shape']['strValue']
             };
             layout.push(nodeData);
         }
@@ -1419,12 +1421,13 @@ function extractJSONProperties(graphJson) {
         }
     }
 
-    var layoutPropertyDictionary = {}
+    var layoutPropertyDictionary = {};
     if (layout) {
         var parsed_json = JSON.parse(layout.json);
+        console.log(parsed_json);
         for (var i in parsed_json) {
             var node_obj = parsed_json[i];
-
+            console.log(node_obj);
             var colorKey = "background_color";
             var shapeKey = "shape"
 
@@ -1492,6 +1495,7 @@ function extractJSONProperties(graphJson) {
             $(this)[0].getContext("2d").fillRect(0, 0, 20, 20);
         });
     }
+    console.log("TESTING");
 };
 
 var colorValues = []
@@ -2028,7 +2032,9 @@ function grabNodePositions2() {
         var nodeData = {
             'x': nodes[i]._private.position.x,
             'y': nodes[i]._private.position.y,
-            'id': nodes[i]._private.data.id
+            'id': nodes[i]._private.data.id,
+            'background_color': nodes[i]._private['style']['background-color']['strValue'],
+            'shape': nodes[i]._private['style']['shape']['strValue']
         };
         layout.push(nodeData);
     }
@@ -2088,14 +2094,15 @@ function setBarToValue(inputId, barId) {
 }
 
 /**
-* When task view is launched it starts a timer.
-* @param duration Duration of countdown
-*/
+ * When task view is launched it starts a timer.
+ * @param duration Duration of countdown
+ */
 function startTimer(duration) {
     var path = location.href.split("/");
     if (path[3] == "task") {
-        var timer = duration, minutes, seconds;
-        var timeLeft = setInterval(function () {
+        var timer = duration,
+            minutes, seconds;
+        var timeLeft = setInterval(function() {
             minutes = parseInt(timer / 60, 10);
             seconds = parseInt(timer % 60, 10);
 
@@ -2114,8 +2121,8 @@ function startTimer(duration) {
 }
 
 /**
-* Retrieves new task code. Called when task is completed.
-*/
+ * Retrieves new task code. Called when task is completed.
+ */
 function retrieveTaskCode() {
     var gid = $("#gid").text();
     var uid = $("#uid").text();
@@ -2124,12 +2131,36 @@ function retrieveTaskCode() {
         return alert("Something is not right...");
     }
 
-    $.post("../../../retrieveTaskCode/", {"graph_id": gid, "user_id": uid}, function(data) {
+    $.post("../../../retrieveTaskCode/", {
+        "graph_id": gid,
+        "user_id": uid
+    }, function(data) {
         if (data.hasOwnProperty("Message")) {
             $("#code").val(data.Message);
             $("#codeModal").modal('toggle');
+
+            //Save layout
+            var layout = grabNodePositions2();
+            var loggedIn = "MTURK_Worker";
+
+            var queryString = location.href.split(location.host)[1].split("?")[0];
+            //Posts information to the server regarding the current display of the graph,
+            //including position
+            $.post(queryString + "/layout/update/", {
+                layout_name: task_layout_name,
+                points: JSON.stringify(layout),
+                loggedIn: loggedIn,
+                "public": 0,
+                "unlisted": 0
+            }, function(data) {
+                console.log(data);
+                if (data.Error) {
+                    return alert(data.Error);
+                }
+            });
+
             $("#exit").click(function() {
-                var pathArray = location.href.split( '/' );
+                var pathArray = location.href.split('/');
                 var protocol = pathArray[0];
                 var host = pathArray[2];
                 var url = protocol + '//' + host;
@@ -2140,5 +2171,3 @@ function retrieveTaskCode() {
         }
     });
 }
-
-

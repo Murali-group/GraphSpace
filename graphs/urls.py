@@ -22,6 +22,7 @@ urlpatterns = patterns('',
         # regex from http://www.regular-expressions.info/email.html
         # <uid> and <gid> are variable names that are passed as parameters
         # into the views.view_graph function.
+        url(r'^task/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout/update/$', views.update_layout, name='update_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout/$', views.save_layout, name='save_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/$', views.view_graph, name='view_graph'),
 
