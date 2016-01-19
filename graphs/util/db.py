@@ -613,10 +613,8 @@ def get_crowd_layouts_for_graph(uid, gid):
 	db_session = data_connection.new_session()
 
 	try:
-		print uid, gid
 		# Get all the layouts for this graph.
 		crowd_layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == uid).all()
-		print crowd_layouts
 		db_session.close()
 		return crowd_layouts
 	except NoResultFound:
@@ -3818,17 +3816,20 @@ def cytoscapePresetLayout(csWebJson):
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
 
 	for node_position in csWebJson:
+		
 		csJson[str(node_position['id'])] = {
 			'x': node_position['x'],
 			'y': node_position['y']
 		};
 
 		if 'background_color' in node_position:
-			csJson[str(node_position['id'])] = node_position['background_color']
+			csJson[str(node_position['id'])]["background_color"] = node_position['background_color']
 
 		if 'shape' in node_position:
-			csJson[str(node_position['id'])] = node_position['shape']
+			csJson[str(node_position['id'])]['shape'] = node_position['shape']
 
+
+	print csJson
 	return json.dumps(csJson)
 
 def get_all_layouts_for_graph(uid, gid):

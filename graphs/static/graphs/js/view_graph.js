@@ -7,7 +7,7 @@ $(document).ready(function() {
     // http://cytoscape.github.io/cytoscape.js/
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
-    startTimer(15);
+    startTimer(10);
 
 
     //Renders the cytoscape element on the page
@@ -1451,8 +1451,10 @@ $(document).ready(function() {
                     var curArray = layoutPropertyDictionary[colorKey];
 
                     if (node_obj.hasOwnProperty(colorKey)) {
-                        curArray.push(node_obj[colorKey]);
-                        layoutPropertyDictionary[colorKey] = curArray;
+                        if (curArray.indexOf(node_obj[colorKey]) == -1) {
+                            curArray.push(node_obj[colorKey]);
+                            layoutPropertyDictionary[colorKey] = curArray;
+                        }
                     } else {
                         layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
                     }
@@ -1464,8 +1466,10 @@ $(document).ready(function() {
                     var curArray = layoutPropertyDictionary[shapeKey];
 
                     if (node_obj.hasOwnProperty(shapeKey)) {
-                        curArray.push(node_obj[shapeKey]);
-                        layoutPropertyDictionary[shapeKey] = curArray;
+                        if (curArray.indexOf(node_obj[shapeKey]) == -1) {
+                            curArray.push(node_obj[shapeKey]);
+                            layoutPropertyDictionary[shapeKey] = curArray;
+                        }
                     } else {
                         layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
                     }
@@ -2178,9 +2182,9 @@ $(document).ready(function() {
     function applyLayoutStyles() {
         if (layout) {
             parsed_json = JSON.parse(layout.json);
-            console.log(parsed_json);
             for (var i in parsed_json) {
                 node_obj = parsed_json[i];
+                console.log(node_obj);
 
                 if (node_obj.hasOwnProperty("background_color")) {
                     window.cy.$('[id="' + i + '"]').css('background-color', node_obj["background_color"]);
