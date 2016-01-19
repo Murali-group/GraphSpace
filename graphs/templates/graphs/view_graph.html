@@ -423,7 +423,14 @@
                         </div>
                         <div class="tab-pane" id="mturk_pane">
                         {% for o in crowd_layouts %}
-                            <h1>{{o}}</h1>
+                            {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
+                            {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
+                                <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">{{o.layout_name}} modified by {{o.modified}}</a>
+                            {% else %}
+                                <a class="list-group-item layout_buttons" href="{{url}}">{{o.layout_name}} modified by {{o.modified}}</a>
+                            {% endif %}
+                                <div style="clear: both;"></div>
+                            {% endwith %}
                         {% endfor %}
                         </div>
                     </div>

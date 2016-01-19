@@ -613,9 +613,10 @@ def get_crowd_layouts_for_graph(uid, gid):
 	db_session = data_connection.new_session()
 
 	try:
-
+		print uid, gid
 		# Get all the layouts for this graph.
-		crowd_layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).all()
+		crowd_layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == uid).all()
+		print crowd_layouts
 		db_session.close()
 		return crowd_layouts
 	except NoResultFound:

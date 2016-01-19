@@ -386,8 +386,6 @@ $(document).ready(function() {
             } // end ready: function()
     });
 
-
-
     //Unselect all nodes/edges when button is clicked
     $("#unselect").click(function(e) {
         e.preventDefault();
@@ -728,6 +726,8 @@ $(document).ready(function() {
             searchValues($('input[name=match]:checked').val(), $("#search").val());
         }
     });
+
+
 
     //Highlights appropriate radio button based on search term
     if (getQueryVariable($('input[name=match]:checked').val())) {
