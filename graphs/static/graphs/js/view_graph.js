@@ -937,12 +937,10 @@ $(document).ready(function() {
             'gid': gid,
             'owner': uid,
         }, function(data) {
-            console.log(data);
             var group_options = "";
             if (data['Group_Information'].length > 0) {
                 //Used for modal to determine if graph is shared with group or not
                 for (var i = 0; i < data['Group_Information'].length; i++) {
-                    console.log(data['Group_Information'][i]);
                     if (data['Group_Information'][i]['graph_shared'] == true) {
                         if (uid == userId || data['Group_Information'][i]['group_owner'] == userId) {
                             group_options += '<li class="list-group-item groups" style="font-size: 15px;"><label><input type="checkbox" class="group_val" checked="checked" style="margin-right: 30px;" value="' + data['Group_Information'][i]['group_id'] + '12345__43121__' + data['Group_Information'][i]['group_owner'] + '">' + data['Group_Information'][i]['group_id'] + " owned by: " + data['Group_Information'][i]['group_owner'] + '</label></li>';
@@ -1564,8 +1562,6 @@ $(document).ready(function() {
 
         cy.nodes().unselect();
 
-        console.log(matching_nodes);
-
         for (var i = 0; i < matching_nodes.length; i++) {
             cy.$("#" + matching_nodes[i]).select();
         }
@@ -2044,7 +2040,24 @@ $(document).ready(function() {
             layout.push(nodeData);
         }
         return layout;
+    };
+
+    function grabNodePositions2Dictionary() {
+        //When save is clicked, it gets location of all the nodes and saves it
+        //so that nodes can be placed in this location later on
+        var nodes = window.cy.elements('node');
+        var layout = {};
+        for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+            layout[nodes[i]._private.data.id] = {
+                'x': nodes[i]._private.position.x,
+                'y': nodes[i]._private.position.y,
+                'background_color': nodes[i]._private['style']['background-color']['strValue'],
+                'shape': nodes[i]._private['style']['shape']['strValue']           
+            };
+        }
+        return layout;
     }
+
 
     /**
      * Launches task on Amazon Mechanical Turk.
@@ -2136,6 +2149,45 @@ $(document).ready(function() {
             return alert("Something is not right...");
         }
 
+        //Save layout
+        var current_layout = grabNodePositions2();
+        var loggedIn = "MTURK_Worker";
+
+        layout = JSON.parse(layout.json);
+        var changedLayout = grabNodePositions2Dictionary();
+
+        var numChanges = 0;
+
+        var numKeys = Object.keys(current_layout);
+
+        for (var key in changedLayout) {
+
+            node_obj = changedLayout[key];
+            new_node_obj = layout[key];
+
+            if (node_obj["x"] != new_node_obj["x"]) {
+                numChanges ++;
+            }
+
+            if (node_obj["y"] != new_node_obj["y"]) {
+                numChanges ++;
+            }
+
+             if (node_obj["background_color"] != new_node_obj["background_color"]) {
+                numChanges ++;
+            }
+
+             if (node_obj["shape"] != new_node_obj["shape"]) {
+                numChanges ++;
+            }
+        }
+
+        if (numChanges < 5) {
+            $("#code").val("Not enough work done to complete task!");
+            $("#codeModal").modal('toggle');
+            return;
+        }
+
         $.post("../../../retrieveTaskCode/", {
             "graph_id": gid,
             "user_id": uid
@@ -2144,18 +2196,12 @@ $(document).ready(function() {
                 $("#code").val(data.Message);
                 $("#codeModal").modal('toggle');
 
-                //Save layout
-                var layout = grabNodePositions2();
-                var loggedIn = "MTURK_Worker";
-
-                console.log(layout);
-
                 var queryString = location.href.split(location.host)[1].split("?")[0];
                 //Posts information to the server regarding the current display of the graph,
                 //including position
                 $.post(queryString + "/layout/update/", {
                     layout_name: task_layout_name,
-                    points: JSON.stringify(layout),
+                    points: JSON.stringify(current_layout),
                     loggedIn: loggedIn,
                     "public": 0,
                     "unlisted": 0
@@ -2184,7 +2230,6 @@ $(document).ready(function() {
             parsed_json = JSON.parse(layout.json);
             for (var i in parsed_json) {
                 node_obj = parsed_json[i];
-                console.log(node_obj);
 
                 if (node_obj.hasOwnProperty("background_color")) {
                     window.cy.$('[id="' + i + '"]').css('background-color', node_obj["background_color"]);

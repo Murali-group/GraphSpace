@@ -3814,9 +3814,10 @@ def cytoscapePresetLayout(csWebJson):
 
 	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
+	print csWebJson
 
 	for node_position in csWebJson:
-		
+
 		csJson[str(node_position['id'])] = {
 			'x': node_position['x'],
 			'y': node_position['y']
@@ -3828,8 +3829,6 @@ def cytoscapePresetLayout(csWebJson):
 		if 'shape' in node_position:
 			csJson[str(node_position['id'])]['shape'] = node_position['shape']
 
-
-	print csJson
 	return json.dumps(csJson)
 
 def get_all_layouts_for_graph(uid, gid):
