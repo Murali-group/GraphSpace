@@ -249,7 +249,6 @@ $(document).ready(function() {
                     $(".side_menu").css("margin-top", -50);
                 }
 
-
                 //Adding in the panzoom functionality 
                 this.panzoom();
 
@@ -309,6 +308,7 @@ $(document).ready(function() {
                     console.log('working');
                 }, function() {
                     console.log('done');
+                    applyLayoutStyles();
                 });
 
                 // enable user panning (hold the left mouse button to drag
@@ -1085,1092 +1085,1112 @@ $(document).ready(function() {
         combineSelections("shape", shapeValues, "background-color", colorValues);
     });
 
-//Clears search terms
-$("#clear_search").click(function(e) {
-    e.preventDefault();
-    clearSearchTerms();
-    $("#search_error").text("");
-    $("#search_error").css("display", "none");
-});
+    //Clears search terms
+    $("#clear_search").click(function(e) {
+        e.preventDefault();
+        clearSearchTerms();
+        $("#search_error").text("");
+        $("#search_error").css("display", "none");
+    });
 
-//Exports the specified graph to an image
-//Appears in side window 
-function export_graph(graphname) {
-    var png = window.cy.png();
+    //Exports the specified graph to an image
+    //Appears in side window 
+    function export_graph(graphname) {
+        var png = window.cy.png();
 
-    var download = document.createElement('a');
-    download.href = png;
-    download.download = graphname + ".png";
-    fireEvent(download, 'click')
-}
-
-//This is needed to launch events in Mozilla browser
-function fireEvent(obj, evt) {
-    var fireOnThis = obj;
-    if (document.createEvent) {
-        var evObj = document.createEvent('MouseEvents');
-        evObj.initEvent(evt, true, false);
-        fireOnThis.dispatchEvent(evObj);
-    } else if (document.createEventObject) {
-        var evObj = document.createEventObject();
-        fireOnThis.fireEvent('on' + evt, evObj);
+        var download = document.createElement('a');
+        download.href = png;
+        download.download = graphname + ".png";
+        fireEvent(download, 'click')
     }
-}
 
-//When graph is loaded, go through query string
-//and highlight appropriate variables
-function searchOnLoad() {
-
-    if (getQueryVariable('partial_search')) {
-        searchValues('partial_search', getQueryVariable('partial_search'));
-        searchVals = getQueryVariable('partial_search').split(',');
-        $("#search").val(searchVals);
-    } else if (getQueryVariable('full_search')) {
-        searchValues('full_search', getQueryVariable('full_search'));
-        searchVals = getQueryVariable('full_search').split(',');
-        $("#search").val(searchVals);
-    }
-}
-
-//Go through graph and find the k value of a label 
-function findKValueOfLabel(label) {
-    for (edge in graph_json['graph']['edges']) {
-        if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
-            return graph_json['graph']['edges'][edge]['data']['k'];
+    //This is needed to launch events in Mozilla browser
+    function fireEvent(obj, evt) {
+        var fireOnThis = obj;
+        if (document.createEvent) {
+            var evObj = document.createEvent('MouseEvents');
+            evObj.initEvent(evt, true, false);
+            fireOnThis.dispatchEvent(evObj);
+        } else if (document.createEventObject) {
+            var evObj = document.createEventObject();
+            fireOnThis.fireEvent('on' + evt, evObj);
         }
     }
 
-    for (node in graph_json['graph']['nodes']) {
-        if (graph_json['graph']['nodes'][node]['data']['id'] == label) {
-            return graph_json['graph']['nodes'][node]['data']['k'];
+    //When graph is loaded, go through query string
+    //and highlight appropriate variables
+    function searchOnLoad() {
+
+        if (getQueryVariable('partial_search')) {
+            searchValues('partial_search', getQueryVariable('partial_search'));
+            searchVals = getQueryVariable('partial_search').split(',');
+            $("#search").val(searchVals);
+        } else if (getQueryVariable('full_search')) {
+            searchValues('full_search', getQueryVariable('full_search'));
+            searchVals = getQueryVariable('full_search').split(',');
+            $("#search").val(searchVals);
         }
     }
-}
 
-//Function to search through graph elements in order to highlight the 
-//appropriate one
-function searchValues(search_type, labels) {
+    //Go through graph and find the k value of a label 
+    function findKValueOfLabel(label) {
+        for (edge in graph_json['graph']['edges']) {
+            if (graph_json['graph']['edges'][edge]['data']['id'] == label) {
+                return graph_json['graph']['edges'][edge]['data']['k'];
+            }
+        }
 
-    labelCheck = labels.split(",");
-
-    var newLabels = "";
-
-    //Get the labels from array to a string seperated by commas
-    for (var i = 0; i < labelCheck.length; i++) {
-        if (labelCheck[i].length > 0) {
-            if (newLabels.length == 0) {
-                newLabels += labelCheck[i];
-            } else {
-                newLabels += "," + labelCheck[i];
+        for (node in graph_json['graph']['nodes']) {
+            if (graph_json['graph']['nodes'][node]['data']['id'] == label) {
+                return graph_json['graph']['nodes'][node]['data']['k'];
             }
         }
     }
 
+    //Function to search through graph elements in order to highlight the 
+    //appropriate one
+    function searchValues(search_type, labels) {
 
-    labels = newLabels;
+        labelCheck = labels.split(",");
 
-    //split paths
-    var paths = document.URL.split('/');
+        var newLabels = "";
 
-    //Keep track of partial/exact search
-    var partialDistinction = Array();
-    var exactDistinction = Array();
-
-    $("#search_error_text").text("");
-
-    $("#search_error").css("display", "none");
-
-    //posts to server requesting the id's from the labels
-    //so cytoscape will recognize the correct element
-    $.post("../../../retrieveIDs/", {
-        'values': labels,
-        "gid": $("#gid").text(),
-        "uid": $("#uid").text(),
-        "search_type": search_type
-    }, function(data) {
-        data = JSON.parse(data);
-
-        var displayLink = false;
-
-        var oldHtml = $("#search_terms").html();
-
-        if (labels.length > 0) {
-            //Split the labels so we can reference the labels
-            labels = labels.split(',');
-            var k_problems = [];
-            for (var i = 0; i < labels.length; i++) {
-                //if the labels that are retrieved from server doesn't exist
-                if (data[labels[i]].length == 0) {
-                    if (labels[i].trim().length == 0) {
-                        $("#search_error_text").append("Please enter node or edge name!<br>");
-                    } else {
-                        $("#search_error_text").append(labels[i] + " not found!<br>");
-                    }
-                    $("#search_error").css("display", "block");
-                    $("#accordion_search").accordion({
-                        collapsible: true,
-                        heightStyle: "content"
-                    });
-                    $("#search_terms").html(oldHtml);
-                }
-
-                //Get the value of k if it exists
-                var k_val = $("#input_k").val();
-
-                //Go through all data that is returned from the server and make sure that the k value is <= to what is being shown 
-                for (var j = 0; j < data[labels[i]].length; j++) {
-                    if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
-                        k_problems.push(findKValueOfLabel(data[labels[i]][j]));
-                    }
-
-                    if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
-                        // Select the specified element and don't allow the user to unselect it until button is clicked again
-                        if (window.cy.$('[id="' + data[labels[i]][j] + '"]').isEdge()) {
-                            window.cy.$('[id="' + data[labels[i]][j] + '"]').css({
-                                'line-color': 'blue',
-                                'line-style': 'dotted',
-                                'width': 10
-                            });
-                            displayLink = true;
-                        } else {
-                            window.cy.$('[id="' + data[labels[i]][j] + '"]').css({
-                                'border-width': 10,
-                                'border-color': 'blue'
-                            });
-                            displayLink = true;
-                        }
-
-                        //displayLink will display the link to get to this graph (for sharing purposes)
-
-                        //Populate the appropriate array according to the search
-                        if (search_type == 'partial_search') {
-                            labels[i].replace(" ", "")
-                            if (partialDistinction.indexOf(labels[i]) == -1) {
-                                partialDistinction.push(labels[i]);
-                            }
-                        } else {
-                            if (exactDistinction.indexOf(labels[i]) == -1) {
-                                exactDistinction.push(labels[i]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            //If there are any errors, report them to the user
-            if (k_problems.length > 0) {
-                var message = "";
-                $("#search_error").css("display", "block");
-
-                var maxProblem = 0;
-                for (var a = 0; a < k_problems.length; a++) {
-                    maxProblem = Math.max(maxProblem, k_problems[a]);
-                }
-
-                if (k_problems.length > 0) {
-                    message = "A node or edge matches the search term but is not visible.";
+        //Get the labels from array to a string seperated by commas
+        for (var i = 0; i < labelCheck.length; i++) {
+            if (labelCheck[i].length > 0) {
+                if (newLabels.length == 0) {
+                    newLabels += labelCheck[i];
                 } else {
-                    message = "Multiple nodes or edges match the search term but some of them are not visible.";
+                    newLabels += "," + labelCheck[i];
                 }
-
-                if (maxProblem > $("#input_max").val()) {
-                    message += " Please set 'Number of paths' and 'Maximum number of paths' to at least " + maxProblem + " to view all of the searched terms.";
-                } else {
-                    message += " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
-                }
-
-                $("#search_error_text").append(message);
             }
-
-            //If link is to be displayed and there are matching elements, generate link including search queries
-            if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
-
-                var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
-                var layout = getQueryVariable('layout');
-                var layout_owner = getQueryVariable("layout_owner");
-                var highlighted = getHighlightedTerms();
-
-                if (layout) {
-                    linkToGraph += '?layout=' + layout + "&layout_owner=" + layout_owner;
-                }
-
-                if (search_type == 'partial_search') {
-                    if (layout) {
-                        linkToGraph += '&partial_search=';
-                    } else {
-                        linkToGraph += '?partial_search=';
-                    }
-                } else if (search_type == 'full_search') {
-                    if (layout) {
-                        linkToGraph += '&full_search=';
-                    } else {
-                        linkToGraph += '?full_search=';
-                    }
-                }
+        }
 
 
+        labels = newLabels;
+
+        //split paths
+        var paths = document.URL.split('/');
+
+        //Keep track of partial/exact search
+        var partialDistinction = Array();
+        var exactDistinction = Array();
+
+        $("#search_error_text").text("");
+
+        $("#search_error").css("display", "none");
+
+        //posts to server requesting the id's from the labels
+        //so cytoscape will recognize the correct element
+        $.post("../../../retrieveIDs/", {
+            'values': labels,
+            "gid": $("#gid").text(),
+            "uid": $("#uid").text(),
+            "search_type": search_type
+        }, function(data) {
+            data = JSON.parse(data);
+
+            var displayLink = false;
+
+            var oldHtml = $("#search_terms").html();
+
+            if (labels.length > 0) {
+                //Split the labels so we can reference the labels
+                labels = labels.split(',');
+                var k_problems = [];
                 for (var i = 0; i < labels.length; i++) {
-                    if (labels[i].trim().length > 0) {
-                        linkToGraph += labels[i].trim() + ',';
+                    //if the labels that are retrieved from server doesn't exist
+                    if (data[labels[i]].length == 0) {
+                        if (labels[i].trim().length == 0) {
+                            $("#search_error_text").append("Please enter node or edge name!<br>");
+                        } else {
+                            $("#search_error_text").append(labels[i] + " not found!<br>");
+                        }
+                        $("#search_error").css("display", "block");
+                        $("#accordion_search").accordion({
+                            collapsible: true,
+                            heightStyle: "content"
+                        });
+                        $("#search_terms").html(oldHtml);
+                    }
+
+                    //Get the value of k if it exists
+                    var k_val = $("#input_k").val();
+
+                    //Go through all data that is returned from the server and make sure that the k value is <= to what is being shown 
+                    for (var j = 0; j < data[labels[i]].length; j++) {
+                        if (findKValueOfLabel(data[labels[i]][j]) !== undefined && findKValueOfLabel(data[labels[i]][j]) !== null && k_val !== undefined && findKValueOfLabel(data[labels[i]][j]) > k_val) {
+                            k_problems.push(findKValueOfLabel(data[labels[i]][j]));
+                        }
+
+                        if (window.cy.$('[id="' + data[labels[i]][j] + '"]').selected() == false) {
+                            // Select the specified element and don't allow the user to unselect it until button is clicked again
+                            if (window.cy.$('[id="' + data[labels[i]][j] + '"]').isEdge()) {
+                                window.cy.$('[id="' + data[labels[i]][j] + '"]').css({
+                                    'line-color': 'blue',
+                                    'line-style': 'dotted',
+                                    'width': 10
+                                });
+                                displayLink = true;
+                            } else {
+                                window.cy.$('[id="' + data[labels[i]][j] + '"]').css({
+                                    'border-width': 10,
+                                    'border-color': 'blue'
+                                });
+                                displayLink = true;
+                            }
+
+                            //displayLink will display the link to get to this graph (for sharing purposes)
+
+                            //Populate the appropriate array according to the search
+                            if (search_type == 'partial_search') {
+                                labels[i].replace(" ", "")
+                                if (partialDistinction.indexOf(labels[i]) == -1) {
+                                    partialDistinction.push(labels[i]);
+                                }
+                            } else {
+                                if (exactDistinction.indexOf(labels[i]) == -1) {
+                                    exactDistinction.push(labels[i]);
+                                }
+                            }
+                        }
                     }
                 }
 
-                $("#url").attr('href', linkToGraph);
-                $("#url").css('text-decoration', 'underline');
-                $("#url").html("<p id='testing1'>Link to this graph with distinguished elements</p>");
-                $(".test").css("height", $(".test").height + 30);
-            } else {
-                $("#url").html("");
-            }
-        }
-    });
-}
+                //If there are any errors, report them to the user
+                if (k_problems.length > 0) {
+                    var message = "";
+                    $("#search_error").css("display", "block");
 
-/**
- * Get all the highlighted terms in the graph.
- */
-function getHighlightedTerms() {
-    // Create a url with all the highlighted terms
-    var partialHighlightedTerms = new Array();
-    var fullHighlightedTerms = new Array();
-
-    // Go through all of the highlighted terms
-    $(".search").each(function(index) {
-        var value = $(this).attr('value').split('_');
-        if (value[0] == 'partial' && partialHighlightedTerms.indexOf(value[1]) == -1) {
-            partialHighlightedTerms.push(value[1]);
-        } else if (value[0] == 'exact' && fullHighlightedTerms.indexOf(value[1]) == -1) {
-            fullHighlightedTerms.push(value[1]);
-        }
-    });
-
-    return [partialHighlightedTerms, fullHighlightedTerms];
-}
-
-// Gets the largest K value elements from the graph
-// and only renders those values
-function getLargestK(graph_json) {
-    var edges = graph_json['edges'];
-
-    var largestK = 0;
-    for (var i = 0; i < edges.length; i++) {
-        k_val = parseInt(edges[i]['data']['k']);
-        if (k_val > largestK) {
-            largestK = k_val;
-        }
-    }
-    return largestK;
-}
-
-// Checks to see if color is Hex
-function isHexaColor(sNum) {
-    return (typeof sNum === "string") && sNum.length === 7 && !isNaN(parseInt(sNum.substring(1), 16)) && sNum.substring(0, 1) == '#';
-}
-
-//Appends # character if string is hex
-function addCharacterToHex(sNum) {
-    if (sNum.length == 6 && !isNaN(parseInt(sNum, 16))) {
-        return '#' + sNum;
-    } else {
-        return sNum
-    }
-}
-//Small function to split terms based on the '_' character
-function splitTerms(term) {
-    return term.split("_");
-}
-
-//Gets query variables from the url
-function getQueryVariable(variable) {
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        if (pair[0] == variable) {
-            return pair[1];
-        }
-    }
-    return (false);
-}
-
-/**
- * Get all properties of the JSON
- */
-function extractJSONProperties(graphJson) {
-    var nodePropertyDictionary = {};
-    var edgePropertyDictionary = {};
-
-    //Get all the node properties
-    for (var i = 0; i < graphJson.nodes.length; i++) {
-        var node = graphJson.nodes[i].data;
-
-        var keys = Object.keys(node);
-
-        for (var j in keys) {
-            var key = keys[j];
-            if (key == "shape" || key == "background_color") {
-                if (nodePropertyDictionary.hasOwnProperty(key)) {
-                    var curArray = nodePropertyDictionary[key];
-                    if (curArray.indexOf(node[key]) == -1) {
-                        curArray.push(node[key]);
-                        nodePropertyDictionary[key] = curArray;
+                    var maxProblem = 0;
+                    for (var a = 0; a < k_problems.length; a++) {
+                        maxProblem = Math.max(maxProblem, k_problems[a]);
                     }
+
+                    if (k_problems.length > 0) {
+                        message = "A node or edge matches the search term but is not visible.";
+                    } else {
+                        message = "Multiple nodes or edges match the search term but some of them are not visible.";
+                    }
+
+                    if (maxProblem > $("#input_max").val()) {
+                        message += " Please set 'Number of paths' and 'Maximum number of paths' to at least " + maxProblem + " to view all of the searched terms.";
+                    } else {
+                        message += " Please set 'Number of paths' to at least " + maxProblem + " to view all of the searched terms."
+                    }
+
+                    $("#search_error_text").append(message);
+                }
+
+                //If link is to be displayed and there are matching elements, generate link including search queries
+                if ((displayLink == true && partialDistinction.length > 0) || (displayLink == true && exactDistinction.length > 0)) {
+
+                    var linkToGraph = document.URL.substring(0, document.URL.indexOf('?'));
+                    var layout = getQueryVariable('layout');
+                    var layout_owner = getQueryVariable("layout_owner");
+                    var highlighted = getHighlightedTerms();
+
+                    if (layout) {
+                        linkToGraph += '?layout=' + layout + "&layout_owner=" + layout_owner;
+                    }
+
+                    if (search_type == 'partial_search') {
+                        if (layout) {
+                            linkToGraph += '&partial_search=';
+                        } else {
+                            linkToGraph += '?partial_search=';
+                        }
+                    } else if (search_type == 'full_search') {
+                        if (layout) {
+                            linkToGraph += '&full_search=';
+                        } else {
+                            linkToGraph += '?full_search=';
+                        }
+                    }
+
+
+                    for (var i = 0; i < labels.length; i++) {
+                        if (labels[i].trim().length > 0) {
+                            linkToGraph += labels[i].trim() + ',';
+                        }
+                    }
+
+                    $("#url").attr('href', linkToGraph);
+                    $("#url").css('text-decoration', 'underline');
+                    $("#url").html("<p id='testing1'>Link to this graph with distinguished elements</p>");
+                    $(".test").css("height", $(".test").height + 30);
                 } else {
-                    nodePropertyDictionary[key] = [node[key]];
+                    $("#url").html("");
+                }
+            }
+        });
+    }
+
+    /**
+     * Get all the highlighted terms in the graph.
+     */
+    function getHighlightedTerms() {
+        // Create a url with all the highlighted terms
+        var partialHighlightedTerms = new Array();
+        var fullHighlightedTerms = new Array();
+
+        // Go through all of the highlighted terms
+        $(".search").each(function(index) {
+            var value = $(this).attr('value').split('_');
+            if (value[0] == 'partial' && partialHighlightedTerms.indexOf(value[1]) == -1) {
+                partialHighlightedTerms.push(value[1]);
+            } else if (value[0] == 'exact' && fullHighlightedTerms.indexOf(value[1]) == -1) {
+                fullHighlightedTerms.push(value[1]);
+            }
+        });
+
+        return [partialHighlightedTerms, fullHighlightedTerms];
+    }
+
+    // Gets the largest K value elements from the graph
+    // and only renders those values
+    function getLargestK(graph_json) {
+        var edges = graph_json['edges'];
+
+        var largestK = 0;
+        for (var i = 0; i < edges.length; i++) {
+            k_val = parseInt(edges[i]['data']['k']);
+            if (k_val > largestK) {
+                largestK = k_val;
+            }
+        }
+        return largestK;
+    }
+
+    // Checks to see if color is Hex
+    function isHexaColor(sNum) {
+        return (typeof sNum === "string") && sNum.length === 7 && !isNaN(parseInt(sNum.substring(1), 16)) && sNum.substring(0, 1) == '#';
+    }
+
+    //Appends # character if string is hex
+    function addCharacterToHex(sNum) {
+        if (sNum.length == 6 && !isNaN(parseInt(sNum, 16))) {
+            return '#' + sNum;
+        } else {
+            return sNum
+        }
+    }
+    //Small function to split terms based on the '_' character
+    function splitTerms(term) {
+        return term.split("_");
+    }
+
+    //Gets query variables from the url
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable) {
+                return pair[1];
+            }
+        }
+        return (false);
+    }
+
+    /**
+     * Get all properties of the JSON
+     */
+    function extractJSONProperties(graphJson) {
+        var nodePropertyDictionary = {};
+        var edgePropertyDictionary = {};
+
+        //Get all the node properties
+        for (var i = 0; i < graphJson.nodes.length; i++) {
+            var node = graphJson.nodes[i].data;
+
+            var keys = Object.keys(node);
+
+            for (var j in keys) {
+                var key = keys[j];
+                if (key == "shape" || key == "background_color") {
+                    if (nodePropertyDictionary.hasOwnProperty(key)) {
+                        var curArray = nodePropertyDictionary[key];
+                        if (curArray.indexOf(node[key]) == -1) {
+                            curArray.push(node[key]);
+                            nodePropertyDictionary[key] = curArray;
+                        }
+                    } else {
+                        nodePropertyDictionary[key] = [node[key]];
+                    }
                 }
             }
         }
-    }
 
-    //Get all the edge properties
-    for (var i = 0; i < graphJson.edges.length; i++) {
-        var edge = graphJson.edges[i].data;
-        var keys = Object.keys(edge);
+        //Get all the edge properties
+        for (var i = 0; i < graphJson.edges.length; i++) {
+            var edge = graphJson.edges[i].data;
+            var keys = Object.keys(edge);
 
-        for (var j in keys) {
-            var key = keys[j];
-            if (edgePropertyDictionary.hasOwnProperty(key)) {
-                var curArray = edgePropertyDictionary[key];
-                curArray.push(edge[key]);
-                edgePropertyDictionary[key] = curArray;
-            } else {
-                edgePropertyDictionary[key] = [edge[key]];
+            for (var j in keys) {
+                var key = keys[j];
+                if (edgePropertyDictionary.hasOwnProperty(key)) {
+                    var curArray = edgePropertyDictionary[key];
+                    curArray.push(edge[key]);
+                    edgePropertyDictionary[key] = curArray;
+                } else {
+                    edgePropertyDictionary[key] = [edge[key]];
+                }
             }
         }
-    }
 
-    var layoutPropertyDictionary = {};
-    if (layout) {
-        var parsed_json = JSON.parse(layout.json);
-        for (var i in parsed_json) {
-            var node_obj = parsed_json[i];
-            var colorKey = "background_color";
-            var shapeKey = "shape";
+        var layoutPropertyDictionary = {};
+        if (layout) {
+            var parsed_json = JSON.parse(layout.json);
+            for (var i in parsed_json) {
+                var node_obj = parsed_json[i];
+                var colorKey = "background_color";
+                var shapeKey = "shape";
 
-            if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
-                var curArray = layoutPropertyDictionary[colorKey];
+                if (layoutPropertyDictionary.hasOwnProperty(colorKey)) {
+                    var curArray = layoutPropertyDictionary[colorKey];
 
-                if (node_obj.hasOwnProperty(colorKey)) {
-                    curArray.push(node_obj[colorKey]);
-                    layoutPropertyDictionary[colorKey] = curArray;
+                    if (node_obj.hasOwnProperty(colorKey)) {
+                        curArray.push(node_obj[colorKey]);
+                        layoutPropertyDictionary[colorKey] = curArray;
+                    } else {
+                        layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
+                    }
                 } else {
                     layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
                 }
-            } else {
-                layoutPropertyDictionary[colorKey] = nodePropertyDictionary[colorKey];
-            }
 
-            if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
-                var curArray = layoutPropertyDictionary[shapeKey];
+                if (layoutPropertyDictionary.hasOwnProperty(shapeKey)) {
+                    var curArray = layoutPropertyDictionary[shapeKey];
 
-                if (node_obj.hasOwnProperty(shapeKey)) {
-                    curArray.push(node_obj[shapeKey]);
-                    layoutPropertyDictionary[shapeKey] = curArray;
+                    if (node_obj.hasOwnProperty(shapeKey)) {
+                        curArray.push(node_obj[shapeKey]);
+                        layoutPropertyDictionary[shapeKey] = curArray;
+                    } else {
+                        layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
+                    }
                 } else {
                     layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
                 }
-            } else {
-                layoutPropertyDictionary[shapeKey] = nodePropertyDictionary[shapeKey];
+
             }
-
-        }
-    } else {
-        layoutPropertyDictionary = nodePropertyDictionary;
-    }
-
-    //Go through and display all the different properties in template
-    for (var key in layoutPropertyDictionary) {
-        var subtitle = "";
-        if (key == "background_color") {
-            subtitle = "Background Color";
         } else {
-            subtitle = "Shape";
+            layoutPropertyDictionary = nodePropertyDictionary;
         }
-        $("#selection").append("<p style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
-        var valueArray = layoutPropertyDictionary[key];
-        var checkboxString = "<p style='text-align: left;'>";
 
-        for (var index in valueArray) {
-            var value = valueArray[index];
+        //Go through and display all the different properties in template
+        for (var key in layoutPropertyDictionary) {
+            var subtitle = "";
             if (key == "background_color") {
-                value = colourNameToHex(value);
+                subtitle = "Background Color";
+            } else {
+                subtitle = "Shape";
+            }
+            $("#selection").append("<p style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
+            var valueArray = layoutPropertyDictionary[key];
+            var checkboxString = "<p style='text-align: left;'>";
 
-                if (value == false) {
-                    value = valueArray[index];
+            for (var index in valueArray) {
+                var value = valueArray[index];
+                if (key == "background_color") {
+                    value = colourNameToHex(value);
+
+                    if (value == false) {
+                        value = valueArray[index];
+                    }
+                    checkboxString += '<input id="' + value.substring(1) + '" type="checkbox" name="colors">&nbsp;<canvas class="canvas" id="' + value.substring(1) + '" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';
+                } else {
+                    checkboxString += '<input id="' + value + '" type="checkbox" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
                 }
-                checkboxString += '<input id="' + value.substring(1) + '" type="checkbox" name="colors">&nbsp;<canvas class="canvas" id="' + value.substring(1) + '" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';
-            } else {
-                checkboxString += '<input id="' + value + '" type="checkbox" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
+                if ((index + 1) % 3 == 0) {
+                    checkboxString += "<br><br>";
+                }
             }
-            if ((index + 1) % 3 == 0) {
-                checkboxString += "<br><br>";
-            }
+            checkboxString += "</p>";
+            $("#selection").append(checkboxString);
+
+            $(".canvas").each(function() {
+                $(this)[0].getContext("2d").fillStyle = "#" + $(this)[0].id;
+                $(this)[0].getContext("2d").fillRect(0, 0, 20, 20);
+            });
         }
-        checkboxString += "</p>";
-        $("#selection").append(checkboxString);
-
-        $(".canvas").each(function() {
-            $(this)[0].getContext("2d").fillStyle = "#" + $(this)[0].id;
-            $(this)[0].getContext("2d").fillRect(0, 0, 20, 20);
-        });
-    }
-};
-
-function combineSelections(selection1, selectionArray1, selection2, selectionArray2) {
-
-    var matching_shape_nodes = []
-
-    var shapes = []
-    for (var i = 0; i < selectionArray1.length; i++) {
-        var shape = selectionArray1[i];
-        for (var j = 0; j < window.cy.nodes().length; j++) {
-            var node = window.cy.nodes()[j];
-
-            var nodeShape = node.style(selection1);
-            if (selectionArray1.indexOf(nodeShape) != -1) {
-                shapes.push(nodeShape);
-                matching_shape_nodes.push(node["_private"]["data"]["id"]);
-            }
-        }
-    }
-
-    var matching_color_nodes = []
-    var colors = []
-    for (var i = 0; i < selectionArray2.length; i++) {
-        var color = selectionArray2[i];
-        for (var j = 0; j < window.cy.nodes().length; j++) {
-            var node = window.cy.nodes()[j];
-
-            var nodeColor = node.style(selection2);
-            if (selectionArray2.indexOf(nodeColor) != -1) {
-                colors.push(nodeColor);
-                matching_color_nodes.push(node["_private"]["data"]["id"]);
-            }
-        }
-    }
-
-    matching_nodes = []
-    if (selectionArray2.length > 0 && selectionArray1.length > 0) {
-        matching_nodes = intersect(matching_shape_nodes, matching_color_nodes);
-    } else if (selectionArray2.length > 0) {
-        matching_nodes = matching_color_nodes;
-    } else {
-        matching_nodes = matching_shape_nodes;
-    }
-
-    cy.nodes().unselect();
-
-    console.log(matching_nodes);
-
-    for (var i = 0; i < matching_nodes.length; i++) {
-        cy.$("#" + matching_nodes[i]).select();
-    }
-}
-
-// Returns all the id's that are > k value
-function showOnlyK() {
-    if ($("#input_k").val()) {
-        if ($("#input_k").val().length > 0) {
-            var maxVal = parseInt($("#input_k").val());
-
-            window.cy.elements().show();
-            hideList = window.cy.filter('[k > ' + maxVal + ']');
-            hideList.hide();
-        }
-    }
-}
-
-//Gets all nodes and edges up do the max value set
-//and only renders them
-function applyMax(graph_layout) {
-    var maxVal = parseInt($("#input_max").val());
-
-    if (!maxVal) {
-        return;
-    }
-    var newJSON = {
-        "nodes": new Array(),
-        "edges": new Array()
     };
 
-    // List of node ids that should remain in the graph
-    var nodeNames = Array();
+    function combineSelections(selection1, selectionArray1, selection2, selectionArray2) {
 
-    //Get all edges that meet the max quantifier
-    for (var i = 0; i < graph_json.graph['edges'].length; i++) {
-        var edge_data = graph_json.graph['edges'][i];
-        if (edge_data['data']['k'] <= maxVal) {
-            newJSON['edges'].push(edge_data);
-            nodeNames.push(edge_data['data']['source']);
-            nodeNames.push(edge_data['data']['target']);
-        }
-    }
+        var matching_shape_nodes = []
 
-    //Get all nodes that meet the max quantifier
-    for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
-        var node_data = graph_json.graph['nodes'][i];
-        if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-            newJSON['nodes'].push(node_data);
-        }
-    }
+        var shapes = []
+        for (var i = 0; i < selectionArray1.length; i++) {
+            var shape = selectionArray1[i];
+            for (var j = 0; j < window.cy.nodes().length; j++) {
+                var node = window.cy.nodes()[j];
 
-    window.cy.load(newJSON);
-    showOnlyK();
-}
-
-//Unselects a specified term from graph
-function unselectTerm(terms) {
-    terms = terms.split(',');
-    for (var i = 0; i < terms.length; i++) {
-        window.cy.$('[id="' + terms[i] + '"]').removeCss();
-    }
-}
-
-function getLayoutFromQuery() {
-
-    //The following code retrieves the specified layout
-    //of a graph to be displayed.
-    //Some of them are pre-defined. Check Cytoscapejs.org
-    var graph_layout = {
-        name: 'random',
-        padding: 10,
-        fit: true,
-        animate: false,
-        // maxSimulationTime: 1000
-    };
-
-    $("#auto").addClass('active');
-    $("#manual").removeClass('active');
-
-    $('#builtin').addClass('active');
-    $('#custom').removeClass('active');
-
-    var query = getQueryVariable("layout");
-
-    if (query == "default_breadthfirst") {
-        graph_layout = {
-            name: "breadthfirst",
-            padding: 10,
-            fit: true,
-            avoidOverlap: true,
-            animate: false
-        }
-    } else if (query == "default_concentric") {
-        graph_layout = {
-            name: "concentric",
-            fit: true,
-            padding: 10,
-            avoidOverlap: true,
-            animate: false
-        }
-    } else if (query == "default_circle") {
-        graph_layout = {
-            name: "circle",
-            padding: 10,
-            fit: true,
-            avoidOverlap: true,
-            animate: false
-        }
-    } else if (query == 'default_cose') {
-        graph_layout = {
-            name: "cose"
-        }
-    } else if (query == "default_grid") {
-        graph_layout = {
-            name: "grid"
-        }
-    } else {
-
-        $("#auto").removeClass('active');
-        $("#manual").addClass('active');
-
-        $('#builtin').removeClass('active');
-        $('#custom').addClass('active');
-
-        if (layout && layout.json != null) {
-            graph_layout = {
-                name: 'preset',
-                positions: JSON.parse(layout.json)
-            };
-        } else if (query) {
-            alert("Layout does not exist or has not been shared yet!");
-            var loc = window.location.href;
-            var baseLoc = loc.substring(0, loc.indexOf("?"));
-            window.location.href = baseLoc;
-        }
-    }
-
-    return graph_layout;
-}
-
-/*
- * Clears all search term from graph.
- */
-function clearSearchTerms() {
-    window.cy.elements().removeCss();
-    $("#search").val("");
-    showOnlyK();
-    // applyMax(graph_json);
-    $("#testing1").html("");
-}
-
-/** 
- * Returns the HEX value of a color
- */
-function colourNameToHex(colour) {
-    var colours = {
-        "aliceblue": "#f0f8ff",
-        "antiquewhite": "#faebd7",
-        "aqua": "#00ffff",
-        "aquamarine": "#7fffd4",
-        "azure": "#f0ffff",
-        "beige": "#f5f5dc",
-        "bisque": "#ffe4c4",
-        "black": "#000000",
-        "blanchedalmond": "#ffebcd",
-        "blue": "#0000ff",
-        "blueviolet": "#8a2be2",
-        "brown": "#a52a2a",
-        "burlywood": "#deb887",
-        "cadetblue": "#5f9ea0",
-        "chartreuse": "#7fff00",
-        "chocolate": "#d2691e",
-        "coral": "#ff7f50",
-        "cornflowerblue": "#6495ed",
-        "cornsilk": "#fff8dc",
-        "crimson": "#dc143c",
-        "cyan": "#00ffff",
-        "darkblue": "#00008b",
-        "darkcyan": "#008b8b",
-        "darkgoldenrod": "#b8860b",
-        "darkgray": "#a9a9a9",
-        "darkgreen": "#006400",
-        "darkkhaki": "#bdb76b",
-        "darkmagenta": "#8b008b",
-        "darkolivegreen": "#556b2f",
-        "darkorange": "#ff8c00",
-        "darkorchid": "#9932cc",
-        "darkred": "#8b0000",
-        "darksalmon": "#e9967a",
-        "darkseagreen": "#8fbc8f",
-        "darkslateblue": "#483d8b",
-        "darkslategray": "#2f4f4f",
-        "darkturquoise": "#00ced1",
-        "darkviolet": "#9400d3",
-        "deeppink": "#ff1493",
-        "deepskyblue": "#00bfff",
-        "dimgray": "#696969",
-        "dodgerblue": "#1e90ff",
-        "firebrick": "#b22222",
-        "floralwhite": "#fffaf0",
-        "forestgreen": "#228b22",
-        "fuchsia": "#ff00ff",
-        "gainsboro": "#dcdcdc",
-        "ghostwhite": "#f8f8ff",
-        "gold": "#ffd700",
-        "goldenrod": "#daa520",
-        "gray": "#808080",
-        "green": "#008000",
-        "greenyellow": "#adff2f",
-        "honeydew": "#f0fff0",
-        "hotpink": "#ff69b4",
-        "indianred ": "#cd5c5c",
-        "indigo": "#4b0082",
-        "ivory": "#fffff0",
-        "khaki": "#f0e68c",
-        "lavender": "#e6e6fa",
-        "lavenderblush": "#fff0f5",
-        "lawngreen": "#7cfc00",
-        "lemonchiffon": "#fffacd",
-        "lightblue": "#add8e6",
-        "lightcoral": "#f08080",
-        "lightcyan": "#e0ffff",
-        "lightgoldenrodyellow": "#fafad2",
-        "lightgrey": "#d3d3d3",
-        "lightgreen": "#90ee90",
-        "lightpink": "#ffb6c1",
-        "lightsalmon": "#ffa07a",
-        "lightseagreen": "#20b2aa",
-        "lightskyblue": "#87cefa",
-        "lightslategray": "#778899",
-        "lightsteelblue": "#b0c4de",
-        "lightyellow": "#ffffe0",
-        "lime": "#00ff00",
-        "limegreen": "#32cd32",
-        "linen": "#faf0e6",
-        "magenta": "#ff00ff",
-        "maroon": "#800000",
-        "mediumaquamarine": "#66cdaa",
-        "mediumblue": "#0000cd",
-        "mediumorchid": "#ba55d3",
-        "mediumpurple": "#9370d8",
-        "mediumseagreen": "#3cb371",
-        "mediumslateblue": "#7b68ee",
-        "mediumspringgreen": "#00fa9a",
-        "mediumturquoise": "#48d1cc",
-        "mediumvioletred": "#c71585",
-        "midnightblue": "#191970",
-        "mintcream": "#f5fffa",
-        "mistyrose": "#ffe4e1",
-        "moccasin": "#ffe4b5",
-        "navajowhite": "#ffdead",
-        "navy": "#000080",
-        "oldlace": "#fdf5e6",
-        "olive": "#808000",
-        "olivedrab": "#6b8e23",
-        "orange": "#ffa500",
-        "orangered": "#ff4500",
-        "orchid": "#da70d6",
-        "palegoldenrod": "#eee8aa",
-        "palegreen": "#98fb98",
-        "paleturquoise": "#afeeee",
-        "palevioletred": "#d87093",
-        "papayawhip": "#ffefd5",
-        "peachpuff": "#ffdab9",
-        "peru": "#cd853f",
-        "pink": "#ffc0cb",
-        "plum": "#dda0dd",
-        "powderblue": "#b0e0e6",
-        "purple": "#800080",
-        "red": "#ff0000",
-        "rosybrown": "#bc8f8f",
-        "royalblue": "#4169e1",
-        "saddlebrown": "#8b4513",
-        "salmon": "#fa8072",
-        "sandybrown": "#f4a460",
-        "seagreen": "#2e8b57",
-        "seashell": "#fff5ee",
-        "sienna": "#a0522d",
-        "silver": "#c0c0c0",
-        "skyblue": "#87ceeb",
-        "slateblue": "#6a5acd",
-        "slategray": "#708090",
-        "snow": "#fffafa",
-        "springgreen": "#00ff7f",
-        "steelblue": "#4682b4",
-        "tan": "#d2b48c",
-        "teal": "#008080",
-        "thistle": "#d8bfd8",
-        "tomato": "#ff6347",
-        "turquoise": "#40e0d0",
-        "violet": "#ee82ee",
-        "wheat": "#f5deb3",
-        "white": "#ffffff",
-        "whitesmoke": "#f5f5f5",
-        "yellow": "#ffff00",
-        "yellowgreen": "#9acd32"
-    };
-
-    if (colour in Object.keys(colours)) {
-        return colours[colour]
-    }
-    return false;
-}
-
-/**
- * Makes specific layout the default layout for a graph.
- */
-$(".default").click(function(e) {
-    var paths = document.URL.split('/')
-
-    var gid = $("#gid").text();
-
-    if (gid.charAt(gid.length - 1) == '/') {
-        gid = gid.substring(0, gid.length - 1);
-    }
-
-    var uid = $("#uid").text();
-
-    $.post('../../../setDefaultLayout/', {
-        'layoutOwner': $(this).attr("id"),
-        'layoutId': $(this).val(),
-        'gid': gid,
-        'uid': uid
-    }, function(data) {
-        if (data.Error) {
-            return alert(data.Error);
-        }
-        window.location.href = window.location.href.split('?')[0];
-    });
-});
-
-/**
- * Makes specific layout the default layout for a graph.
- */
-$(".removeDefault").click(function(e) {
-    var paths = document.URL.split('/')
-    var gid = $("#gid").text();
-    var uid = $("#uid").text();
-
-    $.post('../../../removeDefaultLayout/', {
-        'layoutOwner': $(this).attr("id"),
-        'layoutId': $(this).val(),
-        'gid': gid,
-        'uid': uid
-    }, function(data) {
-        if (data.Error) {
-            return alert(data.Error);
-        }
-        window.location.reload();
-    });
-});
-
-/**
- * Sets default properties of node objects.
- */
-function setDefaultNodeProperties(nodeJSON) {
-    // DONE SO OLD GRAPHS WILL DISPLAY
-    //If the nodes in graphs already in database don't have width or height
-    // or unrecognized shape, have a default value
-    for (var i = 0; i < nodeJSON.length; i++) {
-        var nodeData = nodeJSON[i]['data'];
-
-        //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
-        //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
-        //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
-        var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid", "polygon"];
-
-        //If the node has a shape, make sure that shape is recognized by CytoscapeJS
-        //Otherwise, make shape an ellipse
-        if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
-
-            //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
-            if (nodeData['shape'] == 'square') {
-                nodeData['shape'] = "rectangle"
-            } else {
-                //Make default shape an ellipse
-                nodeData['shape'] = 'ellipse';
-            }
-
-            //If shape is not found, default to ellipse
-            if (acceptedShapes.indexOf(nodeData["shape"]) == -1) {
-                nodeData["shape"] = "ellipse";
-            }
-        } else if (nodeData.hasOwnProperty('shape') == false) {
-            nodeData['shape'] = "ellipse";
-        } else {
-            nodeData['shape'] = nodeData['shape'].toLowerCase();
-        }
-
-        //Pick default color if nothing is provided
-        if (nodeData['background_color'] == undefined) {
-            nodeData['background_color'] = "yellow";
-        } else {
-            var hexCode = colourNameToHex(nodeData['background_color']);
-            if (hexCode != false) {
-                nodeData['background_color'] = hexCode;
-            } else {
-                if (isHexaColor(addCharacterToHex(nodeData['background_color']))) {
-                    nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
+                var nodeShape = node.style(selection1);
+                if (selectionArray1.indexOf(nodeShape) != -1) {
+                    shapes.push(nodeShape);
+                    matching_shape_nodes.push(node["_private"]["data"]["id"]);
                 }
             }
         }
 
-        //Set border color to be black by default
-        if (nodeData["border_color"] == undefined) {
-            nodeData["border_color"] = "#888";
+        var matching_color_nodes = []
+        var colors = []
+        for (var i = 0; i < selectionArray2.length; i++) {
+            var color = selectionArray2[i];
+            for (var j = 0; j < window.cy.nodes().length; j++) {
+                var node = window.cy.nodes()[j];
+
+                var nodeColor = node.style(selection2);
+                if (selectionArray2.indexOf(nodeColor) != -1) {
+                    colors.push(nodeColor);
+                    matching_color_nodes.push(node["_private"]["data"]["id"]);
+                }
+            }
         }
 
-        if (nodeData['text_halign'] == undefined) {
-            nodeData["text_halign"] = "center";
+        matching_nodes = []
+        if (selectionArray2.length > 0 && selectionArray1.length > 0) {
+            matching_nodes = intersect(matching_shape_nodes, matching_color_nodes);
+        } else if (selectionArray2.length > 0) {
+            matching_nodes = matching_color_nodes;
+        } else {
+            matching_nodes = matching_shape_nodes;
         }
 
-        if (nodeData["text_valign"] == undefined) {
-            nodeData["text_valign"] = "center";
+        cy.nodes().unselect();
+
+        console.log(matching_nodes);
+
+        for (var i = 0; i < matching_nodes.length; i++) {
+            cy.$("#" + matching_nodes[i]).select();
         }
     }
-    return nodeJSON;
-};
 
-/*
- * When input_k bar is changed, update the nodes shown in the graph.
- */
-$("#input_k").bind("change", function() {
-    setInputK();
-});
+    // Returns all the id's that are > k value
+    function showOnlyK() {
+        if ($("#input_k").val()) {
+            if ($("#input_k").val().length > 0) {
+                var maxVal = parseInt($("#input_k").val());
 
-/*
- * Updates the text box when the user slides the bar.
- */
-function setInputK() {
-    if ($("#input_k").val() < 0) {
-        $("#input_k").val(0);
+                window.cy.elements().show();
+                hideList = window.cy.filter('[k > ' + maxVal + ']');
+                hideList.hide();
+            }
+        }
     }
-    if (parseInt($("#input_k").val()) > parseInt($("#input_max").val())) {
-        $("#input_k").val($("#input_max").val());
 
-    }
-    setBarToValue($("#input_k"), "slider");
-    $("#slider").slider({
-        value: $("#input_k").val(),
-        max: $('#input_max').val()
-    });
-}
+    //Gets all nodes and edges up do the max value set
+    //and only renders them
+    function applyMax(graph_layout) {
+        var maxVal = parseInt($("#input_max").val());
 
-/**
- * When the input max bar changes from user, invoke changes to the graph 
- * as well as position the slider in its appropriate value.
- */
-$("#input_max").bind("change", function() {
-    if ($(this).val() < 0) {
-        $(this).val(0);
-    }
-    var slider_max = $("#slider_max").slider("option", "max");
-    if ($(this).val() > slider_max) {
-        $(this).val(slider_max);
-    }
-    setBarToValue(this, "slider_max");
-    applyMax(graph_json.graph);
-    setInputK();
-});
-
-function grabNodePositions2() {
-    //When save is clicked, it gets location of all the nodes and saves it
-    //so that nodes can be placed in this location later on
-    var nodes = window.cy.elements('node');
-    var layout = [];
-    for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-        var nodeData = {
-            'x': nodes[i]._private.position.x,
-            'y': nodes[i]._private.position.y,
-            'id': nodes[i]._private.data.id,
-            'background_color': nodes[i]._private['style']['background-color']['strValue'],
-            'shape': nodes[i]._private['style']['shape']['strValue']
+        if (!maxVal) {
+            return;
+        }
+        var newJSON = {
+            "nodes": new Array(),
+            "edges": new Array()
         };
-        layout.push(nodeData);
-    }
-    return layout;
-}
 
-/**
- * Launches task on Amazon Mechanical Turk.
- */
-$(".launch_task").click(function(e) {
+        // List of node ids that should remain in the graph
+        var nodeNames = Array();
 
-    var graph_id = $(this).attr("id");
-    var user_id = $(this).val();
-
-    if (graph_id.length == 0 || user_id.length == 0) {
-        return alert("Something went wrong.");
-    }
-
-    var layoutArray = [];
-    for (var i = 0; i < 5; i++) {
-        var layout = window.cy.makeLayout({
-            name: "random"
-        });
-        layout.on('layoutstop', function() {
-            console.log('done');
-        });
-        layout.run();
-
-        layoutArray.push(grabNodePositions2());
-    }
-
-    $.post('../../../launchTask/', {
-        'graph_id': $(this).attr("id"),
-        'user_id': $(this).val(),
-        'layout_array': JSON.stringify(layoutArray)
-    }, function(data) {
-        if (data.Error) {
-            return alert(data.Error);
-        } else {
-            alert("Task launched!");
-            window.location.reload();
-        }
-    });
-});
-
-/**
- * If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
- * inputId the id of the input bar
- * barId  the id of the max paths shown bar.
- */
-function setBarToValue(inputId, barId) {
-    var slider_max = $("#slider_max").slider("option", "max");
-    if ($(inputId).val() > slider_max) {
-        $(inputId).val(slider_max);
-    }
-    showOnlyK();
-}
-
-/**
- * When task view is launched it starts a timer.
- * @param duration Duration of countdown
- */
-function startTimer(duration) {
-    var path = location.href.split("/");
-    if (path[3] == "task") {
-        var timer = duration,
-            minutes, seconds;
-        var timeLeft = setInterval(function() {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
-
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-
-            $("#timer").html(minutes + ":" + seconds);
-
-            if (--timer < 0) {
-                $("#overlay").show();
-                clearInterval(timeLeft);
-                retrieveTaskCode();
+        //Get all edges that meet the max quantifier
+        for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+            var edge_data = graph_json.graph['edges'][i];
+            if (edge_data['data']['k'] <= maxVal) {
+                newJSON['edges'].push(edge_data);
+                nodeNames.push(edge_data['data']['source']);
+                nodeNames.push(edge_data['data']['target']);
             }
-        }, 1000);
-    }
-}
-
-/**
- * Retrieves new task code. Called when task is completed.
- */
-function retrieveTaskCode() {
-    var gid = $("#gid").text();
-    var uid = $("#uid").text();
-
-    if (gid.length == 0 || uid.length == 0) {
-        return alert("Something is not right...");
-    }
-
-    $.post("../../../retrieveTaskCode/", {
-        "graph_id": gid,
-        "user_id": uid
-    }, function(data) {
-        if (data.hasOwnProperty("Message")) {
-            $("#code").val(data.Message);
-            $("#codeModal").modal('toggle');
-
-            //Save layout
-            var layout = grabNodePositions2();
-            var loggedIn = "MTURK_Worker";
-
-            var queryString = location.href.split(location.host)[1].split("?")[0];
-            //Posts information to the server regarding the current display of the graph,
-            //including position
-            $.post(queryString + "/layout/update/", {
-                layout_name: task_layout_name,
-                points: JSON.stringify(layout),
-                loggedIn: loggedIn,
-                "public": 0,
-                "unlisted": 0
-            }, function(data) {
-                console.log(data);
-                if (data.Error) {
-                    return alert(data.Error);
-                }
-            });
-
-            $("#exit").click(function() {
-                var pathArray = location.href.split('/');
-                var protocol = pathArray[0];
-                var host = pathArray[2];
-                var url = protocol + '//' + host;
-                window.location.href = url
-            });
-        } else {
-            return alert(data.Error);
         }
+
+        //Get all nodes that meet the max quantifier
+        for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+            var node_data = graph_json.graph['nodes'][i];
+            if (nodeNames.indexOf(node_data['data']['id']) > -1) {
+                newJSON['nodes'].push(node_data);
+            }
+        }
+
+        window.cy.load(newJSON);
+        showOnlyK();
+    }
+
+    //Unselects a specified term from graph
+    function unselectTerm(terms) {
+        terms = terms.split(',');
+        for (var i = 0; i < terms.length; i++) {
+            window.cy.$('[id="' + terms[i] + '"]').removeCss();
+        }
+    }
+
+    function getLayoutFromQuery() {
+
+        //The following code retrieves the specified layout
+        //of a graph to be displayed.
+        //Some of them are pre-defined. Check Cytoscapejs.org
+        var graph_layout = {
+            name: 'random',
+            padding: 10,
+            fit: true,
+            animate: false,
+            // maxSimulationTime: 1000
+        };
+
+        $("#auto").addClass('active');
+        $("#manual").removeClass('active');
+
+        $('#builtin').addClass('active');
+        $('#custom').removeClass('active');
+
+        var query = getQueryVariable("layout");
+
+        if (query == "default_breadthfirst") {
+            graph_layout = {
+                name: "breadthfirst",
+                padding: 10,
+                fit: true,
+                avoidOverlap: true,
+                animate: false
+            }
+        } else if (query == "default_concentric") {
+            graph_layout = {
+                name: "concentric",
+                fit: true,
+                padding: 10,
+                avoidOverlap: true,
+                animate: false
+            }
+        } else if (query == "default_circle") {
+            graph_layout = {
+                name: "circle",
+                padding: 10,
+                fit: true,
+                avoidOverlap: true,
+                animate: false
+            }
+        } else if (query == 'default_cose') {
+            graph_layout = {
+                name: "cose"
+            }
+        } else if (query == "default_grid") {
+            graph_layout = {
+                name: "grid"
+            }
+        } else {
+
+            $("#auto").removeClass('active');
+            $("#manual").addClass('active');
+
+            $('#builtin').removeClass('active');
+            $('#custom').addClass('active');
+
+            if (layout && layout.json != null) {
+                graph_layout = {
+                    name: 'preset',
+                    positions: JSON.parse(layout.json)
+                };
+            } else if (query) {
+                alert("Layout does not exist or has not been shared yet!");
+                var loc = window.location.href;
+                var baseLoc = loc.substring(0, loc.indexOf("?"));
+                window.location.href = baseLoc;
+            }
+        }
+
+        return graph_layout;
+    }
+
+    /*
+     * Clears all search term from graph.
+     */
+    function clearSearchTerms() {
+        window.cy.elements().removeCss();
+        $("#search").val("");
+        showOnlyK();
+        // applyMax(graph_json);
+        $("#testing1").html("");
+    }
+
+    /** 
+     * Returns the HEX value of a color
+     */
+    function colourNameToHex(colour) {
+        var colours = {
+            "aliceblue": "#f0f8ff",
+            "antiquewhite": "#faebd7",
+            "aqua": "#00ffff",
+            "aquamarine": "#7fffd4",
+            "azure": "#f0ffff",
+            "beige": "#f5f5dc",
+            "bisque": "#ffe4c4",
+            "black": "#000000",
+            "blanchedalmond": "#ffebcd",
+            "blue": "#0000ff",
+            "blueviolet": "#8a2be2",
+            "brown": "#a52a2a",
+            "burlywood": "#deb887",
+            "cadetblue": "#5f9ea0",
+            "chartreuse": "#7fff00",
+            "chocolate": "#d2691e",
+            "coral": "#ff7f50",
+            "cornflowerblue": "#6495ed",
+            "cornsilk": "#fff8dc",
+            "crimson": "#dc143c",
+            "cyan": "#00ffff",
+            "darkblue": "#00008b",
+            "darkcyan": "#008b8b",
+            "darkgoldenrod": "#b8860b",
+            "darkgray": "#a9a9a9",
+            "darkgreen": "#006400",
+            "darkkhaki": "#bdb76b",
+            "darkmagenta": "#8b008b",
+            "darkolivegreen": "#556b2f",
+            "darkorange": "#ff8c00",
+            "darkorchid": "#9932cc",
+            "darkred": "#8b0000",
+            "darksalmon": "#e9967a",
+            "darkseagreen": "#8fbc8f",
+            "darkslateblue": "#483d8b",
+            "darkslategray": "#2f4f4f",
+            "darkturquoise": "#00ced1",
+            "darkviolet": "#9400d3",
+            "deeppink": "#ff1493",
+            "deepskyblue": "#00bfff",
+            "dimgray": "#696969",
+            "dodgerblue": "#1e90ff",
+            "firebrick": "#b22222",
+            "floralwhite": "#fffaf0",
+            "forestgreen": "#228b22",
+            "fuchsia": "#ff00ff",
+            "gainsboro": "#dcdcdc",
+            "ghostwhite": "#f8f8ff",
+            "gold": "#ffd700",
+            "goldenrod": "#daa520",
+            "gray": "#808080",
+            "green": "#008000",
+            "greenyellow": "#adff2f",
+            "honeydew": "#f0fff0",
+            "hotpink": "#ff69b4",
+            "indianred ": "#cd5c5c",
+            "indigo": "#4b0082",
+            "ivory": "#fffff0",
+            "khaki": "#f0e68c",
+            "lavender": "#e6e6fa",
+            "lavenderblush": "#fff0f5",
+            "lawngreen": "#7cfc00",
+            "lemonchiffon": "#fffacd",
+            "lightblue": "#add8e6",
+            "lightcoral": "#f08080",
+            "lightcyan": "#e0ffff",
+            "lightgoldenrodyellow": "#fafad2",
+            "lightgrey": "#d3d3d3",
+            "lightgreen": "#90ee90",
+            "lightpink": "#ffb6c1",
+            "lightsalmon": "#ffa07a",
+            "lightseagreen": "#20b2aa",
+            "lightskyblue": "#87cefa",
+            "lightslategray": "#778899",
+            "lightsteelblue": "#b0c4de",
+            "lightyellow": "#ffffe0",
+            "lime": "#00ff00",
+            "limegreen": "#32cd32",
+            "linen": "#faf0e6",
+            "magenta": "#ff00ff",
+            "maroon": "#800000",
+            "mediumaquamarine": "#66cdaa",
+            "mediumblue": "#0000cd",
+            "mediumorchid": "#ba55d3",
+            "mediumpurple": "#9370d8",
+            "mediumseagreen": "#3cb371",
+            "mediumslateblue": "#7b68ee",
+            "mediumspringgreen": "#00fa9a",
+            "mediumturquoise": "#48d1cc",
+            "mediumvioletred": "#c71585",
+            "midnightblue": "#191970",
+            "mintcream": "#f5fffa",
+            "mistyrose": "#ffe4e1",
+            "moccasin": "#ffe4b5",
+            "navajowhite": "#ffdead",
+            "navy": "#000080",
+            "oldlace": "#fdf5e6",
+            "olive": "#808000",
+            "olivedrab": "#6b8e23",
+            "orange": "#ffa500",
+            "orangered": "#ff4500",
+            "orchid": "#da70d6",
+            "palegoldenrod": "#eee8aa",
+            "palegreen": "#98fb98",
+            "paleturquoise": "#afeeee",
+            "palevioletred": "#d87093",
+            "papayawhip": "#ffefd5",
+            "peachpuff": "#ffdab9",
+            "peru": "#cd853f",
+            "pink": "#ffc0cb",
+            "plum": "#dda0dd",
+            "powderblue": "#b0e0e6",
+            "purple": "#800080",
+            "red": "#ff0000",
+            "rosybrown": "#bc8f8f",
+            "royalblue": "#4169e1",
+            "saddlebrown": "#8b4513",
+            "salmon": "#fa8072",
+            "sandybrown": "#f4a460",
+            "seagreen": "#2e8b57",
+            "seashell": "#fff5ee",
+            "sienna": "#a0522d",
+            "silver": "#c0c0c0",
+            "skyblue": "#87ceeb",
+            "slateblue": "#6a5acd",
+            "slategray": "#708090",
+            "snow": "#fffafa",
+            "springgreen": "#00ff7f",
+            "steelblue": "#4682b4",
+            "tan": "#d2b48c",
+            "teal": "#008080",
+            "thistle": "#d8bfd8",
+            "tomato": "#ff6347",
+            "turquoise": "#40e0d0",
+            "violet": "#ee82ee",
+            "wheat": "#f5deb3",
+            "white": "#ffffff",
+            "whitesmoke": "#f5f5f5",
+            "yellow": "#ffff00",
+            "yellowgreen": "#9acd32"
+        };
+
+        if (colour in Object.keys(colours)) {
+            return colours[colour]
+        }
+        return false;
+    }
+
+    /**
+     * Makes specific layout the default layout for a graph.
+     */
+    $(".default").click(function(e) {
+        var paths = document.URL.split('/')
+
+        var gid = $("#gid").text();
+
+        if (gid.charAt(gid.length - 1) == '/') {
+            gid = gid.substring(0, gid.length - 1);
+        }
+
+        var uid = $("#uid").text();
+
+        $.post('../../../setDefaultLayout/', {
+            'layoutOwner': $(this).attr("id"),
+            'layoutId': $(this).val(),
+            'gid': gid,
+            'uid': uid
+        }, function(data) {
+            if (data.Error) {
+                return alert(data.Error);
+            }
+            window.location.href = window.location.href.split('?')[0];
+        });
     });
-}
+
+    /**
+     * Makes specific layout the default layout for a graph.
+     */
+    $(".removeDefault").click(function(e) {
+        var paths = document.URL.split('/')
+        var gid = $("#gid").text();
+        var uid = $("#uid").text();
+
+        $.post('../../../removeDefaultLayout/', {
+            'layoutOwner': $(this).attr("id"),
+            'layoutId': $(this).val(),
+            'gid': gid,
+            'uid': uid
+        }, function(data) {
+            if (data.Error) {
+                return alert(data.Error);
+            }
+            window.location.reload();
+        });
+    });
+
+    /**
+     * Sets default properties of node objects.
+     */
+    function setDefaultNodeProperties(nodeJSON) {
+        // DONE SO OLD GRAPHS WILL DISPLAY
+        //If the nodes in graphs already in database don't have width or height
+        // or unrecognized shape, have a default value
+        for (var i = 0; i < nodeJSON.length; i++) {
+            var nodeData = nodeJSON[i]['data'];
+
+            //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
+            //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
+            //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
+            var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid", "polygon"];
+
+            //If the node has a shape, make sure that shape is recognized by CytoscapeJS
+            //Otherwise, make shape an ellipse
+            if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+
+                //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
+                if (nodeData['shape'] == 'square') {
+                    nodeData['shape'] = "rectangle"
+                } else {
+                    //Make default shape an ellipse
+                    nodeData['shape'] = 'ellipse';
+                }
+
+                //If shape is not found, default to ellipse
+                if (acceptedShapes.indexOf(nodeData["shape"]) == -1) {
+                    nodeData["shape"] = "ellipse";
+                }
+            } else if (nodeData.hasOwnProperty('shape') == false) {
+                nodeData['shape'] = "ellipse";
+            } else {
+                nodeData['shape'] = nodeData['shape'].toLowerCase();
+            }
+
+            //Pick default color if nothing is provided
+            if (nodeData['background_color'] == undefined) {
+                nodeData['background_color'] = "yellow";
+            } else {
+                var hexCode = colourNameToHex(nodeData['background_color']);
+                if (hexCode != false) {
+                    nodeData['background_color'] = hexCode;
+                } else {
+                    if (isHexaColor(addCharacterToHex(nodeData['background_color']))) {
+                        nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
+                    }
+                }
+            }
+
+            //Set border color to be black by default
+            if (nodeData["border_color"] == undefined) {
+                nodeData["border_color"] = "#888";
+            }
+
+            if (nodeData['text_halign'] == undefined) {
+                nodeData["text_halign"] = "center";
+            }
+
+            if (nodeData["text_valign"] == undefined) {
+                nodeData["text_valign"] = "center";
+            }
+        }
+        return nodeJSON;
+    };
+
+    /*
+     * When input_k bar is changed, update the nodes shown in the graph.
+     */
+    $("#input_k").bind("change", function() {
+        setInputK();
+    });
+
+    /*
+     * Updates the text box when the user slides the bar.
+     */
+    function setInputK() {
+        if ($("#input_k").val() < 0) {
+            $("#input_k").val(0);
+        }
+        if (parseInt($("#input_k").val()) > parseInt($("#input_max").val())) {
+            $("#input_k").val($("#input_max").val());
+
+        }
+        setBarToValue($("#input_k"), "slider");
+        $("#slider").slider({
+            value: $("#input_k").val(),
+            max: $('#input_max').val()
+        });
+    }
+
+    /**
+     * When the input max bar changes from user, invoke changes to the graph 
+     * as well as position the slider in its appropriate value.
+     */
+    $("#input_max").bind("change", function() {
+        if ($(this).val() < 0) {
+            $(this).val(0);
+        }
+        var slider_max = $("#slider_max").slider("option", "max");
+        if ($(this).val() > slider_max) {
+            $(this).val(slider_max);
+        }
+        setBarToValue(this, "slider_max");
+        applyMax(graph_json.graph);
+        setInputK();
+    });
+
+    function grabNodePositions2() {
+        //When save is clicked, it gets location of all the nodes and saves it
+        //so that nodes can be placed in this location later on
+        var nodes = window.cy.elements('node');
+        var layout = [];
+        for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+            var nodeData = {
+                'x': nodes[i]._private.position.x,
+                'y': nodes[i]._private.position.y,
+                'id': nodes[i]._private.data.id,
+                'background_color': nodes[i]._private['style']['background-color']['strValue'],
+                'shape': nodes[i]._private['style']['shape']['strValue']
+            };
+            layout.push(nodeData);
+        }
+        return layout;
+    }
+
+    /**
+     * Launches task on Amazon Mechanical Turk.
+     */
+    $(".launch_task").click(function(e) {
+
+        var graph_id = $(this).attr("id");
+        var user_id = $(this).val();
+
+        if (graph_id.length == 0 || user_id.length == 0) {
+            return alert("Something went wrong.");
+        }
+
+        var layoutArray = [];
+        for (var i = 0; i < 5; i++) {
+            var layout = window.cy.makeLayout({
+                name: "random"
+            });
+            layout.on('layoutstop', function() {
+                console.log('done');
+            });
+            layout.run();
+
+            layoutArray.push(grabNodePositions2());
+        }
+
+        $.post('../../../launchTask/', {
+            'graph_id': $(this).attr("id"),
+            'user_id': $(this).val(),
+            'layout_array': JSON.stringify(layoutArray)
+        }, function(data) {
+            if (data.Error) {
+                return alert(data.Error);
+            } else {
+                alert("Task launched!");
+                window.location.reload();
+            }
+        });
+    });
+
+    /**
+     * If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
+     * inputId the id of the input bar
+     * barId  the id of the max paths shown bar.
+     */
+    function setBarToValue(inputId, barId) {
+        var slider_max = $("#slider_max").slider("option", "max");
+        if ($(inputId).val() > slider_max) {
+            $(inputId).val(slider_max);
+        }
+        showOnlyK();
+    }
+
+    /**
+     * When task view is launched it starts a timer.
+     * @param duration Duration of countdown
+     */
+    function startTimer(duration) {
+        var path = location.href.split("/");
+        if (path[3] == "task") {
+            var timer = duration,
+                minutes, seconds;
+            var timeLeft = setInterval(function() {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                $("#timer").html(minutes + ":" + seconds);
+
+                if (--timer < 0) {
+                    $("#overlay").show();
+                    clearInterval(timeLeft);
+                    retrieveTaskCode();
+                }
+            }, 1000);
+        }
+    }
+
+    /**
+     * Retrieves new task code. Called when task is completed.
+     */
+    function retrieveTaskCode() {
+        var gid = $("#gid").text();
+        var uid = $("#uid").text();
+
+        if (gid.length == 0 || uid.length == 0) {
+            return alert("Something is not right...");
+        }
+
+        $.post("../../../retrieveTaskCode/", {
+            "graph_id": gid,
+            "user_id": uid
+        }, function(data) {
+            if (data.hasOwnProperty("Message")) {
+                $("#code").val(data.Message);
+                $("#codeModal").modal('toggle');
+
+                //Save layout
+                var layout = grabNodePositions2();
+                var loggedIn = "MTURK_Worker";
+
+                console.log(layout);
+
+                var queryString = location.href.split(location.host)[1].split("?")[0];
+                //Posts information to the server regarding the current display of the graph,
+                //including position
+                $.post(queryString + "/layout/update/", {
+                    layout_name: task_layout_name,
+                    points: JSON.stringify(layout),
+                    loggedIn: loggedIn,
+                    "public": 0,
+                    "unlisted": 0
+                }, function(data) {
+                    console.log(data);
+                    if (data.Error) {
+                        return alert(data.Error);
+                    }
+                });
+
+                $("#exit").click(function() {
+                    var pathArray = location.href.split('/');
+                    var protocol = pathArray[0];
+                    var host = pathArray[2];
+                    var url = protocol + '//' + host;
+                    window.location.href = url
+                });
+            } else {
+                return alert(data.Error);
+            }
+        });
+    };
+
+    function applyLayoutStyles() {
+        if (layout) {
+            parsed_json = JSON.parse(layout.json);
+            console.log(parsed_json);
+            for (var i in parsed_json) {
+                node_obj = parsed_json[i];
+
+                if (node_obj.hasOwnProperty("background_color")) {
+                    window.cy.$('[id="' + i + '"]').css('background-color', node_obj["background_color"]);
+                }
+
+                if (node_obj.hasOwnProperty("shape")) {
+                    window.cy.$('[id="' + i + '"]').css('shape', node_obj["shape"]);
+                }
+            }
+        }
+    };
 
 });

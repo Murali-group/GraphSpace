@@ -3823,6 +3823,12 @@ def cytoscapePresetLayout(csWebJson):
 			'y': node_position['y']
 		};
 
+		if 'background_color' in node_position:
+			csJson[str(node_position['id'])] = node_position['background_color']
+
+		if 'shape' in node_position:
+			csJson[str(node_position['id'])] = node_position['shape']
+
 	return json.dumps(csJson)
 
 def get_all_layouts_for_graph(uid, gid):
