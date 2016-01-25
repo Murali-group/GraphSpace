@@ -2185,6 +2185,10 @@ $(document).ready(function() {
         if (numChanges < 5) {
             $("#code").val("Not enough work done to complete task!");
             $("#codeModal").modal('toggle');
+            $("#exit").text("Try again");
+            $("#exit").click(function() {
+                window.location.reload();
+            });
             return;
         }
 

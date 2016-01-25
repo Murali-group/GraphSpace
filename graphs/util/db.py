@@ -1951,6 +1951,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 	insert_data_for_graph(graphJson, graphname, username, tags, nodes, curTime, 0, db_session)
 
 	db_session.close()
+
 	# If everything works, return Nothing 
 	return None
 
@@ -3414,6 +3415,11 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	group_name_exists = db_session.query(models.Group).filter(models.Group.groupId == groupId).first()
+
+	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
+		return "Group exists but the group owner provided doesn't own this group"
+
 	# Is graph already shared
 	shared_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).first()
 
@@ -3433,6 +3439,8 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 
 		db_session.add(new_shared_graph)
 		db_session.commit()
+	else:
+		return "You must be the owner or a member of this group in order to share graphs with it."
 
 	db_session.close()
 	return None
@@ -3463,6 +3471,11 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	group_name_exists = db_session.query(models.Group).filter(models.Group.groupId == groupId).first()
+
+	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
+		return "Group exists but the group owner provided doesn't own this group"
+
 	# Is this graph already shared with the group?
 	is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).first()
 
@@ -3471,9 +3484,20 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 		db_session.close()
 		return "Can't unshare a graph that is not currently shared with the group"
 
-	# Unshare the graph
-	db_session.delete(is_shared_with_group)
-	db_session.commit()
+	# Is a user a member of the group trying to share graph with
+	group_member = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == owner).filter(models.GroupToUser.group_id == groupId).filter(models.GroupToUser.group_owner == groupOwner).first()
+
+	# Is a user the owner of a group
+	group_owner = db_session.query(models.Group.owner_id).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).first()
+	
+	if group_owner != None or group_member != None:
+
+		# Unshare the graph
+		db_session.delete(is_shared_with_group)
+		db_session.commit()
+	else:
+		return "You must be the owner or a member of this group in order to unshare graphs with it."
+
 	db_session.close()
 	return None
 
@@ -4102,6 +4126,12 @@ def get_all_tags_for_graph(graphname, username):
 	db_session = data_connection.new_session()
 
 	try:
+		# Get graph to see if it exists
+		graph_exists = db_session.query(models.Graph).filter(models.Graph.graph_id == graphname).filter(models.Graph.user_id == username).first()
+
+		if graph_exists == None:
+			return None
+
 		# Retrieves all tags that match a given graph
 		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
 		
@@ -4115,7 +4145,7 @@ def get_all_tags_for_graph(graphname, username):
 		return cleaned_tag_list
 	except NoResultFound:
 		db_session.close()
-		return None
+		return []
 
 def change_graph_visibility_for_tag(isPublic, tagname, username):
 	'''

@@ -1604,10 +1604,12 @@ def delete_group(request, group_owner, groupname):
 
         if group_owner == request.POST['username']:
             data = db.remove_group(request.POST['username'], groupname)
-            return HttpResponse(json.dumps(db.sendMessage(200, data), indent=4, separators=(',', ': ')), content_type="application/json");
+            if data != None:
+                return HttpResponse(json.dumps(db.throwError(404, "Group not found!"), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.sendMessage(200, data), indent=4, separators=(',', ': ')), content_type="application/json");
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
 
 def add_group(request, group_owner, groupname):
     '''
@@ -1650,8 +1652,8 @@ def get_group_for_user(request, user_id):
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        group = db.groups_for_user(user_id)
-        return HttpResponse(json.dumps({"StatusCode": 200, "Groups": group}, indent=4, separators=(',', ': ')), content_type="application/json")
+        groups = db.groups_for_user(user_id)
+        return HttpResponse(json.dumps({"StatusCode": 200, "Groups": groups}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def add_user_to_group(request, group_owner, groupname, user_id):
     '''
@@ -1785,7 +1787,11 @@ def get_all_tags_for_graph(request, username, graphname):
 
 
         result = db.get_all_tags_for_graph(graphname, username)
-        return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+        if result == None:
+            return HttpResponse(json.dumps(db.sendMessage(404, "Graph does not exist!"), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def get_all_graphs_for_tags(request, tag):
     '''
@@ -1876,7 +1882,6 @@ def delete_all_graphs_for_tag(request, username, tagname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Graphs with tag have been deleted"), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
 
 # Private Utility methods used throughout views.py
 
