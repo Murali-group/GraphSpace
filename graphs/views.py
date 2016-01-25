@@ -25,6 +25,17 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 
+def task_tutorial(request):
+    '''
+        Shows the walkthough tutorial of the task page.
+
+    '''
+    context = login(request)
+
+    context = set_task_tutorial_context(request, context)
+    
+    return render(request, 'graphs/task_tutorial.html', context)
+
 def index(request):
     '''
         Render the main page
@@ -455,6 +466,7 @@ def view_task(request, uid, gid):
 
     # Convert JSON for CytoscapeJS, if needed
     context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+
     context['draw_graph'] = True
 
     # TODO: This will eventually get deleted

@@ -484,6 +484,20 @@ def get_default_layout_name(uid, gid):
 	else:
 		return None
 
+def set_task_tutorial_context(request, context):
+	context["Error"] = None
+	context["layout_to_view"] = json.dumps({"json": None})
+
+	db_session = data_connection.new_session()
+
+	graph = db_session.query(models.Graph.json).filter(models.Graph.graph_id =='').filter(models.Graph.user_id == '').first()
+
+	if graph == None:
+		context["Error"] = "Tutorial graph hasn't been uploaded yet!"
+	else:
+		context['graph'] = graph
+
+
 def set_task_layout_context(request, context, uid, gid):
 	context["Error"] = None
 	layout_to_view = get_default_layout(uid, gid)
@@ -504,6 +518,7 @@ def set_task_layout_context(request, context, uid, gid):
 
 	except Exception:
 		print "No Results found"
+		context["layout_to_view"] = json.dumps({"json": None})
 
 	return context
 
