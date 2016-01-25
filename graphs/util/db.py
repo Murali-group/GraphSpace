@@ -504,6 +504,7 @@ def set_task_layout_context(request, context, uid, gid):
 
 	except Exception:
 		print "No Results found"
+		context["layout_to_view"] = json.dumps({"json": None})
 
 	return context
 

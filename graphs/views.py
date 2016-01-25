@@ -25,6 +25,11 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 
+def test(request):
+    context = login(request)
+    
+    return render(request, 'graphs/test.html', context)
+
 def index(request):
     '''
         Render the main page
@@ -455,6 +460,7 @@ def view_task(request, uid, gid):
 
     # Convert JSON for CytoscapeJS, if needed
     context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+
     context['draw_graph'] = True
 
     # TODO: This will eventually get deleted
