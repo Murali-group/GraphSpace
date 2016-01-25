@@ -6,7 +6,7 @@ urlpatterns = patterns('',
         # can be accessed from respective html files using Django 
         # template language.
 
-        url(r'^test/$', views.test, name='test'),
+        url(r'^task/tutorial/$', views.task_tutorial, name='task_tutorial'),
         url(r'^$', views.index, name='index'),
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),

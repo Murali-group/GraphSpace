@@ -25,10 +25,16 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 
-def test(request):
+def task_tutorial(request):
+    '''
+        Shows the walkthough tutorial of the task page.
+
+    '''
     context = login(request)
+
+    context = set_task_tutorial_context(request, context)
     
-    return render(request, 'graphs/test.html', context)
+    return render(request, 'graphs/task_tutorial.html', context)
 
 def index(request):
     '''
