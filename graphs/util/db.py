@@ -615,6 +615,7 @@ def set_layout_context(request, context, uid, gid):
 
 	context["crowd_layouts"] = get_crowd_layouts_for_graph("MTURK_Worker", gid)
 	context['task_launched'] = exists
+	context["tutorial_view"] = False
 
 	return context
 

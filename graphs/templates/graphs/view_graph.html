@@ -151,6 +151,9 @@
         <h1 id="title" style="display:none;">{{graph_name}}</h1>
     </div>
     <div class="csjs" id="csjs">    
+    <script type="text/javascript">
+        var tutorial_view = "{{tutorial_view}}";
+    </script>
     {% if task_view != None %}
         <div id="timer" style="text-align:right; margin-top:-20px; font-size:25px;color:red;"></div>
         <script type="text/javascript">
@@ -466,11 +469,14 @@
               <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
               <div class="accordion_content test" id="design_accordian">
                 <hr> -->
-                <h3>Select</h3>
+                <h3 id="selection_tutorial">Select</h3>
+                <div id="shape_selection"></div>
                 <div style="text-align: center;" id="selection" class="input-group">
                 </div>
                 <button class="btn btn-danger" id="unselect">Unselect All</button><br>
+                <p id="color_select"></p>
                 <hr>
+                <div class="modify_tutorial"></div>
                 <h3>Modify</h3>
                 <div style="text-align: center;" id="modify" class="input-group">
                   <p style='text-align: left;'>Modify Color:
@@ -551,6 +557,38 @@
         {% endif %}
     </div>
     <!-- end class = side_menu -->
+
+    {% if tutorial_view == True %}
+    <!-- Tutorial walkthough -->
+    <!-- Tip Content -->
+      <ol id="joyRideTipContent">
+        <li data-button="Next">
+          <h2>Welcome to the GraphSpace tutorial!</h2>
+          <p>This tutorial will walk you through some of the basic features to quickly layout graphs!</p>
+        </li>        
+        <li data-id="selection_tutorial" data-text="Next">
+          <h2>Selection Panel</h2>
+          <p>This panel allows a user to select multiple nodes that have the same properties.</p>
+        </li>
+        <li data-id="shape_selection" data-button="Next" data-options="tipLocation:top;tipAnimation:fade">
+          <h2>Select based on shape</h2>
+          <p>You can select all nodes that have a certain shape.</p>
+        </li>
+        <li data-class="color_select" data-button="Next" data-options="tipLocation:top;tipAnimation:fade">
+          <h2>Select based on color</h2>
+          <p>You can select all nodes that have a certain color.</p>
+        </li>
+        <li data-class="modify_tutorial" data-button="Next" data-options="tipLocation:right">
+          <h2>Modification Panel</h2>
+          <p>For any nodes that are selected, you can also change the appearance of those nodes.</p>
+        </li>
+        <li data-id="numero5" data-button="Close">
+          <h2>Stop #5</h2>
+          <p>Now what are you waiting for? Add this to your projects and get the most out of your apps!</p>
+        </li>
+      </ol>
+
+    {% endif %}
 </div>
 {% for layout in my_layouts %}
 {% if layout.owner_id == layout_owner and layout.layout_name == layout_name %}
@@ -591,9 +629,14 @@
 <script type="text/javascript" src="{% static 'graphs/js/cytoscape.js-panzoom.js' %}"></script>
 <!-- stylesheet for view_graph page -->
 <!-- cytoscape web wrapper for viewing graph -->
+<script type="text/javascript" src="{% static 'graphs/js/jquery.cookie.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/modernizr.mq.js' %}"></script>
+<script type="text/javascript" src="{% static 'graphs/js/jquery.joyride-2.1.js' %}"></script>
 <script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
+
 <!-- stylesheet for view_graph page -->
 <link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}">
+<link rel="stylesheet" href="{% static 'graphs/css/joyride-2.1.css' %}">
 <link rel="stylesheet" href="{% static 'graphs/css/spectrum.css' %}">
 <!-- stylesheet for side menus -->
 <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">

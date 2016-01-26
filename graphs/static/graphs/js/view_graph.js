@@ -7,8 +7,20 @@ $(document).ready(function() {
     // http://cytoscape.github.io/cytoscape.js/
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
-    startTimer(10);
-
+    if (tutorial_view != "True") {
+        startTimer(10);
+    } else {
+        //if it is a tutorial view, invoke joyride
+        $('#joyRideTipContent').joyride({
+          autoStart : true,
+          postStepCallback : function (index, tip) {
+              if (index == 2) {
+                $(this).joyride('set_li', false, 1);
+              }
+            },
+        expose: true
+        });
+    }
 
     //Renders the cytoscape element on the page
     //with the given options
@@ -1396,7 +1408,7 @@ $(document).ready(function() {
      */
     function extractJSONProperties(graphJson) {
         var nodePropertyDictionary = {};
-        var edgePropertyDictionary = {};
+        // var edgePropertyDictionary = {};
 
         //Get all the node properties
         for (var i = 0; i < graphJson.nodes.length; i++) {
@@ -1420,25 +1432,25 @@ $(document).ready(function() {
             }
         }
 
-        //Get all the edge properties
-        for (var i = 0; i < graphJson.edges.length; i++) {
-            var edge = graphJson.edges[i].data;
-            var keys = Object.keys(edge);
+        // //Get all the edge properties
+        // for (var i = 0; i < graphJson.edges.length; i++) {
+        //     var edge = graphJson.edges[i].data;
+        //     var keys = Object.keys(edge);
 
-            for (var j in keys) {
-                var key = keys[j];
-                if (edgePropertyDictionary.hasOwnProperty(key)) {
-                    var curArray = edgePropertyDictionary[key];
-                    curArray.push(edge[key]);
-                    edgePropertyDictionary[key] = curArray;
-                } else {
-                    edgePropertyDictionary[key] = [edge[key]];
-                }
-            }
-        }
+        //     for (var j in keys) {
+        //         var key = keys[j];
+        //         if (edgePropertyDictionary.hasOwnProperty(key)) {
+        //             var curArray = edgePropertyDictionary[key];
+        //             curArray.push(edge[key]);
+        //             edgePropertyDictionary[key] = curArray;
+        //         } else {
+        //             edgePropertyDictionary[key] = [edge[key]];
+        //         }
+        //     }
+        // }
 
         var layoutPropertyDictionary = {};
-        if (layout) {
+        if (layout && layout["json"] != null) {
             var parsed_json = JSON.parse(layout.json);
             for (var i in parsed_json) {
                 var node_obj = parsed_json[i];
