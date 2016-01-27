@@ -2282,24 +2282,27 @@ $(document).ready(function() {
     });
 
     function getFeedback() {
-        var graph_id = $("#gid").text();
-        var user_id = $("#uid").text();
-        var layout_owner = "MTURK_Worker";
 
-        $.post("../../../getFeedback/", {
-            "graph_id": graph_id,
-            "user_id": user_id,
-            "layout_owner": layout_owner,
-            "layout_name": task_layout_name
-        }, function(data) {
-            if (data.Error) {
-                console.log(data.Error);
-            } else {
-                for (var i = 0; i < data.Message.length; i++) {
-                    $("#note_text").append("<p>" + (i + 1) + ": " + data.Message[i] + "</p>");
+        if (typeof task_layout_name !== 'undefined') {
+            var graph_id = $("#gid").text();
+            var user_id = $("#uid").text();
+            var layout_owner = "MTURK_Worker";
+
+            $.post("../../../getFeedback/", {
+                "graph_id": graph_id,
+                "user_id": user_id,
+                "layout_owner": layout_owner,
+                "layout_name": task_layout_name
+            }, function(data) {
+                if (data.Error) {
+                    console.log(data.Error);
+                } else {
+                    for (var i = 0; i < data.Message.length; i++) {
+                        $("#note_text").append("<p>" + (i + 1) + ": " + data.Message[i] + "</p>");
+                    }
                 }
-            }
-        });
+            });
+        }
     };
 
 });
