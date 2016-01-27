@@ -10,6 +10,7 @@ urlpatterns = patterns('',
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),
         url(r'^download/$', views.download, name='download'),
+        url(r'^image/$', views.image, name='image'),
 
         # graphs page
         url(r'^graphs/$', views.graphs, name='graphs'),

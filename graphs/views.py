@@ -25,6 +25,11 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 
+def image(request):
+    name = request.GET.get('name', '')
+    image_data = open(os.getcwd() + "/graphs/static/images/" + name + ".png", "r").read()
+    return HttpResponse(image_data, content_type="image/png")
+
 def index(request):
     '''
         Render the main page
@@ -448,8 +453,11 @@ def view_task(request, uid, gid):
         context['Error'] = "Task does not exist anymore!."
         return render(request, 'graphs/error.html', context)
 
+    layout_name = request.GET.get('layout', '')
+    layout_owner = request.GET.get('layout_owner', '')
+
     # Get correct layout for the graph to view
-    context = db.set_task_layout_context(request, context, uid, gid)
+    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner)
 
     if context['Error']:
         return render(request, 'graphs/error.html', context)
@@ -495,11 +503,12 @@ def retrieveTaskCode(request):
 
         gid = request.POST["graph_id"]
         uid = request.POST["user_id"]
+        worked_layout = request.POST["layout_name"]
 
         if not gid or not uid:
             return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
         
-        surveyCode = db.retrieveTaskCode(uid, gid)
+        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout)
 
         return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
 
@@ -1023,7 +1032,6 @@ def launchTask(request):
 
         :return JSON: {"Error|Success": Error | Task Launched on Amazon Mechanical Turk!"}
     '''
-
     # Only 1 task per graph as long as there is a HIT active (3 days)
     error = db.launchTask(request.POST["graph_id"], request.POST["user_id"], request.POST.getlist('layout_array'))
 

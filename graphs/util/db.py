@@ -484,7 +484,8 @@ def get_default_layout_name(uid, gid):
 	else:
 		return None
 
-def set_task_layout_context(request, context, uid, gid):
+def set_task_layout_context(request, context, uid, gid, layout_name, layout_owner):
+
 	context["Error"] = None
 	layout_to_view = get_default_layout(uid, gid)
 	context['default_layout'] = get_default_layout_id(uid, gid)
@@ -494,12 +495,19 @@ def set_task_layout_context(request, context, uid, gid):
 	db_session = data_connection.new_session()
 
 	try:
-		# Get the oldest layout and show that as the task layout to be worked on
-		oldest_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).order_by(models.Layout.times_modified).limit(1).one()
-		graph_json = get_layout_for_graph(oldest_layout.layout_name, oldest_layout.owner_id, gid, uid, oldest_layout.user_id)
+		# # Get the oldest layout and show that as the task layout to be worked on
+		# oldest_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).order_by(models.Layout.times_modified).limit(1).one()
+		# graph_json = get_layout_for_graph(oldest_layout.layout_name, oldest_layout.owner_id, gid, uid, oldest_layout.user_id)
+		# layout_to_view = json.dumps({"json": graph_json})
+		# context['layout_name'] = oldest_layout.layout_name
+		# context['layout_owner'] = oldest_layout.owner_id
+		# context["layout_to_view"] = layout_to_view
+
+		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).one()
+		graph_json = get_layout_for_graph(layout.layout_name, layout.owner_id, gid, uid, layout.user_id)
 		layout_to_view = json.dumps({"json": graph_json})
-		context['layout_name'] = oldest_layout.layout_name
-		context['layout_owner'] = oldest_layout.owner_id
+		context['layout_name'] = layout.layout_name
+		context['layout_owner'] = layout.owner_id
 		context["layout_to_view"] = layout_to_view
 
 	except Exception:
@@ -3082,7 +3090,7 @@ def generateTimeStampAndSignature(secretKey, operation):
 	return (timestamp, signature)
 
 
-def launchTask(graph_id, user_id, layout_array):
+def launchTask(graph_id, user_id, layout_array, single=None):
 	'''
 		Launches a task on Amazon Mechanical Turk.
 
@@ -3094,11 +3102,11 @@ def launchTask(graph_id, user_id, layout_array):
 	'''
 
 	# Check to see if there is a task currently active for the current graph
-	exists = task_exists(graph_id, user_id)
+	# exists = task_exists(graph_id, user_id)
 
-	# If there is already a task for this graph, throw error
-	if exists != None:
-		return "Task currently exists for this graph!"
+	# # If there is already a task for this graph, throw error
+	# if exists != None:
+	# 	return "Task currently exists for this graph!"
 
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3108,64 +3116,67 @@ def launchTask(graph_id, user_id, layout_array):
 	# Get the current time
 	curtime = datetime.now()
 
-	layout_array = json.loads(layout_array[0])
-	
-	#Go through each layout and save it
-	for layout in layout_array:
-		new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, modified=datetime.now())
-		db_session.add(new_layout)
-		db_session.commit()
+	if single != None:
+		layout_array = [json.loads(layout_array[0])]
+	else:
+		layout_array = json.loads(layout_array[0])
 
 	# If the proper environment variables are set in gs-setup
 	if AWSACCESSKEYID != None and SECRETKEY != None:
 
-		# Get the common parameters
-		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
+		#Go through each layout and save it
+		for layout in layout_array:
+			new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, times_modified=0)
+			db_session.add(new_layout)
+			db_session.commit()
 
-		# Current as of 12/14/2016
-		version = "2014-08-15"
-		operation = "CreateHIT"
+			# Get the common parameters
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
 
-		# Duration of both task and how long it is to be alive (for now same value)
-		duration = "3000"
+			# Current as of 12/14/2016
+			version = "2014-08-15"
+			operation = "CreateHIT"
 
-		# Title of task and description of task
-		title = urllib.urlencode({"title": "GraphSpace Layout Task"})[6:].replace("+", "%20")
-		description = urllib.urlencode({"description": "Move nodes and edges in a graph following guidelines"})[12:]
+			# Duration of both task and how long it is to be alive (for now same value)
+			duration = "3000"
 
-		# Generate link back to GS that worker will follow
-		link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id
+			# Title of task and description of task
+			title = urllib.urlencode({"title": "GraphSpace Layout Task"})[6:].replace("+", "%20")
+			description = urllib.urlencode({"description": "Move nodes and edges in a graph following guidelines"})[12:]
 
-		# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
-		question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100" /></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+			# Generate link back to GS that worker will follow
+			link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id + "?layout=" + new_layout.layout_name + "&amp;layout_owner=" + new_layout.owner_id
 
-		# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
-		xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
-		
-		# Generate MechTurkRequest
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+			# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
+			# question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100" /></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
+			
+			# Generate MechTurkRequest
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
 
-		response = requests.get(request, allow_redirects=False)
+			response = requests.get(request, allow_redirects=False)
 
-		print response.text
-		# Parse XML
-		root = ET.fromstring(response.text)
+			print response.text
+			# Parse XML
+			root = ET.fromstring(response.text)
 
-		# Depending on XML response, handle task creation
-		try:
-			isValid = root[1][0][0].text
-			if isValid == "True":
+			# Depending on XML response, handle task creation
+			try:
+				isValid = root[1][0][0].text
+				if isValid == "True":
 
-				new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime, hit_id=root[1][1].text)
-				db_session.add(new_task)
-				db_session.commit()
-				db_session.close()
+					new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime, hit_id=root[1][1].text)
+					db_session.add(new_task)
+					db_session.commit()
+					db_session.close()
 
-		except Exception as e:
-			print "Error is", e
-			return root[0][1][0][1].text
+			except Exception as e:
+				print "Error is", e
+				return root[0][1][0][1].text
 
-		db_session.close()
+			db_session.close()
 
 def getAssignmentsForGraph(uid, gid):
 	'''
@@ -3718,7 +3729,7 @@ def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public
 		layout.json = json
 		layout.public = public
 		layout.shared_with_groups = shared_with_groups
-		layout.times_modified = layout.times_modified + 1
+		layout.times_modified += 1
 		db_session.commit()
 
 	else:
@@ -3749,7 +3760,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=1)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0)
 
 	db_session.add(new_layout)
 	db_session.commit()
@@ -4303,7 +4314,7 @@ def insert_user(user_id, password, admin):
 		db_session.close()
 		return None
 
-def retrieveTaskCode(uid, gid):
+def retrieveTaskCode(uid, gid, worked_layout):
 	'''
 		Retrieves task code.
 	'''
@@ -4321,17 +4332,33 @@ def retrieveTaskCode(uid, gid):
 		return None
 
 	# Check to see if survey code doesn't already exist
-	try:
-		expires = datetime.now() + timedelta(hours=6)
-		new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
-		db_session.add(new_code)
-		db_session.commit()
-		db_session.close()
-		return taskCode
-	except Exception as ex:
-		# If code already exists, try again?
-		print ex
-		return retrieveTaskCode(uid, gid)
+	# try:
+	expires = datetime.now() + timedelta(hours=6)
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
+	db_session.add(new_code)
+	db_session.commit()
+
+	# Update the modified count for the layout
+	mod_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == worked_layout).first()
+
+	if mod_layout == None:
+		return None
+
+	mod_layout.times_modified += 1
+	db_session.commit()
+
+	# Launch another task on MTURK
+	if mod_layout.times_modified < 30:
+		launchTask(gid, uid, [mod_layout.json], single=True)
+
+	getAssignmentsForGraph(uid, gid)
+
+	db_session.close()
+	return taskCode
+	# except Exception as ex:
+	# 	# If code already exists, try again?
+	# 	print ex
+	# 	return retrieveTaskCode(uid, gid, worked_layout)
 
 def usernameMismatchError():
 	'''

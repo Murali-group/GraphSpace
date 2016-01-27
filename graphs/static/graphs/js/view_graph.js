@@ -604,6 +604,11 @@ $(document).ready(function() {
         autoOpen: false
     });
 
+    $("#guidelines").accordion({
+        collapsible:true,
+        active:false
+    });
+
     $('#accordion_design').accordion({
         collapsible: true,
         heightStyle: "auto",
@@ -2170,7 +2175,8 @@ $(document).ready(function() {
 
         $.post("../../../retrieveTaskCode/", {
             "graph_id": gid,
-            "user_id": uid
+            "user_id": uid,
+            "layout_name": task_layout_name
         }, function(data) {
             if (data.hasOwnProperty("Message")) {
                 $("#code").val(data.Message);

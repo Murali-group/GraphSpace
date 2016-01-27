@@ -134,9 +134,22 @@
                     <input class="form-control" type="text" readonly id="code">
                 </div>
                 <br>
-                <div class="form-group">
+                <form id="layout_form" class="layout_form" role="form">
+                    <div class="layout_fields">
+                        <div class="control-group">
+                            <label for="layout_name">Feedback</label>
+                            <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <button type="button" id="send_feedback" value="" class="btn btn-success">Finished</button>
+                            <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </form>
+                <!-- <div class="form-group">
                     <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
@@ -419,9 +432,9 @@
                         {% for o in crowd_layouts %}
                             {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
                             {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
-                                <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">{{o.layout_name}} modified by {{o.modified}}</a>
+                                <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">{{o.layout_name}}</a>
                             {% else %}
-                                <a class="list-group-item layout_buttons" href="{{url}}">{{o.layout_name}} modified by {{o.modified}}</a>
+                                <a class="list-group-item layout_buttons" href="{{url}}">{{o.layout_name}}</a>
                             {% endif %}
                                 <div style="clear: both;"></div>
                             {% endwith %}
@@ -456,6 +469,16 @@
         <br>
         {% endif %}
         {% else %}
+            <div id="guidelines" class="accordion">
+                <h3>Guidelines</h3>
+                <div class="accordion_content">
+                    <ul>
+                        <li>Arrange nodes of the same color together.</li>
+                        <li>Arrange rectangles at the bottom of the graph.</li>
+                        <li>Arrange diamonds on top of the graph.</li>
+                    </ul>
+                </div>
+            </div>
             <button class="btn btn-primary" id="tutorial_start">Start Tutorial</button>
             <div id="timeDiv" style="text-align: center;">
                 <div id="timer" style="font-size:25px;color:red;"></div>
