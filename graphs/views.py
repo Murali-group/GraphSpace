@@ -417,22 +417,13 @@ def view_graph(request, uid, gid):
 
     return render(request, 'graphs/view_graph.html', context)
 
-
-def task_tutorial(request):
-    '''
-        Shows the walkthough tutorial of the task page.
-
-    '''
-    return view_task(request, "dsingh5270@gmail.com", "testing", tutorial_view=True)
-
-def view_task(request, uid, gid, tutorial_view=None):
+def view_task(request, uid, gid):
     '''
         View that workers will see for a launched task.
 
         :param request: HTTP GET Request
         :param uid: email of the user that owns this graph
         :param gid: name of graph that the user owns
-        :param tutorial_view: Whether to give tutorial of task UI
     '''
 
     # db.getAssignmentsForGraph(uid, gid)
@@ -450,23 +441,12 @@ def view_task(request, uid, gid, tutorial_view=None):
 
     graph_info = db.getGraphInfo(uid, gid)
 
-    if tutorial_view == None:
-    
-        if graph_info != None:
-            graph_to_view = graph_info
-        else: 
-            context['Error'] = "Task does not exist anymore!."
-            return render(request, 'graphs/error.html', context)
 
-    else:
-
-        if graph_info == None:
-            context['Error'] = "Tutorial graph is not in database!."
-            return render(request, 'graphs/error.html', context)
-
-        else:
-            graph_to_view = graph_info
-            context["tutorial_view"] = True
+    if graph_info != None:
+        graph_to_view = graph_info
+    else: 
+        context['Error'] = "Task does not exist anymore!."
+        return render(request, 'graphs/error.html', context)
 
     # Get correct layout for the graph to view
     context = db.set_task_layout_context(request, context, uid, gid)

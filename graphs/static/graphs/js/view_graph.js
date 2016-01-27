@@ -3,24 +3,15 @@ This function is executed when the page finishes loading.
 Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
+
+    var clock = Clock;
     // Cytoscape.js API: 
     // http://cytoscape.github.io/cytoscape.js/
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
-    if (tutorial_view != "True") {
-        startTimer(10);
-    } else {
-        //if it is a tutorial view, invoke joyride
-        $('#joyRideTipContent').joyride({
-          autoStart : true,
-          postStepCallback : function (index, tip) {
-              if (index == 2) {
-                $(this).joyride('set_li', false, 1);
-              }
-            },
-        expose: true
-        });
-    }
+
+    clock.setSeconds(10);
+    clock.start(retrieveTaskCode);
 
     //Renders the cytoscape element on the page
     //with the given options
@@ -1497,10 +1488,11 @@ $(document).ready(function() {
             var subtitle = "";
             if (key == "background_color") {
                 subtitle = "Background Color";
+                $("#selection").append("<p data-intro='You can select multiple nodes that have the same background color.' data-step='3' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
             } else {
                 subtitle = "Shape";
+                $("#selection").append("<p data-intro='You can select multiple nodes that have the same shape.' data-step='4' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
             }
-            $("#selection").append("<p style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
             var valueArray = layoutPropertyDictionary[key];
             var checkboxString = "<p style='text-align: left;'>";
 
@@ -2070,7 +2062,6 @@ $(document).ready(function() {
         return layout;
     }
 
-
     /**
      * Launches task on Amazon Mechanical Turk.
      */
@@ -2121,33 +2112,6 @@ $(document).ready(function() {
             $(inputId).val(slider_max);
         }
         showOnlyK();
-    }
-
-    /**
-     * When task view is launched it starts a timer.
-     * @param duration Duration of countdown
-     */
-    function startTimer(duration) {
-        var path = location.href.split("/");
-        if (path[3] == "task") {
-            var timer = duration,
-                minutes, seconds;
-            var timeLeft = setInterval(function() {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                $("#timer").html(minutes + ":" + seconds);
-
-                if (--timer < 0) {
-                    $("#overlay").show();
-                    clearInterval(timeLeft);
-                    retrieveTaskCode();
-                }
-            }, 1000);
-        }
     }
 
     /**
@@ -2240,6 +2204,30 @@ $(document).ready(function() {
             }
         });
     };
+
+    $("#tutorial_start").click(function() {
+        clock.pause();
+        $("#pause").find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
+        introJs().start();
+    })
+
+    $("#reverse").click(function () {
+        clock.reverse(retrieveTaskCode);
+    });
+
+    $("#pause").click(function() {
+        if ($(this).find('span').attr('class') == "glyphicon glyphicon-pause") {
+            clock.pause();
+            $(this).find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
+        } else {
+            clock.start(retrieveTaskCode);
+            $(this).find('span').toggleClass("glyphicon glyphicon-play").toggleClass("glyphicon glyphicon-pause");
+        }
+    });
+
+    $("#forward").click(function() {
+        clock.forward(retrieveTaskCode);
+    });
 
     function applyLayoutStyles() {
         if (layout) {
