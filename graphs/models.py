@@ -55,6 +55,16 @@ class GroupToUser(Base):
     group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
        
+class Feedback(Base):
+    __tablename__ = 'feedback'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
+    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_owner =Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    text = Column(String, nullable = False)
+    created = Column(TIMESTAMP, nullable = False)
 
 class GroupToGraph(Base):
     '''The class representing the schema of the group_to_graph table.'''
@@ -63,7 +73,7 @@ class GroupToGraph(Base):
     group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    user_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
     modified = Column(TIMESTAMP, nullable = False)
 
 class GraphToTag(Base):

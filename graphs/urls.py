@@ -6,6 +6,8 @@ urlpatterns = patterns('',
         # can be accessed from respective html files using Django 
         # template language.
 
+        url(r'^saveFeedback/$', views.saveFeedback, name='saveFeedback'),
+        url(r'^getFeedback/$', views.getFeedback, name='getFeedback'),
         url(r'^$', views.index, name='index'),
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),

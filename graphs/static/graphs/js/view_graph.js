@@ -9,6 +9,7 @@ $(document).ready(function() {
     // http://cytoscape.github.io/cytoscape.js/
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
+    getFeedback();
 
     clock.setSeconds(10);
     clock.start(retrieveTaskCode);
@@ -607,6 +608,12 @@ $(document).ready(function() {
     $("#guidelines").accordion({
         collapsible:true,
         active:false
+    });
+
+    $("#notes").accordion({
+        collapsible:true,
+        active:false,
+        heightStyle: "content"
     });
 
     $('#accordion_design').accordion({
@@ -2250,6 +2257,49 @@ $(document).ready(function() {
                 }
             }
         }
+    };
+
+    $("#send_feedback").click(function() {
+        var feedback = $("#feedback").val();
+
+        var graph_id = $("#gid").text();
+        var user_id = $("#uid").text();
+        var layout_owner = "MTURK_Worker";
+
+        $.post("../../../saveFeedback/", {
+            "graph_id": graph_id,
+            "user_id": user_id,
+            "layout_owner": layout_owner,
+            "layout_name": task_layout_name,
+            "feedback": feedback
+        }, function(data) {
+            if (data.Error) {
+                alert(data.Error);
+            } else {
+                console.log("Submitted feedback");
+            }
+        });
+    });
+
+    function getFeedback() {
+        var graph_id = $("#gid").text();
+        var user_id = $("#uid").text();
+        var layout_owner = "MTURK_Worker";
+
+        $.post("../../../getFeedback/", {
+            "graph_id": graph_id,
+            "user_id": user_id,
+            "layout_owner": layout_owner,
+            "layout_name": task_layout_name
+        }, function(data) {
+            if (data.Error) {
+                console.log(data.Error);
+            } else {
+                for (var i = 0; i < data.Message.length; i++) {
+                    $("#note_text").append("<p>" + (i + 1) + ": " + data.Message[i] + "</p>");
+                }
+            }
+        });
     };
 
 });

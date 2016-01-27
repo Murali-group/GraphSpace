@@ -45,6 +45,27 @@ AWSACCESSKEYID = settings.AWSACCESSKEYID
 # SIGNATURE = settings.SIGNATURE
 SECRETKEY = settings.SECRETKEY
 
+def saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name):
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	new_feedback = models.Feedback(id= None, graph_id = graph_id, user_id = user_id, layout_owner = layout_owner, layout_name = layout_name, text=feedback, created=datetime.now())
+	db_session.add(new_feedback)
+	db_session.commit()
+	db_session.close()
+
+def getFeedback(graph_id, user_id, layout_owner, layout_name):
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	try:
+		feedback = db_session.query(models.Feedback.text).filter(models.Feedback.graph_id == graph_id).filter(models.Feedback.user_id == user_id).filter(models.Feedback.layout_name == layout_name).filter(models.Feedback.layout_owner == layout_owner).all()
+		db_session.close()
+		return feedback
+	except NoResultFound:
+		db_session.close()
+		return []
+
 def add_everyone_to_password_reset():
 	'''
 		Adds all users to password reset table (cold-start).

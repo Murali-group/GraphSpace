@@ -30,6 +30,37 @@ def image(request):
     image_data = open(os.getcwd() + "/graphs/static/images/" + name + ".png", "r").read()
     return HttpResponse(image_data, content_type="image/png")
 
+def saveFeedback(request):
+
+    if request.POST:
+        feedback = request.POST["feedback"]
+        graph_id = request.POST["graph_id"]
+        user_id = request.POST["user_id"]
+        layout_owner = request.POST["layout_owner"]
+        layout_name = request.POST["layout_name"]
+
+        error = db.saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name)
+
+        if error != None:
+            return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Feedback saved!")), content_type="application/json")
+
+def getFeedback(request):
+
+    if request.POST:
+        graph_id = request.POST["graph_id"]
+        user_id = request.POST["user_id"]
+        layout_owner = request.POST["layout_owner"]
+        layout_name = request.POST["layout_name"]
+
+        results = db.getFeedback(graph_id, user_id, layout_owner, layout_name)
+
+        if len(results) > 0:
+            return HttpResponse(json.dumps(db.sendMessage(200, results)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, "No feedback entered for this task!")), content_type="application/json")
+
 def index(request):
     '''
         Render the main page
