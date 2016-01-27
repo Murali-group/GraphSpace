@@ -495,7 +495,7 @@ def set_task_layout_context(request, context, uid, gid):
 
 	try:
 		# Get the oldest layout and show that as the task layout to be worked on
-		oldest_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).order_by(models.Layout.modified).limit(1).one()
+		oldest_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).order_by(models.Layout.times_modified).limit(1).one()
 		graph_json = get_layout_for_graph(oldest_layout.layout_name, oldest_layout.owner_id, gid, uid, oldest_layout.user_id)
 		layout_to_view = json.dumps({"json": graph_json})
 		context['layout_name'] = oldest_layout.layout_name
@@ -3146,6 +3146,7 @@ def launchTask(graph_id, user_id, layout_array):
 		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
+
 		print response.text
 		# Parse XML
 		root = ET.fromstring(response.text)
@@ -3692,7 +3693,7 @@ def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 
 def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
 	'''
-		Saves layout of specific graph.
+		Update layout of specific graph.
 
 		:param graph_id: Name of the graph
 		:param graph_owner: Owner of the graph
@@ -3717,7 +3718,7 @@ def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public
 		layout.json = json
 		layout.public = public
 		layout.shared_with_groups = shared_with_groups
-		layout.modified = datetime.now()
+		layout.times_modified = layout.times_modified + 1
 		db_session.commit()
 
 	else:
@@ -3748,7 +3749,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, modified=datetime.now())
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=1)
 
 	db_session.add(new_layout)
 	db_session.commit()

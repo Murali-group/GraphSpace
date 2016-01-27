@@ -2,7 +2,9 @@
 
 body {
     background-color: white;
+    zoom:75%;
 }
+
 /*css for parent div element*/ 
 .csjs_container {
     /* the containser should occupy the entire page */
@@ -27,6 +29,8 @@ body {
     border-left-style: solid;
     border-width: 3px;
     padding-right: 5px;
+    height:100%;
+    overflow: scroll;
 }
 
 #graph_title {

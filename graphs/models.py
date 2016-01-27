@@ -230,7 +230,7 @@ class Layout(Base):
     public = Column(Integer, nullable = True)
     shared_with_groups = Column(Integer, nullable = True)
     # when was the last time layout was modified
-    modified = Column(TIMESTAMP, nullable = False)
+    times_modified = Column(Integer, nullable = False)
 
     # SQLAlchemy's way of creating a multi-column foreign key constraint.
     __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
