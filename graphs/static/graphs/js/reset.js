@@ -5,11 +5,11 @@ $(document).ready(function() {
 	/**
 	 * When clicked, it resets the password for given user.
 	 */
-	$("#reset_pw").click(function(e) {
+	$("#reset").click(function(e) {
 		e.preventDefault();
 
-		var password = $("#password").val()
-		var verifyPass = $("#verifyPass").val()
+		var password = $("#pass").val()
+		var verifyPass = $("#verifPass").val()
 
 		//If there is a password and verify password that are both the same
 		if (password.length == 0 || verifyPass.length == 0) {
