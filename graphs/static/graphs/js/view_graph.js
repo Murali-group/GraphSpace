@@ -5,14 +5,24 @@ Consult the API: http://api.jquery.com/ready/
 $(document).ready(function() {
 
     var clock = Clock;
+    var logger = Logger;
     // Cytoscape.js API: 
+
     // http://cytoscape.github.io/cytoscape.js/
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
     getFeedback();
 
-    clock.setSeconds(10);
-    clock.start(retrieveTaskCode);
+    if (task_view == "True") {
+
+        //Start keeping track of time
+        clock.start(); 
+
+        //start tracking all movements
+        $(document).on("click focus blur keydown change",function(e){
+             logger.addEvent(e);
+        });
+    }
 
     //Renders the cytoscape element on the page
     //with the given options
@@ -1516,9 +1526,9 @@ $(document).ready(function() {
                     if (value == false) {
                         value = valueArray[index];
                     }
-                    checkboxString += '<input id="' + value.substring(1) + '" type="checkbox" name="colors">&nbsp;<canvas class="canvas" id="' + value.substring(1) + '" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';
+                    checkboxString += '<input id="' + value.substring(1) + '" type="checkbox" value="select_color" name="colors">&nbsp;<canvas class="canvas" id="' + value.substring(1) + '" width="20" height="20"></canvas>&nbsp;&nbsp;&nbsp;';
                 } else {
-                    checkboxString += '<input id="' + value + '" type="checkbox" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
+                    checkboxString += '<input id="' + value + '" type="checkbox" value="select_shape" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
                 }
                 if ((index + 1) % 3 == 0) {
                     checkboxString += "<br><br>";
@@ -1931,6 +1941,10 @@ $(document).ready(function() {
         });
     });
 
+    $("#finished").click(function() {
+        retrieveTaskCode();
+    });
+
     /**
      * Sets default properties of node objects.
      */
@@ -2130,6 +2144,7 @@ $(document).ready(function() {
      * Retrieves new task code. Called when task is completed.
      */
     function retrieveTaskCode() {
+
         var gid = $("#gid").text();
         var uid = $("#uid").text();
 
@@ -2141,7 +2156,7 @@ $(document).ready(function() {
         var current_layout = grabNodePositions2();
         var loggedIn = "MTURK_Worker";
 
-        layout = JSON.parse(layout.json);
+        parsed_json = JSON.parse(layout.json);
         var changedLayout = grabNodePositions2Dictionary();
 
         var numChanges = 0;
@@ -2150,27 +2165,31 @@ $(document).ready(function() {
 
         for (var key in changedLayout) {
 
-            node_obj = changedLayout[key];
-            new_node_obj = layout[key];
+            new_node_obj = changedLayout[key];
+            node_obj = parsed_json["" + key];
 
-            if (node_obj["x"] != new_node_obj["x"]) {
-                numChanges ++;
+            if (node_obj != undefined && node_obj != undefined) {
+                if (node_obj["x"] != new_node_obj["x"]) {
+                    numChanges ++;
+                }
+
+                if (node_obj["y"] != new_node_obj["y"]) {
+                    numChanges ++;
+                }
+
+                 if (node_obj["background_color"] != new_node_obj["background_color"]) {
+                    numChanges ++;
+                }
+
+                 if (node_obj["shape"] != new_node_obj["shape"]) {
+                    numChanges ++;
+                }
             }
 
-            if (node_obj["y"] != new_node_obj["y"]) {
-                numChanges ++;
-            }
-
-             if (node_obj["background_color"] != new_node_obj["background_color"]) {
-                numChanges ++;
-            }
-
-             if (node_obj["shape"] != new_node_obj["shape"]) {
-                numChanges ++;
-            }
+            
         }
 
-        if (numChanges < 5) {
+        if (numChanges < 5 || ) {
             $("#code").val("Not enough work done to complete task!");
             $("#codeModal").modal('toggle');
             $("#exit").text("Try again");
@@ -2180,42 +2199,45 @@ $(document).ready(function() {
             return;
         }
 
-        $.post("../../../retrieveTaskCode/", {
-            "graph_id": gid,
-            "user_id": uid,
-            "layout_name": task_layout_name
-        }, function(data) {
-            if (data.hasOwnProperty("Message")) {
-                $("#code").val(data.Message);
-                $("#codeModal").modal('toggle');
+        var timeSpent = clock.stop();
+        var events = logger.getEvents());
 
-                var queryString = location.href.split(location.host)[1].split("?")[0];
-                //Posts information to the server regarding the current display of the graph,
-                //including position
-                $.post(queryString + "/layout/update/", {
-                    layout_name: task_layout_name,
-                    points: JSON.stringify(current_layout),
-                    loggedIn: loggedIn,
-                    "public": 0,
-                    "unlisted": 0
-                }, function(data) {
-                    console.log(data);
-                    if (data.Error) {
-                        return alert(data.Error);
-                    }
-                });
+        // $.post("../../../retrieveTaskCode/", {
+        //     "graph_id": gid,
+        //     "user_id": uid,
+        //     "layout_name": task_layout_name
+        // }, function(data) {
+        //     if (data.hasOwnProperty("Message")) {
+        //         $("#code").val(data.Message);
+        //         $("#codeModal").modal('toggle');
 
-                $("#exit").click(function() {
-                    var pathArray = location.href.split('/');
-                    var protocol = pathArray[0];
-                    var host = pathArray[2];
-                    var url = protocol + '//' + host;
-                    window.location.href = url
-                });
-            } else {
-                return alert(data.Error);
-            }
-        });
+        //         var queryString = location.href.split(location.host)[1].split("?")[0];
+        //         //Posts information to the server regarding the current display of the graph,
+        //         //including position
+        //         $.post(queryString + "/layout/update/", {
+        //             layout_name: task_layout_name,
+        //             points: JSON.stringify(current_layout),
+        //             loggedIn: loggedIn,
+        //             "public": 0,
+        //             "unlisted": 0
+        //         }, function(data) {
+        //             console.log(data);
+        //             if (data.Error) {
+        //                 return alert(data.Error);
+        //             }
+        //         });
+
+        //         $("#exit").click(function() {
+        //             var pathArray = location.href.split('/');
+        //             var protocol = pathArray[0];
+        //             var host = pathArray[2];
+        //             var url = protocol + '//' + host;
+        //             window.location.href = url
+        //         });
+        //     } else {
+        //         return alert(data.Error);
+        //     }
+        // });
     };
 
     $("#tutorial_start").click(function() {
@@ -2224,23 +2246,23 @@ $(document).ready(function() {
         introJs().start();
     })
 
-    $("#reverse").click(function () {
-        clock.reverse(retrieveTaskCode);
-    });
+    // $("#reverse").click(function () {
+    //     clock.reverse(retrieveTaskCode);
+    // });
 
-    $("#pause").click(function() {
-        if ($(this).find('span').attr('class') == "glyphicon glyphicon-pause") {
-            clock.pause();
-            $(this).find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
-        } else {
-            clock.start(retrieveTaskCode);
-            $(this).find('span').toggleClass("glyphicon glyphicon-play").toggleClass("glyphicon glyphicon-pause");
-        }
-    });
+    // $("#pause").click(function() {
+    //     if ($(this).find('span').attr('class') == "glyphicon glyphicon-pause") {
+    //         clock.pause();
+    //         $(this).find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
+    //     } else {
+    //         clock.start(retrieveTaskCode);
+    //         $(this).find('span').toggleClass("glyphicon glyphicon-play").toggleClass("glyphicon glyphicon-pause");
+    //     }
+    // });
 
-    $("#forward").click(function() {
-        clock.forward(retrieveTaskCode);
-    });
+    // $("#forward").click(function() {
+    //     clock.forward(retrieveTaskCode);
+    // });
 
     function applyLayoutStyles() {
         if (layout) {
@@ -2304,5 +2326,4 @@ $(document).ready(function() {
             });
         }
     };
-
 });

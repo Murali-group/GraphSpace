@@ -4,6 +4,7 @@
 <script type="text/javascript">
     var graph_json = {{ graph|safe }};
     var layout = {{ layout_to_view|safe }};
+    var task_view = "{{ task_view|safe }}";
     window.cy;
 </script>
 <div id="dialog"></div>
@@ -486,15 +487,17 @@
                 </div>
             </div>
             <button class="btn btn-primary" id="tutorial_start">Start Tutorial</button>
-            <div id="timeDiv" style="text-align: center;">
+            <script type="text/javascript">
+                var task_layout_name = "{{layout_name}}";
+            </script>
+            <button class="btn btn-default" id="finished">Finished Task</button>
+           <!--  <div id="timeDiv" style="text-align: center;">
                 <div id="timer" style="font-size:25px;color:red;"></div>
                 <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>
                 <button class="btn btn primary" id="pause"><span class="glyphicon glyphicon-pause"></span></button>
                 <button class="btn btn primary" id="forward"><span class="glyphicon glyphicon-forward"></span></button>
-                <script type="text/javascript">
-                    var task_layout_name = "{{layout_name}}";
-                </script>
-            </div>
+                
+            </div> -->
             
             <hr>
             <!-- <div id="accordion_design" class="accordion">
@@ -504,9 +507,9 @@
                 <h3 data-intro="This panel allows for the selection of multiple nodes that have similar background colors and/or similar shapes." data-step="2">Select</h3>
                 <div style="text-align: center;" id="selection" class="input-group">
                 </div>
-                <button class="btn btn-danger" id="unselect">Unselect All Nodes</button><br>
+                <button class="btn btn-danger" value="unselect" id="unselect">Unselect All Nodes</button><br>
                 <hr>
-                <h3 data-intro="This panel allows for the modification of all selected nodes." data-step="5">Modify</h3>
+                <!-- <h3 data-intro="This panel allows for the modification of all selected nodes." data-step="5">Modify</h3>
                 <div style="text-align: center;" id="modify" class="input-group">
                   <p style='text-align: left;' data-intro="For all selected nodes, this allows you to change the color of those nodes." data-step="6">Modify Color:
                       <input type='text' class='basic' id='selectionPalette' value='red' />
@@ -533,7 +536,7 @@
                       <li><a data-value="rhomboid">Rhomboid</a></li>
                     </ul>
                   </div>
-                </div>
+                </div> -->
                 <hr>
                 <h3 data-intro="For all selected nodes, this allows you to move them." data-step="8">Move</h3>
                 <div id="moveArrows" style="text-align:center;">
@@ -542,7 +545,7 @@
                     <tr>
                       <th></th>
                       <th>
-                        <button data-intro="For all selected nodes, this moves them up." data-step="11" type="button" class="btn btn-default" aria-label="Left Align" id="upArrow" data-position="top">
+                        <button value="upArrow"  data-intro="For all selected nodes, this moves them up." data-step="11" type="button" class="btn btn-default" aria-label="Left Align" id="upArrow" data-position="top">
                           <span class="glyphicon glyphicon-arrow-up"></span>
                         </button>
                       </th>
@@ -551,13 +554,13 @@
                     </tr>
                     <tr>
                       <td>
-                        <button data-intro="For all selected nodes, this moves them left." data-step="12" type="button" class="btn btn-default" aria-label="Left Align" id="leftArrow" data-position="top">
+                        <button value="leftArrow" data-intro="For all selected nodes, this moves them left." data-step="12" type="button" class="btn btn-default" aria-label="Left Align" id="leftArrow" data-position="top">
                           <span class="glyphicon glyphicon-arrow-left"></span>
                         </button>
                       </td>
                       <td></td>
                       <td>
-                        <button data-intro="For all selected nodes, this moves them right." data-step="13" type="button" class="btn btn-default" aria-label="Left Align" id="rightArrow" data-position="top">
+                        <button value="rightArrow" data-intro="For all selected nodes, this moves them right." data-step="13" type="button" class="btn btn-default" aria-label="Left Align" id="rightArrow" data-position="top">
                           <span class="glyphicon glyphicon-arrow-right"></span>
                         </button>
                       </td>
@@ -565,15 +568,15 @@
                     <tr>
                       <td></td>
                       <td>
-                        <button data-intro="For all selected nodes, this moves them down." data-step="14" type="button" class="btn btn-default" aria-label="Left Align" id="downArrow" data-position="top">
+                        <button value="downArrow" data-intro="For all selected nodes, this moves them down." data-step="14" type="button" class="btn btn-default" aria-label="Left Align" id="downArrow" data-position="top">
                           <span class="glyphicon glyphicon-arrow-down"></span>
                         </button>
                       </td>
                       <td></td>
                     </tr>
                     <tr>
-                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="9" data-position="top"class="btn btn-primary" id="group" style="display: block; margin: 0 auto;">Coalesce Selected Nodes</button><br>
-                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;">Scatter Selected Nodes</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="9" data-position="top"class="btn btn-primary" value="group" id="group" style="display: block; margin: 0 auto;" value="coalesce">Coalesce Selected Nodes</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" value="scatter" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;">Scatter Selected Nodes</button><br>
                     </tr>
                   </table>
 
@@ -632,6 +635,7 @@
 <!-- cytoscape web wrapper for viewing graph -->
 <script type="text/javascript" src="{% static 'graphs/js/intro.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/clock.js' %}"></script> 
+<script type="text/javascript" src="{% static 'graphs/js/log.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
 
 <!-- stylesheet for view_graph page -->
