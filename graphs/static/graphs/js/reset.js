@@ -9,7 +9,7 @@ $(document).ready(function() {
 		e.preventDefault();
 
 		var password = $("#pass").val()
-		var verifyPass = $("#verPass").val()
+		var verifyPass = $("#verifPass").val()
 
 		//If there is a password and verify password that are both the same
 		if (password.length == 0 || verifyPass.length == 0) {

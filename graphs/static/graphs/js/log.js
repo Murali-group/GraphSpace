@@ -11,7 +11,6 @@ var Logger = {
 			"eventTime": event.timeStamp,
 			"elementInvolved": event.target
 		};
-		console.log(event);
 
 		if ($(event.target).val().length > 0) {
 			newEvent["elementInvolved"] = $(event.target).val();

@@ -2166,7 +2166,7 @@ $(document).ready(function() {
         for (var key in changedLayout) {
 
             new_node_obj = changedLayout[key];
-            node_obj = parsed_json["" + key];
+            node_obj = parsed_json[key];
 
             if (node_obj != undefined && node_obj != undefined) {
                 if (node_obj["x"] != new_node_obj["x"]) {
@@ -2189,7 +2189,7 @@ $(document).ready(function() {
             
         }
 
-        if (numChanges < 5 || ) {
+        if (numChanges < 5) {
             $("#code").val("Not enough work done to complete task!");
             $("#codeModal").modal('toggle');
             $("#exit").text("Try again");
@@ -2200,44 +2200,49 @@ $(document).ready(function() {
         }
 
         var timeSpent = clock.stop();
-        var events = logger.getEvents());
+        var events = logger.getEvents();
 
-        // $.post("../../../retrieveTaskCode/", {
-        //     "graph_id": gid,
-        //     "user_id": uid,
-        //     "layout_name": task_layout_name
-        // }, function(data) {
-        //     if (data.hasOwnProperty("Message")) {
-        //         $("#code").val(data.Message);
-        //         $("#codeModal").modal('toggle');
+        console.log("Features are: NumChanges: " + numChanges + ", Time Spent: " + timeSpent + ", events: " + events.length);
 
-        //         var queryString = location.href.split(location.host)[1].split("?")[0];
-        //         //Posts information to the server regarding the current display of the graph,
-        //         //including position
-        //         $.post(queryString + "/layout/update/", {
-        //             layout_name: task_layout_name,
-        //             points: JSON.stringify(current_layout),
-        //             loggedIn: loggedIn,
-        //             "public": 0,
-        //             "unlisted": 0
-        //         }, function(data) {
-        //             console.log(data);
-        //             if (data.Error) {
-        //                 return alert(data.Error);
-        //             }
-        //         });
+        $.post("../../../retrieveTaskCode/", {
+            "graph_id": gid,
+            "user_id": uid,
+            "layout_name": task_layout_name,
+            "numChanges": numChanges,
+            "timeSpent": timeSpent,
+            "numEvents": events.length
+        }, function(data) {
+            if (data.hasOwnProperty("Message")) {
+                $("#code").val(data.Message);
+                $("#codeModal").modal('toggle');
 
-        //         $("#exit").click(function() {
-        //             var pathArray = location.href.split('/');
-        //             var protocol = pathArray[0];
-        //             var host = pathArray[2];
-        //             var url = protocol + '//' + host;
-        //             window.location.href = url
-        //         });
-        //     } else {
-        //         return alert(data.Error);
-        //     }
-        // });
+                var queryString = location.href.split(location.host)[1].split("?")[0];
+                //Posts information to the server regarding the current display of the graph,
+                //including position
+                $.post(queryString + "/layout/update/", {
+                    layout_name: task_layout_name,
+                    points: JSON.stringify(current_layout),
+                    loggedIn: loggedIn,
+                    "public": 0,
+                    "unlisted": 0
+                }, function(data) {
+                    console.log(data);
+                    if (data.Error) {
+                        return alert(data.Error);
+                    }
+                });
+
+                $("#exit").click(function() {
+                    var pathArray = location.href.split('/');
+                    var protocol = pathArray[0];
+                    var host = pathArray[2];
+                    var url = protocol + '//' + host;
+                    window.location.href = url
+                });
+            } else {
+                return alert(data.Error);
+            }
+        });
     };
 
     $("#tutorial_start").click(function() {

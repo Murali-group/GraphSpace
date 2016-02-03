@@ -14,6 +14,7 @@ from datetime import timedelta
 import time 
 from django.core.mail import send_mail
 import sqlite3 as lite
+from naive_bayes import NaiveBayes as NB
 
 
 import urllib2, urllib
@@ -2841,7 +2842,6 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 	else:
 		return []
 
-
 def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
 	'''
 		Finds all nodes that match search terms that are shared with group.
@@ -4335,10 +4335,30 @@ def insert_user(user_id, password, admin):
 		db_session.close()
 		return None
 
-def retrieveTaskCode(uid, gid, worked_layout):
+def evalQuality(numChanges, timeSpent, numEvents):
+	'''
+		Evaluates the quality of the work given 3 features.
+
+		@param numChanges: Number of movements of graph elements
+		@param timeSpent: Amount of time spent on the task
+		@param numEvents: Number of UI element interactions
+
+		@return True iff quality is sufficient
+	'''
+	nb = NB()
+
+	nb.train_classifier()
+
+	return nb.classify(numChanges, timeSpent, numEvents)
+
+def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents):
 	'''
 		Retrieves task code.
 	'''
+	result =  evalQuality(numChanges, timeSpent, numEvents)
+
+	if result == False:
+		return "Not enough work done to complete task!"
 
 	# Generate task code
 	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
@@ -4369,7 +4389,7 @@ def retrieveTaskCode(uid, gid, worked_layout):
 	db_session.commit()
 
 	# Launch another task on MTURK
-	if mod_layout.times_modified < 30:
+	if mod_layout.times_modified < 5:
 		launchTask(gid, uid, [mod_layout.json], single=True)
 
 	getAssignmentsForGraph(uid, gid)
