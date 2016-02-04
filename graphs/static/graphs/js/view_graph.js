@@ -263,6 +263,8 @@ $(document).ready(function() {
                     $(".side_menu").css("margin-top", -50);
                 }
 
+
+
                 //Adding in the panzoom functionality 
                 this.panzoom();
 
@@ -472,54 +474,78 @@ $(document).ready(function() {
             x: travelX,
             y: travelY
         };
+    };
+
+    function computeCentroid() {
+        //compute centroid
+
+        var centroid = {
+            x: 0,
+            y: 0
+        };
+
+        var selectedNodes = [];
+        var minDistance = 0;
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+            var position = node.renderedPosition();
+            if (node.selected()) {
+                selectedNodes.push(node);
+                centroid["x"] += position.x;
+                centroid["y"] += position.y;
+            }
+            minDistance = Math.max(minDistance, node.boundingBox()["h"]);
+        }
+
+        centroid["x"] /= selectedNodes.length;
+        centroid["y"] /= selectedNodes.length;
+
+        return [centroid, selectedNodes, minDistance];
     }
 
     function groupUngroup(type) {
-        var center = {
-            x: window.cy.width() / 2,
-            y: window.cy.height() / 2
-        };
 
-        for (var j = 0; j < window.cy.nodes().length; j++) {
-            var node = window.cy.nodes()[j];
+        var data = computeCentroid();
 
-            if (node.selected()) {
-                var position = node.renderedPosition();
-                var distance = travelDistance(center, position);
+        var centroid = data[0];
+        var selectedNodes = data[1];
 
-                if (position.x < center.x) {
-                    if (type == 1) {
-                        position.x += distance.x;
-                    } else {
-                        position.x -= distance.x;
-                    }
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var node = selectedNodes[i];
+            var position = node.renderedPosition();
+            var distance = travelDistance(centroid, position);
 
-                }
-                if (position.x > center.x) {
-                    if (type == 1) {
-                        position.x -= distance.x;
-                    } else {
-                        position.x += distance.x;
-                    }
+            if (position.x < centroid.x) {
+                if (type == 1) {
+                    position.x += distance.x;
+                } else {
+                    position.x -= distance.x;
                 }
 
-                if (position.y < center.y) {
-                    if (type == 1) {
-                        position.y += distance.y;
-                    } else {
-                        position.y -= distance.y;
-                    }
-                }
-                if (position.y > center.y) {
-                    if (type == 1) {
-                        position.y -= distance.y;
-                    } else {
-                        position.y += distance.y;
-                    }
-                }
-
-                node.renderedPosition(position);
             }
+            if (position.x > centroid.x) {
+                if (type == 1) {
+                    position.x -= distance.x;
+                } else {
+                    position.x += distance.x;
+                }
+            }
+
+            if (position.y < centroid.y) {
+                if (type == 1) {
+                    position.y += distance.y;
+                } else {
+                    position.y -= distance.y;
+                }
+            }
+            if (position.y > centroid.y) {
+                if (type == 1) {
+                    position.y -= distance.y;
+                } else {
+                    position.y += distance.y;
+                }
+            }
+            node.renderedPosition(position);
         }
     }
 
@@ -2331,4 +2357,219 @@ $(document).ready(function() {
             });
         }
     };
+
+    $("#circle_selected").click(function (e) {
+
+        var minDistance = 0;
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                minDistance = Math.max(node.boundingBox()["h"], minDistance);
+                selectedArray.push(node);
+            }
+        }
+
+        //calculate center of the viewport
+        var center = {
+            x: window.cy.width() / 2,
+            y: window.cy.height() / 2
+        };
+
+        var sweep = 2*Math.PI - 2*Math.PI/selectedArray.length;
+
+        var dTheta = sweep / ( Math.max(1, selectedArray.length - 1) );
+
+        var dcos = Math.cos(dTheta) - Math.cos(0);
+        var dsin = Math.sin(dTheta) - Math.sin(0);
+        var radius = Math.sqrt( minDistance * minDistance / ( dcos*dcos + dsin*dsin ) ); // s.t. no nodes overlapping
+
+        for (var i = 0; i < selectedArray.length; i++) {
+            var theta = (3/2 * Math.PI) + i * dTheta;
+
+            var rx = radius * Math.cos( theta );
+            var ry = radius * Math.sin( theta );
+            var pos = {
+              x: center.x + rx,
+              y: center.y + ry
+            };
+            selectedArray[i].renderedPosition(pos);
+        }
+    });
+
+    $("#square_selected").click(function (e) {
+        var minDistance = 0;
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                minDistance = Math.max(node.boundingBox()["h"], minDistance);
+                selectedArray.push(node);
+            }
+        }
+
+        //calculate center of the viewport
+        var center = {
+            x: window.cy.width() / 2,
+            y: window.cy.height() / 2
+        };
+
+        var radius = (selectedArray.length/4 * minDistance)/2;
+
+        if (selectedArray.length <= 4) {
+
+            if (selectedArray.length == 0) {
+                return;
+            } else if (selectedArray.length == 1) {
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y
+                }
+                selectedArray[0].renderedPosition(newPosition);
+            } else if (selectedArray.length == 2) {
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+
+            } else if (selectedArray.length == 3) {
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y - radius
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[2].renderedPosition(newPosition);
+                
+            } else if (selectedArray.length == 4) {
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y - radius
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[2].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[3].renderedPosition(newPosition);
+            }
+            return;
+        }
+
+        //Group into regions (top, bottom, left, right) Assuem that we have at least 4 selected elements
+
+        //Top region
+        var topBar = selectedArray.slice(0, selectedArray.length/4);
+
+        for (var i = 0; i < topBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius + (i * minDistance),
+                "y": center.y - radius
+            }
+            topBar[i].renderedPosition(newPosition);
+        }
+
+        //Bottom Region
+        var bottomBar = selectedArray.slice(selectedArray.length/4, 2*selectedArray.length/4);
+
+        for (var i = 0; i < bottomBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius + (i * minDistance),
+                "y": center.y + radius
+            }
+            bottomBar[i].renderedPosition(newPosition);
+        }
+        
+        //Left Region
+        var leftBar = selectedArray.slice(2 * selectedArray.length/4, 3*selectedArray.length/4);
+
+        for (var i = 0; i < leftBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius,
+                "y": center.y - radius + (i * minDistance)
+            }
+            leftBar[i].renderedPosition(newPosition);
+        }
+
+        //Right Region
+        var rightBar = selectedArray.slice(3 * selectedArray.length/4, 4*selectedArray.length);
+
+        for (var i = 0; i < rightBar.length; i++) {
+            var newPosition = {
+                "x": center.x + radius,
+                "y": center.y - radius + (i * minDistance)
+            }
+            rightBar[i].renderedPosition(newPosition);
+        }
+    });
+
+    $("#horizontal").click(function (e) {
+        var data = computeCentroid();
+
+        var center = {
+            x: window.cy.width() / 2,
+            y: window.cy.height() / 2
+        };
+        
+        var selectedNodes = data[1];
+        var minDistance = data[2];
+
+        var radius = (selectedNodes.length/4 * minDistance)/2;
+
+        for (var i = 0; i < selectedNodes.length; i++) {
+             var newPosition = {
+                "x": center.x - radius + (i * minDistance),
+                "y": center.y
+            }
+            selectedNodes[i].renderedPosition(newPosition);
+        }
+    });
+
+    $("#vertical").click(function (e) {
+        var data = computeCentroid();
+
+        var center = {
+            x: window.cy.width() / 2,
+            y: window.cy.height() / 2
+        };
+        var selectedNodes = data[1];
+        var minDistance = data[2];
+        
+        var radius = (selectedNodes.length/4 * minDistance)/2;
+
+        for (var i = 0; i < selectedNodes.length; i++) {
+             var newPosition = {
+                "x": center.x,
+                "y": center.y - radius + (i * minDistance)
+            }
+            selectedNodes[i].renderedPosition(newPosition);
+        }
+    });
+
 });

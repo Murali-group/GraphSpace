@@ -496,7 +496,6 @@
                 <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>
                 <button class="btn btn primary" id="pause"><span class="glyphicon glyphicon-pause"></span></button>
                 <button class="btn btn primary" id="forward"><span class="glyphicon glyphicon-forward"></span></button>
-                
             </div> -->
             
             <hr>
@@ -575,8 +574,13 @@
                       <td></td>
                     </tr>
                     <tr>
-                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="9" data-position="top"class="btn btn-primary" value="group" id="group" style="display: block; margin: 0 auto;" value="coalesce">Coalesce Selected Nodes</button><br>
-                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" value="scatter" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;">Scatter Selected Nodes</button><br>
+                      <button id="circle_selected" class="btn btn-primary" style="display: block; margin: 0 auto;" value="coalesce">Group all selected into circle</button><br>
+                      <button id="square_selected" class="btn btn-primary" style="display: block; margin: 0 auto;" value="coalesce">Group all selected into square</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" value="vertical" class="btn btn-primary" id="vertical" style="display: block; margin: 0 auto;">Line vertically</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" value="horizontal" class="btn btn-primary" id="horizontal" style="display: block; margin: 0 auto;">Line horizontally</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="9" data-position="top" class="btn btn-primary" value="group" id="group" style="display: block; margin: 0 auto;" value="coalesce">Squeeze</button><br>
+                      <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="10" value="scatter" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;">Release</button><br>
+
                     </tr>
                   </table>
 
