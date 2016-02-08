@@ -4,11 +4,12 @@ Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
 
-    var clock = Clock;
-    var logger = Logger;
+    var clock = GraphSpace.Clock;
+    var logger = GraphSpace.Logger;
     // Cytoscape.js API: 
 
     // http://cytoscape.github.io/cytoscape.js/
+    //Sets default node properties to nodes that may be missing some
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
     getFeedback();
@@ -506,6 +507,7 @@ $(document).ready(function() {
     function groupUngroup(type) {
 
         var data = computeCentroid();
+        console.log(data);
 
         var centroid = data[0];
         var selectedNodes = data[1];
@@ -545,6 +547,7 @@ $(document).ready(function() {
                     position.y += distance.y;
                 }
             }
+            console.log(position);
             node.renderedPosition(position);
         }
     }

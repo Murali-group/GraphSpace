@@ -1,4 +1,6 @@
-var Logger = {
+var GraphSpace = GraphSpace || {};
+
+GraphSpace.Logger = {
 	eventType: "",
 	eventTime: "",
 	elementInvolved: "",
