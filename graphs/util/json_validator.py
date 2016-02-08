@@ -36,7 +36,11 @@ def verify_json(graph_json):
 
     for node in graph_json["graph"]["nodes"]:
         node = node["data"]
-        shape = node["shape"].lower()
+
+        if "shape" in node:
+            shape = node["shape"].lower()
+        else:
+            shape = "ellipse"
 
         if shape not in ALLOWED_NODE_SHAPES:
             shape = "ellipse"
