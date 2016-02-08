@@ -3897,7 +3897,7 @@ def getGraphInfo(uid, gid):
 		db_session.close()
 		return data
 	except Exception as ex:
-		print ex
+		print "Error in Graph Info" + str(ex)
 		db_session.close()
 		return None
 
