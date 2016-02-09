@@ -489,14 +489,16 @@ $(document).ready(function() {
         var minDistance = 0;
         for (var i = 0; i < window.cy.nodes().length; i++) {
             var node = window.cy.nodes()[i];
-            var position = node.renderedPosition();
             if (node.selected()) {
+                var position = node.renderedPosition();
                 selectedNodes.push(node);
                 centroid["x"] += position.x;
                 centroid["y"] += position.y;
+                minDistance = node.boundingBox()["h"];
             }
-            minDistance = Math.max(minDistance, node.boundingBox()["h"]);
         }
+
+        console.log(centroid);
 
         centroid["x"] /= selectedNodes.length;
         centroid["y"] /= selectedNodes.length;
@@ -507,7 +509,6 @@ $(document).ready(function() {
     function groupUngroup(type) {
 
         var data = computeCentroid();
-        console.log(data);
 
         var centroid = data[0];
         var selectedNodes = data[1];
@@ -515,40 +516,47 @@ $(document).ready(function() {
         for (var i = 0; i < selectedNodes.length; i++) {
             var node = selectedNodes[i];
             var position = node.renderedPosition();
+            console.log(position);
             var distance = travelDistance(centroid, position);
 
-            if (position.x < centroid.x) {
-                if (type == 1) {
-                    position.x += distance.x;
-                } else {
-                    position.x -= distance.x;
-                }
+            if (!isNaN(position.x)) {
+                if (position.x < centroid.x) {
+                    if (type == 1) {
+                        position.x += distance.x;
+                    } else {
+                        position.x -= distance.x;
+                    }
 
-            }
-            if (position.x > centroid.x) {
-                if (type == 1) {
-                    position.x -= distance.x;
-                } else {
-                    position.x += distance.x;
+                }
+                if (position.x > centroid.x) {
+                    if (type == 1) {
+                        position.x -= distance.x;
+                    } else {
+                        position.x += distance.x;
+                    }
                 }
             }
 
-            if (position.y < centroid.y) {
-                if (type == 1) {
-                    position.y += distance.y;
-                } else {
-                    position.y -= distance.y;
+            if (!isNaN(position.y)) {
+                if (position.y < centroid.y) {
+                    if (type == 1) {
+                        position.y += distance.y;
+                    } else {
+                        position.y -= distance.y;
+                    }
+                }
+                if (position.y > centroid.y) {
+                    if (type == 1) {
+                        position.y -= distance.y;
+                    } else {
+                        position.y += distance.y;
+                    }
                 }
             }
-            if (position.y > centroid.y) {
-                if (type == 1) {
-                    position.y -= distance.y;
-                } else {
-                    position.y += distance.y;
-                }
+
+            if (!isNaN(position.x) && !isNaN(position.y)) {
+                node.renderedPosition(position);
             }
-            console.log(position);
-            node.renderedPosition(position);
         }
     }
 
@@ -2379,6 +2387,11 @@ $(document).ready(function() {
             x: window.cy.width() / 2,
             y: window.cy.height() / 2
         };
+
+        if (selectedArray.length == 1) {
+            selectedArray[0].renderedPosition(center);
+            return;
+        }
 
         var sweep = 2*Math.PI - 2*Math.PI/selectedArray.length;
 
