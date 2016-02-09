@@ -12,7 +12,6 @@ $(document).ready(function() {
     //Sets default node properties to nodes that may be missing some
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
-    getFeedback();
 
     if (task_view == "True") {
 
@@ -652,17 +651,6 @@ $(document).ready(function() {
         autoOpen: false
     });
 
-    $("#guidelines").accordion({
-        collapsible:true,
-        active:false
-    });
-
-    $("#notes").accordion({
-        collapsible:true,
-        active:false,
-        heightStyle: "content"
-    });
-
     $('#accordion_design').accordion({
         collapsible: true,
         heightStyle: "auto",
@@ -707,6 +695,12 @@ $(document).ready(function() {
     $('#accordion_filters').accordion({
         collapsible: true,
         heightStyle: "content"
+    });
+
+    $("#notes").click(function() {
+        getFeedback(function() {
+            $("#notes_modal").modal('toggle');
+        });
     });
 
     //When save layout button is clicked
@@ -1567,9 +1561,9 @@ $(document).ready(function() {
                 } else {
                     checkboxString += '<input id="' + value + '" type="checkbox" value="select_shape" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
                 }
-                if ((index + 1) % 3 == 0) {
-                    checkboxString += "<br><br>";
-                }
+                // if ((index + 1) % 3 == 0) {
+                //     checkboxString += "<br>";
+                // }
             }
             checkboxString += "</p>";
             $("#selection").append(checkboxString);
@@ -2284,27 +2278,13 @@ $(document).ready(function() {
 
     $("#tutorial_start").click(function() {
         clock.pause();
-        $("#pause").find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
-        introJs().start();
-    })
+        // $("#pause").find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
+        var tutorial = introJs();
 
-    // $("#reverse").click(function () {
-    //     clock.reverse(retrieveTaskCode);
-    // });
+        tutorial.start();
+    });
 
-    // $("#pause").click(function() {
-    //     if ($(this).find('span').attr('class') == "glyphicon glyphicon-pause") {
-    //         clock.pause();
-    //         $(this).find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
-    //     } else {
-    //         clock.start(retrieveTaskCode);
-    //         $(this).find('span').toggleClass("glyphicon glyphicon-play").toggleClass("glyphicon glyphicon-pause");
-    //     }
-    // });
-
-    // $("#forward").click(function() {
-    //     clock.forward(retrieveTaskCode);
-    // });
+    
 
     function applyLayoutStyles() {
         if (layout) {
@@ -2323,8 +2303,12 @@ $(document).ready(function() {
         }
     };
 
-    $("#send_feedback").click(function() {
+    function sendFeedback() {
         var feedback = $("#feedback").val();
+
+        if (feedback.length == 0) {
+            return;
+        }
 
         var graph_id = $("#gid").text();
         var user_id = $("#uid").text();
@@ -2340,12 +2324,22 @@ $(document).ready(function() {
             if (data.Error) {
                 alert(data.Error);
             } else {
-                console.log("Submitted feedback");
+                $("#notes_list").append("<li>" + feedback + "</li>");
+                $("#feedback").val("");
             }
         });
+    }
+
+    $("#add_note").click(function() {
+        sendFeedback();
     });
 
-    function getFeedback() {
+    $("#send_feedback").click(function() {
+        sendFeedback();
+        window.location = "http://" + window.location.host;
+    });
+
+    function getFeedback(callback) {
 
         if (typeof task_layout_name !== 'undefined') {
             var graph_id = $("#gid").text();
@@ -2361,9 +2355,13 @@ $(document).ready(function() {
                 if (data.Error) {
                     console.log(data.Error);
                 } else {
+                    $("#notes_list").html("");
                     for (var i = 0; i < data.Message.length; i++) {
-                        $("#note_text").append("<p>" + (i + 1) + ": " + data.Message[i] + "</p>");
+                        $("#notes_list").append("<li>" + data.Message[i] + "</li>");
                     }
+                }
+                if (typeof(callback) == 'function') {
+                    callback();
                 }
             });
         }

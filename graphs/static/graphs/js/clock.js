@@ -11,6 +11,10 @@ GraphSpace.Clock = {
         }, 1000);
 	},
 
+	pause: function() {
+		clearInterval(this.looper);
+	},
+
 	stop: function() {
 		clearInterval(this.looper);
 		var timeSpent = this.time;
