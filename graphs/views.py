@@ -633,12 +633,12 @@ def retrieveTaskCode(request):
         worked_layout = request.POST["layout_name"]
         numChanges = request.POST["numChanges"]
         timeSpent = request.POST["timeSpent"]
-        numEvents = request.POST["numEvents"]
+        events = request.POST["events"]
 
         if not gid or not uid:
             return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
         
-        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents)
+        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events)
 
         return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
 

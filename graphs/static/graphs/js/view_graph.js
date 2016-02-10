@@ -2232,15 +2232,13 @@ $(document).ready(function() {
         var timeSpent = clock.stop();
         var events = logger.getEvents();
 
-        console.log("Features are: NumChanges: " + numChanges + ", Time Spent: " + timeSpent + ", events: " + events.length);
-
         $.post("../../../retrieveTaskCode/", {
             "graph_id": gid,
             "user_id": uid,
             "layout_name": task_layout_name,
             "numChanges": numChanges,
             "timeSpent": timeSpent,
-            "numEvents": events.length,
+            "events": JSON.stringify(events),
         }, function(data) {
             if (data.hasOwnProperty("Message")) {
                 $("#code").val(data.Message);

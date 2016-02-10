@@ -4,6 +4,7 @@ import json
 import random
 import string
 import uuid
+import math
 
 from collections import Counter, defaultdict
 from operator import itemgetter
@@ -4401,72 +4402,86 @@ def computeFeatures(uid, gid, layout_name, layout_owner):
 		origJson = json.loads(layout.original_json)
 		newJson = json.loads(layout.json)
 
-		# Compute pairwise distance between each node
+		# Compute distance moved for each node
 		distance_vector = []
 
+		# Pairwise distance between each node
+		pairwise_vector = []
+
 		for orig_key in origJson:
-			print origJson[orig_key]
 			orig_x = origJson[orig_key]["x"]
 			orig_y = origJson[orig_key]["y"]
 
-			if orig_key in newJson:
-				new_x = newJson[orig_key]["x"]
-				new_y = newJson[orig_key]["y"]
+			for obj in newJson:
+				new_x = obj["x"]
+				new_y = obj["y"]
 
-				print distance(orig_x, orig_y, new_x, new_y)
+				if orig_key == obj["id"]:
+					distance_vector.append(distance(orig_x, orig_y, new_x, new_y))
 
-
+				else:
+					pairwise_vector.append(distance(orig_x, orig_y, new_x, new_y))
 
 	db_session.close()
+
+	return [distance_vector, pairwise_vector]
 
 def distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents):
+def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 	'''
 		Retrieves task code.
 	'''
-	# result =  evalQuality(numChanges, timeSpent, numEvents)
+
+	db_session = data_connection.new_session()
+
+	features = computeFeatures(uid, gid, worked_layout, "MTURK_Worker")
+
+	new_feature_vector = models.Feature(id=None, user_id = uid, graph_id = gid, layout_name = worked_layout, layout_owner="MTURK_Worker", created=datetime.now(), distance_vector=json.dumps(features[0]), pairwise_vector=json.dumps(features[1]), num_changes=numChanges, time_spent=timeSpent, events=events)
+	db_session.add(new_feature_vector)
+	db_session.commit()
+
+	# result =  evalQuality(numChanges, timeSpent, len(events))
 
 	# if result == False:
 	# 	return "Not enough work done to complete task!"
 
 	# Generate task code
-	# taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
 
-	# # Create database connection
-	# db_session = data_connection.new_session()
+	# Create database connection
+	db_session = data_connection.new_session()
 
-	# # Get the task associated for this graph
-	# task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
 
-	# if task == None:
-	# 	return None
+	if task == None:
+		return None
 
-	# expires = datetime.now() + timedelta(hours=6)
-	# new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
-	# db_session.add(new_code)
-	# db_session.commit()
+	expires = datetime.now() + timedelta(hours=6)
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
+	db_session.add(new_code)
+	db_session.commit()
 
-	# # Update the modified count for the layout
-	# mod_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == worked_layout).first()
+	# Update the modified count for the layout
+	mod_layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == worked_layout).first()
 
-	# if mod_layout == None:
-	# 	return None
+	if mod_layout == None:
+		return None
 
-	# mod_layout.times_modified += 1
-	# db_session.commit()
+	mod_layout.times_modified += 1
+	db_session.commit()
 
-	# # Launch another task on MTURK if the layout hasn't been modified at least 5 times
-	# if mod_layout.times_modified < 5:
-	# 	launchTask(gid, uid, [mod_layout.json], single=True)
+	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
+	if mod_layout.times_modified < 5:
+		launchTask(gid, uid, [mod_layout.json], single=True)
 
-	# # pay workers
-	# getAssignmentsForGraph(uid, gid)
+	# pay workers
+	getAssignmentsForGraph(uid, gid)
 
-	# db_session.close()
-	# return taskCode
-	return 112121
+	db_session.close()
+	return taskCode
 
 def usernameMismatchError():
 	'''
