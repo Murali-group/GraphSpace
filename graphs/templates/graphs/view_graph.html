@@ -46,7 +46,7 @@
                     <li>Arrange nodes of the same color together.</li>
                     <li>Arrange rectangles at the bottom of the graph.</li>
                     <li>Arrange triangles on top of the graph.</li>
-                    <li>It is advised that nodes of the same color take precence over nodes of the same shape when constructing the layout.</li>
+                    <li><b>Note</b>: For some layouts, it may be advantageous to group nodes by their shape rather than their color.</li>
                 </ul>
             </div>
         </div>
@@ -218,7 +218,7 @@
         <!-- div classes are used to style these menu items,
             ids are used for accordian jQuery functions. -->
         <!-- Graph Details menu -->
-        {% if task_view != True %}
+        {% if researcher_view == True %}
         <div id="accordion_graph_details" class="accordion">
             <h3>Graph Details</h3>
             <div class="accordion_content">
@@ -516,7 +516,7 @@
         <br>
         <br>
         {% endif %}
-        {% else %}
+        {% elif task_view == True %}
             <!-- <div id="guidelines" class="accordion">
                 <h3>Guidelines</h3>
                 <div class="accordion_content">
@@ -652,7 +652,22 @@
               </div>
             <!-- </div>
         </div> -->
-
+        {% else %}
+            <h4>Guidelines to judge layout</h4>
+            <ul>
+                <li>Nodes of the same color are arranged together.</li>
+                <li>Rectangles are at the bottom of the graph.</li>
+                <li>Triangles are at the top of the graph.</li>
+                <li><b>Note</b>: For some layouts, it may be advantageous to group nodes by their shape rather than their color.</li>
+            </ul>
+            <p><b>Does the following layout follow the guidelines?</b></p>
+            <script type="text/javascript">
+                    var task_layout_name = "{{layout_name}}";
+            </script>
+            <div class="btn-group">
+                <btn class="btn btn-primary" id="ApproveLayout">Yes</btn>
+                <btn class="btn btn-danger" id="DenyLayout">No</btn>
+            </div>
         {% endif %}
     </div>
     <!-- end class = side_menu -->

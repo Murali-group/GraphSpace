@@ -515,7 +515,6 @@ $(document).ready(function() {
         for (var i = 0; i < selectedNodes.length; i++) {
             var node = selectedNodes[i];
             var position = node.renderedPosition();
-            console.log(position);
             var distance = travelDistance(centroid, position);
 
             if (!isNaN(position.x)) {
@@ -2241,7 +2240,7 @@ $(document).ready(function() {
             "layout_name": task_layout_name,
             "numChanges": numChanges,
             "timeSpent": timeSpent,
-            "numEvents": events.length
+            "numEvents": events.length,
         }, function(data) {
             if (data.hasOwnProperty("Message")) {
                 $("#code").val(data.Message);
@@ -2251,11 +2250,12 @@ $(document).ready(function() {
                 //Posts information to the server regarding the current display of the graph,
                 //including position
                 $.post(queryString + "/layout/update/", {
-                    layout_name: task_layout_name,
-                    points: JSON.stringify(current_layout),
-                    loggedIn: loggedIn,
+                    "layout_name": task_layout_name,
+                    "points": JSON.stringify(current_layout),
+                    "loggedIn": loggedIn,
                     "public": 0,
-                    "unlisted": 0
+                    "unlisted": 0,
+                    "originalLayout": layout.json
                 }, function(data) {
                     console.log(data);
                     if (data.Error) {
@@ -2278,13 +2278,8 @@ $(document).ready(function() {
 
     $("#tutorial_start").click(function() {
         clock.pause();
-        // $("#pause").find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
-        var tutorial = introJs();
-
-        tutorial.start();
+        introJs().start();
     });
-
-    
 
     function applyLayoutStyles() {
         if (layout) {
@@ -2366,6 +2361,36 @@ $(document).ready(function() {
             });
         }
     };
+
+    function submitEvaluation(result) {
+        var graph_id = $("#gid").text();
+        var user_id = $("#uid").text();
+        var layout_owner = "MTURK_Worker";
+
+        $.post("../../../submitEvaluation/", {
+                "graph_id": graph_id,
+                "user_id": user_id,
+                "layout_owner": layout_owner,
+                "layout_name": task_layout_name,
+                "evaluation": result
+            }, function(data) {
+                if (data.Error) {
+                    console.log(data.Error);
+                } else {
+                    alert(data.Message);
+                    window.location = "http://" + window.location.host;
+                }
+            });
+
+    };
+
+    $("#ApproveLayout").click(function(e) {
+        submitEvaluation("Yes");
+    });
+
+    $("#DenyLayout").click(function(e) {
+        submitEvaluation("No");
+    });
 
     $("#circle_selected").click(function (e) {
 

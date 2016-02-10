@@ -241,9 +241,26 @@ class Layout(Base):
     shared_with_groups = Column(Integer, nullable = True)
     # when was the last time layout was modified
     times_modified = Column(Integer, nullable = False)
+    # If layout is updated (task), save the original layout
+    original_json = Column(String, nullable = True)
 
     # SQLAlchemy's way of creating a multi-column foreign key constraint.
     __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+class LayoutStatus(Base):
+    '''
+       Table of layout acceptances/rejections.
+    '''
+    __tablename__ = 'layout_status'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
+    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    isApproved = Column(Integer, nullable=True)
+    created = Column(TIMESTAMP, nullable = False)
 
 class Node(Base):
     '''

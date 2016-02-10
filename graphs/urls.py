@@ -6,6 +6,7 @@ urlpatterns = patterns('',
         # can be accessed from respective html files using Django 
         # template language.
 
+        url(r'^submitEvaluation/$', views.submitEvaluation, name='submitEvaluation'),
         url(r'^saveFeedback/$', views.saveFeedback, name='saveFeedback'),
         url(r'^getFeedback/$', views.getFeedback, name='getFeedback'),
         url(r'^$', views.index, name='index'),
@@ -125,6 +126,7 @@ urlpatterns = patterns('',
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout$', views.save_layout, name='save_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_graph, name='view_graph'),
         url(r'^task/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_task, name='view_task'),
+        url(r'^approve/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.approve_task, name='approve_task'),
 
         url(r'^json/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_json, name='view_json'),
 
