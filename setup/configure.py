@@ -33,6 +33,11 @@ if __name__ == "__main__":
 	# sudo pip install django-analytical
 	# sudo pip install poster
 	# sudo pip install networkx
+	# sudo pip install requests
+	# sudo pip install numpy
+	# sudo pip install scipy
+	# sudo pip install scikit-learn
+
 	import pip
 
 	install("django")
@@ -41,6 +46,10 @@ if __name__ == "__main__":
 	install("django-analytical")
 	install("poster")
 	install("networkx")
+	install("requests")
+	install("numpy")
+	install("scipy")
+	install("scikit-learn")
 
 	syncdb()
 	
