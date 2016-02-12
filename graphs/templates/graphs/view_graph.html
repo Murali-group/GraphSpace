@@ -517,7 +517,7 @@
         <br>
         {% endif %}
         {% elif task_view == True %}
-            <div id="guidelines" class="accordion">
+            <!-- <div id="guidelines" class="accordion">
                 <h3>Guidelines</h3>
                 <div class="accordion_content">
                     <ul>
@@ -527,7 +527,7 @@
                     </ul>
                 </div>
             </div>
-            <!--<div id="notes" class="accordion">
+            <div id="notes" class="accordion">
                 <h3>Notes</h3>
                 <div class="accordion_content">
                     <p id="note_text"></p>
@@ -539,14 +539,14 @@
                     var task_layout_name = "{{layout_name}}";
                 </script>
                 <button class="btn btn-default" id="finished">Finished Task</button>
-                <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
             </div>
-            <!-- <div class="btn-group" style="margin-top: 10px;">
+            <div class="btn-group" style="margin-top: 10px;">
                 <button class="btn btn-default" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
                 <script type="text/javascript">
                     var task_layout_name = "{{layout_name}}";
                 </script>
-            </div> -->
+                <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+            </div>
            <!--  <div id="timeDiv" style="text-align: center;">
                 <div id="timer" style="font-size:25px;color:red;"></div>
                 <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>

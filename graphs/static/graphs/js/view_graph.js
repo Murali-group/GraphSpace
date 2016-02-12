@@ -663,13 +663,13 @@ $(document).ready(function() {
         active: 0
     });
 
-    $('#guidelines').accordion({
-        collapsible: true,
-        heightStyle: "auto",
-        // autoHeight: false,
-        clearStyle: true,
-        active: 0
-    });
+    // $('#guidelines').accordion({
+    //     collapsible: true,
+    //     heightStyle: "auto",
+    //     // autoHeight: false,
+    //     clearStyle: true,
+    //     active: 0
+    // });
 
     //these accordions make up the side menu
     $('#accordion_graph_details').accordion({
@@ -2291,7 +2291,7 @@ $(document).ready(function() {
     $("#tutorial_start").click(function() {
         clock.pause();
         introJs().start();
-        $("#guidelines").accordion("option", "active", 1);
+        // $("#guidelines").accordion("option", "active", 1);
     });
 
     function applyLayoutStyles() {
