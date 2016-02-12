@@ -4398,15 +4398,17 @@ def computeFeatures(uid, gid, layout_name, layout_owner):
 	if layout == None:
 		return None
 
+	
+	# Compute distance moved for each node
+	distance_vector = []
+
+	# Pairwise distance between each node
+	pairwise_vector = []
+
 	if layout.original_json != None:
 		origJson = json.loads(layout.original_json)
 		newJson = json.loads(layout.json)
 
-		# Compute distance moved for each node
-		distance_vector = []
-
-		# Pairwise distance between each node
-		pairwise_vector = []
 
 		for orig_key in origJson:
 			orig_x = origJson[orig_key]["x"]

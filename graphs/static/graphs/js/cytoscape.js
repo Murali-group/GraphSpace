@@ -14382,8 +14382,9 @@ BRp.load = function() {
           return this.selected();
         }).unselect();
 
-        // //Divit's addition: Clears all checkboxes if user clicked on screen 
-        // $('input:checkbox').removeAttr('checked');
+        //Divit's additions: Clears all checkboxes if user click on screen (not a node)
+        // does this by simulating a click to unselect all nodes
+        $("#unselect").click();
 
         if (draggedElements.length > 0) {
           r.redrawHint('eles', true);

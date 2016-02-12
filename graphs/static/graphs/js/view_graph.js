@@ -257,14 +257,6 @@ $(document).ready(function() {
         // draw graph, handle events etc.
         ready: function() {
 
-                //if there is a title, insert title at top of page
-                if ($("#title").text().length > 0) {
-                    $("#graph_title").html("<h1>" + $("#title").text() + "</h1>");
-                    $(".side_menu").css("margin-top", -50);
-                }
-
-
-
                 //Adding in the panzoom functionality 
                 this.panzoom();
 
@@ -322,51 +314,64 @@ $(document).ready(function() {
                 // load the graph to display
                 this.load(graph_json.graph, function(e) {
                     console.log('working');
+
                 }, function() {
                     console.log('done');
                     applyLayoutStyles();
+                    if (task_view == "True") {
+                        hideGraphInformation();
+                    }
                 });
 
                 // enable user panning (hold the left mouse button to drag
                 // the screen)
                 this.userPanningEnabled(false);
 
-                // display node data as a popup
-                this.on('tap', function(evt) {
-                    window.cy.elements().removeCss('color');
-                    // get target
-                    var target = evt.cyTarget;
-                    // target some element other than background (node/edge)
-                    if (target !== this) {
-                        var popup = target._private.data.popup
+                if (task_view != "True") {
 
-                        //When user clicks an element, turn that element red
-                        window.cy.$('[id="' + target._private.data.id + '"]').css('color', 'red');
+                    //if there is a title, insert title at top of page
+                    if ($("#title").text().length > 0) {
+                        $("#graph_title").html("<h1>" + $("#title").text() + "</h1>");
+                        $(".side_menu").css("margin-top", -50);
+                    }  
 
-                        //If there is no embedded content, don't display anything
-                        if (popup == null || popup.length == 0) {
-                            return;
-                        }
-
-                        //Display embedded content if there is any
-                        if (target._private.data.popup != null && target._private.data.popup.length > 0) {
-                            $("#dialog").html("<p>" + target._private.data.popup + "</p>");
-                        }
-                        if (target._private.group == 'edges') {
-                            $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
-                        } else {
-                            $('#dialog').dialog('option', 'title', target._private.data.content);
-                        }
-                        $("#dialog").dialog({
-                            'maxHeight': 500
-                        });
-                        $('#dialog').dialog('open');
-
-                    } else {
-                        //If another element was clicked, remove the red color from previously clicked element
+                    // display node data as a popup
+                    this.on('tap', function(evt) {
                         window.cy.elements().removeCss('color');
-                    }
-                });
+                        // get target
+                        var target = evt.cyTarget;
+                        // target some element other than background (node/edge)
+                        if (target !== this) {
+                            var popup = target._private.data.popup
+
+                            //When user clicks an element, turn that element red
+                            window.cy.$('[id="' + target._private.data.id + '"]').css('color', 'red');
+
+                            //If there is no embedded content, don't display anything
+                            if (popup == null || popup.length == 0) {
+                                return;
+                            }
+
+                            //Display embedded content if there is any
+                            if (target._private.data.popup != null && target._private.data.popup.length > 0) {
+                                $("#dialog").html("<p>" + target._private.data.popup + "</p>");
+                            }
+                            if (target._private.group == 'edges') {
+                                $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
+                            } else {
+                                $('#dialog').dialog('option', 'title', target._private.data.content);
+                            }
+                            $("#dialog").dialog({
+                                'maxHeight': 500
+                            });
+                            $('#dialog').dialog('open');
+
+                        } else {
+                            //If another element was clicked, remove the red color from previously clicked element
+                            window.cy.elements().removeCss('color');
+                        }
+                    });
+                }
 
                 //If ther are any terms to be searched for, highlight those terms, if found
                 if (getQueryVariable('partial_search')) {
@@ -655,7 +660,15 @@ $(document).ready(function() {
         heightStyle: "auto",
         // autoHeight: false,
         clearStyle: true,
-        // active: 0
+        active: 0
+    });
+
+    $('#guidelines').accordion({
+        collapsible: true,
+        heightStyle: "auto",
+        // autoHeight: false,
+        clearStyle: true,
+        active: 0
     });
 
     //these accordions make up the side menu
@@ -1621,6 +1634,7 @@ $(document).ready(function() {
         for (var i = 0; i < matching_nodes.length; i++) {
             cy.$("#" + matching_nodes[i]).select();
         }
+
     }
 
     // Returns all the id's that are > k value
@@ -2277,6 +2291,7 @@ $(document).ready(function() {
     $("#tutorial_start").click(function() {
         clock.pause();
         introJs().start();
+        $("#guidelines").accordion("option", "active", 1);
     });
 
     function applyLayoutStyles() {
@@ -2608,5 +2623,28 @@ $(document).ready(function() {
             selectedNodes[i].renderedPosition(newPosition);
         }
     });
+
+    /**
+    * Function to hide information about the graph that the task worker doesn't need to see.
+    */
+    function hideGraphInformation() {
+        for (var i = 0; i < window.cy.edges().length; i++) {
+            var edge = window.cy.edges()[i];
+            var edge_id = edge["_private"]["data"]["id"];
+            window.cy.$('[id="' + edge_id + '"]').css({
+                                    'line-color': 'black',
+                                    'line-style': 'solid',
+                                    'width': .1
+                                });
+        }
+
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+            var node_id = node["_private"]["data"]["id"];
+            window.cy.$('[id="' + node_id + '"]').css({
+                                    'font-size': "0px"
+                                });
+        }
+    }
 
 });
