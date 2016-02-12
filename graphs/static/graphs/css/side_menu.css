@@ -16,6 +16,8 @@
     right: 5px;
 
     overflow: auto;
+
+    /*zoom: 80%;*/
 }
 
 /* for each accordion in the menu*/

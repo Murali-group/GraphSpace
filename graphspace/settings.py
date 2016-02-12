@@ -25,6 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
 SECRETKEY = os.environ.get('SECRETKEY')
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG')
 

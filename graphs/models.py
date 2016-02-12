@@ -210,6 +210,40 @@ class GraphTag(Base):
     __tablename__ = 'graph_tag'
     tag_id = Column(String, primary_key = True) #id
 
+# class Log(Base):
+#     '''
+#         Table for log
+#     '''
+#     __tablename__ = 'log'
+
+#     id = Column(Integer, autoincrement=True, primary_key=True)
+#     eventType = Column(String, nullable = False)
+#     eventTime = Column(String, nullable = False)
+#     elementInvolved = Column(String, nullable = True)
+#     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+#     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+#     layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+#     layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+
+class Feature(Base):
+    '''
+        Table that holds all the features.
+    '''
+    __tablename__ = 'feature'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
+    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    created = Column(TIMESTAMP, nullable = False)
+    distance_vector = Column(String, nullable = True)
+    pairwise_vector = Column(String, nullable = True)
+    num_changes = Column(Integer, nullable = False)
+    time_spent = Column(Integer, nullable = False)
+    events = Column(String, nullable = False)
+
+
 class Layout(Base):
     '''
         Table of Layouts to specify how the graphs are viewed on GraphSpace.
@@ -241,9 +275,26 @@ class Layout(Base):
     shared_with_groups = Column(Integer, nullable = True)
     # when was the last time layout was modified
     times_modified = Column(Integer, nullable = False)
+    # If layout is updated (task), save the original layout
+    original_json = Column(String, nullable = True)
 
     # SQLAlchemy's way of creating a multi-column foreign key constraint.
     __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+class LayoutStatus(Base):
+    '''
+       Table of layout acceptances/rejections.
+    '''
+    __tablename__ = 'layout_status'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
+    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    isApproved = Column(Integer, nullable=True)
+    created = Column(TIMESTAMP, nullable = False)
 
 class Node(Base):
     '''

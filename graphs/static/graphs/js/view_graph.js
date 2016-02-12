@@ -12,7 +12,6 @@ $(document).ready(function() {
     //Sets default node properties to nodes that may be missing some
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
-    getFeedback();
 
     if (task_view == "True") {
 
@@ -521,7 +520,6 @@ $(document).ready(function() {
         for (var i = 0; i < selectedNodes.length; i++) {
             var node = selectedNodes[i];
             var position = node.renderedPosition();
-            console.log(position);
             var distance = travelDistance(centroid, position);
 
             if (!isNaN(position.x)) {
@@ -657,23 +655,20 @@ $(document).ready(function() {
         autoOpen: false
     });
 
-    $("#guidelines").accordion({
-        collapsible:true,
-        active:false
-    });
-
-    $("#notes").accordion({
-        collapsible:true,
-        active:false,
-        heightStyle: "content"
-    });
-
     $('#accordion_design').accordion({
         collapsible: true,
         heightStyle: "auto",
         // autoHeight: false,
         clearStyle: true,
-        // active: 0
+        active: 0
+    });
+
+    $('#guidelines').accordion({
+        collapsible: true,
+        heightStyle: "auto",
+        // autoHeight: false,
+        clearStyle: true,
+        active: 0
     });
 
     //these accordions make up the side menu
@@ -712,6 +707,12 @@ $(document).ready(function() {
     $('#accordion_filters').accordion({
         collapsible: true,
         heightStyle: "content"
+    });
+
+    $("#notes").click(function() {
+        getFeedback(function() {
+            $("#notes_modal").modal('toggle');
+        });
     });
 
     //When save layout button is clicked
@@ -1572,9 +1573,9 @@ $(document).ready(function() {
                 } else {
                     checkboxString += '<input id="' + value + '" type="checkbox" value="select_shape" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
                 }
-                if ((index + 1) % 3 == 0) {
-                    checkboxString += "<br><br>";
-                }
+                // if ((index + 1) % 3 == 0) {
+                //     checkboxString += "<br>";
+                // }
             }
             checkboxString += "</p>";
             $("#selection").append(checkboxString);
@@ -1588,7 +1589,6 @@ $(document).ready(function() {
 
     function combineSelections(selection1, selectionArray1, selection2, selectionArray2) {
 
-        console.log(arguments);
         var matching_shape_nodes = []
 
         var shapes = []
@@ -1634,6 +1634,7 @@ $(document).ready(function() {
         for (var i = 0; i < matching_nodes.length; i++) {
             cy.$("#" + matching_nodes[i]).select();
         }
+
     }
 
     // Returns all the id's that are > k value
@@ -2245,15 +2246,13 @@ $(document).ready(function() {
         var timeSpent = clock.stop();
         var events = logger.getEvents();
 
-        console.log("Features are: NumChanges: " + numChanges + ", Time Spent: " + timeSpent + ", events: " + events.length);
-
         $.post("../../../retrieveTaskCode/", {
             "graph_id": gid,
             "user_id": uid,
             "layout_name": task_layout_name,
             "numChanges": numChanges,
             "timeSpent": timeSpent,
-            "numEvents": events.length
+            "events": JSON.stringify(events),
         }, function(data) {
             if (data.hasOwnProperty("Message")) {
                 $("#code").val(data.Message);
@@ -2263,11 +2262,12 @@ $(document).ready(function() {
                 //Posts information to the server regarding the current display of the graph,
                 //including position
                 $.post(queryString + "/layout/update/", {
-                    layout_name: task_layout_name,
-                    points: JSON.stringify(current_layout),
-                    loggedIn: loggedIn,
+                    "layout_name": task_layout_name,
+                    "points": JSON.stringify(current_layout),
+                    "loggedIn": loggedIn,
                     "public": 0,
-                    "unlisted": 0
+                    "unlisted": 0,
+                    "originalLayout": layout.json
                 }, function(data) {
                     console.log(data);
                     if (data.Error) {
@@ -2290,27 +2290,9 @@ $(document).ready(function() {
 
     $("#tutorial_start").click(function() {
         clock.pause();
-        $("#pause").find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
         introJs().start();
-    })
-
-    // $("#reverse").click(function () {
-    //     clock.reverse(retrieveTaskCode);
-    // });
-
-    // $("#pause").click(function() {
-    //     if ($(this).find('span').attr('class') == "glyphicon glyphicon-pause") {
-    //         clock.pause();
-    //         $(this).find('span').toggleClass("glyphicon glyphicon-pause").toggleClass("glyphicon glyphicon-play");
-    //     } else {
-    //         clock.start(retrieveTaskCode);
-    //         $(this).find('span').toggleClass("glyphicon glyphicon-play").toggleClass("glyphicon glyphicon-pause");
-    //     }
-    // });
-
-    // $("#forward").click(function() {
-    //     clock.forward(retrieveTaskCode);
-    // });
+        $("#guidelines").accordion("option", "active", 1);
+    });
 
     function applyLayoutStyles() {
         if (layout) {
@@ -2329,8 +2311,12 @@ $(document).ready(function() {
         }
     };
 
-    $("#send_feedback").click(function() {
+    function sendFeedback() {
         var feedback = $("#feedback").val();
+
+        if (feedback.length == 0) {
+            return;
+        }
 
         var graph_id = $("#gid").text();
         var user_id = $("#uid").text();
@@ -2346,12 +2332,22 @@ $(document).ready(function() {
             if (data.Error) {
                 alert(data.Error);
             } else {
-                console.log("Submitted feedback");
+                $("#notes_list").append("<li>" + feedback + "</li>");
+                $("#feedback").val("");
             }
         });
+    }
+
+    $("#add_note").click(function() {
+        sendFeedback();
     });
 
-    function getFeedback() {
+    $("#send_feedback").click(function() {
+        sendFeedback();
+        window.location = "http://" + window.location.host;
+    });
+
+    function getFeedback(callback) {
 
         if (typeof task_layout_name !== 'undefined') {
             var graph_id = $("#gid").text();
@@ -2367,13 +2363,47 @@ $(document).ready(function() {
                 if (data.Error) {
                     console.log(data.Error);
                 } else {
+                    $("#notes_list").html("");
                     for (var i = 0; i < data.Message.length; i++) {
-                        $("#note_text").append("<p>" + (i + 1) + ": " + data.Message[i] + "</p>");
+                        $("#notes_list").append("<li>" + data.Message[i] + "</li>");
                     }
+                }
+                if (typeof(callback) == 'function') {
+                    callback();
                 }
             });
         }
     };
+
+    function submitEvaluation(result) {
+        var graph_id = $("#gid").text();
+        var user_id = $("#uid").text();
+        var layout_owner = "MTURK_Worker";
+
+        $.post("../../../submitEvaluation/", {
+                "graph_id": graph_id,
+                "user_id": user_id,
+                "layout_owner": layout_owner,
+                "layout_name": task_layout_name,
+                "evaluation": result
+            }, function(data) {
+                if (data.Error) {
+                    console.log(data.Error);
+                } else {
+                    alert(data.Message);
+                    window.location = "http://" + window.location.host;
+                }
+            });
+
+    };
+
+    $("#ApproveLayout").click(function(e) {
+        submitEvaluation("Yes");
+    });
+
+    $("#DenyLayout").click(function(e) {
+        submitEvaluation("No");
+    });
 
     $("#circle_selected").click(function (e) {
 

@@ -350,7 +350,7 @@ def update_layout(request, uid, gid):
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
 
-    error = db.update_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
+    error = db.update_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'], request.POST['originalLayout'])
     if error == None:
         return HttpResponse(json.dumps(db.sendMessage(200, "Layout updated!")), content_type="application/json")
     
@@ -447,6 +447,9 @@ def view_graph(request, uid, gid):
     # Don't display the task_view
     context["task_view"] = False
 
+    context["researcher_view"] = True
+
+
     if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True
 
@@ -527,6 +530,96 @@ def view_task(request, uid, gid):
 
     return render(request, 'graphs/view_graph.html', context)
 
+def approve_task(request, uid, gid):
+    '''
+       Approve or reject a task.
+
+        :param request: HTTP GET Request
+        :param uid: email of the user that owns this graph
+        :param gid: name of graph that the user owns
+    '''
+
+    if 'uid' in request.session:
+        context = login(request)
+        context["approve_view"] = True
+
+    else:
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    graph_info = db.getGraphInfo(uid, gid)
+
+    if graph_info != None:
+        graph_to_view = graph_info
+    else: 
+        context['Error'] = "Task does not exist anymore!."
+        return render(request, 'graphs/error.html', context)
+
+    layout_name = request.GET.get('layout', '')
+    layout_owner = request.GET.get('layout_owner', '')
+
+    context = db.set_layout_context(request, context, uid, gid)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+
+    context['draw_graph'] = True
+
+    # TODO: This will eventually get deleted
+
+    json_data = json.loads(context['graph'])
+
+    #add sidebar information to the context for display
+    if 'description' in json_data['metadata']:
+        context['description'] = json_data['metadata']['description'] + "</table></html>"
+    else:
+        context['description'] = ""
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    if 'name' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['name']
+    else:
+        context['graph_name'] = ''
+
+    # graph id
+    context['graph_id'] = gid
+
+    # owner
+    context["owner"] = uid
+
+    return render(request, 'graphs/view_graph.html', context)
+
+def submitEvaluation(request):
+    '''
+        Submits Evaluation for a task.
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+        layout_name = request.POST["layout_name"]
+        layout_owner = request.POST["layout_owner"]
+        evaluation = request.POST["evaluation"]
+
+        error = db.submitEvaluation(uid, gid, layout_name, layout_owner, evaluation)
+
+        if error == None:
+            return HttpResponse(json.dumps(db.sendMessage(201, "Evaluation Submitted!")), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
+
 def retrieveTaskCode(request):
     '''
         Retrieves code for a task when worker has completed task.
@@ -540,12 +633,12 @@ def retrieveTaskCode(request):
         worked_layout = request.POST["layout_name"]
         numChanges = request.POST["numChanges"]
         timeSpent = request.POST["timeSpent"]
-        numEvents = request.POST["numEvents"]
+        events = request.POST["events"]
 
         if not gid or not uid:
             return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
         
-        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents)
+        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events)
 
         return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
 

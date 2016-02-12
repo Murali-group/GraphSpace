@@ -4,6 +4,7 @@ import json
 import random
 import string
 import uuid
+import math
 
 from collections import Counter, defaultdict
 from operator import itemgetter
@@ -631,10 +632,37 @@ def set_layout_context(request, context, uid, gid):
 
 	context["crowd_layouts"] = get_crowd_layouts_for_graph("MTURK_Worker", gid)
 	context['task_launched'] = exists
-	context["tutorial_view"] = False
 
 	return context
 
+def submitEvaluation(uid, gid, layout_name, layout_owner, evaluation):
+	'''
+		Submits evaluation for a layout
+
+		@param uid: Owner of graph
+		@param gid: Name of graph
+		@param layout_name: Name of layout
+		@param layout_owner: Owner of layout
+		@param evaluation: Evaluation of layout
+	'''
+
+	db_session = data_connection.new_session()
+
+	# Is Approved is 1 or 0 depending if evaluation is good/bad
+	isApproved = 0
+
+	if evaluation == "Yes":
+		isApproved = 1
+
+	# Add this evaluation to database
+	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, isApproved=isApproved, created=datetime.now())
+
+	db_session.add(layout_eval)
+	db_session.commit()
+
+	db_session.close()
+
+	return None
 def get_crowd_layouts_for_graph(uid, gid):
 	'''
 		Gets all the layouts submitted by crowdworkers.
@@ -3147,7 +3175,7 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 
 		#Go through each layout and save it
 		for layout in layout_array:
-			new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, times_modified=0)
+			new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, times_modified=0, original_json=None)
 			db_session.add(new_layout)
 			db_session.commit()
 
@@ -3723,7 +3751,7 @@ def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 
 	db_session.close()
 
-def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
+def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups, originalLayout):
 	'''
 		Update layout of specific graph.
 
@@ -3751,8 +3779,10 @@ def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public
 		layout.public = public
 		layout.shared_with_groups = shared_with_groups
 		layout.times_modified += 1
+		layout.original_json = originalLayout
 		db_session.commit()
 
+		computeFeatures(graph_owner, graph_id, layout_name, layout_owner)
 	else:
 		return "Layout not found!"
 
@@ -3781,7 +3811,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
 
 	db_session.add(new_layout)
 	db_session.commit()
@@ -4351,14 +4381,73 @@ def evalQuality(numChanges, timeSpent, numEvents):
 
 	return nb.classify(numChanges, timeSpent, numEvents)
 
-def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents):
+def computeFeatures(uid, gid, layout_name, layout_owner):
+	'''
+		Computes all features for a layout worked on by worker.
+
+		@param uid: Owner of graph
+		@param gid: Name of graph
+		@param layout_name: Name of layout
+		@param layout_owner: Owner of layout
+	'''
+
+	db_session = data_connection.new_session()
+
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
+
+	if layout == None:
+		return None
+
+	
+	# Compute distance moved for each node
+	distance_vector = []
+
+	# Pairwise distance between each node
+	pairwise_vector = []
+
+	if layout.original_json != None:
+		origJson = json.loads(layout.original_json)
+		newJson = json.loads(layout.json)
+
+
+		for orig_key in origJson:
+			orig_x = origJson[orig_key]["x"]
+			orig_y = origJson[orig_key]["y"]
+
+			for obj in newJson:
+				new_x = obj["x"]
+				new_y = obj["y"]
+
+				if orig_key == obj["id"]:
+					distance_vector.append(distance(orig_x, orig_y, new_x, new_y))
+
+				else:
+					pairwise_vector.append(distance(orig_x, orig_y, new_x, new_y))
+
+	db_session.close()
+
+	return [distance_vector, pairwise_vector]
+
+def distance(x1, y1, x2, y2):
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 	'''
 		Retrieves task code.
 	'''
-	result =  evalQuality(numChanges, timeSpent, numEvents)
 
-	if result == False:
-		return "Not enough work done to complete task!"
+	db_session = data_connection.new_session()
+
+	features = computeFeatures(uid, gid, worked_layout, "MTURK_Worker")
+
+	new_feature_vector = models.Feature(id=None, user_id = uid, graph_id = gid, layout_name = worked_layout, layout_owner="MTURK_Worker", created=datetime.now(), distance_vector=json.dumps(features[0]), pairwise_vector=json.dumps(features[1]), num_changes=numChanges, time_spent=timeSpent, events=events)
+	db_session.add(new_feature_vector)
+	db_session.commit()
+
+	# result =  evalQuality(numChanges, timeSpent, len(events))
+
+	# if result == False:
+	# 	return "Not enough work done to complete task!"
 
 	# Generate task code
 	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
@@ -4372,8 +4461,6 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents):
 	if task == None:
 		return None
 
-	# Check to see if survey code doesn't already exist
-	# try:
 	expires = datetime.now() + timedelta(hours=6)
 	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
 	db_session.add(new_code)
@@ -4388,18 +4475,15 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, numEvents):
 	mod_layout.times_modified += 1
 	db_session.commit()
 
-	# Launch another task on MTURK
+	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
 	if mod_layout.times_modified < 5:
 		launchTask(gid, uid, [mod_layout.json], single=True)
 
+	# pay workers
 	getAssignmentsForGraph(uid, gid)
 
 	db_session.close()
 	return taskCode
-	# except Exception as ex:
-	# 	# If code already exists, try again?
-	# 	print ex
-	# 	return retrieveTaskCode(uid, gid, worked_layout)
 
 def usernameMismatchError():
 	'''
