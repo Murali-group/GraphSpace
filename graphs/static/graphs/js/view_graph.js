@@ -4,6 +4,10 @@ Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
 
+    var popFirstElement = false;
+    var undoStack = [];
+    var redoStack = [];
+
     var clock = GraphSpace.Clock;
     var logger = GraphSpace.Logger;
     // Cytoscape.js API: 
@@ -320,6 +324,13 @@ $(document).ready(function() {
                     applyLayoutStyles();
                     if (task_view == "True") {
                         hideGraphInformation();
+
+                        addToUndoStack();
+
+                        window.cy.on("free", "node", function(event, ui) {
+                            popFirstElement = true;
+                            addToUndoStack();                            
+                        });
                     }
                 });
 
@@ -372,6 +383,7 @@ $(document).ready(function() {
                         }
                     });
                 }
+
 
                 //If ther are any terms to be searched for, highlight those terms, if found
                 if (getQueryVariable('partial_search')) {
@@ -463,6 +475,14 @@ $(document).ready(function() {
             }
         }
     });
+
+    function addToUndoStack() {
+        var step = {};
+        window.cy.nodes().positions(function (i, node) {
+            step[node._private.data.id] = node.renderedPosition();
+        });
+        undoStack.push(step);
+    };
 
     function travelDistance(center, nodePosition) {
         var a = Math.abs(center.x - nodePosition.x);
@@ -561,6 +581,7 @@ $(document).ready(function() {
                 node.renderedPosition(position);
             }
         }
+        addToUndoStack();
     }
 
     function grabNodePositions() {
@@ -2122,6 +2143,7 @@ $(document).ready(function() {
         var nodes = window.cy.elements('node');
         var layout = {};
         for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+            console.log(nodes[i]);
             layout[nodes[i]._private.data.id] = {
                 'x': nodes[i]._private.position.x,
                 'y': nodes[i]._private.position.y,
@@ -2448,6 +2470,8 @@ $(document).ready(function() {
             };
             selectedArray[i].renderedPosition(pos);
         }
+
+        addToUndoStack();
     });
 
     $("#square_selected").click(function (e) {
@@ -2531,6 +2555,7 @@ $(document).ready(function() {
                 }
                 selectedArray[3].renderedPosition(newPosition);
             }
+            addToUndoStack();
             return;
         }
 
@@ -2579,6 +2604,7 @@ $(document).ready(function() {
             }
             rightBar[i].renderedPosition(newPosition);
         }
+        addToUndoStack();
     });
 
     $("#horizontal").click(function (e) {
@@ -2601,6 +2627,7 @@ $(document).ready(function() {
             }
             selectedNodes[i].renderedPosition(newPosition);
         }
+        addToUndoStack();
     });
 
     $("#vertical").click(function (e) {
@@ -2621,6 +2648,47 @@ $(document).ready(function() {
                 "y": center.y - radius + (i * minDistance)
             }
             selectedNodes[i].renderedPosition(newPosition);
+        }
+        addToUndoStack();
+    });
+
+    //Undo's last position change from the user for the current session
+    $("#undo").click(function (e) {
+
+        if (undoStack.length == 1) {
+            var node_positions = undoStack[0];
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+        } else {
+            if (popFirstElement == true) {
+                popFirstElement = false;
+                undoStack.pop();
+            }
+            var node_positions = undoStack.pop();
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+            redoStack.push(node_positions);
+        }
+    });
+
+    $("#redo").click(function(e) {
+        if (redoStack.length == 0) {
+            return;
+        } else {
+            var node_positions = redoStack.pop();
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+            popFirstElement = true;
+            undoStack.push(node_positions);
         }
     });
 
