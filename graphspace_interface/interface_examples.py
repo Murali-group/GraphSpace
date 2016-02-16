@@ -65,9 +65,8 @@ for t,h in G.edges():
     interface.add_edge_color(G,t,h,'#000000')
     interface.add_edge_width(G,t,h,2)
 
-#Divit's Note: We should have a JSON validator at this step
-#Divit: We should.  I want to talk to Murali about possibly enhancing the validator.
 
+print G,graphid,outfile,user,password
 interface.postGraph(G,graphid,outfile=outfile,user=user,password=password)
 if group != None:
     interface.shareGraph(graphid,user=user,password=password,group=group)
