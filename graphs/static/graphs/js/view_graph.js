@@ -535,6 +535,7 @@ $(document).ready(function() {
     function groupUngroup(type) {
 
         var data = computeCentroid();
+        addToUndoStack();
 
         var centroid = data[0];
         var selectedNodes = data[1];
@@ -583,7 +584,6 @@ $(document).ready(function() {
                 node.renderedPosition(position);
             }
         }
-        addToUndoStack();
     }
 
     function grabNodePositions() {
@@ -2431,26 +2431,8 @@ $(document).ready(function() {
         submitEvaluation("No");
     });
 
-    $("#force_directed").click(function (e) {
-        var selectedArray = []
-        for (var i = 0; i < window.cy.nodes().length; i++) {
-            var node = window.cy.nodes()[i];
-
-            if (node.selected()) {
-                selectedArray.push(node);
-            }
-        }
-
-        var collection = cy.collection(selectedArray);
-        collection.layout(
-            {
-                name: "cose",
-                fit: false
-            });
-        addToUndoStack();
-    });
-
     $("#circle_selected").click(function (e) {
+        addToUndoStack();
 
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
@@ -2469,10 +2451,10 @@ $(document).ready(function() {
                 avoidOverlap: false,
                 padding: 0
             });
-        addToUndoStack();
     });
 
     $("#fill_circle_selected").click(function (e) {
+        addToUndoStack();
 
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
@@ -2491,10 +2473,11 @@ $(document).ready(function() {
                 avoidOverlap: false,
                 padding: 40
             });
-        addToUndoStack();
     });
 
     $("#grid_selected").click(function (e) {
+        addToUndoStack();
+
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
             var node = window.cy.nodes()[i];
@@ -2512,10 +2495,11 @@ $(document).ready(function() {
                 avoidOverlap: true,
                 condense: true
             });
-        addToUndoStack();
     });
 
     $("#square_selected").click(function (e) {
+        addToUndoStack();
+
         var minDistance = 0;
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
@@ -2596,7 +2580,6 @@ $(document).ready(function() {
                 }
                 selectedArray[3].renderedPosition(newPosition);
             }
-            addToUndoStack();
             return;
         }
 
@@ -2645,10 +2628,10 @@ $(document).ready(function() {
             }
             rightBar[i].renderedPosition(newPosition);
         }
-        addToUndoStack();
     });
 
     $("#horizontal").click(function (e) {
+        addToUndoStack();
         var data = computeCentroid();
 
         var center = {
@@ -2668,10 +2651,10 @@ $(document).ready(function() {
             }
             selectedNodes[i].renderedPosition(newPosition);
         }
-        addToUndoStack();
     });
 
     $("#vertical").click(function (e) {
+        addToUndoStack();
         var data = computeCentroid();
 
         var center = {
@@ -2690,7 +2673,6 @@ $(document).ready(function() {
             }
             selectedNodes[i].renderedPosition(newPosition);
         }
-        addToUndoStack();
     });
 
     //Undo's last position change from the user for the current session
@@ -2728,7 +2710,6 @@ $(document).ready(function() {
                 var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
                 window.cy.getElementById(node_id).renderedPosition(oldPosition);
             }
-            // popFirstElement = true;
             undoStack.push(node_positions);
         }
     });
