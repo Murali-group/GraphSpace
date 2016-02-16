@@ -323,8 +323,8 @@ $(document).ready(function() {
                     console.log('done');
                     applyLayoutStyles();
                     if (task_view == "True") {
-                        hideGraphInformation();
                         $("#guidelines_modal").modal('toggle');
+                        hideGraphInformation();
                         addToUndoStack();
                         window.cy.on("free", "node", function(event, ui) {
                             popFirstElement = true;
@@ -2311,7 +2311,12 @@ $(document).ready(function() {
 
     $("#tutorial_start").click(function() {
         clock.pause();
-        introJs().start();
+        var intro = introJs();
+
+        intro.setOptions({
+            'scrollToElement': true
+        });
+        intro.start();
         // $("#guidelines").accordion("option", "active", 1);
     });
 
