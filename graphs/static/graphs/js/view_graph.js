@@ -486,6 +486,11 @@ $(document).ready(function() {
     function travelDistance(center, nodePosition) {
         var a = Math.abs(center.x - nodePosition.x);
         var b = Math.abs(center.y - nodePosition.y);
+
+        if (a == 0) {
+          a = 1;
+        }
+
         var ratio = b / a;
 
         var miniH = Math.sqrt(1 + ratio * ratio);
@@ -520,8 +525,6 @@ $(document).ready(function() {
                 minDistance = node.boundingBox()["h"];
             }
         }
-
-        console.log(centroid);
 
         centroid["x"] /= selectedNodes.length;
         centroid["y"] /= selectedNodes.length;
@@ -757,7 +760,6 @@ $(document).ready(function() {
             "public": 0,
             "unlisted": 0
         }, function(data) {
-            console.log(data);
             if (data.Error) {
                 return alert(data.Error);
             }
@@ -2142,7 +2144,6 @@ $(document).ready(function() {
         var nodes = window.cy.elements('node');
         var layout = {};
         for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
-            console.log(nodes[i]);
             layout[nodes[i]._private.data.id] = {
                 'x': nodes[i]._private.position.x,
                 'y': nodes[i]._private.position.y,
@@ -2290,7 +2291,6 @@ $(document).ready(function() {
                     "unlisted": 0,
                     "originalLayout": layout.json
                 }, function(data) {
-                    console.log(data);
                     if (data.Error) {
                         return alert(data.Error);
                     }
