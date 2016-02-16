@@ -1573,10 +1573,10 @@ $(document).ready(function() {
             var subtitle = "";
             if (key == "background_color") {
                 subtitle = "Background Color";
-                $("#selection").append("<p data-intro='You can select multiple nodes that have the same background color.' data-step='3' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
+                $("#selection").append("<p data-intro='You can select multiple nodes that have the same background color.' data-step='5' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
             } else {
                 subtitle = "Shape";
-                $("#selection").append("<p data-intro='You can select multiple nodes that have the same shape.' data-step='4' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
+                $("#selection").append("<p data-intro='You can select multiple nodes that have the same shape.' data-step='6' style='text-align: left; font-weight: bold;'>" + subtitle + "</p>");
             }
             var valueArray = layoutPropertyDictionary[key];
             var checkboxString = "<p style='text-align: left;'>";

@@ -527,26 +527,26 @@
              <p id="note_text"></p>
          </div>
          </div> -->
+      <script type="text/javascript">
+         var task_layout_name = "{{layout_name}}";
+      </script>
       <div class="btn-group">
-         <script type="text/javascript">
-            var task_layout_name = "{{layout_name}}";
-         </script>
          <button class="btn btn-default" id="tutorial_start">Start Tour</button>
-         <button class="btn btn-primary" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <button class="btn btn-primary" data-intro="Reveals guidelines to generate acceptable layouts." data-step="2" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
       </div>
       <br>
       <div class="btn-group" style="margin-top: 10px;">
-         <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-         <button class="btn btn-primary" id="finished">Finished Task</button>
+         <button class="btn btn-default" id="notes" data-intro="Shows any notes for this layout as well as allows user to input their own notes." data-step="3">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <button class="btn btn-primary" id="finished" data-intro="Click this when you are finished with the task." data-step="4">Finished Task</button>
       </div>
       <hr>
-      <h3 data-intro="This panel allows for the selection of multiple nodes that have similar background colors and/or similar shapes." data-step="2">Select</h3>
+      <h3>Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
       </div>
-      <button class="btn btn-primary" value="unselect" id="unselect">Unselect All Nodes</button><br><br>
+      <button class="btn btn-primary" value="unselect" id="unselect" data-intro="This unselects all selected nodes." data-step="7">Unselect All Nodes</button><br><br>
       <div class="btn-group">
-         <button class="btn btn-primary" value="undo" id="undo"><i class="fa fa-mail-reply"></i></button>
-         <button class="btn btn-primary" value="redo" id="redo"><i class="fa fa-mail-forward"></i></button>
+         <button class="btn btn-primary" value="undo" id="undo" data-intro="Undo previous action." data-step="8"><i class="fa fa-mail-reply"></i></button>
+         <button class="btn btn-primary" value="redo" id="redo" data-intro="Redo previous action." data-step="9"><i class="fa fa-mail-forward"></i></button>
       </div>
       <hr>
       <!-- <h3 data-intro="This panel allows for the modification of all selected nodes." data-step="5">Modify</h3>
@@ -577,19 +577,19 @@
              </ul>
            </div>
          </div> -->
-      <h3 data-intro="For all selected nodes, this allows you to move them." data-step="8" data-position="top">Move</h3>
+      <h3>Move</h3>
              <div class="btn-group">
-                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a circle." data-step="9" data-position="top" id="circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle-o"></i></button>
-                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a dense circle." data-step="19" data-position="top" id="fill_circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle"></i></button>
-                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a square." data-step="10" data-position="top" id="square_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square-o"></i></button>
-                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a grid." data-step="10" data-position="top" id="grid_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square"></i></button>
+                <button data-intro="For all selected nodes, this arranges nodes into a circle." data-step="10" data-position="top" id="circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle-o"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a dense circle." data-step="11" data-position="top" id="fill_circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a square." data-step="12" data-position="top" id="square_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square-o"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a grid." data-step="13" data-position="top" id="grid_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square"></i>&nbsp;</button>
              </div>
              <br><br>
              <div class="btn-group">
-                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a vertical line." data-step="11" value="vertical" class="btn btn-primary" id="vertical" style="display: block; margin: 0 auto;"><i class="fa-rotate-90 fa fa-minus"></i></button>
-                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a horizontal line." data-step="12" value="horizontal" class="btn btn-primary" id="horizontal" style="display: block; margin: 0 auto;"><i class="fa fa-minus"></i></button>
-                <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="13" data-position="top" class="btn btn-primary" style="display: block; margin: 0 auto;" value="squeeze" id="group" ><span class="glyphicon glyphicon-resize-small"></span></button>
-                <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="14" value="release" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;"><span class="glyphicon glyphicon-resize-full"></span></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a vertical line." data-step="14" value="vertical" class="btn btn-primary" id="vertical" style="display: block; margin: 0 auto;"><i class="fa-rotate-90 fa fa-minus"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a horizontal line." data-step="15" value="horizontal" class="btn btn-primary" id="horizontal" style="display: block; margin: 0 auto;"><i class="fa fa-minus"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="16" data-position="top" class="btn btn-primary" style="display: block; margin: 0 auto;" value="squeeze" id="group" ><span class="glyphicon glyphicon-resize-small"></span></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="17" value="release" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;"><span class="glyphicon glyphicon-resize-full"></span></button>
              </div>
              <br><br>
              <!-- <div id="moveArrows" >
