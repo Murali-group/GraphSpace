@@ -64,19 +64,16 @@
             <ul id="notes_list">
             </ul>
          </div>
-         <form id="layout_form" class="layout_form" role="form">
-            <div class="layout_fields">
-               <div class="control-group">
-                  <label for="layout_name">Feedback</label>
-                  <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
-               </div>
-               <br>
-               <div class="form-group">
-                  <button type="button" id="add_note" value="" class="btn btn-success">Add Note</button>
-                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-               </div>
+         <div class="modal-body">
+          <form>
+            <textarea id="feedback" class="form-control" rows="3"></textarea>
+            <br>
+            <div class="form-group">
+               <button type="button" id="add_note" value="" class="btn btn-success">Add Note</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-         </form>
+          </form>
+        </div>
       </div>
    </div>
 </div>
@@ -531,30 +528,18 @@
          </div>
          </div> -->
       <div class="btn-group">
+         <script type="text/javascript">
+            var task_layout_name = "{{layout_name}}";
+         </script>
          <button class="btn btn-default" id="tutorial_start">Start Tour</button>
-         <script type="text/javascript">
-            var task_layout_name = "{{layout_name}}";
-         </script>
-         <button class="btn btn-default" id="finished">Finished Task</button>
+         <button class="btn btn-primary" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
       </div>
+      <br>
       <div class="btn-group" style="margin-top: 10px;">
-         <button class="btn btn-default" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
-         <script type="text/javascript">
-            var task_layout_name = "{{layout_name}}";
-         </script>
-         <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <button class="btn btn-primary" id="finished">Finished Task</button>
       </div>
-      <!--  <div id="timeDiv" style="text-align: center;">
-         <div id="timer" style="font-size:25px;color:red;"></div>
-         <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>
-         <button class="btn btn primary" id="pause"><span class="glyphicon glyphicon-pause"></span></button>
-         <button class="btn btn primary" id="forward"><span class="glyphicon glyphicon-forward"></span></button>
-         </div> -->
       <hr>
-      <!-- <div id="accordion_design" class="accordion">
-         <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
-         <div class="accordion_content test" id="design_accordian">
-           <hr> -->
       <h3 data-intro="This panel allows for the selection of multiple nodes that have similar background colors and/or similar shapes." data-step="2">Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
       </div>

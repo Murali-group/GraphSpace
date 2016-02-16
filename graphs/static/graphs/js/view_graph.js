@@ -324,9 +324,8 @@ $(document).ready(function() {
                     applyLayoutStyles();
                     if (task_view == "True") {
                         hideGraphInformation();
-
+                        $("#guidelines_modal").modal('toggle');
                         addToUndoStack();
-
                         window.cy.on("free", "node", function(event, ui) {
                             popFirstElement = true;
                             addToUndoStack();                            
@@ -2462,7 +2461,8 @@ $(document).ready(function() {
             {
                 name: "circle",
                 fit: false,
-                avoidOverlap: true
+                avoidOverlap: false,
+                padding: 0
             });
         addToUndoStack();
     });
@@ -2483,7 +2483,8 @@ $(document).ready(function() {
             {
                 name: "concentric",
                 fit: false,
-                avoidOverlap: true
+                avoidOverlap: false,
+                padding: 40
             });
         addToUndoStack();
     });
