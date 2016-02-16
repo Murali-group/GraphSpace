@@ -1594,9 +1594,9 @@ $(document).ready(function() {
                 } else {
                     checkboxString += '<input id="' + value + '" type="checkbox" value="select_shape" name="shapes">&nbsp;' + value[0].toUpperCase() + value.slice(1) + '&nbsp;&nbsp;&nbsp;';
                 }
-                // if ((index + 1) % 3 == 0) {
-                //     checkboxString += "<br>";
-                // }
+                if (index > 0 && (index % 4) == 0) {
+                    checkboxString += "<br>";
+                }
             }
             checkboxString += "</p>";
             $("#selection").append(checkboxString);
