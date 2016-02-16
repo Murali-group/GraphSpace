@@ -241,7 +241,7 @@ def add_node(G,node_id,label='',shape='ellipse',color='#FFFFFF',height=None,\
     if bubble:
         bubble_effect(G,node_id,bubble,whitetext=False)
     else:
-        add_node_border_color(G,node_id,"#888")
+        add_node_border_color(G,node_id,"#00000")
 
     ## set height and width if len(label)==0 and height/width
     ## are None (auto-resize).  Make them very small nodes.
@@ -428,6 +428,7 @@ def add_node_border_color(G,node_id,color,border_width=2):
     '''
     G.node[node_id]['border_color'] = color
     G.node[node_id]['border_width'] = border_width
+
 ## Get any attribute of a node
 def get_node_attribute(G,node_id,attr):
     '''
@@ -437,6 +438,32 @@ def get_node_attribute(G,node_id,attr):
         return G.node[node_id][attr]
     else:
         return None
+
+## These node get() functions ensure that the correct attribute is called in the get_node_attribute() function.
+## They mirror the node add() functions.
+def get_node_label(G,node_id):
+    return get_node_attribute(G,node_id,'content')
+def get_node_wrap(G,node_id):
+    return get_node_attribute(G,node_id,'text_wrap')
+def get_node_shape(G,node_id):
+    return get_node_attribute(G,node_id,'shape')
+def get_node_color(G,node_id):
+    return get_node_attribute(G,node_id,'background_color')
+def get_node_height(G,node_id):
+    return get_node_attribute(G,node_id,'height')
+def get_node_width(G,node_id,):
+    return get_node_attribute(G,node_id,'width')
+def get_node_popup(G,node_id):
+    return get_node_attribute(G,node_id,'popup')
+def get_node_k(G,node_id):
+    return get_node_attribute(G,node_id,'k')
+def get_node_border_width(G,node_id):
+     return get_node_attribute(G,node_id,'border_width')
+def get_node_border_style(G,node_id):
+    return get_node_attribute(G,node_id,'border_style')
+def get_node_border_color(G,node_id):
+    return get_node_attribute(G,node_id,'border_color')
+
     
 ####################################################################
 ### EDGE FUNCTIONS #################################################
@@ -541,8 +568,8 @@ def add_edge_k(G,source,target,k):
 
     ## Cytoscape.js throws a runtime error if there's an edge with a small k (e.g., 1) but the nodes have larger k's (e.g., 5).
     ## When the slider is set to 3, the edge should be displayed but the incident nodes are not.
-    sourcek = get_node_attribute(G,source,'k')
-    targetk = get_node_attribute(G,target,'k')
+    sourcek = get_node_k(G,source)
+    targetk = get_node_k(G,target)
     if not sourcek:
         raise Exception('Attempting to add a k value %d for edge ("%s","%s"), but node "%s" does not have a k-value.' % (k,source,target,source))
     if not targetk:
@@ -594,7 +621,24 @@ def get_edge_attribute(G,source,target,attr):
     if attr in G.edge[source][target]:
         return G.edge[source][target][attr]
     else:
-        return None
+        return 
+
+## These edge get() functions ensure that the correct attribute is called in the get_edge_attribute() function.
+## They mirror the edge add() functions.
+def get_edge_color(G,source,target):
+    return get_edge_attribute(G,source,target,'line_color')
+def get_edge_directionality(G,source,target):
+    return get_edge_attribute(G,source,target,'directed')
+def get_edge_width(G,source,target):
+    return get_edge_attribute(G,source,target,'width')
+def get_edge_popup(G,source,target):
+    return get_edge_attribute(G,source,target,'popup')
+def get_edge_k(G,source,target):
+    return get_edge_attribute(G,source,target,'k')
+def get_edge_target_arrow_shape(G,source,target):
+    return get_edge_attribute(G,source,target,'target_arrow_shape')
+def get_edge_line_style(G,source,target):
+    return get_edge_attribute(G,source,target,'line_style')
 
 ####################################################################
 ### POSTING FUNCTIONS ##############################################
@@ -630,6 +674,7 @@ def convertNXToDict(G,metadata={'description':'','tags':[],'title':''}):
     # Add metadata information
     if 'description' not in metadata or 'tags' not in metadata or 'title' not in metadata:
         raise TypeError('metadata dictionary must contain "description", "tags", and "title" entries.\n')
+    metadata['name'] = metadata['title']
     out['metadata'] = metadata
 
     # Add graph information (empty nodes and edges for now)
@@ -710,6 +755,7 @@ def convertNXToJSON(G,outfile,metadata=None):
     
     :param G: NetworkX object
     :param outfile: file to write JSON to.  
+    :param metadata: a dictionary of metadata for the graph. Optional.
     """
     ## convert NetworkX object to a JSON-ready dictionary
     if metadata:
@@ -727,7 +773,7 @@ def postGraph(G,graphid,outfile,user,password,metadata=None,logfile=None):
     Posts NetworkX graph with id 'graphid' to the account of the user 'user' to GraphSpace.
 
     :param G: NetworkX object
-    :param graphid: string -- ID of GraphSpace graph (graph name)
+    :param graphid: string -- ID of GraphSpace graph
     :param outfile: string -- output file to write JSON to.  If not specified,
     no output file is written.
     :param user: string -- graph owner's username
@@ -747,8 +793,6 @@ def postGraph(G,graphid,outfile,user,password,metadata=None,logfile=None):
     graph_exists = False
     cmd = _constructExistsCommand(graphid,user,password)
     outstring = execute(cmd,logout)
-    print '*',cmd,'*'
-    print outstring
     outstring = json.loads(outstring)
     if outstring["StatusCode"] == 200:
         # a status code of 200 indicates that a graph already exists.
@@ -771,7 +815,7 @@ def postGraph(G,graphid,outfile,user,password,metadata=None,logfile=None):
 def deleteGraph(graphid,user,password):
     """
     Removes a graph (denoted by graphid and user) from GraphSpace.
-    :param graphid: ID of GraphSpace graph (graph name)
+    :param graphid: ID of GraphSpace graph 
     :param user: graph owner's username
     :param password: graph owner's password
     """
@@ -782,7 +826,7 @@ def deleteGraph(graphid,user,password):
 def shareGraph(graphid,user,password,group):
     """
     Shares an existing graph with a group.
-    :param graphid: ID of GraphSpace graph (graph name)
+    :param graphid: ID of GraphSpace graph
     :param user: graph owner's username
     :param password: graph owner's password
     :param group: group to share graph with.

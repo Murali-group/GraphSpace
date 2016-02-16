@@ -29,8 +29,8 @@ todo:: raise exceptions for unexpected colors/widths/shapes/etc.
 edgefile = 'gs-interface-example-edges.txt'
 graphid = 'gs-interface-example1'
 outfile = 'gs-interface-example1.json'
-user = 'tester@test.com'
-password = 'test'
+user = 'annaritz@vt.edu'
+password = 'platypus'
 group='testgroup'
 
 #Graph 1 (tmp): read edges in from a file.
@@ -65,9 +65,9 @@ for t,h in G.edges():
     interface.add_edge_color(G,t,h,'#000000')
     interface.add_edge_width(G,t,h,2)
 
-
-print G,graphid,outfile,user,password
-interface.postGraph(G,graphid,outfile=outfile,user=user,password=password)
+metadata = {'description':'example1','title':'Example 1 Graph','tags':[]}
+print G,graphid,outfile,user,password,metadata
+interface.postGraph(G,graphid,outfile=outfile,user=user,password=password,metadata=metadata)
 if group != None:
     interface.shareGraph(graphid,user=user,password=password,group=group)
 
@@ -80,7 +80,7 @@ G = nx.DiGraph(directed=True)
 # add 10 nodes
 nodeids = ['node\n%d' % (i) for i in range(10)]
 for n in nodeids:
-    interface.add_node(G,n,label=n,bubble="#880",color='yellow')
+    interface.add_node(G,n,label=n,bubble='yellow',color='yellow')
 for i in range(20): # randomly add 20 edges
     interface.add_edge(G,random.choice(nodeids),random.choice(nodeids),width=random.choice([1,2,3,4,5]),directed=True)
 
