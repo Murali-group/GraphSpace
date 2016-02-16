@@ -41,3 +41,16 @@
 .accordion .ui-accordion-header.ui-state-active { 
 	background: rgb(250, 235, 199); 
 }
+
+input[type="checkbox"] {
+    -webkit-appearance:none;
+    width:15px;
+    height:15px;
+    background:white;
+    border-radius:5px;
+    border:2px solid #555;
+}
+
+input[type='checkbox']:checked {
+    background: black;
+}

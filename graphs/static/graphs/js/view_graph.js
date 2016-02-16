@@ -2427,50 +2427,85 @@ $(document).ready(function() {
         submitEvaluation("No");
     });
 
-    $("#circle_selected").click(function (e) {
-
-        var minDistance = 0;
+    $("#force_directed").click(function (e) {
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
             var node = window.cy.nodes()[i];
 
             if (node.selected()) {
-                minDistance = Math.max(node.boundingBox()["h"], minDistance);
                 selectedArray.push(node);
             }
         }
 
-        //calculate center of the viewport
-        var center = {
-            x: window.cy.width() / 2,
-            y: window.cy.height() / 2
-        };
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "cose",
+                fit: false
+            });
+        addToUndoStack();
+    });
 
-        if (selectedArray.length == 1) {
-            selectedArray[0].renderedPosition(center);
-            return;
+    $("#circle_selected").click(function (e) {
+
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
         }
 
-        var sweep = 2*Math.PI - 2*Math.PI/selectedArray.length;
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "circle",
+                fit: false,
+                avoidOverlap: true
+            });
+        addToUndoStack();
+    });
 
-        var dTheta = sweep / ( Math.max(1, selectedArray.length - 1) );
+    $("#fill_circle_selected").click(function (e) {
 
-        var dcos = Math.cos(dTheta) - Math.cos(0);
-        var dsin = Math.sin(dTheta) - Math.sin(0);
-        var radius = Math.sqrt( minDistance * minDistance / ( dcos*dcos + dsin*dsin ) ); // s.t. no nodes overlapping
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
 
-        for (var i = 0; i < selectedArray.length; i++) {
-            var theta = (3/2 * Math.PI) + i * dTheta;
-
-            var rx = radius * Math.cos( theta );
-            var ry = radius * Math.sin( theta );
-            var pos = {
-              x: center.x + rx,
-              y: center.y + ry
-            };
-            selectedArray[i].renderedPosition(pos);
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
         }
 
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "concentric",
+                fit: false,
+                avoidOverlap: true
+            });
+        addToUndoStack();
+    });
+
+    $("#grid_selected").click(function (e) {
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
+        }
+
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "grid",
+                fit: false,
+                avoidOverlap: true,
+                condense: true
+            });
         addToUndoStack();
     });
 
@@ -2687,7 +2722,7 @@ $(document).ready(function() {
                 var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
                 window.cy.getElementById(node_id).renderedPosition(oldPosition);
             }
-            popFirstElement = true;
+            // popFirstElement = true;
             undoStack.push(node_positions);
         }
     });
