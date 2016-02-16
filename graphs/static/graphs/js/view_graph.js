@@ -4,6 +4,10 @@ Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
 
+    var popFirstElement = false;
+    var undoStack = [];
+    var redoStack = [];
+
     var clock = GraphSpace.Clock;
     var logger = GraphSpace.Logger;
     // Cytoscape.js API: 
@@ -320,6 +324,13 @@ $(document).ready(function() {
                     applyLayoutStyles();
                     if (task_view == "True") {
                         hideGraphInformation();
+
+                        addToUndoStack();
+
+                        window.cy.on("free", "node", function(event, ui) {
+                            popFirstElement = true;
+                            addToUndoStack();                            
+                        });
                     }
                 });
 
@@ -372,6 +383,7 @@ $(document).ready(function() {
                         }
                     });
                 }
+
 
                 //If ther are any terms to be searched for, highlight those terms, if found
                 if (getQueryVariable('partial_search')) {
@@ -463,6 +475,14 @@ $(document).ready(function() {
             }
         }
     });
+
+    function addToUndoStack() {
+        var step = {};
+        window.cy.nodes().positions(function (i, node) {
+            step[node._private.data.id] = node.renderedPosition();
+        });
+        undoStack.push(step);
+    };
 
     function travelDistance(center, nodePosition) {
         var a = Math.abs(center.x - nodePosition.x);
@@ -561,6 +581,7 @@ $(document).ready(function() {
                 node.renderedPosition(position);
             }
         }
+        addToUndoStack();
     }
 
     function grabNodePositions() {
@@ -2122,6 +2143,7 @@ $(document).ready(function() {
         var nodes = window.cy.elements('node');
         var layout = {};
         for (var i = 0; i < Object.keys(nodes).length - 2; i++) {
+            console.log(nodes[i]);
             layout[nodes[i]._private.data.id] = {
                 'x': nodes[i]._private.position.x,
                 'y': nodes[i]._private.position.y,
@@ -2405,49 +2427,86 @@ $(document).ready(function() {
         submitEvaluation("No");
     });
 
-    $("#circle_selected").click(function (e) {
-
-        var minDistance = 0;
+    $("#force_directed").click(function (e) {
         var selectedArray = []
         for (var i = 0; i < window.cy.nodes().length; i++) {
             var node = window.cy.nodes()[i];
 
             if (node.selected()) {
-                minDistance = Math.max(node.boundingBox()["h"], minDistance);
                 selectedArray.push(node);
             }
         }
 
-        //calculate center of the viewport
-        var center = {
-            x: window.cy.width() / 2,
-            y: window.cy.height() / 2
-        };
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "cose",
+                fit: false
+            });
+        addToUndoStack();
+    });
 
-        if (selectedArray.length == 1) {
-            selectedArray[0].renderedPosition(center);
-            return;
+    $("#circle_selected").click(function (e) {
+
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
         }
 
-        var sweep = 2*Math.PI - 2*Math.PI/selectedArray.length;
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "circle",
+                fit: false,
+                avoidOverlap: true
+            });
+        addToUndoStack();
+    });
 
-        var dTheta = sweep / ( Math.max(1, selectedArray.length - 1) );
+    $("#fill_circle_selected").click(function (e) {
 
-        var dcos = Math.cos(dTheta) - Math.cos(0);
-        var dsin = Math.sin(dTheta) - Math.sin(0);
-        var radius = Math.sqrt( minDistance * minDistance / ( dcos*dcos + dsin*dsin ) ); // s.t. no nodes overlapping
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
 
-        for (var i = 0; i < selectedArray.length; i++) {
-            var theta = (3/2 * Math.PI) + i * dTheta;
-
-            var rx = radius * Math.cos( theta );
-            var ry = radius * Math.sin( theta );
-            var pos = {
-              x: center.x + rx,
-              y: center.y + ry
-            };
-            selectedArray[i].renderedPosition(pos);
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
         }
+
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "concentric",
+                fit: false,
+                avoidOverlap: true
+            });
+        addToUndoStack();
+    });
+
+    $("#grid_selected").click(function (e) {
+        var selectedArray = []
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+
+            if (node.selected()) {
+                selectedArray.push(node);
+            }
+        }
+
+        var collection = cy.collection(selectedArray);
+        collection.layout(
+            {
+                name: "grid",
+                fit: false,
+                avoidOverlap: true,
+                condense: true
+            });
+        addToUndoStack();
     });
 
     $("#square_selected").click(function (e) {
@@ -2531,6 +2590,7 @@ $(document).ready(function() {
                 }
                 selectedArray[3].renderedPosition(newPosition);
             }
+            addToUndoStack();
             return;
         }
 
@@ -2579,6 +2639,7 @@ $(document).ready(function() {
             }
             rightBar[i].renderedPosition(newPosition);
         }
+        addToUndoStack();
     });
 
     $("#horizontal").click(function (e) {
@@ -2601,6 +2662,7 @@ $(document).ready(function() {
             }
             selectedNodes[i].renderedPosition(newPosition);
         }
+        addToUndoStack();
     });
 
     $("#vertical").click(function (e) {
@@ -2621,6 +2683,47 @@ $(document).ready(function() {
                 "y": center.y - radius + (i * minDistance)
             }
             selectedNodes[i].renderedPosition(newPosition);
+        }
+        addToUndoStack();
+    });
+
+    //Undo's last position change from the user for the current session
+    $("#undo").click(function (e) {
+
+        if (undoStack.length == 1) {
+            var node_positions = undoStack[0];
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+        } else {
+            if (popFirstElement == true) {
+                popFirstElement = false;
+                undoStack.pop();
+            }
+            var node_positions = undoStack.pop();
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+            redoStack.push(node_positions);
+        }
+    });
+
+    $("#redo").click(function(e) {
+        if (redoStack.length == 0) {
+            return;
+        } else {
+            var node_positions = redoStack.pop();
+
+            for (var node_id in node_positions) {
+                var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
+                window.cy.getElementById(node_id).renderedPosition(oldPosition);
+            }
+            // popFirstElement = true;
+            undoStack.push(node_positions);
         }
     });
 

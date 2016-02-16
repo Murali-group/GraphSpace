@@ -17,7 +17,7 @@ body {
 .csjs {
     /* the width takes up 75% of the page. */
     width: 75%;
-    height: 90%;
+    height: 100%;
     /*padding-top: 25px;*/
     float:left;
 }
