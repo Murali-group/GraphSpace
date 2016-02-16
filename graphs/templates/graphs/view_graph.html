@@ -2,705 +2,698 @@
 {% load staticfiles %}
 {% block cytoscapeweb %}
 <script type="text/javascript">
-    var graph_json = {{ graph|safe }};
-    var layout = {{ layout_to_view|safe }};
-    var task_view = "{{ task_view|safe }}";
-    window.cy;
+   var graph_json = {{ graph|safe }};
+   var layout = {{ layout_to_view|safe }};
+   var task_view = "{{ task_view|safe }}";
+   window.cy;
 </script>
 <div id="dialog"></div>
 <!--#######################################-->
 <!-- Save Modal -->
 <div class="modal fade" id="layout_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
-            </div>
-            <div class="modal-body">
-                <form method="post" id="layout_form" class="layout_form" role="form">
-                    <div class="layout_fields">
-                        <div class="control-group">
-                            <label for="layout_name">Layout Name</label>
-                            <input id="layout_name" class="form-control" type="text" name="layout_name" autocomplete="off"/>
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <button name="save_layout" id="save_layout" class="btn btn-success">Save Layout</button>
-                            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+         </div>
+         <div class="modal-body">
+            <form method="post" id="layout_form" class="layout_form" role="form">
+               <div class="layout_fields">
+                  <div class="control-group">
+                     <label for="layout_name">Layout Name</label>
+                     <input id="layout_name" class="form-control" type="text" name="layout_name" autocomplete="off"/>
+                  </div>
+                  <br>
+                  <div class="form-group">
+                     <button name="save_layout" id="save_layout" class="btn btn-success">Save Layout</button>
+                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                  </div>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
 </div>
 <!-- Guidelines Modal -->
 <div class="modal fade" id="guidelines_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Guidelines</h4>
-            </div>
-            <div class="modal-body">
-                The following guidelines are ranked from most important to least important<br><br>
-                <ol>
-                    <li>Arrange triangles at the top of the graph</li>
-                    <li>Arrange rectangles at the bottom of the graph</li>
-                    <li>Arrange nodes of the same shape together</li>
-                    <li>Arrange nodes of the same color together</li>
-                </ol>
-            </div>
-        </div>
-    </div>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Guidelines</h4>
+         </div>
+         <div class="modal-body">
+            The following guidelines are ranked from most important to least important<br><br>
+            <ol>
+               <li>Arrange triangles at the top of the graph</li>
+               <li>Arrange rectangles at the bottom of the graph</li>
+               <li>Arrange nodes of the same shape together</li>
+               <li>Arrange nodes of the same color together</li>
+            </ol>
+         </div>
+      </div>
+   </div>
 </div>
-
 <!-- Notes Modal -->
 <div class="modal fade" id="notes_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Notes</h4>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Notes</h4>
+         </div>
+         <div class="modal-body">
+            <ul id="notes_list">
+            </ul>
+         </div>
+         <form id="layout_form" class="layout_form" role="form">
+            <div class="layout_fields">
+               <div class="control-group">
+                  <label for="layout_name">Feedback</label>
+                  <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
+               </div>
+               <br>
+               <div class="form-group">
+                  <button type="button" id="add_note" value="" class="btn btn-success">Add Note</button>
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+               </div>
             </div>
-            <div class="modal-body">
-                <ul id="notes_list">
-                </ul>
-            </div>
-            <form id="layout_form" class="layout_form" role="form">
-                <div class="layout_fields">
-                    <div class="control-group">
-                        <label for="layout_name">Feedback</label>
-                        <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
-                    </div>
-                    <br>
-                    <div class="form-group">
-                        <button type="button" id="add_note" value="" class="btn btn-success">Add Note</button>
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+         </form>
+      </div>
+   </div>
 </div>
-
 <!-- Change Layout Name Modal -->
 <div class="modal fade" id="change_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Change Name of Layout</h4>
-            </div>
-            <div class="modal-body">
-                <form id="layout_form" class="layout_form" role="form">
-                    <div class="layout_fields">
-                        <div class="control-group">
-                            <label for="layout_name">New Layout Name</label>
-                            <input id="new_layout_name" class="form-control" type="text" name="new_layout_name" autocomplete="off"/>
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <button type="button" id="change_layout" value="" class="btn btn-success">Save Layout</button>
-                            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Change Name of Layout</h4>
+         </div>
+         <div class="modal-body">
+            <form id="layout_form" class="layout_form" role="form">
+               <div class="layout_fields">
+                  <div class="control-group">
+                     <label for="layout_name">New Layout Name</label>
+                     <input id="new_layout_name" class="form-control" type="text" name="new_layout_name" autocomplete="off"/>
+                  </div>
+                  <br>
+                  <div class="form-group">
+                     <button type="button" id="change_layout" value="" class="btn btn-success">Save Layout</button>
+                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                  </div>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
 </div>
 <!-- Share Groups Modal -->
 <div class="modal fade" id="share_group_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Select all groups to share graph with</h4>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Select all groups to share graph with</h4>
+         </div>
+         <div class="modal-body">
+            <div class="group_body">
+               <ul class="list-group checked-list-box">
+               </ul>
             </div>
-            <div class="modal-body">
-                <div class="group_body">
-                    <ul class="list-group checked-list-box">
-                    </ul>
-                </div>
-                <div class="form-group">
-                    <button type="button" id="share_graph_with_selected_groups" class="btn btn-success">Update Sharing Information</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                </div>
+            <div class="form-group">
+               <button type="button" id="share_graph_with_selected_groups" class="btn btn-success">Update Sharing Information</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-        </div>
-    </div>
+         </div>
+      </div>
+   </div>
 </div>
 <!-- Share Layouts Modal -->
 <div class="modal fade" id="share_layout_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Select all groups to share layout with</h4>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Select all groups to share layout with</h4>
+         </div>
+         <div class="modal-body">
+            <div class="group_body">
+               <ul class="list-group checked-list-box">
+               </ul>
             </div>
-            <div class="modal-body">
-                <div class="group_body">
-                    <ul class="list-group checked-list-box">
-                    </ul>
-                </div>
-                <div class="form-group">
-                    <button type="button" id="share_layout_with_selected_groups" class="btn btn-success">Update Sharing Information</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                </div>
+            <div class="form-group">
+               <button type="button" id="share_layout_with_selected_groups" class="btn btn-success">Update Sharing Information</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-        </div>
-    </div>
+         </div>
+      </div>
+   </div>
 </div>
 <!-- Task Modal -->
 <div class="modal fade" id="task_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Launch Task on Amazon Mechanical Turk?</h4>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Launch Task on Amazon Mechanical Turk?</h4>
+         </div>
+         <div class="modal-body">
+            <div class="group_body">
+               <p>By clicking launch task, your graph will appear as a task on Amazon Mechanical Turk.  From there, workers will work
+                  to generate layouts following guidelines (TODO: CREATE GOOD GUIDELINES)
+               </p>
             </div>
-            <div class="modal-body">
-                <div class="group_body">
-                    <p>By clicking launch task, your graph will appear as a task on Amazon Mechanical Turk.  From there, workers will work
-                        to generate layouts following guidelines (TODO: CREATE GOOD GUIDELINES)
-                    </p>
-                </div>
-                <div class="form-group">
-                    <button type="button" id="{{graph_id}}" value="{{owner}}" class="btn btn-success launch_task">Launch Task</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                </div>
+            <div class="form-group">
+               <button type="button" id="{{graph_id}}" value="{{owner}}" class="btn btn-success launch_task">Launch Task</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
-        </div>
-    </div>
+         </div>
+      </div>
+   </div>
 </div>
-
 <!-- Survey Code modal -->
 <div class="modal fade" id="codeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="changeLabelModal">Task Completed</h4>
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Task Completed</h4>
+         </div>
+         <div class="modal-body">
+            <div class="group_body">
+               <p>Thank you for your work.  Please enter the provided code in Amazon Mechanical Turk to complete the task.
+               </p>
+               <input class="form-control" type="text" readonly id="code">
             </div>
-            <div class="modal-body">
-                <div class="group_body">
-                    <p>Thank you for your work.  Please enter the provided code in Amazon Mechanical Turk to complete the task.
-                    </p>
-                    <input class="form-control" type="text" readonly id="code">
-                </div>
-                <br>
-                <form id="layout_form" class="layout_form" role="form">
-                    <div class="layout_fields">
-                        <div class="control-group">
-                            <label for="layout_name">Feedback</label>
-                            <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <button type="button" id="send_feedback" value="" class="btn btn-success">Finished</button>
-                            <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </form>
-                <!-- <div class="form-group">
-                    <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
-                </div> -->
-            </div>
-        </div>
-    </div>
+            <br>
+            <form id="layout_form" class="layout_form" role="form">
+               <div class="layout_fields">
+                  <div class="control-group">
+                     <label for="layout_name">Feedback</label>
+                     <textarea id="feedback" class="form-control" type="text" name="feedback" autocomplete="off" value="Please add a few notes regarding the experience of this task."/></textarea>
+                  </div>
+                  <br>
+                  <div class="form-group">
+                     <button type="button" id="send_feedback" value="" class="btn btn-success">Finished</button>
+                     <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
+                  </div>
+               </div>
+            </form>
+            <!-- <div class="form-group">
+               <button type="button" class="btn btn-danger" id="exit" data-dismiss="modal">Close</button>
+               </div> -->
+         </div>
+      </div>
+   </div>
 </div>
-
 <div id="overlay"></div>
 <p id="uid" style="display:none;">{{owner}}</p>
 <p id="gid" style="display:none;">{{graph_id}}</p>
 <div class="container-fluid csjs_container">
-    <p id"test"></p>
-    <div id="graph_title" >
-        <h1 id="title" style="display:none;">{{graph_name}}</h1>
-    </div>
-    <div class="csjs" id="csjs">    
-    </div>
-    <!-- side menu must be on top for 'float' to work properly -->
-    <div id="side_menu" class="side_menu">
-        <!-- div classes are used to style these menu items,
-            ids are used for accordian jQuery functions. -->
-        <!-- Graph Details menu -->
-        {% if researcher_view == True %}
-        <div id="accordion_graph_details" class="accordion">
-            <h3>Graph Details</h3>
-            <div class="accordion_content">
-                {{ description|safe }} </br>
-            </div>
-        </div>
-        <div id="accordion_search" class="accordion">
-            <h3>Search<a class="help" href="../../../help/#search_panel" style="float: right; color: #0000FF;">Help</a></h3>
-            <div class="accordion_content test">
-                <div class="search_box">
-                    <a id='url'></a>
-                    <form>
-                        <div class="input-group">
-                            <input class="form-control" type="text" name="search" id="search" placeholder="Enter Node or Edge ID to highlight">
-                            <span class="input-group-btn">
-                            <button class="btn btn-info" name="search_button" id="search_button">Search</button>
-                            </span>
-                        </div>
-                        <div class="input-group" id="search_radios">
-                            <label>
-                            <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)"> Similar
-                            </label>
-                            <label>
-                            <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)"> Exact
-                            </label>
-                        </div>
-                    </form>
-                </div>
-                <div id="search_error" style="display: none;" class="alert alert-danger alert-dismissable">
-                    <!-- <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> -->
-                    <strong>
-                        <p id="search_error_text"></p>
-                    </strong>
-                </div>
-                <div style="text-align: center;">
-                    <button class="btn btn-default" id="clear_search" style="width: 100%;">Clear all search terms</button>
-                </div>
-                <ul class="nav nav-pills" id="search_terms">
-                </ul>
-            </div>
-        </div>
-        <!-- Export menu -->
-        <div id="accordion_export" class="accordion">
-            <h3>Export</h3>
-            <div class="accordion_content">
-                <!-- There seems to be an issue with adobe flash used with Cytoscape Web. 
-                    https://groups.google.com/forum/#!msg/cytoscapeweb-discuss/548wkpC3iE8/TAwyrA2MO-cJ-->
-                <button class="btn btn-default" id="export" onClick="export_graph('{{ graph_id }}');">PNG</button>
-                <br/>
-                <hr/>
-                <!-- View JSON function to be added -->
-                <form>
-                    <button class="btn btn-default" name="view_json" type="submit">View JSON</button>
-                </form>
-            </div>
-        </div>
-        <!-- Owner menu -->
-        <div id="accordion_owner" class="accordion">
-            <h3>Owner</h3>
-            <div class="accordion_content">
-                <a href="#user_profile">{{ owner }}</a>
-            </div>
-        </div>
-        <!-- Sharing menu -->
-        <div id="accordion_sharing" class="accordion">
-            <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: #0000FF;">Help</a></h3>
-            <div class="accordion_content">
-                {% if shared_groups|length == 0 %}
-                <p>This graph is not shared with any groups.</p>
-                {% else %}
-                <p>This graph has been shared with the following group(s):
-                <ul>
-                    {% for o in shared_groups %}
-                    {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
-                    <li><a href={{url}}><u>{{ o.0 }} owned by {{o.1}}</u></a><br></li>
-                    {% endwith %}
-                    {% endfor %}
-                </ul>
-                </p>
-                {% endif %}
-                <br>
-                {% if uid == owner %}
-                <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with groups</button>
-                {% endif %}
-            </div>
-        </div>
-        <!-- Layouts menu -->
-        <div id="accordion_layouts" class="accordion">
-            <h3>Layouts<a class="help" href="../../../help/#layout_panel" style="float: right; color: #0000FF;">Help</a></h3>
-            <div class="accordion_content">
-                {% if uid != None %}
-                <div>
-                    <p id="loggedIn" style="display:none;">{{uid}}</p>
-                    <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button><br><br>
-                    {% if task_launched %}
-                    <button class="btn btn-default disabled">Task Currently Live</button>
-                    {% else %}
-                    <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
-                    {% endif %}
-                </div>
-                {% endif %}
-                <hr/>
-                <div class="tabbable">
-                    <ul class="nav nav-tabs" id="layout-tabs">
-                        <a id='layout_link' href=""></a>
-                        <li id="auto"><a href="#builtin" data-toggle="tab">Auto</a></li>
-                        <li id="manual"><a href="#custom" data-toggle="tab">Manual</a></li>
-                        <li id="crowd"><a href="#mturk_pane" data-toggle="tab">Crowd</a></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane" id="builtin">
-                            <br/>
-                            <ul class="nav nav-pills">
-                                {% if layout_name == "default_circle" %}
-                                <li class="active" id="default_circle"><a id="default_circle" class="layout_buttons">Circle</a></li>
-                                {% else %}
-                                <li id="lr"><a id="default_circle" class="layout_buttons">Circle</a></li>
-                                {% endif %}
-                                {% if layout_name == "default_grid" %}
-                                <li class="active" id="lt"><a id="default_grid" class="layout_buttons">Grid</a></li>
-                                {% else %}
-                                <li id="lt"><a id="default_grid" class="layout_buttons">Grid</a></li>
-                                {% endif %}
-                                {% if layout_name == "default_concentric" %}
-                                <li class="active" id="ldf"><a id="default_concentric" class="layout_buttons">Concentric</a></li>
-                                {% else %}
-                                <li id="ldf"><a id="default_concentric" class="layout_buttons">Concentric</a></li>
-                                {% endif %}
-                                {% if layout_name == "default_cose" %}
-                                <li class="active" id="lt"><a id="default_cose" class="layout_buttons">Spring Embedder</a></li>
-                                {% else %}
-                                <li id="lt"><a id="default_cose" class="layout_buttons">Spring Embedder</a></li>
-                                {% endif %}
-                                {% if layout_name == "default_breadthfirst" %}
-                                <li class="active" id="lc"><a id="default_breadthfirst" class="layout_buttons">Tree</a></li>
-                                {% else %}
-                                <li id="lc"><a id="default_breadthfirst" class="layout_buttons">Tree</a></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        <div class="tab-pane" id="custom">
-                            <br/>
-                            <div class="tabbable">
-                                <ul class="nav nav-pills">
-                                    <li id="private">
-                                        <a id="layouts-mine" href="#my_layouts_pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
-                                    </li>
-                                    <li id="shared">
-                                        <a id="layouts-shared" href="#shared_layouts_pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
-                                    </li>
-                                </ul>
-                                <br/>
-                                <div id="alert-div">
-                                </div>
-                                <div class="tab-content">
-                                    <div class="tab-pane" id="my_layouts_pane">
-                                        {% for o in my_layouts %}
-                                        {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
-                                        {% if o.layout_name == layout_name and o.owner_id == layout_owner%}
-                                        <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
-                                        {% else %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
-                                            {% endif %}
-                                            {{o.layout_name}} created by {{o.owner_id}}<br /><br />
-                                            <button class="btn btn-default layout_links remove" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o.layout_name}}" style="float: left;">
-                                            <span class="glyphicon glyphicon-remove"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Share layout" style="float: left;">
-                                            <span class="glyphicon glyphicon-eye-close"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links change" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o.layout_name}}" style="float: left;">
-                                            <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links highlight" id="{{o.owner_id}}"  value="{{o.layout_name}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
-                                            <span class="glyphicon glyphicon-link"></span>
-                                            </button>
-                                            <div style="clear: both;"></div>
-                                        </a>
-                                        {% endwith %}
-                                        {% endfor %}
-                                    </div>
-                                    <div class="tab-pane" id="shared_layouts_pane">
-                                        {% for o in shared_layouts %}
-                                        {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
-                                        {% if o.layout_name in my_shared_layouts %}
-                                        {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
-                                        <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
-                                        {% else %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
-                                            {% endif %}
-                                            {{o.layout_name}} created by {{o.owner_id}}<br /><br />
-                                            <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Unshare layout" style="float: left;">
-                                            <span class="glyphicon glyphicon-eye-close"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links change" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o.layout_name}}" style="float: left;">
-                                            <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                            <button class="btn btn-default layout_links highlight"  value="{{o.layout_name}}" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
-                                            <span class="glyphicon glyphicon-link"></span>
-                                            </button>
-                                            {% if uid == owner %}
-                                            {% if default_layout_name == None or default_layout_name != o.layout_name %}
-                                            <button class="btn btn-default layout_links default" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o.layout_name}}" style="float: left;">
-                                            <span class="glyphicon glyphicon-bookmark"></span>
-                                            </button>
-                                            {% elif default_layout_name == o.layout_name %}
-                                            <button class="btn btn-default layout_links removeDefault" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o.layout_name}}" style="float: left;">
-                                            <span class="glyphicon glyphicon-bookmark"></span>
-                                            </button>
-                                            {% endif %}
-                                            {% endif %}
-                                            <div style="clear: both;"></div>
-                                        </a>
-                                        {% else %}
-                                        {% if uid == owner %}
-                                        {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
-                                        <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
-                                        {% else %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
-                                        {% endif %}
-                                        {{o.layout_name}} created by {{o.owner_id}}<br /><br />
-                                        </button>
-                                        <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Unshare layout" style="float: left;">
-                                        <span class="glyphicon glyphicon-eye-close"></span>
-                                        </button>
-                                        <button class="btn btn-default layout_links highlight"  value="{{o.layout_name}}" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
-                                        <span class="glyphicon glyphicon-link"></span>
-                                        </button>
-                                        {% if uid == owner and default_layout_name == o %}
-                                        <button class="btn btn-default layout_links removeDefault" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o.layout_name}}" style="float: left;">
-                                        <span class="glyphicon glyphicon-bookmark"></span>
-                                        </button>
-                                        {% else %}
-                                        <button class="btn btn-default layout_links default" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o.layout_name}}" style="float: left;">
-                                        <span class="glyphicon glyphicon-bookmark"></span>
-                                        </button>
-                                        {% endif %}
-                                        {%else %}
-                                        {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
-                                        <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
-                                        {% else %}
-                                        <a class="list-group-item layout_buttons" href="{{url}}">
-                                            {% endif %}
-                                            {{o.layout_name}} created by {{o.owner_id}}<br /><br />
-                                            <button class="btn btn-default layout_links highlight" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
-                                            <span class="glyphicon glyphicon-link"></span>
-                                            </button>
-                                            {% endif %}
-                                            <div style="clear: both;"></div>
-                                        </a>
-                                        {% endif %}
-                                        {% endwith %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane" id="mturk_pane">
-                        {% for o in crowd_layouts %}
-                            {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
-                            {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
-                                <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">{{o.layout_name}}</a>
-                            {% else %}
-                                <a class="list-group-item layout_buttons" href="{{url}}">{{o.layout_name}}</a>
-                            {% endif %}
-                                <div style="clear: both;"></div>
-                            {% endwith %}
-                        {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% if filters != None %}
-        <!-- Filters menu -->
-        <div id="accordion_filters" class="accordion">
-            <h3>Filter Paths<a class="help" href="../../../help/#step_panel" style="float: right; color: #0000FF;">Help</a></h3>
-            <div class="accordion_content">
-                Number of paths
-                <input class="form-control" id="input_k" style="width: 4em;" value="0" size="4" maxlength="">
-                <br>
-                <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
-                </div>
-                <br>
-                Maximum number of paths
-                <input class="form-control" id="input_max" value="0" style="width: 4em;" size="4" maxlength="4">
-                <br>
-                <div id="slider_max" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
-                </div>
-            </div>
-        </div>
-        <br>
-        <br>
-        {% else %}
-        <br>
-        <br>
-        {% endif %}
-        {% elif task_view == True %}
-            <!-- <div id="guidelines" class="accordion">
-                <h3>Guidelines</h3>
-                <div class="accordion_content">
-                    <ul>
-                        <li>Arrange nodes of the same color together.</li>
-                        <li>Arrange rectangles at the bottom of the graph.</li>
-                        <li>Arrange diamonds on top of the graph.</li>
-                    </ul>
-                </div>
-            </div>
-            <div id="notes" class="accordion">
-                <h3>Notes</h3>
-                <div class="accordion_content">
-                    <p id="note_text"></p>
-                </div>
-            </div> -->
-            <div class="btn-group">
-                <button class="btn btn-default" id="tutorial_start">Start Tour</button>
-                <script type="text/javascript">
-                    var task_layout_name = "{{layout_name}}";
-                </script>
-                <button class="btn btn-default" id="finished">Finished Task</button>
-            </div>
-            <div class="btn-group" style="margin-top: 10px;">
-                <button class="btn btn-default" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                <script type="text/javascript">
-                    var task_layout_name = "{{layout_name}}";
-                </script>
-                <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-            </div>
-           <!--  <div id="timeDiv" style="text-align: center;">
-                <div id="timer" style="font-size:25px;color:red;"></div>
-                <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>
-                <button class="btn btn primary" id="pause"><span class="glyphicon glyphicon-pause"></span></button>
-                <button class="btn btn primary" id="forward"><span class="glyphicon glyphicon-forward"></span></button>
-            </div> -->
-            
-            <hr>
-            <!-- <div id="accordion_design" class="accordion">
-              <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
-              <div class="accordion_content test" id="design_accordian">
-                <hr> -->
-                <h3 data-intro="This panel allows for the selection of multiple nodes that have similar background colors and/or similar shapes." data-step="2">Select</h3>
-                <div style="text-align: center;" id="selection" class="input-group">
-                </div>
-                <button class="btn btn-primary" value="unselect" id="unselect">Unselect All Nodes</button><br><br>
-                <div class="btn-group">
-                    <button class="btn btn-primary" value="undo" id="undo"><i class="fa fa-mail-reply"></i></button>
-                    <button class="btn btn-primary" value="redo" id="redo"><i class="fa fa-mail-forward"></i></button>
-                </div>
-                <hr>
-                <!-- <h3 data-intro="This panel allows for the modification of all selected nodes." data-step="5">Modify</h3>
-                <div style="text-align: center;" id="modify" class="input-group">
-                  <p style='text-align: left;' data-intro="For all selected nodes, this allows you to change the color of those nodes." data-step="6">Modify Color:
-                      <input type='text' class='basic' id='selectionPalette' value='red' />
-                  </p>
-
-                  <div class="dropup" style='text-align: left;' data-intro="For all selected nodes, this allows you to change the shape of those nodes." data-step="7">
-                    Modify Shape: 
-                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                      Shapes
-                      <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                      <li><a data-value="rectangle">Rectangle</a></li>
-                      <li><a data-value="roundrectangle">Round Rectangle</a></li>
-                      <li><a data-value="ellipse">Ellipse</a></li>
-                      <li><a data-value="triangle">Triangle</a></li>
-                      <li><a data-value="pentagon">Pentagon</a></li>
-                      <li><a data-value="hexagon">Hexagon</a></li>
-                      <li><a data-value="heptagon">Heptagon</a></li>
-                      <li><a data-value="octagon">Octagon</a></li>
-                      <li><a data-value="star">Star</a></li>
-                      <li><a data-value="diamond">Diamond</a></li>
-                      <li><a data-value="vee">Vee</a></li>
-                      <li><a data-value="rhomboid">Rhomboid</a></li>
-                    </ul>
+   <p id"test"></p>
+   <div id="graph_title" >
+      <h1 id="title" style="display:none;">{{graph_name}}</h1>
+   </div>
+   <div class="csjs" id="csjs">    
+   </div>
+   <!-- side menu must be on top for 'float' to work properly -->
+   <div id="side_menu" class="side_menu">
+      <!-- div classes are used to style these menu items,
+         ids are used for accordian jQuery functions. -->
+      <!-- Graph Details menu -->
+      {% if researcher_view == True %}
+      <div id="accordion_graph_details" class="accordion">
+         <h3>Graph Details</h3>
+         <div class="accordion_content">
+            {{ description|safe }} </br>
+         </div>
+      </div>
+      <div id="accordion_search" class="accordion">
+         <h3>Search<a class="help" href="../../../help/#search_panel" style="float: right; color: #0000FF;">Help</a></h3>
+         <div class="accordion_content test">
+            <div class="search_box">
+               <a id='url'></a>
+               <form>
+                  <div class="input-group">
+                     <input class="form-control" type="text" name="search" id="search" placeholder="Enter Node or Edge ID to highlight">
+                     <span class="input-group-btn">
+                     <button class="btn btn-info" name="search_button" id="search_button">Search</button>
+                     </span>
                   </div>
-                </div> -->
-                <h3 data-intro="For all selected nodes, this allows you to move them." data-step="8" data-position="top">Move</h3>
-
-                <div class="btn-group">
-                  <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a circle." data-step="9" data-position="top" id="circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle-o"></i></button>
-                  <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a dense circle." data-step="19" data-position="top" id="fill_circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle"></i></button>
-                  <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a square." data-step="10" data-position="top" id="square_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square-o"></i></button>
-                  <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a grid." data-step="10" data-position="top" id="grid_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square"></i></button>
-                </div>
-                <div class="btn-group">
-                  <button data-position="top" data-intro="For all selected nodes, this moves nodes into a vertical line." data-step="11" value="vertical" class="btn btn-primary" id="vertical" style="display: block; margin: 0 auto;"><i class="fa-rotate-90 fa fa-minus"></i></button>
-                  <button data-position="top" data-intro="For all selected nodes, this moves nodes into a horizontal line." data-step="12" value="horizontal" class="btn btn-primary" id="horizontal" style="display: block; margin: 0 auto;"><i class="fa fa-minus"></i></button>
-                </div>
-                <br><br>
-                <div class="btn-group">
-                    <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="13" data-position="top" class="btn btn-primary" style="display: block; margin: 0 auto;" value="squeeze" id="group" ><span class="glyphicon glyphicon-resize-small"></span></button>
-                    <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="14" value="release" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;"><span class="glyphicon glyphicon-resize-full"></span></button>
-                </div>
-                <br><br>
-                <div id="moveArrows" style="text-align:center;">
-
-                  <table style="margin: 0 auto;">
-                    <tr>
+                  <div class="input-group" id="search_radios">
+                     <label>
+                     <input type="radio" class="search_type" id="partial_search" name="match" value="partial_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that partially match the search term(s)"> Similar
+                     </label>
+                     <label>
+                     <input type="radio" id="full_search" class="search_type" name="match" value="full_search" rel="tooltip" data-toggle="tooltip" title="Return all graphs that fully match the search term(s)"> Exact
+                     </label>
+                  </div>
+               </form>
+            </div>
+            <div id="search_error" style="display: none;" class="alert alert-danger alert-dismissable">
+               <!-- <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> -->
+               <strong>
+                  <p id="search_error_text"></p>
+               </strong>
+            </div>
+            <div style="text-align: center;">
+               <button class="btn btn-default" id="clear_search" style="width: 100%;">Clear all search terms</button>
+            </div>
+            <ul class="nav nav-pills" id="search_terms">
+            </ul>
+         </div>
+      </div>
+      <!-- Export menu -->
+      <div id="accordion_export" class="accordion">
+         <h3>Export</h3>
+         <div class="accordion_content">
+            <!-- There seems to be an issue with adobe flash used with Cytoscape Web. 
+               https://groups.google.com/forum/#!msg/cytoscapeweb-discuss/548wkpC3iE8/TAwyrA2MO-cJ-->
+            <button class="btn btn-default" id="export" onClick="export_graph('{{ graph_id }}');">PNG</button>
+            <br/>
+            <hr/>
+            <!-- View JSON function to be added -->
+            <form>
+               <button class="btn btn-default" name="view_json" type="submit">View JSON</button>
+            </form>
+         </div>
+      </div>
+      <!-- Owner menu -->
+      <div id="accordion_owner" class="accordion">
+         <h3>Owner</h3>
+         <div class="accordion_content">
+            <a href="#user_profile">{{ owner }}</a>
+         </div>
+      </div>
+      <!-- Sharing menu -->
+      <div id="accordion_sharing" class="accordion">
+         <h3>Sharing<a id="sharing_panel" href="../../../help/#sharing_panel" style="float: right; color: #0000FF;">Help</a></h3>
+         <div class="accordion_content">
+            {% if shared_groups|length == 0 %}
+            <p>This graph is not shared with any groups.</p>
+            {% else %}
+            <p>This graph has been shared with the following group(s):
+            <ul>
+               {% for o in shared_groups %}
+               {% with url|add:"groups/"|add:o.1|add:'/'|add:o.0 as url %}
+               <li><a href={{url}}><u>{{ o.0 }} owned by {{o.1}}</u></a><br></li>
+               {% endwith %}
+               {% endfor %}
+            </ul>
+            </p>
+            {% endif %}
+            <br>
+            {% if uid == owner %}
+            <button class="btn btn-default" style="width: 100%;" id='share_graph' data-toggle="modal" data-target="#share_group_modal">Share graph with groups</button>
+            {% endif %}
+         </div>
+      </div>
+      <!-- Layouts menu -->
+      <div id="accordion_layouts" class="accordion">
+         <h3>Layouts<a class="help" href="../../../help/#layout_panel" style="float: right; color: #0000FF;">Help</a></h3>
+         <div class="accordion_content">
+            {% if uid != None %}
+            <div>
+               <p id="loggedIn" style="display:none;">{{uid}}</p>
+               <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button><br><br>
+               {% if task_launched %}
+               <button class="btn btn-default disabled">Task Currently Live</button>
+               {% else %}
+               <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
+               {% endif %}
+            </div>
+            {% endif %}
+            <hr/>
+            <div class="tabbable">
+               <ul class="nav nav-tabs" id="layout-tabs">
+                  <a id='layout_link' href=""></a>
+                  <li id="auto"><a href="#builtin" data-toggle="tab">Auto</a></li>
+                  <li id="manual"><a href="#custom" data-toggle="tab">Manual</a></li>
+                  <li id="crowd"><a href="#mturk_pane" data-toggle="tab">Crowd</a></li>
+               </ul>
+               <div class="tab-content">
+                  <div class="tab-pane" id="builtin">
+                     <br/>
+                     <ul class="nav nav-pills">
+                        {% if layout_name == "default_circle" %}
+                        <li class="active" id="default_circle"><a id="default_circle" class="layout_buttons">Circle</a></li>
+                        {% else %}
+                        <li id="lr"><a id="default_circle" class="layout_buttons">Circle</a></li>
+                        {% endif %}
+                        {% if layout_name == "default_grid" %}
+                        <li class="active" id="lt"><a id="default_grid" class="layout_buttons">Grid</a></li>
+                        {% else %}
+                        <li id="lt"><a id="default_grid" class="layout_buttons">Grid</a></li>
+                        {% endif %}
+                        {% if layout_name == "default_concentric" %}
+                        <li class="active" id="ldf"><a id="default_concentric" class="layout_buttons">Concentric</a></li>
+                        {% else %}
+                        <li id="ldf"><a id="default_concentric" class="layout_buttons">Concentric</a></li>
+                        {% endif %}
+                        {% if layout_name == "default_cose" %}
+                        <li class="active" id="lt"><a id="default_cose" class="layout_buttons">Spring Embedder</a></li>
+                        {% else %}
+                        <li id="lt"><a id="default_cose" class="layout_buttons">Spring Embedder</a></li>
+                        {% endif %}
+                        {% if layout_name == "default_breadthfirst" %}
+                        <li class="active" id="lc"><a id="default_breadthfirst" class="layout_buttons">Tree</a></li>
+                        {% else %}
+                        <li id="lc"><a id="default_breadthfirst" class="layout_buttons">Tree</a></li>
+                        {% endif %}
+                     </ul>
+                  </div>
+                  <div class="tab-pane" id="custom">
+                     <br/>
+                     <div class="tabbable">
+                        <ul class="nav nav-pills">
+                           <li id="private">
+                              <a id="layouts-mine" href="#my_layouts_pane" style="text-align: center;" data-toggle="tab">Private<br>{{my_layouts|length}}</a>
+                           </li>
+                           <li id="shared">
+                              <a id="layouts-shared" href="#shared_layouts_pane" style="text-align: center;" data-toggle="tab">Shared<br>{{shared_layouts|length}}</a>
+                           </li>
+                        </ul>
+                        <br/>
+                        <div id="alert-div">
+                        </div>
+                        <div class="tab-content">
+                           <div class="tab-pane" id="my_layouts_pane">
+                              {% for o in my_layouts %}
+                              {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
+                              {% if o.layout_name == layout_name and o.owner_id == layout_owner%}
+                              <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
+                              {% else %}
+                              <a class="list-group-item layout_buttons" href="{{url}}">
+                                 {% endif %}
+                                 {{o.layout_name}} created by {{o.owner_id}}<br /><br />
+                                 <button class="btn btn-default layout_links remove" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Delete Layout" value="{{o.layout_name}}" style="float: left;">
+                                 <span class="glyphicon glyphicon-remove"></span>
+                                 </button>
+                                 <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Share layout" style="float: left;">
+                                 <span class="glyphicon glyphicon-eye-close"></span>
+                                 </button>
+                                 <button class="btn btn-default layout_links change" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o.layout_name}}" style="float: left;">
+                                 <span class="glyphicon glyphicon-pencil"></span>
+                                 </button>
+                                 <button class="btn btn-default layout_links highlight" id="{{o.owner_id}}"  value="{{o.layout_name}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                 <span class="glyphicon glyphicon-link"></span>
+                                 </button>
+                                 <div style="clear: both;"></div>
+                              </a>
+                              {% endwith %}
+                              {% endfor %}
+                           </div>
+                           <div class="tab-pane" id="shared_layouts_pane">
+                              {% for o in shared_layouts %}
+                              {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
+                              {% if o.layout_name in my_shared_layouts %}
+                              {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
+                              <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
+                              {% else %}
+                              <a class="list-group-item layout_buttons" href="{{url}}">
+                                 {% endif %}
+                                 {{o.layout_name}} created by {{o.owner_id}}<br /><br />
+                                 <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Unshare layout" style="float: left;">
+                                 <span class="glyphicon glyphicon-eye-close"></span>
+                                 </button>
+                                 <button class="btn btn-default layout_links change" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Change Layout Name" value="{{o.layout_name}}" style="float: left;">
+                                 <span class="glyphicon glyphicon-pencil"></span>
+                                 </button>
+                                 <button class="btn btn-default layout_links highlight"  value="{{o.layout_name}}" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                 <span class="glyphicon glyphicon-link"></span>
+                                 </button>
+                                 {% if uid == owner %}
+                                 {% if default_layout_name == None or default_layout_name != o.layout_name %}
+                                 <button class="btn btn-default layout_links default" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o.layout_name}}" style="float: left;">
+                                 <span class="glyphicon glyphicon-bookmark"></span>
+                                 </button>
+                                 {% elif default_layout_name == o.layout_name %}
+                                 <button class="btn btn-default layout_links removeDefault" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o.layout_name}}" style="float: left;">
+                                 <span class="glyphicon glyphicon-bookmark"></span>
+                                 </button>
+                                 {% endif %}
+                                 {% endif %}
+                                 <div style="clear: both;"></div>
+                              </a>
+                              {% else %}
+                              {% if uid == owner %}
+                              {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
+                              <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
+                              {% else %}
+                              <a class="list-group-item layout_buttons" href="{{url}}">
+                              {% endif %}
+                              {{o.layout_name}} created by {{o.owner_id}}<br /><br />
+                              </button>
+                              <button class="btn btn-default layout_links public" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip"title="Unshare layout" style="float: left;">
+                              <span class="glyphicon glyphicon-eye-close"></span>
+                              </button>
+                              <button class="btn btn-default layout_links highlight"  value="{{o.layout_name}}" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                              <span class="glyphicon glyphicon-link"></span>
+                              </button>
+                              {% if uid == owner and default_layout_name == o %}
+                              <button class="btn btn-default layout_links removeDefault" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Remove as default layout" value="{{o.layout_name}}" style="float: left;">
+                              <span class="glyphicon glyphicon-bookmark"></span>
+                              </button>
+                              {% else %}
+                              <button class="btn btn-default layout_links default" id="{{o.owner_id}}" rel="tooltip" data-toggle="tooltip" title="Set as default layout" value="{{o.layout_name}}" style="float: left;">
+                              <span class="glyphicon glyphicon-bookmark"></span>
+                              </button>
+                              {% endif %}
+                              {%else %}
+                              {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
+                              <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">
+                              {% else %}
+                              <a class="list-group-item layout_buttons" href="{{url}}">
+                                 {% endif %}
+                                 {{o.layout_name}} created by {{o.owner_id}}<br /><br />
+                                 <button class="btn btn-default layout_links highlight" id="{{o.owner_id}}" value="{{o.layout_name}}" rel="tooltip" data-toggle="tooltip" title="Direct Link to Layout" style="float: left;">
+                                 <span class="glyphicon glyphicon-link"></span>
+                                 </button>
+                                 {% endif %}
+                                 <div style="clear: both;"></div>
+                              </a>
+                              {% endif %}
+                              {% endwith %}
+                              {% endfor %}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="tab-pane" id="mturk_pane">
+                     {% for o in crowd_layouts %}
+                     {% with layout_urls|add:o.layout_name|add:"&layout_owner="|add:o.owner_id  as url%}
+                     {% if o.layout_name == layout_name and o.owner_id == layout_owner %}
+                     <a class="list-group-item layout_buttons" style="color: #fff; background-color: #428bca;" href="{{url}}">{{o.layout_name}}</a>
+                     {% else %}
+                     <a class="list-group-item layout_buttons" href="{{url}}">{{o.layout_name}}</a>
+                     {% endif %}
+                     <div style="clear: both;"></div>
+                     {% endwith %}
+                     {% endfor %}
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      {% if filters != None %}
+      <!-- Filters menu -->
+      <div id="accordion_filters" class="accordion">
+         <h3>Filter Paths<a class="help" href="../../../help/#step_panel" style="float: right; color: #0000FF;">Help</a></h3>
+         <div class="accordion_content">
+            Number of paths
+            <input class="form-control" id="input_k" style="width: 4em;" value="0" size="4" maxlength="">
+            <br>
+            <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
+            </div>
+            <br>
+            Maximum number of paths
+            <input class="form-control" id="input_max" value="0" style="width: 4em;" size="4" maxlength="4">
+            <br>
+            <div id="slider_max" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
+            </div>
+         </div>
+      </div>
+      <br>
+      <br>
+      {% else %}
+      <br>
+      <br>
+      {% endif %}
+      {% elif task_view == True %}
+      <!-- <div id="guidelines" class="accordion">
+         <h3>Guidelines</h3>
+         <div class="accordion_content">
+             <ul>
+                 <li>Arrange nodes of the same color together.</li>
+                 <li>Arrange rectangles at the bottom of the graph.</li>
+                 <li>Arrange diamonds on top of the graph.</li>
+             </ul>
+         </div>
+         </div>
+         <div id="notes" class="accordion">
+         <h3>Notes</h3>
+         <div class="accordion_content">
+             <p id="note_text"></p>
+         </div>
+         </div> -->
+      <div class="btn-group">
+         <button class="btn btn-default" id="tutorial_start">Start Tour</button>
+         <script type="text/javascript">
+            var task_layout_name = "{{layout_name}}";
+         </script>
+         <button class="btn btn-default" id="finished">Finished Task</button>
+      </div>
+      <div class="btn-group" style="margin-top: 10px;">
+         <button class="btn btn-default" data-toggle="modal" data-target="#guidelines_modal" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <script type="text/javascript">
+            var task_layout_name = "{{layout_name}}";
+         </script>
+         <button class="btn btn-default" id="notes">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+      </div>
+      <!--  <div id="timeDiv" style="text-align: center;">
+         <div id="timer" style="font-size:25px;color:red;"></div>
+         <button class="btn btn primary" id="reverse"><span class="glyphicon glyphicon-backward"></span></button>
+         <button class="btn btn primary" id="pause"><span class="glyphicon glyphicon-pause"></span></button>
+         <button class="btn btn primary" id="forward"><span class="glyphicon glyphicon-forward"></span></button>
+         </div> -->
+      <hr>
+      <!-- <div id="accordion_design" class="accordion">
+         <h3>Design Graph<a class="help" href="../../../help/#manipulate_panel" style="float: right; color: #0000FF;">Help</a></h3>
+         <div class="accordion_content test" id="design_accordian">
+           <hr> -->
+      <h3 data-intro="This panel allows for the selection of multiple nodes that have similar background colors and/or similar shapes." data-step="2">Select</h3>
+      <div style="text-align: center;" id="selection" class="input-group">
+      </div>
+      <button class="btn btn-primary" value="unselect" id="unselect">Unselect All Nodes</button><br><br>
+      <div class="btn-group">
+         <button class="btn btn-primary" value="undo" id="undo"><i class="fa fa-mail-reply"></i></button>
+         <button class="btn btn-primary" value="redo" id="redo"><i class="fa fa-mail-forward"></i></button>
+      </div>
+      <hr>
+      <!-- <h3 data-intro="This panel allows for the modification of all selected nodes." data-step="5">Modify</h3>
+         <div style="text-align: center;" id="modify" class="input-group">
+           <p style='text-align: left;' data-intro="For all selected nodes, this allows you to change the color of those nodes." data-step="6">Modify Color:
+               <input type='text' class='basic' id='selectionPalette' value='red' />
+           </p>
+         
+           <div class="dropup" style='text-align: left;' data-intro="For all selected nodes, this allows you to change the shape of those nodes." data-step="7">
+             Modify Shape: 
+             <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+               Shapes
+               <span class="caret"></span>
+             </button>
+             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+               <li><a data-value="rectangle">Rectangle</a></li>
+               <li><a data-value="roundrectangle">Round Rectangle</a></li>
+               <li><a data-value="ellipse">Ellipse</a></li>
+               <li><a data-value="triangle">Triangle</a></li>
+               <li><a data-value="pentagon">Pentagon</a></li>
+               <li><a data-value="hexagon">Hexagon</a></li>
+               <li><a data-value="heptagon">Heptagon</a></li>
+               <li><a data-value="octagon">Octagon</a></li>
+               <li><a data-value="star">Star</a></li>
+               <li><a data-value="diamond">Diamond</a></li>
+               <li><a data-value="vee">Vee</a></li>
+               <li><a data-value="rhomboid">Rhomboid</a></li>
+             </ul>
+           </div>
+         </div> -->
+      <h3 data-intro="For all selected nodes, this allows you to move them." data-step="8" data-position="top">Move</h3>
+      <div class="row">
+        <div class="col-md-6">
+             <div class="btn-group">
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a circle." data-step="9" data-position="top" id="circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle-o"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a dense circle." data-step="19" data-position="top" id="fill_circle_selected" class="btn btn-primary move" value="circle_selected"><i class="fa fa-circle"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a square." data-step="10" data-position="top" id="square_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square-o"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this arranges nodes into a grid." data-step="10" data-position="top" id="grid_selected" class="btn btn-primary move" value="square_selected"><i class="fa fa-square"></i></button>
+             </div>
+             <br><br>
+             <div class="btn-group">
+                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a vertical line." data-step="11" value="vertical" class="btn btn-primary" id="vertical" style="display: block; margin: 0 auto;"><i class="fa-rotate-90 fa fa-minus"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves nodes into a horizontal line." data-step="12" value="horizontal" class="btn btn-primary" id="horizontal" style="display: block; margin: 0 auto;"><i class="fa fa-minus"></i></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves all nodes closer to each other." data-step="13" data-position="top" class="btn btn-primary" style="display: block; margin: 0 auto;" value="squeeze" id="group" ><span class="glyphicon glyphicon-resize-small"></span></button>
+                <button data-position="top" data-intro="For all selected nodes, this moves all nodes away from each other." data-step="14" value="release" class="btn btn-primary" id="ungroup" style="display: block; margin: 0 auto;"><span class="glyphicon glyphicon-resize-full"></span></button>
+             </div>
+             <br><br>
+         </div>
+         <div class="col-md-6">
+             <div id="moveArrows" style="text-align:center;">
+                <table style="margin: 0 auto;">
+                   <tr>
                       <th></th>
                       <th>
-                        <button value="upArrow"  data-intro="For all selected nodes, this moves them up." data-step="15" type="button" class="btn btn-default" aria-label="Left Align" id="upArrow" data-position="top">
-                          <span class="glyphicon glyphicon-arrow-up"></span>
-                        </button>
+                         <button value="upArrow"  data-intro="For all selected nodes, this moves them up." data-step="15" type="button" class="btn btn-default" aria-label="Left Align" id="upArrow" data-position="top">
+                         <span class="glyphicon glyphicon-arrow-up"></span>
+                         </button>
                       </th>
                       <th></th>
                       <th></th>
-                    </tr>
-                    <tr>
+                   </tr>
+                   <tr>
                       <td>
-                        <button value="leftArrow" data-intro="For all selected nodes, this moves them left." data-step="16" type="button" class="btn btn-default" aria-label="Left Align" id="leftArrow" data-position="top">
-                          <span class="glyphicon glyphicon-arrow-left"></span>
-                        </button>
+                         <button value="leftArrow" data-intro="For all selected nodes, this moves them left." data-step="16" type="button" class="btn btn-default" aria-label="Left Align" id="leftArrow" data-position="top">
+                         <span class="glyphicon glyphicon-arrow-left"></span>
+                         </button>
                       </td>
                       <td></td>
                       <td>
-                        <button value="rightArrow" data-intro="For all selected nodes, this moves them right." data-step="17" type="button" class="btn btn-default" aria-label="Left Align" id="rightArrow" data-position="top">
-                          <span class="glyphicon glyphicon-arrow-right"></span>
-                        </button>
+                         <button value="rightArrow" data-intro="For all selected nodes, this moves them right." data-step="17" type="button" class="btn btn-default" aria-label="Left Align" id="rightArrow" data-position="top">
+                         <span class="glyphicon glyphicon-arrow-right"></span>
+                         </button>
                       </td>
-                    </tr>
-                    <tr>
+                   </tr>
+                   <tr>
                       <td></td>
                       <td>
-                        <button value="downArrow" data-intro="For all selected nodes, this moves them down." data-step="18" type="button" class="btn btn-default" aria-label="Left Align" id="downArrow" data-position="top">
-                          <span class="glyphicon glyphicon-arrow-down"></span>
-                        </button>
+                         <button value="downArrow" data-intro="For all selected nodes, this moves them down." data-step="18" type="button" class="btn btn-default" aria-label="Left Align" id="downArrow" data-position="top">
+                         <span class="glyphicon glyphicon-arrow-down"></span>
+                         </button>
                       </td>
                       <td></td>
-                    </tr>
-                    <tr>
-                  </table>
-
-                  <div style="height: 100px;"></div>
-                </div>
-
-              </div>
-            <!-- </div>
-        </div> -->
-        {% else %}
-            <h4>Guidelines to judge layout</h4>
-            <ul>
-                <li>Nodes of the same color are arranged together.</li>
-                <li>Rectangles are at the bottom of the graph.</li>
-                <li>Triangles are at the top of the graph.</li>
-                <li><b>Note</b>: For some layouts, it may be advantageous to group nodes by their shape rather than their color.</li>
-            </ul>
-            <p><b>Does the following layout follow the guidelines?</b></p>
-            <script type="text/javascript">
-                    var task_layout_name = "{{layout_name}}";
-            </script>
-            <div class="btn-group">
-                <btn class="btn btn-primary" id="ApproveLayout">Yes</btn>
-                <btn class="btn btn-danger" id="DenyLayout">No</btn>
-            </div>
-        {% endif %}
-    </div>
-    <!-- end class = side_menu -->
-    <p style="z-index=9999;position:fixed; top:40%; left:40%;" data-intro="Welcome to GraphSpace tutuorial!" data-step='1'></p>
-
+                   </tr>
+                   </tr>
+                </table>
+             </div>
+         </div>
+         <div style="height: 100px;"></div>
+      </div>
+   </div>
+   <!-- </div>
+      </div> -->
+   {% else %}
+   <h4>Guidelines to judge layout</h4>
+   <ul>
+      <li>Nodes of the same color are arranged together.</li>
+      <li>Rectangles are at the bottom of the graph.</li>
+      <li>Triangles are at the top of the graph.</li>
+      <li><b>Note</b>: For some layouts, it may be advantageous to group nodes by their shape rather than their color.</li>
+   </ul>
+   <p><b>Does the following layout follow the guidelines?</b></p>
+   <script type="text/javascript">
+      var task_layout_name = "{{layout_name}}";
+   </script>
+   <div class="btn-group">
+      <btn class="btn btn-primary" id="ApproveLayout">Yes</btn>
+      <btn class="btn btn-danger" id="DenyLayout">No</btn>
+   </div>
+   {% endif %}
 </div>
-
+<!-- end class = side_menu -->
+<p style="z-index=9999;position:fixed; top:40%; left:40%;" data-intro="Welcome to GraphSpace tutuorial!" data-step='1'></p>
+</div>
 {% for layout in my_layouts %}
 {% if layout.owner_id == layout_owner and layout.layout_name == layout_name %}
 <script type="text/javascript">
-    $("#builtin").removeClass("active");
-    $("#manual").addClass('active');
-    $('#custom').addClass('active');
-    $("#private").addClass('active');
-    $("#my_layouts_pane").addClass("active");
+   $("#builtin").removeClass("active");
+   $("#manual").addClass('active');
+   $('#custom').addClass('active');
+   $("#private").addClass('active');
+   $("#my_layouts_pane").addClass("active");
 </script>
 {% endif %}
 {% endfor %}
 {% for layout in shared_layouts %}
 {% if layout.owner_id == layout_owner and layout.layout_name == layout_name %}
 <script type="text/javascript">
-    $("#builtin").removeClass("active");
-    $("#manual").addClass('active');
-    $('#custom').addClass('active');
-    $("#shared").addClass('active');
-    $("#shared_layouts_pane").addClass("active");
+   $("#builtin").removeClass("active");
+   $("#manual").addClass('active');
+   $('#custom').addClass('active');
+   $("#shared").addClass('active');
+   $("#shared_layouts_pane").addClass("active");
 </script>
 {% endif %}
 {% endfor %}
@@ -725,7 +718,6 @@
 <script type="text/javascript" src="{% static 'graphs/js/clock.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/log.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
-
 <!-- stylesheet for view_graph page -->
 <link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}">
 <link rel="stylesheet" href="{% static 'graphs/css/intro.css' %}">
@@ -734,10 +726,10 @@
 <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
 {% if search_result %}
 <script>$(document).ready(function() {
-    window.cy.on('load', function(){
-      window.cy.$("#{{ result_id }}").select(); 
-    });
-    });
+   window.cy.on('load', function(){
+     window.cy.$("#{{ result_id }}").select(); 
+   });
+   });
 </script>
 {% endif %}
 {% endblock %}
