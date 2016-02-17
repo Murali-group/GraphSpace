@@ -15,8 +15,6 @@ from datetime import timedelta
 import time 
 from django.core.mail import send_mail
 import sqlite3 as lite
-from naive_bayes import NaiveBayes as NB
-
 
 import urllib2, urllib
 
