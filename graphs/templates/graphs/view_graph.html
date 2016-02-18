@@ -677,6 +677,20 @@
 </script>
 {% endif %}
 {% endfor %}
+
+{% for layout in crowd_layouts %}
+{% if layout.owner_id == layout_owner and layout.layout_name == layout_name %}
+<script type="text/javascript">
+   $("#builtin").removeClass("active");
+   $("#manual").removeClass('active');
+   $('#custom').removeClass('active');
+   $("#shared").removeClass('active');
+   $("#shared_layouts_pane").removeClass("active");
+   $("#mturk_pane").addClass('active');
+   $("#crowd").addClass('active');
+</script>
+{% endif %}
+{% endfor %}
 {% endblock %}
 {% block css-js-footer %}
 <!--jQuery UI, needed for side menu -->

@@ -1743,11 +1743,11 @@ $(document).ready(function() {
             // maxSimulationTime: 1000
         };
 
-        $("#auto").addClass('active');
-        $("#manual").removeClass('active');
+        // $("#auto").addClass('active');
+        // $("#manual").removeClass('active');
 
-        $('#builtin').addClass('active');
-        $('#custom').removeClass('active');
+        // $('#builtin').addClass('active');
+        // $('#custom').removeClass('active');
 
         var query = getQueryVariable("layout");
 
@@ -1785,11 +1785,11 @@ $(document).ready(function() {
             }
         } else {
 
-            $("#auto").removeClass('active');
-            $("#manual").addClass('active');
+            // $("#auto").removeClass('active');
+            // $("#manual").addClass('active');
 
-            $('#builtin').removeClass('active');
-            $('#custom').addClass('active');
+            // $('#builtin').removeClass('active');
+            // $('#custom').addClass('active');
 
             if (layout && layout.json != null) {
                 graph_layout = {
