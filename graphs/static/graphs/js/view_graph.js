@@ -4,6 +4,14 @@ Consult the API: http://api.jquery.com/ready/
 */
 $(document).ready(function() {
 
+    $("#notes_modal").on('shown.bs.modal', function(){
+        $(this).find('#feedback').focus();
+    });
+
+    $("#codeModal").on('shown.bs.modal', function(){
+        $(this).find('#feedback').focus();
+    });
+
     var popFirstElement = false;
     var undoStack = [];
     var redoStack = [];
@@ -2709,7 +2717,7 @@ $(document).ready(function() {
             var node_positions = redoStack.pop();
             undoStack.push(node_positions);
             popFirstElement = true;
-            
+
             for (var node_id in node_positions) {
                 var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
                 window.cy.getElementById(node_id).renderedPosition(oldPosition);
