@@ -12,6 +12,8 @@ $(document).ready(function() {
         $(this).find('#feedback').focus();
     });
 
+    getFeedback();
+
     var popFirstElement = false;
     var undoStack = [];
     var redoStack = [];
@@ -2370,6 +2372,9 @@ $(document).ready(function() {
             } else {
                 $("#notes_list").append("<li>" + feedback + "</li>");
                 $("#feedback").val("");
+                var numNotes = $("#notes").val();
+                $("#notes").text("Notes (" + ++numNotes + ")");
+                $("#notes").val(numNotes);
             }
         });
     }
@@ -2398,11 +2403,15 @@ $(document).ready(function() {
             }, function(data) {
                 if (data.Error) {
                     console.log(data.Error);
+                    $("#notes").text("Notes (0)");
+                    $("#notes").val(0);
                 } else {
                     $("#notes_list").html("");
                     for (var i = 0; i < data.Message.length; i++) {
                         $("#notes_list").append("<li>" + data.Message[i] + "</li>");
                     }
+                    $("#notes").text("Notes (" + data.Message.length + ")");
+                    $("#notes").val(data.Message.length);
                 }
                 if (typeof(callback) == 'function') {
                     callback();
