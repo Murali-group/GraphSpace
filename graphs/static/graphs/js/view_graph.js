@@ -1759,6 +1759,8 @@ $(document).ready(function() {
                 avoidOverlap: true,
                 animate: false
             }
+            $("#auto").addClass('active');
+            $('#builtin').addClass('active');
         } else if (query == "default_concentric") {
             graph_layout = {
                 name: "concentric",
@@ -1767,6 +1769,8 @@ $(document).ready(function() {
                 avoidOverlap: true,
                 animate: false
             }
+            $("#auto").addClass('active');
+            $('#builtin').addClass('active');
         } else if (query == "default_circle") {
             graph_layout = {
                 name: "circle",
@@ -1775,14 +1779,20 @@ $(document).ready(function() {
                 avoidOverlap: true,
                 animate: false
             }
+            $("#auto").addClass('active');
+            $('#builtin').addClass('active');
         } else if (query == 'default_cose') {
             graph_layout = {
                 name: "cose"
             }
+            $("#auto").addClass('active');
+            $('#builtin').addClass('active');
         } else if (query == "default_grid") {
             graph_layout = {
                 name: "grid"
             }
+            $("#auto").addClass('active');
+            $('#builtin').addClass('active');
         } else {
 
             // $("#auto").removeClass('active');

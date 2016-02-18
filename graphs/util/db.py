@@ -3476,7 +3476,7 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	group_name_exists = db_session.query(models.Group).filter(models.Group.groupId == groupId).first()
+	group_name_exists = db_session.query(models.Group).filter(models.Group.group_id == groupId).first()
 
 	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
 		return "Group exists but the group owner provided doesn't own this group"
@@ -3532,7 +3532,7 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	group_name_exists = db_session.query(models.Group).filter(models.Group.groupId == groupId).first()
+	group_name_exists = db_session.query(models.Group).filter(models.Group.group_id == groupId).first()
 
 	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
 		return "Group exists but the group owner provided doesn't own this group"
