@@ -514,7 +514,8 @@ $(document).ready(function() {
         };
 
         var selectedNodes = [];
-        var minDistance = 0;
+        var minWidthDistance = 0;
+        var minHeightDistance = 0;
         for (var i = 0; i < window.cy.nodes().length; i++) {
             var node = window.cy.nodes()[i];
             if (node.selected()) {
@@ -522,14 +523,15 @@ $(document).ready(function() {
                 selectedNodes.push(node);
                 centroid["x"] += position.x;
                 centroid["y"] += position.y;
-                minDistance = node.boundingBox()["h"];
+                minWidthDistance = Math.max(node.boundingBox()["w"], minWidthDistance);
+                minHeightDistance = Math.max(node.boundingBox()["h"], minHeightDistance);
             }
         }
 
         centroid["x"] /= selectedNodes.length;
         centroid["y"] /= selectedNodes.length;
 
-        return [centroid, selectedNodes, minDistance];
+        return [centroid, selectedNodes, minWidthDistance, minHeightDistance];
     }
 
     function groupUngroup(type) {
@@ -2662,7 +2664,7 @@ $(document).ready(function() {
             y: window.cy.height() / 2
         };
         var selectedNodes = data[1];
-        var minDistance = data[2];
+        var minDistance = data[3];
         
         var radius = (selectedNodes.length/4 * minDistance)/2;
 
@@ -2705,12 +2707,13 @@ $(document).ready(function() {
             return;
         } else {
             var node_positions = redoStack.pop();
-
+            undoStack.push(node_positions);
+            popFirstElement = true;
+            
             for (var node_id in node_positions) {
                 var oldPosition = {"x": node_positions[node_id]["x"], "y": node_positions[node_id]["y"]};
                 window.cy.getElementById(node_id).renderedPosition(oldPosition);
             }
-            undoStack.push(node_positions);
         }
     });
 
