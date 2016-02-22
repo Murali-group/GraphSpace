@@ -27,7 +27,7 @@ $(document).ready(function() {
     setDefaultNodeProperties(graph_json['graph']['nodes']);
     extractJSONProperties(graph_json.graph);
 
-    if (task_view == "True") {
+    if (researcher_view != "True") {
 
         //Start keeping track of time
         clock.start(); 
@@ -2740,21 +2740,24 @@ $(document).ready(function() {
         }
     }
 
-    $("#triangle_rating").bind("change", function() {
+    $("#triangle_rating").bind("change", function(e) {
         setRatingInput("triangle_rating", "triangle_slider");
+        logger.addEvent(e);
     });
 
-    $("#rectangle_rating").bind("change", function() {
+    $("#rectangle_rating").bind("change", function(e) {
         setRatingInput("rectangle_rating", "rectangle_slider");
+        logger.addEvent(e);
     });
 
-    $("#shape_rating").bind("change", function() {
+    $("#shape_rating").bind("change", function(e) {
         setRatingInput("shape_rating", "shape_slider");
-
+        logger.addEvent(e);
     });
 
-    $("#color_rating").bind("change", function() {
+    $("#color_rating").bind("change", function(e) {
         setRatingInput("color_rating", "color_slider");
+        logger.addEvent(e);
     });
 
     setRatingSliders("triangle_rating", "triangle_slider");
@@ -2781,7 +2784,7 @@ $(document).ready(function() {
             step: 1,
             min: 1,
             max: 5,
-            slide: function(event, ui) {
+            slide: function(e, ui) {
                 $("#" + id).val(ui.value);
                 m_val = ui.value;
                 if (m_val < 1) {
@@ -2794,6 +2797,7 @@ $(document).ready(function() {
                         value: m_val
                     });
                 }
+                logger.addEvent(e);
             }
         });
     };
@@ -2802,6 +2806,13 @@ $(document).ready(function() {
         var graph_id = $("#gid").text();
         var user_id = $("#uid").text();
         var layout_owner = "MTURK_Worker";
+
+        var timeSpent = clock.stop();
+        var events = logger.getEvents();
+
+        if (timeSpent < 5 || events.length < 3) {
+            return alert("Please spend more time analyzing the graph");
+        }
 
         $.post("../../../submitEvaluation/", {
             "graph_id": graph_id,
@@ -2816,8 +2827,11 @@ $(document).ready(function() {
             if (data.Error) {
                 console.log(data.Error);
             } else {
-                alert(data.Message);
-                window.location = "http://" + window.location.host;
+                $("#approveCode").val(data.Message);
+                $("#approveModal").modal('toggle');
+                $("#exitPage").click(function() {
+                    window.location = "http://" + window.location.host;
+                });
             }
         });
     };

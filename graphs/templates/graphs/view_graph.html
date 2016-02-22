@@ -198,6 +198,26 @@
       </div>
    </div>
 </div>
+
+<!-- Approve Code modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h4 class="modal-title" id="changeLabelModal">Task Completed</h4>
+         </div>
+         <div class="modal-body">
+            <div class="group_body">
+               <p>Thank you for your work.  Please enter the provided code in Amazon Mechanical Turk to complete the task.
+               </p>
+               <input class="form-control" type="text" readonly id="approveCode">
+            </div>
+            <br>
+            <button type="button" class="btn btn-default" id="exitPage" data-dismiss="modal">Close</button>
+         </div>
+      </div>
+   </div>
+</div>
 <div id="overlay"></div>
 <p id="uid" style="display:none;">{{owner}}</p>
 <p id="gid" style="display:none;">{{graph_id}}</p>

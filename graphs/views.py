@@ -68,9 +68,7 @@ def index(request):
         :param request: HTTP GET Request
     '''
 
-    db.launchApprovalTask("dsingh5270@gmail.com", "MURALI_TEST", "Worker_layout_93910")
-
-    return render(request, 'graphs/index.html', {})    # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
+    # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
     # that means that the user is trying to log on to GraphSpace.
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
     # The password_reset table contains all the users whose passwords need to be updated.
@@ -546,12 +544,12 @@ def approve_task(request, uid, gid):
 
     if 'uid' in request.session:
         context = login(request)
-        context["approve_view"] = True
 
     else:
         login_form = LoginForm()
         register_form = RegisterForm()
         context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
+    context["approve_view"] = True
 
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
@@ -567,7 +565,7 @@ def approve_task(request, uid, gid):
     layout_name = request.GET.get('layout', '')
     layout_owner = request.GET.get('layout_owner', '')
 
-    context = db.set_layout_context(request, context, uid, gid)
+    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner)
 
     if context['Error']:
         return render(request, 'graphs/error.html', context)
@@ -621,12 +619,12 @@ def submitEvaluation(request):
         shape_rating = request.POST["shape_rating"]
         color_rating = request.POST["color_rating"]
 
-        error = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating)
+        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating)
 
-        if error == None:
-            return HttpResponse(json.dumps(db.sendMessage(201, "Evaluation Submitted!")), content_type="application/json")
+        if task_code != None:
+            return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+            return HttpResponse(json.dumps(db.throwError(500, "Evaluation Submission Unsucessful!")), content_type="application/json")
     else:
         return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
 

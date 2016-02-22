@@ -652,9 +652,27 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 	db_session.add(layout_eval)
 	db_session.commit()
 
+	# Generate task code
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+
+	if task == None:
+		return None
+
+	expires = datetime.now() + timedelta(hours=6)
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
+	db_session.add(new_code)
+	db_session.commit()
+
 	db_session.close()
 
-	return None
+	return taskCode
+
 def get_crowd_layouts_for_graph(uid, gid):
 	'''
 		Gets all the layouts submitted by crowdworkers.
@@ -3219,27 +3237,6 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 
 			db_session.close()
 
-def payApprovalTaskWorkers(uid, gid, worked_layout):
-
-	# Generate task code
-	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
-
-	# Create database connection
-	db_session = data_connection.new_session()
-
-	# Get the task associated for this graph
-	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
-
-	if task == None:
-		return None
-
-	expires = datetime.now() + timedelta(hours=6)
-	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
-	db_session.add(new_code)
-	db_session.commit()
-
-
-
 def launchApprovalTask(uid, gid, worked_layout):
 
 	# If the proper environment variables are set in gs-setup
@@ -4536,13 +4533,14 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 
 	mod_layout.times_modified += 1
 	db_session.commit()
+	# launchApprovalTask(uid, gid, worked_layout)
 
 	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
-	if mod_layout.times_modified < 5:
-		launchTask(gid, uid, [mod_layout.json], single=True)
+	# if mod_layout.times_modified < 5:
+	# 	launchTask(gid, uid, [mod_layout.json], single=True)
 
 	# pay workers
-	getAssignmentsForGraph(uid, gid)
+	# getAssignmentsForGraph(uid, gid)
 
 	# launch approval tasks
 	db_session.close()
