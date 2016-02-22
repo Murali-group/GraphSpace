@@ -5,6 +5,7 @@
    var graph_json = {{ graph|safe }};
    var layout = {{ layout_to_view|safe }};
    var task_view = "{{ task_view|safe }}";
+   var researcher_view = "{{ researcher_view|safe }}";
    window.cy;
 </script>
 <div id="dialog"></div>
@@ -636,20 +637,33 @@
       </div> -->
    {% else %}
    <h4>Guidelines to judge layout</h4>
-   <ul>
-      <li>Nodes of the same color are arranged together.</li>
-      <li>Rectangles are at the bottom of the graph.</li>
-      <li>Triangles are at the top of the graph.</li>
-      <li><b>Note</b>: For some layouts, it may be advantageous to group nodes by their shape rather than their color.</li>
-   </ul>
-   <p><b>Does the following layout follow the guidelines?</b></p>
+       <li>How well are the triangles arranged at the top of the graph?</li><br>
+       <input class="form-control" id="triangle_rating" style="width: 4em;" value="1" size="5" maxlength="">
+      <br>
+      <div id="triangle_slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
+      </div>
+       <li>How well are the rectangles arranged at the bottom of the graph?</li><br>
+       <input class="form-control" id="rectangle_rating" style="width: 4em;" value="1" size="5" maxlength="">
+      <br>
+      <div id="rectangle_slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a></div>
+       <li>How well are the nodes with the same shape arranged together?</li><br>
+       <input class="form-control" id="shape_rating" style="width: 4em;" value="1" size="5" maxlength="">
+      <br>
+      <div id="shape_slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a></div>
+      <br>
+       <li>How well are the nodes with the same color arranged together?</li><br>
+       <input class="form-control" id="color_rating" style="width: 4em;" value="1" size="5" maxlength="">
+      <br>
+      <div id="color_slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a></div>
+      <br>
+      <btn class="btn btn-primary" id="submitEvaluation">Submit Rating</btn>
    <script type="text/javascript">
       var task_layout_name = "{{layout_name}}";
    </script>
-   <div class="btn-group">
+  <!--  <div class="btn-group">
       <btn class="btn btn-primary" id="ApproveLayout">Yes</btn>
       <btn class="btn btn-danger" id="DenyLayout">No</btn>
-   </div>
+   </div> -->
    {% endif %}
 </div>
 <!-- end class = side_menu -->

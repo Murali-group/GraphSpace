@@ -334,20 +334,23 @@ $(document).ready(function() {
                     applyLayoutStyles();
                     if (task_view == "True") {
                         $("#guidelines_modal").modal('toggle');
+                    }
+                    console.log(researcher_view);
+                    if (researcher_view != "True") {
                         hideGraphInformation();
                         addToUndoStack();
                         window.cy.on("free", "node", function(event, ui) {
                             popFirstElement = true;
                             addToUndoStack();                            
                         });
-                    }
+                    }     
                 });
 
                 // enable user panning (hold the left mouse button to drag
                 // the screen)
                 this.userPanningEnabled(false);
 
-                if (task_view != "True") {
+                if (researcher_view == "True") {
 
                     //if there is a title, insert title at top of page
                     if ($("#title").text().length > 0) {
@@ -2430,36 +2433,6 @@ $(document).ready(function() {
         }
     };
 
-    function submitEvaluation(result) {
-        var graph_id = $("#gid").text();
-        var user_id = $("#uid").text();
-        var layout_owner = "MTURK_Worker";
-
-        $.post("../../../submitEvaluation/", {
-                "graph_id": graph_id,
-                "user_id": user_id,
-                "layout_owner": layout_owner,
-                "layout_name": task_layout_name,
-                "evaluation": result
-            }, function(data) {
-                if (data.Error) {
-                    console.log(data.Error);
-                } else {
-                    alert(data.Message);
-                    window.location = "http://" + window.location.host;
-                }
-            });
-
-    };
-
-    $("#ApproveLayout").click(function(e) {
-        submitEvaluation("Yes");
-    });
-
-    $("#DenyLayout").click(function(e) {
-        submitEvaluation("No");
-    });
-
     $("#circle_selected").click(function (e) {
         addToUndoStack();
 
@@ -2766,5 +2739,91 @@ $(document).ready(function() {
                                 });
         }
     }
+
+    $("#triangle_rating").bind("change", function() {
+        setRatingInput("triangle_rating", "triangle_slider");
+    });
+
+    $("#rectangle_rating").bind("change", function() {
+        setRatingInput("rectangle_rating", "rectangle_slider");
+    });
+
+    $("#shape_rating").bind("change", function() {
+        setRatingInput("shape_rating", "shape_slider");
+
+    });
+
+    $("#color_rating").bind("change", function() {
+        setRatingInput("color_rating", "color_slider");
+    });
+
+    setRatingSliders("triangle_rating", "triangle_slider");
+    setRatingSliders("rectangle_rating", "rectangle_slider");
+    setRatingSliders("shape_rating", "shape_slider");
+    setRatingSliders("color_rating", "color_slider");
+
+    function setRatingInput(id, sliderId) {
+        if ($("#" + id).val() > 5) {
+            $("#" + id).val(5);
+        } else if ($("#" + id).val() < 1) {
+            $("#" + id).val(1);
+        }
+
+        $("#" + sliderId).slider({
+            value: $("#" + id).val(),
+            max: 5
+        });
+        setRatingSliders(id, sliderId)
+    };
+
+    function setRatingSliders(id, sliderId) {
+        $("#" + sliderId).slider({
+            step: 1,
+            min: 1,
+            max: 5,
+            slide: function(event, ui) {
+                $("#" + id).val(ui.value);
+                m_val = ui.value;
+                if (m_val < 1) {
+                    m_val = 1;
+                    $(this).slider({
+                        value: 1
+                    });
+                } else {
+                    $(this).slider({
+                        value: m_val
+                    });
+                }
+            }
+        });
+    };
+
+    function submitEvaluation() {
+        var graph_id = $("#gid").text();
+        var user_id = $("#uid").text();
+        var layout_owner = "MTURK_Worker";
+
+        $.post("../../../submitEvaluation/", {
+            "graph_id": graph_id,
+            "user_id": user_id,
+            "layout_owner": layout_owner,
+            "layout_name": task_layout_name,
+            "triangle_rating": $("#triangle_rating").val(),
+            "rectangle_rating": $("#rectangle_rating").val(),
+            "shape_rating": $("#shape_rating").val(),
+            "color_rating": $("#color_rating").val()
+        }, function(data) {
+            if (data.Error) {
+                console.log(data.Error);
+            } else {
+                alert(data.Message);
+                window.location = "http://" + window.location.host;
+            }
+        });
+    };
+
+    $("#submitEvaluation").click(function() {
+        submitEvaluation();
+    });
 
 });

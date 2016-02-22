@@ -293,7 +293,10 @@ class LayoutStatus(Base):
     user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
     layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
     layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
-    isApproved = Column(Integer, nullable=True)
+    triangle_rating = Column(Integer, nullable = False)
+    rectangle_rating = Column(Integer, nullable = False)
+    shape_rating = Column(Integer, nullable = False)
+    color_rating = Column(Integer, nullable = False)
     created = Column(TIMESTAMP, nullable = False)
 
 class Node(Base):

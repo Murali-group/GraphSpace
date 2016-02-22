@@ -67,7 +67,10 @@ def index(request):
 
         :param request: HTTP GET Request
     '''
-    # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
+
+    db.launchApprovalTask("dsingh5270@gmail.com", "MURALI_TEST", "Worker_layout_93910")
+
+    return render(request, 'graphs/index.html', {})    # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
     # that means that the user is trying to log on to GraphSpace.
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
     # The password_reset table contains all the users whose passwords need to be updated.
@@ -528,6 +531,8 @@ def view_task(request, uid, gid):
     # owner
     context["owner"] = uid
 
+    context["researcher_view"] = False
+
     return render(request, 'graphs/view_graph.html', context)
 
 def approve_task(request, uid, gid):
@@ -571,6 +576,8 @@ def approve_task(request, uid, gid):
     context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
 
     context['draw_graph'] = True
+    
+    context["researcher_view"] = False
 
     # TODO: This will eventually get deleted
 
@@ -609,9 +616,12 @@ def submitEvaluation(request):
         uid = request.POST["user_id"]
         layout_name = request.POST["layout_name"]
         layout_owner = request.POST["layout_owner"]
-        evaluation = request.POST["evaluation"]
+        triangle_rating = request.POST["triangle_rating"]
+        rectangle_rating = request.POST["rectangle_rating"]
+        shape_rating = request.POST["shape_rating"]
+        color_rating = request.POST["color_rating"]
 
-        error = db.submitEvaluation(uid, gid, layout_name, layout_owner, evaluation)
+        error = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating)
 
         if error == None:
             return HttpResponse(json.dumps(db.sendMessage(201, "Evaluation Submitted!")), content_type="application/json")

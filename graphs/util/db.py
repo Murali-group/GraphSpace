@@ -633,7 +633,7 @@ def set_layout_context(request, context, uid, gid):
 
 	return context
 
-def submitEvaluation(uid, gid, layout_name, layout_owner, evaluation):
+def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating):
 	'''
 		Submits evaluation for a layout
 
@@ -646,14 +646,8 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, evaluation):
 
 	db_session = data_connection.new_session()
 
-	# Is Approved is 1 or 0 depending if evaluation is good/bad
-	isApproved = 0
-
-	if evaluation == "Yes":
-		isApproved = 1
-
 	# Add this evaluation to database
-	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, isApproved=isApproved, created=datetime.now())
+	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now())
 
 	db_session.add(layout_eval)
 	db_session.commit()
@@ -3225,6 +3219,80 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 
 			db_session.close()
 
+def payApprovalTaskWorkers(uid, gid, worked_layout):
+
+	# Generate task code
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+
+	if task == None:
+		return None
+
+	expires = datetime.now() + timedelta(hours=6)
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
+	db_session.add(new_code)
+	db_session.commit()
+
+
+
+def launchApprovalTask(uid, gid, worked_layout):
+
+	# If the proper environment variables are set in gs-setup
+	if AWSACCESSKEYID != None and SECRETKEY != None:
+			# Current as of 12/14/2016
+			version = "2014-08-15"
+			operation = "CreateHIT"
+
+			# Duration of both task and how long it is to be alive (for now same value)
+			duration = "3000"
+
+			# Get the common parameters
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
+
+			# Title of task and description of task
+			title = urllib.urlencode({"title": "GraphSpace Approval Task"})[6:].replace("+", "%20")
+			description = urllib.urlencode({"description": "Determine if layout presented meets specified guidelines"})[12:]
+			
+			link_to_graphspace = URL_PATH + "approve/" + uid + "/" + gid + "?layout=" + worked_layout + "&amp;layout_owner=" + "MTURK_Worker"
+
+			question_form_as_xml = '''<?xml version="1.0"?>
+				<QuestionForm
+				    xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd">
+				    <Question>
+				        <QuestionIdentifier>GraphSpace</QuestionIdentifier>
+				        <IsRequired>true</IsRequired>
+				        <QuestionContent>
+				            <Text>Please follow the link to be presented with the task.</Text>
+				            <FormattedContent>
+				                <![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]>
+				            </FormattedContent>
+				        </QuestionContent>
+				        <AnswerSpecification>
+				            <FreeTextAnswer>
+				                <Constraints>
+				                    <Length minLength="2" maxLength="100"/>
+				                </Constraints>
+				                <DefaultText>Replace this with code obtained from GraphSpace.</DefaultText>
+				            </FreeTextAnswer>
+				        </AnswerSpecification>
+				    </Question>
+				</QuestionForm>'''
+
+			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
+			
+			# Generate MechTurkRequest
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+
+			response = requests.get(request, allow_redirects=False)
+
+			print 'TESTING', response.text
+
 def getAssignmentsForGraph(uid, gid):
 	'''
 		Gets all assignments(work done by MTURk workers) for a particular graph
@@ -3265,8 +3333,6 @@ def getAssignmentsForGraph(uid, gid):
 
 		numResults = int(numResults.text)
 		totalResults =  int(totalResults.text)
-
-		print numResults
 
 		if numResults > 0:
 
@@ -4442,10 +4508,8 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 	db_session.add(new_feature_vector)
 	db_session.commit()
 
-	# result =  evalQuality(numChanges, timeSpent, len(events))
-
-	# if result == False:
-	# 	return "Not enough work done to complete task!"
+	if numChanges < 50 and timeSpent < 100 and len(events) < 50:
+		return "Not enough work done to complete task!"
 
 	# Generate task code
 	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
@@ -4480,6 +4544,7 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 	# pay workers
 	getAssignmentsForGraph(uid, gid)
 
+	# launch approval tasks
 	db_session.close()
 	return taskCode
 
