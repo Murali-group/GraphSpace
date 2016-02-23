@@ -3226,7 +3226,7 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 				isValid = root[1][0][0].text
 				if isValid == "True":
 
-					new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime, hit_id=root[1][1].text)
+					new_task = models.Task(task_id=None, task_owner=user_id, graph_id=graph_id, user_id=user_id, created=curtime, hit_id=root[1][1].text, layout_name=new_layout.layout_name, layout_owner=new_layout.owner_id)
 					db_session.add(new_task)
 					db_session.commit()
 					db_session.close()
@@ -3290,11 +3290,12 @@ def launchApprovalTask(uid, gid, worked_layout):
 
 			print 'TESTING', response.text
 
-def getAssignmentsForGraph(uid, gid):
+def payTaskWorkers(uid, gid, worked_layout):
 	'''
 		Gets all assignments(work done by MTURk workers) for a particular graph
 		@param uid: Owner of graph
 		@param gid: Graph name
+		@param worked_layout: Name of layout
 	'''
 	# If the proper environment variables are set in gs-setup
 	if AWSACCESSKEYID != None and SECRETKEY != None:
@@ -3306,11 +3307,10 @@ def getAssignmentsForGraph(uid, gid):
 		db_session = data_connection.new_session()
 
 		# Get the HIT ID for graph
-		task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+		task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).filter(models.Task.layout_name == worked_layout).filter(models.Task.layout_owner == "MTURK_Worker").first()
 
 		if task != None:
 			hitID = task.hit_id
-
 		else:
 			return "Task found for this graph"
 
@@ -3321,59 +3321,43 @@ def getAssignmentsForGraph(uid, gid):
 		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitID + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
-		print response.text
-		# print response.text
+
 		root = ET.fromstring(response.text)[1]
 
-		numResults = root[1]
-		totalResults = root[2]
+		for assignment in root.findall('Assignment'):
+			assignment_id = ""
+			worker_id = ""
+			hit_id = ""
+			assignment_status = ""
+			task_code = ""
 
-		numResults = int(numResults.text)
-		totalResults =  int(totalResults.text)
+			assignment_id = assignment.find('AssignmentId').text
+			worker_id = assignment.find('WorkerId').text
+			hit_id = assignment.find('HITId').text
+			assignment_status = assignment.find('AssignmentStatus').text
+			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
 
-		if numResults > 0:
+			# Check to see if the task code exists and matches the hit id associated with it
+			code = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code == task_code).first()
 
-			# Go through all assignments returned by this call
-			i = 4
-			# Go through the total results and approve or deny them based on if the code associated with the HIT matches up
-			while i < numResults + 4:
-				# Get assignment information
-				assignment_id = root[i][0].text
-				worker_id = root[i][1].text
-				hit_id = root[i][2].text
-				assignment_status = root[i][3].text
-				answer = root[i][8].text
+			# If the code checks out, pay them!
+			if code:
+				# Get new signature and timestamp for different API call
+				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
+				operation = "ApproveAssignment"
+				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				# Delete task code from database so it can't be reused
+				db_session.delete(code)
+				db_session.commit()
+			else:
+				# Reject them
+				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
+				operation = "RejectAssignment"
+				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 
-				print answer, "TESTING", root[i][8].text
-
-				# Get the task code that user obtained from GS (after completing the task)
-				answerRoot = ET.fromstring(answer)
-				task_code = answerRoot[0][1].text
-
-				# Check to see if the task code exists and matches the hit id associated with it
-				code = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code == task_code).first()
-				code_exists = None
-				if code != None:
-					code_exists = code.code
-
-				# If the code checks out, pay them!
-				if code_exists:
-					# Get new signature and timestamp for different API call
-					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-					operation = "ApproveAssignment"
-					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-					# Delete task code from database so it can't be reused
-					db_session.delete(code)
-					db_session.commit()
-				else:
-					# Reject them
-					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
-					operation = "RejectAssignment"
-					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-
-				response = requests.get(request, allow_redirects=False)
-				i += 1
-		
+			response = requests.get(request, allow_redirects=False)
+			print response.text
+	
 		db_session.close()
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
@@ -4515,7 +4499,7 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 	db_session = data_connection.new_session()
 
 	# Get the task associated for this graph
-	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).first()
+	task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).filter(models.Task.layout_name == worked_layout).filter(models.Task.layout_owner == "MTURK_Worker").first()
 
 	if task == None:
 		return None
@@ -4533,14 +4517,14 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events):
 
 	mod_layout.times_modified += 1
 	db_session.commit()
-	# launchApprovalTask(uid, gid, worked_layout)
+	launchApprovalTask(uid, gid, worked_layout)
 
 	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
 	# if mod_layout.times_modified < 5:
 	# 	launchTask(gid, uid, [mod_layout.json], single=True)
 
 	# pay workers
-	# getAssignmentsForGraph(uid, gid)
+	payTaskWorkers(uid, gid, worked_layout)
 
 	# launch approval tasks
 	db_session.close()
