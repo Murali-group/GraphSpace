@@ -173,6 +173,22 @@ class Task(Base):
     created = Column(TIMESTAMP, nullable = False)
     hit_id=Column(String, nullable=False)
 
+class ApproveTask(Base):
+    '''
+        Table that represents the approve_task table.
+    '''
+    __tablename__ = 'approve_task'
+
+    task_id = Column(Integer, autoincrement=True, primary_key=True)
+    task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    created = Column(TIMESTAMP, nullable = False)
+    task_hit_id=Column(String, nullable=False)
+    approve_hit_id=Column(String, nullable=False)
+
 class Event(Base):
     '''The class representing the schema of the event table.'''
     __tablename__ = 'event'

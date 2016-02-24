@@ -648,6 +648,8 @@ def retrieveTaskCode(request):
         
         surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events)
 
+        if surveyCode == None:
+            surveyCode = "Task does not exist anymore!"
         return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
 
     else:
