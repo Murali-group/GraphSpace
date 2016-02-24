@@ -3236,27 +3236,53 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 
 			db_session.close()
 
-# def launchPrepaidTasks():
-# 	prepaid_tasks = ["http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_88151&amp;layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_65384&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_57745&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_99696&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_65557&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_23390&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_97303&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_45106&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_49607&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_18142&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_44917&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_25084&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_39064&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_44361&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_73951&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_20742&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_66711&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_50084&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_69775&layout_owner=MTURK_Worker",
-# 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_46414&layout_owner=MTURK_Worker"]
+def launchPrepaidTasks():
+	prepaid_tasks = [
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_88151&amp;layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_65384&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_57745&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_99696&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/153233-91-1temp-Etoxazole-NCIPID-edges?layout=Worker_layout_65557&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_23390&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_97303&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_45106&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_49607&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/27360-89-0-Bisphenol-A-NCIPID-edges?layout=Worker_layout_18142&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_44917&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_25084&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_39064&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_44361&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/114369-43-6temp-Fenbuconazole-NCIPID-edges?layout=Worker_layout_73951&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_20742&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_66711&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_50084&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_69775&layout_owner=MTURK_Worker",
+		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_46414&layout_owner=MTURK_Worker"]
+
+	prepaid_tasks = [
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8)
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9)
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10)
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11)
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12)
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53)
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54)
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55)
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56)
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23)
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24)
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25)
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26)
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27)
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33)
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34)
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35)
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36)
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37)
+	]
+
+	launchApprovalTask(prepaid_tasks[0][0], prepaid_tasks[0][1], prepaid_tasks[0][2])
 
 def launchApprovalTask(uid, gid, layout_id):
 	'''
