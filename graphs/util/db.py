@@ -3260,25 +3260,25 @@ def launchPrepaidTasks():
 		"http://divitsingh.com/approve/dsingh5270@gmail.com/96827-34-8temp-Flusilazole-NCIPID-edges?layout=Worker_layout_46414&layout_owner=MTURK_Worker"]
 
 	prepaid_tasks = [
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8)
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9)
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10)
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11)
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12)
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53)
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54)
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55)
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56)
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23)
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24)
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25)
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26)
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27)
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33)
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34)
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35)
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36)
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37)
 	]
 
