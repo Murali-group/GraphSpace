@@ -3211,7 +3211,7 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+			request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3348,7 +3348,7 @@ def launchApprovalTask(uid, gid, layout_id):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+			request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3395,7 +3395,7 @@ def payWorkers(hitId, taskCode):
 		operation = "GetAssignmentsForHIT"
 
 		# PAY ALL LAYOUT TASKS
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+		request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
 
@@ -3422,7 +3422,7 @@ def payWorkers(hitId, taskCode):
 				# Get new signature and timestamp for different API call
 				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
 				operation = "ApproveAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 				
 				# Delete task code from database so it can't be reused
 				db_session.delete(code)
@@ -3431,7 +3431,7 @@ def payWorkers(hitId, taskCode):
 				# Reject them
 				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
 				operation = "RejectAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 
 			response = requests.get(request, allow_redirects=False)
 
