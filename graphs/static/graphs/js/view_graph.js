@@ -2300,6 +2300,7 @@ $(document).ready(function() {
             "numChanges": numChanges,
             "timeSpent": timeSpent,
             "events": JSON.stringify(events),
+            "hit_id": hit_id
         }, function(data) {
             if (data.hasOwnProperty("Message")) {
                 $("#code").val(data.Message);
@@ -2822,7 +2823,8 @@ $(document).ready(function() {
             "triangle_rating": $("#triangle_rating").val(),
             "rectangle_rating": $("#rectangle_rating").val(),
             "shape_rating": $("#shape_rating").val(),
-            "color_rating": $("#color_rating").val()
+            "color_rating": $("#color_rating").val(),
+            "hit_id": hit_id
         }, function(data) {
             if (data.Error) {
                 console.log(data.Error);

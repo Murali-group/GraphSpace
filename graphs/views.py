@@ -67,7 +67,6 @@ def index(request):
 
         :param request: HTTP GET Request
     '''
-
     # If there is a POST request made to the main page (graphspace.org/index or graphspace.org/),
     # that means that the user is trying to log on to GraphSpace.
     # If they try to log on, we first check to see if their password needs to be reset (for whatever reason).
@@ -531,6 +530,8 @@ def view_task(request, uid, gid):
 
     context["researcher_view"] = False
 
+    print context
+
     return render(request, 'graphs/view_graph.html', context)
 
 def approve_task(request, uid, gid):
@@ -565,7 +566,7 @@ def approve_task(request, uid, gid):
     layout_name = request.GET.get('layout', '')
     layout_owner = request.GET.get('layout_owner', '')
 
-    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner)
+    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner, approve=True)
 
     if context['Error']:
         return render(request, 'graphs/error.html', context)
@@ -618,8 +619,9 @@ def submitEvaluation(request):
         rectangle_rating = request.POST["rectangle_rating"]
         shape_rating = request.POST["shape_rating"]
         color_rating = request.POST["color_rating"]
+        hit_id = request.POST["hit_id"]
 
-        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating)
+        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id)
 
         if task_code != None:
             return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")
@@ -642,11 +644,12 @@ def retrieveTaskCode(request):
         numChanges = request.POST["numChanges"]
         timeSpent = request.POST["timeSpent"]
         events = request.POST["events"]
+        hit_id = request.POST["hit_id"]
 
         if not gid or not uid:
             return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
         
-        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events)
+        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit_id)
 
         if surveyCode == None:
             surveyCode = "Task does not exist anymore!"
