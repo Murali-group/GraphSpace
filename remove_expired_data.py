@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+
 import sqlite3
 import datetime
 import os
@@ -158,9 +160,9 @@ def payApproveWorkers(hitId, worked_layout, cur):
 def payWorkers(cur):
 
 	import os.path
-	os.path.isfile("payWorkers.txt") 
+	os.path.isfile("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt") 
 
-	worker_file = open('payWorkers.txt', 'r')
+	worker_file = open("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt", 'r')
 
 	for line in worker_file:
 		command = line.replace("\n", "").split('\t')
@@ -168,10 +170,10 @@ def payWorkers(cur):
 			payTaskWorkers(command[1], command[2], cur)
 
 	worker_file.close()
-	os.remove("payWorkers.txt")
+	os.remove("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt")
 
 if __name__ == "__main__":
-    conn = sqlite3.connect('graphspace.db')
+    conn = sqlite3.connect('/Users/Divit/Documents/GRA/GraphSpace/graphspace.db')
     cur = conn.cursor()
 
     print "Running Cron Job to remove expired data from database"
