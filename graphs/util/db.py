@@ -3198,20 +3198,20 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 			duration = "3000"
 
 			# Title of task and description of task
-			title = urllib.urlencode({"title": "GraphSpace Layout Task"})[6:].replace("+", "%20")
+			title = urllib.urlencode({"title": "Lay out a network"})[6:].replace("+", "%20")
 			description = urllib.urlencode({"description": "Move nodes and edges in a graph following guidelines"})[12:]
 
 			# Generate link back to GS that worker will follow
 			link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id + "?layout=" + new_layout.layout_name + "&amp;layout_owner=" + new_layout.owner_id
 
 			# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
-			# question_form_as_xml = '''<QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing.  Afterwards, you will be presented a survey code to enter below in order to submit this HIT.  Thank you for your participation.</Text> <FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent> <AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100" /></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
-			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>http://localhost:8000/image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+
 			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3316,8 +3316,8 @@ def launchApprovalTask(uid, gid, layout_id):
 			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
 
 			# Title of task and description of task
-			title = urllib.urlencode({"title": "GraphSpace Approval Task"})[6:].replace("+", "%20")
-			description = urllib.urlencode({"description": "Determine if layout presented meets specified guidelines"})[12:]
+			title = urllib.urlencode({"title": "Tell us how well this network follows guidelines"})[6:].replace("+", "%20")
+			description = urllib.urlencode({"description": "Examine a network and rate how well it meets the specified guidelines."})[12:]
 			
 			link_to_graphspace = URL_PATH + "approve/" + uid + "/" + gid + "?layout=" + layout.layout_name + "&amp;layout_owner=" + "MTURK_Worker"
 
@@ -3328,9 +3328,17 @@ def launchApprovalTask(uid, gid, layout_id):
 				        <QuestionIdentifier>GraphSpace</QuestionIdentifier>
 				        <IsRequired>true</IsRequired>
 				        <QuestionContent>
-				            <Text>Please follow the link to be presented with the task.</Text>
+				            <Text>This task should not take more than 1 minute to complete.  Please click the following link and rate the networks.</Text>
+				            <Binary>
+				                <MimeType>
+				                    <Type>image</Type>
+				                    <SubType>png</SubType>
+				                </MimeType>
+				                <DataURL>http://localhost:8000/image?name=approve_layout</DataURL>
+				                <AltText>Image of interface.</AltText>
+				            </Binary>
 				            <FormattedContent>
-				                <![CDATA[<a href="''' + link_to_graphspace + '''">Link to task</a>]]>
+				                <![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]>
 				            </FormattedContent>
 				        </QuestionContent>
 				        <AnswerSpecification>
@@ -3348,7 +3356,7 @@ def launchApprovalTask(uid, gid, layout_id):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.05&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.35&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + duration + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3395,7 +3403,7 @@ def payWorkers(hitId, taskCode):
 		operation = "GetAssignmentsForHIT"
 
 		# PAY ALL LAYOUT TASKS
-		request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
 
@@ -3422,7 +3430,7 @@ def payWorkers(hitId, taskCode):
 				# Get new signature and timestamp for different API call
 				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
 				operation = "ApproveAssignment"
-				request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 				
 				# Delete task code from database so it can't be reused
 				db_session.delete(code)
@@ -3431,7 +3439,7 @@ def payWorkers(hitId, taskCode):
 				# Reject them
 				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
 				operation = "RejectAssignment"
-				request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 
 			response = requests.get(request, allow_redirects=False)
 

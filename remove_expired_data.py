@@ -59,7 +59,7 @@ def removeExpiredTasks(cur):
 		task_owner = task[1]
 		user_id = task[2]
 		graph_id = task[3]
-		created = datetime.datetime.strptime(task[6], '%Y-%m-%d %H:%M:%S.%f')
+		created = datetime.datetime.strptime(task[5], '%Y-%m-%d %H:%M:%S.%f')
 
 		if created < datetime.datetime.now() + datetime.timedelta(days=-3):
 			print "Deleting expired task owned by", task_owner, "for graph:", graph_id, "owned by", user_id 
@@ -88,12 +88,16 @@ def generateTimeStampAndSignature(secretKey, operation):
 
 	return (timestamp, signature)
 
-def payTaskWorkers(hitID, worked_layout, cur):
+
+def payWorkers(hitId, taskCode, cur):
 	'''
-		Pay all assignments(work done by MTURk workers) for a particular graph
-		@param hitID: ID of HIT for MTURK
-		@param worked_layout: Name of layout
+		If hitID and taskCode pair exist in task_code table, pay them. 
+		Otherwise, reject their answer.
+
+		@param hitId: ID OF HIT 
+		@param taskCode: Task code submitted by user
 	'''
+
 	# If the proper environment variables are set in gs-setup
 	if os.environ.get('AWSACCESSKEYID') != None and os.environ.get('SECRETKEY') != None:
 
@@ -108,9 +112,10 @@ def payTaskWorkers(hitID, worked_layout, cur):
 		operation = "GetAssignmentsForHIT"
 
 		# PAY ALL LAYOUT TASKS
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitID + '&Signature=' + signature
+		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
+		print response.text
 
 		root = ET.fromstring(response.text)[1]
 
@@ -127,7 +132,8 @@ def payTaskWorkers(hitID, worked_layout, cur):
 			assignment_status = assignment.find('AssignmentStatus').text
 			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
 
-			cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitID, task_code))
+			# Check to see if the task code exists and matches the hit id associated with it
+			cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
 			data = cur.fetchall()
 
 			if data == None or len(data) == 0:
@@ -141,23 +147,14 @@ def payTaskWorkers(hitID, worked_layout, cur):
 					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
 					operation = "ApproveAssignment"
 					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+					
 					# Delete task code from database so it can't be reused
-					cur.execute('delete from task_code where code = ?', (code[1],))
-					print code[1]
+					cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
 			response = requests.get(request, allow_redirects=False)
 
 			print response.text
-		
-def payApproveWorkers(hitId, worked_layout, cur):
-	'''
-		Pay all assignments(work done by MTURk workers) for a approval tasks for a graph
-		@param hitID: ID of HIT for MTURK
-		@param worked_layout: Name of layout
-	'''
-	payTaskWorkers(hitId, worked_layout, cur)
-	cur.execute('delete from approve_task where approve_hit_id = ?', (hitId))
 
-def payWorkers(cur):
+def evaluateWork(cur):
 
 	import os.path
 	os.path.isfile("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt") 
@@ -166,8 +163,8 @@ def payWorkers(cur):
 
 	for line in worker_file:
 		command = line.replace("\n", "").split('\t')
-		if command[0] == "payTaskWorkers" or command[0] == "payApproveWorkers":
-			payTaskWorkers(command[1], command[2], cur)
+		if command[0] == "payWorkers":
+			payWorkers(command[1], command[2], cur)
 
 	worker_file.close()
 	os.remove("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt")
@@ -180,7 +177,7 @@ if __name__ == "__main__":
     
     removeExpiredPublicGraphs(cur)
     removeExpiredTasks(cur)
-    payWorkers(cur)
+    evaluateWork(cur)
 
     conn.commit()
     conn.close()
