@@ -27,7 +27,7 @@ URL_PATH = settings.URL_PATH
 
 def image(request):
     name = request.GET.get('name', '')
-    image_data = open(os.getcwd() + "/graphs/static/images/" + name + ".png", "r").read()
+    image_data = open(os.getcwd() + "graphs/static/images/" + name + ".png", "r").read()
     return HttpResponse(image_data, content_type="image/png")
 
 def saveFeedback(request):
