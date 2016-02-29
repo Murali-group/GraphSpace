@@ -3209,7 +3209,7 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + 259200 + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3350,11 +3350,11 @@ def launchApprovalTask(uid, gid, layout_id):
 				    </Question>
 				</QuestionForm>'''
 
-			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+			# must encode from XML. gs to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.35&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=" + 259200 + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.35&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
 
 			response = requests.get(request, allow_redirects=False)
 
