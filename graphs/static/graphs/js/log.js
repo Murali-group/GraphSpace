@@ -22,8 +22,6 @@ GraphSpace.Logger = {
 			newEvent["elementInvolved"] = "canvas"
 		}
 
-		console.log(newEvent);
-
 		this.logEvents.push(newEvent);
 	},
 

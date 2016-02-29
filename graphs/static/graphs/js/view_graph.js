@@ -36,6 +36,9 @@ $(document).ready(function() {
         $(document).on("click focus blur keydown change",function(e){
              logger.addEvent(e);
         });
+
+        $('.navbar').fadeOut();
+
     }
 
     //Renders the cytoscape element on the page
@@ -335,7 +338,6 @@ $(document).ready(function() {
                     if (task_view == "True") {
                         $("#guidelines_modal").modal('toggle');
                     }
-                    console.log(researcher_view);
                     if (researcher_view != "True") {
                         hideGraphInformation();
                         addToUndoStack();
@@ -343,6 +345,10 @@ $(document).ready(function() {
                             popFirstElement = true;
                             addToUndoStack();                            
                         });
+
+                        if (approve_view == "True") {
+                            window.cy.autolock(true);
+                        }
                     }     
                 });
 
@@ -1811,9 +1817,7 @@ $(document).ready(function() {
                 };
             } else if (query) {
                 alert("Layout does not exist or has not been shared yet!");
-                var loc = window.location.href;
-                var baseLoc = loc.substring(0, loc.indexOf("?"));
-                window.location.href = baseLoc;
+                window.location.href = window.location.origin + "/graphs";
             }
         }
 
@@ -2276,12 +2280,12 @@ $(document).ready(function() {
                     numChanges ++;
                 }
             }
-
-            
+        
         }
 
-        if (numChanges < 5) {
+        if (numChanges < 4) {
             $("#code").val("Not enough work done to complete task!");
+            console.log(numChanges);
             $("#codeModal").modal('toggle');
             $("#exit").text("Try again");
             $("#exit").click(function() {

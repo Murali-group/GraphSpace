@@ -27,8 +27,11 @@ URL_PATH = settings.URL_PATH
 
 def image(request):
     name = request.GET.get('name', '')
-    image_data = open(os.getcwd() + "graphs/static/images/" + name + ".png", "r").read()
-    return HttpResponse(image_data, content_type="image/png")
+
+    if len(name) > 0:
+        return HttpResponseRedirect(URL_PATH + 'static/images/' + name + '.png')
+    else:
+        return HttpResponse(json.dumps(db.throwError(404, "Image not found!")), content_type="application/json")
 
 def saveFeedback(request):
 
@@ -446,7 +449,7 @@ def view_graph(request, uid, gid):
 
     # Don't display the task_view
     context["task_view"] = False
-
+    context["approve_view"] = False
     context["researcher_view"] = True
 
 
@@ -529,8 +532,7 @@ def view_task(request, uid, gid):
     context["owner"] = uid
 
     context["researcher_view"] = False
-
-    print context
+    context["approve_view"] = False
 
     return render(request, 'graphs/view_graph.html', context)
 
@@ -550,7 +552,6 @@ def approve_task(request, uid, gid):
         login_form = LoginForm()
         register_form = RegisterForm()
         context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
-    context["approve_view"] = True
 
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
@@ -577,6 +578,7 @@ def approve_task(request, uid, gid):
     context['draw_graph'] = True
     
     context["researcher_view"] = False
+    context["approve_view"] = True
 
     # TODO: This will eventually get deleted
 
