@@ -104,6 +104,7 @@
       </div>
    </div>
 </div>
+
 <!-- Share Groups Modal -->
 <div class="modal fade" id="share_group_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
    <div class="modal-dialog">
@@ -124,6 +125,7 @@
       </div>
    </div>
 </div>
+
 <!-- Share Layouts Modal -->
 <div class="modal fade" id="share_layout_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
    <div class="modal-dialog">
@@ -334,6 +336,7 @@
                {% else %}
                <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
                {% endif %}
+                  <br><br><button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
             </div>
             {% endif %}
             <hr/>
@@ -532,37 +535,31 @@
       <br>
       <br>
       {% endif %}
-      {% elif task_view == True %}
-      <!-- <div id="guidelines" class="accordion">
-         <h3>Guidelines</h3>
-         <div class="accordion_content">
-             <ul>
-                 <li>Arrange nodes of the same color together.</li>
-                 <li>Arrange rectangles at the bottom of the graph.</li>
-                 <li>Arrange diamonds on top of the graph.</li>
-             </ul>
-         </div>
-         </div>
-         <div id="notes" class="accordion">
-         <h3>Notes</h3>
-         <div class="accordion_content">
-             <p id="note_text"></p>
-         </div>
-         </div> -->
+      {% elif task_view == True or designer_view == True %}
       <script type="text/javascript">
          var task_layout_name = "{{layout_name}}";
          var hit_id = "{{hit_id}}";
       </script>
+      {% if uid != None %}
+      <p id="loggedIn" style="display:none;">{{uid}}</p>
+      {% endif %}
       <div class="btn-group">
          <button title="Learn how to use the application" class="btn btn-default" id="tutorial_start">Start Tour</button>
+         {% if task_view == True %}
          <button data-toggle="modal" data-target="#guidelines_modal" title="Show guidelines of how to lay graph" class="btn btn-primary" data-intro="Reveals guidelines to generate acceptable layouts." data-step="2" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         {% endif %}
       </div>
       <br>
+      {% if task_view == True %}
       <div class="btn-group" style="margin-top: 10px;">
          <button title="Show/add notes for this layout" class="btn btn-default" id="notes" data-intro="Shows any notes for this layout as well as allows user to input their own notes." data-step="3">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
          <button title="Submit this layout for approval" class="btn btn-primary" id="finished" data-intro="Click this when you are finished with the task." data-step="4">Finished Task</button>
       </div>
       <hr>
+      {% else %}
+         <br>
+         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Done using tools</button>
+      {% endif %}
       <h3>Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
       </div>

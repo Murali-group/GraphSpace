@@ -786,6 +786,7 @@ $(document).ready(function() {
             }
 
             var layoutUrl = window.location.pathname;
+            layoutUrl.replace("/graphs/design", "/graphs/");
 
             //Get rid of trailing '/' character
             if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
@@ -2844,6 +2845,22 @@ $(document).ready(function() {
 
     $("#submitEvaluation").click(function() {
         submitEvaluation();
+    });
+
+    $("#design_view").click(function() {
+        showDesignView();
+    });
+
+    function showDesignView() {
+        var url = document.URL;
+        url = url.replace("/graphs/", "/graphs/design/");
+        window.location.href = url;
+    }
+
+    $("#researcher_view").click(function() {
+        // var url = document.URL;
+        // url = url.replace("/graphs/design/", "/graphs/");
+        // window.location.href = url;
     });
 
 });

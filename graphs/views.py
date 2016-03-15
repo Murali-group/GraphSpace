@@ -337,6 +337,8 @@ def save_layout(request, uid, gid):
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
 
+    print "GID:", gid
+
     error = db.save_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
     if error == None:
         return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
@@ -358,6 +360,87 @@ def update_layout(request, uid, gid):
         return HttpResponse(json.dumps(db.sendMessage(200, "Layout updated!")), content_type="application/json")
     
     return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json");
+
+def design_graph(request, uid, gid):
+    '''
+        View a graph with CytoscapeJS along with tool pallete 
+        to help researcher layout of a graph.
+
+        :param request: HTTP GET Request
+        :param uid: Owner of the graph to view
+        :param gid: Graph id of the graph to view
+    '''
+
+    # Context contains all the elements we want to render on the web
+    # page. We fill in the various elements of context before calling
+    # the render() function.
+    #handle login
+    # context = login(request)
+    context = {
+        "uid": request.session['uid'],
+        "Error": None
+    }
+
+    print "Graph ID:", gid
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    #TODO: Create trigger to delete older tasks (3 days)
+
+    # if the graph is public, or if a user is a member 
+    # of the group where this graph is shared
+    # or if he owns this graph, then allow him to view it
+    # otherwise do not allow it
+    if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
+    elif request.session['uid'] == None:
+        context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
+        return render(request, 'graphs/error.html', context)
+    else:
+        # If the user is member of group where this graph is shared
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
+
+        # if user is owner of graph or a member of group that shares graph
+        if request.session['uid'] == uid or user_is_member == True:
+            graph_info = db.getGraphInfo(uid, gid)
+            if graph_info != None:
+                graph_to_view =  graph_info
+            else: 
+                context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
+                return render(request, 'graphs/error.html', context)
+        else:
+            context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
+            return render(request, 'graphs/error.html', context)
+
+    # Get correct layout for the graph to view
+    context = db.set_layout_context(request, context, uid, gid)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['draw_graph'] = True
+
+    # TODO: This will eventually get deleted
+    json_data = json.loads(context['graph'])
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    # graph id
+    context['graph_id'] = gid
+
+    # Don't display the task_view
+    context["task_view"] = False
+    context["approve_view"] = False
+    context["researcher_view"] = False
+    context["designer_view"] = True
+
+    print context
+
+    return render(request, 'graphs/view_graph.html', context)
 
 
 def view_graph(request, uid, gid):
