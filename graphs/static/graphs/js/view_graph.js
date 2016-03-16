@@ -37,7 +37,9 @@ $(document).ready(function() {
              logger.addEvent(e);
         });
 
-        $('.navbar').fadeOut();
+        if (designer_view != "True") {
+            $('.navbar').fadeOut();
+        }
 
     }
 

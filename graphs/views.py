@@ -381,8 +381,6 @@ def design_graph(request, uid, gid):
         "Error": None
     }
 
-    print "Graph ID:", gid
-
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
 
