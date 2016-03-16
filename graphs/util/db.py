@@ -4600,9 +4600,11 @@ def getCrowdEnabledGroup():
 
 	try:
 		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "dsingh5270@gmail.com").all()
-		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "dsingh5270@gmail.com").first()
+		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "dsingh5270@gmail.com").filter(models.Group.owner_id == models.User.user_id).first()
+		print group_owner
 		if group_owner != None:
 			allowed_users.append(group_owner[0])
+		print allowed_users
 		return allowed_users
 	except NoResultFound:
 		db_session.close()
