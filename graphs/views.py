@@ -438,8 +438,6 @@ def design_graph(request, uid, gid):
     context["researcher_view"] = False
     context["designer_view"] = True
 
-    print context
-
     return render(request, 'graphs/view_graph.html', context)
 
 
@@ -535,6 +533,8 @@ def view_graph(request, uid, gid):
     context["approve_view"] = False
     context["researcher_view"] = True
 
+    # HARDCODED GROUP.. IF USER IS IN THIS GROUP, THEN ONLY THEN CAN THEY LAUNCH TASKS ON MTURK
+    context["crowd_group"] = db.getCrowdEnabledGroup()
 
     if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True

@@ -4591,6 +4591,24 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 
 	return taskCode
 
+def getCrowdEnabledGroup():
+	'''
+		All users in this special group may launch tasks to GraphCrowd.
+	'''
+
+	db_session = data_connection.new_session()
+
+	try:
+		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "dsingh5270@gmail.com").all()
+		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "dsingh5270@gmail.com").first()
+		if group_owner != None:
+			allowed_users.append(group_owner[0])
+		return allowed_users
+	except NoResultFound:
+		db_session.close()
+		return []
+	db_session.close()
+
 def usernameMismatchError():
 	'''
 		Returns response telling user that their usernames (from the URL and username field in POST request)

@@ -337,9 +337,11 @@
                {% if task_launched %}
                <button class="btn btn-default disabled">Task Currently Live</button>
                {% else %}
-               <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
+                  {% if uid in crowd_group %}
+                  <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button><br><br>
+                  {% endif %}
                {% endif %}
-                  <br><br><button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
+                  <button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
             </div>
             {% endif %}
             <hr/>
