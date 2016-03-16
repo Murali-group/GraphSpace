@@ -1939,20 +1939,24 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 			edge['data']['target_arrow_shape'] = "none"	
 			is_directed = 0
 
+		# To make sure int and floats are also accepted as source and target nodes of an edge
+		source_node = str(edge['data']['source'])
+		target_node = str(edge['data']['target'])
+
 		# Keep track of all the duplicate edges
 		# If there are two duplicate edges, append a counter and store it as an ID
-		if edge['data']['source'] + '-' + edge['data']['target'] in dupEdges:
+		if source_node + '-' + target_node in dupEdges:
 			rand += 1
 			if 'id' not in edge['data']:
-				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target'] + rand
+				edge['data']['id'] = source_node + '-' + target_node + rand
 
 
 		# If this is first time we've seen an edge, simply get its ID without the counter
 		else:
 			if 'id' not in edge['data']:
-				edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+				edge['data']['id'] = source_node + '-' + target_node
 
-		dupEdges.append(edge['data']['source'] + '-' + edge['data']['target'])
+		dupEdges.append(source_node + '-' + target_node)
 
 		# TRICKY NOTE: An edge's ID is used as the label property
 		# The reason is because edge uses an 'id' column as the primary key.
