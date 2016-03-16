@@ -786,7 +786,7 @@ $(document).ready(function() {
             }
 
             var layoutUrl = window.location.pathname;
-            layoutUrl.replace("/graphs/design", "/graphs/");
+            layoutUrl.replace("/graphs/design/", "/graphs/");
 
             //Get rid of trailing '/' character
             if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
@@ -1203,6 +1203,11 @@ $(document).ready(function() {
         $("#search_error").css("display", "none");
     });
 
+    $("#export").click(function (e) {
+        e.preventDefault();
+        export_graph($(this).val());
+    });
+    
     //Exports the specified graph to an image
     //Appears in side window 
     function export_graph(graphname) {
@@ -1212,7 +1217,7 @@ $(document).ready(function() {
         download.href = png;
         download.download = graphname + ".png";
         fireEvent(download, 'click')
-    }
+    };
 
     //This is needed to launch events in Mozilla browser
     function fireEvent(obj, evt) {
