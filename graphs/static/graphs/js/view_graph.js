@@ -786,7 +786,7 @@ $(document).ready(function() {
             }
 
             var layoutUrl = window.location.pathname;
-            layoutUrl.replace("/graphs/design", "/graphs/");
+            layoutUrl = layoutUrl.replace("/graphs/design/", "/graphs/");
 
             //Get rid of trailing '/' character
             if (layoutUrl.charAt(layoutUrl.length - 1) == "/") {
@@ -828,6 +828,13 @@ $(document).ready(function() {
             }
             window.location.replace(layoutUrl);
         });
+    });
+
+    $("#return_view").click(function (e) {
+        e.preventDefault();
+        var layoutUrl = window.location.href;
+        layoutUrl = layoutUrl.replace("/graphs/design/", "/graphs/");
+        window.location.href = layoutUrl;
     });
 
     //Searches for the element inside the graph

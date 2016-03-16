@@ -28,6 +28,9 @@
                   <br>
                   <div class="form-group">
                      <button name="save_layout" id="save_layout" class="btn btn-success">Save Layout</button>
+                     {% if designer_view == True %}
+                        <button name="return_view" id="return_view" class="btn btn-success">Exit Without Saving</button>
+                     {% endif %}
                      <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                   </div>
                </div>
@@ -558,7 +561,7 @@
       <hr>
       {% else %}
          <br>
-         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Done using tools</button>
+         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Back to researcher view</button>
       {% endif %}
       <h3>Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
