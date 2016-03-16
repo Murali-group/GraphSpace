@@ -7,6 +7,7 @@
    var task_view = "{{ task_view|safe }}";
    var researcher_view = "{{ researcher_view|safe }}";
    var approve_view = "{{ approve_view|safe }}";
+   var designer_view = "{{ designer_view|safe }}";
    window.cy;
 </script>
 <div id="dialog"></div>
@@ -28,6 +29,9 @@
                   <br>
                   <div class="form-group">
                      <button name="save_layout" id="save_layout" class="btn btn-success">Save Layout</button>
+                     {% if designer_view == True %}
+                        <button name="return_view" id="return_view" class="btn btn-success">Exit Without Saving</button>
+                     {% endif %}
                      <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                   </div>
                </div>
@@ -334,9 +338,11 @@
                {% if task_launched %}
                <button class="btn btn-default disabled">Task Currently Live</button>
                {% else %}
-               <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button>
+                  {% if uid in crowd_group %}
+                  <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button><br><br>
+                  {% endif %}
                {% endif %}
-                  <br><br><button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
+                  <button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
             </div>
             {% endif %}
             <hr/>
@@ -558,7 +564,7 @@
       <hr>
       {% else %}
          <br>
-         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Done using tools</button>
+         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Back to researcher view</button>
       {% endif %}
       <h3>Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
