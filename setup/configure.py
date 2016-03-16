@@ -13,8 +13,8 @@ def get_pip():
 	subprocess.check_call(["sudo", sys.executable, "get-pip.py"])
 	os.remove("get-pip.py")
 
-def syncdb():
-	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
+def migrate():
+	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
 
 def run_tests():
 	os.system("python tests/restapi_test.py")
@@ -24,9 +24,9 @@ def install(package):
 
 if __name__ == "__main__":
 	get_pip()
-	
+
 	# IF ANY OF THE BELOW PACKAGES DO NOT INSTALL
-	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL 
+	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL
 	# sudo pip install django
 	# sudo pip install py-bcrypt
 	# sudo pip install sqlalchemy
@@ -51,6 +51,6 @@ if __name__ == "__main__":
 	install("scipy")
 	install("scikit-learn")
 
-	syncdb()
-	
+	migrate()
+
 	print "All dependencies have successfully been installed.  Please type 'python manage.py runserver' to start GraphSpace server on a local machine"

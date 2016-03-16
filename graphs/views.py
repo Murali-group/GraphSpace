@@ -522,8 +522,12 @@ def view_graph(request, uid, gid):
     # id of the owner of this graph
     context['owner'] = uid
 
+    # If the metadata has either a name or a title (backward-compatible)
+    # display it on the top of the graph
     if 'name' in json_data['metadata']:
         context['graph_name'] = json_data['metadata']['name']
+    elif 'title' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['title']
     else:
         context['graph_name'] = ''
 

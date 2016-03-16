@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ## GraphSpace Interface
-## Divit Singh, Anna Ritz, Allison Tegge, and T. M. Murali
+## Divit Singh, Anna Ritz, Allison N. Tegge, and T. M. Murali
 ## Contact: T. M. Murali (murali@cs.vt.edu)
 ## License: GPL version 3
 ##

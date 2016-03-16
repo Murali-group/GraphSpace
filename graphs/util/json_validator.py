@@ -106,7 +106,7 @@ def validate_edge_properties(edges):
     	if "source" not in edge or "target" not in edge:
     		return "All edges must have at least a source and target property.  Please verify that all edges meet this requirement."
 
-		edge_id = "with source: " + edge["source"] + "and target: " + edge["target"]
+		edge_id = "with source: " + str(edge["source"]) + "and target: " + str(edge["target"])
 
         # If edge is directed, it must have a target_arrow_shape
         if "directed" in edge and edge["directed"] == "true":
@@ -167,7 +167,7 @@ def validate_node_properties(nodes):
 		if node["id"] not in unique_ids:
 			unique_ids.add(node["id"])
 		else:
-			return "There are multiple nodes with ID: " + node["id"] + ".  Please make sure all node IDs are unique."
+			return "There are multiple nodes with ID: " + str(node["id"]) + ".  Please make sure all node IDs are unique."
 
         # Checks shape of nodes to make sure it contains only legal shapes
         if "shape" in node:
@@ -182,7 +182,7 @@ def validate_node_properties(nodes):
         # they have values [-1, 1]
         if "border_blacken" in node:
             if node["border_blacken"] >= -1 and node["border_blacken"] <= -1:
-                error += "Node: " + node["id"] + " contains illegal border_blacken value.  Must be between [-1, 1]."
+                error += "Node: " + str(node["id"]) + " contains illegal border_blacken value.  Must be between [-1, 1]."
 
         if "background_repeat" in node:
             error += find_property_in_array("Node", node["id"], "background_repeat", node["background_repeat"], ALLOWED_NODE_BACKGROUND_REPEAT)
@@ -235,8 +235,10 @@ def assign_edge_ids(json_string):
 	# Creates ID's for all of the edges by creating utilizing the source and target nodes
 	# The edge ID would have the form: source-target
 	for edge in json_string['graph']['edges']:
-
-		edge['data']['id'] = edge['data']['source'] + '-' + edge['data']['target']
+		# To make sure int and floats are also accepted as source and target nodes of an edge
+		source_node = str(edge['data']['source'])
+		target_node = str(edge['data']['target'])
+		edge['data']['id'] = source_node + '-' + target_node
 
 		# If the ID has not yet been seen (is unique), simply store the ID 
 		# of that edge as source-target

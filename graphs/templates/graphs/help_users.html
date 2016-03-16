@@ -3,6 +3,13 @@
 
 <div class="container graphs">
 
+<ul class="nav nav-pills">
+    <li><a href="{% url 'help_tutorial' %}" style="text-align:center">Tutorial</a></li>
+    <li class="active"><a href="{% url 'help' %}" style="text-align:center">User's Guide</a></li>
+    <li><a href="{% url 'help_programmers' %}" style="text-align:center">Programmer's Guide</a></li>
+</ul>
+<hr>
+
 <b>This page should help familiarize you with GraphSpace's interface and basic features.</b>
 <br><br>
 <ul>
@@ -264,7 +271,7 @@ If searching for multiple values, separate all individual search terms with comm
 
 <hr>
 <h3 style="padding-top: 50px; margin-top: -40px;" id="program">Programmatically communicate with GraphSpace</h3>
-<p>For registered GraphSpace users that want to write scripts to communicate with GraphSpace, a <a href="{{url}}help/programmers">REST API</a> is provided.  This REST API allows access to almost all of the functionality that is provided through the website.  An example of when it would be advantageous to use the REST API would be for tasks that involve multiple iterative tasks such as uploading many graphs and/or sharing graphs with groups.  Consult the <a href="{{url}}help/programmers">Programmer's Guide"</a> for more information.</p>
+<p>For registered GraphSpace users that want to write scripts to communicate with GraphSpace, a <a href="{{url}}help/programmers">REST API</a> is provided.  This REST API allows access to almost all of the functionality that is provided through the website.  An example of when it would be advantageous to use the REST API would be for tasks that involve multiple iterative tasks such as uploading many graphs and/or sharing graphs with groups.  Consult the <a href="{{url}}help/programmers">Programmer's Guide</a> for more information.</p>
 
 </div>
 
