@@ -410,12 +410,37 @@ def view_json(request, uid, gid):
         :param uid: email of the user that owns this graph
         :param gid: name of graph that the user owns
     '''
-    context = {}
+    #handle login
+    context = login(request)
 
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
-    # Get the json of the graph that we want to view
-    graph_to_view = db.retrieveJSON(uid, gid)
+
+    # if the graph is public, or if a user is a member
+    # of the group where this graph is shared
+    # or if he owns this graph, then allow him to view it's JSON
+    # otherwise do not allow it
+    if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
+    elif request.session['uid'] == None:
+        context['Error'] = "You are not authorized to view JSON for this graph, create an account and contact graph's owner for permission to see this."
+        return render(request, 'graphs/error.html', context)
+    else:
+        # If the user is member of group where this graph is shared
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
+
+        # if user is owner of graph or a member of group that shares graph
+        if request.session['uid'] == uid or user_is_member == True:
+            graph_info = db.getGraphInfo(uid, gid)
+            if graph_info != None:
+                graph_to_view =  graph_info
+            else:
+                context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it's JSON."
+                return render(request, 'graphs/error.html', context)
+        else:
+            context['Error'] = "You are not authorized to view JSON for this graph, please contact graph's owner for permission."
+            return render(request, 'graphs/error.html', context)
+
 
     graph_to_view = db.get_graph_json(uid, gid)
 
