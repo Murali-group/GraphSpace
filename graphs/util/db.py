@@ -1963,7 +1963,7 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		# The label was the column I decided to avoid completely reconstructing the database
 		# POSSIBLE SOLUTION: If edge is bidirectional, we insert two edges with inverse source and target nodes
 		if is_directed == 0:
-			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = edge['data']['source'], tail_node_id = edge['data']['target'], edge_id = edge['data']['id'], directed = is_directed, id = None)
+			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = source_node, tail_node_id = target_node, edge_id = edge['data']['id'], directed = is_directed, id = None)
 			db_session.add(new_edge)
 
 			# ASK MURALI ABOUT THIS
@@ -1971,7 +1971,7 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 			# db_session.add(new_edge)
 
 		else:
-			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = edge['data']['source'], tail_node_id = edge['data']['target'], edge_id = edge['data']['id'], directed = is_directed, id = None)
+			new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = source_node, tail_node_id = target_node, edge_id = edge['data']['id'], directed = is_directed, id = None)
 			db_session.add(new_edge)
 
 		db_session.commit()
