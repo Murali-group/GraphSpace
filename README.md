@@ -17,7 +17,7 @@ In order to run GraphSpace, please install sqlite3 and both the Python runtime a
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git` or by downloading the latest release: https://github.com/Murali-group/GraphSpace/releases.
 2. Visit the GraphSpace directory: `cd GraphSpace`
 3. Modify the `gs-setup.sh` file by populating the `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address through which GraphSpace sends emails to its users.
-4. Propogate changes to these variables in `gs-setup.sh` file to the environment: `source gs-setup.sh`.  Please run `. gs-setup.sh` and not `./gs-setup.sh` as this will not propogate the changes to the environment properly. *This step may require sudo privileges*
+4. Propogate changes to these variables in `gs-setup.sh` file to the environment: `source gs-setup.sh`.  Please run `source gs-setup.sh` and not `./gs-setup.sh` as this will not propogate the changes to the environment properly. *This step may require sudo privileges*
 5. Finally, start the GraphSpace server: `python manage.py runserver`
 6. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
