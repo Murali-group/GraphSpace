@@ -107,7 +107,7 @@ def validate_edge_properties(edges):
     		return "All edges must have at least a source and target property.  Please verify that all edges meet this requirement."
 
         # Check if source and target nodes are strings, integers or floats
-        if not (isinstance(edge["source"], (str, int, float)) and isinstance(edge["target"], (str, int, float))):
+        if not (isinstance(edge["source"], (basestring, int, float)) and isinstance(edge["target"], (basestring, int, float))):
             return "Source and target nodes of the edge must be strings, integers or floats"
 
         edge_id = "with source: " + str(edge["source"]) + "and target: " + str(edge["target"])
@@ -165,7 +165,7 @@ def validate_node_properties(nodes):
     for node in nodes:
         node = node["data"]
         # Check the data type of node, should be int, float or string
-        if not isinstance(node["id"], (str, int, float)):
+        if not isinstance(node["id"], (basestring, int, float)):
             return "All nodes must be strings, integers or floats"
 
     	# Check to see if ID is in node
