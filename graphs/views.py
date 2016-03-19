@@ -1078,14 +1078,25 @@ def deleteGraph(request):
         :return JSON: {"Delete": <message>}
     '''
     if request.method == 'POST':
-        user_id = request.POST['uid']
-        graphname = request.POST['gid']
-        jsonData = db.get_graph_json(user_id, graphname)
-        if jsonData != None:
-            db.delete_graph(request.POST['uid'], request.POST['gid'])
-            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + graphname + " owned by " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+        uid = request.POST['uid']
+        gid = request.POST['gid']
+
+        # Check if the user is authenticated
+        if request.session.get('uid') == None:
+            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to delete this graph"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        # if the user owns the graph only then allow him to delete it
+        graph_info = db.getGraphInfo(uid,gid)
+        if graph_info == None:
+            return HttpResponse(json.dumps(db.throwError(404, "You do not own any such Graph."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists."), indent=4, separators=(',', ': ')), content_type="application/json")
+
+            jsonData = db.get_graph_json(uid, gid)
+            if jsonData != None:
+                db.delete_graph(uid, gid)
+                return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + gid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.throwError(404, "You do not own any such Graph."), indent=4, separators=(',', ': ')), content_type="application/json")
 
 def delete_group_through_ui(request):
     '''
