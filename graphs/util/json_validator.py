@@ -77,18 +77,19 @@ def validate_json(graphJson):
 		return "Edges property must contain an array"
 
     # Validate all node properties
-    error = validate_node_properties(cleaned_json["graph"]["nodes"])
+    nodes = cleaned_json["graph"]["nodes"]
+    error = validate_node_properties(nodes)
 
     if error != None:
         return error
 
     # Validate all edge properties
-    error = validate_edge_properties(cleaned_json["graph"]["edges"])
+    error = validate_edge_properties(cleaned_json["graph"]["edges"], nodes)
 
     if error != None:
         return error
 
-def validate_edge_properties(edges):
+def validate_edge_properties(edges, nodes):
     """
     Validates all edge properties.
 
@@ -97,10 +98,15 @@ def validate_edge_properties(edges):
 
     error = ""
     edge_id = None
+    node_list = [node["data"]["id"] for node in nodes]
     # Go through all edges to verify if edges contain valid properties
     # recognized by CytoscapeJS
     for edge in edges:
         edge = edge["data"]
+
+        # Check if source and target node of an edge exist in JSON node list
+        if edge["source"] not in node_list or edge["target"] not in node_list:
+            return "For all edges source and target nodes should exist in node list"
 
     	# If edge has no source and target nodes, throw error since they are required
     	if "source" not in edge or "target" not in edge:
