@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 
 SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
+PAYWORKERPATH = 'graphs/static/payWorkers.txt'
 
 def removeExpiredPublicGraphs(cur):
 	cur.execute('select graph_id, user_id, created, public from graph where user_id like ?', ("%Public_User%temp.com", ))
@@ -157,9 +158,9 @@ def payWorkers(hitId, taskCode, cur):
 def evaluateWork(cur):
 
 	import os.path
-	os.path.isfile("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt") 
+	os.path.isfile("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH) 
 
-	worker_file = open("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt", 'r')
+	worker_file = open("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH, 'r')
 
 	for line in worker_file:
 		command = line.replace("\n", "").split('\t')
@@ -167,10 +168,10 @@ def evaluateWork(cur):
 			payWorkers(command[1], command[2], cur)
 
 	worker_file.close()
-	os.remove("/Users/Divit/Documents/GRA/GraphSpace/payWorkers.txt")
+	os.remove("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH)
 
 if __name__ == "__main__":
-    conn = sqlite3.connect('/Users/Divit/Documents/GRA/GraphSpace/graphspace.db')
+    conn = sqlite3.connect('/home/divit/Documents/GRA/GraphSpace/graphspace.db')
     cur = conn.cursor()
 
     print "Running Cron Job to remove expired data from database"
