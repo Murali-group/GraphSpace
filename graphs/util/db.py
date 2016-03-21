@@ -45,6 +45,8 @@ AWSACCESSKEYID = settings.AWSACCESSKEYID
 # SIGNATURE = settings.SIGNATURE
 SECRETKEY = settings.SECRETKEY
 
+PAYWORKERPATH = 'graphs/static/payWorkers.txt'
+
 def saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name):
 	#create a new db session
 	db_session = data_connection.new_session()
@@ -669,7 +671,7 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 	db_session.delete(task)
 	db_session.commit()
 
-	payFile = open('payWorkers.txt', 'a')
+	payFile = open(PAYWORKERPATH, 'a')
 	payFile.write("payWorkers\t" + task.hit_id +"\t" + taskCode +"\n")
 	payFile.close()
 
@@ -4586,7 +4588,7 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 	# 	launchTask(gid, uid, [mod_layout.json], single=True)
 	db_session.close()
 
-	payFile = open('payWorkers.txt', 'a')
+	payFile = open(PAYWORKERPATH, 'a')
 	payFile.write("payWorkers\t" + taskHitId +"\t" + taskCode +"\n")
 	payFile.close()
 

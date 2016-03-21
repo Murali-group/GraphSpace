@@ -334,7 +334,7 @@
             {% if uid != None %}
             <div>
                <p id="loggedIn" style="display:none;">{{uid}}</p>
-               <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button><br><br>
+               <!-- <button class="btn btn-default" data-toggle="modal" data-target="#layout_modal">Save Layout</button><br><br> -->
                {% if task_launched %}
                <button class="btn btn-default disabled">Task Currently Live</button>
                {% else %}
@@ -342,7 +342,7 @@
                   <button class="btn btn-default" data-toggle="modal" data-target="#task_modal">Ask Crowd</button><br><br>
                   {% endif %}
                {% endif %}
-                  <button class="btn btn-default" id="design_view">Use tool pallette</button><br><br>
+                  <button class="btn btn-default" id="design_view">Use Layout Editor</button><br><br>
             </div>
             {% endif %}
             <hr/>
