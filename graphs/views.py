@@ -263,16 +263,12 @@ def _graphs_page(request, view_type):
         else:
             graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
 
-	if graph_tags != None:
-            for tag in graph_tags:
-                if len(tag) > 0:
-                    if tag in all_tags:
-                        all_tags[tag] += 1
-                    else:
-                        all_tags[tag] = 1
-
-	else:
-            all_tags = []
+    for tag in graph_tags:
+        if len(tag) > 0:
+            if tag in all_tags:
+                all_tags[tag] += 1
+            else:
+                all_tags[tag] = 1
 
     sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
 
