@@ -18,7 +18,7 @@ def migrate():
 	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
 
 def syncdb():
-	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
+	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
 
 def run_tests():
 	os.system("python tests/restapi_test.py")
