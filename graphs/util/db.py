@@ -3243,19 +3243,46 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 def launchPrepaidTasks():
 
 	prepaid_tasks = [
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
-		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
-		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
-		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43)
-	]
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
+        ]
 
 	for task in prepaid_tasks:
-		for i in xrange(10):
+		for i in xrange(5):
 			launchApprovalTask(task[0], task[1], task[2])
 
 def launchApprovalTask(uid, gid, layout_id):
