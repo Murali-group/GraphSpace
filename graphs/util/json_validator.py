@@ -67,28 +67,29 @@ def validate_json(graphJson):
 	if "nodes" not in cleaned_json["graph"]:
 		return "JSON of graph must have 'nodes' property"
 
-	if isinstance(cleaned_json["graph"]["nodes"], list) == False:
+	if not isinstance(cleaned_json["graph"]["nodes"], list):
 		return "Nodes property must contain an array"
 
     if "edges" not in cleaned_json["graph"]:
 		return "JSON of graph must have 'edges' property"
 
-    if isinstance(cleaned_json["graph"]["edges"], list) == False:
+    if not isinstance(cleaned_json["graph"]["edges"], list):
 		return "Edges property must contain an array"
 
     # Validate all node properties
-    error = validate_node_properties(cleaned_json["graph"]["nodes"])
+    nodes = cleaned_json["graph"]["nodes"]
+    error = validate_node_properties(nodes)
 
     if error != None:
         return error
 
     # Validate all edge properties
-    error = validate_edge_properties(cleaned_json["graph"]["edges"])
+    error = validate_edge_properties(cleaned_json["graph"]["edges"], nodes)
 
     if error != None:
         return error
 
-def validate_edge_properties(edges):
+def validate_edge_properties(edges, nodes):
     """
     Validates all edge properties.
 
@@ -97,16 +98,25 @@ def validate_edge_properties(edges):
 
     error = ""
     edge_id = None
+    node_list = [node["data"]["id"] for node in nodes]
     # Go through all edges to verify if edges contain valid properties
     # recognized by CytoscapeJS
     for edge in edges:
         edge = edge["data"]
 
+        # Check if source and target node of an edge exist in JSON node list
+        if edge["source"] not in node_list or edge["target"] not in node_list:
+            return "For all edges source and target nodes should exist in node list"
+
     	# If edge has no source and target nodes, throw error since they are required
     	if "source" not in edge or "target" not in edge:
     		return "All edges must have at least a source and target property.  Please verify that all edges meet this requirement."
 
-		edge_id = "with source: " + str(edge["source"]) + "and target: " + str(edge["target"])
+        # Check if source and target nodes are strings, integers or floats
+        if not (isinstance(edge["source"], (basestring, int, float)) and isinstance(edge["target"], (basestring, int, float))):
+            return "Source and target nodes of the edge must be strings, integers or floats"
+
+        edge_id = "with source: " + str(edge["source"]) + "and target: " + str(edge["target"])
 
         # If edge is directed, it must have a target_arrow_shape
         if "directed" in edge and edge["directed"] == "true":
@@ -160,6 +170,10 @@ def validate_node_properties(nodes):
     # recognized by CytoscapeJS
     for node in nodes:
         node = node["data"]
+        # Check the data type of node, should be int, float or string
+        if not isinstance(node["id"], (basestring, int, float)):
+            return "All nodes must be strings, integers or floats"
+
     	# Check to see if ID is in node
     	if "id" not in node:
     		return "All nodes must have a unique ID.  Please verify that all nodes meet this requirement."

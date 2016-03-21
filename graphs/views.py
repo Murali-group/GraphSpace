@@ -753,12 +753,37 @@ def view_json(request, uid, gid):
         :param uid: email of the user that owns this graph
         :param gid: name of graph that the user owns
     '''
-    context = {}
+    #handle login
+    context = login(request)
 
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
-    # Get the json of the graph that we want to view
-    graph_to_view = db.retrieveJSON(uid, gid)
+
+    # if the graph is public, or if a user is a member
+    # of the group where this graph is shared
+    # or if he owns this graph, then allow him to view it's JSON
+    # otherwise do not allow it
+    if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
+    elif request.session['uid'] == None:
+        context['Error'] = "You are not authorized to view JSON for this graph, create an account and contact graph's owner for permission to see this."
+        return render(request, 'graphs/error.html', context)
+    else:
+        # If the user is member of group where this graph is shared
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
+
+        # if user is owner of graph or a member of group that shares graph
+        if request.session['uid'] == uid or user_is_member == True:
+            graph_info = db.getGraphInfo(uid, gid)
+            if graph_info != None:
+                graph_to_view =  graph_info
+            else:
+                context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it's JSON."
+                return render(request, 'graphs/error.html', context)
+        else:
+            context['Error'] = "You are not authorized to view JSON for this graph, please contact graph's owner for permission."
+            return render(request, 'graphs/error.html', context)
+
 
     graph_to_view = db.get_graph_json(uid, gid)
 
@@ -1414,14 +1439,25 @@ def deleteGraph(request):
         :return JSON: {"Delete": <message>}
     '''
     if request.method == 'POST':
-        user_id = request.POST['uid']
-        graphname = request.POST['gid']
-        jsonData = db.get_graph_json(user_id, graphname)
-        if jsonData != None:
-            db.delete_graph(request.POST['uid'], request.POST['gid'])
-            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + graphname + " owned by " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+        uid = request.POST['uid']
+        gid = request.POST['gid']
+
+        # Check if the user is authenticated
+        if request.session.get('uid') == None:
+            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to delete this graph"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        # if the user owns the graph only then allow him to delete it
+        graph_info = db.getGraphInfo(uid,gid)
+        if graph_info == None:
+            return HttpResponse(json.dumps(db.throwError(404, "You do not own any such Graph."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists."), indent=4, separators=(',', ': ')), content_type="application/json")
+
+            jsonData = db.get_graph_json(uid, gid)
+            if jsonData != None:
+                db.delete_graph(uid, gid)
+                return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + gid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.throwError(404, "You do not own any such Graph."), indent=4, separators=(',', ': ')), content_type="application/json")
 
 def delete_group_through_ui(request):
     '''

@@ -840,15 +840,14 @@ $(document).ready(function() {
     });
 
     //Searches for the element inside the graph
-    $("#search_button").click(function(e) {
-        e.preventDefault();
-        if ($("#search").val().length > 0) {
-            // window.cy.elements().removeCss();
-            searchValues($('input[name=match]:checked').val(), $("#search").val());
-        }
-    });
-
-
+     $("#search_button").click(function (e) {
+      e.preventDefault();
+      if ($("#search").val().length > 0) {
+        var search_val = $("#search").val();
+        clearSearchTerms();
+        searchValues($('input[name=match]:checked').val(), search_val);
+      }
+     });
 
     //Highlights appropriate radio button based on search term
     if (getQueryVariable($('input[name=match]:checked').val())) {

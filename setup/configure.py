@@ -3,6 +3,7 @@ import subprocess
 import urllib2
 import time
 import os
+import django
 
 def get_pip():
 	response = urllib2.urlopen("https://bootstrap.pypa.io/get-pip.py")
@@ -16,6 +17,9 @@ def get_pip():
 def migrate():
 	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
 
+def syncdb():
+	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
+
 def run_tests():
 	os.system("python tests/restapi_test.py")
 
@@ -23,7 +27,7 @@ def install(package):
 	subprocess.call(["sudo", "pip", "install", package])
 
 if __name__ == "__main__":
-	get_pip()
+	# get_pip()
 
 	# IF ANY OF THE BELOW PACKAGES DO NOT INSTALL
 	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL
@@ -51,6 +55,11 @@ if __name__ == "__main__":
 	install("scipy")
 	install("scikit-learn")
 
-	migrate()
+	version =  django.VERSION
+
+	if version[0] == 1 and version[1] > 7:
+		migrate()
+	else:
+		syncdb()
 
 	print "All dependencies have successfully been installed.  Please type 'python manage.py runserver' to start GraphSpace server on a local machine"
