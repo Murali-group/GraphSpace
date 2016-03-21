@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 
 SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
+PATH = "/home/ubuntu/GraphSpace/"
 PAYWORKERPATH = 'graphs/static/payWorkers.txt'
 
 def removeExpiredPublicGraphs(cur):
@@ -117,7 +118,6 @@ def payWorkers(hitId, taskCode, cur):
 
 		response = requests.get(request, allow_redirects=False)
 		print response.text
-
 		root = ET.fromstring(response.text)[1]
 
 		for assignment in root.findall('Assignment'):
@@ -158,27 +158,26 @@ def payWorkers(hitId, taskCode, cur):
 def evaluateWork(cur):
 
 	import os.path
-	os.path.isfile("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH) 
+	if os.path.isfile(PATH + PAYWORKERPATH):
+	    worker_file = open(PATH + PAYWORKERPATH, 'r')
 
-	worker_file = open("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH, 'r')
-
-	for line in worker_file:
-		command = line.replace("\n", "").split('\t')
+	    for line in worker_file:
+	    	command = line.replace("\n", "").split('\t')
 		if command[0] == "payWorkers":
-			payWorkers(command[1], command[2], cur)
+		    payWorkers(command[1], command[2], cur)
 
-	worker_file.close()
-	os.remove("/home/divit/Documents/GRA/GraphSpace/" + PAYWORKERPATH)
+	    worker_file.close()
+	    os.remove(PATH + PAYWORKERPATH)
 
 if __name__ == "__main__":
-    conn = sqlite3.connect('/home/divit/Documents/GRA/GraphSpace/graphspace.db')
+    conn = sqlite3.connect(PATH + 'graphspace.db')
     cur = conn.cursor()
 
     print "Running Cron Job to remove expired data from database"
     
     removeExpiredPublicGraphs(cur)
     removeExpiredTasks(cur)
+    conn.commit()
     evaluateWork(cur)
-
     conn.commit()
     conn.close()
