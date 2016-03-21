@@ -15,7 +15,7 @@ def get_pip():
 	os.remove("get-pip.py")
 
 def migrate():
-	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
+	subprocess.check_output([sys.executable, "manage.py", "migrate"])
 
 def syncdb():
 	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
