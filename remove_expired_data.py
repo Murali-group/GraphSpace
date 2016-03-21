@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 
 SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
-PATH = "/home/ubuntu/GraphSpace/"
+PATH = "/home/divit/Documents/GRA/GraphSpace/"
 PAYWORKERPATH = 'graphs/static/payWorkers.txt'
 
 def removeExpiredPublicGraphs(cur):
@@ -99,7 +99,6 @@ def payWorkers(hitId, taskCode, cur):
 		@param hitId: ID OF HIT 
 		@param taskCode: Task code submitted by user
 	'''
-
 	# If the proper environment variables are set in gs-setup
 	if os.environ.get('AWSACCESSKEYID') != None and os.environ.get('SECRETKEY') != None:
 
@@ -119,7 +118,6 @@ def payWorkers(hitId, taskCode, cur):
 		response = requests.get(request, allow_redirects=False)
 		print response.text
 		root = ET.fromstring(response.text)[1]
-
 		for assignment in root.findall('Assignment'):
 			assignment_id = ""
 			worker_id = ""
@@ -134,23 +132,23 @@ def payWorkers(hitId, taskCode, cur):
 			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
 
 			# Check to see if the task code exists and matches the hit id associated with it
-			cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
-			data = cur.fetchall()
+			# cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
+			# data = cur.fetchall()
 
-			if data == None or len(data) == 0:
-				# Reject them
-				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
-				operation = "RejectAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-			else:
-				for code in data:
+			# if data == None or len(data) == 0:
+			# 	# Reject them
+			# 	timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
+			# 	operation = "RejectAssignment"
+			# 	request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+			# else:
+			# 	for code in data:
 					# Get new signature and timestamp for different API call
-					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-					operation = "ApproveAssignment"
-					request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
+			operation = "ApproveAssignment"
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 					
 					# Delete task code from database so it can't be reused
-					cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
+					# cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
 			response = requests.get(request, allow_redirects=False)
 
 			print response.text
@@ -167,7 +165,7 @@ def evaluateWork(cur):
 		    payWorkers(command[1], command[2], cur)
 
 	    worker_file.close()
-	    os.remove(PATH + PAYWORKERPATH)
+	    # os.remove(PATH + PAYWORKERPATH)
 
 if __name__ == "__main__":
     conn = sqlite3.connect(PATH + 'graphspace.db')
