@@ -2051,8 +2051,16 @@ def update_graph(username, graphname, graph_json):
 	except NoResultFound:
 		print "No nodes in graph to delete"
 
+	curTime = datetime.now()
 	# Re-insert graph
-	result = insert_graph(username, graphname, graph_json, graph.created, datetime.now(), graph.public, graph.shared_with_groups, graph.default_layout_id)
+	result = insert_graph(username, graphname, graph_json, graph.created, curTime, graph.public, graph.shared_with_groups, graph.default_layout_id)
+
+	# Update modified time for group to graph table
+	group_to_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.Graph.graph_id == graphname).filter(models.Graph.user_id == username).first()
+	
+	if group_to_graph != None:
+		group_to_graph.modified = curTime
+		db_session.commit()
 
 	return result
 
