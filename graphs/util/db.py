@@ -661,19 +661,26 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 
 	# Get the task associated for this graph
 	task = db_session.query(models.ApproveTask).filter(models.ApproveTask.hit_id == hit_id).first()
-
 	if task == None:
 		return None
 
+	submit = task.submitted
 	expires = datetime.now() + timedelta(hours=6)
 	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
 	db_session.add(new_code)
 	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
-	# db_session.delete(task)
+	db_session.delete(task)
 	db_session.commit()
 
+	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
+	if task.submitted < 5:
+		layout_id = db_session.query(models.Layout.layout_id).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
+		if layout_id:
+			print layout_id[0]
+			launchApprovalTask(uid, gid, layout_id[0], submitted=submit + 1)
+
 	payFile = open(PAYWORKERPATH, 'a')
-	payFile.write("payWorkers\t" + task.hit_id +"\t" + taskCode +"\n")
+	payFile.write("payWorkers\t" + hit_id + "\t" + taskCode +"\n")
 	payFile.close()
 
 	db_session.close()
@@ -3159,7 +3166,7 @@ def generateTimeStampAndSignature(secretKey, operation):
 	return (timestamp, signature)
 
 
-def launchTask(graph_id, user_id, layout_array, single=None):
+def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 	'''
 		Launches a task on Amazon Mechanical Turk.
 
@@ -3230,7 +3237,7 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 				isValid = root[1][0][0].text
 				if isValid == "True":
 
-					new_task = models.Task(task_id=None, graph_id=graph_id, user_id=user_id, task_owner=user_id, created=curtime, hit_id=root[1][1].text, layout_id = new_layout.layout_id)
+					new_task = models.Task(task_id=None, submitted=submitted, graph_id=graph_id, user_id=user_id, task_owner=user_id, created=curtime, hit_id=root[1][1].text, layout_id = new_layout.layout_id)
 					db_session.add(new_task)
 					db_session.commit()
 					db_session.close()
@@ -3285,41 +3292,41 @@ def launchPrepaidTasks():
  	prepaid_tasks = [
 		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44),
-		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
-		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
-		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
-		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
-		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
-		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
-		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
-		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
-		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
-		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
-		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
-		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
-		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
-		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
-		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
-		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
-		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
-		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
+		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
+		# # ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
+		# # ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
+		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
+		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
+		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
+		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
+		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
+		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
+		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
+		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
+		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
+		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
+		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
+		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
+		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
+		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
+		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
+		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
+		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
+		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
+		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
+		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
+		# # ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
+		# # ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
+		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
+		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
+		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
 	for task in prepaid_tasks:
-		for i in xrange(5):
-			launchApprovalTask(task[0], task[1], task[2])
+		# for i in xrange(5):
+		launchApprovalTask(task[0], task[1], task[2])
 
-def launchApprovalTask(uid, gid, layout_id):
+def launchApprovalTask(uid, gid, layout_id, submitted=0):
 	'''
 		Launches approval task for a layout.
 
@@ -3403,7 +3410,7 @@ def launchApprovalTask(uid, gid, layout_id):
 			try:
 				isValid = root[1][0][0].text
 				if isValid == "True":
-					new_task = models.ApproveTask(task_id=None, task_owner=uid, graph_id=gid, user_id=uid, created=datetime.now(), hit_id=root[1][1].text, layout_id=layout_id)
+					new_task = models.ApproveTask(task_id=None, task_owner=uid, graph_id=gid, user_id=uid, created=datetime.now(), hit_id=root[1][1].text, layout_id=layout_id, submitted=submitted)
 					db_session.add(new_task)
 					db_session.commit()
 					db_session.close()
@@ -3413,73 +3420,6 @@ def launchApprovalTask(uid, gid, layout_id):
 				return root[0][1][0][1].text
 
 			db_session.close()
-
-def payWorkers(hitId, taskCode):
-	'''
-		If hitID and taskCode pair exist in task_code table, pay them. 
-		Otherwise, reject their answer.
-
-		@param hitId: ID OF HIT 
-		@param taskCode: Task code submitted by user
-	'''
-
-	# If the proper environment variables are set in gs-setup
-	if AWSACCESSKEYID != None and SECRETKEY != None:
-
-		# Get common parameters
-		timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "GetAssignmentsForHIT")
-
-		# Create database connection
-		db_session = data_connection.new_session()
-
-		# Current as of 12/14/2016
-		version = "2014-08-15"
-		operation = "GetAssignmentsForHIT"
-
-		# PAY ALL LAYOUT TASKS
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
-
-		response = requests.get(request, allow_redirects=False)
-
-		root = ET.fromstring(response.text)[1]
-
-		for assignment in root.findall('Assignment'):
-			assignment_id = ""
-			worker_id = ""
-			hit_id = ""
-			assignment_status = ""
-			task_code = ""
-
-			assignment_id = assignment.find('AssignmentId').text
-			worker_id = assignment.find('WorkerId').text
-			hit_id = assignment.find('HITId').text
-			assignment_status = assignment.find('AssignmentStatus').text
-			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
-
-			# Check to see if the task code exists and matches the hit id associated with it
-			code = db_session.query(models.TaskCode).filter(models.TaskCode.hit_id == hit_id).filter(models.TaskCode.code == task_code).first()
-
-			# If the code checks out, pay them!
-			if code:
-				# Get new signature and timestamp for different API call
-				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-				operation = "ApproveAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-				
-				# Delete task code from database so it can't be reused
-				db_session.delete(code)
-				db_session.commit()
-			else:
-				# Reject them
-				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
-				operation = "RejectAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-
-			response = requests.get(request, allow_redirects=False)
-
-			print response.text
-	
-		db_session.close()
 
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
@@ -4629,6 +4569,7 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 
 	# Get the task associated for this graph
 	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).first()
+	submit = task.submitted
 	taskHitId = task.hit_id
 
 	if task == None:
@@ -4638,7 +4579,7 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
 	db_session.add(new_code)
 	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
-	# db_session.delete(task)
+	db_session.delete(task)
 	db_session.commit()
 
 	# Update the modified count for the layout
@@ -4647,11 +4588,11 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 
 	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
 	# if mod_layout.times_modified < 5:
-	# 	launchTask(gid, uid, [mod_layout.json], single=True)
+	# 	launchTask(gid, uid, [mod_layout.json], single=True, submitted=submit + 1)
 	db_session.close()
 
 	payFile = open(PAYWORKERPATH, 'a')
-	payFile.write("payWorkers\t" + taskHitId +"\t" + taskCode +"\n")
+	payFile.write("payWorkers\t" + taskHitId + "\t" + taskCode +"\n")
 	payFile.close()
 
 	# launch approval tasks

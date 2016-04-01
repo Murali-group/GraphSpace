@@ -171,6 +171,7 @@ class Task(Base):
     layout_id = Column(Integer, nullable = False)
     created = Column(TIMESTAMP, nullable = False)
     hit_id=Column(String, nullable=False)
+    submitted=Column(Integer, nullable=True)
 
 class ApproveTask(Base):
     '''
@@ -185,6 +186,7 @@ class ApproveTask(Base):
     layout_id = Column(Integer, nullable = False)
     created = Column(TIMESTAMP, nullable = False)
     hit_id=Column(String, nullable=False)
+    submitted=Column(Integer, nullable=True)
 
 class Event(Base):
     '''The class representing the schema of the event table.'''
