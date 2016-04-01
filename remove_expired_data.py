@@ -141,24 +141,25 @@ def payWorkers(hitId, taskCode, cur):
 			assignment_status = assignment.find('AssignmentStatus').text
 			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
 
+			# JUST PAY ALL THE WORKERS
 			# Check to see if the task code exists and matches the hit id associated with it
-			cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
-			data = cur.fetchall()
+			# cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
+			# data = cur.fetchall()
 
-			if data == None or len(data) == 0:
+			#if data == None or len(data) == 0:
 			# 	# Reject them
 			# 	timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
 			# 	operation = "RejectAssignment"
 			# 	request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 			# else:
 			# 	for code in data:
-				# Get new signature and timestamp for different API call
-				timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-				operation = "ApproveAssignment"
-				request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-				
-				# Delete task code from database so it can't be reused
-				cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
+			# Get new signature and timestamp for different API call
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
+			operation = "ApproveAssignment"
+			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+			
+			# Delete task code from database so it can't be reused
+			# cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
 			response = requests.get(request, allow_redirects=False)
 			print response.text
 
