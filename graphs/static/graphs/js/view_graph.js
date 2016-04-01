@@ -2830,7 +2830,8 @@ $(document).ready(function() {
         var events = logger.getEvents();
 
         if (timeSpent < 2 || events.length < 1) {
-            return alert("Please spend more time analyzing the graph");
+            alert("Please spend more time analyzing the graph");
+            return location.reload();
         }
 
         $.post("../../../submitEvaluation/", {
