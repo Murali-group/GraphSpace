@@ -46,6 +46,7 @@ AWSACCESSKEYID = settings.AWSACCESSKEYID
 SECRETKEY = settings.SECRETKEY
 
 PAYWORKERPATH = 'graphs/static/payWorkers.txt'
+AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name):
 	#create a new db session
@@ -676,7 +677,6 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 	if task.submitted < 5:
 		layout_id = db_session.query(models.Layout.layout_id).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
 		if layout_id:
-			print layout_id[0]
 			launchApprovalTask(uid, gid, layout_id[0], submitted=submit + 1)
 
 	payFile = open(PAYWORKERPATH, 'a')
@@ -3223,7 +3223,7 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3396,7 +3396,7 @@ def launchApprovalTask(uid, gid, layout_id, submitted=0):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.20&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.20&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
 
 			response = requests.get(request, allow_redirects=False)
 

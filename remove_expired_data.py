@@ -20,6 +20,7 @@ SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
 PATH = "/home/divit/Documents/GRA/GraphSpace/"
 PAYWORKERPATH = 'graphs/static/payWorkers.txt'
+AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def removeExpiredPublicGraphs(cur):
 	cur.execute('select graph_id, user_id, created, public from graph where user_id like ?', ("%Public_User%temp.com", ))
@@ -123,7 +124,7 @@ def payWorkers(hitId, taskCode, cur):
 		operation = "GetAssignmentsForHIT"
 
 		# PAY ALL LAYOUT TASKS
-		request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+		request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
 
 		response = requests.get(request, allow_redirects=False)
 		print response.text
@@ -150,13 +151,13 @@ def payWorkers(hitId, taskCode, cur):
 			# 	# Reject them
 			# 	timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
 			# 	operation = "RejectAssignment"
-			# 	request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+			# 	request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 			# else:
 			# 	for code in data:
 			# Get new signature and timestamp for different API call
 			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
 			operation = "ApproveAssignment"
-			request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
 			
 			# Delete task code from database so it can't be reused
 			# cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
