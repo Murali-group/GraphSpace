@@ -3290,7 +3290,7 @@ def launchPrepaidTasks():
  #        ]
 
  	prepaid_tasks = [
-		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44)
 		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
 		# # ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
@@ -3322,10 +3322,8 @@ def launchPrepaidTasks():
 		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
-	# for task in prepaid_tasks:
-	# 	launchApprovalTask(task[0], task[1], task[2])
-
-	launchApprovalTask(prepaid_tasks[0][0], prepaid_tasks[0][0], prepaid_tasks[0][0])
+	for task in prepaid_tasks:
+		launchApprovalTask(task[0], task[1], task[2])
 
 def launchApprovalTask(uid, gid, layout_id, submitted=0):
 	'''
