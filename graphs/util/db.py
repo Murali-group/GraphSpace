@@ -668,7 +668,8 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 	expires = datetime.now() + timedelta(hours=6)
 	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
 	db_session.add(new_code)
-	db_session.delete(task)
+	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
+	# db_session.delete(task)
 	db_session.commit()
 
 	payFile = open(PAYWORKERPATH, 'a')
@@ -3242,44 +3243,77 @@ def launchTask(graph_id, user_id, layout_array, single=None):
 
 def launchPrepaidTasks():
 
-	prepaid_tasks = [
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
-                ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
-                ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
-                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
-                ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
-                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
-                ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
-        ]
+	# prepaid_tasks = [
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
+ #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+ #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+ #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+ #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+ #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+ #                ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
+ #        ]
+
+ 	prepaid_tasks = [
+		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
+		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
+		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
+		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
+		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
+		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
+		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
+		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
+		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
+ 	]
 
 	for task in prepaid_tasks:
 		for i in xrange(5):
@@ -4603,7 +4637,8 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 	expires = datetime.now() + timedelta(hours=6)
 	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
 	db_session.add(new_code)
-	db_session.delete(task)
+	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
+	# db_session.delete(task)
 	db_session.commit()
 
 	# Update the modified count for the layout

@@ -90,6 +90,18 @@ def generateTimeStampAndSignature(secretKey, operation):
 
 	return (timestamp, signature)
 
+def forceExpireHIT(hitId):
+	timestamp, signature = generateTimeStampAndSignature(os.environ.get('SECRETKEY'), "ForceExpireHIT")
+
+	# Current as of 12/14/2016
+	version = "2014-08-15"
+	operation = "ForceExpireHIT"
+
+	request = 'https://mechanicalturk.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+	response = requests.get(request, allow_redirects=False)
+	print response.text
+
+
 
 def payWorkers(hitId, taskCode, cur):
 	'''
@@ -161,8 +173,9 @@ def evaluateWork(cur):
 
 	    for line in worker_file:
 	    	command = line.replace("\n", "").split('\t')
-		if command[0] == "payWorkers":
-		    payWorkers(command[1], command[2], cur)
+	    	print command
+	    	if command[0] == "payWorkers":
+	    		payWorkers(command[1], command[2], cur)
 
 	    worker_file.close()
 	    # os.remove(PATH + PAYWORKERPATH)
