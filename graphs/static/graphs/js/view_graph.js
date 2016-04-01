@@ -2829,7 +2829,7 @@ $(document).ready(function() {
         var timeSpent = clock.stop();
         var events = logger.getEvents();
 
-        if (timeSpent < 2 || events.length < 3) {
+        if (timeSpent < 2 || events.length < 1) {
             return alert("Please spend more time analyzing the graph");
         }
 
