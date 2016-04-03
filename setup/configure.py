@@ -15,7 +15,7 @@ def get_pip():
 	os.remove("get-pip.py")
 
 def migrate():
-	subprocess.check_output([sys.executable, "manage.py", "migrate", "--noinput"])
+	subprocess.check_output([sys.executable, "manage.py", "migrate"])
 
 def syncdb():
 	subprocess.check_output([sys.executable, "manage.py", "syncdb", "--noinput"])
@@ -27,7 +27,7 @@ def install(package):
 	subprocess.call(["sudo", "pip", "install", package])
 
 if __name__ == "__main__":
-	# get_pip()
+	get_pip()
 
 	# IF ANY OF THE BELOW PACKAGES DO NOT INSTALL
 	# PLEASE RUN FOLLOWING COMMANDS ON TERMINAL
