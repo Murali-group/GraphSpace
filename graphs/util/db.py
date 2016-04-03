@@ -3358,7 +3358,7 @@ def launchPrepaidTasks():
 
 def getAllApproveTasks():
 	db_session = data_connection.new_session()
-	approve_tasks = db_session.query(models.ApproveTask).all()
+	approve_tasks = db_session.query(models.ApproveTask).filter(models.ApproveTask.hit_id == "EXPERT_WORKER").all()
 	db_session.close()
 	return approve_tasks
 
