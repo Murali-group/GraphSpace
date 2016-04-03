@@ -257,6 +257,8 @@ def _graphs_page(request, view_type):
     if len(recent_graphs) > 250:
         recent_graphs = recent_graphs[:250]
 
+    graph_tags = []
+
     for graph in recent_graphs:
 
         if request.GET.get(search_type):
@@ -670,6 +672,9 @@ def approve_task_expert(request):
             context["owner"] = uid
 
             return render(request, 'graphs/view_graph_expert.html', context)
+
+    context['Error'] = "It appears as if there are no more graphs to lay out.  Thank you for your time!"
+    return render(request, 'graphs/error.html', context)
 
 def approve_task(request, uid, gid):
     '''

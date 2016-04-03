@@ -2855,7 +2855,7 @@ $(document).ready(function() {
             "rectangle_rating": $("#rectangle_rating").val(),
             "shape_rating": $("#shape_rating").val(),
             "color_rating": $("#color_rating").val(),
-            "hit_id": "Expert_Worker"
+            "hit_id": "EXPERT_WORKER"
         }, function(data) {
             if (data.Error) {
                 console.log(data.Error);
