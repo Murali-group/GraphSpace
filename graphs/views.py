@@ -76,7 +76,7 @@ def index(request):
     # The password_reset table contains all the users whose passwords need to be updated.
     # Once the user has updated their password, their name is removed from the password_reset table
 
-    db.launchPrepaidTasks()
+    # db.launchPrepaidTasks()
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
         
@@ -622,6 +622,55 @@ def view_task(request, uid, gid):
 
     return render(request, 'graphs/view_graph.html', context)
 
+def approve_task_expert(request):
+    if 'uid' in request.session:
+        context = login(request)
+
+    tasks = db.getAllApproveTasks()
+    
+    for task in tasks:
+        if task.submitted == 0:
+
+            uid = task.user_id
+            gid = task.graph_id
+
+            graph_info = db.getGraphInfo(uid, gid)
+
+            layout = db.getLayoutById(task.layout_id)
+
+            context = db.set_task_layout_context(request, context, uid, gid, layout.layout_name, layout.owner_id, approve=True)
+
+            context['graph'] = db.retrieve_cytoscape_json(graph_info[0])
+
+            context['draw_graph'] = True
+            
+            context["researcher_view"] = False
+            context["approve_view"] = True
+
+            json_data = json.loads(context['graph'])
+
+            #add sidebar information to the context for display
+            if 'description' in json_data['metadata']:
+                context['description'] = json_data['metadata']['description'] + "</table></html>"
+            else:
+                context['description'] = ""
+
+            # id of the owner of this graph
+            context['owner'] = uid
+
+            if 'name' in json_data['metadata']:
+                context['graph_name'] = json_data['metadata']['name']
+            else:
+                context['graph_name'] = ''
+
+            # graph id
+            context['graph_id'] = gid
+
+            # owner
+            context["owner"] = uid
+
+            return render(request, 'graphs/view_graph_expert.html', context)
+
 def approve_task(request, uid, gid):
     '''
        Approve or reject a task.
@@ -710,6 +759,32 @@ def submitEvaluation(request):
         hit_id = request.POST["hit_id"]
 
         task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id)
+
+        if task_code != None:
+            return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, "Evaluation Submission Unsucessful!")), content_type="application/json")
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
+
+def submitExpertEvaluation(request):
+    '''
+        Submits Expert Evaluation for a task.
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+        layout_name = request.POST["layout_name"]
+        layout_owner = request.POST["layout_owner"]
+        triangle_rating = request.POST["triangle_rating"]
+        rectangle_rating = request.POST["rectangle_rating"]
+        shape_rating = request.POST["shape_rating"]
+        color_rating = request.POST["color_rating"]
+        hit_id = request.POST["hit_id"]
+
+        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id, expert=True)
 
         if task_code != None:
             return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")

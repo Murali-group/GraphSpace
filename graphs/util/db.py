@@ -635,7 +635,7 @@ def set_layout_context(request, context, uid, gid):
 
 	return context
 
-def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id):
+def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id, expert=None):
 	'''
 		Submits evaluation for a layout
 
@@ -648,8 +648,20 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 
 	db_session = data_connection.new_session()
 
+	if expert:
+		# Add this evaluation to database
+		layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="EXPERT_WORKER")
+
+		db_session.add(layout_eval)
+		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+		task = db_session.query(models.ApproveTask).filter(models.ApproveTask.graph_id == gid).filter(models.ApproveTask.user_id == uid).filter(models.ApproveTask.layout_id == layout.layout_id).filter(models.ApproveTask.hit_id == "EXPERT_WORKER").first()
+		db_session.delete(task)
+		db_session.commit()
+		db_session.close()
+		return "Done"
+
 	# Add this evaluation to database
-	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now())
+	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="MTURK_Worker")
 
 	db_session.add(layout_eval)
 	db_session.commit()
@@ -3250,80 +3262,94 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 
 def launchPrepaidTasks():
 
-	# prepaid_tasks = [
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
- #                ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
- #                ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
- #                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
- #                ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
- #                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
- #                ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
- #        ]
+	crowd_layout_prepaid_tasks = [
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
+                ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+                ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+                ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+                ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+                ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+                ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
+        ]
 
- 	prepaid_tasks = [
+ 	researcher_layout_prepaid_tasks = [
 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
-		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44)
-		# ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
-		# # ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
-		# # ("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
-		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
-		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
-		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
-		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
-		# ("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
-		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
-		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
-		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
-		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
-		# ("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
-		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
-		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
-		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
-		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
-		# ("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
-		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
-		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
-		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
-		# ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
-		# # ("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
-		# # ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
-		# # ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
-		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
-		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
-		# ("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
+		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
+		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
+		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
+		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
+		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
+		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
-	for task in prepaid_tasks:
-		launchApprovalTask(task[0], task[1], task[2])
+ 	db_session = data_connection.new_session()
+ 	for task in crowd_layout_prepaid_tasks:
+ 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
+		db_session.add(new_task)
+	for task in researcher_layout_prepaid_tasks:
+ 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
+		db_session.add(new_task)
+
+	db_session.commit()
+	db_session.close()
+
+def getAllApproveTasks():
+	db_session = data_connection.new_session()
+	approve_tasks = db_session.query(models.ApproveTask).all()
+	db_session.close()
+	return approve_tasks
 
 def launchApprovalTask(uid, gid, layout_id, submitted=0):
 	'''
@@ -3993,7 +4019,12 @@ def get_layout_for_graph(layout_name, layout_owner, graph_id, graph_owner, logge
 		db_session.close()
 		return cytoscapePresetLayout(json.loads(layout.json))
 
-	
+def getLayoutById(layout_id):
+	# Create database connection
+	db_session = data_connection.new_session()
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_id == layout_id).first()
+	db_session.close()
+	return layout
 
 def cytoscapePresetLayout(csWebJson):
 	'''
@@ -4008,7 +4039,6 @@ def cytoscapePresetLayout(csWebJson):
 
 	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
-	print csWebJson
 
 	for node_position in csWebJson:
 
@@ -4609,10 +4639,8 @@ def getCrowdEnabledGroup():
 	try:
 		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "dsingh5270@gmail.com").all()
 		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "dsingh5270@gmail.com").filter(models.Group.owner_id == models.User.user_id).first()
-		print group_owner
 		if group_owner != None:
 			allowed_users.append(group_owner[0])
-		print allowed_users
 		return allowed_users
 	except NoResultFound:
 		db_session.close()

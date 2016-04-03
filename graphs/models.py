@@ -315,6 +315,7 @@ class LayoutStatus(Base):
     shape_rating = Column(Integer, nullable = False)
     color_rating = Column(Integer, nullable = False)
     created = Column(TIMESTAMP, nullable = False)
+    submitted_by = Column(String, nullable = True)
 
 class Node(Base):
     '''
