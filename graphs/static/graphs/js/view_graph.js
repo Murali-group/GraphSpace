@@ -1124,8 +1124,9 @@ $(".removeDefault").click(function(e) {
   }, function (data) {
     if (data.Error) {
       return alert(data.Error);
+    } else {
+      window.location.reload();
     }
-    window.location.reload();
   });
 });
 
