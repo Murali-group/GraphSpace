@@ -120,7 +120,6 @@ def need_to_reset_password(email):
 		user_id = db_session.query(models.PasswordReset.user_id).filter(models.PasswordReset.user_id == email).one()
 		return True
 	except NoResultFound:
-		print "User: " + email + " not found!"
 		return None
 
 	db_session.close()
@@ -819,18 +818,13 @@ def removeDefaultLayout(layoutName, graph_id, graph_owner):
 	if layout == None:
 		return "Layout does not exist for this graph!"
 
-	try:
-		# If the default layout is deleted, update 
-		# graph so that it has no default layout
-		if layout.layout_name == layoutName:
-			graph.default_layout_id = None
-			db_session.commit()
-		db_session.close()
-		return None
-	except Exception as ex:
-		print ex
-		db_session.close()
-		return "An unexpected error occureed: " + ex
+	# If the default layout is deleted, update 
+	# graph so that it has no default layout
+	graph.default_layout_id = None
+	db_session.commit()
+	db_session.close()
+	return None
+
 
 def order_information(order_term, search_terms, graphs_list):
 	'''
