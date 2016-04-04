@@ -295,15 +295,25 @@ def save_layout(request, uid, gid):
         :param HTTP POST Request
 
     '''
-    if gid[len(gid) - 1] == '/':
-        gid = gid[:len(gid) - 1]
 
-    result = db.save_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
-    if result == None:
-        return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
-    
-    return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json");
+    if request.POST:
+        if gid[len(gid) - 1] == '/':
+            gid = gid[:len(gid) - 1]
 
+        uid = request.session.get('uid')
+
+        if uid == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to save a layout!")), content_type="application/json")
+
+        result = db.save_layout(gid, uid, request.POST['layout_name'], uid, request.POST['points'], request.POST['public'], request.POST['unlisted'])
+        if result == None:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
+        
+        return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def view_graph(request, uid, gid):
     '''
@@ -872,7 +882,8 @@ def retrieveIDs(request):
 
         return HttpResponse(json.dumps(elementDictionary))
     else:
-        return HttpResponseNotFound('<h1>Page not found</h1>')
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def sendResetEmail(request):
     '''
@@ -885,14 +896,18 @@ def sendResetEmail(request):
         :returns JSON: {"Error|Success": "Email does not exist! | "Email has been sent!"}
 
     '''
-    db.add_user_to_password_reset(request.POST['forgot_email'])
-    emailId = db.sendForgotEmail(request.POST['forgot_email'])
+    if request.POST:
+        db.add_user_to_password_reset(request.POST['forgot_email'])
+        emailId = db.sendForgotEmail(request.POST['forgot_email'])
 
-    # If email is not found, throw an error
-    if emailId == None:
-        return HttpResponse(json.dumps(db.throwError(404, "Email does not exist!")), content_type="application/json");
+        # If email is not found, throw an error
+        if emailId == None:
+            return HttpResponse(json.dumps(db.throwError(404, "Email does not exist!")), content_type="application/json")
 
-    return HttpResponse(json.dumps(db.sendMessage(200, "Email has been sent!")), content_type="application/json");
+        return HttpResponse(json.dumps(db.sendMessage(200, "Email has been sent!")), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def resetLink(request):
     '''
@@ -914,6 +929,8 @@ def resetLink(request):
 
         context = {"email": email, "url": URL_PATH}
         return render(request, 'graphs/reset.html', context)
+    else:
+        return HttpResponse(json.dumps(db.throwError(500, "This route only accepts GET requests.")), content_type="application/json")
 
 def resetPassword(request):
     '''
@@ -926,13 +943,16 @@ def resetPassword(request):
         :return JSON: {"Error|Success": "Password Update not successful! | Password updated for <user_id>!"}
 
     '''
-    resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
-    print resetInfo
+    if request.method == "POST":
+        resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
 
-    if resetInfo == None:
-        return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
+        if resetInfo == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");
 
-    return HttpResponse(json.dumps(db.sendMessage(200, "Password updated for " + request.POST['email'])), content_type="application/json");
+        return HttpResponse(json.dumps(db.sendMessage(200, "Password updated for " + request.POST['email'])), content_type="application/json");
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def changeLayoutName(request):
     '''
@@ -945,17 +965,23 @@ def changeLayoutName(request):
         :return JSON:  {"Success": <message>}
     '''
     if request.method == 'POST':
+        loggedIn = request.session.get('uid')
         uid = request.POST['uid']
         gid = request.POST['gid']
         old_layout_name = request.POST['old_layout_name']
         new_layout_name = request.POST['new_layout_name']
-        loggedIn = request.POST['loggedIn']
+
+        if loggedIn == None:
+            return HttpResponse(json.dumps({"StatusCode": 500, "Message": "Must be logged in to make those requests", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name + "&layout_owner=" + loggedIn}), content_type="application/json")
 
         error = db.changeLayoutName(uid, gid, old_layout_name, new_layout_name, loggedIn)
         if error == None:
             return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout name changed!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name + "&layout_owner=" + loggedIn}), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def deleteLayout(request):
     '''
@@ -968,8 +994,11 @@ def deleteLayout(request):
         :return JSON:  {"Success": <message>}
     '''
     if request.method == 'POST':
-        uid = request.POST['owner']
+        uid = request.session.get('uid')
         gid = request.POST['gid']
+
+        if uid == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to delete a layout!")), content_type="application/json")
 
         layoutToDelete = request.POST['layout']
         layout_owner = request.POST['layout_owner']
@@ -980,6 +1009,9 @@ def deleteLayout(request):
             return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout deleted!", "url": URL_PATH + 'graphs/' + uid + '/' + gid}), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def makeLayoutPublic(request):
     '''
@@ -992,14 +1024,29 @@ def makeLayoutPublic(request):
         :return JSON:  {"Success": <message>}
     '''
     if request.method == 'POST':
-        uid = request.POST['owner']
+        uid = request.POST['uid']
         gid = request.POST['gid']
         layoutToMakePpublic = request.POST['layout']
         loggedIn = request.POST['user_id']
 
+        current_user = request.session.get('uid')
+
+        # If user is not logged on, they can't do anything
+        if current_user == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to make share layouts!")), content_type="application/json")
+
+        # If user is the owner of the graph or if they are the layout owner, can they share a layout
+        if current_user != uid and db.get_layout_for_graph(layoutId, layout_owner, gid, uid, current_user) == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Not authorized to share layouts!")), content_type="application/json")
+
+        if uid == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to make a layout public!")), content_type="application/json")
+
         db.makeLayoutPublic(uid, gid, layoutToMakePpublic, loggedIn)
         return HttpResponse(json.dumps({"StatusCode": 200, "Message": "Layout made public!", "url": URL_PATH + 'graphs/' + uid + '/' + gid + '/?layout=' + new_layout_name}), content_type="application/json")
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def getGroupsForGraph(request):
     '''
@@ -1007,15 +1054,21 @@ def getGroupsForGraph(request):
 
         :param request:Incoming HTTP POST Request containing:
 
-        {"gid": <name of graph>, "owner": <owner of the graph>}
+        {"gid": <name of graph>}
 
         :return JSON: {"Groups": [list of groups]}
     '''
     if request.method == 'POST':
-        owner = request.POST['owner']
+        owner = request.session.get('uid')
         gid = request.POST['gid']
-        
+
+        if owner == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to see groups for this graph!")), content_type="application/json")
+
         return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": db.get_all_groups_for_user_with_sharing_info(owner, gid)}), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def shareGraphWithGroups(request):
     '''
@@ -1043,7 +1096,8 @@ def shareGraphWithGroups(request):
         return HttpResponse("Done")
 
     else:
-        return HttpResponse("Test")
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def create_group(request, groupname):
     '''
@@ -1066,6 +1120,9 @@ def create_group(request, groupname):
             return HttpResponse(json.dumps({"StatusCode": 201, "Message": "Group created!", "Group Name": group_created[0], "Group Id": group_created[1]}, indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "Group name already exists for this account"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def deleteGraph(request):
     '''
@@ -1078,15 +1135,15 @@ def deleteGraph(request):
         :return JSON: {"Delete": <message>}
     '''
     if request.method == 'POST':
-        uid = request.POST['uid']
         gid = request.POST['gid']
+        uid = request.session.get('uid')
 
         # Check if the user is authenticated
-        if request.session.get('uid') == None:
+        if uid == None:
             return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to delete this graph"), indent=4, separators=(',', ': ')), content_type="application/json")
 
         # if the user owns the graph only then allow him to delete it
-        graph_info = db.getGraphInfo(uid,gid)
+        graph_info = db.getGraphInfo(uid, gid)
         if graph_info == None:
             return HttpResponse(json.dumps(db.throwError(404, "You do not own any such Graph."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
@@ -1114,6 +1171,9 @@ def delete_group_through_ui(request):
         if request.POST['username'] == request.POST['groupOwner']:
             db.remove_group(request.POST['groupOwner'], request.POST['groupName'])
             return HttpResponse(json.dumps(db.sendMessage(200, request.POST['groupName'] + " deleted for " + request.POST['groupOwner'])), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def unsubscribe_from_group(request):
     '''
@@ -1133,6 +1193,9 @@ def unsubscribe_from_group(request):
             return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "You are no longer following " + request.POST['groupName'] + " owned by " + request.POST['groupOwner'])), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def change_description_through_ui(request):
     '''
@@ -1152,6 +1215,9 @@ def change_description_through_ui(request):
             return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "Changed description")), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def add_member_through_ui(request):
     '''
@@ -1168,6 +1234,9 @@ def add_member_through_ui(request):
     if request.method == 'POST':
         result = db.add_user_to_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
         return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def remove_member_through_ui(request):
     '''
@@ -1184,8 +1253,9 @@ def remove_member_through_ui(request):
     if request.method == 'POST':
         result = db.remove_user_from_group(request.POST['member'], request.POST['groupOwner'], request.POST['groupId'])
         return HttpResponse(json.dumps(db.sendMessage(200, result)), content_type="application/json")
-
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def getGroupsWithLayout(request):
     '''
@@ -1201,7 +1271,8 @@ def getGroupsWithLayout(request):
         result = db.is_layout_shared(request.POST['layout'], request.POST['loggedIn'], request.POST['owner'], request.POST['gid'])
         return HttpResponse(json.dumps({"StatusCode": 200, "Group_Information": result}), content_type="application/json")
     else:
-        return HttpResponse("NONE")
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def setDefaultLayout(request):
     if request.method == 'POST':
@@ -1211,7 +1282,8 @@ def setDefaultLayout(request):
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "Set " + request.POST['layoutId'] + " as default")), content_type="application/json")
     else:
-        return HttpResponse("NONE")
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def removeDefaultLayout(request):
     if request.method == 'POST':
@@ -1221,9 +1293,11 @@ def removeDefaultLayout(request):
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "Removed " + request.POST['layoutId'] + " as default")), content_type="application/json")
     else:
-        return HttpResponse("NONE")
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def renderImage(request):
+    # This is a temporary route so Allison's graphs show up
     return HttpResponseRedirect(URL_PATH + 'static/images/legend.png');
 
 def shareLayoutWithGroups(request):
@@ -1239,7 +1313,19 @@ def shareLayoutWithGroups(request):
         gid = request.POST['gid']
         uid = request.POST['uid']
         layoutId = request.POST['layoutId']
+        current_user = request.session.get('uid')
 
+        # If user is not logged on, they can't do anything
+        if current_user == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to make share layouts!")), content_type="application/json")
+
+        # If user is the owner of the graph or if they are the layout owner, can they share a layout
+        if current_user != uid and db.get_layout_for_graph(layoutId, layout_owner, gid, uid, current_user) == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Not authorized to share layouts!")), content_type="application/json")
+
+        if db.can_see_shared_graph(current_user, uid, gid) == None:
+            return HttpResponse(json.dumps(db.throwError(500, "Not allowed to do this operation!")), content_type="application/json")
+        
         if len(db.get_all_groups_for_this_graph(uid, gid)) == 0:
             return HttpResponse(json.dumps(db.throwError(400, "No groups to share with.  Either share this graph with a group first or make this graph public!")), content_type="application/json")
         else:
@@ -1249,6 +1335,9 @@ def shareLayoutWithGroups(request):
                 db.share_layout_with_all_groups_of_user(uid, gid, layoutId, layout_owner)
  
             return HttpResponse(json.dumps(db.sendMessage(200, "Okay")), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 ##### END VIEWS #####
 
@@ -1277,7 +1366,8 @@ def graph_exists(request, user_id, graphname):
         else:
             return HttpResponse(json.dumps(db.sendMessage(200, "User " + user_id + " owns a graph with id " + graphname + "!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
-            return HttpResponse(json.dumps(db.throwError(404, "This route only accepts POST Requests"), indent=4, separators=(',', ': ')), content_type="application/json")
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def upload_graph(request, user_id, graphname):
     '''
@@ -1304,8 +1394,9 @@ def upload_graph(request, user_id, graphname):
         graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
         if graph_errors != None:
             return HttpResponse(json.dumps(db.throwError(400, graph_errors), indent=4, separators=(',', ': ')), content_type="application/json")
-        else:
-            return HttpResponse(json.dumps(db.sendMessage(201, "Graph inserted into GraphSpace!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def update_graph(request, user_id, graphname):
     '''
@@ -1334,7 +1425,9 @@ def update_graph(request, user_id, graphname):
             return HttpResponse(json.dumps(db.throwError(404, graph_errors), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(201, "Updated " + graphname + " for " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def retrieve_graph(request, user_id, graphname):
     '''
@@ -1362,6 +1455,9 @@ def retrieve_graph(request, user_id, graphname):
             return HttpResponse(jsonData)
         else:
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def remove_graph(request, user_id, graphname):
     '''
@@ -1391,6 +1487,9 @@ def remove_graph(request, user_id, graphname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Successfully deleted " + graphname + " owned by " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists."), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def view_all_graphs_for_user(request, user_id):
     '''
@@ -1412,6 +1511,9 @@ def view_all_graphs_for_user(request, user_id):
 
         data = db.get_all_graphs_for_user(user_id)
         return HttpResponse(json.dumps({"StatusCode": 200, "Graphs": data}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def make_graph_public(request, user_id, graphname):
     '''
@@ -1436,6 +1538,9 @@ def make_graph_public(request, user_id, graphname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Successfully made " + graphname + " owned by " + user_id + " public."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(404, data), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def make_graph_private(request, user_id, graphname):
     '''
@@ -1459,6 +1564,9 @@ def make_graph_private(request, user_id, graphname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Successfully made " + graphname + " owned by " + user_id + " private."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(404, data), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_groups(request):
     '''
@@ -1477,6 +1585,9 @@ def get_groups(request):
 
         data = db.get_all_groups_with_member(request.POST['username'])
         return HttpResponse(json.dumps({"StatusCode": 200, "Groups": data}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_group(request, group_owner, groupname):
     '''
@@ -1498,7 +1609,9 @@ def get_group(request, group_owner, groupname):
             return HttpResponse(json.dumps(db.throwError(404, "Group does not exist for this user!"), indent=4, separators=(',', ': ')), content_type="application/json")
         
         return HttpResponse(json.dumps({"StatusCode": 200, "Groups": data}, indent=4, separators=(',', ': ')), content_type="application/json");
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def delete_group(request, group_owner, groupname):
     '''
@@ -1522,7 +1635,9 @@ def delete_group(request, group_owner, groupname):
             return HttpResponse(json.dumps(db.sendMessage(200, data), indent=4, separators=(',', ': ')), content_type="application/json");
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def add_group(request, group_owner, groupname):
     '''
@@ -1547,6 +1662,9 @@ def add_group(request, group_owner, groupname):
             return HttpResponse(data)
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_group_for_user(request, user_id):
     '''
@@ -1567,6 +1685,9 @@ def get_group_for_user(request, user_id):
 
         group = db.groups_for_user(user_id)
         return HttpResponse(json.dumps({"StatusCode": 200, "Groups": group}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def add_user_to_group(request, group_owner, groupname, user_id):
     '''
@@ -1599,7 +1720,9 @@ def add_user_to_group(request, group_owner, groupname, user_id):
 
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def remove_user_from_group(request, group_owner, groupname, user_id):
     '''
@@ -1611,7 +1734,6 @@ def remove_user_from_group(request, group_owner, groupname, user_id):
         :param user_id: Email of user to remove
 
     '''
-
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
@@ -1621,6 +1743,9 @@ def remove_user_from_group(request, group_owner, groupname, user_id):
             return HttpResponse(json.dumps(db.sendMessage(200, group), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def share_graph(request, graphname, group_owner, groupname):
     '''
@@ -1643,6 +1768,9 @@ def share_graph(request, graphname, group_owner, groupname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Graph successfully shared with group!"), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(400, result), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def unshare_graph(request, graphname, group_owner, groupname):
     '''
@@ -1665,6 +1793,9 @@ def unshare_graph(request, graphname, group_owner, groupname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Graph successfully unshared with group!"), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.sendMessage(400, result), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_tags_for_user(request, username):
     '''
@@ -1682,6 +1813,9 @@ def get_tags_for_user(request, username):
 
         result = db.get_all_tags_for_user(username)
         return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_all_tags_for_graph(request, username, graphname):
     '''
@@ -1698,9 +1832,11 @@ def get_all_tags_for_graph(request, username, graphname):
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-
         result = db.get_all_tags_for_graph(graphname, username)
         return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def get_all_graphs_for_tags(request, tag):
     '''
@@ -1719,6 +1855,9 @@ def get_all_graphs_for_tags(request, tag):
 
         result = db.get_all_graphs_for_tags(tag)
         return HttpResponse(json.dumps({"StatusCode": 200, "Graphs": result}, indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def make_all_graphs_for_tag_public(request, username, tagname):
     '''
@@ -1744,6 +1883,9 @@ def make_all_graphs_for_tag_public(request, username, tagname):
                 return HttpResponse(json.dumps(db.throwError(400, error), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def make_all_graphs_for_tag_private(request, username, tagname):
     '''
@@ -1755,7 +1897,6 @@ def make_all_graphs_for_tag_private(request, username, tagname):
 
         :return JSON: {"Response": <message>}
     '''
-
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
@@ -1769,6 +1910,9 @@ def make_all_graphs_for_tag_private(request, username, tagname):
                 return HttpResponse(json.dumps(db.throwError(400, error), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 def delete_all_graphs_for_tag(request, username, tagname):
     '''
@@ -1780,7 +1924,6 @@ def delete_all_graphs_for_tag(request, username, tagname):
 
         :return JSON: {"Response": <message>}
     '''
-
     if request.method == 'POST':
 
         if db.get_valid_user(request.POST['username'], request.POST['password']) == None:
@@ -1791,7 +1934,9 @@ def delete_all_graphs_for_tag(request, username, tagname):
             return HttpResponse(json.dumps(db.sendMessage(200, "Graphs with tag have been deleted"), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The tag owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
-
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return render(request, 'graphs/error.html', context)
 
 # Private Utility methods used throughout views.py
 

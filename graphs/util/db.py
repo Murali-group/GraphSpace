@@ -3497,8 +3497,6 @@ def get_layout_for_graph(layout_name, layout_owner, graph_id, graph_owner, logge
 		db_session.close()
 		return cytoscapePresetLayout(json.loads(layout.json))
 
-	
-
 def cytoscapePresetLayout(csWebJson):
 	'''
 		Converts CytoscapeWeb preset layouts to be

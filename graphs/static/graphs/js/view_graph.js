@@ -601,7 +601,6 @@ $(document).ready(function() {
 
       var gid = $("#gid").text();
       var uid = $("#uid").text();
-      var loggedIn = $("#loggedIn").text();
       var old_layout_name = $(this).val()
 
       if (new_layout_name.length == 0) {
@@ -610,7 +609,6 @@ $(document).ready(function() {
         $.post('../../../changeLayoutName/', {
           "gid": gid,
           "uid": uid,
-          "loggedIn": loggedIn,
           "old_layout_name": old_layout_name,
           "new_layout_name": new_layout_name
         }, function (data) {
@@ -634,7 +632,6 @@ $(document).ready(function() {
 
       $.post('../../../deleteLayout/', {
         'gid': gid,
-        'owner': uid,
         'layout': publicLayout,
         'layout_owner': userId
       }, function (data) {
@@ -728,7 +725,6 @@ $(document).ready(function() {
 
       $.post('../../../getGroupsForGraph/', {
         'gid': gid,
-        'owner': uid,
       }, function (data) {
         console.log(data);
         var group_options = "";

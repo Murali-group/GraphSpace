@@ -170,14 +170,12 @@ $(document).ready(function() {
    */
   $(".delete_graph").click(function(e) {
     e.preventDefault();
-    var uid = $(this).val();
     var gid = $(this).attr('id');
 
     $("#deleteModal").modal('toggle');
 
     $("#delete_confirm").on('click', function(e) {
       $.post('/deleteGraph/', {
-        'uid': uid,
         'gid': gid
       }, function(data) {
         if (data.Error) {
