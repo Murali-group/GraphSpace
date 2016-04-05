@@ -18,8 +18,8 @@ import xml.etree.ElementTree as ET
 
 SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
+
 PATH = "/home/divit/Documents/GRA/GraphSpace/"
-PAYWORKERPATH = 'graphs/static/payWorkers.txt'
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def removeExpiredPublicGraphs(cur):
@@ -102,7 +102,18 @@ def forceExpireHIT(hitId):
 	response = requests.get(request, allow_redirects=False)
 	print response.text
 
-def payWorkers(hitId, taskCode, cur):
+def forceDisableHIT(hitId):
+	timestamp, signature = generateTimeStampAndSignature(os.environ.get('SECRETKEY'), "DisableHIT")
+
+	# Current as of 12/14/2016
+	version = "2014-08-15"
+	operation = "DisableHIT"
+
+	request = 'https://mechanicalturk.sandbox.amazonaws.com/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+	response = requests.get(request, allow_redirects=False)
+	print response.text
+
+def payWorkers(cur):
 	'''
 		If hitID and taskCode pair exist in task_code table, pay them. 
 		Otherwise, reject their answer.
@@ -113,71 +124,78 @@ def payWorkers(hitId, taskCode, cur):
 	# If the proper environment variables are set in gs-setup
 	if os.environ.get('AWSACCESSKEYID') != None and os.environ.get('SECRETKEY') != None:
 
-		# Get common parameters
-		timestamp, signature = generateTimeStampAndSignature(os.environ.get('SECRETKEY'), "GetAssignmentsForHIT")
+		cur.execute('select hit_id, code from task_code')
+		hit_ids = cur.fetchall()
 
-		# # Create database connection
-		# db_session = data_connection.new_session()
+		if hit_ids == None or len(hit_ids) == 0:
+			return
 
-		# Current as of 12/14/2016
-		version = "2014-08-15"
-		operation = "GetAssignmentsForHIT"
+		for hit in hit_ids:
+			hitId = hit[0]
+			taskCode = hit[1]
 
-		# PAY ALL LAYOUT TASKS
-		request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
+			# Get common parameters
+			timestamp, signature = generateTimeStampAndSignature(os.environ.get('SECRETKEY'), "GetAssignmentsForHIT")
 
-		response = requests.get(request, allow_redirects=False)
-		print response.text
-		root = ET.fromstring(response.text)[1]
-		for assignment in root.findall('Assignment'):
-			assignment_id = ""
-			worker_id = ""
-			hit_id = ""
-			assignment_status = ""
-			task_code = ""
+			# Current as of 12/14/2016
+			version = "2014-08-15"
+			operation = "GetAssignmentsForHIT"
 
-			assignment_id = assignment.find('AssignmentId').text
-			worker_id = assignment.find('WorkerId').text
-			hit_id = assignment.find('HITId').text
-			assignment_status = assignment.find('AssignmentStatus').text
-			task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
-
-			# JUST PAY ALL THE WORKERS
-			# Check to see if the task code exists and matches the hit id associated with it
-			# cur.execute('select * from task_code as tc where tc.hit_id == ? and tc.code == ?', (hitId, task_code))
-			# data = cur.fetchall()
-
-			#if data == None or len(data) == 0:
-			# 	# Reject them
-			# 	timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
-			# 	operation = "RejectAssignment"
-			# 	request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-			# else:
-			# 	for code in data:
-			# Get new signature and timestamp for different API call
-			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
-			operation = "ApproveAssignment"
-			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
-			
-			# Delete task code from database so it can't be reused
-			# cur.execute('delete from task_code where code = ? and hit_id =?', (code[1], code[0]))
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&HITId=' + hitId + '&Signature=' + signature
 			response = requests.get(request, allow_redirects=False)
 			print response.text
 
-def evaluateWork(cur):
+			root = ET.fromstring(response.text)[1]
+			for assignment in root.findall('Assignment'):
+				assignment_id = ""
+				worker_id = ""
+				hit_id = ""
+				assignment_status = ""
+				task_code = ""
 
-	import os.path
-	if os.path.isfile(PATH + PAYWORKERPATH):
-	    worker_file = open(PATH + PAYWORKERPATH, 'r')
+				assignment_id = assignment.find('AssignmentId').text
+				worker_id = assignment.find('WorkerId').text
+				hit_id = assignment.find('HITId').text
+				assignment_status = assignment.find('AssignmentStatus').text
+				task_code = ET.fromstring(assignment.find('Answer').text)[0][1].text
 
-	    for line in worker_file:
-	    	command = line.replace("\n", "").split('\t')
-	    	print command
-	    	if command[0] == "payWorkers":
-	    		payWorkers(command[1], command[2], cur)
+				if task_code != taskCode:
+					# Reject them
+					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "RejectAssignment")
+					operation = "RejectAssignment"
+					request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				else:
+					# Get new signature and timestamp for different API call
+					timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "ApproveAssignment")
+					operation = "ApproveAssignment"
+					request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + '&AssignmentId=' + assignment_id + '&Signature=' + signature
+				
+				response = requests.get(request, allow_redirects=False)
+				print response.text
 
-	    worker_file.close()
-	    # os.remove(PATH + PAYWORKERPATH)
+def searchHits():
+
+	timestamp, signature = generateTimeStampAndSignature(os.environ.get('SECRETKEY'), "SearchHITs")
+	operation = "SearchHITs"
+	version = "2014-08-15"
+
+	request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&Signature=' + signature
+	response = requests.get(request, allow_redirects=False)
+	print response.text
+	root = ET.fromstring(response.text)
+	totalNum = int(root[1][2].text)
+	pageNum = 1
+
+	while totalNum > 0:
+
+		request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=' + operation + '&AWSAccessKeyId=' + os.environ.get('AWSACCESSKEYID') + '&Version=' + version + '&Timestamp=' + timestamp + '&Signature=' + signature + '&PageNumber=' + str(pageNum)
+		response = requests.get(request, allow_redirects=False)
+		root = ET.fromstring(response.text)
+		print root
+		for hit in root[1].findall("HIT"):
+			forceExpireHIT(hit[0].text)
+
+		totalNum -= 10
 
 if __name__ == "__main__":
     conn = sqlite3.connect(PATH + 'graphspace.db')
@@ -188,6 +206,6 @@ if __name__ == "__main__":
     removeExpiredPublicGraphs(cur)
     removeExpiredTasks(cur)
     conn.commit()
-    evaluateWork(cur)
+    payWorkers(cur)
     conn.commit()
     conn.close()

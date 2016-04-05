@@ -61,8 +61,10 @@ def getFeedback(graph_id, user_id, layout_owner, layout_name):
 	#create a new db session
 	db_session = data_connection.new_session()
 
+	layout = db_session.query(models.Layout).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.layout_name == layout_name).first()
+
 	try:
-		feedback = db_session.query(models.Feedback.text).filter(models.Feedback.graph_id == graph_id).filter(models.Feedback.user_id == user_id).filter(models.Feedback.layout_name == layout_name).filter(models.Feedback.layout_owner == layout_owner).all()
+		feedback = db_session.query(models.Feedback.text).filter(models.Feedback.graph_id == graph_id).filter(models.Feedback.user_id == user_id).filter(models.Feedback.layoud_id == layout.layout_id).all()
 		db_session.close()
 		return feedback
 	except NoResultFound:
@@ -523,11 +525,11 @@ def set_task_layout_context(request, context, uid, gid, layout_name, layout_owne
 	if layout != None:
 		graph_json = get_layout_for_graph(layout.layout_name, layout.owner_id, gid, uid, layout.user_id)
 
-		if approve == None:
-			task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).first()
+		if approve:
+			task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").first()
 		else:
-			task_exists = db_session.query(models.ApproveTask).filter(models.ApproveTask.layout_id == layout.layout_id).first()
-		
+			task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").first()
+
 		if task_exists != None:
 			layout_to_view = json.dumps({"json": graph_json})
 			context['layout_name'] = layout.layout_name
@@ -648,58 +650,50 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 
 	db_session = data_connection.new_session()
 
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+
+	# If layout doesn't exist, return
+	if layout == None:
+		return
+
+	# If it's an expert, than delete the task at once without paying worker 
 	if expert:
 		# Add this evaluation to database
-		layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="EXPERT_WORKER")
-
+		layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_id=layout.layout_id, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="EXPERT_WORKER")
 		db_session.add(layout_eval)
-		print uid, gid, layout_name, layout_owner
-		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
-		if layout == None:
-			return
-		task = db_session.query(models.ApproveTask).filter(models.ApproveTask.graph_id == gid).filter(models.ApproveTask.user_id == uid).filter(models.ApproveTask.layout_id == layout.layout_id).filter(models.ApproveTask.hit_id == "EXPERT_WORKER").first()
+
+		task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.worker_id == "EXPERT_WORKER").first()
 		db_session.delete(task)
 		db_session.commit()
 		db_session.close()
 		return "Done"
 
 	# Add this evaluation to database
-	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_name=layout_name, layout_owner=layout_owner, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="MTURK_Worker")
+	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_id=layout.layout_id, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="MTURK_Worker")
 
 	db_session.add(layout_eval)
 	db_session.commit()
 
-	# Generate task code
-	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
-
-	# Create database connection
-	db_session = data_connection.new_session()
-
 	# Get the task associated for this graph
-	task = db_session.query(models.ApproveTask).filter(models.ApproveTask.hit_id == hit_id).first()
+	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).filter(models.Task.task_type == "APPROVE_TASK").first()
+
 	if task == None:
 		return None
 
 	submit = task.submitted
-	expires = datetime.now() + timedelta(hours=6)
-	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
-	db_session.add(new_code)
-	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
-	db_session.delete(task)
+	
+	# If layout has had 5 people look at it, then delete the task, otherwise increment submission count
+	if task.submitted == 5:
+		db_session.delete(task)
+	else:
+		task.submitted = submit + 1
+		
 	db_session.commit()
 
-	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
-	if task.submitted < 5:
-		layout_id = db_session.query(models.Layout.layout_id).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
-		if layout_id:
-			launchApprovalTask(uid, gid, layout_id[0], submitted=submit + 1)
-
-	payFile = open(PAYWORKERPATH, 'a')
-	payFile.write("payWorkers\t" + hit_id + "\t" + taskCode +"\n")
-	payFile.close()
-
+	task_code = db_session.query(models.TaskCode.code).filter(models.TaskCode.hit_id == hit_id).first()
 	db_session.close()
-	return taskCode
+
+	return task_code
 
 def get_crowd_layouts_for_graph(uid, gid):
 	'''
@@ -3196,7 +3190,8 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 		:param graph_id: ID of graph
 		:param user_id: Owner of graph
 		:param layout_array: Array of layouts to be saved when task is launched
-
+		:param single: If only single layout is being produced instead of an array of layouts
+		:param submitted: Number of times the layout has been submitted by other workers
 		:return Error or None if no error
 	'''
 
@@ -3208,6 +3203,7 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 	# Get the current time
 	curtime = datetime.now()
 
+	# If only one layout is provided, nest it in list so rest of code still works
 	if single != None:
 		layout_array = [json.loads(layout_array[0])]
 	else:
@@ -3218,11 +3214,12 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 
 		#Go through each layout and save it
 		for layout in layout_array:
+			# Create randomly named layout
 			new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, times_modified=0, original_json=None)
 			db_session.add(new_layout)
 			db_session.commit()
 
-			# Get the common parameters
+			# Get the common parameters for MTurk
 			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
 
 			# Current as of 12/14/2016
@@ -3259,9 +3256,10 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 			try:
 				isValid = root[1][0][0].text
 				if isValid == "True":
-
-					new_task = models.Task(task_id=None, submitted=submitted, graph_id=graph_id, user_id=user_id, task_owner=user_id, created=curtime, hit_id=root[1][1].text, layout_id = new_layout.layout_id)
+					hit_id=root[1][1].text
+					new_task = models.Task(task_id=None, submitted=submitted, graph_id=graph_id, user_id=user_id, task_owner=user_id, created=curtime, hit_id=hit_id, layout_id = new_layout.layout_id, task_type="LAYOUT_TASK", worker_id="MTURK_Worker")
 					db_session.add(new_task)
+					createTaskCode(db_session, hit_id)
 					db_session.commit()
 					db_session.close()
 
@@ -3278,38 +3276,38 @@ def launchPrepaidTasks():
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
-        ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
-        ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
-        ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
-        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
-        ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
-        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
-        ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
+        ("dsingh5270@gmail.com", "Etoxazole_crowd", 189)
+        # ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+        # ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
     ]
 
  	researcher_layout_prepaid_tasks = [
@@ -3345,20 +3343,24 @@ def launchPrepaidTasks():
 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
- 	db_session = data_connection.new_session()
- 	for task in crowd_layout_prepaid_tasks:
- 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
-		db_session.add(new_task)
-	for task in researcher_layout_prepaid_tasks:
- 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
-		db_session.add(new_task)
+ 	# for task in crowd_layout_prepaid_tasks:
+ 	# 	launchApprovalTask(task[0], task[1], task[2])
 
-	db_session.commit()
-	db_session.close()
+ 	# db_session = data_connection.new_session()
+ 	# for task in crowd_layout_prepaid_tasks:
+ 	# 	new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+		# db_session.add(new_task)
+
+	# for task in researcher_layout_prepaid_tasks:
+ # 		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+	# 	db_session.add(new_task)
+
+	# db_session.commit()
+	# db_session.close()
 
 def getAllApproveTasks():
 	db_session = data_connection.new_session()
-	approve_tasks = db_session.query(models.ApproveTask).filter(models.ApproveTask.hit_id == "EXPERT_WORKER").all()
+	approve_tasks = db_session.query(models.Task).filter(models.Task.worker_id == "EXPERT_WORKER").all()
 	db_session.close()
 	return approve_tasks
 
@@ -3376,8 +3378,10 @@ def launchApprovalTask(uid, gid, layout_id, submitted=0):
 
 			db_session = data_connection.new_session()
 
+			# Get the layout
 			layout = db_session.query(models.Layout).filter(models.Layout.layout_id == layout_id).first()
 
+			# If it doesn't exist, exit 
 			if layout == None:
 				print "LAYOUT DOESNT EXIST ANYMORE"
 				return None
@@ -3433,7 +3437,7 @@ def launchApprovalTask(uid, gid, layout_id, submitted=0):
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
 			
 			# Generate MechTurkRequest
-			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.20&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual'
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.20&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual' + '&MaxAssignments=5'
 
 			response = requests.get(request, allow_redirects=False)
 
@@ -3446,9 +3450,11 @@ def launchApprovalTask(uid, gid, layout_id, submitted=0):
 			try:
 				isValid = root[1][0][0].text
 				if isValid == "True":
-					new_task = models.ApproveTask(task_id=None, task_owner=uid, graph_id=gid, user_id=uid, created=datetime.now(), hit_id=root[1][1].text, layout_id=layout_id, submitted=submitted)
+					hit_id=root[1][1].text
+					new_task = models.Task(task_id=None, task_owner=uid, graph_id=gid, user_id=uid, created=datetime.now(), hit_id=hit_id, layout_id=layout_id, submitted=submitted, task_type="APPROVE_TASK", worker_id="MTURK_Worker")
 					db_session.add(new_task)
 					db_session.commit()
+					createTaskCode(db_session, hit_id)
 					db_session.close()
 
 			except Exception as e:
@@ -4556,7 +4562,6 @@ def computeFeatures(uid, gid, layout_name, layout_owner):
 		origJson = json.loads(layout.original_json)
 		newJson = json.loads(layout.json)
 
-
 		for orig_key in origJson:
 			orig_x = origJson[orig_key]["x"]
 			orig_y = origJson[orig_key]["y"]
@@ -4585,40 +4590,37 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 
 	db_session = data_connection.new_session()
 
-	features = computeFeatures(uid, gid, worked_layout, "MTURK_Worker")
-
-	new_feature_vector = models.Feature(id=None, user_id = uid, graph_id = gid, layout_name = worked_layout, layout_owner="MTURK_Worker", created=datetime.now(), distance_vector=json.dumps(features[0]), pairwise_vector=json.dumps(features[1]), num_changes=numChanges, time_spent=timeSpent, events=events)
-	db_session.add(new_feature_vector)
-	db_session.commit()
-
-	if numChanges < 50 and timeSpent < 100 and len(events) < 50:
-		return "Not enough work done to complete task!"
-
-	# Generate task code
-	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
-
-	# Create database connection
-	db_session = data_connection.new_session()
-
-	# Get the layout 
-	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == worked_layout).filter(models.Layout.owner_id == "MTURK_Worker").filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
+	# Get the layout from the database
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == worked_layout).filter(models.Layout.owner_id == "MTURK_Worker").first()
+	
+	# If layout doesn't exist, exit out
 	if layout == None:
 		return None
 
-	layout_id = layout.layout_id
+	# Get features of the task
+	features = computeFeatures(uid, gid, worked_layout, "MTURK_Worker")
 
+	# Store them in database 
+	new_feature_vector = models.Feature(id=None, user_id = uid, graph_id = gid, layout_id = layout.layout_id, created=datetime.now(), distance_vector=json.dumps(features[0]), pairwise_vector=json.dumps(features[1]), num_changes=numChanges, time_spent=timeSpent, events=events)
+	db_session.add(new_feature_vector)
+	db_session.commit()
+
+	# Basic error checking to see if worker deserves pay
+	if numChanges < 50 and timeSpent < 100 and len(events) < 50:
+		return "Not enough work done to complete task!"
+
+	# Create database connection
+	db_session = data_connection.new_session()
+	
 	# Get the task associated for this graph
-	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).first()
+	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).filter(models.Task.task_type == "LAYOUT_TASK").first()
 	submit = task.submitted
-	taskHitId = task.hit_id
 
+	# If task doesn't exist, exit out
 	if task == None:
 		return None
 
-	expires = datetime.now() + timedelta(hours=6)
-	new_code = models.TaskCode(code=taskCode, created=datetime.now(), used=0, expires=datetime.now() + timedelta(hours=6), hit_id = task.hit_id)
-	db_session.add(new_code)
-	# COMMENT THIS OUT SO WHEN WORKERS ACCIDENTALLY DON'T SUBMIT THE RIGHT ANSWER, THEY CAN ACCESS THIS HIT AGAIN!!
+	# Once task is complete, delete it from the database
 	db_session.delete(task)
 	db_session.commit()
 
@@ -4627,18 +4629,24 @@ def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit
 	db_session.commit()
 
 	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
-	# if mod_layout.times_modified < 5:
-	# 	launchTask(gid, uid, [mod_layout.json], single=True, submitted=submit + 1)
+	# if layout.times_modified < 5:
+	# 	launchTask(gid, uid, [layout.json], single=True, submitted=submit + 1)
+
+	task_code = db_session.query(models.TaskCode.code).filter(models.TaskCode.hit_id == hit_id).first()
 	db_session.close()
 
-	payFile = open(PAYWORKERPATH, 'a')
-	payFile.write("payWorkers\t" + taskHitId + "\t" + taskCode +"\n")
-	payFile.close()
-
 	# launch approval tasks
-	launchApprovalTask(uid, gid, layout_id)
+	launchApprovalTask(uid, gid, layout.layout_id)
 
-	return taskCode
+	return task_code
+
+def createTaskCode(db_session, hitId):
+
+	# Generate task code
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), hit_id = hitId)
+	db_session.add(new_code)
+	db_session.commit()
 
 def getCrowdEnabledGroup():
 	'''
