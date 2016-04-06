@@ -295,7 +295,7 @@ def save_layout(request, uid, gid):
         :param HTTP POST Request
 
     '''
-
+    graph_owner = uid
     if request.POST:
         if gid[len(gid) - 1] == '/':
             gid = gid[:len(gid) - 1]
@@ -305,7 +305,7 @@ def save_layout(request, uid, gid):
         if uid == None:
             return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to save a layout!")), content_type="application/json")
 
-        result = db.save_layout(gid, uid, request.POST['layout_name'], uid, request.POST['points'], request.POST['public'], request.POST['unlisted'])
+        result = db.save_layout(gid, graph_owner, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
         if result == None:
             return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
         
