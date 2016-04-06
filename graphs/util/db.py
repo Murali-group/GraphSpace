@@ -689,10 +689,10 @@ def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, recta
 	db_session.commit()
 
 	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
-	if task.submitted < 5:
-		layout_id = db_session.query(models.Layout.layout_id).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
-		if layout_id:
-			launchApprovalTask(uid, gid, layout_id[0], submitted=submit + 1)
+	# if task.submitted < 5:
+	# 	layout_id = db_session.query(models.Layout.layout_id).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
+	# 	if layout_id:
+	# 		launchApprovalTask(uid, gid, layout_id[0], submitted=submit + 1)
 
 	payFile = open(PAYWORKERPATH, 'a')
 	payFile.write("payWorkers\t" + hit_id + "\t" + taskCode +"\n")
@@ -3345,16 +3345,25 @@ def launchPrepaidTasks():
 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
- 	db_session = data_connection.new_session()
- 	for task in crowd_layout_prepaid_tasks:
- 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
-		db_session.add(new_task)
-	for task in researcher_layout_prepaid_tasks:
- 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
-		db_session.add(new_task)
+ 	# db_session = data_connection.new_session()
+ 	# new_task = models.ApproveTask(task_id=None, task_owner="dsingh5270@gmail.com", graph_id="test", user_id="dsingh5270@gmail.com", created=datetime.now(), hit_id="testing", layout_id=1, submitted=0)
+ 	# db_session.commit()
+ 	launchApprovalTask("dsingh5270@gmail.com", "test", 1)
+ 	# for task in crowd_layout_prepaid_tasks:
+ 	# 	new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
+		# db_session.add(new_task)
+		# print task[0],task[1],task[2]
+		# launchApprovalTask(task[0], task[1], task[2])
+		# # db_session.commit()
+		# print "IN HERE"
+		# return
 
-	db_session.commit()
-	db_session.close()
+	# for task in researcher_layout_prepaid_tasks:
+ # 		new_task = models.ApproveTask(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", layout_id=task[2], submitted=0)
+	# 	db_session.add(new_task)
+
+	# db_session.commit()
+	# db_session.close()
 
 def getAllApproveTasks():
 	db_session = data_connection.new_session()
