@@ -61,8 +61,7 @@ class Feedback(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
     user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_owner =Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
     text = Column(String, nullable = False)
     created = Column(TIMESTAMP, nullable = False)
 
@@ -90,8 +89,6 @@ class TaskCode(Base):
     hit_id = Column(String, ForeignKey('task.hit_id', ondelete="CASCADE", onupdate="CASCADE"))
     code = Column(String, primary_key = True)
     created = Column(TIMESTAMP, nullable = False)
-    used = Column(Integer, nullable = False)
-    expires = Column(TIMESTAMP, nullable = False)
 
 class User(Base):
     '''The class representing the schema of the user table.'''
@@ -168,57 +165,12 @@ class Task(Base):
     task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    layout_id = Column(Integer, nullable = False)
+    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
     created = Column(TIMESTAMP, nullable = False)
     hit_id=Column(String, nullable=False)
+    worker_id=Column(String, nullable=False)
     submitted=Column(Integer, nullable=True)
-
-class ApproveTask(Base):
-    '''
-        Table that represents the approve_task table.
-    '''
-    __tablename__ = 'approve_task'
-
-    task_id = Column(Integer, autoincrement=True, primary_key=True)
-    task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    layout_id = Column(Integer, nullable = False)
-    created = Column(TIMESTAMP, nullable = False)
-    hit_id=Column(String, nullable=False)
-    submitted=Column(Integer, nullable=True)
-
-class Event(Base):
-    '''The class representing the schema of the event table.'''
-    __tablename__ = 'event'
-
-    event_id = Column(Integer, primary_key = True, autoincrement = True)
-    # 1 means clickable graph link
-    # 2 means clickable group link
-    # 3 means clickable layout link
-    # 4 means clickable task link
-    # 5 means delete graph
-    # 6 means delete group
-    # 7 means deleted layout from graph
-    # 8 means unshared graph
-    # 9 means new feedback note
-
-    event_type = Column(Integer, nullable = False)
-    created = Column(TIMESTAMP, nullable = False)
-    description = Column(String, nullable = False)
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-    layout_name = Column(String, nullable = True)
-    layout_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-
-class LastAccess(Base):
-    '''The class representing the schema of the last time user accessed notifications page.'''
-    __tablename__ = 'last_accessed'
-
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key = True)
-    accessed = Column(TIMESTAMP, nullable = False)
+    task_type=Column(String, nullable=False)
 
 class GraphTag(Base):
     '''
@@ -226,21 +178,6 @@ class GraphTag(Base):
     '''
     __tablename__ = 'graph_tag'
     tag_id = Column(String, primary_key = True) #id
-
-# class Log(Base):
-#     '''
-#         Table for log
-#     '''
-#     __tablename__ = 'log'
-
-#     id = Column(Integer, autoincrement=True, primary_key=True)
-#     eventType = Column(String, nullable = False)
-#     eventTime = Column(String, nullable = False)
-#     elementInvolved = Column(String, nullable = True)
-#     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-#     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-#     layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
-#     layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
 
 class Feature(Base):
     '''
@@ -251,15 +188,13 @@ class Feature(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
     created = Column(TIMESTAMP, nullable = False)
     distance_vector = Column(String, nullable = True)
     pairwise_vector = Column(String, nullable = True)
     num_changes = Column(Integer, nullable = False)
     time_spent = Column(Integer, nullable = False)
     events = Column(String, nullable = False)
-
 
 class Layout(Base):
     '''
@@ -305,11 +240,9 @@ class LayoutStatus(Base):
     __tablename__ = 'layout_status'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
-
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
     user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_name = Column(String, ForeignKey('layout.layout_name', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_owner = Column(String, ForeignKey('layout.owner_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_id = Column(Integer, nullable = False)
     triangle_rating = Column(Integer, nullable = False)
     rectangle_rating = Column(Integer, nullable = False)
     shape_rating = Column(Integer, nullable = False)
@@ -376,25 +309,6 @@ class Edge(Base):
             ForeignKeyConstraint([user_id, graph_id, head_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
             ForeignKeyConstraint([user_id, graph_id, tail_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
-
-
-# CREATE INDEX graph_id_modified_user_id_public on graph(graph_id, modified, user_id, public);
-# CREATE INDEX graph_data_idx on graph(graph_id, modified, user_id, public);
-# CREATE INDEX password_reset_idx_user_id ON password_reset (user_id);
-# CREATE INDEX password_reset_idx_user_id ON password_reset (user_id);
-
-# CREATE INDEX edge_search on edge(head_id, tail_id);
-# CREATE INDEX edge_idx on edge(head_id, tail_id, head_graph_id);
-
-# CREATE INDEX group_to_graph_graph_id_idx on group_to_graph(graph_id);
-# CREATE INDEX group_to_graph_idx on group_to_graph(group_id);
-# CREATE INDEX group_to_graph_user_id_idx on group_to_graph(user_id);
-# CREATE INDEX node_idx_label on node(label);
-
-# CREATE INDEX group_to_user_idx on group_to_user(user_id);
-
-# CREATE INDEX tag_id_on_graph_to_tag on graph_to_tag(tag_id);
-# CREATE INDEX graph_to_tag_idx on graph_to_tag(tag_id);
 
 #Create indices
 Index('graph_public_idx', Graph.public)

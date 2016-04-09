@@ -629,7 +629,7 @@ def approve_task_expert(request):
         context = login(request)
 
     tasks = db.getAllApproveTasks()
-    
+    all_tasks = len(tasks)
     for task in tasks:
         if task.submitted == 0:
 
@@ -643,7 +643,7 @@ def approve_task_expert(request):
             context = db.set_task_layout_context(request, context, uid, gid, layout.layout_name, layout.owner_id, approve=True)
 
             context['graph'] = db.retrieve_cytoscape_json(graph_info[0])
-
+            context['remaining'] = all_tasks
             context['draw_graph'] = True
             
             context["researcher_view"] = False
