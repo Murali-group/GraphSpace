@@ -76,7 +76,7 @@ def index(request):
     # The password_reset table contains all the users whose passwords need to be updated.
     # Once the user has updated their password, their name is removed from the password_reset table
 
-    #db.launchPrepaidTasks()
+    # db.launchPrepaidTasks()
     if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
         context = {}
         
@@ -640,7 +640,7 @@ def approve_task_expert(request):
 
             layout = db.getLayoutById(task.layout_id)
 
-            context = db.set_task_layout_context(request, context, uid, gid, layout.layout_name, layout.owner_id, approve=True)
+            context = db.set_task_layout_context(request, context, uid, gid, layout.layout_name, layout.owner_id, approve=True, expert=True)
 
             context['graph'] = db.retrieve_cytoscape_json(graph_info[0])
             context['remaining'] = all_tasks

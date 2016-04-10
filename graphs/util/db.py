@@ -508,7 +508,7 @@ def get_default_layout_name(uid, gid):
 	else:
 		return None
 
-def set_task_layout_context(request, context, uid, gid, layout_name, layout_owner, approve=None):
+def set_task_layout_context(request, context, uid, gid, layout_name, layout_owner, approve=None, expert=None):
 
 	context["Error"] = None
 	layout_to_view = get_default_layout(uid, gid)
@@ -524,10 +524,16 @@ def set_task_layout_context(request, context, uid, gid, layout_name, layout_owne
 		graph_json = get_layout_for_graph(layout.layout_name, layout.owner_id, gid, uid, layout.user_id)
 
 		if approve:
-			task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").first()
+			if expert:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").filter(models.Task.worker_id == "EXPERT_WORKER").first()
+			else:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
 		else:
-			task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").first()
-
+			if expert:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
+			else:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id == "EXPERT_WORKER").first()
+		
 		if task_exists != None:
 			layout_to_view = json.dumps({"json": graph_json})
 			context['layout_name'] = layout.layout_name
@@ -3276,38 +3282,38 @@ def launchPrepaidTasks():
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
         ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
-        ("dsingh5270@gmail.com", "Etoxazole_crowd", 189)
-        # ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
-        # ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
-        # ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
-        # ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
-        # ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
-        # ("dsingh5270@gmail.com", "Triclosan_crowd", 195),
+        ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
+        ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+        ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+        ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+        ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+        ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+        ("dsingh5270@gmail.com", "Triclosan_crowd", 195)
     ]
 
  	researcher_layout_prepaid_tasks = [
@@ -3343,20 +3349,23 @@ def launchPrepaidTasks():
 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
  	]
 
- 	# for task in crowd_layout_prepaid_tasks:
- 	# 	launchApprovalTask(task[0], task[1], task[2])
+ 	for task in crowd_layout_prepaid_tasks:
+ 		launchApprovalTask(task[0], task[1], task[2])
 
- 	# db_session = data_connection.new_session()
- 	# for task in crowd_layout_prepaid_tasks:
- 	# 	new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
-		# db_session.add(new_task)
+ 	for task in researcher_layout_prepaid_tasks:
+ 		launchApprovalTask(task[0], task[1], task[2])
 
-	# for task in researcher_layout_prepaid_tasks:
- # 		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
-	# 	db_session.add(new_task)
+ 	db_session = data_connection.new_session()
+ 	for task in crowd_layout_prepaid_tasks:
+ 		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+		db_session.add(new_task)
 
-	# db_session.commit()
-	# db_session.close()
+	for task in researcher_layout_prepaid_tasks:
+ 		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+		db_session.add(new_task)
+
+	db_session.commit()
+	db_session.close()
 
 def getAllApproveTasks():
 	db_session = data_connection.new_session()
