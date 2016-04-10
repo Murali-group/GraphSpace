@@ -42,10 +42,8 @@ data_connection = db_init.db
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
 AWSACCESSKEYID = settings.AWSACCESSKEYID
-# SIGNATURE = settings.SIGNATURE
 SECRETKEY = settings.SECRETKEY
 
-PAYWORKERPATH = 'graphs/static/payWorkers.txt'
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name):
@@ -631,6 +629,8 @@ def set_layout_context(request, context, uid, gid):
 
 	# Check to see if task is launched for graph
 	exists = task_exists(gid, uid)
+
+	print exists, gid, uid
 
 	context["crowd_layouts"] = get_crowd_layouts_for_graph("MTURK_Worker", gid)
 	context['task_launched'] = exists
@@ -3237,7 +3237,7 @@ def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
 			link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id + "?layout=" + new_layout.layout_name + "&amp;layout_owner=" + new_layout.owner_id
 
 			# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
-			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Text>This task is part of a study by Virginia Tech researchers investigating how people can make graph visualizations easier to understand, and the results may be published in scientific journals, conferences, and graduate student theses. You are invited to participate by accepting this task and completing the online consent form. If you participate, you will use our software to look at graphs and create new layouts using some guidelines.  You can do as many tasks as you like. Participation is voluntary and confidential. You must be 18 or older to participate.  You will be paid $0.50 for each task.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
 
 			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
 			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
@@ -3417,7 +3417,7 @@ def launchApprovalTask(uid, gid, layout_id, submitted=0):
 				                </MimeType>
 				                <DataURL>''' + URL_PATH + '''image?name=approve_layout</DataURL>
 				                <AltText>Image of interface.</AltText>
-				            </Binary>
+				            </Binary><Text>This task is part of a study by Virginia Tech researchers investigating how people can make graph visualizations easier to understand, and the results may be published in scientific journals, conferences, and graduate student theses. You are invited to participate by accepting this task and completing the online consent form. If you participate, you will use our software to look at graphs and give feedback on and review graph layouts submitted by crowd workers.  You can do as many tasks as you like. Participation is voluntary and confidential. You must be 18 or older to participate.  You will be paid $0.20 for each task.</Text>
 				            <FormattedContent>
 				                <![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]>
 				            </FormattedContent>

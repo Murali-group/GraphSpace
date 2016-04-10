@@ -2829,11 +2829,6 @@ $(document).ready(function() {
         var timeSpent = clock.stop();
         var events = logger.getEvents();
 
-        if (timeSpent < 2 || events.length < 1) {
-            alert("Please spend more time analyzing the graph");
-            return location.reload();
-        }
-
         $.post("../../../submitEvaluation/", {
             "graph_id": graph_id,
             "user_id": user_id,
