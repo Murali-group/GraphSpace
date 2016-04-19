@@ -203,6 +203,7 @@ def resetPassword(username, password, code):
 	#create a new db session
 	db_session = data_connection.new_session()
 
+	# if code in password_reset table doesn't match the user trying to reset the password, don't allow them to
 	user = db_session.query(models.PasswordReset).filter(models.PasswordReset.code == code).first()
 
 	if user == None:

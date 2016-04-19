@@ -23,6 +23,7 @@ $(document).ready(function() {
 		var password = $("#pass").val()
 		var verifyPass = $("#verifPass").val()
 
+		// Get the code attached to the user 
 		var resetCode = getQueryVariable("id");
 
 		if (!resetCode) {
