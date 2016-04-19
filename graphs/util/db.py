@@ -2039,37 +2039,26 @@ def update_graph(username, graphname, graph_json):
 
 	try:
 		# Get all tags for the graph
-		gt_to_delete = db_session.query(models.GraphToTag).filter(models.GraphToTag.graph_id == graphname).filter(models.GraphToTag.user_id == username).all()
-
-		# Remove all graph_to_tag associations
-		for gt in gt_to_delete:
-			db_session.delete(gt)
-			db_session.commit()
+		gt_to_delete = db_session.query(models.GraphToTag).filter(models.GraphToTag.graph_id == graphname).filter(models.GraphToTag.user_id == username).delete()
 
 	except NoResultFound:
 		print "No tags for graph"
 
 	try:
 		# Delete from edge
-		edges_to_delete = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).all()
-
-		for edge in edges_to_delete:
-			db_session.delete(edge)
-			db_session.commit()
-
+		edges_to_delete = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).delete()
+		
 	except NoResultFound:
 		print "No edges in graph to delete"
 
 	try:
 		# Delete from node
-		nodes_to_delete = db_session.query(models.Node).filter(models.Node.graph_id == graphname).filter(models.Node.user_id == username).all()
-
-		for node in nodes_to_delete:
-			db_session.delete(node)
-			db_session.commit()
+		nodes_to_delete = db_session.query(models.Node).filter(models.Node.graph_id == graphname).filter(models.Node.user_id == username).delete()
 
 	except NoResultFound:
 		print "No nodes in graph to delete"
+
+	db_session.commit()
 
 	curTime = datetime.now()
 	# Re-insert graph
@@ -2124,36 +2113,20 @@ def delete_graph(username, graphname):
 
 		db_session.commit()
 		# Delete from graph_to_tag
-		gt = db_session.query(models.GraphToTag).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
+		gt = db_session.query(models.GraphToTag).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).delete()
 
-		for g_tags in gt:
-			db_session.delete(g_tags)
-			db_session.commit()
 		# Delete from group_to_graph
-		gg = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.user_id == username).filter(models.GroupToGraph.graph_id == graphname).all()
+		gg = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.user_id == username).filter(models.GroupToGraph.graph_id == graphname).delete()
 
-		for g_gruop in gg:
-			db_session.delete(g_gruop)
-			db_session.commit()
 		# Delete from edge
-		edge = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).all()
-
-		for e in edge:
-			db_session.delete(e)
-			db_session.commit()
+		edge = db_session.query(models.Edge).filter(models.Edge.graph_id == graphname).filter(models.Edge.user_id == username).delete()
 
 		# Delete from node
-		node = db_session.query(models.Node).filter(models.Node.user_id == username).filter(models.Node.graph_id == graphname).all()
+		node = db_session.query(models.Node).filter(models.Node.user_id == username).filter(models.Node.graph_id == graphname).delete()
 
-		for n in node:
-			db_session.delete(n)
-			db_session.commit()
 		# Delete from layout
-		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graphname).filter(models.Layout.user_id == username).all()
+		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graphname).filter(models.Layout.user_id == username).delete()
 
-		for l in layout:
-			db_session.delete(l)
-			db_session.commit()
 		db_session.commit()
 		db_session.close()
 
