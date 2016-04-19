@@ -68,22 +68,39 @@ def add_user_to_password_reset(email, db_session=None):
 		:param email: Email of the user for GraphSpace
 		:param db_session: database connection (See sqlalchemy.org for more information)
 	'''
+	# Check if current user exists
+	curUser = emailExists(email)
+
+	# If user doesn't exist, return out
+	if curUser == None:
+		return
+
 	# Get database connection
 	db_session = db_session or data_connection.new_session()
 
 	# Get the user if they exist
-	user_id = db_session.query(models.User.user_id).filter(models.User.user_id == email).first()
-	
+	user_id = db_session.query(models.PasswordReset).filter(models.PasswordReset.user_id == email).first()
+
 	# Generate unique code that GraphSpace will use to identify
 	# which user is trying to reset their password
 	code = id_generator()
 
-	# Create new entry to be inserted into password_reset table
-	reset_user = models.PasswordReset(id = None, user_id = email, code = code, created = datetime.now())
+	# If user needs to already reset their password, simply update the code
+	# for everytime they want to reset the password
+
+	# If user doesn't have to already change their password, add them to the appropriate table
+	if user_id == None:
 	
-	# Commit the changes to the database
-	db_session.add(reset_user)
-	db_session.commit()
+		# Create new entry to be inserted into password_reset table
+		reset_user = models.PasswordReset(id = None, user_id = email, code = code, created = datetime.now())
+		db_session.add(reset_user)
+		# Commit the changes to the database
+		db_session.commit()
+	else:
+		#Update the code for the existing user already needing to reset their password
+		user_id.code = code
+		# Commit the changes to the database
+		db_session.commit()
 
 def emailExists(email):
 	'''
@@ -144,7 +161,7 @@ def sendForgotEmail(email):
 	mail_title = 'Password Reset Information for GraphSpace!'
 	message = 'Please go to the following url to reset your password: ' + URL_PATH + 'reset/?id=' + reset_code[0]
 	emailFrom = "GraphSpace Admin"
-	
+
 	# Sends email to respective user
 	send_mail(mail_title, message, emailFrom, [email], fail_silently=False)
 	db_session.close()
@@ -174,17 +191,25 @@ def retrieveResetInfo(reset_code):
 		db_session.close()
 		return None
 
-def resetPassword(username, password):
+def resetPassword(username, password, code):
 	'''
 		Updates password information about a user.
 
 		:param username: Email of user
 		:param password: Password of user
-
+		:param code: Code that is attached to this user to match if correct user submits password request
 	'''
 
 	#create a new db session
 	db_session = data_connection.new_session()
+
+	user = db_session.query(models.PasswordReset).filter(models.PasswordReset.code == code).first()
+
+	if user == None:
+		return "Incorrect code provided"
+
+	if user.user_id != username:
+		return "Invalid code provided for current user"
 
 	try:
 		# Hash password

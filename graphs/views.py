@@ -37,26 +37,16 @@ def index(request):
     # The password_reset table contains all the users whose passwords need to be updated.
     # Once the user has updated their password, their name is removed from the password_reset table
 
-    if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
-        context = {}
-        
-        # Forcibly clearing an existing user session (essentially logging user out) 
-        request.session['uid'] = None
-
-        # Email the user the link to reset their password
-        result = db.sendForgotEmail(request.POST['user_id'])
-
-        # Any and all errors are thrown via "Error" key in context.  This will
-        # be displayed to the user on the front end through a message.
-        context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
-        return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
-
-    # Action to login the user to GraphSpace
     context = login(request)
 
-    # If there is no problem, then context contains user's information
     if context['Error'] == None:
         return render(request, 'graphs/index.html', context)
+    elif db.need_to_reset_password(request.POST['user_id']) != None:
+        context = {}
+        context['Error'] = "Invalid password.  Perhaps you need to reset your password!"
+        # Any and all errors are thrown via "Error" key in context.  This will
+        # be displayed to the user on the front end through a message.
+        return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
     else:
         # If there is a problem, throw error and the reason why there was a problem
         return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
@@ -919,15 +909,18 @@ def resetLink(request):
 
     '''
     if request.method == 'GET': 
+        login_form = LoginForm()
+        register_form = RegisterForm()
         code = request.GET.get('id')
         email = db.retrieveResetInfo(code)
+        context = {'login_form': login_form, 'register_form': register_form}
 
         if email == None:
-            context = {}
             context['Error'] = "This password reset link is outdated. Please try resetting your password again."
             return render(request, 'graphs/error.html', context)
 
-        context = {"email": email, "url": URL_PATH}
+        context['email'] = email
+        context['url'] = URL_PATH
         return render(request, 'graphs/reset.html', context)
     else:
         return HttpResponse(json.dumps(db.throwError(500, "This route only accepts GET requests.")), content_type="application/json")
@@ -944,7 +937,7 @@ def resetPassword(request):
 
     '''
     if request.method == "POST":
-        resetInfo = db.resetPassword(request.POST['email'], request.POST['password'])
+        resetInfo = db.resetPassword(request.POST['email'], request.POST['password'], request.POST['code'])
 
         if resetInfo == None:
             return HttpResponse(json.dumps(db.throwError(500, "Password Update not successful!")), content_type="application/json");

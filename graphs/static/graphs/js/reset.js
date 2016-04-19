@@ -2,6 +2,18 @@ $(document).ready(function() {
 
 	var URL_PATH = $("#url").text();
 
+	//Gets query variables from the url
+	function getQueryVariable(variable)
+	{
+	   var query = window.location.search.substring(1);
+	   var vars = query.split("&");
+	   for (var i=0;i<vars.length;i++) {
+	           var pair = vars[i].split("=");
+	           if(pair[0] == variable){return pair[1];}
+	   }
+	   return(false);
+	}
+
 	/**
 	 * When clicked, it resets the password for given user.
 	 */
@@ -10,6 +22,12 @@ $(document).ready(function() {
 
 		var password = $("#pass").val()
 		var verifyPass = $("#verifPass").val()
+
+		var resetCode = getQueryVariable("id");
+
+		if (!resetCode) {
+			alert("Invalid reset code provided for this user!");
+		}
 
 		//If there is a password and verify password that are both the same
 		if (password.length == 0 || verifyPass.length == 0) {
@@ -20,7 +38,8 @@ $(document).ready(function() {
 			//Send reset request via email
 			$.post("../resetPassword/", {
 				email: $("#reset_email").val(),
-				password: password
+				password: password,
+				code: resetCode
 			}, function(data) {
 
 				if (data.Error) {
