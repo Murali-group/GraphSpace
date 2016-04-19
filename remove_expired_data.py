@@ -20,7 +20,7 @@ SECRETKEY = os.environ.get('SECRETKEY')
 AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
 
 PATH = "/home/divit/Documents/GRA/GraphSpace/"
-AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
+AWS_URL = 'https://mechanicalturk.amazonaws.com'
 
 def removeExpiredPublicGraphs(cur):
 	cur.execute('select graph_id, user_id, created, public from graph where user_id like ?', ("%Public_User%temp.com", ))
@@ -198,8 +198,8 @@ def searchHits():
 		totalNum -= 10
 
 if __name__ == "__main__":
-    conn = sqlite3.connect(PATH + 'graphspace.db')
-    cur = conn.cursor()
+    # conn = sqlite3.connect(PATH + 'graphspace.db')
+    # cur = conn.cursor()
 
     print "Running Cron Job to remove expired data from database"
     
@@ -209,3 +209,6 @@ if __name__ == "__main__":
     payWorkers(cur)
     conn.commit()
     conn.close()
+
+
+    
