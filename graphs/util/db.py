@@ -3844,6 +3844,19 @@ def change_graph_visibility_for_tag(isPublic, tagname, username):
 		db_session.close()
 		return None
 
+def get_visibility_of_graph(user_id, graph_id):
+	'''
+		Gets the publicity of a graph.
+
+		@param user_id: Owner of graph
+		@param graph_id: Name of graph
+	'''
+	db_session = data_connection.new_session()
+
+	public = db_session.query(models.Graph.public).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).first()
+	db_session.close()
+	return public[0]
+
 def delete_all_graphs_for_tag(tagname, username):
 	'''
 		Deletes all graphs under a tag owned by username.

@@ -178,14 +178,22 @@ def _graphs_page(request, view_type):
             context.update(pager_context)
             for i in xrange(len(context['current_page'].object_list)):
                 graph = list(context['current_page'][i])
-
+                # Get all the tags associated with current graphs and populate the 
+                # tags accordion
                 graph_tags = []
+
                 if request.GET.get(search_type):
-                    graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+                    user_id = graph[5]
+                    graph_id = graph[0]
+                    graph_tags = db.get_all_tags_for_graph(graph_id, user_id)
                     graph[1] = graph_tags
+                    graph.append(db.get_visibility_of_graph(user_id, graph_id))
                 else:
-                    graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
+                    user_id = graph[2]
+                    graph_id = graph[0]
+                    graph_tags = db.get_all_tags_for_graph(graph_id, user_id)
                     graph.insert(1, graph_tags)
+                    graph.append(db.get_visibility_of_graph(user_id, graph_id))
 
                 context['current_page'].object_list[i] = graph
 
@@ -672,11 +680,17 @@ def graphs_in_group(request, group_owner, group_id):
 
                     graph_tags = []
                     if request.GET.get(search_type):
-                        graph_tags = db.get_all_tags_for_graph(graph[0], graph[5])
+                        user_id = graph[5]
+                        graph_id = graph[0]
+                        graph_tags = db.get_all_tags_for_graph(graph_id, user_id)
                         graph[1] = graph_tags
+                        graph.append(db.get_visibility_of_graph(user_id, graph_id))
                     else:
-                        graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
+                        user_id = graph[2]
+                        graph_id = graph[0]
+                        graph_tags = db.get_all_tags_for_graph(graph_id, user_id)
                         graph.insert(1, graph_tags)
+                        graph.append(db.get_visibility_of_graph(user_id, graph_id))
                     all_tags += graph_tags
 
                     context['current_page'].object_list[i] = graph

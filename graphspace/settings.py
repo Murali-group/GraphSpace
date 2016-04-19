@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import local_settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -19,23 +20,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = local_settings.getSecretKey()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG')
+DEBUG = local_settings.getDebug()
 
-TEMPLATE_DEBUG = os.environ.get('TEMPLATE_DEBUG')
+TEMPLATE_DEBUG = local_settings.getTemplateDebug()
 
 ALLOWED_HOSTS = ['*']
 
 # GLOBAL VALUES FOR DATABASE AND PATHS
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
-URL_PATH = "http://localhost:8000/"
+URL_PATH = local_settings.getURLPath()
 DATABASE_LOCATION = 'sqlite:///graphspace.db'
+GOOGLE_ANALYTICS_PROPERTY_ID = local_settings.getGoogleAnalyticsId()
 
 # Application definition
 
 INSTALLED_APPS = (
+    'analytical',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -78,9 +81,9 @@ USE_TZ = True
 
 # Email setup
 EMAIL_USE_TLS = True
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST = local_settings.getEmailHost()
+EMAIL_HOST_USER = local_settings.getEmailUser()
+EMAIL_HOST_PASSWORD = local_settings.getEmailPassword()
 EMAIL_PORT = 587
 
 # Static files (CSS, JavaScript, Images)
