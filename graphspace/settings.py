@@ -32,7 +32,7 @@ ALLOWED_HOSTS = ['*']
 # GLOBAL VALUES FOR DATABASE AND PATHS
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
 URL_PATH = local_settings.getURLPath()
-DATABASE_LOCATION = 'sqlite:///graphspace.db'
+DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
 GOOGLE_ANALYTICS_PROPERTY_ID = local_settings.getGoogleAnalyticsId()
 
 # Application definition
