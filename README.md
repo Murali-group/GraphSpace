@@ -16,8 +16,8 @@ In order to run GraphSpace, please install sqlite3 and both the Python runtime a
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git` or by downloading the latest release: https://github.com/Murali-group/GraphSpace/releases.
 2. Visit the GraphSpace directory: `cd GraphSpace`
-3. Modify the `gs-setup.sh` file by populating the `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address through which GraphSpace sends emails to its users.
-4. Propogate changes to these variables in `gs-setup.sh` file to the environment: `source gs-setup.sh`.  Please run `source gs-setup.sh` and not `./gs-setup.sh` as this will not propogate the changes to the environment properly. *This step may require sudo privileges*
+3. Modify the `local_settings.py` file by populating the `EMAIL_HOST`, `EMAIL_HOST_USER`, and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address through which GraphSpace sends emails to its users.  `EMAIL_HOST` is the email protocol to use.  For example, `smtp.gmail.com` would be used if using a Gmail email address.
+4. Install all the necessary packages that GraphSpace requires: `python local_settings.py`*This step may require sudo privileges*
 5. Finally, start the GraphSpace server: `python manage.py runserver`
 6. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
@@ -26,10 +26,11 @@ Running GraphSpace on Apache
 
 This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  First, please follow the steps in **Running GraphSpace locally**.  Next, execute the instructions below. 
 
-1. Visit the graphspace directory: `cd GraphSpace/graphspace`
-3. In a text editor, open the file `gs-setup.sh`
-4. Set `DEBUG=False` and `TEMPLATE_DEBUG=False`
-5. Propogate those changes to the environment: `source gs-setup.sh`
+1. Visit the GraphSpace directory: `cd GraphSpace`
+2. Modify the `local_settings.py` file by populating all `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` fields.
+3. Set `DEBUG` and `TEMPLATE_DEBUG` to `False`.
+4. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
+5. Install all the necessary packages that GraphSpace requires: `python local_settings.py`*This step may require sudo privileges*
 6. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
 7. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 8. Create a file called `graphspace.conf`
@@ -57,9 +58,7 @@ This section describes the steps required to launch GraphSpace on a server that 
   </Directory>
  ```
 10. Give permissions to the Apache server to access the GraphSpace database: `chmod 777 graphspace.db`
-11. Navigate to the `GraphSpace/graphspace` directory and open up the file `settings.py` in a text editor
-12. Replace URL_PATH with the IP address or domain name of the computer where the apache2 server is running, e.g., "http://graphspace.org/"
-13. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
+11. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
