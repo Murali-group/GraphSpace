@@ -530,10 +530,10 @@ def set_task_layout_context(request, context, uid, gid, layout_name, layout_owne
 				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
 		else:
 			if expert:
-				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
-			else:
 				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id == "EXPERT_WORKER").first()
-		
+			else:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
+
 		if task_exists != None:
 			layout_to_view = json.dumps({"json": graph_json})
 			context['layout_name'] = layout.layout_name
