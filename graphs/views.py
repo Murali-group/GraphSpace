@@ -1682,7 +1682,7 @@ def shareLayoutWithGroups(request):
         uid = request.POST['uid']
         layoutId = request.POST['layoutId']
 
-        if len(db.get_all_groups_for_this_graph(uid, gid)) == 0:
+        if len(db.get_all_groups_for_this_graph(uid, gid)) == 0 and db.is_public_graph(uid, gid) == None:
             return HttpResponse(json.dumps(db.throwError(400, "No groups to share with.  Either share this graph with a group first or make this graph public!")), content_type="application/json")
         else:
             if db.is_public_graph(uid, gid):
