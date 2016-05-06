@@ -2000,13 +2000,3 @@ def constructGraphMessage(context, view_type, search, tags):
             context['message'] = "It appears that you currently have no graphs uploaded that match the serach and tag terms. Please create an account and join a group or upload your own graphs through the <a href='/../help/programmers/#add_graph'>REST API</a> or <a href='upload'>web interface</a>  with the given search and tag criteria in order to see them here."
 
     return context
-
-
-
-
-
-
-
-
-
-

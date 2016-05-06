@@ -861,21 +861,20 @@ def order_information(order_term, search_terms, graphs_list):
 		:param graph_list Tuples of graphs
 		:return sorted_list Sorted list of graph tuples according to order_term
 	'''
-
 	# Each order_term corresponds to sortable columns in the graph tables
 	if search_terms:
 		if order_term == 'graph_ascending':
-			return sorted(graphs_list, key=lambda graph: graph.graph_id)
+			return sorted(graphs_list, key=lambda graph: graph[0])
 		elif order_term == 'graph_descending':
-			return sorted(graphs_list, key=lambda graph: graph.graph_id, reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph[0], reverse=True)
 		elif order_term == 'modified_ascending':
 			return sorted(graphs_list, key=lambda graph: graph[4])
 		elif order_term == 'modified_descending':
 			return sorted(graphs_list, key=lambda graph: graph[4], reverse=True)
 		elif order_term == 'owner_ascending':
-			return sorted(graphs_list, key=lambda graph: graph.user_id)
+			return sorted(graphs_list, key=lambda graph: graph[2])
 		elif order_term == 'owner_descending':
-			return sorted(graphs_list, key=lambda graph: graph.user_id, reverse=True)
+			return sorted(graphs_list, key=lambda graph: graph[2], reverse=True)
 		else:
 			return graphs_list
 	else:
@@ -2846,7 +2845,7 @@ def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, db_session):
 		for tag in tag_terms:
 			try:
 				# Find graphs that have tag being searched for
-				intial_graphs_with_tags += db_session.query(models.Graph).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
+				intial_graphs_with_tags += db_session.query(models.Graph.graph_id, models.Graph.modified, models.Graph.user_id).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.GraphToTag.tag_id == tag).filter(models.GroupToGraph.graph_id == models.Graph.graph_id).filter(models.GroupToGraph.user_id == models.Graph.user_id).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).all()
 
 			except NoResultFound:
 				print "No shared graphs with tag"
@@ -2859,23 +2858,18 @@ def tag_result_for_graphs_in_group(groupOwner, groupId, tag_terms, db_session):
 			graph_repititions[graph] += 1
 
 		# Go through and aggregate all graph together
-		graph_mappings = defaultdict(list)
+		graph_mappings = set()
 
 		# If the number of times a graph appears matches the number of search terms
 		# it is a graph we want (simulating the and operator for all search terms)
 		for graph in intial_graphs_with_tags:
 
-			graph_tuple = (graph.graph_id, get_all_tags_for_graph(graph.graph_id, graph.user_id), graph.modified, graph.user_id, graph.public)
-
 			# Graph matches all search terms
 			if graph_repititions[graph] == len(tag_terms):
-
-				# If we haven't seen this graph yet 
-				if graph not in graph_mappings:
-					graph_mappings[graph] = graph_tuple
+				graph_mappings.add(graph)
 				
 		# Go through all the graphs and insert tags for the graphs that match all search terms
-		return graph_mappings.values()
+		return graph_mappings
 	else:
 		return []
 
