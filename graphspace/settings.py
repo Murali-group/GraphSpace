@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = local_settings.getSecretKey()
 
 # Amazon Mechanical Turk Keys (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkGettingStartedGuide/SetUp.html)
-AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
-SECRETKEY = os.environ.get('SECRETKEY')
-
+AWSACCESSKEYID = local_settings.getAWSKey()
+SECRETKEY = local_settings.getAWSSecretKey()
+AWS_URL = local_settings.getAWSURL()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.getDebug()
