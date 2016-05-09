@@ -25,6 +25,45 @@ URL_PATH = settings.URL_PATH
 
 ##### VIEWS #####
 
+def image(request):
+    name = request.GET.get('name', '')
+
+    if len(name) > 0:
+        return HttpResponseRedirect(URL_PATH + 'static/images/' + name + '.png')
+    else:
+        return HttpResponse(json.dumps(db.throwError(404, "Image not found!")), content_type="application/json")
+
+def saveFeedback(request):
+
+    if request.POST:
+        feedback = request.POST["feedback"]
+        graph_id = request.POST["graph_id"]
+        user_id = request.POST["user_id"]
+        layout_owner = request.POST["layout_owner"]
+        layout_name = request.POST["layout_name"]
+
+        error = db.saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name)
+
+        if error != None:
+            return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Feedback saved!")), content_type="application/json")
+
+def getFeedback(request):
+
+    if request.POST:
+        graph_id = request.POST["graph_id"]
+        user_id = request.POST["user_id"]
+        layout_owner = request.POST["layout_owner"]
+        layout_name = request.POST["layout_name"]
+
+        results = db.getFeedback(graph_id, user_id, layout_owner, layout_name)
+
+        if len(results) > 0:
+            return HttpResponse(json.dumps(db.sendMessage(200, results)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, "No feedback entered for this task!")), content_type="application/json")
+
 def index(request):
     '''
         Render the main page
@@ -37,6 +76,21 @@ def index(request):
     # The password_reset table contains all the users whose passwords need to be updated.
     # Once the user has updated their password, their name is removed from the password_reset table
 
+    if request.method == 'POST' and db.need_to_reset_password(request.POST['user_id']) != None:
+        context = {}
+        
+        # Forcibly clearing an existing user session (essentially logging user out) 
+        request.session['uid'] = None
+
+        # Email the user the link to reset their password
+        result = db.sendForgotEmail(request.POST['user_id'])
+
+        # Any and all errors are thrown via "Error" key in context.  This will
+        # be displayed to the user on the front end through a message.
+        context['Error'] = "Need to reset your password! An email has been sent to " + request.POST['user_id'] + ' with instructions to reset your password!'
+        return HttpResponse(json.dumps(db.throwError(400, context['Error'])), content_type="application/json");
+
+    # Action to login the user to GraphSpace
     context = login(request)
 
     if context['Error'] == None:
@@ -215,6 +269,8 @@ def _graphs_page(request, view_type):
     if len(recent_graphs) > 250:
         recent_graphs = recent_graphs[:250]
 
+    graph_tags = []
+
     for graph in recent_graphs:
 
         if request.GET.get(search_type):
@@ -222,12 +278,12 @@ def _graphs_page(request, view_type):
         else:
             graph_tags = db.get_all_tags_for_graph(graph[0], graph[2])
 
-        for tag in graph_tags:
-            if len(tag) > 0:
-                if tag in all_tags:
-                    all_tags[tag] += 1
-                else:
-                    all_tags[tag] = 1
+    for tag in graph_tags:
+        if len(tag) > 0:
+            if tag in all_tags:
+                all_tags[tag] += 1
+            else:
+                all_tags[tag] = 1
 
     sorted_tags = sorted(all_tags.items(), key=operator.itemgetter(1), reverse = True)[:10]
 
@@ -295,11 +351,6 @@ def save_layout(request, uid, gid):
     '''
     graph_owner = uid
     if request.POST:
-        if gid[len(gid) - 1] == '/':
-            gid = gid[:len(gid) - 1]
-
-        uid = request.session.get('uid')
-
         if uid == None:
             return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to save a layout!")), content_type="application/json")
 
@@ -313,22 +364,46 @@ def save_layout(request, uid, gid):
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)
 
-def view_graph(request, uid, gid):
+def update_layout(request, uid, gid):
     '''
-        View a graph with CytoscapeJS.
+        Updates a layout for a graph.
+
+        :param HTTP POST Request
+
+    '''
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    error = db.update_layout(gid, uid, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'], request.POST['originalLayout'])
+    if error == None:
+        return HttpResponse(json.dumps(db.sendMessage(200, "Layout updated!")), content_type="application/json")
+    
+    return HttpResponse(json.dumps(db.throwError(400, error)), content_type="application/json");
+
+def design_graph(request, uid, gid):
+    '''
+        View a graph with CytoscapeJS along with tool pallete 
+        to help researcher layout of a graph.
 
         :param request: HTTP GET Request
         :param uid: Owner of the graph to view
         :param gid: Graph id of the graph to view
     '''
+
     # Context contains all the elements we want to render on the web
     # page. We fill in the various elements of context before calling
     # the render() function.
     #handle login
-    context = login(request)
+    # context = login(request)
+    context = {
+        "uid": request.session['uid'],
+        "Error": None
+    }
 
     if gid[len(gid) - 1] == '/':
         gid = gid[:len(gid) - 1]
+
+    #TODO: Create trigger to delete older tasks (3 days)
 
     # if the graph is public, or if a user is a member 
     # of the group where this graph is shared
@@ -354,6 +429,78 @@ def view_graph(request, uid, gid):
         else:
             context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
             return render(request, 'graphs/error.html', context)
+
+    # Get correct layout for the graph to view
+    context = db.set_layout_context(request, context, uid, gid)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+    context['draw_graph'] = True
+
+    # TODO: This will eventually get deleted
+    json_data = json.loads(context['graph'])
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    # graph id
+    context['graph_id'] = gid
+
+    # Don't display the task_view
+    context["task_view"] = False
+    context["approve_view"] = False
+    context["researcher_view"] = False
+    context["designer_view"] = True
+
+    return render(request, 'graphs/view_graph.html', context)
+
+def view_graph(request, uid, gid):
+    '''
+        View a graph with CytoscapeJS.
+
+        :param request: HTTP GET Request
+        :param uid: Owner of the graph to view
+        :param gid: Graph id of the graph to view
+    '''
+    # Context contains all the elements we want to render on the web
+    # page. We fill in the various elements of context before calling
+    # the render() function.
+    #handle login
+    context = login(request)
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    #TODO: Create trigger to delete older tasks (3 days)
+
+    # if the graph is public, or if a user is a member 
+    # of the group where this graph is shared
+    # or if he owns this graph, then allow him to view it
+    # otherwise do not allow it
+    if db.is_public_graph(uid, gid) or 'Public_User_' in uid:
+        graph_to_view = db.get_all_info_for_graph(uid, gid)
+    elif request.session['uid'] == None:
+        context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph."
+        return render(request, 'graphs/error.html', context)
+    else:
+        # If the user is member of group where this graph is shared
+        user_is_member = db.can_see_shared_graph(context['uid'], uid, gid)
+
+        # if user is owner of graph or a member of group that shares graph
+        if request.session['uid'] == uid or user_is_member == True:
+            graph_info = db.getGraphInfo(uid, gid)
+            if graph_info != None:
+                graph_to_view =  graph_info
+            else: 
+                context['Error'] = "Graph: " + gid + " does not exist for " + uid + ".  Upload a graph with this name into GraphSpace in order to see it."
+                return render(request, 'graphs/error.html', context)
+        else:
+            context['Error'] = "You are not authorized to view this graph, please contact graph's owner for permission."
+            return render(request, 'graphs/error.html', context)
+
     # Get correct layout for the graph to view
     context = db.set_layout_context(request, context, uid, gid)
 
@@ -401,6 +548,14 @@ def view_graph(request, uid, gid):
     # graph id
     context['graph_id'] = gid
 
+    # Don't display the task_view
+    context["task_view"] = False
+    context["approve_view"] = False
+    context["researcher_view"] = True
+
+    # HARDCODED GROUP.. IF USER IS IN THIS GROUP, THEN ONLY THEN CAN THEY LAUNCH TASKS ON MTURK
+    context["crowd_group"] = db.getCrowdEnabledGroup()
+
     if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
         context['filters'] = True
 
@@ -409,6 +564,284 @@ def view_graph(request, uid, gid):
         return HttpResponseRedirect("/json/%s/%s" % (uid, gid))
 
     return render(request, 'graphs/view_graph.html', context)
+
+def view_task(request, uid, gid):
+    '''
+        View that workers will see for a launched task.
+
+        :param request: HTTP GET Request
+        :param uid: email of the user that owns this graph
+        :param gid: name of graph that the user owns
+    '''
+
+    # db.getAssignmentsForGraph(uid, gid)
+    if 'uid' in request.session:
+        context = login(request)
+        context["task_view"] = True
+
+    else:
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    graph_info = db.getGraphInfo(uid, gid)
+
+
+    if graph_info != None:
+        graph_to_view = graph_info
+    else: 
+        context['Error'] = "Task does not exist anymore!."
+        return render(request, 'graphs/error.html', context)
+
+    layout_name = request.GET.get('layout', '')
+    layout_owner = request.GET.get('layout_owner', '')
+
+    # Get correct layout for the graph to view
+    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+
+    context['draw_graph'] = True
+
+    # TODO: This will eventually get deleted
+
+    json_data = json.loads(context['graph'])
+
+    #add sidebar information to the context for display
+    if 'description' in json_data['metadata']:
+        context['description'] = json_data['metadata']['description'] + "</table></html>"
+    else:
+        context['description'] = ""
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    if 'name' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['name']
+    else:
+        context['graph_name'] = ''
+
+    # graph id
+    context['graph_id'] = gid
+
+    # owner
+    context["owner"] = uid
+
+    context["researcher_view"] = False
+    context["approve_view"] = False
+
+    return render(request, 'graphs/view_graph.html', context)
+
+def approve_task_expert(request):
+    if 'uid' in request.session:
+        context = login(request)
+    else:
+        context = {}
+
+    tasks = db.getAllApproveTasks()
+    all_tasks = len(tasks)
+    for task in tasks:
+        if task.submitted == 0:
+
+            uid = task.user_id
+            gid = task.graph_id
+
+            graph_info = db.getGraphInfo(uid, gid)
+
+            layout = db.getLayoutById(task.layout_id)
+
+            context = db.set_task_layout_context(request, context, uid, gid, layout.layout_name, layout.owner_id, approve=True, expert=True)
+
+            context['graph'] = db.retrieve_cytoscape_json(graph_info[0])
+            context['remaining'] = all_tasks
+            context['draw_graph'] = True
+            
+            context["researcher_view"] = False
+            context["approve_view"] = True
+
+            json_data = json.loads(context['graph'])
+
+            #add sidebar information to the context for display
+            if 'description' in json_data['metadata']:
+                context['description'] = json_data['metadata']['description'] + "</table></html>"
+            else:
+                context['description'] = ""
+
+            # id of the owner of this graph
+            context['owner'] = uid
+
+            if 'name' in json_data['metadata']:
+                context['graph_name'] = json_data['metadata']['name']
+            else:
+                context['graph_name'] = ''
+
+            # graph id
+            context['graph_id'] = gid
+
+            # owner
+            context["owner"] = uid
+
+            return render(request, 'graphs/view_graph_expert.html', context)
+
+    context['Error'] = "It appears as if there are no more graphs to lay out.  Thank you for your time!"
+    return render(request, 'graphs/error.html', context)
+
+def approve_task(request, uid, gid):
+    '''
+       Approve or reject a task.
+
+        :param request: HTTP GET Request
+        :param uid: email of the user that owns this graph
+        :param gid: name of graph that the user owns
+    '''
+
+    if 'uid' in request.session:
+        context = login(request)
+
+    else:
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        context = {'login_form': login_form, 'register_form': register_form, "Error": None, "task_view": True}
+
+    if gid[len(gid) - 1] == '/':
+        gid = gid[:len(gid) - 1]
+
+    graph_info = db.getGraphInfo(uid, gid)
+
+    if graph_info != None:
+        graph_to_view = graph_info
+    else: 
+        context['Error'] = "Task does not exist anymore!."
+        return render(request, 'graphs/error.html', context)
+
+    layout_name = request.GET.get('layout', '')
+    layout_owner = request.GET.get('layout_owner', '')
+
+    context = db.set_task_layout_context(request, context, uid, gid, layout_name, layout_owner, approve=True)
+
+    if context['Error']:
+        return render(request, 'graphs/error.html', context)
+
+    # Convert JSON for CytoscapeJS, if needed
+    context['graph'] = db.retrieve_cytoscape_json(graph_to_view[0])
+
+    context['draw_graph'] = True
+    
+    context["researcher_view"] = False
+    context["approve_view"] = True
+
+    # TODO: This will eventually get deleted
+
+    json_data = json.loads(context['graph'])
+
+    #add sidebar information to the context for display
+    if 'description' in json_data['metadata']:
+        context['description'] = json_data['metadata']['description'] + "</table></html>"
+    else:
+        context['description'] = ""
+
+    # id of the owner of this graph
+    context['owner'] = uid
+
+    if 'name' in json_data['metadata']:
+        context['graph_name'] = json_data['metadata']['name']
+    else:
+        context['graph_name'] = ''
+
+    # graph id
+    context['graph_id'] = gid
+
+    # owner
+    context["owner"] = uid
+
+    return render(request, 'graphs/view_graph.html', context)
+
+def submitEvaluation(request):
+    '''
+        Submits Evaluation for a task.
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+        layout_name = request.POST["layout_name"]
+        layout_owner = request.POST["layout_owner"]
+        triangle_rating = request.POST["triangle_rating"]
+        rectangle_rating = request.POST["rectangle_rating"]
+        shape_rating = request.POST["shape_rating"]
+        color_rating = request.POST["color_rating"]
+        hit_id = request.POST["hit_id"]
+
+        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id)
+
+        if task_code != None:
+            return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, "Evaluation Submission Unsucessful!")), content_type="application/json")
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
+
+def submitExpertEvaluation(request):
+    '''
+        Submits Expert Evaluation for a task.
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+        layout_name = request.POST["layout_name"]
+        layout_owner = request.POST["layout_owner"]
+        triangle_rating = request.POST["triangle_rating"]
+        rectangle_rating = request.POST["rectangle_rating"]
+        shape_rating = request.POST["shape_rating"]
+        color_rating = request.POST["color_rating"]
+        hit_id = request.POST["hit_id"]
+
+        task_code = db.submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id, expert=True)
+
+        if task_code != None:
+            return HttpResponse(json.dumps(db.sendMessage(201, task_code)), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(500, "Evaluation Submission Unsucessful!")), content_type="application/json")
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
+
+def retrieveTaskCode(request):
+    '''
+        Retrieves code for a task when worker has completed task.
+
+    '''
+
+    if request.POST:
+
+        gid = request.POST["graph_id"]
+        uid = request.POST["user_id"]
+        worked_layout = request.POST["layout_name"]
+        numChanges = request.POST["numChanges"]
+        timeSpent = request.POST["timeSpent"]
+        events = request.POST["events"]
+        hit_id = request.POST["hit_id"]
+
+        if not gid or not uid:
+            return HttpResponse(json.dumps(db.throwError(201, "Must include both graph_id and user_id in POST request.")), content_type="application/json")
+        
+        surveyCode = db.retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit_id)
+
+        if surveyCode == None:
+            surveyCode = "Task does not exist anymore!"
+        return HttpResponse(json.dumps(db.sendMessage(201, surveyCode)), content_type="application/json")
+
+    else:
+        return render(request, 'graphs/error.html', {"Error": "This route only accepts POST Requests"})
 
 def view_json(request, uid, gid):
     '''
@@ -960,6 +1393,24 @@ def resetPassword(request):
     else:
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)
+
+def launchTask(request):
+    '''
+        Launches a task on Amazon Mechanical Turk.
+
+        :param request: HTTP POST Request containing
+
+        {"graph_id": <graph_id>, "user_id": <owner of graph>}
+
+        :return JSON: {"Error|Success": Error | Task Launched on Amazon Mechanical Turk!"}
+    '''
+    # Only 1 task per graph as long as there is a HIT active (3 days)
+    error = db.launchTask(request.POST["graph_id"], request.POST["user_id"], request.POST.getlist('layout_array'))
+
+    if error != None:
+        return HttpResponse(json.dumps(db.throwError(500, error)), content_type="application/json")
+
+    return HttpResponse(json.dumps(db.sendMessage(201, "Task Launched on Amazon Mechanical Turk!")), content_type="application/json");
 
 def changeLayoutName(request):
     '''
@@ -1642,7 +2093,10 @@ def delete_group(request, group_owner, groupname):
 
         if group_owner == request.POST['username']:
             data = db.remove_group(request.POST['username'], groupname)
-            return HttpResponse(json.dumps(db.sendMessage(200, data), indent=4, separators=(',', ': ')), content_type="application/json");
+            if data != None:
+                return HttpResponse(json.dumps(db.throwError(404, "Group not found!"), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.sendMessage(200, data), indent=4, separators=(',', ': ')), content_type="application/json");
         else:
             return HttpResponse(json.dumps(db.throwError(400, "The group owner and the person making this request are not the same person!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
@@ -1843,7 +2297,10 @@ def get_all_tags_for_graph(request, username, graphname):
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
         result = db.get_all_tags_for_graph(graphname, username)
-        return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
+        if result == None:
+            return HttpResponse(json.dumps(db.sendMessage(404, "Graph does not exist!"), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"StatusCode": 200, "Tags": result}, indent=4, separators=(',', ': ')), content_type="application/json")
     else:
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)

@@ -6,10 +6,15 @@ urlpatterns = patterns('',
         # can be accessed from respective html files using Django 
         # template language.
 
+        url(r'^submitEvaluation/$', views.submitEvaluation, name='submitEvaluation'),
+        url(r'^submitExpertEvaluation/$', views.submitExpertEvaluation, name='submitExpertEvaluation'),
+        url(r'^saveFeedback/$', views.saveFeedback, name='saveFeedback'),
+        url(r'^getFeedback/$', views.getFeedback, name='getFeedback'),
         url(r'^$', views.index, name='index'),
         url(r'^index/$', views.index, name='index'),
         url(r'^index/logout/$', views.logout, name='logout'),
         url(r'^download/$', views.download, name='download'),
+        url(r'^image/$', views.image, name='image'),
 
         # graphs page
         url(r'^graphs/$', views.graphs, name='graphs'),
@@ -22,7 +27,9 @@ urlpatterns = patterns('',
         # regex from http://www.regular-expressions.info/email.html
         # <uid> and <gid> are variable names that are passed as parameters
         # into the views.view_graph function.
+        url(r'^task/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout/update/$', views.update_layout, name='update_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout/$', views.save_layout, name='save_layout'),
+        url(r'^graphs/design/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout/$', views.save_layout, name='save_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/$', views.view_graph, name='view_graph'),
 
         url(r'^json/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/$', views.view_json, name='view_json'),
@@ -68,6 +75,8 @@ urlpatterns = patterns('',
         url(r'^forgot/$', views.sendResetEmail, name='forgot'),
         url(r'^reset/$', views.resetLink, name='reset'),
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
+        url(r'^launchTask/$', views.launchTask, name='launchTask'),
+        url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
 
         #REST API
 
@@ -118,6 +127,10 @@ urlpatterns = patterns('',
         # into the views.view_graph function.
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)/layout$', views.save_layout, name='save_layout'),
         url(r'^graphs/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_graph, name='view_graph'),
+        url(r'^graphs/design/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.design_graph, name='design_graph'),
+        url(r'^task/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_task, name='view_task'),
+        url(r'^approveExpert$', views.approve_task_expert, name='approve_task_expert'),
+        url(r'^approve/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.approve_task, name='approve_task'),
 
         url(r'^json/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/(?P<gid>.+)$', views.view_json, name='view_json'),
 

@@ -17,6 +17,7 @@ $(document).ready(function() {
     var popFirstElement = false;
     var undoStack = [];
     var redoStack = [];
+    var hideGraphInfo = true;
 
     var clock = GraphSpace.Clock;
     var logger = GraphSpace.Logger;
@@ -37,9 +38,9 @@ $(document).ready(function() {
              logger.addEvent(e);
         });
 
-        if (designer_view != "True") {
-            $('.navbar').fadeOut();
-        }
+        // if (designer_view != "True") {
+        //     $('.navbar').fadeOut();
+        // }
 
     }
 
@@ -923,7 +924,6 @@ $(document).ready(function() {
     });
 
     //Changes the name of the current layout
-
     $("#change_layout").click(function(e) {
         var new_layout_name = $("#new_layout_name").val();
 
@@ -2758,6 +2758,22 @@ $(document).ready(function() {
                                     'font-size': "0px"
                                 });
         }
+        hideGraphInfo = true;
+    }
+
+    function showGraphInformation() {
+        for (var i = 0; i < window.cy.edges().length; i++) {
+            var edge = window.cy.edges()[i];
+            var edge_id = edge["_private"]["data"]["id"];
+            window.cy.$('[id="' + edge_id + '"]').removeCss()
+        }
+
+        for (var i = 0; i < window.cy.nodes().length; i++) {
+            var node = window.cy.nodes()[i];
+            var node_id = node["_private"]["data"]["id"];
+            window.cy.$('[id="' + node_id + '"]').removeCss();
+        }
+        hideGraphInfo = false;
     }
 
     $("#triangle_rating").bind("change", function(e) {
@@ -2830,7 +2846,7 @@ $(document).ready(function() {
         var timeSpent = clock.stop();
         var events = logger.getEvents();
 
-        $.post("../../../submitEvaluation/", {
+        $.post("../../../submitExpertEvaluation/", {
             "graph_id": graph_id,
             "user_id": user_id,
             "layout_owner": layout_owner,
@@ -2839,16 +2855,12 @@ $(document).ready(function() {
             "rectangle_rating": $("#rectangle_rating").val(),
             "shape_rating": $("#shape_rating").val(),
             "color_rating": $("#color_rating").val(),
-            "hit_id": hit_id
+            "hit_id": "EXPERT_WORKER"
         }, function(data) {
             if (data.Error) {
                 console.log(data.Error);
             } else {
-                $("#approveCode").val(data.Message);
-                $("#approveModal").modal('toggle');
-                $("#exitPage").click(function() {
-                    window.location = "http://" + window.location.host;
-                });
+                window.location.reload();
             }
         });
     };
@@ -2871,6 +2883,16 @@ $(document).ready(function() {
         // var url = document.URL;
         // url = url.replace("/graphs/design/", "/graphs/");
         // window.location.href = url;
+    });
+
+    $("#toggleGraphInformation").click(function() {
+        hideGraphInfo = !hideGraphInfo;
+        if (hideGraphInfo) {
+            hideGraphInformation();
+        } else {
+
+            showGraphInformation();
+        }
     });
 
 });

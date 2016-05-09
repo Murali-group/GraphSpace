@@ -4,13 +4,19 @@ import json
 import random
 import string
 import uuid
+import math
 
 from collections import Counter, defaultdict
 from operator import itemgetter
 from itertools import groupby
 from datetime import datetime
+from datetime import timedelta
+
+import time 
 from django.core.mail import send_mail
 import sqlite3 as lite
+
+import urllib2, urllib
 
 from django.conf import settings
 
@@ -23,13 +29,45 @@ from sqlalchemy import and_, or_, tuple_
 from sqlalchemy import distinct
 from sqlalchemy import update
 
+import hmac
+from hashlib import sha1
+import requests
+
 import graphs.models as models
+import xml.etree.ElementTree as ET
 
 data_connection = db_init.db
 
 # Name of the database that is being used as the backend storage
 DB_NAME = settings.DB_FULL_PATH
 URL_PATH = settings.URL_PATH
+AWSACCESSKEYID = settings.AWSACCESSKEYID
+SECRETKEY = settings.SECRETKEY
+
+AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
+
+def saveFeedback(feedback, graph_id, user_id, layout_owner, layout_name):
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	new_feedback = models.Feedback(id= None, graph_id = graph_id, user_id = user_id, layout_owner = layout_owner, layout_name = layout_name, text=feedback, created=datetime.now())
+	db_session.add(new_feedback)
+	db_session.commit()
+	db_session.close()
+
+def getFeedback(graph_id, user_id, layout_owner, layout_name):
+	#create a new db session
+	db_session = data_connection.new_session()
+
+	layout = db_session.query(models.Layout).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.layout_name == layout_name).first()
+
+	try:
+		feedback = db_session.query(models.Feedback.text).filter(models.Feedback.graph_id == graph_id).filter(models.Feedback.user_id == user_id).filter(models.Feedback.layoud_id == layout.layout_id).all()
+		db_session.close()
+		return feedback
+	except NoResultFound:
+		db_session.close()
+		return []
 
 def add_everyone_to_password_reset():
 	'''
@@ -495,6 +533,43 @@ def get_default_layout_name(uid, gid):
 	else:
 		return None
 
+def set_task_layout_context(request, context, uid, gid, layout_name, layout_owner, approve=None, expert=None):
+
+	context["Error"] = None
+	layout_to_view = get_default_layout(uid, gid)
+	context['default_layout'] = get_default_layout_id(uid, gid)
+	context['layout_name'] = get_default_layout_name(uid, gid)
+
+	# Get all of the available layouts for this graph
+	db_session = data_connection.new_session()
+
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+	
+	if layout != None:
+		graph_json = get_layout_for_graph(layout.layout_name, layout.owner_id, gid, uid, layout.user_id)
+
+		if approve:
+			if expert:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").filter(models.Task.worker_id == "EXPERT_WORKER").first()
+			else:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "APPROVE_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
+		else:
+			if expert:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id == "EXPERT_WORKER").first()
+			else:
+				task_exists = db_session.query(models.Task).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.task_type == "LAYOUT_TASK").filter(models.Task.worker_id != "EXPERT_WORKER").first()
+
+		if task_exists != None:
+			layout_to_view = json.dumps({"json": graph_json})
+			context['layout_name'] = layout.layout_name
+			context['layout_owner'] = layout.owner_id
+			context["layout_to_view"] = layout_to_view
+			context['hit_id'] = task_exists.hit_id
+			return context
+
+	context["layout_to_view"] = json.dumps({"json": None})
+	return context
+
 def set_layout_context(request, context, uid, gid):
 	'''
 		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
@@ -521,7 +596,7 @@ def set_layout_context(request, context, uid, gid):
 	    	# there exists a layout that matches the query term
 		    graph_json = get_layout_for_graph(request.GET.get('layout'), request.GET.get('layout_owner'), gid, uid, loggedIn)
 
-		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an erro
+		    # If the layout either does not exist or the user is not allowed to see it, prompt them with an error
 		    if graph_json == None:
 		    	context['Error'] = "Layout: " + request.GET.get('layout') + " either does not exist or " + uid + " has not shared this layout yet.  Click <a href='" + URL_PATH + "graphs/" + uid + "/" + gid + "'>here</a> to view this graph without the specified layout."
 		    
@@ -583,7 +658,91 @@ def set_layout_context(request, context, uid, gid):
 		context['my_layouts'] = []
 		context['shared_layouts'] = get_public_layouts_for_graph(uid, gid)
 
+	# Check to see if task is launched for graph
+	exists = task_exists(gid, uid)
+
+	print exists, gid, uid
+
+	context["crowd_layouts"] = get_crowd_layouts_for_graph("MTURK_Worker", gid)
+	context['task_launched'] = exists
+
 	return context
+
+def submitEvaluation(uid, gid, layout_name, layout_owner, triangle_rating, rectangle_rating, shape_rating, color_rating, hit_id, expert=None):
+	'''
+		Submits evaluation for a layout
+
+		@param uid: Owner of graph
+		@param gid: Name of graph
+		@param layout_name: Name of layout
+		@param layout_owner: Owner of layout
+		@param evaluation: Evaluation of layout
+	'''
+
+	db_session = data_connection.new_session()
+
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+
+	# If layout doesn't exist, return
+	if layout == None:
+		return
+
+	# If it's an expert, than delete the task at once without paying worker 
+	if expert:
+		# Add this evaluation to database
+		layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_id=layout.layout_id, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="EXPERT_WORKER")
+		db_session.add(layout_eval)
+
+		task = db_session.query(models.Task).filter(models.Task.graph_id == gid).filter(models.Task.user_id == uid).filter(models.Task.layout_id == layout.layout_id).filter(models.Task.worker_id == "EXPERT_WORKER").first()
+		db_session.delete(task)
+		db_session.commit()
+		db_session.close()
+		return "Done"
+
+	# Add this evaluation to database
+	layout_eval = models.LayoutStatus(id=None, graph_id=gid, user_id=uid, layout_id=layout.layout_id, triangle_rating=triangle_rating, rectangle_rating=rectangle_rating, shape_rating=shape_rating, color_rating=color_rating, created=datetime.now(), submitted_by="MTURK_Worker")
+
+	db_session.add(layout_eval)
+	db_session.commit()
+
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).filter(models.Task.task_type == "APPROVE_TASK").first()
+
+	if task == None:
+		return None
+
+	submit = task.submitted
+	
+	# If layout has had 5 people look at it, then delete the task, otherwise increment submission count
+	if task.submitted == 5:
+		db_session.delete(task)
+	else:
+		task.submitted = submit + 1
+		
+	db_session.commit()
+
+	task_code = db_session.query(models.TaskCode.code).filter(models.TaskCode.hit_id == hit_id).first()
+	db_session.close()
+
+	return task_code
+
+def get_crowd_layouts_for_graph(uid, gid):
+	'''
+		Gets all the layouts submitted by crowdworkers.
+		@param uid: Owner of graph
+		@param gid: Name of graph
+	'''
+	# Get database connection
+	db_session = data_connection.new_session()
+
+	try:
+		# Get all the layouts for this graph.
+		crowd_layouts = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.owner_id == uid).all()
+		db_session.close()
+		return crowd_layouts
+	except NoResultFound:
+		db_session.close()
+		return []
 
 def retrieve_cytoscape_json(graphjson):
 	'''
@@ -1909,6 +2068,7 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 	insert_data_for_graph(graphJson, graphname, username, tags, nodes, curTime, 0, db_session)
 
 	db_session.close()
+
 	# If everything works, return Nothing 
 	return None
 
@@ -2127,6 +2287,13 @@ def delete_graph(username, graphname):
 		layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graphname).filter(models.Layout.user_id == username).delete()
 
 		db_session.commit()
+
+		task = db_session.query(models.Task).filter(models.Task.graph_id == graphname).filter(models.Task.user_id == username).all()
+
+		for t in task:
+			db_session.delete(t)
+			db_session.commit()
+
 		db_session.close()
 
 	except Exception as ex:
@@ -2745,7 +2912,6 @@ def find_all_graphs_containing_edges_in_group(uid, search_type, search_word, db_
 	else:
 		return []
 
-
 def find_all_graphs_containing_nodes_in_group(uid, search_type, search_word, db_session, groupId, groupOwner):
 	'''
 		Finds all nodes that match search terms that are shared with group.
@@ -2971,6 +3137,331 @@ def get_all_graphs_for_group(uid, groupOwner, groupId, request):
 	db_session.close()
 	return graph_data
 
+def task_exists(graph_id, user_id):
+	'''
+		Checks to see if task exists for graph.
+
+		@param graph_id: ID of graph
+		@param user_id: Owner of graph
+
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Check to see if there is a task currently active for the current graph
+	exists = db_session.query(models.Task.created).filter(models.Task.graph_id == graph_id).filter(models.Task.user_id == user_id).first()
+	return exists
+
+def generateTimeStampAndSignature(secretKey, operation):
+	'''
+		Generates common parameters as defined in (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CommonParametersArticle.html)
+
+		@param secretKey: Secret Key given by AWS when creating account
+		@param operation: Operation of call (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_OperationsArticle.html)
+		@return (Timestamp, Signature) following AWS semantics
+	'''
+
+	# Get current timestamp 
+	cur_date = datetime.utcnow()
+	timestamp = datetime.strftime(cur_date, "%Y-%m-%dT%H:%M:%S") + "Z"
+
+	# Create signature based on service, operation and timestamp
+	signature = "AWSMechanicalTurkRequester" + operation + timestamp
+
+	# Encrypt with HMAC-SHA1 in base64, then URL encode
+	# (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkRequester/MakingRequests_RequestAuthenticationArticle.html#CalcReqSig)
+	signature = hmac.new(secretKey, signature, sha1).digest().encode("base64").rstrip("\n")
+	signature = urllib.urlencode({"code": signature})[5:]
+
+	return (timestamp, signature)
+
+
+def launchTask(graph_id, user_id, layout_array, single=None, submitted=0):
+	'''
+		Launches a task on Amazon Mechanical Turk.
+
+		:param graph_id: ID of graph
+		:param user_id: Owner of graph
+		:param layout_array: Array of layouts to be saved when task is launched
+		:param single: If only single layout is being produced instead of an array of layouts
+		:param submitted: Number of times the layout has been submitted by other workers
+		:return Error or None if no error
+	'''
+
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	#TODO: ASK IF GROUP OWNER CAN ALSO LAUNCH TASK OR ONLY GRAPH OWNER CAN
+
+	# Get the current time
+	curtime = datetime.now()
+
+	# If only one layout is provided, nest it in list so rest of code still works
+	if single != None:
+		layout_array = [json.loads(layout_array[0])]
+	else:
+		layout_array = json.loads(layout_array[0])
+
+	# If the proper environment variables are set in gs-setup
+	if AWSACCESSKEYID != None and SECRETKEY != None:
+
+		#Go through each layout and save it
+		for layout in layout_array:
+			# Create randomly named layout
+			new_layout = models.Layout(layout_id = None, layout_name = "Worker_layout_" + str(random.randint(0, 100000)), owner_id = "MTURK_Worker", graph_id = graph_id, user_id = user_id, json = json.dumps(layout), public = 0, shared_with_groups = 0, times_modified=0, original_json=None)
+			db_session.add(new_layout)
+			db_session.commit()
+
+			# Get the common parameters for MTurk
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
+
+			# Current as of 12/14/2016
+			version = "2014-08-15"
+			operation = "CreateHIT"
+
+			# Duration of both task and how long it is to be alive (for now same value)
+			duration = "3000"
+
+			# Title of task and description of task
+			title = urllib.urlencode({"title": "Lay out a network"})[6:].replace("+", "%20")
+			description = urllib.urlencode({"description": "Move nodes and edges in a graph following guidelines"})[12:]
+
+			# Generate link back to GS that worker will follow
+			link_to_graphspace = URL_PATH + "task/" + user_id + "/" + graph_id + "?layout=" + new_layout.layout_name + "&amp;layout_owner=" + new_layout.owner_id
+
+			# Follows Amazon Schematics (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/ApiReference_CreateHITOperation.html)
+			question_form_as_xml = '''<?xml version="1.0"?><QuestionForm xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd"><Question><QuestionIdentifier>GraphSpace</QuestionIdentifier><IsRequired>true</IsRequired><QuestionContent><Text>Please follow the link to lay this graph out to be visually pleasing. Afterwards, you will be presented a survey code to enter below in order to submit this HIT. Thank you for your participation.</Text><Text>There are 3 guidelines to follow when laying out a graph. 1) Arrange nodes of the same color together. 2) Arrange rectangles at the bottom of the graph. 3) Arrange diamonds on top of the graph. There is a short tutorial to introduce the tools to aid you provided with the link. The following screenshots shows how a user may layout a graph according to the guidelines.</Text><Text>This task is part of a study by Virginia Tech researchers investigating how people can make graph visualizations easier to understand, and the results may be published in scientific journals, conferences, and graduate student theses. You are invited to participate by accepting this task and completing the online consent form. If you participate, you will use our software to look at graphs and create new layouts using some guidelines.  You can do as many tasks as you like. Participation is voluntary and confidential. You must be 18 or older to participate.  You will be paid $0.50 for each task.</Text><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=original</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=midway</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><Binary><MimeType><Type>image</Type><SubType>png</SubType></MimeType><DataURL>''' + URL_PATH + '''image?name=final</DataURL><AltText>The game board, with "X" to move.</AltText></Binary><FormattedContent><![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]></FormattedContent></QuestionContent><AnswerSpecification><FreeTextAnswer><Constraints><Length minLength="2" maxLength="100"/></Constraints><DefaultText>Replace this with code obtained from GraphSpace.</DefaultText></FreeTextAnswer></AnswerSpecification></Question></QuestionForm>'''
+
+			# must encode from XML to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
+			
+			# Generate MechTurkRequest
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.50&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,money,science,graph,nodes,edges,task,work,easy'
+
+			response = requests.get(request, allow_redirects=False)
+
+			print response.text
+
+			# Parse XML
+			root = ET.fromstring(response.text)
+
+			# Depending on XML response, handle task creation
+			try:
+				isValid = root[1][0][0].text
+				if isValid == "True":
+					hit_id=root[1][1].text
+					new_task = models.Task(task_id=None, submitted=submitted, graph_id=graph_id, user_id=user_id, task_owner=user_id, created=curtime, hit_id=hit_id, layout_id = new_layout.layout_id, task_type="LAYOUT_TASK", worker_id="MTURK_Worker")
+					db_session.add(new_task)
+					createTaskCode(db_session, hit_id)
+					db_session.commit()
+					db_session.close()
+
+			except Exception as e:
+				print "Error is", e
+				return root[0][1][0][1].text
+
+			db_session.close()
+
+	else:
+		print "No AWS KEY Specified!"
+
+# def launchPrepaidTasks():
+
+# 	crowd_layout_prepaid_tasks = [
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 185),
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 186),
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 187),
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 188),
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 189),
+#         ("dsingh5270@gmail.com", "Etoxazole_crowd", 201),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 190),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 191),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 192),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 193),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 194),
+#         ("dsingh5270@gmail.com", "Bisphenol_crowd", 200),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 180),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 181),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 182),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 183),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 184),
+#         ("dsingh5270@gmail.com", "Fenbuconazole_crowd", 199),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 175),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 176),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 177),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 178),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 179),
+#         ("dsingh5270@gmail.com", "Flusilazole_crowd", 198),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 170),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 171),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 172),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 173),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 174),
+#         ("dsingh5270@gmail.com", "Fludioxonil_crowd", 197),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 165),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 166),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 167),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 168),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 169),
+#         ("dsingh5270@gmail.com", "Triclosan_crowd", 195)
+#     ]
+
+#  	researcher_layout_prepaid_tasks = [
+# 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 43),
+# 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 44),
+# 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 45),
+# 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 46),
+# 		("dsingh5270@gmail.com", "88032-08-0temp-Triclosan-NCIPID-edges", 47),
+# 		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 18),
+# 		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 19),
+# 		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 20),
+# 		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 21),
+# 		("dsingh5270@gmail.com", "131341-86-1temp-Fludioxonil-NCIPID-edges", 22),
+# 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 33),
+# 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 34),
+# 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 35),
+# 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 36),
+# 		("dsingh5270@gmail.com", "96827-34-8temp-Flusilazole-NCIPID-edges", 37),
+# 		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 23),
+# 		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 24),
+# 		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 25),
+# 		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 26),
+# 		("dsingh5270@gmail.com", "114369-43-6temp-Fenbuconazole-NCIPID-edges", 27),
+# 		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 8),
+# 		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 9),
+# 		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 10),
+# 		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 11),
+# 		("dsingh5270@gmail.com", "153233-91-1temp-Etoxazole-NCIPID-edges", 12),
+# 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 53),
+# 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 54),
+# 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 55),
+# 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 56),
+# 		("dsingh5270@gmail.com", "27360-89-0-Bisphenol-A-NCIPID-edges", 57)
+#  	]
+
+#  	for task in crowd_layout_prepaid_tasks:
+#  		launchApprovalTask(task[0], task[1], task[2])
+
+#  	for task in researcher_layout_prepaid_tasks:
+#  		launchApprovalTask(task[0], task[1], task[2])
+
+#  	db_session = data_connection.new_session()
+#  	for task in crowd_layout_prepaid_tasks:
+#  		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+# 		db_session.add(new_task)
+
+# 	for task in researcher_layout_prepaid_tasks:
+#  		new_task = models.Task(task_id=None, task_owner=task[0], graph_id=task[1], user_id=task[0], created=datetime.now(), hit_id="EXPERT_WORKER", worker_id="EXPERT_WORKER", layout_id=task[2], submitted=0, task_type="APPROVE_TASK")
+# 		db_session.add(new_task)
+
+# 	db_session.commit()
+# 	db_session.close()
+
+def getAllApproveTasks():
+	db_session = data_connection.new_session()
+	approve_tasks = db_session.query(models.Task).filter(models.Task.worker_id == "EXPERT_WORKER").all()
+	db_session.close()
+	return approve_tasks
+
+def launchApprovalTask(uid, gid, layout_id, submitted=0):
+	'''
+		Launches approval task for a layout.
+
+		@param uid: Owner of graph
+		@param gid: Name of graph
+		@param layout_id: ID of layout
+	'''
+
+	# If the proper environment variables are set in gs-setup
+	if AWSACCESSKEYID != None and SECRETKEY != None:
+
+			db_session = data_connection.new_session()
+
+			# Get the layout
+			layout = db_session.query(models.Layout).filter(models.Layout.layout_id == layout_id).first()
+
+			# If it doesn't exist, exit 
+			if layout == None:
+				print "LAYOUT DOESNT EXIST ANYMORE"
+				return None
+
+			# Current as of 12/14/2016
+			version = "2014-08-15"
+			operation = "CreateHIT"
+
+			# Duration of both task and how long it is to be alive (for now same value)
+			duration = "3000"
+
+			# Get the common parameters
+			timestamp, signature = generateTimeStampAndSignature(SECRETKEY, "CreateHIT")
+
+			# Title of task and description of task
+			title = urllib.urlencode({"title": "Tell us how well this network follows guidelines"})[6:].replace("+", "%20")
+			description = urllib.urlencode({"description": "Examine a network and rate how well it meets the specified guidelines."})[12:]
+			
+			link_to_graphspace = URL_PATH + "approve/" + uid + "/" + gid + "?layout=" + layout.layout_name + "&amp;layout_owner=" + "MTURK_Worker"
+
+			question_form_as_xml = '''<?xml version="1.0"?>
+				<QuestionForm
+				    xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionForm.xsd">
+				    <Question>
+				        <QuestionIdentifier>GraphSpace</QuestionIdentifier>
+				        <IsRequired>true</IsRequired>
+				        <QuestionContent>
+				            <Text>This task should not take more than 1 minute to complete.  Please click the following link and rate the networks.</Text>
+				            <Binary>
+				                <MimeType>
+				                    <Type>image</Type>
+				                    <SubType>png</SubType>
+				                </MimeType>
+				                <DataURL>''' + URL_PATH + '''image?name=approve_layout</DataURL>
+				                <AltText>Image of interface.</AltText>
+				            </Binary><Text>This task is part of a study by Virginia Tech researchers investigating how people can make graph visualizations easier to understand, and the results may be published in scientific journals, conferences, and graduate student theses. You are invited to participate by accepting this task and completing the online consent form. If you participate, you will use our software to look at graphs and give feedback on and review graph layouts submitted by crowd workers.  You can do as many tasks as you like. Participation is voluntary and confidential. You must be 18 or older to participate.  You will be paid $0.20 for each task.</Text>
+				            <FormattedContent>
+				                <![CDATA[<a target="blank" href="''' + link_to_graphspace + '''">Link to task</a>]]>
+				            </FormattedContent>
+				        </QuestionContent>
+				        <AnswerSpecification>
+				            <FreeTextAnswer>
+				                <Constraints>
+				                    <Length minLength="2" maxLength="100"/>
+				                </Constraints>
+				                <DefaultText>Replace this with code obtained from GraphSpace.</DefaultText>
+				            </FreeTextAnswer>
+				        </AnswerSpecification>
+				    </Question>
+				</QuestionForm>'''
+
+			# must encode from XML. gs to urlencoded format.. some of the letters didn't match up correctly so manually replacement was necessary
+			xml_encoded = urllib.urlencode({"xml": question_form_as_xml})[4:].replace("+", "%20").replace("%21", "!")
+			
+			# Generate MechTurkRequest
+			request = AWS_URL + '/?Service=AWSMechanicalTurkRequester&Operation=CreateHIT&AWSAccessKeyId=' + AWSACCESSKEYID + '&Version=' + version + '&Timestamp=' + timestamp + "&Title=" + title + "&Description=" + description + "&Reward.1.Amount=0.20&Reward.1.CurrencyCode=USD&AssignmentDurationInSeconds=" + duration + "&LifetimeInSeconds=259200" + "&Question=" + xml_encoded + '&Signature=' + signature + '&Keywords=network,layout,easy,money,graphs,quick,science,visual' + '&MaxAssignments=5'
+
+			response = requests.get(request, allow_redirects=False)
+
+			print response.text
+
+			# Parse XML
+			root = ET.fromstring(response.text)
+
+			# Depending on XML response, handle task creation
+			try:
+				isValid = root[1][0][0].text
+				if isValid == "True":
+					hit_id=root[1][1].text
+					new_task = models.Task(task_id=None, task_owner=uid, graph_id=gid, user_id=uid, created=datetime.now(), hit_id=hit_id, layout_id=layout_id, submitted=submitted, task_type="APPROVE_TASK", worker_id="MTURK_Worker")
+					db_session.add(new_task)
+					db_session.commit()
+					createTaskCode(db_session, hit_id)
+					db_session.close()
+
+			except Exception as e:
+				print "Error is", e
+				return root[0][1][0][1].text
+
+			db_session.close()
+
 def get_all_groups_for_user_with_sharing_info(graphowner, graphname):
 	'''
 		Gets all groups that a user owns or is a member of,
@@ -3134,6 +3625,11 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	group_name_exists = db_session.query(models.Group).filter(models.Group.group_id == groupId).first()
+
+	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
+		return "Group exists but the group owner provided doesn't own this group"
+
 	# Is graph already shared
 	shared_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).first()
 
@@ -3153,6 +3649,8 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 
 		db_session.add(new_shared_graph)
 		db_session.commit()
+	else:
+		return "You must be the owner or a member of this group in order to share graphs with it."
 
 	db_session.close()
 	return None
@@ -3183,6 +3681,11 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 	# Create database connection
 	db_session = data_connection.new_session()
 
+	group_name_exists = db_session.query(models.Group).filter(models.Group.group_id == groupId).first()
+
+	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
+		return "Group exists but the group owner provided doesn't own this group"
+
 	# Is this graph already shared with the group?
 	is_shared_with_group = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).first()
 
@@ -3191,9 +3694,20 @@ def unshare_graph_with_group(owner, graph, groupId, groupOwner):
 		db_session.close()
 		return "Can't unshare a graph that is not currently shared with the group"
 
-	# Unshare the graph
-	db_session.delete(is_shared_with_group)
-	db_session.commit()
+	# Is a user a member of the group trying to share graph with
+	group_member = db_session.query(models.GroupToUser).filter(models.GroupToUser.user_id == owner).filter(models.GroupToUser.group_id == groupId).filter(models.GroupToUser.group_owner == groupOwner).first()
+
+	# Is a user the owner of a group
+	group_owner = db_session.query(models.Group.owner_id).filter(models.Group.owner_id == groupOwner).filter(models.Group.group_id == groupId).first()
+	
+	if group_owner != None or group_member != None:
+
+		# Unshare the graph
+		db_session.delete(is_shared_with_group)
+		db_session.commit()
+	else:
+		return "You must be the owner or a member of this group in order to unshare graphs with it."
+
 	db_session.close()
 	return None
 
@@ -3384,6 +3898,43 @@ def makeLayoutPublic(uid, gid, public_layout, layout_owner):
 
 	db_session.close()
 
+def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups, originalLayout):
+	'''
+		Update layout of specific graph.
+
+		:param graph_id: Name of the graph
+		:param graph_owner: Owner of the graph
+		:param layout_name: Name of layout to save
+		:param layout_owner: Owner of layout
+		:param json: JSON of the graph
+		:param public: Is layout public or not
+		:param shared_with_groups: Is layout shared with groups
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Checks to see if there is a layout for this specific graph and the same layout name which the person saving the layout already owns
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == graph_id).filter(models.Layout.user_id == graph_owner).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).first()
+
+	# If no such layout exists, add it
+	if layout != None:
+		layout.graph_id = graph_id
+		layout.user_id = graph_owner
+		layout.layout_name = layout_name
+		layout.layout_owner = layout_owner
+		layout.json = json
+		layout.public = public
+		layout.shared_with_groups = shared_with_groups
+		layout.times_modified += 1
+		layout.original_json = originalLayout
+		db_session.commit()
+
+		computeFeatures(graph_owner, graph_id, layout_name, layout_owner)
+	else:
+		return "Layout not found!"
+
+	db_session.close()
+
 def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
 	'''
 		Saves layout of specific graph.
@@ -3407,7 +3958,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups)
+	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
 
 	db_session.add(new_layout)
 	db_session.commit()
@@ -3484,6 +4035,13 @@ def get_layout_for_graph(layout_name, layout_owner, graph_id, graph_owner, logge
 		db_session.close()
 		return cytoscapePresetLayout(json.loads(layout.json))
 
+def getLayoutById(layout_id):
+	# Create database connection
+	db_session = data_connection.new_session()
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_id == layout_id).first()
+	db_session.close()
+	return layout
+
 def cytoscapePresetLayout(csWebJson):
 	'''
 		Converts CytoscapeWeb preset layouts to be
@@ -3493,17 +4051,23 @@ def cytoscapePresetLayout(csWebJson):
 		:param csWebJson: A CytoscapeWeb compatible layout json containing coordinates of the nodes
 		:return csJson: A CytoscapeJS compatible layout json containing coordinates of the nodes
 	'''
-
 	csJson = {}
 
 	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]
 	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
 
 	for node_position in csWebJson:
+
 		csJson[str(node_position['id'])] = {
 			'x': node_position['x'],
 			'y': node_position['y']
 		};
+
+		if 'background_color' in node_position:
+			csJson[str(node_position['id'])]["background_color"] = node_position['background_color']
+
+		if 'shape' in node_position:
+			csJson[str(node_position['id'])]['shape'] = node_position['shape']
 
 	return json.dumps(csJson)
 
@@ -3778,6 +4342,12 @@ def get_all_tags_for_graph(graphname, username):
 	db_session = data_connection.new_session()
 
 	try:
+		# Get graph to see if it exists
+		graph_exists = db_session.query(models.Graph).filter(models.Graph.graph_id == graphname).filter(models.Graph.user_id == username).first()
+
+		if graph_exists == None:
+			return None
+
 		# Retrieves all tags that match a given graph
 		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
 		
@@ -3791,7 +4361,7 @@ def get_all_tags_for_graph(graphname, username):
 		return cleaned_tag_list
 	except NoResultFound:
 		db_session.close()
-		return None
+		return []
 
 def change_graph_visibility_for_tag(isPublic, tagname, username):
 	'''
@@ -3907,7 +4477,8 @@ def getGraphInfo(uid, gid):
 		db_session.close()
 		return data
 	except Exception as ex:
-		print "Error in Graph Info" + str(ex)
+		print uid, gid
+		print "Error in Graph Info: " + str(ex)
 		db_session.close()
 		return None
 
@@ -3958,6 +4529,154 @@ def insert_user(user_id, password, admin):
 		print ex
 		db_session.close()
 		return None
+
+def evalQuality(numChanges, timeSpent, numEvents):
+	'''
+		Evaluates the quality of the work given 3 features.
+
+		@param numChanges: Number of movements of graph elements
+		@param timeSpent: Amount of time spent on the task
+		@param numEvents: Number of UI element interactions
+
+		@return True iff quality is sufficient
+	'''
+	nb = NB()
+
+	nb.train_classifier()
+
+	return nb.classify(numChanges, timeSpent, numEvents)
+
+def computeFeatures(uid, gid, layout_name, layout_owner):
+	'''
+		Computes all features for a layout worked on by worker.
+
+		@param uid: Owner of graph
+		@param gid: Name of graph
+		@param layout_name: Name of layout
+		@param layout_owner: Owner of layout
+	'''
+
+	db_session = data_connection.new_session()
+
+	layout = db_session.query(models.Layout).filter(models.Layout.layout_name == layout_name).filter(models.Layout.owner_id == layout_owner).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).first()
+
+	if layout == None:
+		return None
+
+	
+	# Compute distance moved for each node
+	distance_vector = []
+
+	# Pairwise distance between each node
+	pairwise_vector = []
+
+	if layout.original_json != None:
+		origJson = json.loads(layout.original_json)
+		newJson = json.loads(layout.json)
+
+		for orig_key in origJson:
+			orig_x = origJson[orig_key]["x"]
+			orig_y = origJson[orig_key]["y"]
+
+			for obj in newJson:
+				new_x = obj["x"]
+				new_y = obj["y"]
+
+				if orig_key == obj["id"]:
+					distance_vector.append(distance(orig_x, orig_y, new_x, new_y))
+
+				else:
+					pairwise_vector.append(distance(orig_x, orig_y, new_x, new_y))
+
+	db_session.close()
+
+	return [distance_vector, pairwise_vector]
+
+def distance(x1, y1, x2, y2):
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def retrieveTaskCode(uid, gid, worked_layout, numChanges, timeSpent, events, hit_id):
+	'''
+		Retrieves task code.
+	'''
+
+	db_session = data_connection.new_session()
+
+	# Get the layout from the database
+	layout = db_session.query(models.Layout).filter(models.Layout.graph_id == gid).filter(models.Layout.user_id == uid).filter(models.Layout.layout_name == worked_layout).filter(models.Layout.owner_id == "MTURK_Worker").first()
+	
+	# If layout doesn't exist, exit out
+	if layout == None:
+		return None
+
+	# Get features of the task
+	features = computeFeatures(uid, gid, worked_layout, "MTURK_Worker")
+
+	# Store them in database 
+	new_feature_vector = models.Feature(id=None, user_id = uid, graph_id = gid, layout_id = layout.layout_id, created=datetime.now(), distance_vector=json.dumps(features[0]), pairwise_vector=json.dumps(features[1]), num_changes=numChanges, time_spent=timeSpent, events=events)
+	db_session.add(new_feature_vector)
+	db_session.commit()
+
+	# Basic error checking to see if worker deserves pay
+	if numChanges < 50 and timeSpent < 100 and len(events) < 50:
+		return "Not enough work done to complete task!"
+
+	# Create database connection
+	db_session = data_connection.new_session()
+	
+	# Get the task associated for this graph
+	task = db_session.query(models.Task).filter(models.Task.hit_id == hit_id).filter(models.Task.task_type == "LAYOUT_TASK").first()
+	submit = task.submitted
+
+	# If task doesn't exist, exit out
+	if task == None:
+		return None
+
+	# Once task is complete, delete it from the database
+	db_session.delete(task)
+	db_session.commit()
+
+	# Update the modified count for the layout
+	layout.times_modified += 1
+	db_session.commit()
+
+	# Launch another task on MTURK if the layout hasn't been modified at least 5 times
+	# if layout.times_modified < 5:
+	# 	launchTask(gid, uid, [layout.json], single=True, submitted=submit + 1)
+
+	task_code = db_session.query(models.TaskCode.code).filter(models.TaskCode.hit_id == hit_id).first()
+	db_session.close()
+
+	# launch approval tasks
+	launchApprovalTask(uid, gid, layout.layout_id)
+
+	return task_code
+
+def createTaskCode(db_session, hitId):
+
+	# Generate task code
+	taskCode = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(20))
+	new_code = models.TaskCode(code=taskCode, created=datetime.now(), hit_id = hitId)
+	db_session.add(new_code)
+	db_session.commit()
+
+def getCrowdEnabledGroup():
+	'''
+		All users in this special group may launch tasks to GraphCrowd.
+	'''
+
+	db_session = data_connection.new_session()
+
+	try:
+		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "dsingh5270@gmail.com").all()
+		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "dsingh5270@gmail.com").filter(models.Group.owner_id == models.User.user_id).first()
+		if group_owner != None:
+			allowed_users.append(group_owner[0])
+		return allowed_users
+	except NoResultFound:
+		db_session.close()
+		return []
+	db_session.close()
 
 def usernameMismatchError():
 	'''

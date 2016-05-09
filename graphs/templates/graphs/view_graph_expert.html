@@ -682,6 +682,8 @@
       <div id="color_slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false"><a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a></div>
       <br>
       <btn class="btn btn-primary" id="submitEvaluation">Submit Rating</btn>
+      <h4>There are {{remaining}} layouts to rate.</h4>
+      <!-- <btn class="btn btn-primary" id="toggleGraphInformation">Toggle Graph Information</btn> -->
    <script type="text/javascript">
       var task_layout_name = "{{layout_name}}";
       var hit_id = "{{hit_id}}";
@@ -751,7 +753,7 @@
 <script type="text/javascript" src="{% static 'graphs/js/intro.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/clock.js' %}"></script> 
 <script type="text/javascript" src="{% static 'graphs/js/log.js' %}"></script> 
-<script type="text/javascript" src="{% static 'graphs/js/view_graph.js' %}"></script> 
+<script type="text/javascript" src="{% static 'graphs/js/view_graph_expert.js' %}"></script> 
 <!-- stylesheet for view_graph page -->
 <link rel="stylesheet" href="{% static 'graphs/css/view_graph.css' %}">
 <link rel="stylesheet" href="{% static 'graphs/css/intro.css' %}">
