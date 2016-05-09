@@ -562,8 +562,6 @@ if __name__ == '__main__':
 
 	tag = "tutorial"
 
-	print DB_FULL_PATH
-
 	testCreateUser(email, password)
 	testCreateUser(email_other, password)
 

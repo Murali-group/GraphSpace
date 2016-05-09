@@ -1399,8 +1399,11 @@ def upload_graph(request, user_id, graphname):
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
         graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+
         if graph_errors != None:
             return HttpResponse(json.dumps(db.throwError(400, graph_errors), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(201, "Added " + graphname + " for " + user_id + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)
