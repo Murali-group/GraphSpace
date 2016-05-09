@@ -19,6 +19,10 @@ DEBUG=True
 TEMPLATE_DEBUG=True
 URL_PATH="http://localhost:8000/"
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
+AWSACCESSKEYID='None'
+SECRETKEY='None'
+PATH = "/home/divit/Documents/GRA/GraphSpace/"
+AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def getEmailHost():
 	global EMAIL_HOST
@@ -52,6 +56,22 @@ def getGoogleAnalyticsId():
 	global GOOGLE_ANALYTICS_PROPERTY_ID
 	return GOOGLE_ANALYTICS_PROPERTY_ID
 
+def getAWSKey():
+	global AWSACCESSKEYID
+	return AWSACCESSKEYID
+
+def getAWSSecretKey():
+	global SECRETKEY
+	return SECRETKEY
+
+def getPathToGS():
+	global PATH
+	return PATH
+
+def getAWSURL():
+	global AWS_URL
+	return AWS_URL
+
 def get_pip():
 	response = urllib2.urlopen("https://bootstrap.pypa.io/get-pip.py")
 	code = response.read()
@@ -59,7 +79,7 @@ def get_pip():
 	pip_file.write(code)
 	pip_file.close()
 	subprocess.check_call(["sudo", sys.executable, "get-pip.py"])
-	os.remove("get-pip.py")
+	os.remove("get-pip.py")	
 
 def migrate():
 	subprocess.check_output([sys.executable, "manage.py", "migrate"])
@@ -89,7 +109,7 @@ if __name__ == "__main__":
 	# sudo pip install poster
 	# sudo pip install networkx
 
-	required_packages = ["django", "py-bcrypt","sqlalchemy","django-analytical","poster","networkx"]
+	required_packages = ["django", "py-bcrypt","sqlalchemy","django-analytical","poster","networkx", "Sphinx"]
 	installed_packages = sorted(["%s" % (i.key) for i in pip.get_installed_distributions()])
 
 	# Installs any packages that are not already installed on the system
