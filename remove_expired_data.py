@@ -8,6 +8,7 @@ from hashlib import sha1
 import urllib2, urllib
 import requests
 import xml.etree.ElementTree as ET
+import local_settings
 
 '''
 	Removes all public graphs uploaded anonymously (without a user logging into GraphSpace) 
@@ -16,11 +17,12 @@ import xml.etree.ElementTree as ET
 	@param cur: Database cursor
 '''
 
-SECRETKEY = os.environ.get('SECRETKEY')
-AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
+# Amazon Mechanical Turk Keys (http://docs.aws.amazon.com/AWSMechTurk/latest/AWSMechanicalTurkGettingStartedGuide/SetUp.html)
+AWSACCESSKEYID = local_settings.getAWSKey()
+SECRETKEY = local_settings.getAWSSecretKey()
 
-PATH = "/home/divit/Documents/GRA/GraphSpace/"
-AWS_URL = 'https://mechanicalturk.amazonaws.com'
+PATH = local_settings.getPathToGS()
+AWS_URL = local_settings.getAWSURL()
 
 def removeExpiredPublicGraphs(cur):
 	cur.execute('select graph_id, user_id, created, public from graph where user_id like ?', ("%Public_User%temp.com", ))
