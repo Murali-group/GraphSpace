@@ -20,7 +20,7 @@ GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 AWSACCESSKEYID='None'
 SECRETKEY='None'
 PATH = "path_to_graphspace/"
-SECRET_KEY=''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
+SECRET_KEY= 'None'
 
 # If needing to test on production mturk account (real money)
 #AWS_URL = 'https://mechanicalturk.amazonaws.com'
@@ -124,6 +124,9 @@ if __name__ == "__main__":
 
 	import django
 	version =  django.VERSION
+
+	global SECRET_KEY
+	SECRET_KEY = ''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
 
 	# Depending on the version, use appropriate command to sync databases
 	if version[0] == 1 and version[1] > 7:
