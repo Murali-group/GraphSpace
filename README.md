@@ -56,7 +56,7 @@ EMAIL_HOST_PASSWORD` fields.
   </Directory>
  ```
 7. Give permissions to the Apache server to access the GraphSpace database: `chmod 777 graphspace.db`
-8. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi'
+8. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi`
 9. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
 10. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
