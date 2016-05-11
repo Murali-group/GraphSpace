@@ -26,7 +26,7 @@ Running GraphSpace on Apache
 
 This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  First, please follow the steps in **Running GraphSpace locally**.  Next, execute the instructions below. 
 
-1. Follow instructions 1-5 in `Running GraphSpace locally` 
+1. Follow instructions 1-4 in `Running GraphSpace locally` 
 EMAIL_HOST_PASSWORD` fields.
 2. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
 3. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
