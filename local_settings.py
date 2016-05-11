@@ -4,8 +4,6 @@ import subprocess
 import urllib2
 import time
 import os
-import django
-import pip
 
 '''
 	This file sets all the environment variables for GraphSpace.
@@ -21,7 +19,12 @@ URL_PATH="http://localhost:8000/"
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 AWSACCESSKEYID='None'
 SECRETKEY='None'
-PATH = "/home/divit/Documents/GRA/GraphSpace/"
+PATH = "path_to_graphspace/"
+
+# If needing to test on production mturk account (real money)
+#AWS_URL = 'https://mechanicalturk.amazonaws.com'
+
+# Sandbox (development) MTURK url (fake money used)
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def getEmailHost():
@@ -49,7 +52,10 @@ def getURLPath():
 	return URL_PATH
 
 def getSecretKey():
-	SECRET_KEY = ''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
+	global SECRET_KEY
+	if SECRET_KEY == "None":
+		SECRET_KEY = ''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
+	
 	return SECRET_KEY
 
 def getGoogleAnalyticsId():
@@ -109,6 +115,7 @@ if __name__ == "__main__":
 	# sudo pip install poster
 	# sudo pip install networkx
 
+	import pip
 	required_packages = ["django", "py-bcrypt","sqlalchemy","django-analytical","poster","networkx", "Sphinx"]
 	installed_packages = sorted(["%s" % (i.key) for i in pip.get_installed_distributions()])
 
@@ -117,6 +124,7 @@ if __name__ == "__main__":
 		if package not in installed_packages:
 			install(package)
 
+	import django
 	version =  django.VERSION
 
 	# Depending on the version, use appropriate command to sync databases
