@@ -20,7 +20,7 @@ GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 AWSACCESSKEYID='None'
 SECRETKEY='None'
 PATH = "path_to_graphspace/"
-
+SECRET_KEY='None'
 # If needing to test on production mturk account (real money)
 #AWS_URL = 'https://mechanicalturk.amazonaws.com'
 
