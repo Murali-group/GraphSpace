@@ -44,9 +44,9 @@ This section describes the steps required to launch GraphSpace on a server that 
      </Files>
   </Directory>
   
-  Alias /static/ /path_to_GraphSpace/graphspace/graphs/static/
+  Alias /static/ /path_to_GraphSpace/graphs/static/
   
-  <Directory /path_to_GraphSpace/graphspace/graphs/static>
+  <Directory /path_to_GraphSpace/graphs/static>
       Require all granted
   </Directory>
   
