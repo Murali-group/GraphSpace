@@ -18,6 +18,7 @@ In order to run GraphSpace, please install sqlite3 and both the Python runtime a
 2. Visit the GraphSpace directory: `cd GraphSpace`
 3. Modify the `local_settings.py` file by populating the `EMAIL_HOST`, `EMAIL_HOST_USER`, and `EMAIL_HOST_PASSWORD` fields.  GraphSpace uses `EMAIL_HOST_USER` as the email address through which GraphSpace sends emails to its users.  `EMAIL_HOST` is the email protocol to use.  For example, `smtp.gmail.com` would be used if using a Gmail email address.
 4. Install all the necessary packages that GraphSpace requires: `python local_settings.py`*This step may require sudo privileges*
+5. Give permission to allow GraphSpace to access the database: `chmod 777 graphspace.db`
 5. Finally, start the GraphSpace server: `python manage.py runserver`
 6. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
