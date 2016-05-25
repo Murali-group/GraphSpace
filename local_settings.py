@@ -10,16 +10,16 @@ import os
 	All variables are imported in graphspace/settings.py
 '''
 
-EMAIL_HOST='NONE'
-EMAIL_HOST_USER='NONE'
-EMAIL_HOST_PASSWORD='NONE'
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_HOST_USER='graphspacevt@gmail.com'
+EMAIL_HOST_PASSWORD='vtresearch'
 DEBUG=True
 TEMPLATE_DEBUG=True
-URL_PATH="http://localhost:8000/"
-GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
-AWSACCESSKEYID='None'
-SECRETKEY='None'
-PATH = "path_to_graphspace/"
+URL_PATH="http://graphspace.org/"
+GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-69100112-1'
+AWSACCESSKEYID='AKIAIT2ZCQH4IZ5UI6EA'
+SECRETKEY='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'
+PATH = "/home/ubuntu/GraphSpace/"
 SECRET_KEY= 'None'
 
 # If needing to test on production mturk account (real money)
