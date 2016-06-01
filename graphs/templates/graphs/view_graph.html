@@ -351,7 +351,9 @@
                   <a id='layout_link' href=""></a>
                   <li id="auto"><a href="#builtin" data-toggle="tab">Auto</a></li>
                   <li id="manual"><a href="#custom" data-toggle="tab">Manual</a></li>
+                  {% if uid in crowd_group %}
                   <li id="crowd"><a href="#mturk_pane" data-toggle="tab">Crowd</a></li>
+                  {% endif %}
                </ul>
                <div class="tab-content">
                   <div class="tab-pane" id="builtin">
