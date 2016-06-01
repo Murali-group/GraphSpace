@@ -338,9 +338,9 @@ Index('group_to_user_idx_group_id', GroupToUser.group_id, GroupToUser.user_id, G
 # Table: group_to_user. Columns: user_id
 Index('group_to_user_idx_user_id', GroupToUser.user_id)
 # Table: layout. Columns: graph_id, user_id
-Index('layout_idx_graph_id_user_id', Layout.graph_id, Layout.user_id)
+#Index('layout_idx_graph_id_user_id', Layout.graph_id, Layout.user_id)
 # Table: layout. Columns: owner_id
-Index('layout_idx_owner_id', Layout.owner_id)
+#Index('layout_idx_owner_id', Layout.owner_id)
 # Table: node. Columns: graph_id, user_id
 Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id, Node.node_id, Node.label)
 Index('node_index_label_graph_id', Node.label)
