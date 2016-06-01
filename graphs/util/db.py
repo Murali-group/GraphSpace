@@ -4419,6 +4419,8 @@ def get_visibility_of_graph(user_id, graph_id):
 
 	public = db_session.query(models.Graph.public).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).first()
 	db_session.close()
+	if public == None:
+		return []
 	return public[0]
 
 def delete_all_graphs_for_tag(tagname, username):

@@ -25,7 +25,7 @@ SECRET_KEY= 'None'
 # If needing to test on production mturk account (real money)
 #AWS_URL = 'https://mechanicalturk.amazonaws.com'
 
-# Sandbox (development) MTURK url (fake money used)
+# Sandbox (development) MTURK (fake money used)
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
 def getEmailHost():
