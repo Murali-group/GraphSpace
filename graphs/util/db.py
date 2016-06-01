@@ -4346,7 +4346,7 @@ def get_all_tags_for_graph(graphname, username):
 		graph_exists = db_session.query(models.Graph).filter(models.Graph.graph_id == graphname).filter(models.Graph.user_id == username).first()
 
 		if graph_exists == None:
-			return None
+			return []
 
 		# Retrieves all tags that match a given graph
 		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
@@ -4419,6 +4419,7 @@ def get_visibility_of_graph(user_id, graph_id):
 
 	public = db_session.query(models.Graph.public).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).first()
 	db_session.close()
+	print public
 	return public[0]
 
 def delete_all_graphs_for_tag(tagname, username):
