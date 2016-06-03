@@ -4416,9 +4416,10 @@ def get_visibility_of_graph(user_id, graph_id):
 		@param graph_id: Name of graph
 	'''
 	db_session = data_connection.new_session()
-
 	public = db_session.query(models.Graph.public).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).first()
 	db_session.close()
+
+	# If the graph we query for doesn't exist, return empty bracket
 	if public == None:
 		return []
 	return public[0]
