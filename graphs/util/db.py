@@ -4672,10 +4672,18 @@ def getCrowdEnabledGroup():
 	try:
 		#THIS IS A HARD-CODED GROUP TO GAIN ACCESS TO MTURK
 		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "tmmurali@acm.org").all()
+		allowed_users_clean = []
+
+		# Only members of this group or owner of the group have access to Ask the Crowd as well as can see the Crowd option
+		for user in allowed_users:
+			allowed_users_clean.append(str(user[0]))
+
+		# Let group owner also view the buttons
 		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "tmmurali@acm.org").filter(models.Group.owner_id == models.User.user_id).first()
 		if group_owner != None:
-			allowed_users.append(group_owner[0])
-		return allowed_users
+			allowed_users_clean.append(group_owner[0])
+
+		return allowed_users_clean
 	except NoResultFound:
 		db_session.close()
 		return []
