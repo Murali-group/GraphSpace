@@ -1,9 +1,12 @@
-## See http://js.cytoscape.org/#style/node-body
-ALLOWED_NODE_SHAPES = ['rectangle', 'roundrectangle', 'ellipse', 'triangle', 
-                       'pentagon', 'hexagon', 'heptagon', 'octagon', 'star', 
+import json
+import re
+
+# See http://js.cytoscape.org/#style/node-body
+ALLOWED_NODE_SHAPES = ['rectangle', 'roundrectangle', 'ellipse', 'triangle',
+                       'pentagon', 'hexagon', 'heptagon', 'octagon', 'star',
                        'diamond', 'vee', 'rhomboid']
 
-ALLOWED_NODE_BORDER_STYLES = ['solid', 'dotted', 'dashed','double']
+ALLOWED_NODE_BORDER_STYLES = ['solid', 'dotted', 'dashed', 'double']
 
 ALLOWED_NODE_BACKGROUND_REPEAT = ['no-repeat', 'repeat-x', 'repeat-y', 'repeat']
 
@@ -21,7 +24,7 @@ ALLOWED_TEXT_VALIGN = ['top', 'center', 'bottom']
 ALLOWED_TEXT_WRAP = ['wrap','none']
 
 ## See http://js.cytoscape.org/#style/edge-arrow
-ALLOWED_ARROW_SHAPES = ['tee', 'triangle', 'triangle-tee', 'triangle-backcurve', 
+ALLOWED_ARROW_SHAPES = ['tee', 'triangle', 'triangle-tee', 'triangle-backcurve',
                         'square', 'circle', 'diamond', 'none']
 
 ## See http://js.cytoscape.org/#style/edge-line
@@ -29,7 +32,14 @@ ALLOWED_EDGE_STYLES = ['solid', 'dotted','dashed']
 
 ALLOWED_ARROW_FILL = ['filled', 'hollow']
 
-import json
+NODE_COLOR_ATTRIBUTES = ['background_color', 'border_color', 'color',
+                         'text_outline_color', 'text_shadow_color',
+                         'text_border_color']
+
+EDGE_COLOR_ATTRIBUTES = ['line_color', 'source_arrow_color',
+                         'mid_source_arrow_color', 'target_arrow_color',
+                         'mid_target_arrow_color']
+
 
 def verify_json(graph_json):
     graph_json = json.loads(graph_json)
@@ -46,7 +56,7 @@ def verify_json(graph_json):
             shape = "ellipse"
 
         node["shape"] = shape
-    
+
     return json.dumps(graph_json)
 
 def validate_json(graphJson):
@@ -150,6 +160,10 @@ def validate_edge_properties(edges, nodes):
         if "mid_target_arrow_fill" in edge:
             error +=  find_property_in_array("Edge", edge_id, edge, edge["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
 
+        for attr in EDGE_COLOR_ATTRIBUTES:
+            if attr in edge:
+                error += check_color_hex(edge[attr])
+
     if len(error) > 0:
         return error
     else:
@@ -177,7 +191,7 @@ def validate_node_properties(nodes):
     	# Check to see if ID is in node
     	if "id" not in node:
     		return "All nodes must have a unique ID.  Please verify that all nodes meet this requirement."
-		
+
 		if node["id"] not in unique_ids:
 			unique_ids.add(node["id"])
 		else:
@@ -187,7 +201,7 @@ def validate_node_properties(nodes):
         if "shape" in node:
             error += find_property_in_array("Node", node["id"], "shape", node["shape"], ALLOWED_NODE_SHAPES)
 
-        # If node contains a border-style property, check to make sure it is 
+        # If node contains a border-style property, check to make sure it is
         # a legal value
         if "border_style" in node:
             error += find_property_in_array("Node", node["id"], "border_style", node["border_style"], ALLOWED_NODE_BORDER_STYLES)
@@ -216,10 +230,35 @@ def validate_node_properties(nodes):
         if "text_valign" in node:
             error += find_property_in_array("Node", node["id"], "text_valign", node["text_valign"], ALLOWED_TEXT_VALIGN)
 
+        for attr in NODE_COLOR_ATTRIBUTES:
+            if attr in node:
+                error += check_color_hex(node[attr])
+
     if len(error) > 0:
         return error
     else:
         return None
+
+
+def check_color_hex(color_code):
+    """
+    Check the validity of the hexadecimal code of various node and edge color
+    related attributes.
+
+    This function returns an error if the hexadecimal code is not of the format
+    '#XXX' or '#XXXXXX', i.e. hexadecimal color code is not valid.
+
+    :param color_code: color code
+    """
+    # if color name is given instead of hex code, no need to check its validity
+    if not color_code.startswith('#'):
+        return ""
+    valid = re.search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color_code)
+    if valid is None:
+        return color_code + ' is not a valid hex color code.'
+    else:
+        return ""
+
 
 def find_property_in_array(elementType, key, prop, value, array):
     """
@@ -244,7 +283,7 @@ def assign_edge_ids(json_string):
 		:param json_string: JSON of graph
 		:return json_string: JSON of graph having unique ID's for all edges
 	'''
-	
+
 	ids = []
 	# Creates ID's for all of the edges by creating utilizing the source and target nodes
 	# The edge ID would have the form: source-target
@@ -254,7 +293,7 @@ def assign_edge_ids(json_string):
 		target_node = str(edge['data']['target'])
 		edge['data']['id'] = source_node + '-' + target_node
 
-		# If the ID has not yet been seen (is unique), simply store the ID 
+		# If the ID has not yet been seen (is unique), simply store the ID
 		# of that edge as source-target
 		if edge['data']['id'] not in ids:
 			ids.append(edge['data']['id'])
@@ -272,7 +311,7 @@ def assign_edge_ids(json_string):
 	# Return JSON having all edges containing unique ID's
 	return json_string
 
-# This file is a wrapper to communicate with sqlite3 database 
+# This file is a wrapper to communicate with sqlite3 database
 # that does not need authentication for connection.
 
 # It may be viewed as the controller to the database
@@ -292,12 +331,12 @@ def convert_json(original_json):
 
             "graph": {
                 "data": {
-                    "nodes": [ 
+                    "nodes": [
                         { "id": "node1", "label": "n1", ... },
                         { "id": "node2", "label": "n2", ... },
                         ...
                     ],
-                    "edges": [ 
+                    "edges": [
                         { "id": "edge1", "label": "e1", ... },
                         { "id": "edge2", "label": "e2", ... },
                         ...
