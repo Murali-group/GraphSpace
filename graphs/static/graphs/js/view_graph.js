@@ -70,7 +70,7 @@ $(document).ready(function() {
                 'background-blacken': 'data(background_blacken)'
             })
             .selector('node[background_opacity]').css({
-                'border-opacity': 'data(background_opacity)'
+                'background-opacity': 'data(background_opacity)'
             })
             .selector('node[border_width]').css({
                 'border-width': 'data(border_width)'
