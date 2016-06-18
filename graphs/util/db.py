@@ -21,6 +21,7 @@ import urllib2, urllib
 from django.conf import settings
 
 from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
+from gpml_util import parse_gpml
 import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
@@ -1609,273 +1610,22 @@ def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, d
 	return graph_dict.values()
 
 
-def uploadGPMLFile(username, graphJSON, title):
+def upload_gpml_file(username, graph_json, title):
 	'''
 		Uploads GPML file to GraphSpace via /upload.
+
 		@param username: Owner of graph
 		@param graphJSON: JSON of graph
 		@param title: Title of graph
 	'''
 
 	try:
+		parse_json, default_layout, title = parse_gpml(graph_json, title)
 		# Create JSON stucture for GraphSpace recognized JSON
-		parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
-
-		# Use xml parser to parse the GPML file
-		import xml.etree.ElementTree as ET
-		tree = ET.fromstring(graphJSON)
-
-		# The current GPML format
-		GPML = '{http://pathvisio.org/GPML/2013a}'
-
-		# Keep the overall count of nodes and create unique ids for datanodes, shape, labels.
-		# IMPORTANT!!!
-		count = 0
-
-		# Parsing the GPML file for Shape elements
-		shapes = tree.findall(GPML+'Shape')
-		# Create a list of details of all the shape
-		shape_details = []
-		for shape in shapes:
-			tempNode = {}
-			tempNode.update(shape.attrib)
-			for more_details in shape:
-				tempNode.update(more_details.attrib)
-			shape_details.append(tempNode)
-
-		# Add shape elemets to the JSON structure parseJson
-		for node in shape_details:
-			tempNode = {'data' : {}}
-
-			# Give an id to the shape element.
-			tempNode['data']['id'] = count
-			if not ('CenterX' in node and 'CenterY' in node):
-				return {"Error": "GPML file must contain X and Y coordinates of all the shape elements!"}
-			tempNode['data']['x'] = node['CenterX']
-			tempNode['data']['y'] = node['CenterY']
-
-			# Shape element may or may not contain a TextLabel field
-			if 'TextLabel' in node:
-				tempNode['data']['content'] = node['TextLabel']
-
-			# Deal with the ShapeType field of the shape element,
-			# improve this, make it more general, too many hacks right now.
-			if 'ShapeType' in node:
-				if node['ShapeType'].lower() == 'brace':
-					tempNode['data']['shape'] = 'rectangle'
-				else:
-					# oval in GPML is ellipse in cytoscape JSON
-					if node['ShapeType'].lower() == 'oval':
-						tempNode['data']['shape'] = 'ellipse'
-					# roundedrectangle in GPML is roundrectangle in cytoscape JSON
-					elif node['ShapeType'].lower() == 'roundedrectangle':
-						tempNode['data']['shape'] = 'roundrectangle'
-					# everything else works right now, may break with more testing
-					else:
-						tempNode['data']['shape'] = node['ShapeType'].lower()
-			else:
-				# if no ShapeType given use rectangle by default.
-				tempNode['data']['shape'] = 'rectangle'
-
-			if not ('Height' in node and 'Width' in node):
-				return {"Error": "GPML file must contain the height and width of all the shape elements!"}
-			tempNode['data']['height'] = node['Height']
-			tempNode['data']['width'] = node['Width']
-			# this is the twist out here, if you compare this with node color attribute
-			# we use the color given for border_color rather than color (i.e. text color)
-			if 'Color' in node:
-				tempNode['data']['border_color'] = '#' + node['Color']
-			if 'FillColor' in node:
-				tempNode['data']['background_color'] = '#' + node['FillColor']
-			else:
-				tempNode['data']['background_color'] = 'white'
-			# this has to be zero because we'll have multiple elements
-			tempNode['data']['background_opacity'] = 0
-			if 'key' in node:
-				if node['key'] == 'org.pathvisio.DoubleLineProperty':
-					tempNode['data']['border_style'] = 'double'
-			if 'LineThickness' in node:
-				tempNode['data']['border_width'] = node['LineThickness']
-			else:
-				tempNode['data']['border_width'] = 1
-			# increase count, i.e. to keep unique ids for shapes, nodes, labels.
-			count = count + 1
-			parseJson['graph']['nodes'].append(tempNode)
-
-
-		# Find all the DataNodes in the GPML file which is used to draw various
-		# the various nodes of the graph
-		datanode = tree.findall(GPML+'DataNode')
-
-		# Parsing the DataNode element for all the details.
-		node_details = []
-		for node in datanode:
-		    temp = {}
-		    temp = node.attrib
-		    for details in node:
-		        temp.update(details.attrib)
-		    node_details.append(temp)
-
-		# Go through the node details of the node
-		for node in node_details:
-			tempNode = {'data': {}}
-
-			# Give an id to the node element.
-			tempNode['data']['id'] = count
-			if not ('CenterX' in node and 'CenterY' in node):
-				return {"Error": "GPML file must contain X and Y coordinates of all the DataNode elements!"}
-			tempNode['data']['x'] = node['CenterX']
-			tempNode['data']['y'] = node['CenterY']
-			# Not sure about text label. Haven't got an error yet for textlable, YET!!
-			tempNode['data']['content'] = node['TextLabel']
-
-			if not ('Height' in node and 'Width' in node):
-				return {"Error": "GPML file must contain the height and width of all the DataNode elements!"}
-			tempNode['data']['height'] = node['Height']
-			tempNode['data']['width'] = node['Width']
-			# Again not sure about font size
-			tempNode['data']['font_size'] = node['FontSize']
-
-			if 'Color' in node:
-				tempNode['data']['color'] = '#' + node['Color']
-				tempNode['data']['border_color'] = '#' + node['Color']
-			tempNode['data']['background_color'] = 'white'
-			tempNode['data']['background_opacity'] = 0
-
-			tempNode['data']['border_width'] = 2
-			# rectangle is the default shape for all the datanodes
-			tempNode['data']['shape'] = 'rectangle'
-			# We use compound nodes to represent GPML groups in GraphSpace.
-			if 'GroupRef' in node:
-				tempNode['data']['group'] = node['GroupRef']
-				tempNode['data']['parent'] = node['GroupRef']
-
-			# increase count, i.e. to keep unique ids for shapes, nodes, labels.
-			count = count + 1
-			parseJson['graph']['nodes'].append(tempNode)
-
-
-		# Parsing the GPML file for Shape elements
-		labels = tree.findall(GPML+'Label')
-		# Parsing the label element for all the details.
-		label_details = []
-		for label in labels:
-			tempNode = {}
-			tempNode.update(label.attrib)
-			for more_details in label:
-				tempNode.update(more_details.attrib)
-			label_details.append(tempNode)
-		for node in label_details:
-			tempNode = {'data' : {}}
-			# Give an id to the label element.
-			tempNode['data']['id'] = count
-			if not ('CenterX' in node and 'CenterY' in node):
-				return {"Error": "GPML file must contain X and Y coordinates of all the label elements!"}
-			tempNode['data']['x'] = node['CenterX']
-			tempNode['data']['y'] = node['CenterY']
-			# Again not sure about this
-			tempNode['data']['content'] = node['TextLabel']
-
-			if not ('Height' in node and 'Width' in node):
-				return {"Error": "GPML file must contain the height and width of all the label elements!"}
-			tempNode['data']['height'] = node['Height']
-			tempNode['data']['width'] = node['Width']
-			# Again not sure about this
-			tempNode['data']['font_size'] = node['FontSize']
-			# By default we choose white :)
-			tempNode['data']['background_color'] = 'white'
-			tempNode['data']['background_opacity'] = 0
-			# increase count, i.e. to keep unique ids for shapes, nodes, labels.
-			count = count + 1
-			parseJson['graph']['nodes'].append(tempNode)
-
-		# This is a crude version of getting interactions (edges) working
-		# Look for all the interactions
-		interaction = tree.findall(GPML+'Interaction')
-		# Create a list of (x, y) coordinates of an edge
-		# every element of the list can be either of length of 2 or 3
-		# as curved edges are represented by 3 coordinates.
-		edge_details = []
-		for edge in interaction:
-		    for details in edge:
-		        tempEdge = []
-		        for more in details:
-		            if 'X' in more.attrib and 'Y' in more.attrib:
-		                tempEdge.append((more.attrib['X'], more.attrib['Y']))
-		        edge_details.append(tempEdge)
-
-		# the above way of adding attributes will append after every empty list
-		# something like [['something'], [], ['more'], [], ['something']]
-		# that's why we use the magic of list slicing [::2]
-		# create temp edge ids
-		temp_edge_ids = []
-		for edge in edge_details[::2]:
-			edge_id = []
-			for nodes in edge:
-				tempNode = {'data': {}}
-				tempNode['data']['id'] = count
-				edge_id.append(count)
-				tempNode['data']['x'] = nodes[0]
-				tempNode['data']['y'] = nodes[1]
-				tempNode['data']['background_color'] = 'white'
-				tempNode['data']['background_opacity'] = 0
-				count = count + 1
-				parseJson['graph']['nodes'].append(tempNode)
-			temp_edge_ids.append(edge_id)
-
-		# create edges
-		# TODO: extract more information from edges, i.e arrow shapes
-		# right now by default we are using triangle as arrow shape.
-		for edge in temp_edge_ids:
-			tempEdge = {'data': {}}
-			if len(edge) == 2:
-				tempEdge['data']['source'] = edge[0]
-				tempEdge['data']['target'] = edge[1]
-				tempEdge['data']['target_arrow_shape'] = 'triangle'
-				parseJson['graph']['edges'].append(tempEdge)
-			if len(edge) == 3:
-				tempEdge['data']['source'] = edge[0]
-				tempEdge['data']['target'] = edge[1]
-				tempEdge['data']['target_arrow_shape'] = 'triangle'
-				parseJson['graph']['edges'].append(tempEdge)
-				tempEdge = {'data': {}}
-				tempEdge['data']['source'] = edge[1]
-				tempEdge['data']['target'] = edge[2]
-				parseJson['graph']['edges'].append(tempEdge)
-
-		# This is the where magic happens, creating the layout
-		# for the GPML file.
-		default_layout = []
-		for node in parseJson['graph']['nodes']:
-			temp = dict()
-			temp['id'] = str(node["data"]["id"])
-			temp['x'] = float(node["data"]["x"])
-			temp['y'] = float(node["data"]["y"])
-			default_layout.append(temp)
-
-		# Well, we need it in JSON format. So ..
-		default_layout = json.dumps(default_layout)
-
-		# To add nodes to the group we parse through the group
-		# elements of the GPML file.
-		groups = tree.findall(GPML+'Group')
-		for group in groups:
-			tempNode = {'data': {}}
-			tempNode['data']['id'] = group.attrib['GroupId']
-			tempNode['data']['background_color'] = 'white'
-			tempNode['data']['border_color'] = 'black'
-			parseJson['graph']['nodes'].append(tempNode)
-
-		parseJson['metadata']['name'] = tree.attrib['Name'] or "GPML"
-
-		# No tags or description since CYJS doesn't give me any
-		parseJson['metadata']['tags'] = []
-		parseJson['metadata']['description'] = ""
-		title = title or parseJson['metadata']['name']
 		# Insert converted graph to GraphSpace and provide URL
 		# for logged in user
 		if username != None:
-			result = insert_graph(username, title, json.dumps(parseJson))
+			result = insert_graph(username, title, json.dumps(parse_json), gpml=True)
 			if result == None:
 				return {"Success": URL_PATH + "graphs/" + username + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title}
 			else:
@@ -1888,7 +1638,7 @@ def uploadGPMLFile(username, graphJSON, title):
 			first_request = create_public_user(public_user_id)
 
 			if first_request == None:
-				result = insert_graph(public_user_id, title, json.dumps(parseJson))
+				result = insert_graph(public_user_id, title, json.dumps(parse_json), sqgpml=True)
 
 				if result == None:
 					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title, 'public_user_id': public_user_id}
@@ -2289,7 +2039,7 @@ def add_unique_to_list(listname, data):
 
 # -------------------------- REST API -------------------------------
 
-def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, shared_with_groups=0, default_layout_id=None):
+def insert_graph(username, graphname, graph_json, created=None, modified=None, public=0, shared_with_groups=0, default_layout_id=None, gpml=False):
 	'''
 		Inserts a uniquely named graph under a username.
 
@@ -2312,10 +2062,10 @@ def insert_graph(username, graphname, graph_json, created=None, modified=None, p
 	# Create database connection
 	db_session = data_connection.new_session()
 
-	validationErrors = validate_json(graph_json)
-
-	if validationErrors != None:
-		return validationErrors 
+	if gpml == False:
+		validationErrors = validate_json(graph_json)
+		if validationErrors != None:
+			return validationErrors
 
 	# Get the current time
 	curTime = datetime.now()

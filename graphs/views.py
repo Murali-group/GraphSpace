@@ -302,15 +302,15 @@ def upload_graph_through_ui(request):
     if request.method == 'POST':
         login_form = LoginForm()
         register_form = RegisterForm()
-
+        file_extension = -4
         title_of_graph = None
 
         if 'title' in request.POST:
             title_of_graph = request.POST['title']
 
-        if str(request.FILES['graphname'])[-4:] == 'json':
+        if str(request.FILES['graphname'])[file_extension:] == 'json':
             upload = 'json'
-        elif str(request.FILES['graphname'])[-4:] == 'gpml':
+        elif str(request.FILES['graphname'])[file_extension:] == 'gpml':
             upload = 'gpml'
         else:
             upload = 'cyjs'
@@ -320,7 +320,7 @@ def upload_graph_through_ui(request):
             if upload == 'json':
                 result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
             elif upload == 'gpml':
-                result = db.uploadGPMLFile(None, request.FILES['graphname'].read(), title_of_graph)
+                result = db.upload_gpml_file(None, request.FILES['graphname'].read(), title_of_graph)
                 request.POST['layout_name'] = 'gpml'
                 request.POST['loggedIn'] = result['public_user_id']
                 request.POST['public'] = 0
@@ -341,7 +341,7 @@ def upload_graph_through_ui(request):
             if upload == 'json':
                 result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
             elif upload == 'gpml':
-                result = db.uploadGPMLFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+                result = db.upload_gpml_file(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
                 request.POST['layout_name'] = 'gpml'
                 request.POST['loggedIn'] = request.POST['email']
                 request.POST['public'] = 0
