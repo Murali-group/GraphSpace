@@ -6,8 +6,7 @@ import time
 import os
 
 '''
-	This file sets all the environment variables for GraphSpace.
-	All variables are imported in graphspace/settings.py
+	Executing this file will install all the required packages and set up some environment variables. You should need to execute this script only once upon installation. All variables are imported in graphspace/settings.py
 '''
 
 # variables for setting up account through which GraphSpace emails
@@ -29,7 +28,7 @@ GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 AWSACCESSKEYID='None'
 SECRETKEY='None'
 
-# Path to GraphSPace
+# Path to GraphSpace
 PATH = "/Path_to_GraphSpace"
 
 # SHOULD NEVER CHANGE THIS VALUE
@@ -110,10 +109,6 @@ def run_tests():
 def install(package):
 	subprocess.call(["sudo", "pip", "install", package])
 
-'''
-	If this file is ran, then it installs all the required packages.
-	Need to only run this once upon installation.
-'''
 if __name__ == "__main__":
 	get_pip()
 
