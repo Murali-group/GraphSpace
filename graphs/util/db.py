@@ -4346,7 +4346,7 @@ def get_all_tags_for_graph(graphname, username):
 		graph_exists = db_session.query(models.Graph).filter(models.Graph.graph_id == graphname).filter(models.Graph.user_id == username).first()
 
 		if graph_exists == None:
-			return None
+			return []
 
 		# Retrieves all tags that match a given graph
 		tag_list = db_session.query(models.GraphToTag.tag_id).distinct(models.GraphToTag.tag_id).filter(models.GraphToTag.user_id == username).filter(models.GraphToTag.graph_id == graphname).all()
@@ -4416,9 +4416,12 @@ def get_visibility_of_graph(user_id, graph_id):
 		@param graph_id: Name of graph
 	'''
 	db_session = data_connection.new_session()
-
 	public = db_session.query(models.Graph.public).filter(models.Graph.user_id == user_id).filter(models.Graph.graph_id == graph_id).first()
 	db_session.close()
+
+	# If the graph we query for doesn't exist, return empty bracket
+	if public == None:
+		return []
 	return public[0]
 
 def delete_all_graphs_for_tag(tagname, username):
@@ -4670,10 +4673,18 @@ def getCrowdEnabledGroup():
 	try:
 		#THIS IS A HARD-CODED GROUP TO GAIN ACCESS TO MTURK
 		allowed_users = db_session.query(models.User.user_id).filter(models.GroupToUser.user_id == models.User.user_id).filter(models.GroupToUser.group_id == "Crowd_Group").filter(models.GroupToUser.group_owner == "tmmurali@acm.org").all()
+		allowed_users_clean = []
+
+		# Only members of this group or owner of the group have access to Ask the Crowd as well as can see the Crowd option
+		for user in allowed_users:
+			allowed_users_clean.append(str(user[0]))
+
+		# Let group owner also view the buttons
 		group_owner = db_session.query(models.User.user_id).filter(models.Group.group_id == "Crowd_Group").filter(models.Group.owner_id == "tmmurali@acm.org").filter(models.Group.owner_id == models.User.user_id).first()
 		if group_owner != None:
-			allowed_users.append(group_owner[0])
-		return allowed_users
+			allowed_users_clean.append(group_owner[0])
+
+		return allowed_users_clean
 	except NoResultFound:
 		db_session.close()
 		return []
