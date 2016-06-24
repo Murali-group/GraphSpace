@@ -825,16 +825,19 @@ def deleteGraph(graphid,user,password):
     cmd = _constructDeleteCommand(graphid,user,password)
     execute(cmd)
    
-def shareGraph(graphid,user,password,group):
+def shareGraph(graphid,user,password,group,group_owner=""):
     """
     Shares an existing graph with a group.
     :param graphid: ID of GraphSpace graph
     :param user: graph owner's username
     :param password: graph owner's password
     :param group: group to share graph with.
+    :param group_owner: the group owner's username. Set to the user parameter by default
     """
-    print '\nSharing existing graph %s from user %s with group %s' % (graphid,user,group)
-    cmd = _constructShareCommand(graphid,user,password,group)
+    if group_owner == "":
+        group_owner = user
+    print '\nSharing existing graph %s from user %s with group %s owned by %s' % (graphid,user,group,group_owner)
+    cmd = _constructShareCommand(graphid,user,password,group,group_owner)
     outstring = execute(cmd)
 
 def makeGraphPublic(graphid,user,password):
@@ -906,9 +909,9 @@ def _constructDeleteCommand(graphid,user,password):
           (URL, user, graphid, user, password) 
     return cmd
 
-def _constructShareCommand(graphid,user,password,groupid):
+def _constructShareCommand(graphid,user,password,groupid,group_owner):
     cmd = 'curl -X POST %s/api/users/graphs/%s/share/%s/%s/ -F username=%s -F password=%s ; echo'  % \
-          (URL, graphid,user,groupid,user,password)
+          (URL, graphid,group_owner,groupid,user,password)
     return cmd
 
 def _constructPublicGraphCommand(graphid,user,password):
