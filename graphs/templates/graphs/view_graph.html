@@ -552,22 +552,21 @@
       <p id="loggedIn" style="display:none;">{{uid}}</p>
       {% endif %}
       <div class="btn-group">
-         <button title="Learn how to use the application" class="btn btn-default" id="tutorial_start">Start Tour</button>
          {% if task_view == True %}
+         <button title="Learn how to use the application" class="btn btn-default" id="tutorial_start">Start Tour</button>
          <button data-toggle="modal" data-target="#guidelines_modal" title="Show guidelines of how to lay graph" class="btn btn-primary" data-intro="Reveals guidelines to generate acceptable layouts." data-step="2" id="guidelines">Guidelines&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+         <div class="btn-group" style="margin-top: 10px;">
+            <button title="Show/add notes for this layout" class="btn btn-default" id="notes" data-intro="Shows any notes for this layout as well as allows user to input their own notes." data-step="3">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+            <button title="Submit this layout for approval" class="btn btn-primary" id="finished" data-intro="Click this when you are finished with the task." data-step="4">Finished Task</button>
+         </div>
+         <hr>
+         {% else %}
+            <div class="btn-group">
+               <button title="Learn how to use the application" class="btn btn-default" id="tutorial_start">Start Tour</button>
+               <button class="btn btn-default" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Exit layout editor</button>
+            </div>
          {% endif %}
       </div>
-      <br>
-      {% if task_view == True %}
-      <div class="btn-group" style="margin-top: 10px;">
-         <button title="Show/add notes for this layout" class="btn btn-default" id="notes" data-intro="Shows any notes for this layout as well as allows user to input their own notes." data-step="3">Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-         <button title="Submit this layout for approval" class="btn btn-primary" id="finished" data-intro="Click this when you are finished with the task." data-step="4">Finished Task</button>
-      </div>
-      <hr>
-      {% else %}
-         <br>
-         <button class="btn btn-primary" id="researcher_view" data-toggle="modal" data-target="#layout_modal">Exit layout editor</button>
-      {% endif %}
       <h3>Select</h3>
       <div style="text-align: center;" id="selection" class="input-group">
       </div>
