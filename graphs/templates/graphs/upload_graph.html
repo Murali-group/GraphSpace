@@ -18,7 +18,7 @@
 	<p style="text-align: center;">Graph is now viewable at: <a href="{{Success}}" style="text-align: center; color: green;">{{Success}}!</a></p>
   <br>
   {% if uid == None %}
-    **Please note that this URL in your records. We will delete this graph after <b>30 days</b>. If you like GraphSpace and would like persistent storage of your graphs, please consider <a id="create">creating an account</a>.
+    **Please note this URL in your records. We will delete this graph after <b>30 days</b>. If you like GraphSpace and would like persistent storage of your graphs, please consider <a id="create">creating an account</a>.
       <br>
 
   {% endif %}
@@ -52,12 +52,12 @@
   <label class="col-md-4 control-label" for="filebutton"></label>
   <div class="col-md-4" id="test">
     <span class="btn btn-default btn-file" id="filename">
-	    Supports uploading of files in two distinct formats (.cyjs) and (.json) <input id="graphname" name="graphname" type="file" accept=".cyjs,.json"><br>
+	    Upload a file in one of the following formats: .cyjs or .json <input id="graphname" name="graphname" type="file" accept=".cyjs,.json"><br>
 	</span>
   <p id="files" style="color: red;"></p>
   </div>
 </div>
-<p style="font-size: 11px;text-align: center;color: green;">You can export a network created in Cytoscape (v3.1 or later) in this format. See <b><a href="{{url}}help/#upload_graphs">documentation</a></b> for more information.  Refer to the <a href="{{url}}help/programmers/#example">example JSON</a>.</p>
+<p style="font-size: 11px;text-align: center;color: green;">If you are using Cytoscape (v3.1 or later), you can export a network in the "cyjs" format. See <b><a href="{{url}}help/#upload_graphs">documentation</a></b> for more information and for the differences between the "cyjs" and "json" formats.  <!--Refer to the <a href="{{url}}help/programmers/#example">example JSON</a>.--></p>
 
 <!-- Button -->
 <div class="form-group">
