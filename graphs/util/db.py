@@ -21,7 +21,7 @@ import urllib2, urllib
 from django.conf import settings
 
 from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
-from gpml_util import parse_gpml
+from gpml_util_interface import parse_gpml
 import sqlalchemy, sqlalchemy.orm
 from graphs.util.db_conn import Database
 import graphs.util.db_init as db_init
@@ -1620,7 +1620,7 @@ def upload_gpml_file(username, graph_json, title):
 	'''
 
 	try:
-		parse_json, default_layout, title = parse_gpml(graph_json, title)
+		parse_json, _, default_layout, title = parse_gpml(graph_json, title)
 		# Create JSON stucture for GraphSpace recognized JSON
 		# Insert converted graph to GraphSpace and provide URL
 		# for logged in user
