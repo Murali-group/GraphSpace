@@ -1,36 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 	
-	    <div class="container">
+<div class="container">
 
-			<div class="content">
+  <div class="content">
 
-				<div class="jumbotron">
+    <div class="jumbotron">
 
-					<h1>Welcome to GraphSpace!</h1>
+      <h1>Welcome to GraphSpace!</h1>
 
-					<big>The interactive graph sharing website.</big>
+      <big>The interactive graph sharing website.</big>
 
-					<br/>
+      <br/>
 
-					{% if uid != None %}
-						<big>You are logged in, go to <a href="/graphs">Graphs</a> to view your graphs or <a href="/graphs/upload">upload</a> a new graph.<br>
-						</big>
-					{% else %}
-						<big>If you don't have an account right now, you can check out <a href="../graphs/">public graphs</a> or <a href="/graphs/upload">upload</a> a new graph.<br></big> 
+      {% if uid != None %}
+      <big>You are logged in. You can view <a href="/graphs">your graphs</a> or <a href="/graphs/upload">upload</a> a new graph.
+      </big>
+      {% else %}
+      <big>If you don't have an account right now, you can check out <a href="../graphs/">public graphs</a> or <a href="/graphs/upload">upload</a> a new graph.</big> 
+      
+      {% endif %}
+      
+      <br/>
+      
+      <strong>Please contact <a href="http://bioinformatics.cs.vt.edu/~murali">T. M. Murali</a> at <em>murali@cs.vt.edu</em> if you have any questions about GraphSpace.</strong>
 
-					{% endif %}
-
-					<br/>
-
-					<h4>Please contact <b>murali@cs.vt.edu</b> for any questions/concerns.</h4>
-
-					<br/>
-
-				</div>
-
-			</div>
-
-		</div>
+      <br/>
+      
+    </div>
+    
+  </div>
+  
+</div>
 {% endblock %}
 
