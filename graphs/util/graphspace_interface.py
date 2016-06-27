@@ -357,7 +357,7 @@ def add_node_color(G,node_id,color):
     ## TODO: rais an exception if the color is improperly formatted.
     G.node[node_id]['background_color'] = color
 
-def add_node_height(G,node_id,height,label,height_factor=20):
+def add_node_height(G,node_id,height,label=None,height_factor=20):
     '''Sets  the node  height for  node "node_id" in  graph "G".   If the
     height is 'None', then the height of the node is determined by the
     number of newlines in the label that will be displayed.
@@ -370,13 +370,13 @@ def add_node_height(G,node_id,height,label,height_factor=20):
     :warning: previous versions of this function supported an "autosize" option. Since we do not implement this option any more, the user must set the height for every node.
 
     '''
-    if height == None: # "auto-resize" height
+    if height == None and label != None: # "auto-resize" height
         # take the number of lines for the label after interpreting newlines.
         labellines = label.split('\n')
         height = len(labellines)*height_factor
     G.node[node_id]['height'] = height
 
-def add_node_width(G,node_id,width,label,width_factor=15):
+def add_node_width(G,node_id,width,label=None,width_factor=15):
     '''
     Sets the node width for node  "node_id" in graph "G". If the width
     is 'None', then the width of  the node is determined by the length
@@ -391,7 +391,7 @@ def add_node_width(G,node_id,width,label,width_factor=15):
     :warning: previous versions of this function supported an "autosize" option. Since we do not implement this option any more, the user must set the height for every node.
 
     '''
-    if width == None: # "auto-resize" width
+    if width == None and label != None: # "auto-resize" width
         ## take the longest width of the label after interpreting newlines.
         labellines = label.split('\n')
         width = max([len(l) for l in labellines])*width_factor
@@ -464,23 +464,31 @@ def add_node_border_color(G,node_id,color):
     '''
     G.node[node_id]['border_color'] = color
 
-def add_node_vertical_alignment(G,node_id,valign):
+def add_node_vertical_alignment(G, node_id, valign, gpml=False):
     '''
     Set the vertical alignment of label for node "node_id" in graph "G".
     :param G: NetworkX object.
     :param node_id: string -- unique ID of the node.
     :param valign: string -- alignment of text.
     '''
-    G.node[node_id]['text_valign'] = valign
+    if gpml:
+        if valign == 'Middle':
+            valign = 'center'
+        G.node[node_id]['text_valign'] = valign.lower()
+    else:
+        G.node[node_id]['text_valign'] = valign
 
-def add_node_horizontal_alignment(G,node_id,halign):
+def add_node_horizontal_alignment(G,node_id,halign, gpml=False):
     '''
     Set the vertical alignment of label for node "node_id" in graph "G".
     :param G: NetworkX object.
     :param node_id: string -- unique ID of the node.
     :param halign: string -- alignment of text.
     '''
-    G.node[node_id]['text_halign'] = halign
+    if gpml:
+        G.node[node_id]['text_halign'] = halign.lower()
+    else:
+        G.node[node_id]['text_halign'] = halign
     
 
 ## Getter methods for nodes.
@@ -494,14 +502,14 @@ def add_node_background_opacity(G, node_id, opacity):
     G.node[node_id]['background_opacity'] = opacity
 
 
-def add_node_font_size(G, node_id, fontsize):
+def add_node_fontsize(G, node_id, fontsize):
     G.node[node_id]['font_size'] = fontsize
 
-def add_node_fill_color(G, count, color):
+def add_node_fill_color(G, node_id, color):
     G.node[node_id]['color'] = color
 
 
-def add_node_parent(G, count, parent):
+def add_node_parent(G, node_id, parent):
     G.node[node_id]['parent'] = parent
 
 
@@ -514,6 +522,7 @@ def get_node_attribute(G,node_id,attr):
         return G.node[node_id][attr]
     else:
         return None
+
 
 ## These node get() functions ensure that the correct attribute is called in the get_node_attribute() function.
 ## They mirror the node add() functions.
