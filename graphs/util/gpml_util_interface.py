@@ -1,57 +1,58 @@
-
 import graphspace_interface as interface
 import networkx as nx
 import json
+import xml.etree.ElementTree as ET
+
+
+# Current supported GPML format
+GPML = '{http://pathvisio.org/GPML/2013a}'
 
 
 def parse_gpml(graph_json, title):
-    parse_json = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
+    """ Parse the GPML file
+
+    """
+    # Create a directed NetworkX graph to parse through
     G = nx.DiGraph(directed=True)
+    
     # Use xml parser to parse the GPML file
-    import xml.etree.ElementTree as ET
-    tree = ET.fromstring(graph_json)
-    # The current GPML format
-    GPML = '{http://pathvisio.org/GPML/2013a}'
+    graph_gpml = ET.fromstring(graph_json)
     # Keep the overall count of nodes and create unique ids for
     # datanodes, shape, labels.
     # IMPORTANT!!!
     count = 0
+
     # Parsing the GPML file for Shape elements
-    shapes = tree.findall(GPML+'Shape')
-    G, parse_json, count = parse_shapes(G, parse_json, count, shapes)
+    G, count = parse_shapes(G, count, graph_gpml)
+
     # Find all the DataNodes in the GPML file which is used to draw various
     # the various nodes of the graph
-    datanodes = tree.findall(GPML+'DataNode')
-    G, parse_json, count = parse_datanodes(G, parse_json, count, datanodes)
+    G, count = parse_datanodes(G, count, graph_gpml)
     # Parsing the GPML file for Shape elements
-    labels = tree.findall(GPML+'Label')
-    G, parse_json, count = parse_labels(G, parse_json, count, labels)
+    labels =  graph_gpml.findall(GPML+'Label')
+    G, count = parse_labels(G, count, labels)
     # This is a crude version of getting interactions (edges) working
     # Look for all the interactions
-    interactions = tree.findall(GPML+'Interaction')
-    G, parse_json, count = parse_interactions(G, parse_json, count, interactions)
-    print G.nodes(data=True)
-    layout = set_gpml_layout(G, parse_json)
+    interactions =  graph_gpml.findall(GPML+'Interaction')
+    G, count = parse_interactions(G, count, interactions)
+    layout = set_gpml_layout(G)
 
     # To add nodes to the group we parse through the group
     # elements of the GPML file.
-    groups = tree.findall(GPML+'Group')
-    G, parse_json = parse_groups(G, parse_json, groups)
-    parse_json['metadata']['name'] = tree.attrib['Name'] or "GPML"
+    groups =  graph_gpml.findall(GPML+'Group')
+    G = parse_groups(G, groups)
 
-    # No tags or description since CYJS doesn't give me any
-    parse_json['metadata']['tags'] = []
-    parse_json['metadata']['description'] = ""
-    title = title or parse_json['metadata']['name']
     
-    metadata = {'description':'example1','title':'Example 1 Graph','tags':[]}
-    out = interface.convertNXToDict(G, metadata=metadata)
+    metadata = {'description':'','title':  graph_gpml.attrib['Name'] or "GPML",'tags':[]}
+    title = title or metadata['title']
+    parse_json = interface.convertNXToDict(G, metadata=metadata)
 
-    return out, parse_json, layout, title
+    return parse_json, layout, title
 
 
-def parse_shapes(G, parse_json, count, shapes):
+def parse_shapes(G, count,  graph_gpml):
     # Create a list of details of all the shape
+    shapes =  graph_gpml.findall(GPML+'Shape')
     shape_details = []
     for shape in shapes:
         temp_node = {}
@@ -64,52 +65,31 @@ def parse_shapes(G, parse_json, count, shapes):
         temp_node = {'data': {}}
         # Give an id to the shape element.
         interface.add_node(G, count)
-        #temp_node['data']['id'] = count
-        if not ('CenterX' in node and 'CenterY' in node):
-            return {"Error": "GPML file must contain X and Y coordinates"
-                    "of all the shape elements!"}
-
-        interface.add_node_x_coordinate(G, count, node['CenterX'])
-        #temp_node['data']['x'] = node['CenterX']
-        #temp_node['data']['y'] = node['CenterY']
-        interface.add_node_y_coordinate(G, count, node['CenterY'])
+        _node_graphics(G, count, node)
 
         # Shape element may or may not contain a TextLabel field
         if 'TextLabel' in node:
             interface.add_node_label(G, count, node['TextLabel'])
-            # temp_node['data']['content'] = node['TextLabel']
 
         # Deal with the ShapeType field of the shape element,
         # improve this, make it more general, too many hacks right now.
         if 'ShapeType' in node:
             shape_type = node['ShapeType'].lower()
-            if shape_type == 'brace':
-                # temp_node['data']['shape'] = 'rectangle'
+            if shape_type == 'brace' or shape_type == 'arc':
                 interface.add_node_shape(G, count, 'rectangle')
             else:
                 # oval in GPML is ellipse in cytoscape JSON
                 if shape_type == 'oval':
-                    # temp_node['data']['shape'] = 'ellipse'
                     interface.add_node_shape(G, count, 'ellipse')
                 # roundedrectangle in GPML is roundrectangle in cytoscape JSON
                 elif shape_type == 'roundedrectangle':
                     interface.add_node_shape(G, count, 'roundrectangle')
-                    # temp_node['data']['shape'] = 'roundrectangle'
                 # everything else works right now, may break with more testing
                 else:
-                    # temp_node['data']['shape'] = shape_type
-                    interface.add_node_shape(G, count, shape_type)
+                    interface.add_node_shape(G, count, 'roundrectangle')
         else:
             # if no ShapeType given use rectangle by default.
             interface.add_node_shape(G, count, 'rectangle')
-            # temp_node['data']['shape'] = 'rectangle'
-        if not ('Height' in node and 'Width' in node):
-            return {"Error": "GPML file must contain the height and width"
-                    "of all the shape elements!"}
-        interface.add_node_height(G, count, node['Height'])
-        interface.add_node_width(G, count, node['Width'])
-        # temp_node['data']['height'] = node['Height']
-        # temp_node['data']['width'] = node['Width']
         # this is the twist out here, if you compare this with node color
         # attribute, we use the color given for border_color rather than
         # color (i.e. text color)
@@ -117,31 +97,25 @@ def parse_shapes(G, parse_json, count, shapes):
             temp_node['data']['border_color'] = '#' + node['Color']
         if 'FillColor' in node:
             interface.add_node_color(G, count, '#' + node['FillColor'])
-            # temp_node['data']['background_color'] = '#' + node['FillColor']
         else:
             interface.add_node_color(G, count, 'white')
-            # temp_node['data']['background_color'] = 'white'
         # this has to be zero because we'll have multiple elements
         interface.add_node_background_opacity(G, count, 0)
-        # temp_node['data']['background_opacity'] = 0
         if 'key' in node:
             if node['key'] == 'org.pathvisio.DoubleLineProperty':
                 interface.add_node_border_style(G, count, 'double')
-                # temp_node['data']['border_style'] = 'double'
         if 'LineThickness' in node:
             interface.add_node_border_width(G, count, node['LineThickness'])
-            # temp_node['data']['border_width'] = node['LineThickness']
         else:
             interface.add_node_border_width(G, count, 1)
-            # temp_node['data']['border_width'] = 1
         # increase count, i.e. to keep unique ids for shapes, nodes, labels.
         count = count + 1
-        parse_json['graph']['nodes'].append(temp_node)
-    return G, parse_json, count
+    return G, count
 
 
-def parse_datanodes(G, parse_json, count, datanodes):
+def parse_datanodes(G, count, graph_gpml):
     # Parsing the DataNode element for all the details.
+    datanodes =  graph_gpml.findall(GPML+'DataNode')
     node_details = []
     for node in datanodes:
         temp = {}
@@ -155,27 +129,13 @@ def parse_datanodes(G, parse_json, count, datanodes):
 
         # Give an id to the node element.
         interface.add_node(G, count)
-        # temp_node['data']['id'] = count
-        if not ('CenterX' in node and 'CenterY' in node):
-            print "mri"
-            return {"Error": "GPML file must contain X and Y coordinates of all the DataNode elements!"}
-        interface.add_node_x_coordinate(G, count, node['CenterX'])
-        #temp_node['data']['x'] = node['CenterX']
-        #temp_node['data']['y'] = node['CenterY']
-        interface.add_node_y_coordinate(G, count, node['CenterY'])
+        _node_graphics(G, count, node)
 
         # Not sure about text label. Haven't got an error yet for textlable
         # YET!!
         interface.add_node_label(G, count, node['TextLabel'])
         # temp_node['data']['content'] = node['TextLabel']
 
-        if not ('Height' in node and 'Width' in node):
-            return {"Error": "GPML file must contain the height and width"
-                    "of all the DataNode elements!"}
-        interface.add_node_height(G, count, node['Height'])
-        # temp_node['data']['height'] = node['Height']
-        interface.add_node_width(G, count, node['Width'])
-        # temp_node['data']['width'] = node['Width']
         # Again not sure about font size
         # temp_node['data']['font_size'] = node['FontSize']
         interface.add_node_fontsize(G, count, node['FontSize'])
@@ -201,11 +161,10 @@ def parse_datanodes(G, parse_json, count, datanodes):
 
         # increase count, i.e. to keep unique ids for shapes, nodes, labels.
         count = count + 1
-        parse_json['graph']['nodes'].append(temp_node)
-    return G, parse_json, count
+    return G, count
 
 
-def parse_labels(G, parse_json, count, labels):
+def parse_labels(G,   count, labels):
     # Parsing the label element for all the details.
     label_details = []
     for label in labels:
@@ -218,10 +177,7 @@ def parse_labels(G, parse_json, count, labels):
         temp_node = {'data': {}}
         # Give an id to the label element.
         interface.add_node(G, count)
-        # temp_node['data']['id'] = count
-        if not ('CenterX' in node and 'CenterY' in node):
-            return {"Error": "GPML file must contain X and Y coordinates"
-                    "of all the label elements!"}
+        _node_graphics(G, count, node)
         # temp_node['data']['x'] = node['CenterX']
         # temp_node['data']['y'] = node['CenterY']
         interface.add_node_x_coordinate(G, count, node['CenterX'])
@@ -229,13 +185,6 @@ def parse_labels(G, parse_json, count, labels):
         # Again not sure about this
         # temp_node['data']['content'] = node['TextLabel']
         interface.add_node_label(G, count, node['TextLabel'])
-        if not ('Height' in node and 'Width' in node):
-            return {"Error": "GPML file must contain the height and width"
-                    "of all the label elements!"}
-        # temp_node['data']['height'] = node['Height']
-        # temp_node['data']['width'] = node['Width']
-        interface.add_node_height(G, count, node['Height'])
-        interface.add_node_width(G, count, node['Width'])
         # Again not sure about this
         interface.add_node_fontsize(G, count, node['FontSize'])
         # temp_node['data']['font_size'] = node['FontSize']
@@ -246,11 +195,10 @@ def parse_labels(G, parse_json, count, labels):
         # temp_node['data']['background_opacity'] = 0
         # increase count, i.e. to keep unique ids for shapes, nodes, labels.
         count = count + 1
-        parse_json['graph']['nodes'].append(temp_node)
-    return G, parse_json, count
+    return G,   count
 
 
-def parse_interactions(G, parse_json, count, interactions):
+def parse_interactions(G,   count, interactions):
     # Create a list of (x, y) coordinates of an edge
     # every element of the list can be either of length of 2 or 3
     # as curved edges are represented by 3 coordinates.
@@ -284,7 +232,6 @@ def parse_interactions(G, parse_json, count, interactions):
             interface.add_node_background_opacity(G, count, 0)
             # temp_node['data']['background_opacity'] = 0
             count = count + 1
-            parse_json['graph']['nodes'].append(temp_node)
         temp_edge_ids.append(edge_id)
 
     # create edges
@@ -295,29 +242,19 @@ def parse_interactions(G, parse_json, count, interactions):
         if len(edge) == 2:
             interface.add_edge(G, edge[0], edge[1])
             interface.add_edge_target_arrow_shape(G, edge[0], edge[1], 'triangle')
-            # temp_edge['data']['source'] = edge[0]
-            # temp_edge['data']['target'] = edge[1]
-            # temp_edge['data']['target_arrow_shape'] = 'triangle'
-            parse_json['graph']['edges'].append(temp_edge)
         if len(edge) == 3:
             interface.add_edge(G, edge[0], edge[1])
             interface.add_edge_target_arrow_shape(G, edge[0], edge[1], 'triangle')
-            # temp_edge['data']['source'] = edge[0]
-            # temp_edge['data']['target'] = edge[1]
-            # temp_edge['data']['target_arrow_shape'] = 'triangle'
-            parse_json['graph']['edges'].append(temp_edge)
+
             temp_edge = {'data': {}}
             interface.add_edge(G, edge[1], edge[2])
-            # interface.add_edge_target_arrow_shape(G, edge[1], edge[2], 'triangle')
-            # temp_edge['data']['source'] = edge[1]
-            # temp_edge['data']['target'] = edge[2]
-            parse_json['graph']['edges'].append(temp_edge)
+
     # This is the where magic happens, creating the layout
     # for the GPML file.
-    return G, parse_json, count
+    return G, count
 
 
-def set_gpml_layout(G, parse_json):
+def set_gpml_layout(G):
     default_layout = []
     for node in G.nodes_iter(data=True):
         temp = dict()
@@ -331,7 +268,7 @@ def set_gpml_layout(G, parse_json):
     return default_layout
 
 
-def parse_groups(G, parse_json, groups):
+def parse_groups(G, groups):
     for group in groups:
         temp_node = {'data': {}}
         interface.add_node(G, group.attrib['GroupId'])
@@ -340,6 +277,27 @@ def parse_groups(G, parse_json, groups):
         # temp_node['data']['background_color'] = 'white'
         interface.add_node_border_color(G, group.attrib['GroupId'], 'black')
         # temp_node['data']['border_color'] = 'black'
-        parse_json['graph']['nodes'].append(temp_node)
-    return G, parse_json
+    return G
+
+
+def _node_graphics(G, count, node):
+    if not ('CenterX' in node and 'CenterY' in node):
+        return {"Error": "GPML file must contain X and Y coordinates"
+                "of all the node type elements! Value for node"
+                + str(node['TextLabel']) + " missing"}
+    interface.add_node_x_coordinate(G, count, node['CenterX'])
+    interface.add_node_y_coordinate(G, count, node['CenterY'])
+
+    if not ('Height' in node and 'Width' in node):
+        return {"Error": "GPML file must contain the height and width"
+                "of all the node type elements! Value for node"
+                + str(node['TextLabel']) + " missing"}
+    interface.add_node_height(G, count, node['Height'])
+    interface.add_node_width(G, count, node['Width'])
+
+    if 'Align' in node:
+        interface.add_node_horizontal_alignment(G, count, node['Align'], gpml=True)
+
+    if 'Valign' in node:
+        interface.add_node_vertical_alignment(G, count, node['Valign'], gpml=True)
 
