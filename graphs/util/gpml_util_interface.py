@@ -8,15 +8,14 @@ import xml.etree.ElementTree as ET
 GPML = '{http://pathvisio.org/GPML/2013a}'
 
 
-def parse_gpml(graph_json, title):
+def parse_gpml(graph_gpml, title):
     """ Parse the GPML file
-
     """
+
     # Create a directed NetworkX graph to parse through
     G = nx.DiGraph(directed=True)
-    
     # Use xml parser to parse the GPML file
-    graph_gpml = ET.fromstring(graph_json)
+    graph_gpml = ET.fromstring(graph_gpml)
     # Keep the overall count of nodes and create unique ids for
     # datanodes, shape, labels.
     # IMPORTANT!!!
@@ -28,14 +27,17 @@ def parse_gpml(graph_json, title):
     # Find all the DataNodes in the GPML file which is used to draw various
     # the various nodes of the graph
     G, count = parse_datanodes(G, count, graph_gpml)
+    # print G.node
     # Parsing the GPML file for Shape elements
-    labels =  graph_gpml.findall(GPML+'Label')
-    G, count = parse_labels(G, count, labels)
+    G, count = parse_labels(G, count, graph_gpml)
+
+
     # This is a crude version of getting interactions (edges) working
     # Look for all the interactions
     interactions =  graph_gpml.findall(GPML+'Interaction')
     G, count = parse_interactions(G, count, interactions)
     layout = set_gpml_layout(G)
+
 
     # To add nodes to the group we parse through the group
     # elements of the GPML file.
@@ -134,21 +136,15 @@ def parse_datanodes(G, count, graph_gpml):
         # Not sure about text label. Haven't got an error yet for textlable
         # YET!!
         interface.add_node_label(G, count, node['TextLabel'])
-        # temp_node['data']['content'] = node['TextLabel']
 
         # Again not sure about font size
-        # temp_node['data']['font_size'] = node['FontSize']
         interface.add_node_fontsize(G, count, node['FontSize'])
 
         if 'Color' in node:
             interface.add_node_border_color(G, count, '#' + node['Color'])
             interface.add_node_fill_color(G, count, '#' + node['Color'])
-            # temp_node['data']['color'] = '#' + node['Color']
-            # temp_node['data']['border_color'] = '#' + node['Color']
         interface.add_node_color(G, count, 'white')
-        # temp_node['data']['background_color'] = 'white'
         interface.add_node_background_opacity(G, count, 0)
-        # temp_node['data']['background_opacity'] = 0
 
         # temp_node['data']['border_width'] = 2
         # rectangle is the default shape for all the datanodes
@@ -157,15 +153,16 @@ def parse_datanodes(G, count, graph_gpml):
         # We use compound nodes to represent GPML groups in GraphSpace.
         if 'GroupRef' in node:
             interface.add_node_parent(G, count, node['GroupRef'])
-            # temp_node['data']['parent'] = node['GroupRef']
 
         # increase count, i.e. to keep unique ids for shapes, nodes, labels.
         count = count + 1
     return G, count
 
 
-def parse_labels(G,   count, labels):
+def parse_labels(G,   count, graph_gpml):
     # Parsing the label element for all the details.
+    labels =  graph_gpml.findall(GPML+'Label')
+
     label_details = []
     for label in labels:
         temp_node = {}
@@ -221,16 +218,11 @@ def parse_interactions(G,   count, interactions):
         for nodes in edge:
             temp_node = {'data': {}}
             interface.add_node(G, count)
-            # temp_node['data']['id'] = count
             edge_id.append(count)
             interface.add_node_x_coordinate(G, count, nodes[0])
-            # temp_node['data']['x'] = nodes[0]
             interface.add_node_y_coordinate(G, count, nodes[1])
-            # temp_node['data']['y'] = nodes[1]
             interface.add_node_color(G, count, 'white')
-            # temp_node['data']['background_color'] = 'white'
             interface.add_node_background_opacity(G, count, 0)
-            # temp_node['data']['background_opacity'] = 0
             count = count + 1
         temp_edge_ids.append(edge_id)
 
@@ -272,28 +264,29 @@ def parse_groups(G, groups):
     for group in groups:
         temp_node = {'data': {}}
         interface.add_node(G, group.attrib['GroupId'])
-        # temp_node['data']['id'] = group.attrib['GroupId']
         interface.add_node_color(G,group.attrib['GroupId'], 'white')
-        # temp_node['data']['background_color'] = 'white'
         interface.add_node_border_color(G, group.attrib['GroupId'], 'black')
-        # temp_node['data']['border_color'] = 'black'
     return G
 
 
 def _node_graphics(G, count, node):
-    if not ('CenterX' in node and 'CenterY' in node):
+    try:
+        interface.add_node_x_coordinate(G, count, node['CenterX'])
+        interface.add_node_y_coordinate(G, count, node['CenterY'])
+    except Exception, e:
         return {"Error": "GPML file must contain X and Y coordinates"
                 "of all the node type elements! Value for node"
                 + str(node['TextLabel']) + " missing"}
-    interface.add_node_x_coordinate(G, count, node['CenterX'])
-    interface.add_node_y_coordinate(G, count, node['CenterY'])
+    
+    try:
+        interface.add_node_height(G, count, node['Height'])
+        interface.add_node_width(G, count, node['Width'])
 
-    if not ('Height' in node and 'Width' in node):
+    except:
         return {"Error": "GPML file must contain the height and width"
                 "of all the node type elements! Value for node"
                 + str(node['TextLabel']) + " missing"}
-    interface.add_node_height(G, count, node['Height'])
-    interface.add_node_width(G, count, node['Width'])
+   
 
     if 'Align' in node:
         interface.add_node_horizontal_alignment(G, count, node['Align'], gpml=True)
