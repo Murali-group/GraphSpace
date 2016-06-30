@@ -483,7 +483,6 @@ def add_node_horizontal_alignment(G,node_id,halign):
     G.node[node_id]['text_halign'] = halign
     
 
-## Getter methods for nodes.
 
 
 def add_node_border_width(G, node_id, border_width):
@@ -503,6 +502,10 @@ def add_node_fill_color(G, count, color):
 
 def add_node_parent(G, count, parent):
     G.node[node_id]['parent'] = parent
+
+
+
+## Getter methods for nodes.
 
 
 ## Get any attribute of a node

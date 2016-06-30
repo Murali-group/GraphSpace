@@ -1,4 +1,8 @@
+# from graphspace.graphspace_interface import *
+import sys
+sys.path.insert(0, '../../graphspace_interface/')
 import graphspace_interface as interface
+
 import networkx as nx
 import json
 import xml.etree.ElementTree as ET

@@ -1619,35 +1619,35 @@ def upload_gpml_file(username, graph_json, title):
 		@param title: Title of graph
 	'''
 
-	# try:
-	parse_json, default_layout, title = parse_gpml(graph_json, title)
-	# Create JSON stucture for GraphSpace recognized JSON
-	# Insert converted graph to GraphSpace and provide URL
-	# for logged in user
-	if username != None:
-		result = insert_graph(username, title, json.dumps(parse_json), gpml=True)
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title}
-		else:
-			return {"Error": result}
-	else:
-		# Create a unique user and insert graph for that name
-		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
-		public_user_id = public_user_id.replace('-', '_')
-
-		first_request = create_public_user(public_user_id)
-
-		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parse_json), sqgpml=True)
-
+	try:
+		parse_json, default_layout, title = parse_gpml(graph_json, title)
+		# Create JSON stucture for GraphSpace recognized JSON
+		# Insert converted graph to GraphSpace and provide URL
+		# for logged in user
+		if username != None:
+			result = insert_graph(username, title, json.dumps(parse_json), gpml=True)
 			if result == None:
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title, 'public_user_id': public_user_id}
+				return {"Success": URL_PATH + "graphs/" + username + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title}
 			else:
 				return {"Error": result}
 		else:
-			return {"Error": result}
-	# except Exception as ex:
-		# return {"Error": "Seems to be an error with " + ex + " property."}
+			# Create a unique user and insert graph for that name
+			public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
+			public_user_id = public_user_id.replace('-', '_')
+
+			first_request = create_public_user(public_user_id)
+
+			if first_request == None:
+				result = insert_graph(public_user_id, title, json.dumps(parse_json), sqgpml=True)
+
+				if result == None:
+					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title, 'public_user_id': public_user_id}
+				else:
+					return {"Error": result}
+			else:
+				return {"Error": result}
+	except Exception as ex:
+		return {"Error": "Seems to be an error with " + ex + " property."}
 
 
 def uploadCyjsFile(username, graphJSON, title):
