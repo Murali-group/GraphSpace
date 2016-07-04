@@ -1619,17 +1619,16 @@ def upload_gpml_file(username, graph_json, title):
 		@param title: Title of graph
 	'''
 
-	# try:
 	parse_json, default_layout, title = parse_gpml(graph_json, title)
+	if 'Error' in parse_json:
+		return parse_json
 	# Create JSON stucture for GraphSpace recognized JSON
 	# Insert converted graph to GraphSpace and provide URL
 	# for logged in user
 	if username != None:
 		result = insert_graph(username, title, json.dumps(parse_json), gpml=True)
-		if result == None:
-			return {"Success": URL_PATH + "graphs/" + username + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title}
-		else:
-			return {"Error": result}
+		return {"Success": URL_PATH + "graphs/" + username + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title}
+
 	else:
 		# Create a unique user and insert graph for that name
 		public_user_id = "Public_User_" + str(uuid.uuid4()) + '@temp.com'
@@ -1638,16 +1637,15 @@ def upload_gpml_file(username, graph_json, title):
 		first_request = create_public_user(public_user_id)
 
 		if first_request == None:
-			result = insert_graph(public_user_id, title, json.dumps(parse_json), sqgpml=True)
+			result = insert_graph(public_user_id, title, json.dumps(parse_json), gpml=True)
+			print type(URL_PATH)
+			print type(public_user_id)
+			print type(title)
+			print type(username)
+			return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title + "?layout=gpml&layout_owner=" + public_user_id, "default": str(default_layout), 'title': title, 'public_user_id': public_user_id}
 
-			if result == None:
-				return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title + "?layout=gpml&layout_owner=" + username, "default": str(default_layout), 'title': title, 'public_user_id': public_user_id}
-			else:
-				return {"Error": result}
 		else:
 			return {"Error": result}
-	# except Exception as ex:
-		# return {"Error": "Seems to be an error with " + ex + " property."}
 
 
 def uploadCyjsFile(username, graphJSON, title):

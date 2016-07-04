@@ -56,12 +56,18 @@ def parse_gpml(graph_gpml, title):
 
     # Parsing the GPML file for Shape elements
     G = parse_shapes(G, graph_gpml)
+    if 'Error' in G:
+        return G, "", ""
 
     # Parsing the GPML file for DataNode elements
     G = parse_datanodes(G, graph_gpml)
+    if 'Error' in G:
+        return G, "", ""
 
     # Parsing the GPML file for Label elements
     G = parse_labels(G, graph_gpml)
+    if 'Error' in G:
+        return G, "", ""
 
     # This is a crude version of getting interactions (edges) working
     # Look for all the interactions
@@ -99,6 +105,9 @@ def parse_shapes(G, graph_gpml):
 
         G = update_node_graphics(G, node['GraphId'], node)
 
+        if 'Error' in G:
+            return G
+
         # Deal with the ShapeType field of the shape element,
         # improve this, make it more general, too many hacks right now.
         if 'ShapeType' in node:
@@ -114,7 +123,7 @@ def parse_shapes(G, graph_gpml):
                     interface.add_node_shape(G, node['GraphId'], 'roundrectangle')
                 # everything else works right now, may break with more testing
                 else:
-                    interface.add_node_shape(G, node['GraphId'], 'roundrectangle')
+                    interface.add_node_shape(G, node['GraphId'], shape_type)
         else:
             # if no ShapeType given use rectangle by default.
             interface.add_node_shape(G, node['GraphId'], 'rectangle')
@@ -137,6 +146,9 @@ def parse_datanodes(G, graph_gpml):
         interface.add_node(G, node['GraphId'], shape='rectangle', border_width=2)
         # Parse through the 
         G = update_node_graphics(G, node['GraphId'], node)
+
+        if 'Error' in G:
+            return G
 
         # if 'Color' in node:
         #     interface.add_node_border_color(G, node['GraphId'], '#' + node['Color'])
@@ -165,6 +177,9 @@ def parse_labels(G, graph_gpml):
         temp_node = {'data': {}}
         interface.add_node(G, node['GraphId'], border_color='#FFFFFF')
         update_node_graphics(G, node['GraphId'], node)
+
+        if 'Error' in G:
+            return G
 
     return G
 
@@ -213,6 +228,9 @@ def parse_interactions(G, interactions):
     for edge in edges:
         if len(edge) > 1:
             interface.add_edge(G, edge[0], edge[1])
+
+        if len(edge) > 2:
+            interface.add_edge(G, node[1], node[2])
 
 
 
@@ -285,8 +303,8 @@ def update_node_graphics(G, node_id, node):
         interface.add_node_x_coordinate(G, node['GraphId'], node['CenterX'])
         interface.add_node_y_coordinate(G, node['GraphId'], node['CenterY'])
     else:
-        return {"Error": "GPML file must contain X and Y coordinates"
-                "of all the node type elements! Value for node"
+        return {"Error": "GPML file must contain X and Y coordinates "
+                "of all the node type elements! Value for "
                 + str(node['GraphId']) + " missing"}
     
     if 'Height' in node:
