@@ -116,7 +116,6 @@ def validate_edge_properties(edges, nodes):
 
         # Check if source and target node of an edge exist in JSON node list
         if edge["source"] not in node_list or edge["target"] not in node_list:
-            print edge
             return "For all edges source and target nodes should exist in node list"
 
     	# If edge has no source and target nodes, throw error since they are required

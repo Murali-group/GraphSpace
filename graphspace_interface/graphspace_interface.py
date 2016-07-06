@@ -232,7 +232,6 @@ def add_node(G,node_id,label='',shape='ellipse',color='#FFFFFF',height=None,\
     :param border_color: string -- color of border. Default is #000000. If Bubble is specified, then style is overwritten.
     :param border_width: int -- width of border. Default is 4.  If Bubble is specified, then style is overwritten.
     """
-    print '==============='
     G.node[node_id] = {}
     add_node_label(G,node_id,label)
     add_node_shape(G,node_id,shape)
