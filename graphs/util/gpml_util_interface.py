@@ -49,7 +49,6 @@ def parse_gpml(graph_gpml, title):
 
     # Use xml parser to parse the GPML file
     graph_gpml = ET.fromstring(graph_gpml)
-
     # Parsing the GPML file for Group elements.
     # This is the first step because 
     G = parse_groups(G, graph_gpml)
@@ -71,8 +70,7 @@ def parse_gpml(graph_gpml, title):
 
     # This is a crude version of getting interactions (edges) working
     # Look for all the interactions
-    interactions =  graph_gpml.findall(GPML+'Interaction')
-    G = parse_interactions(G, interactions)
+    G = parse_interactions(G, graph_gpml)
 
     # Set the layout of the GPML file. This is an important
     # step as GraphSpace by default will create a random
@@ -91,6 +89,11 @@ def parse_gpml(graph_gpml, title):
 
 
 def parse_shapes(G, graph_gpml):
+    """ Parse the shape element of GPML file
+
+    :param G: NetworkX Graph Object
+    :param graph_gpml: xml.etree.ElementTree.Element object
+    """
     # Create a list of details of all the shape
     shapes =  graph_gpml.findall(GPML+'Shape')
 
@@ -136,6 +139,11 @@ def parse_shapes(G, graph_gpml):
 
 
 def parse_datanodes(G, graph_gpml):
+    """ Parse the datanode element of GPML file
+
+    :param G: NetworkX Graph Object
+    :param graph_gpml: xml.etree.ElementTree.Element object
+    """
     # Parsing the DataNode element for all the details.
     datanodes =  graph_gpml.findall(GPML+'DataNode')
     node_attributes = _extract_attributes(datanodes)
@@ -168,9 +176,13 @@ def parse_datanodes(G, graph_gpml):
 
 
 def parse_labels(G, graph_gpml):
+    """ Parse the label element of GPML file
+
+    :param G: NetworkX Graph Object
+    :param graph_gpml: xml.etree.ElementTree.Element object
+    """
     # Parsing the label element for all the details.
     labels =  graph_gpml.findall(GPML+'Label')
-
     label_attributes = _extract_attributes(labels)
 
     for node in label_attributes:
@@ -184,23 +196,13 @@ def parse_labels(G, graph_gpml):
     return G
 
 
-def parse_interactions(G, interactions):
-    # Create a list of (x, y) coordinates of an edge
-    # every element of the list can be either of length of 2 or 3
-    # as curved edges are represented by 3 coordinates.
+def parse_interactions(G, graph_gpml):
+    """ Parse the interaction element of GPML file
 
-    # edge_details = []
-    # for edge in interactions:
-    #     for details in edge:
-    #         temp_edge = []
-    #         for more in details:
-    #             # if 'X' in more.attrib and 'Y' in more.attrib and 'g:
-    #             #     temp_edge.append((more.attrib['X'], more.attrib['Y']))
-    #             if 'GraphRef' in more.attrib:
-    #                 temp_edge.append(more.attrib['GraphRef'])
-
-    #         edge_details.append(temp_edge)     
-
+    :param G: NetworkX Graph Object
+    :param graph_gpml: xml.etree.ElementTree.Element object
+    """
+    interactions =  graph_gpml.findall(GPML+'Interaction')
     edge_attributes = []
     for edge in interactions:
         temp_edge = {}
@@ -210,13 +212,8 @@ def parse_interactions(G, interactions):
             temp_edge.update(nested_layer_attribute.attrib)
             for points in nested_layer_attribute:
                 list_of_points.append(points.attrib)
-
             temp_edge['points'] = list_of_points
         edge_attributes.append(temp_edge)
-
-            
-    # print edge_attributes
-
     edges = []
     for edge in edge_attributes:
         temp = []
@@ -229,50 +226,25 @@ def parse_interactions(G, interactions):
         if len(edge) > 1:
             interface.add_edge(G, edge[0], edge[1])
 
+        # this is used when curved edges are present and we have
+        # an intermediate point to connect the nodes to.
         if len(edge) > 2:
             interface.add_edge(G, node[1], node[2])
 
-
-
-    # the above way of adding attributes will append after every empty list
-    # something like [['something'], [], ['more'], [], ['something']]
-    # that's why we use the magic of list slicing [::2]
-    # create temp edge ids
-    # temp_edge_ids = []
-    # for edge in edge_details[::2]:
-    #     edge_id = []
-    #     for nodes in edge:
-    #         temp_node = {'data': {}}
-    #         interface.add_node(G, count)
-    #         edge_id.append(count)
-    #         interface.add_node_x_coordinate(G, count, nodes[0])
-    #         interface.add_node_y_coordinate(G, count, nodes[1])
-    #         interface.add_node_color(G, count, 'white')
-    #         interface.add_node_background_opacity(G, count, 0)
-    #         count = count + 1
-    #     temp_edge_ids.append(edge_id)
-
-    # create edges
-    # TODO: extract more information from edges, i.e arrow shapes
-    # right now by default we are using triangle as arrow shape.
-    # for edge in temp_edge_ids:
-    #     temp_edge = {'data': {}}
-    #     if len(edge) == 2:
-    #         interface.add_edge(G, edge[0], edge[1])
-    #         interface.add_edge_target_arrow_shape(G, edge[0], edge[1], 'triangle')
-    #     if len(edge) == 3:
-    #         interface.add_edge(G, edge[0], edge[1])
-    #         interface.add_edge_target_arrow_shape(G, edge[0], edge[1], 'triangle')
-
-    #         temp_edge = {'data': {}}
-    #         interface.add_edge(G, edge[1], edge[2])
-
-    # This is the where magic happens, creating the layout
-    # for the GPML file.
     return G
 
 
 def set_gpml_layout(G):
+    """ Create the layout for the GPML layout
+
+    Extract the x and y coordinates from G, the graph created
+    using the GPML file. The coordinates are stored in a list
+    of dictionaries. Each dictionary stores the 'id', 'x' and
+    'y' values of a node.
+
+    :param G: NetworkX Graph Object
+    """
+
     default_layout = []
     for node in G.nodes_iter(data=True):
         if 'x' in node[1] and 'y' in node[1]:
@@ -288,17 +260,30 @@ def set_gpml_layout(G):
 
 
 def parse_groups(G, graph_gpml):
+    """ Parse the group element of GPML file
+
+    :param G: NetworkX Graph Object
+    :param graph_gpml: xml.etree.ElementTree.Element object
+    """
     groups =  graph_gpml.findall(GPML+'Group')
     for group in groups:
         temp_node = {'data': {}}
         interface.add_node(G, group.attrib['GraphId'])
         interface.add_node_group_id(G, group.attrib['GraphId'], group.attrib['GroupId'])
         interface.add_node_color(G,group.attrib['GraphId'], 'white')
+        # We explicitly make the border of a group to be black so that we can see
+        # the group in GraphSpace.
         interface.add_node_border_color(G, group.attrib['GraphId'], 'black')
     return G
 
 
 def update_node_graphics(G, node_id, node):
+    """ Extract graphic related attributes from the node.
+
+    :param G: NetworkX Graph Object
+    :param node_id: GraphId of the node
+    :param node: node element dictionary with all the attributes.
+    """
     if 'CenterX' in node and 'CenterY' in node:
         interface.add_node_x_coordinate(G, node['GraphId'], node['CenterX'])
         interface.add_node_y_coordinate(G, node['GraphId'], node['CenterY'])
@@ -339,12 +324,20 @@ def update_node_graphics(G, node_id, node):
         interface.add_node_color(G, node['GraphId'], 'white')
 
     interface.add_node_background_opacity(G, node['GraphId'], 0)
-
-
     return G
 
 
 def _extract_attributes(nodes):
+    """ Extract the attributes from the nested form of xml object
+
+    All the node type elements, i.e. Shapes, Labels, DataNodes and
+    Groups have their attributes in a two nested xml objects.
+    This function is used to extract that and return a list of
+    node attribute dictionaries, i.e.
+    [{'id': 1, 'some_attribute': 'foo'}, {'id': 'bar', 'other_attribute': 5}]
+
+    :param nodes: list of xml element objects
+    """
     node_attributes = []
     for node in nodes:
         temp_node = {}
