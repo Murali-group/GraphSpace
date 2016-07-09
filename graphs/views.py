@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 
 from graphs.util.paginator import pager
 from graphs.util import db
+from graphs.util.gpml_util_interface import parse_gpml
 from graphs.auth.login import login
 from forms import LoginForm, SearchForm, RegisterForm
 from django.conf import settings
@@ -1869,7 +1870,20 @@ def upload_graph(request, user_id, graphname):
         if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+        if graphname[-4:] == 'gpml':
+            parse_json, default_layout, title = parse_gpml(request.FILES['graphname'].read(), graphname)
+            if 'Error' in parse_json:
+                return HttpResponse(json.dumps(db.throwError(400, parse_json['Error']), indent=4, separators=(',', ': ')), content_type="application/json")
+            graph_errors = db.insert_graph(user_id, graphname, json.dumps(parse_json), gpml=True)
+            request.POST['layout_name'] = 'gpml'
+            request.POST['loggedIn'] = request.POST['username']
+            request.POST['public'] = 0
+            request.POST['unlisted'] = 0
+            request.POST['points'] = str(default_layout)
+            save_layout(request, request.POST['username'], graphname)
+        else:
+            graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+
 
         if graph_errors != None:
             return HttpResponse(json.dumps(db.throwError(400, graph_errors), indent=4, separators=(',', ': ')), content_type="application/json")

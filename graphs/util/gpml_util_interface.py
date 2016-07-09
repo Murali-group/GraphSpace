@@ -71,6 +71,8 @@ def parse_gpml(graph_gpml, title):
     # This is a crude version of getting interactions (edges) working
     # Look for all the interactions
     G = parse_interactions(G, graph_gpml)
+    if 'Error' in G:
+        return G, "", ""
 
     # Set the layout of the GPML file. This is an important
     # step as GraphSpace by default will create a random
@@ -214,22 +216,37 @@ def parse_interactions(G, graph_gpml):
                 list_of_points.append(points.attrib)
             temp_edge['points'] = list_of_points
         edge_attributes.append(temp_edge)
-    edges = []
+    edges = {}
+
     for edge in edge_attributes:
         temp = []
         for point in edge['points']:
-            if 'GraphRef' in point:
-                temp.append(point['GraphRef'])
-        edges.append(temp)
+            temp.append(point)
+        edges[edge['GraphId']] = temp
 
-    for edge in edges:
-        if len(edge) > 1:
-            interface.add_edge(G, edge[0], edge[1])
+    for edge_id, edge in edges.items():
+        if len(edge) == 2:
+            try:
+                interface.add_edge(G, edge[0]['GraphRef'], edge[1]['GraphRef'])
+            except:
+                return {"Error": "GPML file must contain GraphRef for "
+                "all interaction elements! Value for "
+                + str(edge_id) + " missing"}
+
 
         # this is used when curved edges are present and we have
         # an intermediate point to connect the nodes to.
-        if len(edge) > 2:
-            interface.add_edge(G, node[1], node[2])
+        elif len(edge) == 3:
+            if 'GraphRef' in edge[0] and 'GraphRef' in edge[1]:
+                interface.add_edge(G, edge[0]['GraphRef'], edge[1]['GraphRef'])
+            elif 'GraphRef' in edge[0] and 'GraphRef' in edge[2]:
+                interface.add_edge(G, edge[0]['GraphRef'], edge[2]['GraphRef'])
+            elif 'GraphRef' in edge[1] and 'GraphRef' in edge[2]:
+                interface.add_edge(G, edge[1]['GraphRef'], edge[2]['GraphRef'])
+            else:
+                return {"Error": "GPML file must contain GraphRef for "
+                "all interaction elements! Value for "
+                + str(edge_id) + " missing"}
 
     return G
 
