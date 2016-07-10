@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 
 from graphs.util.paginator import pager
 from graphs.util import db
+from graphs.util.gpml_util_interface import parse_gpml
 from graphs.auth.login import login
 from forms import LoginForm, SearchForm, RegisterForm
 from django.conf import settings
@@ -300,44 +301,64 @@ def _graphs_page(request, view_type):
 def upload_graph_through_ui(request):
 
     if request.method == 'POST':
-            login_form = LoginForm()
-            register_form = RegisterForm()
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        file_extension = -4
+        title_of_graph = None
 
-            upload_json = True
+        if 'title' in request.POST:
+            title_of_graph = request.POST['title']
 
-            title_of_graph = None
+        if str(request.FILES['graphname'])[file_extension:] == 'json':
+            upload = 'json'
+        elif str(request.FILES['graphname'])[file_extension:] == 'gpml':
+            upload = 'gpml'
+        else:
+            upload = 'cyjs'
 
-            if 'title' in request.POST:
-                title_of_graph = request.POST['title']
-
-            if str(request.FILES['graphname'])[-4:] != "json":
-                upload_json = None
-            
-            if request.POST['email'] == 'Public User':
-                # assign random id generator
-                if upload_json:
-                    result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
-                else:
-                    result = db.uploadCyjsFile(None, request.FILES['graphname'].read(), title_of_graph)
-
-                if 'Error' not in result:
-                    context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
-                else:
-                    context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
-                return render(request, 'graphs/upload_graph.html', context)
+        if request.POST['email'] == 'Public User':
+            # assign random id generator
+            if upload == 'json':
+                result = db.uploadJSONFile(None, request.FILES['graphname'].read(), title_of_graph)
+            elif upload == 'gpml':
+                result = db.upload_gpml_file(None, request.FILES['graphname'].read(), title_of_graph)
+                request.POST['layout_name'] = 'gpml'
+                request.POST['loggedIn'] = result['public_user_id']
+                request.POST['public'] = 0
+                request.POST['unlisted'] = 0
             else:
+                result = db.uploadCyjsFile(None, request.FILES['graphname'].read(), title_of_graph)
 
-                if upload_json:
-                    result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
-                else:
-                    result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+            if 'Error' not in result:
+                if upload == 'gpml':
+                    request.POST['points'] = result['default']
+                    temp = save_layout(request, result['public_user_id'], result['title'])
+                context = {'login_form': login_form, 'register_form': register_form, 'Success': result['Success']}
+            else:
+                context = {'login_form': login_form,  'register_form': register_form, 'Error': result['Error']}
+            return render(request, 'graphs/upload_graph.html', context)
+        else:
 
-                if 'Error' not in result:
-                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}
-                else:
-                    context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Error': result['Error']}
-                
-                return render(request, 'graphs/upload_graph.html', context)
+            if upload == 'json':
+                result = db.uploadJSONFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+            elif upload == 'gpml':
+                result = db.upload_gpml_file(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+                request.POST['layout_name'] = 'gpml'
+                request.POST['loggedIn'] = request.POST['email']
+                request.POST['public'] = 0
+                request.POST['unlisted'] = 0
+            else:
+                result = db.uploadCyjsFile(request.POST['email'], request.FILES['graphname'].read(), title_of_graph)
+
+            if 'Error' not in result:
+                if upload == 'gpml':
+                    request.POST['points'] = result['default']
+                    temp = save_layout(request, request.POST['email'], result['title'])
+                context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Success': result['Success']}
+            else:
+                context = {'login_form': login_form,  'uid': request.POST['email'], 'register_form': register_form, 'Error': result['Error']}
+
+            return render(request, 'graphs/upload_graph.html', context)
     else: 
         context = login(request)
         return render(request, 'graphs/upload_graph.html', context)
@@ -1849,7 +1870,20 @@ def upload_graph(request, user_id, graphname):
         if db.get_valid_user(user_id, request.POST['password']) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+        if graphname[-4:] == 'gpml':
+            parse_json, default_layout, title = parse_gpml(request.FILES['graphname'].read(), graphname)
+            if 'Error' in parse_json:
+                return HttpResponse(json.dumps(db.throwError(400, parse_json['Error']), indent=4, separators=(',', ': ')), content_type="application/json")
+            graph_errors = db.insert_graph(user_id, graphname, json.dumps(parse_json), gpml=True)
+            request.POST['layout_name'] = 'gpml'
+            request.POST['loggedIn'] = request.POST['username']
+            request.POST['public'] = 0
+            request.POST['unlisted'] = 0
+            request.POST['points'] = str(default_layout)
+            save_layout(request, request.POST['username'], graphname)
+        else:
+            graph_errors = db.insert_graph(user_id, graphname, request.FILES['graphname'].read())
+
 
         if graph_errors != None:
             return HttpResponse(json.dumps(db.throwError(400, graph_errors), indent=4, separators=(',', ': ')), content_type="application/json")

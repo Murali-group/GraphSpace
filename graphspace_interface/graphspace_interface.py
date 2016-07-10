@@ -87,7 +87,6 @@ DEFAULT_METADATA = {'description':'','tags':[],'title':''}
 ## END GLOBAL VARIABLES #############################################
 
 ## JSON VALIDATOR FUNCTIONS #########################################
-
 def validate_json(G):
     """
     Validates JSON to see if all properties are consistent with API.
@@ -289,6 +288,33 @@ def add_node_label(G,node_id,label):
     G.node[node_id]['content'] = label
     add_node_wrap(G,node_id,'wrap')
 
+
+def add_node_x_coordinate(G, node_id, x):
+    '''
+    Add a label "label" to a node "node_id" in graph "G".
+    The label is stored under "content" in the node information.
+    Also set wrap = 'wrap' so newlines are interpreted.
+
+    :param G: NetworkX object.
+    :param node_id: string -- unique ID of the node.
+    :param label: string -- text to display on node. "\n" will be interpreted as a newline. 
+    '''
+    G.node[node_id]['x'] = x
+
+
+def add_node_y_coordinate(G, node_id, y):
+    '''
+    Add a label "label" to a node "node_id" in graph "G".
+    The label is stored under "content" in the node information.
+    Also set wrap = 'wrap' so newlines are interpreted.
+
+    :param G: NetworkX object.
+    :param node_id: string -- unique ID of the node.
+    :param label: string -- text to display on node. "\n" will be interpreted as a newline. 
+    '''
+    G.node[node_id]['y'] = y
+
+
 def add_node_wrap(G,node_id,wrap):
     '''
     Adding node wrap allows the newline '\n' to be interpreted
@@ -330,7 +356,7 @@ def add_node_color(G,node_id,color):
     ## TODO: rais an exception if the color is improperly formatted.
     G.node[node_id]['background_color'] = color
 
-def add_node_height(G,node_id,height,label,height_factor=20):
+def add_node_height(G,node_id,height,label="",height_factor=20):
     '''Sets  the node  height for  node "node_id" in  graph "G".   If the
     height is 'None', then the height of the node is determined by the
     number of newlines in the label that will be displayed.
@@ -349,7 +375,7 @@ def add_node_height(G,node_id,height,label,height_factor=20):
         height = len(labellines)*height_factor
     G.node[node_id]['height'] = height
 
-def add_node_width(G,node_id,width,label,width_factor=15):
+def add_node_width(G,node_id,width,label="",width_factor=15):
     '''
     Sets the node width for node  "node_id" in graph "G". If the width
     is 'None', then the width of  the node is determined by the length
@@ -437,26 +463,61 @@ def add_node_border_color(G,node_id,color):
     '''
     G.node[node_id]['border_color'] = color
 
-def add_node_vertical_alignment(G,node_id,valign):
+def add_node_vertical_alignment(G,node_id,valign, gpml=False):
     '''
     Set the vertical alignment of label for node "node_id" in graph "G".
     :param G: NetworkX object.
     :param node_id: string -- unique ID of the node.
     :param valign: string -- alignment of text.
     '''
-    G.node[node_id]['text_valign'] = valign
+    if gpml:
+        if valign == 'Middle':
+            valign = 'center'
+        G.node[node_id]['text_valign'] = valign.lower()
+    else:
+        G.node[node_id]['text_valign'] = valign
 
-def add_node_horizontal_alignment(G,node_id,halign):
+
+def add_node_horizontal_alignment(G,node_id,halign, gpml=False):
     '''
     Set the vertical alignment of label for node "node_id" in graph "G".
     :param G: NetworkX object.
     :param node_id: string -- unique ID of the node.
     :param halign: string -- alignment of text.
     '''
-    G.node[node_id]['text_halign'] = halign
+    if gpml:
+        G.node[node_id]['text_halign'] = halign.lower()
+    else:
+        G.node[node_id]['text_halign'] = halign
     
 
+
+
+def add_node_border_width(G, node_id, border_width):
+    G.node[node_id]['border_width'] = border_width
+
+
+def add_node_background_opacity(G, node_id, opacity):
+    G.node[node_id]['background_opacity'] = opacity
+
+
+def add_node_fontsize(G, node_id, fontsize):
+    G.node[node_id]['font_size'] = fontsize
+
+def add_node_fill_color(G, node_id, color):
+    G.node[node_id]['color'] = color
+
+
+def add_node_parent(G, node_id, parent):
+    G.node[node_id]['parent'] = parent
+
+
+def add_node_group_id(G, node_id, group_id):
+    G.node[node_id]['group_id'] = group_id
+
+
 ## Getter methods for nodes.
+
 
 ## Get any attribute of a node
 def get_node_attribute(G,node_id,attr):
@@ -825,16 +886,19 @@ def deleteGraph(graphid,user,password):
     cmd = _constructDeleteCommand(graphid,user,password)
     execute(cmd)
    
-def shareGraph(graphid,user,password,group):
+def shareGraph(graphid,user,password,group,group_owner=""):
     """
     Shares an existing graph with a group.
     :param graphid: ID of GraphSpace graph
     :param user: graph owner's username
     :param password: graph owner's password
     :param group: group to share graph with.
+    :param group_owner: the group owner's username. Set to the user parameter by default
     """
-    print '\nSharing existing graph %s from user %s with group %s' % (graphid,user,group)
-    cmd = _constructShareCommand(graphid,user,password,group)
+    if group_owner == "":
+        group_owner = user
+    print '\nSharing existing graph %s from user %s with group %s owned by %s' % (graphid,user,group,group_owner)
+    cmd = _constructShareCommand(graphid,user,password,group,group_owner)
     outstring = execute(cmd)
 
 def makeGraphPublic(graphid,user,password):
@@ -906,9 +970,9 @@ def _constructDeleteCommand(graphid,user,password):
           (URL, user, graphid, user, password) 
     return cmd
 
-def _constructShareCommand(graphid,user,password,groupid):
+def _constructShareCommand(graphid,user,password,groupid,group_owner):
     cmd = 'curl -X POST %s/api/users/graphs/%s/share/%s/%s/ -F username=%s -F password=%s ; echo'  % \
-          (URL, graphid,user,groupid,user,password)
+          (URL, graphid,group_owner,groupid,user,password)
     return cmd
 
 def _constructPublicGraphCommand(graphid,user,password):
