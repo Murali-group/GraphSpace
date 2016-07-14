@@ -1,40 +1,26 @@
-import sys
-import bcrypt
-import json
-import random
-import string
-import uuid
-import math
-
-from collections import Counter, defaultdict
-from operator import itemgetter
-from itertools import groupby
-from datetime import datetime
-from datetime import timedelta
-
-import time 
-from django.core.mail import send_mail
-import sqlite3 as lite
-
-import urllib2, urllib
-
-from django.conf import settings
-
-from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
-import sqlalchemy, sqlalchemy.orm
-from graphs.util.db_conn import Database
-import graphs.util.db_init as db_init
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import and_, or_, tuple_
-from sqlalchemy import distinct
-from sqlalchemy import update
-
 import hmac
+import json
+import math
+import random
+import sqlite3 as lite
+import string
+import urllib
+import uuid
+import xml.etree.ElementTree as ET
+from collections import Counter, defaultdict
+from datetime import datetime
 from hashlib import sha1
-import requests
+
+import bcrypt
+from sqlalchemy import or_
+from sqlalchemy.orm.exc import NoResultFound
 
 import graphs.models as models
-import xml.etree.ElementTree as ET
+import graphs.util.db_init as db_init
+import requests
+from django.conf import settings
+from django.core.mail import send_mail
+from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
 
 data_connection = db_init.db
 
@@ -1616,7 +1602,7 @@ def uploadCyjsFile(username, graphJSON, title):
 		@param graphJSON: CYJS of graph
 		@param tile: Title of graph
 	'''
-
+	has_node_positions = True
 	try:
 		# Create JSON stucture for GraphSpace recognized JSON
 		parseJson = {"graph": {"edges": [], "nodes": []}, "metadata": {}}
@@ -1636,6 +1622,7 @@ def uploadCyjsFile(username, graphJSON, title):
 		if 'edges' not in csjs['elements']:
 			return {"Error": "File must contain edges property in elements dictionary!"}
 
+		node_positions = []
 		# Go through nodes and translate properties so CytoscapeJS may render
 		for node in csjs['elements']['nodes']:
 
@@ -1644,6 +1631,17 @@ def uploadCyjsFile(username, graphJSON, title):
 
 			# Copy over ID
 			tempNode['data']['id'] = node['data']['id']
+
+			if 'position' in node and 'x' in node['position'] and 'y' in node['position']:
+				tempNode['data']['x'] = node['position']['x']
+				tempNode['data']['y'] = node['position']['y']
+				node_positions.append({
+					'x': node['position']['x'],
+					'y': node['position']['y'],
+					'id': node['data']['id']
+				})
+			else:
+				has_node_positions = False
 
 			# Change color property to background color 
 			if 'node_fillColor' in node['data'] and len(node['data']['node_fillColor']) > 0:
@@ -1688,9 +1686,12 @@ def uploadCyjsFile(username, graphJSON, title):
 
 		# Insert converted graph to GraphSpace and provide URL
 		# for logged in user
+
 		if username != None:
 			result = insert_graph(username, title, json.dumps(parseJson))
 			if result == None:
+				if has_node_positions:
+					save_layout(title, username, 'cyjs_layout', username, json.dumps(node_positions), False, False, default=True)
 				return {"Success": URL_PATH + "graphs/" + username + "/" + title}
 			else:
 				return {"Error": result}
@@ -1703,15 +1704,16 @@ def uploadCyjsFile(username, graphJSON, title):
 
 			if first_request == None:
 				result = insert_graph(public_user_id, title, json.dumps(parseJson))
-
-				if result == None: 
+				if result == None:
+					if has_node_positions:
+						save_layout(title, public_user_id, 'cyjs_layout', public_user_id, json.dumps(node_positions), False, False, default=True)
 					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
 				else: 
 					return {"Error": result}
 			else:
 				return {"Error": result}
 	except Exception as ex:
-		return {"Error": "Seems to be an error with " + ex + " property."}
+		return {"Error": "Seems to be an error with " + ex.message + " property."}
 		
 def uploadJSONFile(username, graphJSON, title):
 	'''
@@ -3935,7 +3937,7 @@ def update_layout(graph_id, graph_owner, layout_name, layout_owner, json, public
 
 	db_session.close()
 
-def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups):
+def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, shared_with_groups, default=False):
 	'''
 		Saves layout of specific graph.
 
@@ -3946,6 +3948,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		:param json: JSON of the graph
 		:param public: Is layout public or not
 		:param shared_with_groups: Is layout shared with groups
+		:param default: Is layout default for given graph_id
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3959,9 +3962,16 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 
 	# Add the new layout
 	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
-
 	db_session.add(new_layout)
 	db_session.commit()
+
+	if default:
+		db_session.refresh(new_layout)
+		a = db_session.query(models.Graph).filter(models.Graph.graph_id == graph_id).update({
+			"default_layout_id": new_layout.layout_id
+		})
+		db_session.commit()
+
 	db_session.close()
 
 def deleteLayout(uid, gid, layoutToDelete, layout_owner):
