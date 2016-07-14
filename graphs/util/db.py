@@ -1405,79 +1405,82 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	# List of all tail node ids
 	tail_nodes = []
 
-	# Match all edges that contain the edges that exactly match the search_word
-	if search_type == "full_search":
+	# # Match all edges that contain the edges that exactly match the search_word
+	# if search_type == "full_search":
+    #
+	# 	# Get all (head) nodes that contain a label matching search_word
+	# 	head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == head_node).all()
+	#
+	# 	# Get all (tail) nodes that contain a label matching search_word
+	# 	tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == tail_node).all()
+    #
+	# 	# Get all (head) nodes that contain a node id matching search_word
+	# 	head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == head_node).all()
+    #
+	# 	# Get all (tail) nodes that contain a node id matched search_word
+	# 	tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == tail_node).all()
+	#
+	# elif search_type == "partial_search":
+    #
+	# 	# Get all (head) nodes that contain a partially matching label
+	# 	head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + head_node + "%")).all()
+	#
+	# 	# Get all (tail) nodes that contain a label partially matching label
+	# 	tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + tail_node + "%")).all()
+    #
+	# 	# Get all (head) nodes that contain a node id partially matching search_word
+	# 	head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + head_node + "%")).all()
+	#
+	# 	# Get all (head) nodes that contain a node id partially matching search_word
+	# 	tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + tail_node + "%")).all()
+    #
+	# # Remove all the duplicates
+	# head_nodes = list(set(head_nodes))
+	# tail_nodes = list(set(tail_nodes))
+    #
+	# # Go through head and tail nodes to see if there are any graphs
+	# # that match the given view type (my graphs, shared, public).
+	# # In other words, return all graphs that having matching edges
+	# # for the given view type.
+    #
+	# # TODO: ASK MURALI ABOUT BIDIRECTION EDGES
+    #
+	# # If there are both head and tail nodes
+	# if len(head_nodes) > 0 and len(tail_nodes) > 0:
+	# 	# Go through all permutations of these nodes
+	# 	# compile graphs that match the given view_type (my graphs, shared, public)
+	# 	for i in xrange(len(head_nodes)):
+	# 		for j in xrange(len(tail_nodes)):
+	# 			h_node =  head_nodes[i][0]
+	# 			t_node =  tail_nodes[j][0]
+	# 			# For each view type, we query edges twice because we use head:tail and tail:head (to resolve undirected edge search issue)
+	# 			if view_type == "public":
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+	# 			elif view_type == "shared":
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
+	# 			else:
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
+	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
+	import time
+	start = time.time()
+	initial_graphs_matching_edges = db_session.query(models.Edge).filter(or_(and_(models.Edge.head_node_id.like("%" + head_node + "%"), models.Edge.tail_node_id.like("%" + tail_node + "%")), and_(models.Edge.tail_node_id.like("%" + head_node + "%"), models.Edge.head_node_id.like("%" + tail_node + "%")))).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+	print(time.time() - start)
 
-		# Get all (head) nodes that contain a label matching search_word
-		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == head_node).all()
-		
-		# Get all (tail) nodes that contain a label matching search_word
-		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label == tail_node).all()
+	graph_dict = dict()
 
-		# Get all (head) nodes that contain a node id matching search_word 
-		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == head_node).all()
+	# Remove duplicates for all graphs that match have the same edge matching search term
+	for edge in initial_graphs_matching_edges:
+		key = edge.head_node_id + edge.graph_id + edge.user_id + edge.tail_node_id + edge.edge_id
+		if key in graph_dict:
+			continue
+		else:
+			graph_dict[key] = edge
 
-		# Get all (tail) nodes that contain a node id matched search_word 
-		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id == tail_node).all()
-		
-	elif search_type == "partial_search":
-
-		# Get all (head) nodes that contain a partially matching label
-		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + head_node + "%")).all()
-		
-		# Get all (tail) nodes that contain a label partially matching label
-		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.label.like("%" + tail_node + "%")).all()
-
-		# Get all (head) nodes that contain a node id partially matching search_word 
-		head_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + head_node + "%")).all()
-		
-		# Get all (head) nodes that contain a node id partially matching search_word 
-		tail_nodes += db_session.query(models.Node.node_id).filter(models.Node.node_id.like("%" + tail_node + "%")).all()
-
-	# Remove all the duplicates
-	head_nodes = list(set(head_nodes))
-	tail_nodes = list(set(tail_nodes))
-
-	# Go through head and tail nodes to see if there are any graphs
-	# that match the given view type (my graphs, shared, public).
-	# In other words, return all graphs that having matching edges
-	# for the given view type.
-
-	# TODO: ASK MURALI ABOUT BIDIRECTION EDGES
-
-	# If there are both head and tail nodes
-	if len(head_nodes) > 0 and len(tail_nodes) > 0:
-		# Go through all permutations of these nodes
-		# compile graphs that match the given view_type (my graphs, shared, public)
-		for i in xrange(len(head_nodes)):
-			for j in xrange(len(tail_nodes)):
-				h_node =  head_nodes[i][0]
-				t_node =  tail_nodes[j][0]
-				# For each view type, we query edges twice because we use head:tail and tail:head (to resolve undirected edge search issue)
-				if view_type == "public":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
-				elif view_type == "shared":
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.GroupToGraph.user_id == uid).filter(models.Edge.graph_id == models.GroupToGraph.graph_id).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).all()
-				else:
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == h_node).filter(models.Edge.tail_node_id == t_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
-					initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
-
-
-		graph_dict = dict()
-
-		# Remove duplicates for all graphs that match have the same edge matching search term
-		for edge in initial_graphs_matching_edges:
-			key = edge.head_node_id + edge.graph_id + edge.user_id + edge.tail_node_id + edge.edge_id
-			if key in graph_dict:
-				continue
-			else:
-				graph_dict[key] = edge
-
-		return graph_dict.values()
-	else:
-		return []
+	return graph_dict.values()
+	# else:
+	# 	return []
 
 def find_all_graphs_containing_nodes(uid, search_type, search_word, view_type, db_session):
 	'''
