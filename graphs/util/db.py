@@ -1396,8 +1396,8 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	node_ids = search_word.split(":")
 
 	# Get head and tail node references
-	head_node = node_ids[0]
-	tail_node = node_ids[1]
+	head_node = node_ids[0].upper()
+	tail_node = node_ids[1].upper()
 
 	# List of all head node ids
 	head_nodes = []
@@ -1465,8 +1465,10 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	# 				initial_graphs_matching_edges += db_session.query(models.Edge).filter(models.Edge.head_node_id == t_node).filter(models.Edge.tail_node_id == h_node).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Edge.user_id == uid).all()
 	import time
 	start = time.time()
-	initial_graphs_matching_edges = db_session.query(models.Edge).filter(or_(and_(models.Edge.head_node_id.like("%" + head_node + "%"), models.Edge.tail_node_id.like("%" + tail_node + "%")), and_(models.Edge.tail_node_id.like("%" + head_node + "%"), models.Edge.head_node_id.like("%" + tail_node + "%")))).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
-	print(time.time() - start)
+	# initial_graphs_matching_edges = db_session.query(models.Edge).filter(or_(and_(models.Edge.head_node_id.like("%" + head_node + "%"), models.Edge.tail_node_id.like("%" + tail_node + "%")), and_(models.Edge.tail_node_id.like("%" + head_node + "%"), models.Edge.head_node_id.like("%" + tail_node + "%")))).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+	initial_graphs_matching_edges = db_session.query(models.Edge).filter(or_(and_(models.Edge.head_node_id >= head_node, models.Edge.head_node_id <= head_node+'zzz', models.Edge.tail_node_id >= tail_node, models.Edge.tail_node_id <= tail_node+"zzz"), and_(models.Edge.tail_node_id >= head_node, models.Edge.tail_node_id <= head_node + "zzz", models.Edge.head_node_id >= tail_node, models.Edge.head_node_id <= tail_node + "zzz"))).filter(models.Edge.graph_id == models.Graph.graph_id).filter(models.Graph.public == 1).all()
+	net = (time.time() - start)
+	print(net)
 
 	graph_dict = dict()
 
@@ -1705,8 +1707,11 @@ def uploadCyjsFile(username, graphJSON, title):
 			first_request = create_public_user(public_user_id)
 
 			if first_request == None:
+				import time
+				start = time.time()
 				result = insert_graph(public_user_id, title, json.dumps(parseJson))
-
+				net = (time.time() - start)
+				print(net)
 				if result == None: 
 					return {"Success": URL_PATH + "graphs/" + public_user_id + "/" + title}
 				else: 
