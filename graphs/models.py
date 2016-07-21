@@ -349,6 +349,7 @@ Index('node_index_label_graph_id', Node.label)
 Index('node_index_node_id_graph_id', Node.node_id)
 
 Index('edge_idx_head_id_tail_id', Edge.head_node_id, Edge.tail_node_id)
+Index('edge_idx_head_label_tail_label', Edge.head_node_label, Edge.tail_node_label)
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
 engine = create_engine(settings.DATABASE_LOCATION, echo=False)
