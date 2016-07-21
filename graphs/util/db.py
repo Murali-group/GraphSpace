@@ -1382,8 +1382,8 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	node_ids = search_word.split(":")
 
 	# Get head and tail node references
-	head_node = node_ids[0]
-	tail_node = node_ids[1]
+	head_node = node_ids[0].upper()
+	tail_node = node_ids[1].upper()
 
 	# List of all head node ids
 	head_nodes = []
@@ -1403,14 +1403,14 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	elif search_type == "partial_search":
 
 		search_query = or_(
-			and_(models.Edge.head_node_id >= head_node.upper(), models.Edge.head_node_id <= head_node.lower() + 'zzz',
-				  models.Edge.tail_node_id >= tail_node.upper(), models.Edge.tail_node_id <= tail_node.lower() + "zzz"),
-			and_(models.Edge.tail_node_id >= head_node.upper(), models.Edge.tail_node_id <= head_node.lower() + "zzz",
-				  models.Edge.head_node_id >= tail_node.upper(), models.Edge.head_node_id <= tail_node.lower() + "zzz"),
-			and_(models.Edge.head_node_label >= head_node.upper(), models.Edge.head_node_label <= head_node.lower() + 'zzz',
-				  models.Edge.tail_node_label >= tail_node.upper(), models.Edge.tail_node_label <= tail_node.lower() + "zzz"),
-			and_(models.Edge.tail_node_label >= head_node.upper(), models.Edge.tail_node_label <= head_node.lower() + 'zzz',
-				  models.Edge.head_node_label >= tail_node.upper(), models.Edge.head_node_label <= tail_node.lower() + "zzz"))
+			and_(models.Edge.head_node_id >= head_node, models.Edge.head_node_id <= head_node + 'zzz',
+				  models.Edge.tail_node_id >= tail_node, models.Edge.tail_node_id <= tail_node + "zzz"),
+			and_(models.Edge.tail_node_id >= head_node, models.Edge.tail_node_id <= head_node + "zzz",
+				  models.Edge.head_node_id >= tail_node, models.Edge.head_node_id <= tail_node + "zzz"),
+			and_(models.Edge.head_node_label >= head_node, models.Edge.head_node_label <= head_node + 'zzz',
+				  models.Edge.tail_node_label >= tail_node, models.Edge.tail_node_label <= tail_node + "zzz"),
+			and_(models.Edge.tail_node_label >= head_node, models.Edge.tail_node_label <= head_node + 'zzz',
+				  models.Edge.head_node_label >= tail_node, models.Edge.head_node_label <= tail_node + "zzz"))
 
 
 	# # Go through head and tail nodes to see if there are any graphs
