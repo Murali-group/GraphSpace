@@ -4,6 +4,7 @@ from sqlalchemy.pool import NullPool
 import sqlalchemy
 import graphs.models as models
 from django.conf import settings
+import logging
 
 # database locations
 _originaldb = settings.DATABASE_LOCATION
@@ -16,10 +17,14 @@ class Database(object):
         self.db = db_type
         self.connection = None
 
+
+
         if self.db == 'prod':
-            self.engine = create_engine(_originaldb, echo=False)
+            self.engine = create_engine(_originaldb, echo=True)
         else:
             self.engine = create_engine('sqlite:///:memory:', echo=False)
+
+        # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
