@@ -293,9 +293,11 @@ class Edge(Base):
     user_id = Column(String, nullable = False)
     graph_id = Column(String, nullable = False)
     head_node_id = Column(String, nullable = False)
+    head_node_label = Column(String, nullable = False)
 
     # tail node
     tail_node_id = Column(String, nullable = False)
+    tail_node_label = Column(String, nullable = False)
 
     # label of this edge
     edge_id = Column(String, nullable = True)
@@ -345,6 +347,7 @@ Index('group_to_user_idx_user_id', GroupToUser.user_id)
 Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id, Node.node_id, Node.label)
 Index('node_index_label_graph_id', Node.label)
 Index('node_index_node_id_graph_id', Node.node_id)
+
 Index('edge_idx_head_id_tail_id', Edge.head_node_id, Edge.tail_node_id)
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.

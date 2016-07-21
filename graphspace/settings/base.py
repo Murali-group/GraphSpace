@@ -21,11 +21,13 @@ DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
 
 INSTALLED_APPS = (
     'analytical',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.messages',
     'django.contrib.staticfiles',
-    'graphs',
+    'graphs'
 )
 
 MIDDLEWARE_CLASSES = (
