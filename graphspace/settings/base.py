@@ -57,10 +57,7 @@ WSGI_APPLICATION = 'graphspace.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'graphspace.db'),
-        'OPTIONS': {
-            'timeout': 20
-        }
+        'NAME': os.path.join(BASE_DIR, 'graphspace.db')
     }
 }
 
