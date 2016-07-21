@@ -1,9 +1,9 @@
 *.db
 *.pyc
 
-# Ignore updates to local_settings.py,
+# Ignore updates to production.py,
 # It's meant to be local
-local_settings.py
+production.py
 
 # Ignore Mac DS_Store files
 .DS_Store
