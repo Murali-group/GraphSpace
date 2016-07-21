@@ -1382,8 +1382,8 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	node_ids = search_word.split(":")
 
 	# Get head and tail node references
-	head_node = node_ids[0].upper()
-	tail_node = node_ids[1].upper()
+	head_node = node_ids[0]
+	tail_node = node_ids[1]
 
 	# List of all head node ids
 	head_nodes = []
@@ -1392,6 +1392,7 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	tail_nodes = []
 
 	# Match all edges that contain the edges that exactly match the search_word
+	# TODO: Currently the match queries are case sensitive. In future we would like to make these queries case insensitive.
 	if search_type == "full_search":
 
 		search_query = or_(
@@ -2156,6 +2157,8 @@ def insert_data_for_graph(graphJson, graphname, username, tags, nodes, modified,
 		# The label was the column I decided to avoid completely reconstructing the database
 		# POSSIBLE SOLUTION: If edge is bidirectional, we insert two edges with inverse source and target nodes
 
+		# We are storing head_node_label and tail_node_label to speed up the similar terms search query on edges. Looking up in two tables was taking up too much time.
+		# head_node_label and tail_node_label are part of index `edge_idx_head_label_tail_label`. This helped in reducing the query time.
 		new_edge = models.Edge(user_id = username, graph_id = graphname, head_node_id = source_node_id, head_node_label = source_node_label, tail_node_id = target_node_id, tail_node_label = target_node_label, edge_id = edge['data']['id'], directed = is_directed, id = None)
 
 		db_session.add(new_edge)

@@ -293,10 +293,14 @@ class Edge(Base):
     user_id = Column(String, nullable = False)
     graph_id = Column(String, nullable = False)
     head_node_id = Column(String, nullable = False)
+    # head_node_label column was added to speed up the similar terms search query on edges. The lookup on two tables was taking too much time.
+    # This column is part of index edge_idx_head_label_tail_label
     head_node_label = Column(String, nullable = False)
 
     # tail node
     tail_node_id = Column(String, nullable = False)
+    # tail_node_label column was added to speed up the similar terms search query on edges. The lookup on two tables was taking too much time.
+    # This column is part of index edge_idx_head_label_tail_label
     tail_node_label = Column(String, nullable = False)
 
     # label of this edge
