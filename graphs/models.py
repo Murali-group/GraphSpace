@@ -10,7 +10,7 @@ There are two differences:
        ex. 'id' for user table would be 'user_id'
 '''
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import TIMESTAMP
@@ -309,6 +309,16 @@ class Edge(Base):
             ForeignKeyConstraint([user_id, graph_id, head_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
             ForeignKeyConstraint([user_id, graph_id, tail_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
+
+class share_graph_event(Base):
+    __tablename__ = 'share_graph_event'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    owner_id = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    member_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    share_time = Column(TIMESTAMP, nullable = False)
+    is_active = Column(Boolean)
 
 #Create indices
 Index('graph_public_idx', Graph.public)

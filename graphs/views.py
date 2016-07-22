@@ -297,6 +297,15 @@ def _graphs_page(request, view_type):
 
     return render(request, 'graphs/graphs.html', context)
 
+def notifications(request):
+    # context of the view to be passed in for rendering
+    context = {}
+    # handle login
+    context = login(request)
+    # Checks to see if a user is currently logged on
+    uid = request.session['uid']
+    return render(request, 'graphs/notifications.html', context)
+
 def upload_graph_through_ui(request):
 
     if request.method == 'POST':

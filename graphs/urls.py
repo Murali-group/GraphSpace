@@ -22,6 +22,9 @@ urlpatterns = patterns('',
         url(r'^graphs/public/$', views.public_graphs, name='public_graphs'),
         url(r'^graphs/upload/$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
 
+        # notifications page
+        url(r'^notifications/$', views.notifications, name='notifications'),
+
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/
         # regex from http://www.regular-expressions.info/email.html
