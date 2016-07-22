@@ -4742,3 +4742,62 @@ def constructResponse(statusCode, message, error):
 		response['Error'] = error
 
 	return response
+
+
+def add_share_graph_event(graph_id, owner_id, group_id, member_id):
+	'''
+		Add a new share graph event to the table.
+		After sharing the graph with a group this function will create
+		a share graph event for all the users in that group
+
+		@param graph_id: id of the graph shared
+		@param owner_id: owner of the graph which is shared
+		@param group_id: id of the grop
+		@param member_id: id of the member the graph is shared
+	'''
+	pass
+
+def update_share_graph_event(event_id, active):
+	'''
+		Update the share graph event. Change its active state.
+		If active is True then the notification is not read/clicked.
+
+		@param event_id: id of the share graph event
+		@param active: Boolean value, update the state of event
+	'''
+	pass
+
+
+def delete_share_graph_event(event_id, member_id):
+	'''
+		Delete the share graph event from the table for the member
+
+		@param event_id: id of the share graph event
+		@param member_id: id of the member
+
+	'''
+	pass
+
+
+def get_share_graph_event_by_member_id(member_id):
+	'''
+		Return all the share graph events for a user
+
+		@param member_id: id of the user
+	'''
+	pass
+
+def get_share_graph_event_by_id(event_id):
+	'''
+		Return share graph event notification
+
+		@param event_id: id of the event
+	'''
+	pass
+
+
+def get_all_share_graph_event():
+	'''
+		Return all the share graph events.
+	'''
+	pass
