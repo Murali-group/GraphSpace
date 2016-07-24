@@ -2,6 +2,8 @@
 {% block content %}
 {% load staticfiles %}
 
+{% if uid != None %}
+
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">Group1</h3>
@@ -35,5 +37,5 @@
   </table>
 
 </div>
-
+{% endif %}
 {% endblock %}

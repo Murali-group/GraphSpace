@@ -312,12 +312,23 @@ class Edge(Base):
 
 class share_graph_event(Base):
     __tablename__ = 'share_graph_event'
+    # unique id for each share graph event
     id = Column(Integer, autoincrement=True, primary_key=True)
+    # id of the graph shared
     graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # id of the owner of the graph which is shared
     owner_id = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # id of the group the graph is shared in
     group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # id of the member of the group.
+    # Hence there can be multiple share graph events if a owner shares a grap
+    # with a group. A share graph event will be created for all the memebers
+    # of the group except the owner of the graph (the one who shared it).
     member_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # timestamp at which the share graph event occured
     share_time = Column(TIMESTAMP, nullable = False)
+    # Boolean value to track if notifications is read or not.
+    # if True then the notification is active, i.e not read
     is_active = Column(Boolean)
 
 #Create indices

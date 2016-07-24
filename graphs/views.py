@@ -304,6 +304,9 @@ def notifications(request):
     context = login(request)
     # Checks to see if a user is currently logged on
     uid = request.session['uid']
+    if uid is None:
+        context['Error'] = "You need to be logged in to view notifications"
+        return render(request, 'graphs/error.html', context)
     return render(request, 'graphs/notifications.html', context)
 
 def upload_graph_through_ui(request):
