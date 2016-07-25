@@ -40,9 +40,12 @@ This section describes the steps required to launch GraphSpace on a server that 
 5. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 6. Create a file called `graphspace.conf` and access this file using admin privileges: `sudo vim graphspace.conf'
 7. Inside this file, copy and paste following lines, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace:
+
  ```
- WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
- WSGIPythonPath /path_to_GraphSpace
+WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace/venv/lib/python2.7/site-packages/ python-eggs=/path_to_python_eggs
+WSGIProcessGroup GraphSpace
+WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
+
   <Directory /path_to_GraphSpace/graphspace>
      <Files wsgi.py>
          Order deny,allow
@@ -62,9 +65,12 @@ This section describes the steps required to launch GraphSpace on a server that 
    Require all granted
   </Directory>
  ```
+ 
 8. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi`
 9. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
-10. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
+10. Create a directory for python-eggs. `mkdir /path_to_python_eggs`
+11. Give permission to access static files through apache2. `chmod 777 /path_to_python_eggs`
+12. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
