@@ -4755,17 +4755,37 @@ def add_share_graph_event(graph_id, owner_id, group_id, member_id):
 		@param group_id: id of the grop
 		@param member_id: id of the member the graph is shared
 	'''
-	pass
+	# Create database connection
+	db_session = data_connection.new_session()
 
-def update_share_graph_event(event_id, active):
+	# Get the current time
+	cur_time = datetime.now()
+
+	new_event = models.ShareGraphEvent(graph_id=graph_id, owner_id=owner_id, group_id=group_id, member_id=member_id, share_time=cur_time, event_active=True)
+	db_session.add(new_event)
+	db_session.commit()
+	db_session.close()
+
+
+def update_share_graph_event(event_id, active, member_id):
 	'''
 		Update the share graph event. Change its active state.
 		If active is True then the notification is not read/clicked.
 
 		@param event_id: id of the share graph event
 		@param active: Boolean value, update the state of event
+		@param member_id: id of the user, the logged in user.
 	'''
-	pass
+	db_session = data_connection.new_session()
+
+	try:
+		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+		event.event_active = active
+		db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
+		return 'Event not found'
 
 
 def delete_share_graph_event(event_id, member_id):
@@ -4776,7 +4796,15 @@ def delete_share_graph_event(event_id, member_id):
 		@param member_id: id of the member
 
 	'''
-	pass
+	db_session = data_connection.new_session()
+	try:
+		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+		db_session.delete(event)
+		db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
+		return 'Event not found'
 
 
 def get_share_graph_event_by_member_id(member_id):
@@ -4785,19 +4813,41 @@ def get_share_graph_event_by_member_id(member_id):
 
 		@param member_id: id of the user
 	'''
-	pass
+	# Create database connection
+	db_session = data_connection.new_session()
 
-def get_share_graph_event_by_id(event_id):
+	try:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
+		db_session.close()
+		return events
+	except NoResultFound:
+		db_session.close()
+		return None
+
+
+def get_share_graph_event_by_id(event_id, member_id):
 	'''
 		Return share graph event notification
 
 		@param event_id: id of the event
+		@param member_id: id of the logged in user
 	'''
-	pass
+	db_session = data_connection.new_session()
+	try:
+		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+		db_session.close()
+		return event
+	except NoResultFound:
+		db_session.close()
+		return 'Event not found'
 
 
 def get_all_share_graph_event():
 	'''
 		Return all the share graph events.
 	'''
-	pass
+	db_session = data_connection.new_session()
+	events = db_session.query(models.ShareGraphEvent).all()
+	db_session.close()
+	return events
+

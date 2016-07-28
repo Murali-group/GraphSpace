@@ -10,10 +10,10 @@ There are two differences:
        ex. 'id' for user table would be 'user_id'
 '''
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint, Boolean, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import TIMESTAMP
+from sqlalchemy.types import TIMESTAMP, Boolean
 from django.db import models
 from django.conf import settings
 from sqlalchemy import create_engine
@@ -310,14 +310,14 @@ class Edge(Base):
             ForeignKeyConstraint([user_id, graph_id, tail_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
 
-class share_graph_event(Base):
+class ShareGraphEvent(Base):
     __tablename__ = 'share_graph_event'
     # unique id for each share graph event
     id = Column(Integer, autoincrement=True, primary_key=True)
     # id of the graph shared
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    graph_id = Column(String, nullable=False)
     # id of the owner of the graph which is shared
-    owner_id = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    owner_id = Column(String, nullable=False)
     # id of the group the graph is shared in
     group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     # id of the member of the group.
@@ -329,7 +329,13 @@ class share_graph_event(Base):
     share_time = Column(TIMESTAMP, nullable = False)
     # Boolean value to track if notifications is read or not.
     # if True then the notification is active, i.e not read
-    is_active = Column(Boolean)
+    event_active = Column(Boolean, nullable=False)
+    # We use ForeignKeyConstraint for graph_id and owner_id
+    # because this is the only to define a composite foreign key
+    __table_args__ = (
+        UniqueConstraint('graph_id', 'owner_id', 'group_id', 'member_id'),
+        ForeignKeyConstraint([graph_id, owner_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"),
+            )
 
 #Create indices
 Index('graph_public_idx', Graph.public)
