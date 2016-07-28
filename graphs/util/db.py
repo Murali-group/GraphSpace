@@ -3648,7 +3648,9 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	# If they're an owner or a group member, they can add graph to the group
 	if group_owner != None or group_member != None:
 		new_shared_graph = models.GroupToGraph(group_id = groupId, group_owner = groupOwner, user_id = owner, graph_id = graph, modified = graph_exists.modified)
-
+		members = get_group_members(groupOwner, groupId)
+		for member in members:
+			add_share_graph_event(graph, owner, groupId, member.user_id)
 		db_session.add(new_shared_graph)
 		db_session.commit()
 	else:
