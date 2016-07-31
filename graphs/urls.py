@@ -93,6 +93,7 @@ urlpatterns = patterns('',
         url(r'^api/users/(?P<user_id>.+)/graph/makeGraphPrivate/(?P<graphname>.+)/$', views.make_graph_private, name='make_graph_private'),
         url(r'^api/users/(?P<user_id>.+)/graphs/$', views.view_all_graphs_for_user, name='view_all_graphs_for_user'),
 
+
         # Group REST API endpoints
         url(r'^api/groups/get/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.get_group, name='get_group'),
         url(r'^api/groups/get/$', views.get_groups, name='get_groups'),

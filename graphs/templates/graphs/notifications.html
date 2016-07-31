@@ -1,41 +1,34 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load staticfiles %}
+<script type="text/javascript" src="{% static 'graphs/js/notifications.js' %}"></script>
 
 {% if uid != None %}
 
+<div class="column">
+{% for group, events in notifications.items %}
+{% if events.length != None %}
 <div class="panel panel-primary">
   <div class="panel-heading">
-    <h3 class="panel-title">Group1</h3>
+    <h3 class="panel-title">{{ group }}</h3>
   </div>
   <table class="table">
+  {% for event in events %}
+  {% if event.owner_id != uid %}
+  {% if event.is_active != 0 %}
     <tr> 
-    <td> <a href="">seth.mridul@gmail.com shared graph some_name_of_graph with the group Group 1.</td>
+    <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</td>
+    <td><div class="test"><button class="btn btn-default read_notification" id="{{ event.id }}" value="{{ event.member_id }}">Mark as read</button></div></td>
     </tr>
-    <tr> 
-    <td> <a href="">seth.mridul@gmail.com shared graph some_other_graph with the group Group 1.</td>
-    </tr>
+  {% endif %}
+  {% endif %}
+  {% endfor %}
 
   </table>
 </div>
-
-<div class="panel panel-primary">
-  <div class="panel-heading">
-    <h3 class="panel-title">Group 2</h3>
-  </div>
-    <table class="table">
-    <tr> 
-    <td> <a href="">seth.mridul@gmail.com shared graph new_graph with the group Group 2.</td>
-    </tr>
-    <tr> 
-    <td> <a href="">seth.mridul@gmail.com shared graph test_graph with the group Group 2.</td>
-    </tr>
-    <tr> 
-    <td> <a href="">seth.mridul@gmail.com shared graph random_graph with the group Group 2.</td>
-    </tr>
-
-  </table>
-
+{% endif %}
+{% endfor %}
 </div>
+
 {% endif %}
 {% endblock %}

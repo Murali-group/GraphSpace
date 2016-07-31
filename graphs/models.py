@@ -329,7 +329,7 @@ class ShareGraphEvent(Base):
     share_time = Column(TIMESTAMP, nullable = False)
     # Boolean value to track if notifications is read or not.
     # if True then the notification is active, i.e not read
-    event_active = Column(Boolean, nullable=False)
+    is_active = Column(Boolean, nullable=False)
     # We use ForeignKeyConstraint for graph_id and owner_id
     # because this is the only to define a composite foreign key
     __table_args__ = (

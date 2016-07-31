@@ -4763,7 +4763,7 @@ def add_share_graph_event(graph_id, owner_id, group_id, member_id):
 	# Get the current time
 	cur_time = datetime.now()
 
-	new_event = models.ShareGraphEvent(graph_id=graph_id, owner_id=owner_id, group_id=group_id, member_id=member_id, share_time=cur_time, event_active=True)
+	new_event = models.ShareGraphEvent(graph_id=graph_id, owner_id=owner_id, group_id=group_id, member_id=member_id, share_time=cur_time, is_active=True)
 	db_session.add(new_event)
 	db_session.commit()
 	db_session.close()
@@ -4782,12 +4782,13 @@ def update_share_graph_event(event_id, active, member_id):
 
 	try:
 		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
-		event.event_active = active
+		event.is_active = active
 		db_session.commit()
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		return 'Event not found'
+		raise EventNotFound
+		# return 'Event not found'
 
 
 def delete_share_graph_event(event_id, member_id):
@@ -4806,12 +4807,15 @@ def delete_share_graph_event(event_id, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		return 'Event not found'
+		raise EventNotFound
+		# return 'Event not found'
 
 
 def get_share_graph_event_by_member_id(member_id):
 	'''
-		Return all the share graph events for a user
+		Return a dictionary of share graph events for a user keyed by group id.
+		If all the share graph events for a particular group are inactive, i.e. read
+		then the group is keyed by None in the dictionary.
 
 		@param member_id: id of the user
 	'''
@@ -4820,11 +4824,21 @@ def get_share_graph_event_by_member_id(member_id):
 
 	try:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
+		events_group = {}
+		for event in events:
+			if event.group_id in events_group:
+				events_group[event.group_id].append(event)
+			else:
+				events_group[event.group_id] = [event]
+		for group, events in events_group.items():
+			if all(event.is_active == 0 for event in events):
+				events_group[group] = None
 		db_session.close()
-		return events
+		return events_group
 	except NoResultFound:
 		db_session.close()
-		return None
+		# return None
+		raise EventNotFound
 
 
 def get_share_graph_event_by_id(event_id, member_id):
@@ -4841,7 +4855,8 @@ def get_share_graph_event_by_id(event_id, member_id):
 		return event
 	except NoResultFound:
 		db_session.close()
-		return 'Event not found'
+		raise EventNotFound
+		# return 'Event not found'
 
 
 def get_all_share_graph_event():

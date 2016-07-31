@@ -304,10 +304,32 @@ def notifications(request):
     context = login(request)
     # Checks to see if a user is currently logged on
     uid = request.session['uid']
+    context['notifications'] = db.get_share_graph_event_by_member_id(context['uid'])
+    context['group_list'] = db.get_all_groups_with_member(context['uid']) + db.get_groups_of_user(context['uid'])
     if uid is None:
         context['Error'] = "Please log in to view notifications."
         return render(request, 'graphs/error.html', context)
     return render(request, 'graphs/notifications.html', context)
+
+
+def read_notification(request):
+    if request.method == 'POST':
+        nid = request.POST['nid']
+        uid = request.session.get('uid')
+        
+        # Check if the user is authenticated
+        if uid == None:
+            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        # if the user owns the graph only then allow him to delete it
+        graph_info = db.get_share_graph_event_by_id(nid, uid)
+        if graph_info == None:
+            return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            db.update_share_graph_event(nid, 0, uid)
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share event " + nid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+
+
 
 def upload_graph_through_ui(request):
 
@@ -1021,6 +1043,7 @@ def _groups_page(request, view_type):
             context['message'] = "It appears as if you are not a member of any group. Please join a group in order for them to appear here."
         else:
             context['message'] = "It appears as if there are currently no groups on GraphSpace."
+
         return render(request, 'graphs/groups.html', context)
 
     #No public groups anymore
