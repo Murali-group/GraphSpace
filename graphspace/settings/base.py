@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ['*']
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
-DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
+# DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
 
 # Application definition
 
@@ -42,24 +42,24 @@ WSGI_APPLICATION = 'graphspace.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'graphspace',
-#         'USER': 'adb',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '5432'
-#     }
-# }
-
-## Old Sqlite Implementation ###
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'graphspace.db')
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'gsdb',
+        'USER': 'adb',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432'
     }
 }
+
+## Old Sqlite Implementation ###
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'graphspace.db')
+#     }
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/

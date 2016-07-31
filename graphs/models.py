@@ -20,6 +20,8 @@ from sqlalchemy import create_engine
 
 import bcrypt
 
+config = settings.DATABASES['default']
+
 # Construct a base class for declarative class definitions.
 # The new base class will be given a metaclass that produces appropriate Table objects
 # and makes the appropriate mapper() calls based on the information provided
@@ -356,7 +358,7 @@ Index('edge_idx_head_id_tail_id', Edge.head_node_id, Edge.tail_node_id)
 Index('edge_idx_head_label_tail_label', Edge.head_node_label, Edge.tail_node_label)
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
-engine = create_engine(settings.DATABASE_LOCATION, echo=False)
+engine = create_engine(''.join(['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
  
 # Create all tables in the engine. This is equivalent to "Create Table"
 # statements in raw SQL.
