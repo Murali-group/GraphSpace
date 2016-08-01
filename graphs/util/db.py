@@ -21,6 +21,7 @@ import requests
 from django.conf import settings
 from django.core.mail import send_mail
 from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
+from graphs.exception import EventNotFound
 
 data_connection = db_init.db
 
