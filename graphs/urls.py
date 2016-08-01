@@ -80,6 +80,8 @@ urlpatterns = patterns('',
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
         url(r'^launchTask/$', views.launchTask, name='launchTask'),
         url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
+        url(r'^read_notification/$', views.read_notification, name='read_notification'),
+        url(r'^read_all_notifications/$', views.read_all_notifications, name='read_all_notifications'),
 
         #REST API
 

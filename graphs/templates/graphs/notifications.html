@@ -7,7 +7,7 @@
 
 <div class="column">
 {% for group, events in notifications.items %}
-{% if events.length != None %}
+{% if events != None %}
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">{{ group }}</h3>
@@ -15,7 +15,7 @@
   <table class="table">
   {% for event in events %}
   {% if event.owner_id != uid %}
-  {% if event.is_active != 0 %}
+  {% if event.is_active == 1 %}
     <tr> 
     <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</td>
     <td><div class="test"><button class="btn btn-default read_notification" id="{{ event.id }}" value="{{ event.member_id }}">Mark as read</button></div></td>
@@ -25,6 +25,7 @@
   {% endfor %}
 
   </table>
+  <div class="panel-footer"><div class="test"><button class="btn btn-default read_all_notifications" id="{{ group }}" value="{{ event.member_id }}">Mark all as read</button></div></div>
 </div>
 {% endif %}
 {% endfor %}

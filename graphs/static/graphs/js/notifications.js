@@ -18,4 +18,24 @@ $(document).ready(function() {
       window.location.reload();
     });
    });
+
+   /**
+   * Mark all notifications as read in a group
+   */
+   $(".read_all_notifications").click(function (e) {
+    var uid = $(this).val();
+    var nid = $(this).attr('id');
+
+    $.post('../../../read_all_notifications/', {
+      'uid': uid,
+      'nid': nid
+    }, function (data) {
+      if (data.Error) {
+        return alert(data.Error);
+      }
+      window.location.reload();
+    });
+   });
+
+
 });

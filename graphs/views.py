@@ -321,13 +321,28 @@ def read_notification(request):
         if uid == None:
             return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        # if the user owns the graph only then allow him to delete it
-        graph_info = db.get_share_graph_event_by_id(nid, uid)
-        if graph_info == None:
+        event_info = db.get_share_graph_event_by_id(nid, uid)
+        if event_info == None:
             return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             db.update_share_graph_event(nid, 0, uid)
             return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share event " + nid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+
+
+def read_all_notifications(request):
+    if request.method == 'POST':
+        nid = request.POST['nid']
+        uid = request.session.get('uid')
+        
+        # Check if the user is authenticated
+        if uid == None:
+            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        event_info = db.set_share_graph_events_inactive_by_group(nid, uid)
+        if event_info != None:
+            return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share events " + nid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
 
 
 

@@ -4869,3 +4869,40 @@ def get_all_share_graph_event():
 	db_session.close()
 	return events
 
+
+def set_share_graph_events_inactive(event_ids, member_id):
+	'''
+		Set all events in the list event_ids as inactive
+		
+		@param events_id: list of event ids
+		@param member_id: id of the logged in user
+	'''
+	db_session = data_connection.new_session()
+	try:
+		for event in events_id: 
+			db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.id == event_id).update({"is_active": 0})
+  			db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
+		raise EventNotFound
+
+def set_share_graph_events_inactive_by_group(group_id, member_id):
+	'''
+		Set all events in a group for a user as inactive
+		
+		@param group_id: id of the group
+		@param member_id: id of the logged in user
+	'''
+	db_session = data_connection.new_session()
+	try:
+		 
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
+  		for event in events:
+  			event.is_active = 0
+  			db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
+		raise EventNotFound
+
