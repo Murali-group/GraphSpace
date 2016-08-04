@@ -157,12 +157,76 @@ def get_graphs_by_group(group_id, group_owner):
 	"""
 
 
-def add_node(node_id, user_id, graph_id):
+def add_node(node_id, user_id, graph_id, label):
 	"""
 
 	:param node_id: ID of the node
 	:param user_id: ID of the user
 	:param graph_id: ID of the graph
+	:param label: Node label
 	:return: None
 	"""
 
+def get_node(node_id, user_id, graph_id):
+	"""
+
+	:param node_id:
+	:param user_id:
+	:param graph_id:
+	:return:
+	"""
+
+def update_node(node_id, user_id, graph_id, updated_node):
+	"""
+
+	:param node_id:
+	:param user_id:
+	:param graph_id:
+	:param updated_node:
+	:return:
+	"""
+
+def delete_node(node_id, user_id, graph_id):
+	"""
+
+	:param node_id:
+	:param user_id:
+	:param graph_id:
+	:return:
+	"""
+
+def get_edge(id):
+	"""
+
+	:param id:
+	:return:
+	"""
+
+def add_edge(graph_id, user_id, head_node_id , head_node_label, tail_node_id, tail_node_label, directed, edge_id):
+	"""
+
+	:param graph_id:
+	:param user_id:
+	:param head_node_id:
+	:param head_node_label:
+	:param tail_node_id:
+	:param tail_node_label:
+	:param directed:
+	:param edge_id:
+	:return:
+	"""
+
+def update_edge(id, updated_edge):
+	"""
+
+	:param id:
+	:param updated_edge:
+	:return:
+	"""
+
+def delete_edge(id):
+	"""
+
+	:param id:
+	:return:
+	"""

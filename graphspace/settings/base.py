@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
 import os
+from graphspace.database import Database
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 ALLOWED_HOSTS = ['*']
 
@@ -32,7 +34,8 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware'
+    'django.middleware.common.CommonMiddleware',
+    'graphspace.middleware.SQLAlchemySessionMiddleware'
 )
 
 ROOT_URLCONF = 'graphspace.urls'
@@ -103,3 +106,5 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
     'django.contrib.auth.hashers.CryptPasswordHasher',
 )
+
+db = Database()
