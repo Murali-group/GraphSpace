@@ -24,6 +24,7 @@ urlpatterns = patterns('',
 
         # notifications page
         url(r'^notifications/$', views.notifications, name='notifications'),
+        url(r'^notifications/(?P<groupname>.+)/$', views.notifications_group, name='notifications_group'),
 
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/
@@ -82,6 +83,8 @@ urlpatterns = patterns('',
         url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
         url(r'^read_notification/$', views.read_notification, name='read_notification'),
         url(r'^read_all_notifications/$', views.read_all_notifications, name='read_all_notifications'),
+        url(r'^read_all_user_notifications/$', views.read_all_user_notifications, name='read_all_user_notifications'),
+
 
         #REST API
 

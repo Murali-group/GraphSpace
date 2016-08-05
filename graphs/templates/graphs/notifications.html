@@ -9,7 +9,7 @@
 
 <br>
 <div class="row"><button style="position: relative;
-   right: 100px; float: right;" class="btn btn-default read_all_notifications" id="{{ group }}" value="{{ event.member_id }}">Mark all notifications as read</button></div>
+   right: 100px; float: right;" class="btn btn-default read_all_user_notifications" value="{{ uid }}">Mark all notifications as read</button></div>
 
 <br>
 <div class="row">
@@ -18,21 +18,24 @@
   <!-- Default panel contents -->
   <div class="panel-heading">Groups</div>
   <div class="panel-body">
-    <p>All the notifications of the Group you are a part of.</p>
+    <p>Notifications</p>
   </div>
 
   <!-- Table -->
   <table class="table">
   {% for group in groups_for_user %}
     <tr>
-    <td>{{ group.groupId }}</td>
+    <td><a href="{% url 'notifications' %}{{ group.groupId }}">{{ group.groupId }}</td>
     </tr>
   {% endfor %}
   </table>
 </div>
   </div>
-<div class="col-sm-8">
 
+
+{% if notifications != None %}
+{% if check_new_notifications == True %}
+<div class="col-sm-8">
 
 <!-- <div class="column"> -->
 {% for group, events in notifications.items %}
@@ -62,6 +65,39 @@
 
 </div>
 <!-- </div> -->
+{% else %}
+<div class="col-sm-8">
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h4 class="panel-title" style="text-align: center">No new notifications.</h4>
+  </div>
+</div>
+</div> 
+{% endif %}
+{% else %}
+<div class="col-sm-8">
+
+<!-- <div class="column"> -->
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">{{ group }}</h3>
+  </div>
+  <table class="table">
+  {% for event in all_events_in_group %}
+  {% if event.owner_id != uid %}
+    <tr> 
+    <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</td>
+    </tr>
+  {% endif %}
+  {% endfor %}
+
+  </table>
+</div>
+
+</div>
+
+</div>
+{% endif %}
 
 {% endif %}
 {% endblock %}

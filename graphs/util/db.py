@@ -21,7 +21,6 @@ import requests
 from django.conf import settings
 from django.core.mail import send_mail
 from json_validator import validate_json, assign_edge_ids, convert_json, verify_json
-from graphs.exception import EventNotFound
 
 data_connection = db_init.db
 
@@ -4790,8 +4789,7 @@ def update_share_graph_event(event_id, active, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise EventNotFound
-		# return 'Event not found'
+		raise NoResultFound
 
 # admin function
 def delete_share_graph_event(event_id, member_id):
@@ -4810,8 +4808,7 @@ def delete_share_graph_event(event_id, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise EventNotFound
-		# return 'Event not found'
+		raise NoResultFound
 
 
 def get_share_graph_event_by_member_id(member_id):
@@ -4831,8 +4828,7 @@ def get_share_graph_event_by_member_id(member_id):
 		return events
 	except NoResultFound:
 		db_session.close()
-		# return None
-		raise EventNotFound
+		raise NoResultFound
 
 
 def get_share_graph_event_by_id(event_id, member_id):
@@ -4849,8 +4845,7 @@ def get_share_graph_event_by_id(event_id, member_id):
 		return event
 	except NoResultFound:
 		db_session.close()
-		raise EventNotFound
-		# return 'Event not found'
+		raise NoResultFound
 
 
 def get_all_share_graph_event():
@@ -4858,9 +4853,26 @@ def get_all_share_graph_event():
 		Return all the share graph events.
 	'''
 	db_session = data_connection.new_session()
-	events = db_session.query(models.ShareGraphEvent).all()
-	db_session.close()
-	return events
+	try:
+		events = db_session.query(models.ShareGraphEvent).all()
+		db_session.close()
+		return events
+	except NoResultFound:
+		db_session.close()
+		raise NoResultFound
+
+
+def set_all_graph_events_inactive_user(member_id):
+	'''
+	'''
+	db_session = data_connection.new_session()
+	try:
+		db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).update({"is_active": 0})
+		db_session.commit()
+		db_session.close()
+	except NoResultFound:
+		db_session.close()
+		raise NoResultFound
 
 
 def set_share_graph_events_inactive(event_ids, member_id):
@@ -4878,7 +4890,7 @@ def set_share_graph_events_inactive(event_ids, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise EventNotFound
+		raise NoResultFound
 
 def set_share_graph_events_inactive_by_group(group_id, member_id):
 	'''
@@ -4897,5 +4909,29 @@ def set_share_graph_events_inactive_by_group(group_id, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise EventNotFound
+		raise NoResultFound
+
+
+def get_share_graph_event_by_group_id(member_id, group_id):
+	db_session = data_connection.new_session()
+	try:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
+  		return events
+	except NoResultFound:
+		db_session.close()
+		raise NoResultFound
+
+
+def check_new_notifications(member_id):
+	db_session = data_connection.new_session()
+	try:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
+		if len(events) != 0:
+			return True
+  		else:
+  			return False
+	except NoResultFound:
+		db_session.close()
+		raise NoResultFound
+
 

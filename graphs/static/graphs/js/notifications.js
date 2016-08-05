@@ -37,5 +37,20 @@ $(document).ready(function() {
     });
    });
 
+  /**
+   * Mark all notifications as read in a group
+   */
+   $(".read_all_user_notifications").click(function (e) {
+    var uid = $(this).val();
+
+    $.post('../../../read_all_user_notifications/', {
+      'uid': uid
+    }, function (data) {
+      if (data.Error) {
+        return alert(data.Error);
+      }
+      window.location.reload();
+    });
+   });
 
 });
