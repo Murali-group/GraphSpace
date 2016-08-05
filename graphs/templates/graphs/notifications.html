@@ -5,7 +5,36 @@
 
 {% if uid != None %}
 
-<div class="column">
+
+
+<br>
+<div class="row"><button style="position: relative;
+   right: 100px; float: right;" class="btn btn-default read_all_notifications" id="{{ group }}" value="{{ event.member_id }}">Mark all notifications as read</button></div>
+
+<br>
+<div class="row">
+  <div class="col-sm-3">
+    <div class="panel panel-primary">
+  <!-- Default panel contents -->
+  <div class="panel-heading">Groups</div>
+  <div class="panel-body">
+    <p>All the notifications of the Group you are a part of.</p>
+  </div>
+
+  <!-- Table -->
+  <table class="table">
+  {% for group in groups_for_user %}
+    <tr>
+    <td>{{ group.groupId }}</td>
+    </tr>
+  {% endfor %}
+  </table>
+</div>
+  </div>
+<div class="col-sm-8">
+
+
+<!-- <div class="column"> -->
 {% for group, events in notifications.items %}
 {% if events != None %}
 <div class="panel panel-primary">
@@ -30,6 +59,9 @@
 {% endif %}
 {% endfor %}
 </div>
+
+</div>
+<!-- </div> -->
 
 {% endif %}
 {% endblock %}

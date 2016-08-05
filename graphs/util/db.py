@@ -3651,6 +3651,8 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 		new_shared_graph = models.GroupToGraph(group_id = groupId, group_owner = groupOwner, user_id = owner, graph_id = graph, modified = graph_exists.modified)
 		members = get_group_members(groupOwner, groupId)
 		for member in members:
+			# TODO: use the current db session instead of creating a new db
+			# session
 			add_share_graph_event(graph, owner, groupId, member.user_id)
 		db_session.add(new_shared_graph)
 		db_session.commit()
@@ -4791,7 +4793,7 @@ def update_share_graph_event(event_id, active, member_id):
 		raise EventNotFound
 		# return 'Event not found'
 
-
+# admin function
 def delete_share_graph_event(event_id, member_id):
 	'''
 		Delete the share graph event from the table for the member
@@ -4825,17 +4827,8 @@ def get_share_graph_event_by_member_id(member_id):
 
 	try:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
-		events_group = {}
-		for event in events:
-			if event.group_id in events_group:
-				events_group[event.group_id].append(event)
-			else:
-				events_group[event.group_id] = [event]
-		for group, events in events_group.items():
-			if all(event.is_active == 0 for event in events):
-				events_group[group] = None
 		db_session.close()
-		return events_group
+		return events
 	except NoResultFound:
 		db_session.close()
 		# return None

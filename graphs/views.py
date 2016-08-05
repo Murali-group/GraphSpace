@@ -297,6 +297,20 @@ def _graphs_page(request, view_type):
 
     return render(request, 'graphs/graphs.html', context)
 
+
+def _group_by_id_notifications(events):
+    events_group = {}
+    for event in events:
+        if event.group_id in events_group:
+            events_group[event.group_id].append(event)
+        else:
+            events_group[event.group_id] = [event]
+    for group, events in events_group.items():
+        if all(event.is_active == 0 for event in events):
+            events_group[group] = None
+    return events_group
+
+
 def notifications(request):
     # context of the view to be passed in for rendering
     context = {}
@@ -304,11 +318,14 @@ def notifications(request):
     context = login(request)
     # Checks to see if a user is currently logged on
     uid = request.session['uid']
-    context['notifications'] = db.get_share_graph_event_by_member_id(context['uid'])
-    context['group_list'] = db.get_all_groups_with_member(context['uid']) + db.get_groups_of_user(context['uid'])
+    events = db.get_share_graph_event_by_member_id(context['uid'])
+    context['groups_for_user'] = db.groups_for_user(context['uid'])
+    context['notifications'] = _group_by_id_notifications(events)
+    # context['group_list'] = db.get_all_groups_with_member(context['uid']) + db.get_groups_of_user(context['uid'])
     if uid is None:
         context['Error'] = "Please log in to view notifications."
         return render(request, 'graphs/error.html', context)
+    print context
     return render(request, 'graphs/notifications.html', context)
 
 
