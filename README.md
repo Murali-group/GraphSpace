@@ -82,3 +82,8 @@ Testing the GraphSpace REST API
 2. Enter python command to run test cases: `python restapi_test.py`
 
 This script will test all the REST API commands supported by the GraphSpace server.  If something fails, it will display the error.
+
+Contributing
+=================
+
+Feel free to fork and send us pull requests. Here are the [guidelines for contribution](https://github.com/Murali-group/GraphSpace/blob/master/CONTRIBUTING.md) in GraphSpace.
