@@ -20,7 +20,9 @@ Base = declarative_base()
 # ================== Table Definitions ===================
 
 class User(Base):
-    '''The class representing the schema of the user table.'''
+    """
+    The class representing the schema of the user table.
+    """
     __tablename__ = 'user'
 
     user_id = Column(String, primary_key = True)

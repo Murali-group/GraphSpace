@@ -1,4 +1,4 @@
-import models
+from models import *
 import graphs.util.db_init as db_init
 from django.utils.datetime_safe import datetime
 from graphspace.utils import generate_uid
@@ -23,7 +23,7 @@ def add_user(db_session, user_id="public_user_%s@graphspace.com" % generate_uid(
 	:return: User
 	"""
 
-	user = models.User(user_id, password, admin)
+	user = User(user_id, password, admin)
 	db_session.add(user)
 	return user
 
@@ -37,7 +37,7 @@ def get_user(db_session, user_id):
 	:param user_id: User ID of the user.
 	:return: User if user_id exists else None.
 	"""
-	return db_session.query(models.User).filter(models.User.user_id == user_id).one_or_none()
+	return db_session.query(User).filter(User.user_id == user_id).one_or_none()
 
 
 @sqlalchemy_operation
@@ -50,7 +50,7 @@ def update_user(db_session, user_id, updated_user):
 	:param updated_user: Updated user data. Data is stored in dictionary format where keys store the column names and values store the updated value.
 	:return: User
 	"""
-	user = db_session.query(models.User).filter(models.User.user_id == user_id)
+	user = db_session.query(User).filter(User.user_id == user_id)
 	for (key, value) in updated_user.items():
 		setattr(user, key, value)
 	return user
@@ -63,7 +63,7 @@ def delete_user(db_session, user_id):
 	:param user_id: User ID of the user.
 	:return: None
 	"""
-	user = db_session.query(models.User).filter(models.User.user_id == user_id)
+	user = db_session.query(User).filter(User.user_id == user_id)
 	db_session.delete(user)
 
 
@@ -77,7 +77,7 @@ def add_password_reset(db_session, user_id):
 	:param user_id: User ID for which password reset row will be generated.
 	:return: None
 	"""
-	password_reset = models.PasswordReset(user_id=user_id, code=generate_uid(), created=datetime.now())
+	password_reset = PasswordReset(user_id=user_id, code=generate_uid(), created=datetime.now())
 	db_session.add(password_reset)
 	return password_reset
 
