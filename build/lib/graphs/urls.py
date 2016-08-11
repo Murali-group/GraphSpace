@@ -22,10 +22,6 @@ urlpatterns = patterns('',
         url(r'^graphs/public/$', views.public_graphs, name='public_graphs'),
         url(r'^graphs/upload/$', views.upload_graph_through_ui, name='upload_graph_through_ui'),
 
-        # notifications page
-        url(r'^(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/notifications/$', views.notifications, name='notifications'),
-        url(r'^notifications/(?P<groupname>.+)/$', views.notifications_group, name='notifications_group'),
-
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/
         # regex from http://www.regular-expressions.info/email.html
@@ -81,10 +77,6 @@ urlpatterns = patterns('',
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
         url(r'^launchTask/$', views.launchTask, name='launchTask'),
         url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
-        url(r'^read_notification/$', views.read_notification, name='read_notification'),
-        url(r'^read_all_notifications/$', views.read_all_notifications, name='read_all_notifications'),
-        url(r'^read_all_user_notifications/$', views.read_all_user_notifications, name='read_all_user_notifications'),
-
 
         #REST API
 
@@ -97,7 +89,6 @@ urlpatterns = patterns('',
         url(r'^api/users/(?P<user_id>.+)/graph/makeGraphPublic/(?P<graphname>.+)/$', views.make_graph_public, name='make_graph_public'),
         url(r'^api/users/(?P<user_id>.+)/graph/makeGraphPrivate/(?P<graphname>.+)/$', views.make_graph_private, name='make_graph_private'),
         url(r'^api/users/(?P<user_id>.+)/graphs/$', views.view_all_graphs_for_user, name='view_all_graphs_for_user'),
-
 
         # Group REST API endpoints
         url(r'^api/groups/get/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.get_group, name='get_group'),

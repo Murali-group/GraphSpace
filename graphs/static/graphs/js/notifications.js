@@ -15,8 +15,10 @@ $(document).ready(function() {
       if (data.Error) {
         return alert(data.Error);
       }
-      window.location.reload();
+      $("#read_notification").load("notifications.html #read_notification")
+      // window.location.reload();
     });
+
    });
 
    /**

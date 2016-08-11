@@ -25,7 +25,7 @@
   <table class="table">
   {% for group in groups_for_user %}
     <tr>
-    <td><a href="{% url 'notifications' %}{{ group.groupId }}">{{ group.groupId }}</td>
+    <td><a href="{% url 'notifications' uid %}{{ group.groupId }}">{{ group.groupId }}</td>
     </tr>
   {% endfor %}
   </table>
@@ -50,7 +50,7 @@
   {% if event.is_active == 1 %}
     <tr> 
     <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</td>
-    <td><div class="test"><button class="btn btn-default read_notification" id="{{ event.id }}" value="{{ event.member_id }}">Mark as read</button></div></td>
+    <td><div id="read_notification" ><button class="btn btn-default read_notification" id="{{ event.id }}" value="{{ event.member_id }}">Mark as read</button></div></td>
     </tr>
   {% endif %}
   {% endif %}
