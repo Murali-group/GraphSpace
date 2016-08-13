@@ -33,9 +33,11 @@ Running GraphSpace on Apache
 
 This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  First, please follow the steps in **Running GraphSpace locally**.  Next, execute the instructions below. 
 
-1. Follow instructions 1-5 in `Running GraphSpace locally` 
-2. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
-3. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
+1. Follow instructions 1-5 in `Running GraphSpace locally`
+2. Add settings file `production.py` by copying local settings file. `cp graphspace/settings/local.py graphspace/settings/`
+3. Update your `production.py` settings file.
+  1. InSet `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
+  2. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
 4. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
 5. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 6. Create a file called `graphspace.conf` and access this file using admin privileges: `sudo vim graphspace.conf'
