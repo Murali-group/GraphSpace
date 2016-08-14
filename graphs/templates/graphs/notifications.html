@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load staticfiles %}
+<link href={% static "graphs/css/notifications.css" %} rel="stylesheet">
 <script type="text/javascript" src="{% static 'graphs/js/notifications.js' %}"></script>
 
 {% if uid != None %}
@@ -29,38 +30,40 @@
     </div>
   </div>
 
-<div class="col-sm-8">
-{% if notifications != None %}
-{% if check_new_notifications == True %}
-{% for group, events in notifications.items %}
+  {% if notifications != None %}
+  {% if check_new_notifications == True %}
+  <div class="col-sm-8">
+    <div class="panel panel-primary">
+  {% for group, events in notifications.items %}
   {% if events != None %}
-  <div class="panel panel-primary">
-    <table class="table" id="notification_table">
-      <tr bgcolor="#428BCA">
-        <th><font color="white">{{ group }}</font></th>
-        <th></th>
-        <th><a href="#" data-toggle="tooltip" title="Mark all {{ group }} notifications as read" data-placement="left"><button class="btn btn-default read_notification" uid="{{ uid }}" gid="{{ group }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a> </th>
-      </tr>
-      {% for event in events %}
-        {% if event.owner_id != uid %}
-          {% if event.is_active == 1 %}
-            <tr id="{{ event.id }}" class="info"> 
-              <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</a></td>
-              <td> Shared on {{ event.share_time }}</td>
-              <td><a href="#" data-toggle="tooltip" title="Mark as read" data-placement="left"><button class="btn btn-default read_notification" nid="{{ event.id }}" uid="{{ event.member_id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a></td>
-            </tr>
+    
+      <table class="table" id="notification_table{{ group }}">
+        <tr bgcolor="#428BCA">
+          <th><font color="white">{{ group }}</font></th>
+          <th></th>
+          <th><a href="#" data-toggle="tooltip" title="Mark all {{ group }} notifications as read" data-placement="left"><button class="btn btn-default read_notification" uid="{{ uid }}" gid="{{ group }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a> </th>
+        </tr>
+        {% for event in events %}
+          {% if event.owner_id != uid %}
+            {% if event.is_active == 1 %}
+              <tr id="{{ event.id }}" class="notification_event{{ event.id }}"> 
+                <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</a></td>
+                <td> Shared on {{ event.share_time }}</td>
+                <td class="remove_read{{ event.id }}"><a href="#" data-toggle="tooltip" title="Mark as read" data-placement="left"><button class="btn btn-default read_notification" nid="{{ event.id }}" uid="{{ event.member_id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a></td>
+              </tr>
+            {% endif %}
           {% endif %}
-        {% endif %}
-      {% endfor %}
-  {% endif %}
-  </table>
-  </div>
+        {% endfor %}
+    {% endif %}
+    </table>
+    
 {% endfor %}
-
+</div>
 </div>
 
 
 {% else %}
+<div class="col-sm-8">
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h4 class="panel-title" style="text-align: center">No new notifications.</h4>

@@ -12,10 +12,6 @@ $(document).ready(function() {
     // allid present if clicked on mark all notification read for a user
     var allid = $(this).attr('allid');
 
-    console.log(uid);
-    console.log(gid);
-    console.log(nid);
-    console.log(allid);
     // send a post request to the view read_notification
     $.post('../../../javascript/'+uid+'/mark_notifications_as_read/', {
       'uid': uid,
@@ -28,10 +24,10 @@ $(document).ready(function() {
         return alert(data.Error);
       }
       window.location.reload();
+      // $('.remove_read'+nid).remove();
+      // $('.notification_event'+nid).addClass('notification_read');
     });
-
    });
-
    $('[data-toggle="tooltip"]').tooltip(); 
 
 });
