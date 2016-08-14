@@ -24,7 +24,7 @@ urlpatterns = patterns('',
 
         # notifications page
         url(r'^(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/notifications/$', views.notifications, name='notifications'),
-        url(r'^notifications/(?P<groupname>.+)/$', views.notifications_group, name='notifications_group'),
+        url(r'^(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/notifications/(?P<groupname>.+)/$', views.notifications, name='notifications'),
 
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/
@@ -81,9 +81,7 @@ urlpatterns = patterns('',
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
         url(r'^launchTask/$', views.launchTask, name='launchTask'),
         url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
-        url(r'^read_notification/$', views.read_notification, name='read_notification'),
-        url(r'^read_all_notifications/$', views.read_all_notifications, name='read_all_notifications'),
-        url(r'^read_all_user_notifications/$', views.read_all_user_notifications, name='read_all_user_notifications'),
+        url(r'^javascript/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/mark_notifications_as_read/$', views.mark_notifications_as_read, name='mark_notifications_as_read'),
 
 
         #REST API

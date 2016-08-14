@@ -298,99 +298,93 @@ def _graphs_page(request, view_type):
     return render(request, 'graphs/graphs.html', context)
 
 
-def _group_by_id_notifications(events):
-    events_group = {}
-    for event in events:
-        if event.group_id in events_group:
-            events_group[event.group_id].append(event)
-        else:
-            events_group[event.group_id] = [event]
-    for group, events in events_group.items():
-        if all(event.is_active == 0 for event in events):
-            events_group[group] = None
-    return events_group
+# Controller method for notifications.
+def get_notifications_for_user(user_id, group_id=None):
+    if group_id == None:
+        events = db.get_share_graph_event_by_member_id(user_id)
+        events_group = {}
+        for event in events:
+            if event.group_id in events_group:
+                events_group[event.group_id].append(event)
+            else:
+                events_group[event.group_id] = [event]
+        for group, events in events_group.items():
+            if all(event.is_active == 0 for event in events):
+                events_group[group] = None
+        return events_group
+    else:
+        events = db.get_share_graph_event_by_member_id_and_group_id(user_id, group_id)
+        return events
 
 
-def notifications(request, uid):
-    # context of the view to be passed in for rendering
-    context = {}
+# View method for notifications
+def notifications(request, uid, groupname=None):
     # handle login
     context = login(request)
     # Checks to see if a user is currently logged on
     uid = request.session['uid']
-    events = db.get_share_graph_event_by_member_id(context['uid'])
-    context['groups_for_user'] = db.groups_for_user(context['uid'])
-    context['notifications'] = _group_by_id_notifications(events)
-    context['check_new_notifications'] = db.check_new_notifications(context['uid'])
-    print context
+    if groupname == None:
+        context['groups_for_user'] = db.groups_for_user(uid)
+        context['notifications'] = get_notifications_for_user(uid)
+        context['check_new_notifications'] = db.check_new_notifications(uid)
+    if groupname != None:
+        context['groups_for_user'] = db.groups_for_user(uid)
+        context['all_events_in_group'] = get_notifications_for_user(uid, groupname)
+        context['notifications'] = None
+        context['group'] = groupname
+
+    # Better way of handling errors? As we don't have any GraphSpace
+    # specific excpections I am just using the generic SQLalchemy ORM
+    # generic exception NoResultFound.
+    for i in context:
+        try:
+            if 'Error' in i:
+                context['Error'] = i['Error']
+                return render(request, 'graphs/error.html', context)
+        except:
+            pass
     if uid is None:
         context['Error'] = "Please log in to view notifications."
         return render(request, 'graphs/error.html', context)
     return render(request, 'graphs/notifications.html', context)
 
 
-def notifications_group(request, groupname):
-    # context of the view to be passed in for rendering
-    context = {}
-    # handle login
-    context = login(request)
-    # Checks to see if a user is currently logged on
-    uid = request.session['uid']
-    context['groups_for_user'] = db.groups_for_user(context['uid'])
-    context['all_events_in_group'] = db.get_share_graph_event_by_group_id(uid, groupname)
-    context['notifications'] = None
-    context['group'] = groupname
-    if uid is None:
-        context['Error'] = "Please log in to view notifications."
-        return render(request, 'graphs/error.html', context)
-    return render(request, 'graphs/notifications.html', context)
-
-
-def read_notification(request):
+def mark_notifications_as_read(request, uid):
+    '''
+        View for marking a notification as read.
+        Fetch gid, nid, allid and uid for a request and
+        update the database accordingly.
+    '''
     if request.method == 'POST':
-        nid = request.POST['nid']
-        uid = request.session.get('uid')
-        
+        nid = request.POST['nid'] if 'nid' in request.POST else None
+        allid = request.POST['allid'] if 'allid' in request.POST else None
+        gid = request.POST['gid'] if 'gid' in request.POST else None
+        uid = request.session.get('uid', None)
         # Check if the user is authenticated
         if uid == None:
             return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
+    
+        # If gid and allid are None then the user clicked on mark as read
+        # for an individual notification.
+        if gid is None and allid is None:
+            events = [nid]
 
-        event_info = db.get_share_graph_event_by_id(nid, uid)
-        if event_info == None:
+        # if gid is not None then the user clicked on mark as read for
+        # all the notifications in a group
+        elif gid is not None:
+            events = [event.id for event in db.get_share_graph_event_by_member_id_and_group_id(uid, gid)]
+
+        # if allid is not None then the user clicked on mark all notifications
+        # as read for a user.
+        elif allid is not None:
+            events = [event.id for event in db.get_share_graph_event_by_member_id(uid)]
+
+        event_info = db.set_share_graph_events_inactive(events, uid)
+
+        if event_info is not None:
             return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
-            db.update_share_graph_event(nid, 0, uid)
-            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share event " + nid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
-
-
-def read_all_user_notifications(request):
-    if request.method == 'POST':
-        uid = request.session.get('uid')
-         # Check if the user is authenticated
-        if uid == None:
-            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
-        event_info = db.set_all_graph_events_inactive_user(uid)
-        if event_info != None:
-            return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
-        else:
-            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share events " + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
-
-
-def read_all_notifications(request):
-    if request.method == 'POST':
-        nid = request.POST['nid']
-        uid = request.session.get('uid')
-        
-        # Check if the user is authenticated
-        if uid == None:
-            return HttpResponse(json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4, separators=(',', ': ')), content_type="application/json")
-
-        event_info = db.set_share_graph_events_inactive_by_group(nid, uid)
-        if event_info != None:
-            return HttpResponse(json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')), content_type="application/json")
-        else:
-            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share events " + nid + " owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
-
+            return HttpResponse(json.dumps(db.sendMessage(200, "Successfully updated share event(s) owned by " + uid + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
 
 
 def upload_graph_through_ui(request):

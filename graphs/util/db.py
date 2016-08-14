@@ -4759,7 +4759,7 @@ def add_share_graph_event(graph_id, owner_id, group_id, member_id):
 	db_session.commit()
 	db_session.close()
 
-
+# admin function
 def update_share_graph_event(event_id, active, member_id):
 	'''
 		Update the share graph event. Change its active state.
@@ -4778,7 +4778,7 @@ def update_share_graph_event(event_id, active, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 # admin function
 def delete_share_graph_event(event_id, member_id):
@@ -4797,7 +4797,7 @@ def delete_share_graph_event(event_id, member_id):
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 
 def get_share_graph_event_by_member_id(member_id):
@@ -4810,14 +4810,13 @@ def get_share_graph_event_by_member_id(member_id):
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
-
 	try:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
 		db_session.close()
 		return events
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 
 def get_share_graph_event_by_id(event_id, member_id):
@@ -4834,8 +4833,7 @@ def get_share_graph_event_by_id(event_id, member_id):
 		return event
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
-
+		return {'Error': 'No share graph event found.'}
 
 def get_all_share_graph_event():
 	'''
@@ -4848,20 +4846,7 @@ def get_all_share_graph_event():
 		return events
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
-
-
-def set_all_graph_events_inactive_user(member_id):
-	'''
-	'''
-	db_session = data_connection.new_session()
-	try:
-		db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).update({"is_active": 0})
-		db_session.commit()
-		db_session.close()
-	except NoResultFound:
-		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 
 def set_share_graph_events_inactive(event_ids, member_id):
@@ -4873,42 +4858,23 @@ def set_share_graph_events_inactive(event_ids, member_id):
 	'''
 	db_session = data_connection.new_session()
 	try:
-		for event in events_id: 
+		for event_id in event_ids: 
 			db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.id == event_id).update({"is_active": 0})
   			db_session.commit()
 		db_session.close()
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
-
-def set_share_graph_events_inactive_by_group(group_id, member_id):
-	'''
-		Set all events in a group for a user as inactive
-		
-		@param group_id: id of the group
-		@param member_id: id of the logged in user
-	'''
-	db_session = data_connection.new_session()
-	try:
-		 
-		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
-  		for event in events:
-  			event.is_active = 0
-  			db_session.commit()
-		db_session.close()
-	except NoResultFound:
-		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 
-def get_share_graph_event_by_group_id(member_id, group_id):
+def get_share_graph_event_by_member_id_and_group_id(member_id, group_id):
 	db_session = data_connection.new_session()
 	try:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
   		return events
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 
 def check_new_notifications(member_id):
@@ -4921,6 +4887,6 @@ def check_new_notifications(member_id):
   			return False
 	except NoResultFound:
 		db_session.close()
-		raise NoResultFound
+		return {'Error': 'No share graph event found.'}
 
 

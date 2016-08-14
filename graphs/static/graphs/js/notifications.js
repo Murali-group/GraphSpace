@@ -1,58 +1,37 @@
 $(document).ready(function() {
-
-
    /**
    * Mark notification as read through the UI.
    */
    $(".read_notification").click(function (e) {
-    var uid = $(this).val();
-    var nid = $(this).attr('id');
+    // current user_id always present
+    var uid = $(this).attr('uid');
+    // notification id present if clicked on individual notification
+    var nid = $(this).attr('nid');
+    // group id present if clicked on mark read for group notifications
+    var gid = $(this).attr('gid');
+    // allid present if clicked on mark all notification read for a user
+    var allid = $(this).attr('allid');
 
-    $.post('../../../read_notification/', {
+    console.log(uid);
+    console.log(gid);
+    console.log(nid);
+    console.log(allid);
+    // send a post request to the view read_notification
+    $.post('../../../javascript/'+uid+'/mark_notifications_as_read/', {
       'uid': uid,
-      'nid': nid
-    }, function (data) {
-      if (data.Error) {
-        return alert(data.Error);
-      }
-      $("#read_notification").load("notifications.html #read_notification")
-      // window.location.reload();
-    });
+      'nid': nid,
+      'gid': gid,
+      'allid': allid
 
-   });
-
-   /**
-   * Mark all notifications as read in a group
-   */
-   $(".read_all_notifications").click(function (e) {
-    var uid = $(this).val();
-    var nid = $(this).attr('id');
-
-    $.post('../../../read_all_notifications/', {
-      'uid': uid,
-      'nid': nid
     }, function (data) {
       if (data.Error) {
         return alert(data.Error);
       }
       window.location.reload();
     });
+
    });
 
-  /**
-   * Mark all notifications as read in a group
-   */
-   $(".read_all_user_notifications").click(function (e) {
-    var uid = $(this).val();
-
-    $.post('../../../read_all_user_notifications/', {
-      'uid': uid
-    }, function (data) {
-      if (data.Error) {
-        return alert(data.Error);
-      }
-      window.location.reload();
-    });
-   });
+   $('[data-toggle="tooltip"]').tooltip(); 
 
 });
