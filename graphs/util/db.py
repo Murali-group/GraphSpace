@@ -4800,7 +4800,7 @@ def delete_share_graph_event(event_id, member_id):
 		return {'Error': 'No share graph event found.'}
 
 
-def get_share_graph_events_by_member_id(member_id, only_active=1):
+def get_share_graph_events_by_member_id(member_id, all_notifications=1):
 	"""
 		Return a list of share graph events for a user for a given userid of a member of any group and given status of the notification.
 
@@ -4813,10 +4813,10 @@ def get_share_graph_events_by_member_id(member_id, only_active=1):
 	"""
 	# Create database connection
 	db_session = data_connection.new_session()
-	if only_active:
-		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
-	else:
+	if all_notifications == 1:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
+	else:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
 	db_session.close()
 	return events
 
@@ -4863,24 +4863,22 @@ def set_share_graph_events_inactive(event_ids, member_id):
 		@param member_id: id of the logged in user
 	'''
 	db_session = data_connection.new_session()
-	try:
-		for event_id in event_ids: 
-			db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.id == event_id).update({"is_active": 0})
-  			db_session.commit()
-		db_session.close()
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	for event_id in event_ids:
+		db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.id == event_id).update({"is_active": 0})
+        db_session.commit()
+	db_session.close()
 
 
-def get_share_graph_event_by_member_id_and_group_id(member_id, group_id):
+
+def get_share_graph_event_by_member_id_and_group_id(member_id, group_id, all_notifications=1):
+	# TODO: @Mridul Add docstring
 	db_session = data_connection.new_session()
-	try:
+	if all_notifications == 1:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
-  		return events
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	else:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).filter(models.ShareGraphEvent.is_active == 1).all()
+	db_session.close()
+	return events
 
 
 def check_new_notifications(member_id):

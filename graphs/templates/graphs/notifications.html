@@ -8,7 +8,7 @@
 
 <br>
 <div class="row"><button style="position: relative;
-   right: 100px; float: right;" class="btn btn-default read_notification" uid="{{ uid }}" allid="True">Mark all notifications as read</button></div>
+   right: 100px; float: right;" class="btn btn-default read_all_notifications" uid="{{ uid }}" allid="True">Mark all notifications as read</button></div>
 <br>
 
 <div class="row">
@@ -21,43 +21,44 @@
         <p>Notifications</p>
       </div>
       <table class="table">
-        {% for group_id in notifications.keys() %}
           <tr>
-            <td><a href="{% url 'notifications' uid %}{{ group_id }}">{{ group_id }}</a></td>
+            <td><a href="{% url 'notifications' uid %}?all=1">All notifications</a></td>
+          </tr>
+        {% for group_id in grouped_notifications.keys %}
+          <tr>
+            <td><a href="{% url 'notifications' uid %}?group_id={{ group_id }}">{{ group_id }}</a></td>
           </tr>
         {% endfor %}
       </table>
     </div>
   </div>
 
-  {% if grouped_notifications != None %}
   {% if num_notifications > 0 %}
   <div class="col-sm-8">
     <div class="panel panel-primary">
   {% for group, events in grouped_notifications.items %}
-  {% if events != None %}
-    
+    {% if events|length > 0 %}
+
       <table class="table" id="notification_table{{ group }}">
         <tr bgcolor="#428BCA">
           <th><font color="white">{{ group }}</font></th>
           <th></th>
-          <th><a href="#" data-toggle="tooltip" title="Mark all {{ group }} notifications as read" data-placement="left"><button class="btn btn-default read_notification" uid="{{ uid }}" gid="{{ group }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a> </th>
+          <th><a href="#" data-toggle="tooltip" title="Mark all {{ group }} notifications as read" data-placement="left"><button class="btn btn-default read_all_group_notifications" uid="{{ uid }}" group_id="{{ group }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a> </th>
         </tr>
         {% for event in events %}
           {% if event.owner_id != uid %}
-            {% if event.is_active == 1 %}
-              <tr id="{{ event.id }}" class="notification_event{{ event.id }}"> 
+
+              <tr id="{{ event.id }}" class="notification_event{{ event.id }} {{ group }} notifications">
                 <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</a></td>
                 <td> Shared on {{ event.share_time }}</td>
-                <td class="remove_read{{ event.id }}"><a href="#" data-toggle="tooltip" title="Mark as read" data-placement="left"><button class="btn btn-default read_notification" nid="{{ event.id }}" uid="{{ event.member_id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a></td>
+                <td class="remove_read{{ event.id }}"><a href="#" data-toggle="tooltip" title="Mark as read" data-placement="left"><button class="btn btn-default read_notification" notification_id="{{ event.id }}" uid="{{ event.member_id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a></td>
               </tr>
-            {% endif %}
+
           {% endif %}
         {% endfor %}
+      </table>
     {% endif %}
-    </table>
-    
-{% endfor %}
+  {% endfor %}
 </div>
 </div>
 
@@ -69,32 +70,11 @@
     <h4 class="panel-title" style="text-align: center">No new notifications.</h4>
   </div>
 </div>
-</div> 
-{% endif %}
-{% else %}
-<div class="col-sm-8">
-
-<!-- <div class="column"> -->
-<div class="panel panel-primary">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{ group }}</h3>
-  </div>
-  <table class="table">
-  {% for event in all_events_in_group %}
-  {% if event.owner_id != uid %}
-    <tr> 
-    <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</td>
-    </tr>
-  {% endif %}
-  {% endfor %}
-
-  </table>
-</div>
-
-</div>
-
 </div>
 {% endif %}
+
+
+</div>
 
 {% endif %}
 {% endblock %}

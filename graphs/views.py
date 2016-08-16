@@ -311,13 +311,14 @@ def _graphs_page(request, view_type):
 
 
 # Controller method for notifications.
-def get_notifications_for_user(user_id, group_id=None, only_active=1):
+def get_notifications_for_user(user_id, group_id=None, all_notifications=1):
 	# TODO: @Mridul Add docstring
+
 	try:
 		if group_id == None:
-			events = db.get_share_graph_events_by_member_id(user_id, only_active)
+			events = db.get_share_graph_events_by_member_id(user_id, all_notifications)
 		else:
-			events = db.get_share_graph_event_by_member_id_and_group_id(user_id, group_id, only_active)
+			events = db.get_share_graph_event_by_member_id_and_group_id(user_id, group_id, all_notifications)
 	except NoResultFound:
 		events = list()
 	except:
@@ -334,14 +335,17 @@ def notifications(request, uid):
 	# Checks to see if a user is currently logged in
 	uid = request.session['uid']
 	group_id = request.GET.get('group_id')
-	all = request.GET.get('all')
+	if request.GET.get('all'):
+		all_notifications = int(request.GET.get('all'))
+	else:
+		all_notifications = 0
 
 	if uid is None:
 		context['Error'] = "Please log in to view notifications."
 		return render(request, 'graphs/error.html', context)
 
 	try:
-		notifications = get_notifications_for_user(uid, group_id, all=all)
+		notifications = get_notifications_for_user(uid, group_id, all_notifications=all_notifications)
 
 		context['grouped_notifications'] = dict()
 		for notification in notifications:
@@ -361,49 +365,37 @@ def notifications(request, uid):
 		context['Error'] = str(e)
 		return render(request, 'graphs/error.html', context)
 
-
-def mark_notifications_as_read(request, uid):
-	'''
-        View for marking a notification as read.
-        Fetch gid, nid, allid and uid for a request and
-        update the database accordingly.
-    '''
+def mark_notifications_as_read_api(request, uid):
 	if request.method == 'POST':
-		nid = request.POST['nid'] if 'nid' in request.POST else None
-		allid = request.POST['allid'] if 'allid' in request.POST else None
-		gid = request.POST['gid'] if 'gid' in request.POST else None
-		uid = request.session.get('uid', None)
-		# Check if the user is authenticated
+		notification_ids = request.POST.get('notification_ids[]') if 'notification_ids[]' in request.POST else []
 		if uid == None:
 			return HttpResponse(
 				json.dumps(db.throwError(401, "You are not allowed to update this share event."), indent=4,
 				           separators=(',', ': ')), content_type="application/json")
-
-		# If gid and allid are None then the user clicked on mark as read
-		# for an individual notification.
-		if gid is None and allid is None:
-			events = [nid]
-
-		# if gid is not None then the user clicked on mark as read for
-		# all the notifications in a group
-		elif gid is not None:
-			events = [event.id for event in db.get_share_graph_event_by_member_id_and_group_id(uid, gid)]
-
-		# if allid is not None then the user clicked on mark all notifications
-		# as read for a user.
-		elif allid is not None:
-			events = [event.id for event in db.get_share_graph_events_by_member_id(uid)]
-
-		event_info = db.set_share_graph_events_inactive(events, uid)
-
-		if event_info is not None:
-			return HttpResponse(
-				json.dumps(db.throwError(404, "There is no such share event."), indent=4, separators=(',', ': ')),
-				content_type="application/json")
 		else:
-			return HttpResponse(
+			try:
+				status = mark_notifications_as_read(notification_ids, uid)
+				return HttpResponse(
 				json.dumps(db.sendMessage(200, "Successfully updated share event(s) owned by " + uid + '.'), indent=4,
 				           separators=(',', ': ')), content_type="application/json")
+			except Exception, e:
+				# Better way of handling errors? As we don't have any GraphSpace
+				# specific excpections I am just using the generic SQLalchemy ORM
+				# generic exception NoResultFound.
+				return HttpResponse(
+				json.dumps(db.throwError(500, str(e)), indent=4, separators=(',', ': ')),
+				content_type="application/json")
+
+
+
+def mark_notifications_as_read(notification_ids, uid):
+	print(notification_ids, uid)
+	try:
+		db.set_share_graph_events_inactive(notification_ids, uid)
+		return 1
+	except:
+		raise Exception('Database Error: Error setting notifications as read.')
+
 
 
 def upload_graph_through_ui(request):
