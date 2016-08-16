@@ -24,7 +24,6 @@ urlpatterns = patterns('',
 
         # notifications page
         url(r'^(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/notifications/$', views.notifications, name='notifications'),
-        url(r'^(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/notifications/(?P<groupname>.+)/$', views.notifications, name='notifications'),
 
         # view graph page. This contains regular expression to catch url in the form of the following:
         # /graphs/email_address/graph_id/

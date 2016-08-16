@@ -4800,23 +4800,29 @@ def delete_share_graph_event(event_id, member_id):
 		return {'Error': 'No share graph event found.'}
 
 
-def get_share_graph_event_by_member_id(member_id):
-	'''
-		Return a dictionary of share graph events for a user keyed by group id.
-		If all the share graph events for a particular group are inactive, i.e. read
-		then the group is keyed by None in the dictionary.
+def get_share_graph_events_by_member_id(member_id, only_active=1):
+	"""
+		Return a list of share graph events for a user for a given userid of a member of any group and given status of the notification.
+
+		If no results are found the method will raise NoResultFound exception.
 
 		@param member_id: id of the user
-	'''
+		@param is_active: 1 if we want only the list of unread share graph events else 0 to get all share graph events
+		@return: List of share graph events
+
+	"""
 	# Create database connection
 	db_session = data_connection.new_session()
-	try:
+	if only_active:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
+	else:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
-		db_session.close()
-		return events
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	db_session.close()
+	return events
+
+	# 	db_session.close()
+	# except NoResultFound:
+	# 	return {'Error': 'No share graph event found.'}
 
 
 def get_share_graph_event_by_id(event_id, member_id):

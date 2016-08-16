@@ -21,20 +21,20 @@
         <p>Notifications</p>
       </div>
       <table class="table">
-        {% for group in groups_for_user %}
+        {% for group_id in notifications.keys() %}
           <tr>
-            <td><a href="{% url 'notifications' uid %}{{ group.groupId }}">{{ group.groupId }}</a></td>
+            <td><a href="{% url 'notifications' uid %}{{ group_id }}">{{ group_id }}</a></td>
           </tr>
         {% endfor %}
       </table>
     </div>
   </div>
 
-  {% if notifications != None %}
-  {% if check_new_notifications == True %}
+  {% if grouped_notifications != None %}
+  {% if num_notifications > 0 %}
   <div class="col-sm-8">
     <div class="panel panel-primary">
-  {% for group, events in notifications.items %}
+  {% for group, events in grouped_notifications.items %}
   {% if events != None %}
     
       <table class="table" id="notification_table{{ group }}">
