@@ -13,27 +13,19 @@
 
 <div class="row">
   <div class="col-sm-3">
-    <div class="panel panel-primary">
-      <div class="panel-heading">
-        Groups
+      <div class="list-group">
+        <a href="{% url 'notifications' uid %}" class="list-group-item">Unread<span class="badge">{{ num_active_notifications }}</span> </a>
+        <a href="{% url 'notifications' uid %}?all=1" class="list-group-item">All Notifications <span class="badge">{{ num_notifications }}</span> </a>
       </div>
-      <div class="panel-body">
-        <p>Notifications</p>
-      </div>
-      <table class="table">
-          <tr>
-            <td><a href="{% url 'notifications' uid %}?all=1">All notifications</a></td>
-          </tr>
-        {% for group_id in grouped_notifications.keys %}
-          <tr>
-            <td><a href="{% url 'notifications' uid %}?group_id={{ group_id }}">{{ group_id }}</a></td>
-          </tr>
+      <div class="list-group">
+      <a href="#" class="list-group-item active">Groups</a>
+          {% for group_id, notifications in groups_of_user.items %}
+            <a href="{% url 'notifications' uid %}?group_id={{ group_id }}" class="list-group-item">{{ group_id }} <span class="badge">{{ notifications }}</span></a>
         {% endfor %}
-      </table>
     </div>
   </div>
 
-  {% if num_notifications > 0 %}
+  {% if grouped_notifications|length != 0 %}
   <div class="col-sm-8">
     <div class="panel panel-primary">
   {% for group, events in grouped_notifications.items %}
