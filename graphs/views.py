@@ -312,7 +312,19 @@ def _graphs_page(request, view_type):
 
 # Controller method for notifications.
 def get_notifications_for_user(user_id, group_id=None, all_notifications=1):
-	# TODO: @Mridul Add docstring
+	'''
+		Controller method to get notifications for a user.
+		This method returns a list of events of a user according to the parameters
+		provided. If a group_id is present then only the notifications for the specific
+		group are returned. If all_notifications is `1` then all notifications irrespective
+		of there `is_active` i.e. read field are returned otherwise (all_notifications=0)
+		only unread notifications are returned.
+
+		:param user_id: user id of logged in user
+		:param group_id: id of requested group (default=None)
+		:param all_notifications: value of query string parameter (default=1)
+		:return: list of events
+	'''
 
 	try:
 		if group_id == None:
@@ -327,13 +339,48 @@ def get_notifications_for_user(user_id, group_id=None, all_notifications=1):
 	return events
 
 
+def get_notifications_group_stats_for_user(user_id):
+	'''
+		Controller method to get statistics for groups and notifications.
+		These stats are displayed in the left column of the notificaitons.html
+		page. We calculate the number of all notifications,
+		active notifications (i.e. Unread) and groups the user is a part of.
+
+		:param user_id:
+		:return: a three tuple of number of active notifications, all notificaitons
+				 and groups of user.
+	'''
+	try:
+		events = db.get_share_graph_events_by_member_id(user_id, all_notifications=0)
+		all_events = db.get_share_graph_events_by_member_id(user_id, all_notifications=1)
+		groups_of_user = [group['groupId'] for group in db.groups_for_user(user_id)]
+
+	except:
+		raise Exception('Database Error: Error while fetching notifications')
+
+	return len(events), len(all_events), groups_of_user
+
+
 # View method for notifications
 def notifications(request, uid):
-	# TODO: @Mridul Add docstring
+	'''
+		View method to display notifications for a user.
+		Use uid to check if user is currently logged in the session
+		and query string parameters `group_id` and `all` to display
+		group specific notifications and all notifications for a user
+
+		:param request:
+		:param uid: user_id of the user
+
+		:return: Render HTML page for notifications or HTML page for
+				 errors if any errors occurs.
+	'''
+
 	# handle login
 	context = login(request)
 	# Checks to see if a user is currently logged in
 	uid = request.session['uid']
+	# Query string parameter for group_id
 	group_id = request.GET.get('group_id')
 	if request.GET.get('all'):
 		all_notifications = int(request.GET.get('all'))
@@ -347,6 +394,8 @@ def notifications(request, uid):
 	try:
 		notifications = get_notifications_for_user(uid, group_id, all_notifications=all_notifications)
 
+		# Create a grouped notification dictonary which is keyed by the group_id
+		# and has all the notifications for that group as a list in the values field.
 		context['grouped_notifications'] = dict()
 		for notification in notifications:
 			if notification.group_id in context['grouped_notifications']:
@@ -355,9 +404,31 @@ def notifications(request, uid):
 				context['grouped_notifications'][notification.group_id] = [notification]
 
 		context['group'] = group_id
-		context['num_notifications'] = len(notifications)
+
+		# Create context for left column stats which display Unread notifications, all
+		# notifications and groups with number of notifications.
+		notification_stats = get_notifications_group_stats_for_user(uid)
+
+		# Create a dictionary to store the groups and the number
+		# of notifications for each group.
+		# Instead of using grouped_notifications we need to create a new variable
+		# because grouped_notification will only have the notifications for a
+		# particular group when we click on notifications of a group, and we'll lose
+		# all the information about other groups. Hence only the particular group will
+		# be dispalyed in the left column when we iterate through the grouped_notifcation
+		# variable.
+		group_count = {}
+		for group in notification_stats[2]:
+			if group in context['grouped_notifications']:
+				group_count[group] = len(context['grouped_notifications'][group])
+			else:
+				group_count[group] = 0
+
+		context['num_active_notifications'], context['num_notifications'] = notification_stats[0], notification_stats[1]
+		context['groups_of_user'] = group_count
 
 		return render(request, 'graphs/notifications.html', context)
+
 	except Exception, e:
 		# Better way of handling errors? As we don't have any GraphSpace
 		# specific excpections I am just using the generic SQLalchemy ORM
@@ -365,7 +436,20 @@ def notifications(request, uid):
 		context['Error'] = str(e)
 		return render(request, 'graphs/error.html', context)
 
+
 def mark_notifications_as_read_api(request, uid):
+	'''
+		view method to mark notifications as read.
+		It marks notifications as read and returns a HTTP response
+		depending on actions.
+		401 - if the user is not logged in
+		200 - Success
+		500 - If any database error or any other exception is recorded
+
+		:param request: request session variable
+		:param uid: user_id of the logged in user
+		:return: HttpResponse
+	'''
 	if request.method == 'POST':
 		notification_ids = request.POST.get('notification_ids[]') if 'notification_ids[]' in request.POST else []
 		if uid == None:
@@ -387,15 +471,24 @@ def mark_notifications_as_read_api(request, uid):
 				content_type="application/json")
 
 
-
 def mark_notifications_as_read(notification_ids, uid):
-	print(notification_ids, uid)
+	'''
+		Controller method to mark a list of notifications
+		as read. Interacts with the database layer and updates
+		the is_active field for the list of share graph events
+
+		It raises an error if any exception is raised by the
+		database layer.
+
+		:param notification_ids: list of notification ids
+		:param uid: user_id of the logged in user
+		:return: 1 if successful
+	'''
 	try:
 		db.set_share_graph_events_inactive(notification_ids, uid)
 		return 1
 	except:
 		raise Exception('Database Error: Error setting notifications as read.')
-
 
 
 def upload_graph_through_ui(request):

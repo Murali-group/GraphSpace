@@ -4759,6 +4759,7 @@ def add_share_graph_event(graph_id, owner_id, group_id, member_id):
 	db_session.commit()
 	db_session.close()
 
+
 # admin function
 def update_share_graph_event(event_id, active, member_id):
 	'''
@@ -4770,34 +4771,26 @@ def update_share_graph_event(event_id, active, member_id):
 		@param member_id: id of the user, the logged in user.
 	'''
 	db_session = data_connection.new_session()
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	event.is_active = active
+	db_session.commit()
+	db_session.close()
 
-	try:
-		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
-		event.is_active = active
-		db_session.commit()
-		db_session.close()
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
 
 # admin function
 def delete_share_graph_event(event_id, member_id):
 	'''
 		Delete the share graph event from the table for the member
 
-		@param event_id: id of the share graph event
-		@param member_id: id of the member
+		:param event_id: id of the share graph event
+		:param member_id: id of the member
 
 	'''
 	db_session = data_connection.new_session()
-	try:
-		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
-		db_session.delete(event)
-		db_session.commit()
-		db_session.close()
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	db_session.delete(event)
+	db_session.commit()
+	db_session.close()
 
 
 def get_share_graph_events_by_member_id(member_id, all_notifications=1):
@@ -4806,9 +4799,9 @@ def get_share_graph_events_by_member_id(member_id, all_notifications=1):
 
 		If no results are found the method will raise NoResultFound exception.
 
-		@param member_id: id of the user
-		@param is_active: 1 if we want only the list of unread share graph events else 0 to get all share graph events
-		@return: List of share graph events
+		:param member_id: id of the user
+		:param is_active: 1 if we want only the list of unread share graph events else 0 to get all share graph events
+		:return: List of share graph events
 
 	"""
 	# Create database connection
@@ -4820,47 +4813,41 @@ def get_share_graph_events_by_member_id(member_id, all_notifications=1):
 	db_session.close()
 	return events
 
-	# 	db_session.close()
-	# except NoResultFound:
-	# 	return {'Error': 'No share graph event found.'}
-
 
 def get_share_graph_event_by_id(event_id, member_id):
 	'''
-		Return share graph event notification
+		Query database to find share graph event by event_id
 
-		@param event_id: id of the event
-		@param member_id: id of the logged in user
+		:param event_id: id of the event
+		:param member_id: id of the logged in user
+
+		:return: event with id event_id
 	'''
 	db_session = data_connection.new_session()
-	try:
-		event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
-		db_session.close()
-		return event
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	db_session.close()
+	return event
+
 
 def get_all_share_graph_event():
 	'''
-		Return all the share graph events.
+		Query database to find all the share graph events
+		and return a list of events
+
+		:return: list of events
 	'''
 	db_session = data_connection.new_session()
-	try:
-		events = db_session.query(models.ShareGraphEvent).all()
-		db_session.close()
-		return events
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
+	events = db_session.query(models.ShareGraphEvent).all()
+	db_session.close()
+	return events
 
 
 def set_share_graph_events_inactive(event_ids, member_id):
 	'''
 		Set all events in the list event_ids as inactive
 		
-		@param events_id: list of event ids
-		@param member_id: id of the logged in user
+		:param events_id: list of event ids
+		:param member_id: id of the logged in user
 	'''
 	db_session = data_connection.new_session()
 	for event_id in event_ids:
@@ -4869,9 +4856,19 @@ def set_share_graph_events_inactive(event_ids, member_id):
 	db_session.close()
 
 
-
 def get_share_graph_event_by_member_id_and_group_id(member_id, group_id, all_notifications=1):
-	# TODO: @Mridul Add docstring
+	'''
+		Query database to find share graph events with a specific member_id
+		,group_id and all_notifications and return a list. If all_notifications
+		is `1` then all notifications are returned irrespective of `is_active`
+		field (i.e. read or unread), else (all_notifications=0) only unread
+		events are returned.
+
+		:param member_id: id of the logged in user
+		:param group_id: id of thr group
+		:param all_notifications: boolean value to display all notifications
+		:return: list of events
+	'''
 	db_session = data_connection.new_session()
 	if all_notifications == 1:
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
@@ -4879,18 +4876,3 @@ def get_share_graph_event_by_member_id_and_group_id(member_id, group_id, all_not
 		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).filter(models.ShareGraphEvent.is_active == 1).all()
 	db_session.close()
 	return events
-
-
-def check_new_notifications(member_id):
-	db_session = data_connection.new_session()
-	try:
-		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
-		if len(events) != 0:
-			return True
-  		else:
-  			return False
-	except NoResultFound:
-		db_session.close()
-		return {'Error': 'No share graph event found.'}
-
-
