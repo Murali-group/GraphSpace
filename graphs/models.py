@@ -10,10 +10,10 @@ There are two differences:
        ex. 'id' for user table would be 'user_id'
 '''
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint, Boolean, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import TIMESTAMP
+from sqlalchemy.types import TIMESTAMP, Boolean
 from django.db import models
 from django.conf import settings
 from sqlalchemy import create_engine
@@ -315,6 +315,33 @@ class Edge(Base):
             ForeignKeyConstraint([user_id, graph_id, head_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
             ForeignKeyConstraint([user_id, graph_id, tail_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"), {})
     #no relationship specified
+
+class ShareGraphEvent(Base):
+    __tablename__ = 'share_graph_event'
+    # unique id for each share graph event
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    # id of the graph shared
+    graph_id = Column(String, nullable=False)
+    # id of the owner of the graph which is shared
+    owner_id = Column(String, nullable=False)
+    # id of the group the graph is shared in
+    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # id of the member of the group.
+    # Hence there can be multiple share graph events if a owner shares a grap
+    # with a group. A share graph event will be created for all the memebers
+    # of the group except the owner of the graph (the one who shared it).
+    member_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    # timestamp at which the share graph event occured
+    share_time = Column(TIMESTAMP, nullable = False)
+    # Boolean value to track if notifications is read or not.
+    # if True then the notification is active, i.e not read
+    is_active = Column(Boolean, nullable=False)
+    # We use ForeignKeyConstraint for graph_id and owner_id
+    # because this is the only to define a composite foreign key
+    __table_args__ = (
+        UniqueConstraint('graph_id', 'owner_id', 'group_id', 'member_id'),
+        ForeignKeyConstraint([graph_id, owner_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"),
+            )
 
 #Create indices
 Index('graph_public_idx', Graph.public)

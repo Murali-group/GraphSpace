@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link href={% static "graphs/css/notifications.css" %} rel="stylesheet">
+<script type="text/javascript" src="{% static 'graphs/js/notifications.js' %}"></script>
+
+{% if uid != None %}
+
+<br>
+<div class="row"><button style="position: relative;
+   right: 100px; float: right;" class="btn btn-default read_all_notifications" uid="{{ uid }}" allid="True">Mark all notifications as read</button></div>
+<br>
+
+<div class="row">
+  <div class="col-sm-3">
+      <div class="list-group">
+        <a href="{% url 'notifications' uid %}" class="list-group-item">Unread<span class="badge">{{ num_active_notifications }}</span> </a>
+        <a href="{% url 'notifications' uid %}?all=1" class="list-group-item">All Notifications <span class="badge">{{ num_notifications }}</span> </a>
+      </div>
+      <div class="list-group">
+      <a href="#" class="list-group-item active">Groups</a>
+          {% for group_id, notifications in groups_of_user.items %}
+            <a href="{% url 'notifications' uid %}?group_id={{ group_id }}" class="list-group-item">{{ group_id }} <span class="badge">{{ notifications }}</span></a>
+        {% endfor %}
+    </div>
+  </div>
+
+  {% if grouped_notifications|length != 0 %}
+  <div class="col-sm-8">
+    <div class="panel panel-primary">
+  {% for group, events in grouped_notifications.items %}
+    {% if events|length > 0 %}
+
+      <table class="table" id="notification_table{{ group }}">
+        <tr bgcolor="#428BCA">
+          <th><font color="white">{{ group }}</font></th>
+          <th></th>
+          <th><a href="#" data-toggle="tooltip" title="Mark all {{ group }} notifications as read" data-placement="left"><button class="btn btn-default read_all_group_notifications" uid="{{ uid }}" group_id="{{ group }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a> </th>
+        </tr>
+        {% for event in events %}
+          {% if event.owner_id != uid %}
+
+              <tr id="{{ event.id }}" class="notification_event{{ event.id }} {{ group }} notifications">
+                <td> <a href="{% url 'graphs' %}/{{ event.owner_id }}/{{ event.graph_id}}">{{ event.owner_id }} shared {{ event.graph_id }} with {{ event.group_id }}.</a></td>
+                <td> Shared on {{ event.share_time }}</td>
+                <td class="remove_read{{ event.id }}"><a href="#" data-toggle="tooltip" title="Mark as read" data-placement="left"><button class="btn btn-default read_notification" notification_id="{{ event.id }}" uid="{{ event.member_id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button></a></td>
+              </tr>
+
+          {% endif %}
+        {% endfor %}
+      </table>
+    {% endif %}
+  {% endfor %}
+</div>
+</div>
+
+
+{% else %}
+<div class="col-sm-8">
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h4 class="panel-title" style="text-align: center">No new notifications.</h4>
+  </div>
+</div>
+</div>
+{% endif %}
+
+
+</div>
+
+{% endif %}
+{% endblock %}

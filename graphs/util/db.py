@@ -3637,7 +3637,11 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	# If they're an owner or a group member, they can add graph to the group
 	if group_owner != None or group_member != None:
 		new_shared_graph = models.GroupToGraph(group_id = groupId, group_owner = groupOwner, user_id = owner, graph_id = graph, modified = graph_exists.modified)
-
+		members = get_group_members(groupOwner, groupId)
+		for member in members:
+			# TODO: use the current db session instead of creating a new db
+			# session
+			add_share_graph_event(graph, owner, groupId, member.user_id)
 		db_session.add(new_shared_graph)
 		db_session.commit()
 	else:
@@ -4731,3 +4735,144 @@ def constructResponse(statusCode, message, error):
 		response['Error'] = error
 
 	return response
+
+
+def add_share_graph_event(graph_id, owner_id, group_id, member_id):
+	'''
+		Add a new share graph event to the table.
+		After sharing the graph with a group this function will create
+		a share graph event for all the users in that group
+
+		@param graph_id: id of the graph shared
+		@param owner_id: owner of the graph which is shared
+		@param group_id: id of the grop
+		@param member_id: id of the member the graph is shared
+	'''
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	# Get the current time
+	cur_time = datetime.now()
+
+	new_event = models.ShareGraphEvent(graph_id=graph_id, owner_id=owner_id, group_id=group_id, member_id=member_id, share_time=cur_time, is_active=True)
+	db_session.add(new_event)
+	db_session.commit()
+	db_session.close()
+
+
+# admin function
+def update_share_graph_event(event_id, active, member_id):
+	'''
+		Update the share graph event. Change its active state.
+		If active is True then the notification is not read/clicked.
+
+		@param event_id: id of the share graph event
+		@param active: Boolean value, update the state of event
+		@param member_id: id of the user, the logged in user.
+	'''
+	db_session = data_connection.new_session()
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	event.is_active = active
+	db_session.commit()
+	db_session.close()
+
+
+# admin function
+def delete_share_graph_event(event_id, member_id):
+	'''
+		Delete the share graph event from the table for the member
+
+		:param event_id: id of the share graph event
+		:param member_id: id of the member
+
+	'''
+	db_session = data_connection.new_session()
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	db_session.delete(event)
+	db_session.commit()
+	db_session.close()
+
+
+def get_share_graph_events_by_member_id(member_id, all_notifications=1):
+	"""
+		Return a list of share graph events for a user for a given userid of a member of any group and given status of the notification.
+
+		If no results are found the method will raise NoResultFound exception.
+
+		:param member_id: id of the user
+		:param is_active: 1 if we want only the list of unread share graph events else 0 to get all share graph events
+		:return: List of share graph events
+
+	"""
+	# Create database connection
+	db_session = data_connection.new_session()
+	if all_notifications == 1:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).all()
+	else:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.is_active == 1).all()
+	db_session.close()
+	return events
+
+
+def get_share_graph_event_by_id(event_id, member_id):
+	'''
+		Query database to find share graph event by event_id
+
+		:param event_id: id of the event
+		:param member_id: id of the logged in user
+
+		:return: event with id event_id
+	'''
+	db_session = data_connection.new_session()
+	event = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.id == event_id).filter(models.ShareGraphEvent.member_id == member_id).one()
+	db_session.close()
+	return event
+
+
+def get_all_share_graph_event():
+	'''
+		Query database to find all the share graph events
+		and return a list of events
+
+		:return: list of events
+	'''
+	db_session = data_connection.new_session()
+	events = db_session.query(models.ShareGraphEvent).all()
+	db_session.close()
+	return events
+
+
+def set_share_graph_events_inactive(event_ids, member_id):
+	'''
+		Set all events in the list event_ids as inactive
+		
+		:param events_id: list of event ids
+		:param member_id: id of the logged in user
+	'''
+	db_session = data_connection.new_session()
+	for event_id in event_ids:
+		db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.id == event_id).update({"is_active": 0})
+        db_session.commit()
+	db_session.close()
+
+
+def get_share_graph_event_by_member_id_and_group_id(member_id, group_id, all_notifications=1):
+	'''
+		Query database to find share graph events with a specific member_id
+		,group_id and all_notifications and return a list. If all_notifications
+		is `1` then all notifications are returned irrespective of `is_active`
+		field (i.e. read or unread), else (all_notifications=0) only unread
+		events are returned.
+
+		:param member_id: id of the logged in user
+		:param group_id: id of thr group
+		:param all_notifications: boolean value to display all notifications
+		:return: list of events
+	'''
+	db_session = data_connection.new_session()
+	if all_notifications == 1:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).all()
+	else:
+		events = db_session.query(models.ShareGraphEvent).filter(models.ShareGraphEvent.member_id == member_id).filter(models.ShareGraphEvent.group_id == group_id).filter(models.ShareGraphEvent.is_active == 1).all()
+	db_session.close()
+	return events
