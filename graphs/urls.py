@@ -80,7 +80,7 @@ urlpatterns = patterns('',
         url(r'^resetPassword/$', views.resetPassword, name='resetPassword'),
         url(r'^launchTask/$', views.launchTask, name='launchTask'),
         url(r'^retrieveTaskCode/$', views.retrieveTaskCode, name='retrieveTaskCode'),
-        url(r'^javascript/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/mark_notifications_as_read/$', views.mark_notifications_as_read_api, name='mark_notifications_as_read_api'),
+        url(r'^javascript/(?P<uid>\b[A-Z0-9a-z._%+-]+@[A-Z0-9a-z.-]+\.[A-Za-z]{2,4}\b)/mark_notifications_as_read_api/$', views.mark_notifications_as_read_api, name='mark_notifications_as_read_api'),
 
 
         #REST API
