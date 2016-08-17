@@ -48,7 +48,7 @@ WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace
 WSGIProcessGroup GraphSpace
 WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 
-  <Directory /path_to_GraphSpace/graphspace>
+  <Directory /path_to_GraphSpace/graphspace/>
      <Files wsgi.py>
          Order deny,allow
          Require all granted
@@ -57,7 +57,7 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
   
   Alias /static/ /path_to_GraphSpace/graphs/static/
   
-  <Directory /path_to_GraphSpace/graphs/static>
+  <Directory /path_to_GraphSpace/graphs/static/>
       Require all granted
   </Directory>
   
