@@ -15,8 +15,8 @@ import bcrypt
 from sqlalchemy import or_, and_
 from sqlalchemy.orm.exc import NoResultFound
 
-import graphs.models as models
-import graphs.util.db_init as db_init
+import graphs_old.models as models
+import graphs_old.util.db_init as db_init
 import requests
 from django.conf import settings
 from django.core.mail import send_mail

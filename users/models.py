@@ -1,18 +1,17 @@
 from __future__ import unicode_literals
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import relationship, backref
+from graphspace.mixins import *
+from django.conf import settings
 
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from sqlalchemy.types import TIMESTAMP
-
-from graphspace.mixins import GraphSpaceMixin
-
-Base = declarative_base()
-
+Base = settings.BASE
 
 # ================== Table Definitions ===================
 
-class User(GraphSpaceMixin, Base):
+
+class User(IDMixin, TimeStampMixin, Base):
 	"""
 	The class representing the schema of the user table.
 	:param email: Email ID of the user.
@@ -21,34 +20,76 @@ class User(GraphSpaceMixin, Base):
 	"""
 	__tablename__ = "user"
 
-	email = Column(String, unique=True)
+	email = Column(String, nullable=False, unique=True, index=True)
 	password = Column(String, nullable=False)
 	is_admin = Column(Integer, nullable=False)
-	password_reset_codes = relationship("PasswordResetCode", back_populates="user")
+
+	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
+	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
+
+	member_groups = association_proxy('user_groups', 'group')
+
+	constraints = ()
+	indices = ()
+
+	@declared_attr
+	def __table_args__(cls):
+		args = tuple() + cls.constraints + cls.indices
+		return args
 
 
-class PasswordResetCode(Base):
+class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'password_reset_code'
 
-	user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False, index=True)
 	code = Column(String, nullable=False)
 	user = relationship("User", back_populates="password_reset_codes", uselist=False)
 
+	constraints = (UniqueConstraint('email', 'code', name='_password_reset_code_uc_email_code'),)
+	indices = ()
 
-class Group(Base):
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args
+
+
+class Group(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'group'
 
-	group_id = Column(String, primary_key=True)
 	name = Column(String, nullable=False)
-	owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False,
-	                  primary_key=True)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	description = Column(String, nullable=False)
+
+	owner = relationship("User", back_populates="owned_groups", uselist=False)
+	members = association_proxy('member_users', 'user')
+
+	constraints = (UniqueConstraint('name', 'owner_email', name='_group_uc_name_owner_email'),)
+	indices = ()
+
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args
 
 
 class GroupToUser(Base):
 	"""The class representing the schema of the group_to_user table."""
 	__tablename__ = 'group_to_user'
 
-	user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-	group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-	group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+
+	# bidirectional attribute/collection of "user"/"member_of_groups"
+	user = relationship("User", backref=backref("user_groups", cascade="all, delete-orphan"))
+
+	# reference to the "Group" object
+	group = relationship("Group", backref=backref("member_users", cascade="all, delete-orphan"))
+
+	indices = (Index('group2user_idx_user_id_group_id', 'user_id', 'group_id'),)
+	constraints = ()
+
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args

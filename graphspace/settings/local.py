@@ -30,3 +30,5 @@ SECRET_KEY = 'this-is-a-secret-key-for-local-settings-only'
 
 # Sandbox (development) MTURK (fake money used)
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
+
+db = Database()

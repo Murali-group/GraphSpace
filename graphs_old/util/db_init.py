@@ -2,7 +2,7 @@
     Module to initialize database access.
 '''
 
-from graphs.util.db_conn import Database
+from graphs_old.util.db_conn import Database
 
 #connect to database
 db = Database('prod')

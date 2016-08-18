@@ -1,5 +1,5 @@
 import models
-import graphs.util.db_init as db_init
+import graphs_old.util.db_init as db_init
 
 data_connection = db_init.db
 

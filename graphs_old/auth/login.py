@@ -1,6 +1,6 @@
-from graphs.auth import AuthBackend
-from graphs.forms import LoginForm, RegisterForm
-from graphs.util import db
+from graphs_old.auth import AuthBackend
+from graphs_old.forms import LoginForm, RegisterForm
+from graphs_old.util import db
 from django.conf import settings
 
 def login(request):

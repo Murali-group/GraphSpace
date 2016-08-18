@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from graphs.util import db
+from graphs_old.util import db
 
 def pager(request, content, page_size=25, adjacent_pages=3):
     '''

@@ -1,11 +1,9 @@
 from models import *
-import graphs.util.db_init as db_init
+import graphs_old.util.db_init as db_init
 from django.utils.datetime_safe import datetime
 from graphspace.utils import generate_uid
 from sqlalchemy.orm.exc import NoResultFound
 from graphspace.wrappers import sqlalchemy_operation
-
-data_connection = db_init.db
 
 # TODO: Add documentation about exception raised.
 

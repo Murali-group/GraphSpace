@@ -3,7 +3,7 @@ See https://docs.djangoproject.com/en/dev/topics/forms/ for details.
 '''
 
 from django import forms
-from graphs.util import db
+from graphs_old.util import db
 
 class LoginForm(forms.Form):
 	'''

@@ -19,6 +19,7 @@ class Database(object):
 		self.engine = create_engine(''.join(
 			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
 		# TODO: Find out what is the use of metadata and reflection.
+		settings.BASE.metadata.create_all(self.engine)
 		self.meta = sqlalchemy.schema.MetaData()
 		self.meta.reflect(bind=self.engine)
 		self.session = sessionmaker(bind=self.engine)

@@ -30,3 +30,15 @@ SECRET_KEY = 'this-is-a-secret-key-for-local-settings-only'
 
 # Sandbox (development) MTURK (fake money used)
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'testing',
+        'USER': 'adb',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432'
+    }
+}
+

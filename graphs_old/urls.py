@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from graphs import views
+from graphs_old import views
 
 urlpatterns = patterns('', 
         # name parameter indicates the name of the view. This name
