@@ -12,3 +12,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "graphspace.settings.production"
 
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
+
+from graphspace.database import *
+from django.conf import settings
+settings.db = Database()

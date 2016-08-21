@@ -12,15 +12,15 @@ with open('requirements.txt') as reqs:
 
 setup(
     name = 'GraphSpace',
-    version = '1.1.0',
+    version = '1.2.0',
     url = 'http://graphspace.org',
     license = 'GNU GENERAL PUBLIC LICENSE',
     author = 'adb',
     author_email = 'adb@vt.edu',
     description = 'The interactive graph sharing website.',
     long_description=long_description,
-    packages=find_packages(),
-    include_package_data=True,
+    packages=[],
+    include_package_data=False,
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

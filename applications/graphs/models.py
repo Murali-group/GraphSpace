@@ -4,7 +4,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, backref
 from graphspace.mixins import *
-from users.models import *
+from applications.users.models import *
 from django.conf import settings
 
 Base = settings.BASE
@@ -31,7 +31,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
 
 	groups = association_proxy('shared_with_groups', 'group')
-	tags = association_proxy('graph_tags', 'graph_tag')
+	tags = association_proxy('graph_tags', 'tag')
 
 	constraints = (UniqueConstraint('name', 'owner_email', name='_graph_uc_name_owner_email'),)
 	indices = ()
@@ -109,9 +109,9 @@ class GroupToGraph(TimeStampMixin, Base):
 class Layout(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'layout'
 
-	layout_name = Column(String, nullable=False)
+	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	json = Column(String, nullable=False)
 	is_public = Column(Integer, nullable=False)
 	is_shared = Column(Integer, nullable=False)
@@ -124,7 +124,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	                                    uselist=False)
 
 	constraints = (
-		UniqueConstraint('layout_name', 'graph_id', 'owner_email', name='_layout_uc_layout_name_graph_id_owner_email'),)
+		UniqueConstraint('name', 'graph_id', 'owner_email', name='_layout_uc_name_graph_id_owner_email'),)
 	indices = ()
 
 	@declared_attr

@@ -1,11 +1,10 @@
 from sqlalchemy import and_
-from sqlalchemy.exc import InvalidRequestError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-
+from applications.graphs.models import *
+from applications.users.models import *
 from django.test import TestCase
 from graphspace.database import Database
-from users.models import *
-from graphs.models import *
 
 Session = sessionmaker()
 
@@ -79,6 +78,18 @@ class UserModelTestCase(TestCase):
 		num_owned_groups = self.session.query(Group).filter(Group.owner_email == 'owner@example.com').count()
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
 		self.assertEqual(len(owner.owned_groups), num_owned_groups)
+
+	def test_owned_layouts_relationship(self):
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.commit()
+
+		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
+		layout1 = self.session.query(Layout).filter(Layout.name == 'layout1').one_or_none()
+
+		self.assertEqual(owner.owned_layouts[0].id, layout1.id)
 
 	def test_member_groups_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
@@ -546,6 +557,23 @@ class GroupToUserModelTestCase(TestCase):
 		self.session.commit()
 
 		self.assertEqual(group2user1.group.id, group1.id)
+
+	def test_graphs_relationship(self):
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(User(email='member@example.com', password="password", is_admin=0))
+		member = self.session.query(User).filter(User.email == 'member@example.com').one_or_none()
+
+		self.session.add(Group(name="group1", owner_email='owner@example.com', description="description"))
+		group1 = self.session.query(Group).filter(and_(
+			Group.owner_email == 'owner@example.com', Group.name == 'group1')).one_or_none()
+
+		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
+		self.session.commit()
+
+		self.assertEqual(group1.graphs[0].id, graph1.id)
 
 
 

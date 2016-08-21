@@ -10,7 +10,6 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 import os
 from sqlalchemy.ext.declarative import declarative_base
-
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 ALLOWED_HOSTS = ['*']
 
@@ -30,7 +29,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'graphs'
+    'applications.users',
+	'applications.graphs'
 )
 
 MIDDLEWARE_CLASSES = (

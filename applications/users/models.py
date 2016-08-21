@@ -1,11 +1,5 @@
 from __future__ import unicode_literals
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import relationship, backref
-from graphspace.mixins import *
-from django.conf import settings
-from graphs.models import *
+from applications.graphs.models import *
 
 Base = settings.BASE
 

@@ -5,8 +5,6 @@ import sqlalchemy
 from django.conf import settings
 from contextlib import contextmanager
 
-config = settings.DATABASES['default']
-
 
 class Database(object):
 	"""
@@ -17,6 +15,7 @@ class Database(object):
 		"""
 			Constructor
 		"""
+		config = settings.DATABASES['default']
 		self.engine = create_engine(''.join(
 			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
 		# TODO: Find out what is the use of metadata and reflection.
