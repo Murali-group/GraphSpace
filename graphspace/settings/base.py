@@ -17,6 +17,7 @@ ALLOWED_HOSTS = ['*']
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
+print (DB_FULL_PATH)
 # DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
 
 # Application definition

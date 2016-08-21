@@ -12,7 +12,7 @@ TODO: Find out what args need to be set for postgreSQL.
 
 
 class IDMixin(object):
-	id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+	id = Column(Integer, primary_key=True, autoincrement=True, index=True, unique=True)
 
 
 class TimeStampMixin(object):

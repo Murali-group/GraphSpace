@@ -5,6 +5,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 from graphspace.mixins import *
 from django.conf import settings
+from graphs.models import *
 
 Base = settings.BASE
 
@@ -26,6 +27,8 @@ class User(IDMixin, TimeStampMixin, Base):
 
 	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
+	owned_graphs = relationship("Graph", back_populates="owner", cascade="all, delete-orphan")
+	owned_layouts = relationship("Layout", back_populates="owner", cascade="all, delete-orphan")
 
 	member_groups = association_proxy('user_groups', 'group')
 
@@ -63,6 +66,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
 	members = association_proxy('member_users', 'user')
+	graphs = association_proxy('shared_graphs', 'graph')
 
 	constraints = (UniqueConstraint('name', 'owner_email', name='_group_uc_name_owner_email'),)
 	indices = ()
@@ -73,18 +77,15 @@ class Group(IDMixin, TimeStampMixin, Base):
 		return args
 
 
-class GroupToUser(Base):
+class GroupToUser(TimeStampMixin, Base):
 	"""The class representing the schema of the group_to_user table."""
 	__tablename__ = 'group_to_user'
 
 	user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
 	group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
 
-	# bidirectional attribute/collection of "user"/"member_of_groups"
-	user = relationship("User", backref=backref("user_groups", cascade="all, delete-orphan"))
-
-	# reference to the "Group" object
-	group = relationship("Group", backref=backref("member_users", cascade="all, delete-orphan"))
+	user = relationship("User", backref=backref("user_groups", cascade="all, delete-orphan"), uselist=False)
+	group = relationship("Group", backref=backref("member_users", cascade="all, delete-orphan"), uselist=False)
 
 	indices = (Index('group2user_idx_user_id_group_id', 'user_id', 'group_id'),)
 	constraints = ()
