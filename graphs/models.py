@@ -36,7 +36,7 @@ Base = declarative_base()
 # primary key. 'user_id' is a foreign key referring to the 'user_id' column in 
 # the 'user' table. 'group_id' is a foreign key referring to the 'group_id' column 
 # in the 'group' table.
-        
+
 # For each graph, this table stores the groups that the graph belongs to. 
 # Note that a graph may belong to multiple groups. 
 
@@ -47,48 +47,6 @@ Base = declarative_base()
 #=================== End of Junction Tables ===================
 
 # ================== Table Definitions ===================
-class GroupToUser(Base):
-    '''The class representing the schema of the group_to_user table.'''
-    __tablename__ = 'group_to_user'
-
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-       
-class Feedback(Base):
-    __tablename__ = 'feedback'
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
-    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
-    text = Column(String, nullable = False)
-    created = Column(TIMESTAMP, nullable = False)
-
-class GroupToGraph(Base):
-    '''The class representing the schema of the group_to_graph table.'''
-    __tablename__ = 'group_to_graph'
-
-    group_id = Column(String, ForeignKey('group.group_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    group_owner = Column(String, ForeignKey('group.owner_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    modified = Column(TIMESTAMP, nullable = False)
-
-class GraphToTag(Base):
-    '''The class representing the schema of the graph_to_tag table.'''
-    __tablename__ = 'graph_to_tag'
-
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
-    tag_id = Column(String, ForeignKey('graph_tag.tag_id'), primary_key=True)
-
-class TaskCode(Base):
-    '''The class representing the schema of the task_code table.'''
-    __tablename__ = 'task_code'
-    hit_id = Column(String, ForeignKey('task.hit_id', ondelete="CASCADE", onupdate="CASCADE"))
-    code = Column(String, primary_key = True)
-    created = Column(TIMESTAMP, nullable = False)
 
 class User(Base):
     '''The class representing the schema of the user table.'''
@@ -100,42 +58,44 @@ class User(Base):
 
     # one to many relationships. TODO: add cascades
     # at most one user can create a graph layout
-    layouts = relationship("Layout")
+    layouts = relationship("Layout", foreign_keys="[Layout.owner_id]", back_populates="owner", cascade="all, delete-orphan")
     # each group has at most one user who created it. See the owner_id column in the 'Group' class.
-    owned_groups = relationship("Group")
+    owned_groups = relationship("Group", cascade="all, delete-orphan")
     # each graph has at most one creator.
-    graphs = relationship("Graph") 
-    # ??? 
+    graphs = relationship("Graph", cascade="all, delete-orphan")
+    # ???
     password_reset = relationship("PasswordReset")
-       
-# TODO: change name to Group here and in the db.
+
+
 class Group(Base):
     __tablename__ = 'group'
-    
+
     group_id = Column(String, primary_key = True)
     # TODO: describe the difference bewteen group_id and name.
     name = Column(String, nullable = False)
-    # Each group has one owner, who must be in the user table. The foreign key 
+    # Each group has one owner, who must be in the user table. The foreign key
     # statement corresponds to the owned_groups relationship in the 'User' class.
     owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False, primary_key = True)
     description = Column(String, nullable = False)
 
     # This line creates the many-to-many relationship between the User class and the i
-    # Group class through the group_to_user junction table. Specifically, 
-    # it links the 'User' class to the current class using the group_to_user junction 
-    # table; this is a many to one relationship from 'User' to 'group_to_user'. 
-    # The backref argument establishes the many to one relationship from 'Group' 
-    # to 'group_to_user'. An equivalent way to link the two classes is to instead 
+    # Group class through the group_to_user junction table. Specifically,
+    # it links the 'User' class to the current class using the group_to_user junction
+    # table; this is a many to one relationship from 'User' to 'group_to_user'.
+    # The backref argument establishes the many to one relationship from 'Group'
+    # to 'group_to_user'. An equivalent way to link the two classes is to instead
     # add the following line to User:
     # groups = relationship('Group', secondary=group_to_user, backref='user')
     # users = relationship('User', backref='group')
     # # specifies many-to-many relationship with Graph table
     # graphs = relationship('Graph', backref='group')
 
+
+
 class Graph(Base):
     __tablename__ = 'graph'
 
-    # The graph_id and user_id together specify the primary key.     
+    # The graph_id and user_id together specify the primary key.
     graph_id = Column(String, primary_key = True) #id
     user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key = True)
     json = Column(String, nullable = False)
@@ -143,7 +103,7 @@ class Graph(Base):
     modified = Column(TIMESTAMP, nullable = False)
     public = Column(Integer, nullable = True)
     shared_with_groups = Column(Integer, nullable = True)
-    default_layout_id = Column(String, nullable = True)
+    default_layout_id = Column(Integer, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
 
     # specify one to many relationships
     # layouts = relationship("Layout")
@@ -151,50 +111,11 @@ class Graph(Base):
     # nodes = relationship("Node")
 
     # groups = relationship("Group", backref='graph')
-    
+
     #specify many to many relationship with GraphTag
     # tags = relationship("GraphTag", secondary=graph_to_tag, backref='graph')
 
-class Task(Base):
-    '''
-        Table that represents the task table.
-    '''
-    __tablename__ = 'task'
 
-    task_id = Column(Integer, autoincrement=True, primary_key=True)
-    task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
-    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
-    created = Column(TIMESTAMP, nullable = False)
-    hit_id=Column(String, nullable=False)
-    worker_id=Column(String, nullable=False)
-    submitted=Column(Integer, nullable=True)
-    task_type=Column(String, nullable=False)
-
-class GraphTag(Base):
-    '''
-        Table of tags that are assigned to each graph to categorize them.
-    '''
-    __tablename__ = 'graph_tag'
-    tag_id = Column(String, primary_key = True) #id
-
-class Feature(Base):
-    '''
-        Table that holds all the features.
-    '''
-    __tablename__ = 'feature'
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = True)
-    layout_id = Column(String, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
-    created = Column(TIMESTAMP, nullable = False)
-    distance_vector = Column(String, nullable = True)
-    pairwise_vector = Column(String, nullable = True)
-    num_changes = Column(Integer, nullable = False)
-    time_spent = Column(Integer, nullable = False)
-    events = Column(String, nullable = False)
 
 class Layout(Base):
     '''
@@ -208,19 +129,19 @@ class Layout(Base):
     # layout in GraphSpace.
     layout_name = Column(String, nullable = False)
 
-    # The id of the user who created the layout. The foreign key constraint ensures 
-    # this person is present in the 'user' table. Not that owner_id need not be the 
-    # same as user_id since (graph_id, user_id) uniquely identify the graph. 
-    # In other words, the owner_id can be the person other than the one who created 
-    # the graph (user_id). An implicit rule is that owner_id must belong to some 
-    # group that this graph belongs to. However, the database does not enforce this 
-    # constraint explicitly. 
+    # The id of the user who created the layout. The foreign key constraint ensures
+    # this person is present in the 'user' table. Not that owner_id need not be the
+    # same as user_id since (graph_id, user_id) uniquely identify the graph.
+    # In other words, the owner_id can be the person other than the one who created
+    # the graph (user_id). An implicit rule is that owner_id must belong to some
+    # group that this graph belongs to. However, the database does not enforce this
+    # constraint explicitly.
     # TODO: Add a database constraint that checks this rule.
     owner_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     # id of the graph that the layout is for
     graph_id = Column(String, nullable = False)
     # id of the user who owns the graph specified by graph_id
-    user_id = Column(String, nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     # graph layout data in JSON format
     json = Column(String, nullable = False)
     public = Column(Integer, nullable = True)
@@ -233,6 +154,112 @@ class Layout(Base):
     # SQLAlchemy's way of creating a multi-column foreign key constraint.
     __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
 
+    owner = relationship("User", foreign_keys=[owner_id], back_populates="layouts", uselist=False)
+
+class GroupToUser(Base):
+    '''The class representing the schema of the group_to_user table.'''
+    __tablename__ = 'group_to_user'
+
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    group_id = Column(String, primary_key=True)
+    group_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+
+    __table_args__ = (ForeignKeyConstraint([group_id, group_owner], [Group.group_id, Group.owner_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+
+class Feedback(Base):
+    __tablename__ = 'feedback'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    graph_id = Column(String)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_id = Column(Integer, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
+    text = Column(String, nullable = False)
+    created = Column(TIMESTAMP, nullable = False)
+
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+class GroupToGraph(Base):
+    '''The class representing the schema of the group_to_graph table.'''
+    __tablename__ = 'group_to_graph'
+
+    group_id = Column(String, primary_key=True)
+    group_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    graph_id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    modified = Column(TIMESTAMP, nullable = False)
+
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"),
+                      ForeignKeyConstraint([group_id, group_owner], [Group.group_id, Group.owner_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+class GraphToTag(Base):
+    '''The class representing the schema of the graph_to_tag table.'''
+    __tablename__ = 'graph_to_tag'
+
+    graph_id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    tag_id = Column(String, ForeignKey('graph_tag.tag_id'), primary_key=True)
+
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+
+class TaskCode(Base):
+    '''The class representing the schema of the task_code table.'''
+    __tablename__ = 'task_code'
+    hit_id = Column(String, ForeignKey('task.hit_id', ondelete="CASCADE", onupdate="CASCADE"))
+    code = Column(String, primary_key = True)
+    created = Column(TIMESTAMP, nullable = False)
+
+
+
+class Task(Base):
+    '''
+        Table that represents the task table.
+    '''
+    __tablename__ = 'task'
+
+    task_id = Column(Integer, autoincrement=True, primary_key=True)
+    task_owner = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
+    graph_id = Column(String, nullable = False)
+    layout_id = Column(Integer, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
+    created = Column(TIMESTAMP, nullable = False)
+    hit_id=Column(String, nullable=False)
+    worker_id=Column(String, nullable=False)
+    submitted=Column(Integer, nullable=True)
+    task_type=Column(String, nullable=False)
+
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+
+class GraphTag(Base):
+    '''
+        Table of tags that are assigned to each graph to categorize them.
+    '''
+    __tablename__ = 'graph_tag'
+    tag_id = Column(String, primary_key = True) #id
+
+
+class Feature(Base):
+    '''
+        Table that holds all the features.
+    '''
+    __tablename__ = 'feature'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    graph_id = Column(String, nullable = True)
+    layout_id = Column(Integer, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"))
+    created = Column(TIMESTAMP, nullable = False)
+    distance_vector = Column(String, nullable = True)
+    pairwise_vector = Column(String, nullable = True)
+    num_changes = Column(Integer, nullable = False)
+    time_spent = Column(Integer, nullable = False)
+    events = Column(String, nullable = False)
+
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
+
 class LayoutStatus(Base):
     '''
        Table of layout acceptances/rejections.
@@ -240,9 +267,9 @@ class LayoutStatus(Base):
     __tablename__ = 'layout_status'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
-    graph_id = Column(String, ForeignKey('graph.graph_id', ondelete="CASCADE", onupdate="CASCADE"))
-    user_id = Column(String, ForeignKey('graph.user_id', ondelete="CASCADE", onupdate="CASCADE"))
-    layout_id = Column(Integer, nullable = False)
+    graph_id = Column(String)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"))
+    layout_id = Column(Integer, ForeignKey('layout.layout_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     triangle_rating = Column(Integer, nullable = False)
     rectangle_rating = Column(Integer, nullable = False)
     shape_rating = Column(Integer, nullable = False)
@@ -250,9 +277,11 @@ class LayoutStatus(Base):
     created = Column(TIMESTAMP, nullable = False)
     submitted_by = Column(String, nullable = True)
 
+    __table_args__ = (ForeignKeyConstraint([graph_id, user_id], [Graph.graph_id, Graph.user_id], ondelete="CASCADE", onupdate="CASCADE"), {})
+
 class Node(Base):
     '''
-        Table of nodes used in graphs. Same node can be in many graphs, but they are 
+        Table of nodes used in graphs. Same node can be in many graphs, but they are
         considered to be distinct.
     '''
     __tablename__ = 'node'
@@ -260,9 +289,9 @@ class Node(Base):
     # The primary key contains three columns: node_id, graph_id, and user_id. The same node may appear in different graphs but we consider them to be distinct.
     node_id = Column(String, primary_key = True)
     label = Column(String, nullable = False)
-    user_id = Column(String, primary_key = True)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), primary_key = True)
     graph_id = Column(String, primary_key = True)
-    modified = Column(TIMESTAMP, primary_key = True)
+    modified = Column(TIMESTAMP, primary_key = False)
 
     # Foregin key contraint to idientify the graph that this node belong to
     __table_args__ = (ForeignKeyConstraint([user_id, graph_id], [Graph.user_id, Graph.graph_id], ondelete="CASCADE", onupdate="CASCADE"), {})
@@ -290,7 +319,7 @@ class Edge(Base):
     # 3 column primary keys are used to determine which two nodes that this edge connect.
     # each edge connects a head node to a tail node.
     # head node
-    user_id = Column(String, nullable = False)
+    user_id = Column(String, ForeignKey('user.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable = False)
     graph_id = Column(String, nullable = False)
     head_node_id = Column(String, nullable = False)
     # head_node_label column was added to speed up the similar terms search query on edges. The lookup on two tables was taking too much time.
@@ -309,7 +338,7 @@ class Edge(Base):
     directed = Column(Integer, nullable = True)
 
     id = Column(Integer, autoincrement=True, primary_key=True)
-    
+
     # Foreign key contraints to determine each node.
     __table_args__ = (
             ForeignKeyConstraint([user_id, graph_id, head_node_id], [Node.user_id, Node.graph_id, Node.node_id], ondelete="CASCADE", onupdate="CASCADE"),
@@ -356,8 +385,11 @@ Index('edge_idx_head_id_tail_id', Edge.head_node_id, Edge.tail_node_id)
 Index('edge_idx_head_label_tail_label', Edge.head_node_label, Edge.tail_node_label)
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
-engine = create_engine(settings.DATABASE_LOCATION, echo=False)
- 
+config = settings.DATABASES['default']
+engine = create_engine(''.join(
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
+
+#
 # Create all tables in the engine. This is equivalent to "Create Table"
 # statements in raw SQL.
 Base.metadata.create_all(engine)

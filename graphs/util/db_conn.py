@@ -4,7 +4,7 @@ import sqlalchemy
 from django.conf import settings
 
 # database locations
-_originaldb = settings.DATABASE_LOCATION
+config = settings.DATABASES['default']
 
 class Database(object):
     '''
@@ -15,7 +15,9 @@ class Database(object):
         self.connection = None
 
         if self.db == 'prod':
-            self.engine = create_engine(_originaldb, echo=False)
+            self.engine = create_engine(''.join(
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
+
         else:
             self.engine = create_engine('sqlite:///:memory:', echo=False)
 

@@ -3950,7 +3950,7 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		return "Layout with this name already exists for this graph! Please choose another name."
 
 	# Add the new layout
-	new_layout = models.Layout(layout_id = None, layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
+	new_layout = models.Layout(layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
 	db_session.add(new_layout)
 	db_session.commit()
 
