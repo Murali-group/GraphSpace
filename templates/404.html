@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<!-- Base template for web pages used in GraphSpace. Every pages in 
+     GraphSpace are based on this htmll template. -->
+{% load staticfiles %}
+{% load google_analytics %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.ico">
+    {% google_analytics %}
+    <title>GraphSpace</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'graphs/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this base template -->
+    <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="container">
+      <h1 style='text-align: center;'>Sorry, but the page you are looking for is not found!</h1>
+    </div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{% static 'graphs/js/bootstrap.min.js' %}"></script>
+
+</body>
+</html>
+

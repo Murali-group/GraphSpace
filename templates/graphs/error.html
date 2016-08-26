@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+<div class="container">
+<div class="content">
+
+<div class="row">
+<div class="col-sm-12 col-xs-12 value">
+
+  <h4>{{ Error | safe}}</h4>
+
+</div>
+</div>
+
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="{% static 'graphs/css/error.css' %}">
+<footer class="footer">
+<br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+<br><a href = "http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
+</footer>
+{% endblock %}

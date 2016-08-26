@@ -10,13 +10,12 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 import os
 from sqlalchemy.ext.declarative import declarative_base
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
 
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
-print (DB_FULL_PATH)
 # DATABASE_LOCATION = 'sqlite:///' + DB_FULL_PATH
 
 # Application definition
@@ -34,7 +33,9 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'graphspace.middleware.SQLAlchemySessionMiddleware'
 )
@@ -92,7 +93,23 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': ["templates"],  #modify this line
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+LOGIN_REDIRECT_URL = '/'
 
 # for authentication. Since we need to use SQL Alchemy for the ORM, we cannot use the authentication backend automatically provided by Django when using the Django ORM.
 AUTHENTICATION_BACKENDS = ('graphs.auth.AuthBackend.AuthBackend',)

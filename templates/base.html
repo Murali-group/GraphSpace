@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<!-- Base template for web pages used in GraphSpace. Every pages in 
+     GraphSpace are based on this htmll template. -->
+{% load staticfiles %}
+{% load google_analytics %}
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <title>GraphSpace</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'graphs/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this base template -->
+    <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+
+    <script src="{% static 'graphs/js/jquery.min.js' %}"></script>
+    {% google_analytics %}
+
+    <!-- Came with Bootstrap template -->
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <!-- menubar provided by Bootstrap -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% url 'index' %}">GraphSpace</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="{% url 'graphs' %}">Graphs</a></li>
+                    {% if uid != None %}
+                        <li><a href="{% url 'groups' %}">Groups</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'features' %}">Features</a></li>
+                    <li><a href="{% url 'help_tutorial' %}">Help</a></li>
+                    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>                     
+                </ul>
+
+                <!-- display login form if not logged in -->
+                {% if uid == None %}
+
+                
+                <form method="post" id="login" class="navbar-form navbar-right" role="form">
+{#                    {% for field in login_form %}#}
+{#                    <div class="form-group">#}
+{#                        {{ field }}#}
+{#                    </div>#}
+{#                    {% endfor %}#}
+
+                    <!-- TODO: this button is not integrated into LoginForm. This may be integrated. -->
+                    <button type="submit" name="signin" id="signin" class="btn btn-success">Sign in</button>
+                    <button name="create" class="btn btn-primary" data-toggle="modal" data-target="#createModal" >Create Account</button>
+                    <!-- <button name="forgot" class="btn btn-danger" data-toggle="modal" data-target="#forgotModal">Forgot</button> -->
+                    &nbsp;&nbsp;&nbsp;&nbsp;<a name="forgot" data-toggle="modal" data-target="#forgotModal" href="">Forgot</a>
+                </form>
+                {% else %}
+                <div class="navbar-form navbar-right">
+                    <a href="#">Signed in as: {{ uid }}</a>
+                    <a href="{% url 'index' %}"><button class="btn btn-success">Sign out  <span class="glyphicon glyphicon-log-out"></span></button></a>
+                </div>
+                {% endif %}
+
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+
+    <!-- main content on each page -->
+    <div class="content_container">
+        <div class="content">
+
+            {% block content %}
+            {% endblock %}
+
+        </div>
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{% static 'graphs/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>
+
+</body>
+</html>
+

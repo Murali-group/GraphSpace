@@ -1,0 +1,90 @@
+/*for view_graph.html */
+
+body {
+    background-color: white;
+}
+
+/*css for parent div element*/ 
+.csjs_container {
+    /* the containser should occupy the entire page */
+    height: 100%;
+    width: 100%;
+    background-color: #fff; 
+    /*position: relative;*/
+}
+
+/* for cytoscape web component within csweb_container */
+.csjs {
+    /* the width takes up 75% of the page. */
+    width: 75%;
+    height: 100%;
+    /*padding-top: 25px;*/
+    float:left;
+}
+
+.side_menu {
+    float:right;
+    padding-left: 5px;
+    border-left-style: solid;
+    border-width: 3px;
+    padding-right: 5px;
+    height:100%;
+    overflow: scroll;
+}
+
+#graph_title {
+    width: 75%;
+    text-align: center;
+    margin-left: 50px;
+}
+
+#search_tips {
+    margin-top: -20px;
+    margin-left: 10px;
+    width: 100%;
+}
+
+#search_error {
+    margin-top: -20px;
+    margin-left: 10px;
+    width: 100%;
+}
+
+.ui-cytoscape-panzoom {
+    top: 20%;
+}
+
+.tooltip {
+    display:none;
+    position:absolute;
+    border:1px solid #333;
+    background-color:#161616;
+    border-radius:5px;
+    padding:10px;
+    color:#fff;
+    font-size:12px Arial;
+}
+
+#search_radios {
+  text-align: left;
+  margin-top: 10px;
+}
+
+#partial_search {
+  margin-left: 30px;
+}
+
+#full_search {
+  margin-left: 30px;
+}
+
+#overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 999;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
