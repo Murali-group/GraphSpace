@@ -88,9 +88,9 @@ DEFAULT_METADATA = {'description':'','tags':[],'title':''}
 
 ## JSON VALIDATOR FUNCTIONS #########################################
 
-def validate_json(G):
+def validate_network_properties(G):
     """
-    Validates JSON to see if all properties are consistent with API.
+    Validates the NetworkX nodes and edges to see if all properties are consistent with API.
 
     @param G: NetworkX object.
     """
@@ -110,39 +110,41 @@ def validate_edge_properties(G):
 
     # Go through all edges to verify if edges contain valid properties
     # recognized by CytoscapeJS
-    for edge_id in G.edge:
+    for source in G.edge:
+        for target in G.edge[source]:
+            edge_id = str((source, target))
 
-        # If edge is directed, it must have a target_arrow_shape
-        if "directed" in G.edge[edge_id] and G.edge[edge_id] == "true":
-            if "target_arrow_shape" not in G.edge[edge_id]:
-                print "Edge: ", edge_id, "must have a target_arrow_shape property if directed is true"
+            # If edge is directed, it must have a target_arrow_shape
+            if "directed" in G.edge[source][target] and G.edge[source][target] == "true":
+                if "target_arrow_shape" not in G.edge[source][target]:
+                    print "Edge: ", edge_id, "must have a target_arrow_shape property if directed is true"
 
-        if "source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "source_arrow_shape", G.edge[edge_id]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            if "source_arrow_shape" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "source_arrow_shape", G.edge[source][target]["source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
-        if "mid_source_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "mid_source_arrow_shape", G.edge[edge_id]["mid_source_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            if "mid_source_arrow_shape" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "mid_source_arrow_shape", G.edge[source][target]["mid_source_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
-        if "target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "target_arrow_shape", G.edge[edge_id]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            if "target_arrow_shape" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "target_arrow_shape", G.edge[source][target]["target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
-        if "mid_target_arrow_shape" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "mid_target_arrow_shape", G.edge[edge_id]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
+            if "mid_target_arrow_shape" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "mid_target_arrow_shape", G.edge[source][target]["mid_target_arrow_shape"], ALLOWED_ARROW_SHAPES)
 
-        if "line_style" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "line_style", G.edge[edge_id]["line_style"], ALLOWED_EDGE_STYLES)
+            if "line_style" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "line_style", G.edge[source][target]["line_style"], ALLOWED_EDGE_STYLES)
 
-        if "source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "source_arrow_fill", G.edge[edge_id]["source_arrow_fill"], ALLOWED_ARROW_FILL)
+            if "source_arrow_fill" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "source_arrow_fill", G.edge[source][target]["source_arrow_fill"], ALLOWED_ARROW_FILL)
 
-        if "mid_source_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "mid_source_arrow_fill", G.edge[edge_id]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
+            if "mid_source_arrow_fill" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "mid_source_arrow_fill", G.edge[source][target]["mid_source_arrow_fill"], ALLOWED_ARROW_FILL)
 
-        if "target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "target_arrow_fill", G.edge[edge_id]["target_arrow_fill"], ALLOWED_ARROW_FILL)
+            if "target_arrow_fill" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "target_arrow_fill", G.edge[source][target]["target_arrow_fill"], ALLOWED_ARROW_FILL)
 
-        if "mid_target_arrow_fill" in G.edge[edge_id]:
-            find_property_in_array("Edge", edge_id, "mid_target_arrow_fill", G.edge[edge_id]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
+            if "mid_target_arrow_fill" in G.edge[source][target]:
+                find_property_in_array("Edge", edge_id, "mid_target_arrow_fill", G.edge[source][target]["mid_target_arrow_fill"], ALLOWED_ARROW_FILL)
 
 def validate_node_properties(G):
     """
@@ -788,6 +790,9 @@ def postGraph(G,graphid,outfile,user,password,metadata=None,logfile=None):
     else:
         logout = None
         
+    # validate the NetworkX object to see if all properties are consistent with API.
+    validate_network_properties(G)
+
     # convert NetworkX object to a serialized_graph
     convertNXToJSON(G,outfile,metadata)
 
