@@ -53,7 +53,7 @@ $(document).ready(function() {
 	});
 
 	/**
-	* Upon clicking, the user makes a 
+	* Upon clicking, the user makes a
 	* POST request to sign-in to GS.
 	*/
 	$("#signin").click(function (e) {
@@ -78,7 +78,7 @@ $(document).ready(function() {
 		};
 
 		//POST Request to log in user
-		$.post("/index/", loginInfo, function (data) {
+		$.post("/login/", loginInfo, function (data) {
 			if (data.Error) {
 				alert(data.Error);
 			} else {

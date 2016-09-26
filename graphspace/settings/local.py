@@ -34,7 +34,7 @@ AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'graphspacedb',
+        'NAME': 'mydb',
         'USER': 'adb',
         'PASSWORD': '',
         'HOST': 'localhost',

@@ -104,6 +104,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'graphspace.context_processors.auth',
+                'graphspace.context_processors.static_urls',
+                'graphspace.context_processors.login_forms'
             ],
         },
     },

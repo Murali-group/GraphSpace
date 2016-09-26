@@ -11,3 +11,17 @@ def generate_uid(size=20, chars=string.ascii_uppercase + string.digits):
 		:return string: Random string that adhere to the parameter properties
 	"""
 	return ''.join(random.choice(chars) for _ in range(size))
+
+
+def json_success_response(status_code=200, message=""):
+	return {
+		"StatusCode": status_code,
+		"Message": message
+	}
+
+
+def json_error_response(status_code=500, error=""):
+	return {
+		"StatusCode": status_code,
+		"Error": error
+	}

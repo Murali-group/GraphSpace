@@ -37,6 +37,57 @@
   </head>
 
   <body>
+  <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Create Account</h4>
+          </div>
+          <div class="modal-body">
+
+            <form method="post" id="register_form" class="register_form" role="form">
+                <div class="register_fields">
+                    {% for field in register_form %}
+                    <div class="form-group">
+                        <span class="field_label">{{ field.label }}:</span>
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                <button name="register" id="register" class="btn btn-success">Register</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+   <!-- Forgot Modal -->
+    <div class="modal fade" id="forgotModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Forgot Information</h4>
+          </div>
+          <div class="modal-body">
+
+            <form method="post" class="forgot_form" name="forgot_form" id="forgot_form" role="form">
+                <div class="forgot_fields">
+                    <div class="control-group">
+                        <label for="forgot_email">Email:</label>
+                        <input id="forgot_email" class="form-control" maxlength="32" type="text" name="forgot_email" autocomplete="off"/>
+                    </div>
+                    <br />
+                    <button type="submit" name="forgot" id="forgot_send" class="btn btn-success">Send Email</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- menubar provided by Bootstrap -->
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -58,19 +109,19 @@
                     {% endif %}
                     <li><a href="{% url 'features' %}">Features</a></li>
                     <li><a href="{% url 'help_tutorial' %}">Help</a></li>
-                    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>                     
+                    <li><a href="{% url 'help_about' %}" style="text-align:center">About Us</a></li>
                 </ul>
 
                 <!-- display login form if not logged in -->
                 {% if uid == None %}
 
-                
-                <form method="post" id="login" class="navbar-form navbar-right" role="form">
-{#                    {% for field in login_form %}#}
-{#                    <div class="form-group">#}
-{#                        {{ field }}#}
-{#                    </div>#}
-{#                    {% endfor %}#}
+
+                <form method="post" action="/login" id="login" class="navbar-form navbar-right" role="form">
+                    {% for field in login_form %}
+                    <div class="form-group">
+                        {{ field }}
+                    </div>
+                    {% endfor %}
 
                     <!-- TODO: this button is not integrated into LoginForm. This may be integrated. -->
                     <button type="submit" name="signin" id="signin" class="btn btn-success">Sign in</button>
@@ -81,7 +132,7 @@
                 {% else %}
                 <div class="navbar-form navbar-right">
                     <a href="#">Signed in as: {{ uid }}</a>
-                    <a href="{% url 'index' %}"><button class="btn btn-success">Sign out  <span class="glyphicon glyphicon-log-out"></span></button></a>
+                    <a href="{% url 'logout' %}"><button class="btn btn-success">Sign out  <span class="glyphicon glyphicon-log-out"></span></button></a>
                 </div>
                 {% endif %}
 
