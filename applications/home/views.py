@@ -15,7 +15,7 @@ def index(request):
 	"""
 
 	context = RequestContext(request) # Checkout base.py file to see what context processors are being applied here.
-
+	print(context)
 	if 'GET' == request.method:
 		# Handle GET request to index page.
 		return render(request, 'home/index.html', context)

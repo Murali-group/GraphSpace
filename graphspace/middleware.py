@@ -32,14 +32,14 @@ class SQLAlchemySessionMiddleware(object):
 
 class GraphSpaceMiddleware(object):
 	def process_request(self, request):
-		pass
+		request.session['uid'] = request.session['uid'] if 'uid' in request.session else None
 
 	def process_response(self, request, response):
-		pass
+		return response
 
 	def process_exception(self, request, exception):
 		# TODO: Handle different types of error
-		return render(request, '500.html');
+		return render(request, '500.html')
 
 
 

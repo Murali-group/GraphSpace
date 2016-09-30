@@ -1,6 +1,7 @@
 from django.conf import settings
 from applications.users.forms import LoginForm, RegisterForm
 
+
 def auth(request):
 	return {
 		'uid': request.session['uid'] if 'uid' in request.session else None,

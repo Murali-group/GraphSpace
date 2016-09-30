@@ -37,7 +37,8 @@ MIDDLEWARE_CLASSES = (
 	'django.contrib.auth.middleware.AuthenticationMiddleware',
 	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'graphspace.middleware.SQLAlchemySessionMiddleware'
+    'graphspace.middleware.SQLAlchemySessionMiddleware',
+    'graphspace.middleware.GraphSpaceMiddleware'
 )
 
 ROOT_URLCONF = 'graphspace.urls'

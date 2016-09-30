@@ -1,6 +1,6 @@
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from applications.graphs.models import *
 from applications.users.models import *
 from django.test import TestCase
@@ -135,6 +135,9 @@ class GraphModelTestCase(TestCase):
 
 		self.assertEqual(graph1.nodes[0].id, source.id)
 
+		graph1 = self.session.query(Graph).options(joinedload('nodes')).filter(Graph.nodes.any(Node.label.like('source1'))).one_or_none()
+		self.assertEqual(graph1.name, 'graph1')
+
 	def test_edges_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
@@ -147,6 +150,7 @@ class GraphModelTestCase(TestCase):
 		edge1 = self.session.query(Edge).filter(Edge.name == 'edge1').one_or_none()
 		self.session.commit()
 		self.assertEqual(graph1.edges[0].id, edge1.id)
+
 
 	def test_layouts_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
@@ -581,6 +585,9 @@ class EdgeModelTestCase(TestCase):
 
 		edge1 = self.session.query(Edge).filter(Edge.name == 'edge1').one_or_none()
 		self.assertEqual(edge1.head_node.id, source.id)
+
+		edge1 = self.session.query(Edge).options(joinedload('head_node')).filter(Edge.head_node.has(Node.label.like('source'))).one_or_none()
+		self.assertEqual(edge1.name, 'edge1')
 
 	def test_tail_node_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))

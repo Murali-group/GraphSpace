@@ -1,3 +1,4 @@
+import json
 import string
 from django.utils.crypto import random
 
@@ -25,3 +26,34 @@ def json_error_response(status_code=500, error=""):
 		"StatusCode": status_code,
 		"Error": error
 	}
+
+
+
+def cytoscapePresetLayout(csWebJson):
+	"""
+		Converts CytoscapeWeb preset layouts to be
+		the standards of CytoscapeJS JSON. See http://js.cytoscape.org/#layouts/preset
+		for more details.
+
+		:param csWebJson: A CytoscapeWeb compatible layout json containing coordinates of the nodes
+		:return csJson: A CytoscapeJS compatible layout json containing coordinates of the nodes
+	"""
+	csJson = {}
+
+	# csWebJSON format: [{x: x coordinate of node, y: y coordinate of node, id: id of node},...]
+	# csJson format: [id of node: {x: x coordinate of node, y: y coordinate of node},...]
+
+	for node_position in csWebJson:
+
+		csJson[str(node_position['id'])] = {
+			'x': node_position['x'],
+			'y': node_position['y']
+		};
+
+		if 'background_color' in node_position:
+			csJson[str(node_position['id'])]["background_color"] = node_position['background_color']
+
+		if 'shape' in node_position:
+			csJson[str(node_position['id'])]['shape'] = node_position['shape']
+
+	return json.dumps(csJson)

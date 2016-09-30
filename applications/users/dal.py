@@ -1,31 +1,31 @@
+from sqlalchemy import and_
+
 from models import *
 from django.utils.datetime_safe import datetime
 from graphspace.utils import generate_uid
 from sqlalchemy.orm.exc import NoResultFound
-from graphspace.wrappers import sqlalchemy_operation
+from graphspace.wrappers import with_session
 
 # TODO: Add documentation about exception raised.
 
 
-@sqlalchemy_operation
-def add_user(db_session, email="public_user_%s@graphspace.com" % generate_uid(size=10), password="public", is_admin=0):
+@with_session
+def add_user(db_session, email, password, is_admin):
 	"""
-	Add a new user. If email and password is not passed, it will create a user with default values.
-	By default a user has no admin access.
+	Add a new user.
 
 	:param db_session: Database session.
-	:param email: User ID of the user. Default value is dynamically generated user id.
-	:param password: Password of the user. Default value is "public".
-	:param admin: 1 if user has admin access else 0. Default value is 0.
+	:param email: User ID of the user.
+	:param password: Password of the user.
+	:param admin: 1 if user has admin access else 0.
 	:return: User
 	"""
-
 	user = User(email=email, password=password, is_admin = is_admin)
 	db_session.add(user)
 	return user
 
 
-@sqlalchemy_operation
+@with_session
 def get_user(db_session, email):
 	"""
 	Get a user with given email.
@@ -37,7 +37,7 @@ def get_user(db_session, email):
 	return db_session.query(User).filter(User.email == email).one_or_none()
 
 
-@sqlalchemy_operation
+@with_session
 def update_user(db_session, email, updated_user):
 	"""
 	Update the user data with given email with the given updated user data.
@@ -53,7 +53,7 @@ def update_user(db_session, email, updated_user):
 	return user
 
 
-@sqlalchemy_operation
+@with_session
 def delete_user(db_session, email):
 	"""
 	:param db_session: Database session.
@@ -65,7 +65,7 @@ def delete_user(db_session, email):
 
 
 
-@sqlalchemy_operation
+@with_session
 def add_password_reset(db_session, email):
 	"""
 	Add a password reset entry for given user id.
@@ -80,7 +80,7 @@ def add_password_reset(db_session, email):
 
 
 
-@sqlalchemy_operation
+@with_session
 def get_password_reset_by_code(db_session, code):
 	"""
 	:param db_session: Database session.
@@ -89,7 +89,7 @@ def get_password_reset_by_code(db_session, code):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def update_password_reset(db_session, id, updated_user):
 	"""
 	:param db_session: Database session.
@@ -99,7 +99,7 @@ def update_password_reset(db_session, id, updated_user):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def add_group(db_session, group_id, name, owner_id, description):
 	"""
 	:param db_session: Database session.
@@ -111,7 +111,7 @@ def add_group(db_session, group_id, name, owner_id, description):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def get_group(db_session, group_id):
 	"""
 	Get group by group id.
@@ -121,7 +121,7 @@ def get_group(db_session, group_id):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def update_group(db_session, group_id, updated_group):
 	"""
 	Update group row entry.
@@ -132,7 +132,7 @@ def update_group(db_session, group_id, updated_group):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def delete_group(db_session, group_id):
 	"""
 	Delete group from Group table.
@@ -142,7 +142,18 @@ def delete_group(db_session, group_id):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
+def get_group_to_user(db_session, group_id, user_id):
+	"""
+	:param db_session: Database session.
+	:param group_id: Unique ID of the group
+	:param user_id: Unique user ID of a member of the group
+	:return: None
+	"""
+	return db_session.query(GroupToUser).filter(and_(GroupToUser.group_id == group_id, GroupToUser.user_id == user_id)).one_or_none()
+
+
+@with_session
 def add_group_to_user(db_session, group_id, email):
 	"""
 	:param db_session: Database session.
@@ -153,7 +164,7 @@ def add_group_to_user(db_session, group_id, email):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def delete_group_to_user(db_session, group_id, email):
 	"""
 	:param db_session: Database session.
@@ -164,7 +175,7 @@ def delete_group_to_user(db_session, group_id, email):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def get_groups_by_email(db_session, email):
 	"""
 	Returns all groups where user with give email is a member.
@@ -173,7 +184,7 @@ def get_groups_by_email(db_session, email):
 	:return: list of Groups
 	"""
 
-@sqlalchemy_operation
+@with_session
 def get_groups_by_owner_id(db_session, owner_id):
 	"""
 	Returns all groups where user with give email is a owner.
@@ -183,7 +194,7 @@ def get_groups_by_owner_id(db_session, owner_id):
 	"""
 
 
-@sqlalchemy_operation
+@with_session
 def get_users_by_group(db_session, group_id):
 	"""
 	Returns all users who are member of a group with given group_id.

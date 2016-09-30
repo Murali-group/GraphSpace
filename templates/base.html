@@ -144,8 +144,15 @@
     <div class="content_container">
         <div class="content">
 
-            {% block content %}
-            {% endblock %}
+            {% if not draw_graph %}
+                <!-- load content (Graphs, Groups, Help pages) -->
+                {% block content %}
+                {% endblock %}
+            {% else %}
+                <!-- load cytoscape web for viewing graphs -->
+                {% block cytoscapeweb %}
+                {% endblock %}
+            {% endif %}
 
         </div>
     </div><!-- /.container -->
@@ -156,6 +163,13 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="{% static 'graphs/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>
+
+      <!-- css and javascripts needed for cytoscape web and side menu -->
+    {% if draw_graph or footer %}
+        {% block css-js-footer %}
+        {% endblock %}
+    {% endif %}
+
 
 </body>
 </html>

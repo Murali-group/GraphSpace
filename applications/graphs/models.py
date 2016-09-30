@@ -114,7 +114,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	json = Column(String, nullable=False)
 	is_public = Column(Integer, nullable=False)
-	is_shared = Column(Integer, nullable=False)
+	is_shared_with_groups = Column(Integer, nullable=False)
 	original_json = Column(String, nullable=False)
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)

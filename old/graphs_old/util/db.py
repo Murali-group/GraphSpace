@@ -558,7 +558,7 @@ def set_task_layout_context(request, context, uid, gid, layout_name, layout_owne
 
 def set_layout_context(request, context, uid, gid):
 	'''
-		Sets the entire context of a graph to be viewed.  This is needed for sending information to the front-end
+		Sets the entire context oretrieve_cytoscape_jsonf a graph to be viewed.  This is needed for sending information to the front-end
 		:param request: HTTP Request of graph to view
 		:param context: Dictionary containing all the variables to send to the front-end
 		:param uid: The owner of the graph
@@ -740,7 +740,7 @@ def retrieve_cytoscape_json(graphjson):
 
 	temp_json = json.loads(graphjson)['graph']
 
-    # for Cytoscape.js, if data is in properties, then we need to convert (main difference)
+    # for Cytoscape.js, if data layout_to_viewis in properties, then we need to convert (main difference)
 	if 'data' in temp_json:
 	    return convert_json(graphjson)
 	else:
