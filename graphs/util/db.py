@@ -2240,6 +2240,7 @@ def get_graph_json(username, graphname):
 
 	return graph.json
 
+
 def delete_graph(username, graphname):
 	'''
 		Deletes graph from database.
@@ -2408,7 +2409,7 @@ def get_graphs(offset=0, limit=10):
 	try:
 
 		# Query to get all graphs with given filters.
-		query = db_session.query(models.Graph)
+		query = db_session.query(models.Graph).filter(models.Graph.public == 1)
 		total = query.count()
 		graphs = query.limit(limit).offset(offset).all()
 
