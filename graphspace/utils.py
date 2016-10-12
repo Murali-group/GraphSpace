@@ -1,5 +1,6 @@
 import json
 import string
+
 from django.utils.crypto import random
 
 
@@ -14,6 +15,9 @@ def generate_uid(size=20, chars=string.ascii_uppercase + string.digits):
 	return ''.join(random.choice(chars) for _ in range(size))
 
 
+def serializer(obj):
+	return obj.serialize() if obj is not None else None
+
 def json_success_response(status_code=200, message=""):
 	return {
 		"StatusCode": status_code,
@@ -26,7 +30,6 @@ def json_error_response(status_code=500, error=""):
 		"StatusCode": status_code,
 		"Error": error
 	}
-
 
 
 def cytoscapePresetLayout(csWebJson):

@@ -9,61 +9,35 @@ $(document).ready(function() {
   $("#create_group").click(function(e) {
     e.preventDefault();
 
-    var groupName = $("#group_name").val();
 
-    if (groupName.length == 0 || !groupName) {
-      return alert("Please enter in a valid group name!");
-    }
-
-    var relURL = "";
-
-    //URL to post to
-    if (location.pathname.split('/').length == 4) {
-      relURL = '../../add/' + groupName + '/'
-    } else {
-      relURL = '../add/' + groupName + '/'
-    }
-
-    //POST REQUEST to create a group through UI
-    $.post(relURL, {
-      "groupname": groupName,
-      "username": $("#username").text()
-    }, function(data) {
-      if ("Error" in data) {
-        alert(data['Error']);
-        return;
-      } else {
-        location.reload();
-      }
-    });
   });
 
 
-  /**
-   * When clicked, it deletes a group through the UI.
-   */
-  $(".delete").click(function(e) {
-    var groupInfo = $(this).attr("id").split('concat_val_buffer');
-    var groupOwner = groupInfo[1];
-    var groupName = groupInfo[0];
-
-    $("#deleteModal").modal('toggle');
-
-    $("#delete_confirm").on('click', function(e) {
-      $.post('../delete/group/', {
-        "groupOwner": groupOwner,
-        "groupName": groupName,
-        "username": $("#username").text()
-      }, function(data) {
-        if ("Error" in data) {
-          alert(data['Error']);
-          return;
-        } else {
-          location.reload();
-        }
-      });
-    });
-  });
+  ///**
+  // * When clicked, it deletes a group through the UI.
+  // */
+  //$(".delete").click(function(e) {
+  //  var groupInfo = $(this).attr("id").split('concat_val_buffer');
+  //  var groupOwner = groupInfo[1];
+  //  var groupName = groupInfo[0];
+  //
+  //  $("#deleteModal").modal('toggle');
+  //
+  //  $("#delete_confirm").on('click', function(e) {
+  //    $.post('../delete/group/', {
+  //      "groupOwner": groupOwner,
+  //      "groupName": groupName,
+  //      "username": $("#username").text()
+  //    }, function(data) {
+  //      if ("Error" in data) {
+  //        alert(data['Error']);
+  //        return;
+  //      } else {
+  //        location.reload();
+  //      }
+  //    });
+  //  });
+  //});
 
   /**
    * When clicked, it removes a member from the group through the UI.

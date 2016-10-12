@@ -8,11 +8,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
-import os
 from sqlalchemy.ext.declarative import declarative_base
+
+import os
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
 
+APPEND_SLASH=False
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
@@ -101,17 +104,19 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+	            'graphspace.context_processors.auth',
+                'graphspace.context_processors.static_urls',
+                'graphspace.context_processors.login_forms',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'graphspace.context_processors.auth',
-                'graphspace.context_processors.static_urls',
-                'graphspace.context_processors.login_forms'
+
             ],
         },
     },
 ]
+
 
 LOGIN_REDIRECT_URL = '/'
 

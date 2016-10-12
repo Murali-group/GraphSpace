@@ -1,0 +1,18 @@
+{
+  "name": "GraphSpace",
+  "homepage": "https://github.com/Murali-group/GraphSpace",
+  "authors": [
+    "Aditya Bharadwaj <adb@vt.edu>"
+  ],
+  "description": "The interactive graph sharing website.",
+  "main": "",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

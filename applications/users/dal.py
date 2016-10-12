@@ -1,10 +1,12 @@
 from sqlalchemy import and_
+from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import asc
 
-from models import *
 from django.utils.datetime_safe import datetime
 from graphspace.utils import generate_uid
-from sqlalchemy.orm.exc import NoResultFound
 from graphspace.wrappers import with_session
+from models import *
+
 
 # TODO: Add documentation about exception raised.
 
@@ -38,6 +40,18 @@ def get_user(db_session, email):
 
 
 @with_session
+def get_user_by_id(db_session, id):
+	"""
+	Get a user with given email.
+
+	:param db_session: Database session.
+	:param id: id of the user.
+	:return: User if email exists else None.
+	"""
+	return db_session.query(User).filter(User.id == id).one_or_none()
+
+
+@with_session
 def update_user(db_session, email, updated_user):
 	"""
 	Update the user data with given email with the given updated user data.
@@ -62,6 +76,7 @@ def delete_user(db_session, email):
 	"""
 	user = db_session.query(User).filter(User.email == email)
 	db_session.delete(user)
+	return
 
 
 
@@ -100,46 +115,56 @@ def update_password_reset(db_session, id, updated_user):
 
 
 @with_session
-def add_group(db_session, group_id, name, owner_id, description):
+def add_group(db_session, name, owner_email, description):
 	"""
 	:param db_session: Database session.
-	:param group_id: Unique ID of the group
 	:param name: Name of the group
-	:param owner_id: ID of user who owns the group
+	:param owner_email: ID of user who owns the group
 	:param description: Description of the group
 	:return: None
 	"""
+	group = Group(name=name, owner_email=owner_email, description = description)
+	db_session.add(group)
+	return group
 
 
 @with_session
-def get_group(db_session, group_id):
+def get_group(db_session, id):
 	"""
 	Get group by group id.
 	:param db_session: Database session.
-	:param group_id: Unique ID of the group
-	:return: Group if group_id exists else None
+	:param id: Unique ID of the group
+	:return: Group if id exists else None
 	"""
+	return db_session.query(Group).filter(Group.id == id).one_or_none()
 
 
 @with_session
-def update_group(db_session, group_id, updated_group):
+def update_group(db_session, id, updated_group):
 	"""
 	Update group row entry.
 	:param db_session: Database session.
-	:param group_id: Unique ID of the group
+	:param id: Unique ID of the group
 	:param updated_group: Updated group row entry
-	:return: None
+	:return: Group if id exists else None
 	"""
+	group = db_session.query(Group).filter(Group.id == id).one_or_none()
+	for (key, value) in updated_group.items():
+		setattr(group, key, value)
+	return group
 
 
 @with_session
-def delete_group(db_session, group_id):
+def delete_group(db_session, id):
 	"""
 	Delete group from Group table.
 	:param db_session: Database session.
-	:param group_id: Unique ID of the group
+	:param id: Unique ID of the group
 	:return: None
 	"""
+	group = db_session.query(Group).filter(Group.id == id).one_or_none()
+	db_session.delete(group)
+	return
 
 
 @with_session
@@ -148,53 +173,63 @@ def get_group_to_user(db_session, group_id, user_id):
 	:param db_session: Database session.
 	:param group_id: Unique ID of the group
 	:param user_id: Unique user ID of a member of the group
-	:return: None
+	:return: GroupToUser if entry exists else None
 	"""
 	return db_session.query(GroupToUser).filter(and_(GroupToUser.group_id == group_id, GroupToUser.user_id == user_id)).one_or_none()
 
 
 @with_session
-def add_group_to_user(db_session, group_id, email):
+def add_group_to_user(db_session, group_id, user_id):
 	"""
 	:param db_session: Database session.
-	:param group_owner: Unique ID of the user who owns the group.
 	:param group_id: Unique ID of the group
-	:param email: Unique ID of a member of the group
-	:return: None
+	:param user_id: Unique ID of a member of the group
+	:return: GroupToUser if entry exists else None
 	"""
+	group_to_user = GroupToUser(user_id=user_id, group_id=group_id)
+	db_session.add(group_to_user)
+	return group_to_user
 
 
 @with_session
-def delete_group_to_user(db_session, group_id, email):
+def delete_group_to_user(db_session, group_id, user_id):
 	"""
 	:param db_session: Database session.
-	:param group_owner: Unique ID of the user who owns the group.
 	:param group_id: Unique ID of the group
-	:param email: Unique ID of a member of the group
+	:param id: Unique ID of a member of the group
 	:return: None
 	"""
-
+	group_to_user = db_session.query(GroupToUser).filter(and_(GroupToUser.group_id == group_id, GroupToUser.user_id == user_id)).one_or_none()
+	db_session.delete(group_to_user)
+	return
 
 @with_session
-def get_groups_by_email(db_session, email):
+def get_groups_by_member_id(db_session, member_id):
 	"""
-	Returns all groups where user with give email is a member.
+	Returns all groups where user with given user_id is a member.
 	:param db_session: Database session.
-	:param email: email of a user who is a member of one or many groups.
+	:param member_id: ID of a user who is a member of one or many groups.
 	:return: list of Groups
 	"""
+	return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == member_id).all()]
 
 @with_session
 def get_groups_by_owner_id(db_session, owner_id):
 	"""
-	Returns all groups where user with give email is a owner.
+	Returns all groups where user with given ID is the owner.
 
+	:param db_session: Database session.
 	:param owner_id: email of a user who owns one or many groups.
 	:return: list of Groups
 	"""
+	user = db_session.query(User).filter(User.id == owner_id).one_or_none()
+	if user is not None:
+		return user.owned_groups
+	else:
+		return None
 
 
-@with_session
+# @with_session
 def get_users_by_group(db_session, group_id):
 	"""
 	Returns all users who are member of a group with given group_id.
@@ -203,6 +238,36 @@ def get_users_by_group(db_session, group_id):
 	:param group_id: Unique ID of the group.
 	:return: list of Users
 	"""
+	group = db_session.query(Group).filter(Group.id == group_id).one_or_none()
+	if group is not None:
+		return list(group.members)
+	else:
+		raise Exception("Group Not Found")
 
 
+@with_session
+def find_groups(db_session, owner_email, member_email, name, description, limit, offset, order_by=asc(Group.name)):
+	query = db_session.query(Group)
 
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if owner_email is not None:
+		query = query.filter(Group.owner_email.ilike(owner_email))
+
+	if name is not None:
+		query = query.filter(Group.name.ilike(name))
+
+	if description is not None:
+		query = query.filter(Group.description.ilike(description))
+
+	if member_email is not None:
+		query = query.options(joinedload('member_users'))
+		query = query.filter(Group.members.any(User.email == member_email))
+
+	total = query.count()
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()

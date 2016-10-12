@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 from applications.graphs.models import *
 
 Base = settings.BASE
@@ -34,6 +35,13 @@ class User(IDMixin, TimeStampMixin, Base):
 		args = tuple() + cls.constraints + cls.indices
 		return args
 
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'email': cls.email,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'password_reset_code'
@@ -56,7 +64,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	description = Column(String, nullable=False)
+	description = Column(String, nullable=True)
 
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
 	members = association_proxy('member_users', 'user')
@@ -69,6 +77,18 @@ class Group(IDMixin, TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'name': cls.name,
+			'owner_email': cls.owner_email,
+			'description': cls.description,
+			'total_graphs': len(cls.graphs),
+			'total_members': len(cls.members),
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 
 class GroupToUser(TimeStampMixin, Base):
@@ -88,3 +108,9 @@ class GroupToUser(TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+	def serialize(cls):
+		return {
+			'user_id': cls.user_id,
+			'group_id': cls.group_id
+		}

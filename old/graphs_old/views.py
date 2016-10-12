@@ -1,25 +1,16 @@
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.views import generic
-from django.templatetags.static import static
-
-from django.shortcuts import render_to_response
-
-from graphs_old.util.paginator import pager
-from graphs_old.util import db
-from graphs_old.auth.login import login
-from forms import LoginForm, SearchForm, RegisterForm
-from django.conf import settings
-
 import json
-import bcrypt
-import os
 import operator
 
-from operator import itemgetter
-from itertools import groupby
+import bcrypt
+from graphs_old.auth.login import login
 from graphs_old.forms import LoginForm, RegisterForm
+from graphs_old.util import db
+from graphs_old.util.paginator import pager
+
+from django.conf import settings
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
+from forms import LoginForm, SearchForm, RegisterForm
 
 URL_PATH = settings.URL_PATH
 
@@ -985,7 +976,6 @@ def _groups_page(request, view_type):
 				group_list = sorted(group_list, key=lambda graph: graph[2])
 			elif order_term == 'owner_descending':
 				group_list = sorted(group_list, key=lambda graph: graph[2], reverse=True)
-
 		else:
 			group_list = sorted(group_list, key=lambda graph: graph[0])
 

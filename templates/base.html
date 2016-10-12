@@ -6,35 +6,42 @@
 {% load google_analytics %}
 
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
 
-    <title>GraphSpace</title>
+        <title>GraphSpace</title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="{% static 'graphs/css/bootstrap.min.css' %}" rel="stylesheet">
+        <!-- Bootstrap core CSS -->
+        <link href="{% static 'components/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
 
-    <!-- Custom styles for this base template -->
-    <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+        <!-- Custom styles for this base template -->
+        <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">
+        <link href="{% static 'css/graphspace.css' %}" rel="stylesheet">
 
-    <script src="{% static 'graphs/js/jquery.min.js' %}"></script>
-    {% google_analytics %}
+        <script src="{% static 'graphs/js/jquery.min.js' %}"></script>
 
-    <!-- Came with Bootstrap template -->
-    <!-- Just for debugging purposes. Don't actually copy this line! -->
-    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+        <link rel="stylesheet" href={% static "components/bootstrap-table/src/bootstrap-table.css" %}>
+        <script src="{% static 'components/bootstrap/dist/js/bootstrap.js' %}"></script>
+        <script src="{% static "components/bootstrap-table/src/bootstrap-table.js" %}"></script>
 
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
+
+        {% google_analytics %}
+
+        <!-- Came with Bootstrap template -->
+        <!-- Just for debugging purposes. Don't actually copy this line! -->
+        <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
 
   <body>
   <!-- Create Modal -->
@@ -143,7 +150,7 @@
     <!-- main content on each page -->
     <div class="content_container">
         <div class="content">
-
+            <input type="text" id="UserEmail" value="{{ uid }}" hidden />
             {% if not draw_graph %}
                 <!-- load content (Graphs, Groups, Help pages) -->
                 {% block content %}
@@ -161,10 +168,9 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="{% static 'graphs/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>
 
-      <!-- css and javascripts needed for cytoscape web and side menu -->
+    <!-- css and javascripts needed for cytoscape web and side menu -->
     {% if draw_graph or footer %}
         {% block css-js-footer %}
         {% endblock %}

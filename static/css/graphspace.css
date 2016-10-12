@@ -1,0 +1,48 @@
+.zero-margin {
+    margin: 0;
+}
+.zero-padding {
+    padding: 0;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-underline {
+    text-decoration: underline;
+}
+
+.link-reset {
+    color: inherit;
+}
+
+.padding-top-6 {
+    padding-top: 3%;
+}
+.padding-bottom-6 {
+    padding-bottom: 3%
+}
+
+.margin-top-4 {
+    margin-top: 2%;
+}
+.margin-bottom-4 {
+    margin-bottom: 2%;
+}
+.margin-top-2 {
+    margin-top: 1%;
+}
+.margin-bottom-2 {
+    margin-bottom: 1%;
+}
+.margin-top-1 {
+    margin-top: 0.5%;
+}
+.margin-bottom-1 {
+    margin-bottom: 0.5%;
+}
+
+.gs-full-width {
+    width: 100% !important;
+}

@@ -1,8 +1,7 @@
-import json
 from datetime import datetime
 
-import applications.users.controllers as users
 import applications.graphs.dal as db
+import applications.users as users
 from graphspace.wrappers import atomic_transaction
 from json_validator import *
 
@@ -17,6 +16,10 @@ def get_graph(request, graph_owner, graphname):
 	return graph
 
 
+def get_graph_by_id(request, graph_id):
+	return db.get_graph_by_id(request.db_session, graph_id)
+
+
 def is_user_authorized_to_view_graph(request, username, graph_id):
 	is_authorized = False
 
@@ -29,9 +32,26 @@ def is_user_authorized_to_view_graph(request, username, graph_id):
 			is_authorized = True
 		else:  # graph is not public
 			for group in graph.groups:
-				if users.is_member_of_group(request, username, group.id):
+				if users.controllers.is_member_of_group(request, username, group.id):
 					is_authorized = True
 	return is_authorized
+
+
+def search_graphs_shared_with_user(request, uid, search_type, search_terms, tags, order_by, page, page_size):
+	user = users.controllers.get_user(request, uid)
+
+	if user is None:
+		return []
+	else:
+		edges, nodes, names = [], [], []
+		for term in search_terms:
+			if ':' in term:
+				edges.append(term)
+			else:
+				names.append(term)
+				nodes.append(term)
+
+		return db.get_graphs_by_edges_and_nodes_and_names(request.db_session, group_ids=[group.id for group in user.member_groups], names=filter(None, names), nodes=filter(None, nodes), edges=edges, page=page, page_size=page_size, partial_matching=True if search_type == 'partial_search' else False, order=_convert_order_query_term_to_database_order_object(order_by), tags=tags)
 
 
 def search_graphs_owned_by_user(request, uid, search_type, search_terms, tags, order_by, page, page_size):
@@ -46,7 +66,20 @@ def search_graphs_owned_by_user(request, uid, search_type, search_terms, tags, o
 				names.append(term)
 				nodes.append(term)
 
-		return db.get_graphs(request.db_session, names=names, nodes=nodes, edges=edges, page=page, page_size=page_size, partial_matching=True if search_type == 'partial_search' else False)
+		return db.get_graphs_by_edges_and_nodes_and_names(request.db_session, owner_email=uid, names=filter(None, names), nodes=filter(None, nodes), edges=edges, page=page, page_size=page_size, partial_matching=True if search_type == 'partial_search' else False, order=_convert_order_query_term_to_database_order_object(order_by), tags=tags)
+
+
+def search_public_graphs(request, uid, search_type, search_terms, tags, order_by, page, page_size):
+
+	edges, nodes, names = [], [], []
+	for term in search_terms:
+		if ':' in term:
+			edges.append(term)
+		else:
+			names.append(term)
+			nodes.append(term)
+
+	return db.get_graphs_by_edges_and_nodes_and_names(request.db_session, is_public=1, names=filter(None, names), nodes=filter(None, nodes), edges=edges, page=page, page_size=page_size, partial_matching=True if search_type == 'partial_search' else False, order=_convert_order_query_term_to_database_order_object(order_by), tags=tags)
 
 
 def uploadJSONFile(request, username, graphJSON, title):
@@ -72,9 +105,10 @@ def uploadJSONFile(request, username, graphJSON, title):
 
 	title = title or parseJson['metadata']['name']
 
-	username = users.add_user(request).email if username is None else username
+	is_public = 1 if username is None else 0
+	username = users.controllers.add_user(request).email if username is None else username
 
-	return add_graph(request, username, title, json.dumps(parseJson))
+	return add_graph(request, username, title, json.dumps(parseJson), public=is_public)
 
 @atomic_transaction
 def add_graph(request, username, graphname, graph_json_string, created=None, modified=None, public=0, shared_with_groups=0, default_layout_id=None):
@@ -188,6 +222,33 @@ def _load_graph_json(graph_json_string):
 	return graphJson
 
 
+def _convert_order_query_term_to_database_order_object(order_query):
+	"""
+	It converts terms like owner_descending to desc(Graph.owner_email) which is readable by sqlalchemy.
+
+	Parameters
+	----------
+	order_query: order query eg: owner_descending
+
+	Returns
+	-------
+	order object like desc(Graph.owner_email)
+
+	"""
+	order_query = '' if order_query is None else order_query
+
+	if 'owner' in order_query:
+		attribute = db.Graph.owner_email
+	elif 'graph' in order_query:
+		attribute = db.Graph.name
+	else:
+		attribute = db.Graph.updated_at
+	if 'ascending' in order_query:
+		return db.asc(attribute)
+	else:
+		return db.desc(attribute)
+
+
 def get_layout(request, layout_owner, layoutname, graph_id):
 	# if there is no layout specified in the request (query term), then render the default layout
 	# If there is a layout that is an automatic algorithm, simply return the default layout because the front-end JavaScript library handles the movement clientside
@@ -196,3 +257,25 @@ def get_layout(request, layout_owner, layoutname, graph_id):
 		return graph.default_layout
 	else:
 		return db.get_layout(request.db_session, owner_email=layout_owner, name=layoutname, graph_id=graph_id)
+
+
+def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=None, nodes=None, edges=None, tags=None, limit=None, offset=None):
+	if group_ids is None:
+		raise Exception("Atleast one group id is required.")
+	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes, edges=edges, tags=tags, limit=limit, offset=offset)
+
+
+def add_graph_to_group(request, group_id, graph_id):
+	if graph_id is not None:
+		graph = db.get_graph_by_id(request.db_session, graph_id)
+	else:
+		raise Exception("Required Parameter is missing!")
+	if graph is not None:
+		return db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
+	else:
+		raise Exception("Graph does not exit.")
+
+
+def delete_graph_to_group(request, group_id, graph_id):
+	db.delete_graph_to_group(request.db_session, group_id=int(group_id), graph_id=int(graph_id))
+	return

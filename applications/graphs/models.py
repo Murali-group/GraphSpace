@@ -1,11 +1,8 @@
 from __future__ import unicode_literals
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import relationship, backref
-from graphspace.mixins import *
+
 from applications.users.models import *
 from django.conf import settings
+from graphspace.mixins import *
 
 Base = settings.BASE
 
@@ -21,7 +18,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	json = Column(String, nullable=False)
 	is_public = Column(Integer, nullable=False)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
-	                           nullable=True)
+							   nullable=True)
 
 	owner = relationship("User", back_populates="owned_graphs", uselist=False)
 	default_layout = relationship("Layout", foreign_keys=[default_layout_id], back_populates="default_layout_graph", uselist=False)
@@ -41,6 +38,18 @@ class Graph(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'owner_email': cls.owner_email,
+			'name': cls.name,
+			'json': cls.json,
+			'is_public': cls.is_public,
+			'default_layout_id': cls.default_layout_id,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
+
 
 class Edge(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'edge'
@@ -57,7 +66,7 @@ class Edge(IDMixin, TimeStampMixin, Base):
 
 	constraints = (
 		UniqueConstraint('graph_id', 'head_node_id', 'tail_node_id',
-		                 name='_edge_uc_graph_id_head_node_id_tail_node_id'),
+						 name='_edge_uc_graph_id_head_node_id_tail_node_id'),
 		UniqueConstraint('graph_id', 'name', name='_edge_uc_graph_id_name'),
 	)
 	indices = ()
@@ -105,6 +114,14 @@ class GroupToGraph(TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
+	def serialize(cls):
+		return {
+			'group_id': cls.group_id,
+			'graph_id': cls.graph_id,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
+
 
 class Layout(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'layout'
@@ -121,7 +138,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	owner = relationship("User", back_populates="owned_layouts", uselist=False)
 
 	default_layout_graph = relationship("Graph", foreign_keys="Graph.default_layout_id", back_populates="default_layout", cascade="all, delete-orphan",
-	                                    uselist=False)
+										uselist=False)
 
 	constraints = (
 		UniqueConstraint('name', 'graph_id', 'owner_email', name='_layout_uc_name_graph_id_owner_email'),)

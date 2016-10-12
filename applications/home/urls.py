@@ -1,5 +1,5 @@
-from django.conf.urls import patterns, url
 from applications.home import views
+from django.conf.urls import url
 
 urlpatterns = [
 	url(r'^$', views.index, name='index'),
@@ -8,7 +8,6 @@ urlpatterns = [
 	url(r'^logout/$', views.logout, name='logout'),
 	url(r'^index/$', views.index, name='index'),
 	url(r'^index/$', views.index, name='index'),
-	url(r'^groups/$', views.index, name='groups'),
 	url(r'^features/$', views.index, name='features'),
 	url(r'^help_tutorial/$', views.index, name='help_tutorial'),
 	url(r'^help_about/$', views.index, name='help_about'),
