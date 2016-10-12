@@ -1905,15 +1905,15 @@ def retrieve_graph(request, user_id, graphname):
     '''
     if request.method == 'POST':
 
-        if request.POST['username'] != user_id:
-            return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
-
-        if db.get_valid_user(user_id, request.POST['password']) == None:
+        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        jsonData = db.get_graph_json(user_id, graphname)
-        if jsonData != None:
-            return HttpResponse(jsonData)
+        graph = db.get_graph(user_id, graphname)
+        if graph != None:
+            if graph.user_id == request.POST.get('username', '') or graph.public == 1:
+                return HttpResponse(graph.json)
+            else:
+                return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
@@ -2095,7 +2095,9 @@ def get_graphs(request):
                 "graphname": graph.graph_id,
                 "owner_email": graph.user_id,
                 "created_at": graph.created,
-                "updated_at": graph.modified
+                "updated_at": graph.modified,
+                "num_edges": len(json.loads(graph.json).get("graph", {}).get("edges", [])),
+                "num_nodes": len(json.loads(graph.json).get("graph", {}).get("nodes", [])),
             })
 
         return HttpResponse(json.dumps({"StatusCode": 200, "metadata": metadata, "result": result}, indent=4, separators=(',', ': '), default=date_handler), content_type="application/json")
