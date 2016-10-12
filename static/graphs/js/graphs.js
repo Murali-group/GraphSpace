@@ -1,6 +1,23 @@
 /* Front end code for graphs/ endpoint.  Provides all front-end functionalities that occur when 
  * user interacts with HTML elements 
  */
+
+/**
+* Switches the search page.
+* @param searchPage type of search page. (my_graphs/shared_graphs/public_graphs)
+* */
+var switchSearch = function(searchPage) {
+    if (searchPage == 'public_graphs') {
+        pathname = '/graphs/public/';
+    } else if (searchPage == 'shared_graphs') {
+        pathname = '/graphs/shared/';
+    } else {
+        pathname = '/graphs/';
+    }
+
+    window.location.href = pathname + window.location.search;
+};
+
 $(document).ready(function() {
 
   if (getQueryVariable('full_search')) {
@@ -353,3 +370,4 @@ $(document).ready(function() {
   }
 
 });
+

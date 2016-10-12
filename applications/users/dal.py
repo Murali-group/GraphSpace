@@ -176,13 +176,14 @@ def delete_group_to_user(db_session, group_id, email):
 
 
 @with_session
-def get_groups_by_email(db_session, email):
+def get_groups_by_member_id(db_session, user_id):
 	"""
-	Returns all groups where user with give email is a member.
+	Returns all groups where user with given user_id is a member.
 	:param db_session: Database session.
-	:param email: email of a user who is a member of one or many groups.
+	:param user_id: ID of a user who is a member of one or many groups.
 	:return: list of Groups
 	"""
+	return db_session.query(GroupToUser).filter(GroupToUser.user_id == user_id).all()
 
 @with_session
 def get_groups_by_owner_id(db_session, owner_id):

@@ -22,6 +22,10 @@ def authenticate(request, username=None, password=None):
 		return None
 
 
+def get_user(request, email):
+	return db.get_user(request.db_session, email) if email is not None else None
+
+
 def register(request, username=None, password=None):
 	if db.get_user(request.db_session, username):
 		raise Exception("Email already exists!")

@@ -1,4 +1,4 @@
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.orm import joinedload
 
 from models import *
@@ -11,30 +11,64 @@ from graphspace.wrappers import with_session
 @with_session
 def get_edges(db_session, edges, order=desc(Edge.updated_at), page=0, page_size=10, partial_matching=False):
 	edges = [('%%%s%%' % u, '%%%s%%' % v) for u,v in edges] if partial_matching else edges
-	filter_group = [and_(Edge.head_node_id.like(u), Edge.tail_node_id.like(v)) for u,v in edges]
-	filter_group.append([and_(Edge.head_node.has(Node.label.like(u)), Edge.tail_node.has(Node.label.like(v))) for u,v in edges])
+	filter_group = [and_(Edge.head_node_id.ilike(u), Edge.tail_node_id.ilike(v)) for u,v in edges]
+	filter_group.append([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
 	return db_session.query(Graph).options(joinedload('head_node'), joinedload('tail_node')).filter(or_(*filter_group)).order_by(order).limit(page_size).offset(page*page_size)
 
 
 @with_session
-def get_graphs_by_edges_or_nodes(db_session, names=None, nodes=None, edges=None, order=desc(Edge.updated_at), page=0, page_size=10, partial_matching=False):
+def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None,names=None, nodes=None, edges=None, tags=None, order=desc(Graph.updated_at), page=0, page_size=10, partial_matching=False, owner_email=None, is_public=None):
+	query = db_session.query(Graph)
 
 	edges = [] if edges is None else edges
 	nodes = [] if nodes is None else nodes
 	names = [] if names is None else names
+	tags = [] if tags is None else tags
 
 	edges = [('%%%s%%' % u, '%%%s%%' % v) for u,v in edges] if partial_matching else edges
 	nodes = ['%%%s%%' % node for node in nodes] if partial_matching else nodes
 	names = ['%%%s%%' % name for name in names] if partial_matching else names
+	tags = ['%%%s%%' % tag for tag in tags]
 
-	graph_filter_group = [Graph.name.like(name) for name in names]
-	nodes_filter_group = [Node.label.like(node) for node in nodes]
-	nodes_filter_group.append([Node.name.like(node) for node in nodes])
-	edges_filter_group = [and_(Edge.head_node.has(Node.label.like(u)), Edge.tail_node.has(Node.label.like(v))) for u,v in edges]
+	graph_filter_group = []
+	if is_public is not None:
+		graph_filter_group.append(Graph.is_public == is_public)
+	if owner_email is not None:
+		graph_filter_group.append(Graph.owner_email == owner_email)
+	if group_ids is not None:
+		graph_filter_group.append(Graph.id.in_(group_ids))
 
-	return db_session.query(Graph).options(joinedload('nodes'), joinedload('edges'))\
-		.filter(or_(Graph.edges.any(or_(*edges_filter_group)), Graph.nodes.any(or_(*nodes_filter_group), *graph_filter_group)))\
-		.order_by(order).limit(page_size).offset(page*page_size)
+	if len(graph_filter_group) > 0:
+		query = query.filter(*graph_filter_group)
+
+	names_filter_group = [Graph.name.ilike(name) for name in names]
+	tags_filter_group = [GraphTag.name.ilike(tag) for tag in tags]
+	nodes_filter_group = [Node.label.ilike(node) for node in nodes]
+	nodes_filter_group.extend([Node.name.ilike(node) for node in nodes])
+	edges_filter_group = [and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges]
+
+	options_group = []
+	if len(nodes_filter_group) > 0:
+		options_group.append(joinedload('nodes'))
+	if len(edges_filter_group) > 0:
+		options_group.append(joinedload('edges'))
+	if len(options_group) > 0:
+		query = query.options(*options_group)
+
+	combined_filter_group = []
+	if len(nodes_filter_group) > 0:
+		combined_filter_group.append(Graph.nodes.any(or_(*nodes_filter_group)))
+	if len(edges_filter_group) > 0:
+		combined_filter_group.append(Graph.edges.any(or_(*edges_filter_group)))
+	if len(names_filter_group) > 0:
+		combined_filter_group.append(*names_filter_group)
+	if len(tags_filter_group) > 0:
+		combined_filter_group.append(*tags_filter_group)
+
+	if len(combined_filter_group) > 0:
+		query = query.filter(or_(*combined_filter_group))
+
+	return query.order_by(order).limit(page_size).offset(page*page_size).all()
 
 
 @with_session

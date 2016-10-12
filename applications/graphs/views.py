@@ -69,26 +69,30 @@ def _graphs_page(request, view_type):
 		context['search_type'] = 'full_search'
 
 	context['tags'] = _clean_tag_query(request.GET.get('tags'))
-	context['tag_terms'] = context['tags'].split(',')
+	context['tag_terms'] = filter(None, context['tags'].split(','))
 	context['search_word'] = _clean_tag_query(request.GET.get(context['search_type']))
-	context['search_word_terms'] = context['search_word'].split(',')
-	# context['order_by'] = 'modified_descending' if len(request.GET.get('order').strip()) == 0 else request.GET.get('order').strip()
-	context['order_by'] = 'modified_descending'
+	context['search_word_terms'] = filter(None, context['search_word'].split(','))
+	context['order_by'] = 'modified_descending' if len(request.GET.get('order', '').strip()) == 0 else request.GET.get('order').strip()
 
-	context['page'] = 0
+	context['page'] = request.GET.get('page', 0)
 	# context['page'] = request.GET.get('page')
-	context['page_size'] = 10
-
-	if len(context['search_word_terms']) > 0:
-		context['search_result'] = True
+	context['page_size'] = request.GET.get('pageSize', 10)
 
 	context['my_graphs'] = graphs.search_graphs_owned_by_user(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
-	print(context['my_graphs'])
-	# context['shared_graphs'] = graphs.search_graphs_shared_with_user(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
-	# context['public_graphs'] = graphs.search_public_graphs(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
+	context['shared_graphs'] = graphs.search_graphs_shared_with_user(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
+	context['public_graphs'] = graphs.search_public_graphs(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
 	context['search_form'] = SearchForm(placeholder='Search...')
 
-	return HttpResponse(json.dumps(context), content_type="application/json")
+	context['search_result'] = True
+	if view_type == 'my graphs' and uid is not None:
+		context['graph_list'] = context['my_graphs']
+	elif view_type == 'shared' and uid is not None:
+		context['graph_list'] = context['shared_graphs']
+	else:
+		context['graph_list'] = context['public_graphs']
+	context['footer'] = True
+
+	return render(request, 'graphs/graphs.html', context)
 
 
 def upload_graph_through_ui(request):
