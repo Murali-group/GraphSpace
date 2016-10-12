@@ -2396,6 +2396,29 @@ def get_cleaned_group_data(data, db_session):
 
 	return complete_group_information
 
+def get_graphs(offset=0, limit=10):
+	"""
+		Get the count of graphs with given parameter and subset of these graphs with given offset and limit.
+
+		TODO: add more parameters like sortorder, sortfield, tags etc.
+	"""
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	try:
+
+		# Query to get all graphs with given filters.
+		query = db_session.query(models.Graph)
+		total = query.count()
+		graphs = query.limit(limit).offset(offset).all()
+
+		db_session.close()
+		return total, graphs
+	except NoResultFound:
+		db_session.close()
+		return None
+
+
 def get_all_groups_with_member(user_id, skip = None):
 	'''
 		Get all groups that has the user as a member in that group.
@@ -4701,6 +4724,13 @@ def userNotFoundError():
 		Returns response telling user that their username and password combination is not found.
 	'''
 	return throwError(401, "Username/Password is not recognized!")
+
+
+def userNotAuthorized():
+	'''
+		Returns response telling user that they are not authorized for the request.
+	'''
+	return throwError(400, "User Unauthorized!")
 
 def throwError(statusCode, error):
 	'''

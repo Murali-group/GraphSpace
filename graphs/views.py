@@ -2050,6 +2050,60 @@ def get_groups(request):
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)
 
+
+def date_handler(obj):
+    """
+    Serializes the datetime object.
+
+    Added because datetime.date() is not JSON serializable in Django
+
+    http://stackoverflow.com/questions/23285558/datetime-date2014-4-25-is-not-json-serializable-in-django
+    """
+    if hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    else:
+        raise TypeError
+
+
+def get_graphs(request):
+    '''
+        Get all graphs that are on this server
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :return response: JSON Response: {"Graphs|Error": <message>}
+    '''
+    if request.method == 'POST':
+        user = db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', ''))
+        if user == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+        elif user.admin == 0:
+            return HttpResponse(json.dumps(db.userNotAuthorized(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        total, graphs = db.get_graphs(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10))
+        metadata = {
+                "count": total,
+                "offset": request.POST.get('offset', 0),
+                "limit": request.POST.get('limit', 10)
+            }
+
+        result = []
+        for graph in graphs:
+            result.append({
+                "graphname": graph.graph_id,
+                "owner_email": graph.user_id,
+                "created_at": graph.created,
+                "updated_at": graph.modified
+            })
+
+        return HttpResponse(json.dumps({"StatusCode": 200, "metadata": metadata, "result": result}, indent=4, separators=(',', ': '), default=date_handler), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+
 def get_group(request, group_owner, groupname):
     '''
         Get information about this group 
