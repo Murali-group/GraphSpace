@@ -2095,7 +2095,9 @@ def get_graphs(request):
                 "graphname": graph.graph_id,
                 "owner_email": graph.user_id,
                 "created_at": graph.created,
-                "updated_at": graph.modified
+                "updated_at": graph.modified,
+                "num_edges": len(json.loads(graph.json).get("graph", {}).get("edges", [])),
+                "num_nodes": len(json.loads(graph.json).get("graph", {}).get("nodes", [])),
             })
 
         return HttpResponse(json.dumps({"StatusCode": 200, "metadata": metadata, "result": result}, indent=4, separators=(',', ': '), default=date_handler), content_type="application/json")
