@@ -2397,11 +2397,14 @@ def get_cleaned_group_data(data, db_session):
 
 	return complete_group_information
 
-def get_graphs(offset=0, limit=10):
+def get_graphs(offset=0, limit=10, tag=None, graph_owner=None):
 	"""
 		Get the count of graphs with given parameter and subset of these graphs with given offset and limit.
 
-		TODO: add more parameters like sortorder, sortfield, tags etc.
+		If the graph owner is given, fetch graphs owned by user or public graphs.
+		Otherwise fetch all graphs with given parameters like tag.
+
+		TODO: add more parameters like sortorder, sortfield etc.
 	"""
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -2409,12 +2412,51 @@ def get_graphs(offset=0, limit=10):
 	try:
 
 		# Query to get all graphs with given filters.
-		query = db_session.query(models.Graph).filter(models.Graph.public == 1)
+
+		query = db_session.query(models.Graph)
+		if graph_owner is not None:
+			query = query.filter(or_(models.Graph.user_id == graph_owner, models.Graph.public == 1))
+		if tag is not None:
+			query = query.filter(models.Graph.user_id == models.GraphToTag.user_id).filter(models.Graph.graph_id == models.GraphToTag.graph_id).filter(models.GraphToTag.tag_id == tag)
+
 		total = query.count()
 		graphs = query.limit(limit).offset(offset).all()
 
 		db_session.close()
 		return total, graphs
+	except NoResultFound:
+		db_session.close()
+		return None
+
+
+def get_layouts(offset=0, limit=10, layout_owner=None, graph_owner=None, graphname=None):
+	"""
+		Get the count of layouts with given parameter and subset of these layout with given offset and limit.
+
+		If the layout owner is given, fetch layouts owned by user or public layouts.
+		Otherwise fetch all layouts with give parameters.
+
+		TODO: add more parameters like sortorder, sortfield etc.
+	"""
+	# Create database connection
+	db_session = data_connection.new_session()
+
+	try:
+		# Query to get all graphs with given filters.
+
+		query = db_session.query(models.Layout)
+		if graphname is not None:
+			query = query.filter(models.Layout.graph_id == graphname)
+		if graph_owner is not None:
+			query = query.filter(models.Layout.user_id == graph_owner)
+		if layout_owner is not None:
+			query = query.filter(or_(models.Layout.public == 1, models.Layout.owner_id == layout_owner))
+
+		total = query.count()
+		layouts = query.limit(limit).offset(offset).all()
+
+		db_session.close()
+		return total, layouts
 	except NoResultFound:
 		db_session.close()
 		return None
@@ -3962,6 +4004,8 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 		:param public: Is layout public or not
 		:param shared_with_groups: Is layout shared with groups
 		:param default: Is layout default for given graph_id
+
+		:returns: Layout|None
 	'''
 	# Create database connection
 	db_session = data_connection.new_session()
@@ -3971,7 +4015,9 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 
 	# If no such layout exists, add it
 	if layout != None:
-		return "Layout with this name already exists for this graph! Please choose another name."
+		# return "Layout with this name already exists for this graph! Please choose another name."
+		return None
+
 
 	# Add the new layout
 	new_layout = models.Layout(layout_name = layout_name, owner_id = layout_owner, graph_id = graph_id, user_id = graph_owner, json = json, public = public, shared_with_groups = shared_with_groups, times_modified=0, original_json=None)
@@ -3984,6 +4030,8 @@ def save_layout(graph_id, graph_owner, layout_name, layout_owner, json, public, 
 			"default_layout_id": new_layout.layout_id
 		})
 		db_session.commit()
+
+	return new_layout
 
 	db_session.close()
 
@@ -4107,7 +4155,7 @@ def get_all_layouts_for_graph(uid, gid):
 
 	try:
 		# Get layouts for graph
-		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == owner).filter(models.Layout.graph_id == gid).all()
+		layouts = db_session.query(models.Layout).filter(models.Layout.owner_id == uid).filter(models.Layout.graph_id == gid).all()
 
 		# Get rid of unicode
 		cleaned_layouts = []
