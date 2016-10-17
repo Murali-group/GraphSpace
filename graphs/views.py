@@ -346,10 +346,10 @@ def save_layout(request, uid, gid):
             return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to save a layout!")), content_type="application/json")
 
         result = db.save_layout(gid, graph_owner, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
-        if result == None:
+        if result != None:
             return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
         
-        return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+        return HttpResponse(json.dumps(db.throwError(400, "Layout with this name already exists for this graph! Please choose another name.")), content_type="application/json")
 
     else:
         context = {"Error": "This route only accepts POST requests."}
