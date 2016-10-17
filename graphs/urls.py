@@ -94,7 +94,7 @@ urlpatterns = patterns('',
         url(r'^api/layouts/get/(?P<layout_id>.+)$', views.retrieve_layout, name='retrieve_layout'),
         url(r'^api/layouts/update/(?P<layout_id>.+)$', views.update_graph_layout, name='update_graph_layout'),
         url(r'^api/users/(?P<user_id>.+)/graph/(?P<graphname>.+)/layouts/add$', views.upload_layout, name='upload_graph'),
-        url(r'^api/users/(?P<user_id>.+)/graph/(?P<graphname>.+)/layouts/get', views.get_graph_layouts, name='upload_graph'),
+        url(r'^api/users/(?P<user_id>.+)/graph/(?P<graphname>.+)/layouts/get', views.get_graph_layouts, name='get_graph_layout'),
 
         # Group REST API endpoints
         url(r'^api/groups/get/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.get_group, name='get_group'),

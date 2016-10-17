@@ -2048,13 +2048,13 @@ def retrieve_graph(request, user_id, graphname):
         :return response: JSON Response: {"Graph|Error": <message>}
     '''
     if request.method == 'POST':
-
-        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
+        user = db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', ''))
+        if user == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
         graph = db.get_graph(user_id, graphname)
         if graph != None:
-            if graph.user_id == request.POST.get('username', '') or graph.public == 1:
+            if graph.user_id == request.POST.get('username', '') or graph.public == 1 or user.admin == 1:
                 return HttpResponse(graph.json)
             else:
                 return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
@@ -2062,7 +2062,7 @@ def retrieve_graph(request, user_id, graphname):
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
         context = {"Error": "This route only accepts POST requests."}
-        return render(request, 'graphs/error.html', context)
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def remove_graph(request, user_id, graphname):
     '''

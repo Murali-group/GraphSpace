@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from datetime import datetime
 from hashlib import sha1
-
+from sqlalchemy import func
 import bcrypt
 from sqlalchemy import or_, and_
 from sqlalchemy.orm.exc import NoResultFound
@@ -1404,14 +1404,10 @@ def find_all_graphs_containing_edges(uid, search_type, search_word, view_type, d
 	elif search_type == "partial_search":
 
 		search_query = or_(
-			and_(models.Edge.head_node_id >= head_node, models.Edge.head_node_id <= head_node + 'zzz',
-				  models.Edge.tail_node_id >= tail_node, models.Edge.tail_node_id <= tail_node + "zzz"),
-			and_(models.Edge.tail_node_id >= head_node, models.Edge.tail_node_id <= head_node + "zzz",
-				  models.Edge.head_node_id >= tail_node, models.Edge.head_node_id <= tail_node + "zzz"),
-			and_(models.Edge.head_node_label >= head_node, models.Edge.head_node_label <= head_node + 'zzz',
-				  models.Edge.tail_node_label >= tail_node, models.Edge.tail_node_label <= tail_node + "zzz"),
-			and_(models.Edge.tail_node_label >= head_node, models.Edge.tail_node_label <= head_node + 'zzz',
-				  models.Edge.head_node_label >= tail_node, models.Edge.head_node_label <= tail_node + "zzz"))
+			and_(models.Edge.head_node_id.ilike('%'+head_node+'%'), models.Edge.tail_node_id.ilike('%'+tail_node+'%')),
+			and_(models.Edge.tail_node_id.ilike('%'+head_node+'%'), models.Edge.head_node_id.ilike('%'+tail_node+'%')),
+			and_(models.Edge.head_node_label.ilike('%'+head_node+'%'), models.Edge.tail_node_label.ilike('%'+tail_node+'%')),
+			and_(models.Edge.tail_node_label.ilike('%'+head_node+'%'), models.Edge.head_node_label.ilike('%'+tail_node+'%')))
 
 
 	# # Go through head and tail nodes to see if there are any graphs
@@ -2406,6 +2402,9 @@ def get_graphs(offset=0, limit=10, tag=None, graph_owner=None):
 
 		TODO: add more parameters like sortorder, sortfield etc.
 	"""
+	# maximum value of limit is 1000. We dont want users to fetch a huge list of results
+	limit = limit if limit < 1000 else 1000
+
 	# Create database connection
 	db_session = data_connection.new_session()
 
@@ -2439,6 +2438,9 @@ def get_layouts(offset=0, limit=10, layout_owner=None, graph_owner=None, graphna
 		TODO: add more parameters like sortorder, sortfield etc.
 	"""
 	# Create database connection
+	# maximum value of limit is 1000. We dont want users to fetch a huge list of results
+	limit = limit if limit < 1000 else 1000
+
 	db_session = data_connection.new_session()
 
 	try:
