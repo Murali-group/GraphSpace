@@ -10,15 +10,13 @@ There are two differences:
        ex. 'id' for user table would be 'user_id'
 '''
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Index, ForeignKeyConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import TIMESTAMP
-from django.db import models
-from django.conf import settings
+from sqlalchemy import Column, Integer, String, ForeignKey, Index, ForeignKeyConstraint
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy.types import TIMESTAMP
 
-import bcrypt
+from django.conf import settings
 
 # Construct a base class for declarative class definitions.
 # The new base class will be given a metaclass that produces appropriate Table objects
@@ -348,6 +346,7 @@ class Edge(Base):
 #Create indices
 Index('graph_public_idx', Graph.public)
 Index('graph_owner_idx', Graph.user_id)
+Index('graph_idx_graph_id', Graph.graph_id)
 # Table: group. Columns: owner_id
 Index('group_idx_owner_id_group_id', Group.owner_id, Group.group_id)
 # Table: graph. Columns: user_id
@@ -378,8 +377,10 @@ Index('group_to_user_idx_user_id', GroupToUser.user_id)
 #Index('layout_idx_owner_id', Layout.owner_id)
 # Table: node. Columns: graph_id, user_id
 Index('node_idx_graph_id_user_id', Node.graph_id, Node.user_id, Node.node_id, Node.label)
-Index('node_index_label_graph_id', Node.label)
-Index('node_index_node_id_graph_id', Node.node_id)
+Index('node_index_label', Node.label)
+Index('node_index_label_graph_id', Node.label, Node.graph_id)
+Index('node_index_node_id', Node.node_id)
+Index('node_index_node_id_graph_id', Node.node_id, Node.graph_id)
 
 Index('edge_idx_head_id_tail_id', Edge.head_node_id, Edge.tail_node_id)
 Index('edge_idx_head_label_tail_label', Edge.head_node_label, Edge.tail_node_label)

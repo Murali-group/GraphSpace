@@ -1,25 +1,16 @@
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.views import generic
-from django.templatetags.static import static
-
-from django.shortcuts import render_to_response
-
-from graphs.util.paginator import pager
-from graphs.util import db
-from graphs.auth.login import login
-from forms import LoginForm, SearchForm, RegisterForm
-from django.conf import settings
-
 import json
-import bcrypt
-import os
 import operator
 
-from operator import itemgetter
-from itertools import groupby
+import bcrypt
+
+from django.conf import settings
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
+from forms import SearchForm
+from graphs.auth.login import login
 from graphs.forms import LoginForm, RegisterForm
+from graphs.util import db
+from graphs.util.paginator import pager
 
 URL_PATH = settings.URL_PATH
 
@@ -355,10 +346,10 @@ def save_layout(request, uid, gid):
             return HttpResponse(json.dumps(db.throwError(500, "Must be signed in to save a layout!")), content_type="application/json")
 
         result = db.save_layout(gid, graph_owner, request.POST['layout_name'], request.POST['loggedIn'], request.POST['points'], request.POST['public'], request.POST['unlisted'])
-        if result == None:
+        if result != None:
             return HttpResponse(json.dumps(db.sendMessage(200, "Layout saved!")), content_type="application/json")
         
-        return HttpResponse(json.dumps(db.throwError(400, result)), content_type="application/json")
+        return HttpResponse(json.dumps(db.throwError(400, "Layout with this name already exists for this graph! Please choose another name.")), content_type="application/json")
 
     else:
         context = {"Error": "This route only accepts POST requests."}
@@ -1890,6 +1881,159 @@ def update_graph(request, user_id, graphname):
         context = {"Error": "This route only accepts POST requests."}
         return render(request, 'graphs/error.html', context)
 
+def get_graph_layouts(request, user_id, graphname):
+    """
+        Get all layouts for a specified graph.
+
+        If the user has admin access, he can fetch any layout specific to the graph on the server.
+        Otherwise user can fetch public layouts and layouts owned by the user.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+
+        :return response: JSON Response: {"Layouts|Error": <message>}
+    """
+    if request.method == 'POST':
+        user = db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', ''))
+        if user == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+        if user_id is None or graphname is None:
+            return HttpResponse(json.dumps(db.throwError(404, "Bad Request!"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        if user.admin == 1:
+            total, layouts = db.get_layouts(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10), graph_owner=user_id, graphname=graphname)
+        else:
+            total, layouts = db.get_layouts(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10), layout_owner=user.user_id, graph_owner=user_id, graphname=graphname)
+
+        metadata = {
+                "count": total,
+                "offset": request.POST.get('offset', 0),
+                "limit": request.POST.get('limit', 10)
+            }
+
+        result = []
+        for layout in layouts:
+            result.append({k: getattr(layout, k, None) for k in ['layout_id', 'layout_name', 'owner_id', 'graph_id', 'user_id', 'json']})
+
+        return HttpResponse(json.dumps({"StatusCode": 200, "metadata": metadata, "result": result}, indent=4, separators=(',', ': '), default=date_handler), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+
+def retrieve_layout(request, layout_id):
+    '''
+        Retrieves the specified layout
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>}
+
+        :param layout_id: Id of the layout
+
+        :return response: JSON Response: {"Layout|Error": <message>}
+    '''
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        layout = db.get_layout(layout_id)
+        if layout != None:
+            if layout.owner_id == request.POST.get('username', '') or layout.public == 1:
+                return HttpResponse(json.dumps({k: getattr(layout, k, None) for k in ['layout_id', 'layout_name', 'owner_id', 'graph_id', 'user_id', 'json']}, indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.userNotAuthorized(), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(404, "No Such Layout Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+
+def upload_layout(request, user_id, graphname):
+    '''
+        Uploads a layout for a graph
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>, "layout_name": <layout_name>, "json": <layout_json>}
+
+        :param user_id: Id of the user
+        :param graphname: Name of the graph
+
+        :return response: JSON Response: {"Success|Error": <message>}
+
+    '''
+    if request.method == 'POST':
+
+        # if request.POST['username'] != user_id:
+        #     return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
+        layout_name = request.POST.get('layout_name', None)
+
+
+        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        if request.POST['username'] != user_id:
+            return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        if layout_name == None:
+            return HttpResponse(json.dumps(db.throwError(400, 'Layout name is required !'), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        layout = db.save_layout(graphname, user_id, layout_name, request.POST.get('username', ''), request.POST.get('json', '{}'), public=0, shared_with_groups=0)
+
+        if layout == None:
+            return HttpResponse(json.dumps(db.throwError(400, "Layout with this name already exists for this graph! Please choose another name."), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.sendMessage(201, "Added " + layout_name + "layout with id=" + str(layout.layout_id) + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+
+def update_graph_layout(request, layout_id):
+    '''
+        Updates an already existing layout.
+
+        :param request: Incoming HTTP POST Request containing:
+
+        {"username": <username>,"password": <password>, "json": <layout_json>}
+
+        :param layout_id: Id of the layout
+
+        :return response: JSON Response: {"Success|Error": <message>}
+    '''
+
+    if request.method == 'POST':
+
+        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
+            return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
+
+        layout = db.get_layout(layout_id)
+        if layout != None:
+            if layout.owner_id == request.POST.get('username', ''):
+                layout_json = request.POST.get('json', layout.json)
+                error = db.update_layout(layout.graph_id, layout.user_id, layout.layout_name, layout.owner_id, layout_json, layout.public, layout.shared_with_groups, layout.original_json)
+                if error != None:
+                    return HttpResponse(json.dumps(db.throwError(404, error), indent=4, separators=(',', ': ')), content_type="application/json")
+                else:
+                    return HttpResponse(json.dumps(db.sendMessage(201, "Updated Layout with id=" + str(layout_id) + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+            else:
+                return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
+        else:
+            return HttpResponse(json.dumps(db.throwError(404, "No Such Layout Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
+
+
+    else:
+        context = {"Error": "This route only accepts POST requests."}
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
+
+
 def retrieve_graph(request, user_id, graphname):
     '''
         Retrieves the json of a specified graph
@@ -1904,13 +2048,13 @@ def retrieve_graph(request, user_id, graphname):
         :return response: JSON Response: {"Graph|Error": <message>}
     '''
     if request.method == 'POST':
-
-        if db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', '')) == None:
+        user = db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', ''))
+        if user == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
 
         graph = db.get_graph(user_id, graphname)
         if graph != None:
-            if graph.user_id == request.POST.get('username', '') or graph.public == 1:
+            if graph.user_id == request.POST.get('username', '') or graph.public == 1 or user.admin == 1:
                 return HttpResponse(graph.json)
             else:
                 return HttpResponse(json.dumps(db.usernameMismatchError(), indent=4, separators=(',', ': ')), content_type="application/json")
@@ -1918,7 +2062,7 @@ def retrieve_graph(request, user_id, graphname):
             return HttpResponse(json.dumps(db.throwError(404, "No Such Graph Exists!"), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
         context = {"Error": "This route only accepts POST requests."}
-        return render(request, 'graphs/error.html', context)
+        return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
 
 def remove_graph(request, user_id, graphname):
     '''
@@ -2066,23 +2210,28 @@ def date_handler(obj):
 
 
 def get_graphs(request):
-    '''
-        Get all graphs that are on this server
+    """
+        Get all graphs that are on this server.
+
+        If the user has admin access, he can fetch any graph on the server.
+        Otherwise user can fetch public graphs and graphs owned by the user.
 
         :param request: Incoming HTTP POST Request containing:
 
-        {"username": <username>,"password": <password>}
+        {"username": <username>,"password": <password>, "tag": <tag>}
 
         :return response: JSON Response: {"Graphs|Error": <message>}
-    '''
+    """
     if request.method == 'POST':
         user = db.get_valid_user(request.POST.get('username', ''), request.POST.get('password', ''))
         if user == None:
             return HttpResponse(json.dumps(db.userNotFoundError(), indent=4, separators=(',', ': ')), content_type="application/json")
-        elif user.admin == 0:
-            return HttpResponse(json.dumps(db.userNotAuthorized(), indent=4, separators=(',', ': ')), content_type="application/json")
 
-        total, graphs = db.get_graphs(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10))
+        if user.admin == 1:
+            total, graphs = db.get_graphs(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10), tag=request.POST.get('tag', None))
+        else:
+            total, graphs = db.get_graphs(offset=request.POST.get('offset', 0), limit=request.POST.get('limit', 10), tag=request.POST.get('tag', None), graph_owner=user.user_id)
+
         metadata = {
                 "count": total,
                 "offset": request.POST.get('offset', 0),
