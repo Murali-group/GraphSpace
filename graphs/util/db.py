@@ -1197,6 +1197,7 @@ def search_result(uid, search_type, search_terms, view_type):
 			# Add condensed tuples to list of graphs matched
 			initial_graphs_from_search += matched_graphs
 
+		data_session.close()
 		# Go through and count the list of occurrences of matched graph
 		graph_repititions = defaultdict(int)
 
@@ -2829,6 +2830,7 @@ def search_result_for_graphs_in_group(uid, search_type, search_terms, db_session
 			# Add condensed tuples to list of graphs matched
 			initial_graphs_from_search += matched_graphs
 
+		data_session.close()
 		# Go through and count the list of occurrences of matched graph
 		graph_repititions = defaultdict(int)
 
@@ -3806,10 +3808,8 @@ def view_graphs_of_type(view_type, username):
 		except NoResultFound:
 			print "No owned graphs"
 
-	return graphs
-
 	db_session.close()
-	return cleaned_graphs
+	return graphs
 
 def is_public_graph(username, graph):
 	'''
