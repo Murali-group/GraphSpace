@@ -17,8 +17,7 @@ class Database(object):
 
         if self.db == 'prod':
             self.engine = create_engine(''.join(
-			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
-
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False, pool_size=20, max_overflow=100)
         else:
             self.engine = create_engine('sqlite:///:memory:', echo=False)
 
