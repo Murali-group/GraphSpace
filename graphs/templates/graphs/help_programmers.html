@@ -74,11 +74,11 @@ Below is a list of the different REST API calls.
 <li><a href="#unshare_graph">Unshare a graph with a group</a></li>
 </ul>
 </li>
-<li><h4><a href="#groups">Layout</a></h4>
+<li><h4><a href="#layouts">Layout</a></h4>
 <ul>
-<li><a href="#create_layout">Create layout</a></li>
-<li><a href="#get_layout">Get layout</a></li>
 <li><a href="#get_graph_layouts">Get all layouts for a graph.</a></li>
+<li><a href="#get_layout">Get layout</a></li>
+<li><a href="#create_layout">Create layout</a></li>
 <li><a href="#update_layout">Update layout</a></li>
 </ul>
 </li>
@@ -878,81 +878,103 @@ Example successful response:
 }
 </pre>
 
-<h2 style="padding-top: 50px; margin-top: -40px;" id="tags">Layouts</h2>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="layouts">Layouts</h2>
 
-    <h3 style="padding-top: 50px; margin-top: -40px;" id='get_graph_layouts'>Get all layouts for a Graph</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_graph_layouts'>Get all layouts for a Graph</h3>
 
-    Get all the layouts that are attached to a certain graph.
-    <pre>
-    curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/get" -F "username=[email]" -F "password=[password]"; echo
-    </pre>
+Get all the layouts that are attached to a certain graph.
+<pre>
+curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/get" -F "username=[email]" -F "password=[password]"; echo
+</pre>
 
-    Example successful response:
-    <pre>
-    {
-        "metadata": {
-            "count": 2,
-            "limit": 10,
-            "offset": 0
+Example successful response:
+<pre>
+{
+    "metadata": {
+        "count": 2,
+        "limit": 10,
+        "offset": 0
+    },
+    "result": [
+        {
+            "graph_id": "tutorial_graph1",
+            "layout_id": 3,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout1",
+            "owner_id": "[email]"
         },
-        "result": [
-            {
-                "graph_id": "tutorial_graph1",
-                "layout_id": 3,
-                "json": "{}",
-                "user_id": "[email]",
-                "layout_name": "test_layout1",
-                "owner_id": "[email]"
-            },
-            {
-                "graph_id": "tutorial_graph2",
-                "layout_id": 607,
-                "json": "{}",
-                "user_id": "[email]",
-                "layout_name": "test_layout2",
-                "owner_id": "[email]"
-            }
-        ],
-        "StatusCode": 200
-    }
-    </pre>
+        {
+            "graph_id": "tutorial_graph2",
+            "layout_id": 607,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout2",
+            "owner_id": "[email]"
+        }
+    ],
+    "StatusCode": 200
+}
+</pre>
 
-    <h3 style="padding-top: 50px; margin-top: -40px;" id='create_layout'>Create layout</h3>
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_layout'>Get layout</h3>
 
-    Get all the layouts that are attached to a certain graph.
-    <pre>
-    curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/get" -F "username=[email]" -F "password=[password]"; echo
-    </pre>
+To get the JSON for an existing layout use the following command. You can only get the JSON for a layout that belongs to you or is shared with a group you belong to or available for public access. Here, [layout_id] refers to id of the layout whose JSON you are trying to retrieve.
+<pre>
+curl -X POST "{{url}}layouts/get/[layout_id]" -F "username=[email]" -F "password=[password]"; echo
+</pre>
 
-    Example successful response:
-    <pre>
-    {
-        "metadata": {
-            "count": 2,
-            "limit": 10,
-            "offset": 0
-        },
-        "result": [
-            {
-                "graph_id": "tutorial_graph1",
-                "layout_id": 3,
-                "json": "{}",
-                "user_id": "[email]",
-                "layout_name": "test_layout1",
-                "owner_id": "[email]"
-            },
-            {
-                "graph_id": "tutorial_graph2",
-                "layout_id": 607,
-                "json": "{}",
-                "user_id": "[email]",
-                "layout_name": "test_layout2",
-                "owner_id": "[email]"
-            }
-        ],
-        "StatusCode": 200
-    }
-    </pre>
+Example successful response:
+<pre>
+{
+  "graph_id": "[graph_id]",
+  "layout_id": [layout_id],
+  "json": "[layout_json]",
+  "user_id": "[graph_owner]",
+  "layout_name": "[layout_name]",
+  "owner_id": "[layout_owner]"
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='create_layout'>Create layout</h3>
+
+In order to add a layout to a graph, make the following POST request where [email] is your email, [password] is your password, [layout_name] is the name of layout and [json] is the layout data as a JSON string.
+
+<pre>
+curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/add" -F "username=[email]" -F "password=[password]" -F "json=[json]" -F "layout_name=[layout_name]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Added [layout_name] layout with id=619.",
+  "StatusCode": 201
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='update_layout'>Update layout</h3>
+
+If a user wants to update any information for a specific layout, they can do so using this command. The user uploads the modified JSON of the layout to the server. Note, a user can only update a layout if it already exists in GraphSpace for that user.
+<pre>
+curl -X POST "{{url}}layouts/update/[layout_id]" -F "username=[email]" -F "password=[password]" -F "json=[json]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Updated Layout with id=[layout_id].",
+  "StatusCode": 201
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+  "Error": "No Such Layout Exists!",
+  "StatusCode": 404
+}
+</pre>
+
 
 
 <h2 style="padding-top: 50px; margin-top: -40px;" id="tags">Tags</h2>

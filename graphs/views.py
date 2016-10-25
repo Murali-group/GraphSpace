@@ -1990,7 +1990,7 @@ def upload_layout(request, user_id, graphname):
         if layout == None:
             return HttpResponse(json.dumps(db.throwError(400, "Layout with this name already exists for this graph! Please choose another name."), indent=4, separators=(',', ': ')), content_type="application/json")
         else:
-            return HttpResponse(json.dumps(db.sendMessage(201, "Added " + layout_name + "layout with id=" + str(layout.layout_id) + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
+            return HttpResponse(json.dumps(db.sendMessage(201, "Added " + layout_name + " layout with id=" + str(layout.layout_id) + '.'), indent=4, separators=(',', ': ')), content_type="application/json")
     else:
         context = {"Error": "This route only accepts POST requests."}
         return HttpResponse(json.dumps({"StatusCode": 400, "Error": context["Error"]}, indent=4, separators=(',', ': ')), content_type="application/json")
