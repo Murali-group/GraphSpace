@@ -90,9 +90,16 @@ urlpatterns = patterns('',
         url(r'^api/users/(?P<user_id>.+)/graph/makeGraphPrivate/(?P<graphname>.+)/$', views.make_graph_private, name='make_graph_private'),
         url(r'^api/users/(?P<user_id>.+)/graphs/$', views.view_all_graphs_for_user, name='view_all_graphs_for_user'),
 
+
+        url(r'^api/layouts/get/(?P<layout_id>.+)$', views.retrieve_layout, name='retrieve_layout'),
+        url(r'^api/layouts/update/(?P<layout_id>.+)$', views.update_graph_layout, name='update_graph_layout'),
+        url(r'^api/users/(?P<user_id>.+)/graph/(?P<graphname>.+)/layouts/add$', views.upload_layout, name='upload_graph'),
+        url(r'^api/users/(?P<user_id>.+)/graph/(?P<graphname>.+)/layouts/get', views.get_graph_layouts, name='get_graph_layout'),
+
         # Group REST API endpoints
         url(r'^api/groups/get/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.get_group, name='get_group'),
         url(r'^api/groups/get/$', views.get_groups, name='get_groups'),
+        url(r'^api/graphs/get/$', views.get_graphs, name='get_graphs'),
         url(r'^api/groups/add/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.add_group, name='add_group'),
         url(r'^api/groups/delete/(?P<group_owner>.+)/(?P<groupname>.+)/$', views.delete_group, name='delete_group'),
         url(r'^api/users/(?P<user_id>.+)/groups/$', views.get_group_for_user, name='get_group_for_user'),

@@ -57,6 +57,7 @@ Below is a list of the different REST API calls.
 <li><a href="#update_graph">Update graph</a></li>
 <li><a href="#remove_graph">Remove graph</a></li>
 <li><a href="#get_user_graphs">Get user graphs</a></li>
+<li><a href="#get_all_graphs">Get all graphs</a></li>
 <li><a href="#make_graph_public">Make graph public</a></li>
 <li><a href="#make_graph_private">Make graph private</a></li>
 </ul>
@@ -71,6 +72,14 @@ Below is a list of the different REST API calls.
 <li><a href="#remove_user_from_group">Remove user from group</a></li>
 <li><a href="#share_graph">Share a graph with a group</a></li>
 <li><a href="#unshare_graph">Unshare a graph with a group</a></li>
+</ul>
+</li>
+<li><h4><a href="#layouts">Layout</a></h4>
+<ul>
+<li><a href="#get_graph_layouts">Get all layouts for a graph.</a></li>
+<li><a href="#get_layout">Get layout</a></li>
+<li><a href="#create_layout">Create layout</a></li>
+<li><a href="#update_layout">Update layout</a></li>
 </ul>
 </li>
 <li><h4><a href="#tags">Tags</a></h4>
@@ -588,6 +597,52 @@ Example response:
 }
 </pre>
 
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_all_graphs">Get all graphs</h3>
+
+Get a summary of all graphs belonging to the user making this request and public graphs (viewable to all users of GS). The result is a JSON object containing a list of summarized inforation about graphs.
+
+<pre>
+curl -X POST "{{url}}api/graphs/get/" -F "username=[email]" -F "password=[password]" -F "offset=[offset]" -F "limit=[limit]"; echo
+</pre>
+
+Note:
+    <ul>
+        <li><b>Offset</b> is a optional field. Defaults to 10, limits the number of results in the response. Maximum is 1000</li>
+        <li><b>Limit</b> is a optional field. Defaults to 0, used to offset the resultlist.</li>
+    </ul>
+
+Example response:
+
+<pre>
+{
+  "metadata": {
+    "count": 2,
+    "limit": "25",
+    "offset": "0"
+  },
+  "result": [
+    {
+      "created_at": "2012-10-25T06:29:26",
+      "owner_email": "[email]",
+      "updated_at": "2013-10-16T17:49:51",
+      "num_edges": 2,
+      "num_nodes": 1,
+      "graphname": "tutorial_graph1"
+    },
+    {
+      "created_at": "2012-10-25T07:03:10",
+      "owner_email": "[email]",
+      "updated_at": "2013-10-16T17:50:13",
+      "num_edges": 2,
+      "num_nodes": 1,
+      "graphname": "tutorial_graph2"
+    }
+  "StatusCode": 200
+}
+</pre>
+
+
 <h3 style="padding-top: 50px; margin-top: -40px;" id="make_graph_public">Make graph public</h3>
 
 Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
@@ -822,6 +877,105 @@ Example successful response:
     "StatusCode": 200
 }
 </pre>
+
+<h2 style="padding-top: 50px; margin-top: -40px;" id="layouts">Layouts</h2>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_graph_layouts'>Get all layouts for a Graph</h3>
+
+Get all the layouts that are attached to a certain graph.
+<pre>
+curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/get" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+    "metadata": {
+        "count": 2,
+        "limit": 10,
+        "offset": 0
+    },
+    "result": [
+        {
+            "graph_id": "tutorial_graph1",
+            "layout_id": 3,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout1",
+            "owner_id": "[email]"
+        },
+        {
+            "graph_id": "tutorial_graph2",
+            "layout_id": 607,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout2",
+            "owner_id": "[email]"
+        }
+    ],
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_layout'>Get layout</h3>
+
+To get the JSON for an existing layout use the following command. You can only get the JSON for a layout that belongs to you or is shared with a group you belong to or available for public access. Here, [layout_id] refers to id of the layout whose JSON you are trying to retrieve.
+<pre>
+curl -X POST "{{url}}layouts/get/[layout_id]" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "graph_id": "[graph_id]",
+  "layout_id": [layout_id],
+  "json": "[layout_json]",
+  "user_id": "[graph_owner]",
+  "layout_name": "[layout_name]",
+  "owner_id": "[layout_owner]"
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='create_layout'>Create layout</h3>
+
+In order to add a layout to a graph, make the following POST request where [email] is your email, [password] is your password, [layout_name] is the name of layout and [json] is the layout data as a JSON string.
+
+<pre>
+curl -X POST "{{url}}api/users/[email]/graph/[graphname]/layouts/add" -F "username=[email]" -F "password=[password]" -F "json=[json]" -F "layout_name=[layout_name]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Added [layout_name] layout with id=619.",
+  "StatusCode": 201
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='update_layout'>Update layout</h3>
+
+If a user wants to update any information for a specific layout, they can do so using this command. The user uploads the modified JSON of the layout to the server. Note, a user can only update a layout if it already exists in GraphSpace for that user.
+<pre>
+curl -X POST "{{url}}layouts/update/[layout_id]" -F "username=[email]" -F "password=[password]" -F "json=[json]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Updated Layout with id=[layout_id].",
+  "StatusCode": 201
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+  "Error": "No Such Layout Exists!",
+  "StatusCode": 404
+}
+</pre>
+
+
 
 <h2 style="padding-top: 50px; margin-top: -40px;" id="tags">Tags</h2>
 
