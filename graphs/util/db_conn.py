@@ -1,10 +1,11 @@
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import sqlalchemy
+
 from django.conf import settings
 
 # database locations
-_originaldb = settings.DATABASE_LOCATION
+config = settings.DATABASES['default']
 
 class Database(object):
     '''
@@ -15,12 +16,13 @@ class Database(object):
         self.connection = None
 
         if self.db == 'prod':
-            self.engine = create_engine(_originaldb, echo=False)
+            self.engine = create_engine(''.join(
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False, pool_size=20, max_overflow=100)
         else:
             self.engine = create_engine('sqlite:///:memory:', echo=False)
 
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
+        self.sessionmaker = sessionmaker(bind=self.engine)
+        self.session = self.sessionmaker()
 
         if self.db == 'prod':
             self.meta = sqlalchemy.schema.MetaData()
@@ -33,10 +35,7 @@ class Database(object):
             Create a new session in this database. This is needed to avoid 1 seesion per thread
             error raised if you don't create a new session for every new page load or query request.
         '''
-        self.session.close()
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        return self.session
+        return self.sessionmaker()
     
     def connect(self):
         '''
