@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
 import sqlalchemy
-import graphs.models as models
 from django.conf import settings
 
 # database locations
