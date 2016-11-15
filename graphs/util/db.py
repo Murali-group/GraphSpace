@@ -3603,7 +3603,7 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 	'''
 		Shares a graph with group.
 
-		:param owner: Owner of group
+		:param owner: Owner of the graph
 		:param graph: Graph to share
 		:param groupId: Group ID
 		:param groupOwner: Group Owner
@@ -3624,11 +3624,6 @@ def share_graph_with_group(owner, graph, groupId, groupOwner):
 
 	# Create database connection
 	db_session = data_connection.new_session()
-
-	group_name_exists = db_session.query(models.Group).filter(models.Group.group_id == groupId).first()
-
-	if group_name_exists != None and group_name_exists.owner_id != groupOwner:
-		return "Group exists but the group owner provided doesn't own this group"
 
 	# Is graph already shared
 	shared_graph = db_session.query(models.GroupToGraph).filter(models.GroupToGraph.group_id == groupId).filter(models.GroupToGraph.group_owner == groupOwner).filter(models.GroupToGraph.graph_id == graph).filter(models.GroupToGraph.user_id == owner).first()
