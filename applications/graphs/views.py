@@ -86,7 +86,6 @@ def _graphs_page(request, view_type):
 		context['graph_list'] = context['public_graphs']
 	context['footer'] = True
 
-
 	return render(request, 'graphs/graphs.html', context)
 
 

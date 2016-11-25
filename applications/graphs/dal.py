@@ -1,4 +1,4 @@
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.orm import joinedload
 
 from applications.users.models import *
@@ -34,7 +34,6 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None,names=Non
 		graph_filter_group.append(Graph.owner_email == owner_email)
 	if group_ids is not None:
 		query = query.filter(Graph.shared_with_groups.any(Group.id.in_(group_ids)))
-
 	if len(graph_filter_group) > 0:
 		query = query.filter(*graph_filter_group)
 

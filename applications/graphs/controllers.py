@@ -258,7 +258,6 @@ def get_layout(request, layout_owner, layoutname, graph_id):
 	else:
 		return db.get_layout(request.db_session, owner_email=layout_owner, name=layoutname, graph_id=graph_id)
 
-
 def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=None, nodes=None, edges=None, tags=None, limit=None, offset=None):
 	if group_ids is None:
 		raise Exception("Atleast one group id is required.")

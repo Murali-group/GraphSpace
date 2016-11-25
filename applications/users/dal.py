@@ -213,6 +213,7 @@ def get_groups_by_member_id(db_session, member_id):
 	"""
 	return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == member_id).all()]
 
+
 @with_session
 def get_groups_by_owner_id(db_session, owner_id):
 	"""
