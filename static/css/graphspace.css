@@ -1,6 +1,7 @@
 .zero-margin {
     margin: 0;
 }
+
 .zero-padding {
     padding: 0;
 }
@@ -20,6 +21,7 @@
 .padding-top-6 {
     padding-top: 3%;
 }
+
 .padding-bottom-6 {
     padding-bottom: 3%
 }
@@ -27,22 +29,48 @@
 .margin-top-4 {
     margin-top: 2%;
 }
+
 .margin-bottom-4 {
     margin-bottom: 2%;
 }
+
 .margin-top-2 {
     margin-top: 1%;
 }
+
 .margin-bottom-2 {
     margin-bottom: 1%;
 }
+
 .margin-top-1 {
     margin-top: 0.5%;
 }
+
 .margin-bottom-1 {
     margin-bottom: 0.5%;
 }
 
 .gs-full-width {
     width: 100% !important;
+}
+
+.file {
+    visibility: hidden !important;
+    position: absolute;
+}
+
+#cyGraphContainer {
+    width: 100%;
+    height: 80%;
+    position: relative;
+    left: 0;
+    top: 0;
+    z-index: 999;
+}
+
+.container.graphs  {
+	background-color: white;
+	position: relative;
+	padding-top: 20px;
+    height: 100%;
 }

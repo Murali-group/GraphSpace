@@ -7,7 +7,7 @@
 {#    <script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>#}
 
     <div class="container graphs padding-bottom-6">
-        <ul class="nav nav-tabs nav-justified margin-bottom-4">
+        <ul class="nav nav-pills nav-justified margin-bottom-4">
             <li class="active text-center">
                 <a href="#owner_of" data-toggle="tab">Owner of {{ owner_of.total }} groups</a>
             </li>
@@ -43,7 +43,7 @@
                         <th data-field="total_graphs">#Graphs</th>
                         <th data-field="total_members">#Members</th>
                         <th data-field="owner_email">Group Owner</th>
-                        <th data-field="updated_at" data-sortable="True">Last Modified</th>
+                        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
                         <th data-field="operations" data-formatter="groupsPage.groupsTable.operationsFormatter"
                             data-events="groupsPage.groupsTable.operationEvents">
                             Operations
@@ -74,7 +74,7 @@
                         <th data-field="total_graphs">#Graphs</th>
                         <th data-field="total_members">#Members</th>
                         <th data-field="owner_email">Group Owner</th>
-                        <th data-field="updated_at" data-sortable="True">Last Modified</th>
+                        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
                         <th data-field="operations" data-formatter="groupsPage.groupsTable.operationsFormatter"
                             data-events="groupsPage.groupsTable.operationEvents">
                             Operations
@@ -141,6 +141,7 @@
     </footer>
 
     <!-- JSON support for Groups Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
 
     <script>
@@ -148,29 +149,4 @@
             groupsPage.init();
         });
     </script>
-{% endblock %}
-
-{% block css-js-footer %}
-    <!-- load javascripts -->
-    <!-- javascript for side menu -->
-
-    <!--jQuery UI, needed for side menu -->
-    <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
-
-    <!-- JSON support for IE (needed to use JS API) -->
-    <script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
-
-    <!-- load stylesheets -->
-    <!-- jQuery UI style sheet -->
-    <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
-
-    <!-- stylesheet for pager -->
-    <link href="{% static 'graphs/css/pager.css' %}" rel="stylesheet">
-
-    <!-- stylesheet for elements specified in this html(graphs.html) -->
-    <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs.css' %}">
-
-    <!-- stylesheet for side menues -->
-    <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
-
 {% endblock %}

@@ -29,12 +29,6 @@ div.content {
     visibility: hidden;
 }
 
-.graphs  {
-	background-color: white;
-	position: relative;
-	padding-top: 20px;
-}
-
 .footer {
 	text-align: center;
 }

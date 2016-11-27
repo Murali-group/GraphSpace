@@ -38,7 +38,7 @@ def register(request, username=None, password=None):
 		raise e
 
 
-def add_user(request, email="public_user_%s@graphspace.com" % generate_uid(size=10), password="graphspace_public_user", is_admin=0):
+def add_user(request, email=None, password="graphspace_public_user", is_admin=0):
 	"""
 	Add a new user. If email and password is not passed, it will create a user with default values.
 	By default a user has no admin access.
@@ -49,6 +49,8 @@ def add_user(request, email="public_user_%s@graphspace.com" % generate_uid(size=
 	:param admin: 1 if user has admin access else 0. Default value is 0.
 	:return: User
 	"""
+	email = "public_user_%s@graphspace.com" % generate_uid(size=10) if email is None else email
+
 	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin)
 
 
@@ -76,7 +78,7 @@ def get_groups_by_member_id(request, member_id):
 	:param member_id: ID of a user who is a member of one or many groups.
 	:return: list of Groups
 	"""
-	return db.get_groups_by_member_id(request.db_session, member_id=member_id) + db.get_groups_by_owner_id(request.db_session, owner_id=member_id)
+	return db.get_groups_by_member_id(request.db_session, member_id=member_id)
 
 
 def get_groups_by_owner_id(request, owner_id):

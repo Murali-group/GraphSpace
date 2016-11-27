@@ -4,124 +4,39 @@ import applications.graphs.controllers as graphs
 import graphspace.utils as utils
 from applications.graphs.forms import SearchForm
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
-from graphs.util.json_validator import convert_json
 
 
-def search(request):
-	"""
-		Render the My Graphs page
 
-		:param request: HTTP GET Request
-	"""
-
-	return _graphs_page(request, 'my graphs')
-
-
-def shared_graphs(request):
-	"""
-		Render the graphs/shared/ page showing all graphs that are shared with a user
-
-		:param request: HTTP GET Request
-	"""
-
-	return _graphs_page(request, 'shared')
-
-
-def public_graphs(request):
-	"""
-		Render the graphs/public/ page showing all graphs that are public
-
-		:param request: HTTP GET Request
-	"""
-
-	return _graphs_page(request, 'public')
-
-
-def _graphs_page(request, view_type):
-	"""
-		wrapper view for the following pages:
-			graphs/
-			graphs/shared/
-			graphs/public/
-
-		:param request: HTTP GET Request
-		:param view_type: Type of view for graph (Ex: my graphs, shared, public)
-	"""
-	context = RequestContext(request)
-	context['view_type'] = view_type  # Send view_type to front end to tell the user (through button color) where they are
-
-	uid = request.session['uid'] if 'uid' in request.session else None  # Checks to see if a user is currently logged on
-
-	# Partial search may be thought of as "contains" matching
-	# Exact search may be though of as "identical" matching
-	context['search_type'] = None
-	if 'partial_search' in request.GET:
-		context['search_type'] = 'partial_search'
-	elif 'full_search' in request.GET:
-		context['search_type'] = 'full_search'
-
-	context['tags'] = _clean_tag_query(request.GET.get('tags'))
-	context['tag_terms'] = filter(None, context['tags'].split(','))
-	context['search_word'] = _clean_tag_query(request.GET.get(context['search_type']))
-	context['search_word_terms'] = filter(None, context['search_word'].split(','))
-	context['order_by'] = 'modified_descending' if len(request.GET.get('order', '').strip()) == 0 else request.GET.get('order').strip()
-
-	context['page'] = request.GET.get('page', 0)
-	context['page_size'] = request.GET.get('pageSize', 10)
-
-	context['my_graphs'] = graphs.search_graphs_owned_by_user(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
-	context['shared_graphs'] = graphs.search_graphs_shared_with_user(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
-	context['public_graphs'] = graphs.search_public_graphs(request, uid, context['search_type'], context['search_word_terms'], context['tag_terms'], context['order_by'], context['page'], context['page_size'])
-	context['search_form'] = SearchForm(placeholder='Search...')
-
-	context['search_result'] = True
-	if view_type == 'my graphs' and uid is not None:
-		context['graph_list'] = context['my_graphs']
-	elif view_type == 'shared' and uid is not None:
-		context['graph_list'] = context['shared_graphs']
-	else:
-		context['graph_list'] = context['public_graphs']
-	context['footer'] = True
-
-	return render(request, 'graphs/graphs.html', context)
-
-
-def upload_graph_through_ui(request):
-	context = RequestContext(request)
+def upload_graph_page(request):
+	context = RequestContext(request, {})
 
 	if request.method == 'POST':
-			title_of_graph = request.POST['title'] if 'title' in request.POST else None
-			username = None if request.POST['email'] == 'Public User' else request.POST['email']
-			try:
-				if str(request.FILES['graphname']).endswith("json"):
-					graph = graphs.uploadJSONFile(request, username, request.FILES['graphname'].read(), title_of_graph)
-				else:
-					graph = graphs.uploadCyjsFile(request, username, request.FILES['graphname'].read(), title_of_graph)
+		try:
+			if str(request.FILES['graph_file']).endswith("json"):
+				graph=add_graph(request, graph={
+					'name': request.POST.get('name', None),
+					'owner_email': request.POST.get('owner_email', None),
+					'is_public': request.POST.get('is_public', None),
+					'json': json.loads(request.FILES['graph_file'].read()),
+				})
+			else:
+				graph=add_graph(request, graph={
+					'name': request.POST.get('name', None),
+					'owner_email': request.POST.get('owner_email', None),
+					'is_public': request.POST.get('is_public', None),
+					'cyjs': json.loads(request.FILES['graph_file'].read()),
+				})
 
-				context['Success'] = settings.URL_PATH + "graphs/" + graph.owner_email + "/" + graph.name
-			except Exception as e:
-				context['Error'] = str(e)
+			context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
+		except Exception as e:
+			context['Error'] = str(e)
 
-			return render(request, 'graphs/upload_graph.html', context)
+		return render(request, 'graphs/upload_graph.html', context)
 	else:
 		return render(request, 'graphs/upload_graph.html', context)
-
-
-def _clean_tag_query(tag_query):
-	if tag_query is None:
-		return ''
-	else:
-		return ','.join([x for x in tag_query.split(',') if len(x.strip()) != 0])
-
-
-def _clean_search_query(search_query):
-	if search_query is None:
-		return ''
-	else:
-		return ','.join([x for x in search_query.split(',') if len(x.strip()) != 0])
 
 
 def view_graph(request, graph_owner, graphname):
@@ -234,3 +149,293 @@ def _convert_to_cytoscape_json(graphjson):
 	else:
 		return graphjson
 
+
+def get_graphs(request, query=dict()):
+	"""
+	Query Parameters
+	----------
+	owner_email : string
+		Email of the Owner of the graphs.
+	member_email: string
+		Email of the member of the groups the graphs are shared with.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	is_public: boolean
+		Search for graphs with given visibility. In order to search for public graphs set is_public to True.
+		In order to search for private graphs set is_public to False. In order to search for all graphs set is_public to None.
+	names : list of strings
+		Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+	nodes : list of strings
+		Search for graphs with given given list of node names. In order to search for graphs with given node name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node name.
+	edges : list of strings
+		Search for graphs with the edge between given given list of node names separated by colon. In order to search for graphs with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edge between nodes with 'xyz' and 'abc' in their node names.
+	tags : list of strings
+		Search for graphs with the given given list of tag names. In order to search for graphs with given tag as a substring, wrap the name of the tag with percentage symbol. For example, %xyz% will search for all graphs with 'xyz' in their tag names.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+	Parameters
+	----------
+	query : dict
+		Dictionary of query parameters.
+	request : object
+		HTTP GET Request.
+	owner_email : string
+		Email of the Owner of the groups.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	groups : List of Groups.
+		List of Group Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+	"""
+
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	total, graphs_list = graphs.search_graphs(request,
+										owner_email=query.get('owner_email', None),
+										member_email=query.get('member_email', None),
+										names=list(filter(None, query.getlist('names[]', []))),
+										is_public=query.get('is_public', None),
+										nodes=list(filter(None, query.getlist('nodes[]', []))),
+										edges=list(filter(None, query.getlist('edges[]', []))),
+										tags=list(filter(None, query.getlist('tags[]', []))),
+										limit=query.get('limit', 20),
+										offset=query.get('offset', 0),
+										order=query.get('order', 'desc'),
+										sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'graphs': [utils.serializer(graph) for graph in graphs_list]
+	}
+
+
+def graphs_page(request):
+	"""
+		Wrapper view for the graphs page.
+
+		:param request: HTTP GET Request.
+	"""
+	context = RequestContext(request, {})
+	uid = request.session['uid'] if 'uid' in request.session else None
+	try:
+		context.push({
+			"public_graphs": get_graphs(request, query={'is_public': True}),
+		})
+		if uid is not None:
+			context.push({
+				"owned_graphs": get_graphs(request, query={'owner_email': uid}),
+				"shared_graphs": get_graphs(request, query={'member_email': uid})
+			})
+
+		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
+		else:
+			return render(request, 'graphs/graphs.html', context)
+	except Exception as e:
+		context['Error'] = str(e)
+		return render(request, 'graphs/error.html', context)
+
+def get_graph(request, graph_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph.
+
+	Returns
+	-------
+	graph: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	return utils.serializer(graphs.get_graph_by_id(request, graph_id))
+
+
+def add_graph(request, graph={}):
+	"""
+	Graph Parameters
+	----------
+	name : string
+		Name of group. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	tags: list of strings
+		List of tags to be attached with the graph. Optional
+
+
+	Parameters
+	----------
+	graph : dict
+		Dictionary containing the data of the graph being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	graph : object
+		Newly created graph object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.add_graph(request,
+											name=graph.get('name', None),
+											is_public=graph.get('is_public', None),
+											json_graph=graph.get('json', None),
+											cyjs_graph=graph.get('cyjs', None),
+											tags=graph.get('tags', None),
+											owner_email=graph.get('owner_email', None)))
+
+
+def update_graph(request, graph_id, graph={}):
+	"""
+	Graph Parameters
+	----------
+	name : string
+		Name of group. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+
+
+	Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph.
+	graph : dict
+		Dictionary containing the data of the graph being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	graph : object
+		Updated graph object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.update_graph(request,
+											graph_id=graph_id,
+											name=graph.get('name', None),
+											is_public=graph.get('is_public', None),
+											json_string=graph.get('json', None),
+											owner_email=graph.get('owner_email', None),
+											default_layout_id=graph.get('default_layout_id', None)))
+
+
+def delete_graph(request, graph_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	graphs.delete_graph_by_id(request, graph_id)
+
+
+def gs_graphs(request, graph_id=None):
+	"""
+	Handles any request (GET/POST) sent to /graphs or graphs/<graph_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		try:
+			if request.method == "GET" and graph_id is None:
+				return HttpResponse(json.dumps(get_graphs(request, query=request.GET)), content_type="application/json")
+			elif request.method == "GET" and graph_id is not None:
+				return HttpResponse(json.dumps(get_graph(request, graph_id)), content_type="application/json",
+									status=200)
+			elif request.method == "POST" and graph_id is None:
+				return HttpResponse(json.dumps(add_graph(request, graph=json.loads(request.body))), content_type="application/json", status=201)
+			elif request.method == "PUT" and graph_id is not None:
+				return HttpResponse(json.dumps(update_graph(request, graph_id, graph=json.loads(request.body))), content_type="application/json",
+									status=200)
+			elif request.method == "DELETE" and graph_id is not None:
+				delete_graph(request, graph_id)
+				return HttpResponse(json.dumps({
+					"message": "Successfully deleted graph with id=%s" % graph_id
+				}), content_type="application/json", status=200)
+		except Exception as e:
+			return HttpResponse(json.dumps({
+				"message": "BAD REQUEST"
+			}), content_type="application/json", status=400)
+
+
+def graph_page(request, graph_id):
+	"""
+		Wrapper view for the group page. /graphs/<graph_id>
+
+		:param request: HTTP GET Request.
+
+	Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph. Required
+	"""
+	context = RequestContext(request, {})
+	uid = request.session['uid'] if 'uid' in request.session else None
+	if uid is not None:
+		context.push({
+			"graph": get_graph(request, graph_id),
+		})
+		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
+		else:
+			return render(request, 'graphs/graph.html', context)
+	else:
+		context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.!"
+		return render(request, 'graphs/error.html', context)

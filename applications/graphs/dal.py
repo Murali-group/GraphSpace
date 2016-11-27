@@ -75,8 +75,36 @@ def add_graph(db_session, name, owner_email, json, is_public=0, default_layout_i
 
 
 @with_session
+def update_graph(db_session, id, updated_graph):
+	"""
+	Update graph row entry.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph
+	:param updated_graph: Updated graph row entry
+	:return: Graph if id exists else None
+	"""
+	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	for (key, value) in updated_graph.items():
+		setattr(graph, key, value)
+	return graph
+
+
+@with_session
 def get_graph(db_session, owner_email, name):
 	return db_session.query(Graph).filter(and_(Graph.owner_email == owner_email, Graph.name == name)).one_or_none()
+
+
+@with_session
+def delete_graph(db_session, id):
+	"""
+	Delete group from Graph table.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph
+	:return: None
+	"""
+	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	db_session.delete(graph)
+	return
 
 
 @with_session
@@ -85,7 +113,7 @@ def get_graph_by_id(db_session, id):
 
 
 @with_session
-def find_graphs(db_session, group_ids=None, owner_email=None, is_public=None, names=None, nodes=None, edges=None, tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
+def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, names=None, nodes=None, edges=None, tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
 
 	graph_filter_group = []
@@ -98,11 +126,11 @@ def find_graphs(db_session, group_ids=None, owner_email=None, is_public=None, na
 		query = query.filter(*graph_filter_group)
 
 	options_group = []
-	if nodes is not None:
+	if nodes is not None and len(nodes) > 0:
 		options_group.append(joinedload('nodes'))
-	if edges is not None:
+	if edges is not None and len(edges) > 0:
 		options_group.append(joinedload('edges'))
-	if group_ids is not None:
+	if group_ids is not None and len(group_ids) > 0:
 		options_group.append(joinedload('shared_with_groups'))
 	if len(options_group) > 0:
 		query = query.options(*options_group)
@@ -128,12 +156,9 @@ def find_graphs(db_session, group_ids=None, owner_email=None, is_public=None, na
 	if len(edges_filter) > 0:
 		combined_filter.append(Graph.edges.any(or_(*edges_filter)))
 	if len(names_filter) > 0:
-		combined_filter.append(*names_filter)
-	if len(tags_filter) > 0:
-		combined_filter.append(*tags_filter)
+		combined_filter.extend(names_filter)
 
-	if len(combined_filter) > 0:
-		query = query.filter(or_(*combined_filter))
+	query = query.filter(and_(or_(*combined_filter), *tags_filter))
 
 	total = query.count()
 
@@ -157,6 +182,11 @@ def add_node(db_session, graph_id, name, label):
 	node = Node(name=name, graph_id=graph_id, label=label)
 	db_session.add(node)
 	return node
+
+
+@with_session
+def remove_nodes_by_graph_id(db_session, graph_id):
+	db_session.query(Node).filter(Node.graph_id == graph_id).delete()
 
 
 @with_session

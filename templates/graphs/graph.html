@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+    <script type="text/javascript">
+        {% if not Error %}
+            var graph_json = {{ graph.json|safe }};
+        {% endif %}
+    </script>
+
+    <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
+    <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
+
+    <div class="container graphs padding-bottom-6">
+        <h1 class="text-center">
+            {{ graph.name }}
+        </h1>
+        <div id="cyGraphContainer"></div>
+    </div>
+
+    <footer class="footer">
+        <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+        <br><a href="http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
+    </footer>
+
+    <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
+    <!-- JSON support for Graph Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            graphPage.init();
+        });
+    </script>
+{% endblock %}

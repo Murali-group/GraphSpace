@@ -9,21 +9,21 @@
 
 					<h1>Welcome to GraphSpace!</h1>
 
-					<big>The interactive graph sharing website.</big>
+					<h4>The interactive graph sharing website.</h4>
 
 					<br/>
 
 					{% if uid != None %}
-						<big>You are logged in, go to <a href="/old/graphs_old">Graphs</a> to view your graphs or <a href="/old/graphs_old/upload">upload</a> a new graph.<br>
-						</big>
+						<h4>You are logged in, go to <a href="{% url 'graphs' %}">Graphs</a> to view your graphs or <a href="{% url 'upload_graph' %}">upload</a> a new graph.<br>
+						</h4>
 					{% else %}
-						<big>If you don't have an account right now, you can check out <a href="">public graphs</a> or <a href="/old/graphs_old/upload">upload</a> a new graph.<br></big>
+						<h4>If you don't have an account right now, you can check out <a href="{% url 'graphs' %}">public graphs</a> or <a href="{% url 'upload_graph' %}">upload</a> a new graph.<br></h4>
 
 					{% endif %}
 
 					<br/>
 
-					<h4>Please contact <b>murali@cs.vt.edu</b> for any questions/concerns.</h4>
+					<h4>Please contact <b>T. M. Murali</b> at murali@cs.vt.edu if you have any questions about GraphSpace. </h4>
 
 					<br/>
 

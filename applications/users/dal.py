@@ -1,6 +1,6 @@
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
-from sqlalchemy.sql import asc
+from sqlalchemy.sql import asc, desc
 
 from django.utils.datetime_safe import datetime
 from graphspace.utils import generate_uid

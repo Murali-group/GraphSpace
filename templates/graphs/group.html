@@ -44,8 +44,8 @@
                     <tr>
                         <th data-field="name" data-sortable="True" data-formatter="groupPage.SharedGraphsTable.nameFormatter">Graph Name</th>
                         <th data-field="owner_email" data-sortable="True">Graph Owner</th>
-                        <th data-field="is_public">Visibility</th>
-                        <th data-field="updated_at" data-sortable="True">Last Modified</th>
+                        <th data-field="is_public" data-formatter="groupPage.SharedGraphsTable.visibilityFormatter" data-sortable="True">Visibility</th>
+                        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
                         {% if group.owner_email == uid %}
                             <th data-field="operations"
                                 data-formatter="groupPage.SharedGraphsTable.operationsFormatter"
@@ -167,6 +167,7 @@
     </footer>
 
     <!-- JSON support for Groups Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
 
     <script>

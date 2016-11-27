@@ -16,7 +16,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	json = Column(String, nullable=False)
-	is_public = Column(Integer, nullable=False)
+	is_public = Column(Integer, nullable=False, default=0)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
 							   nullable=True)
 
@@ -45,6 +45,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 			'name': cls.name,
 			'json': cls.json,
 			'is_public': cls.is_public,
+			'tags': [tag.serialize() for tag in cls.tags],
 			'default_layout_id': cls.default_layout_id,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
@@ -165,6 +166,13 @@ class GraphTag(IDMixin, TimeStampMixin, Base):
 	name = Column(String, nullable=False, unique=True)
 
 	graphs = association_proxy('tagged_graphs', 'graph')
+
+	def serialize(cls):
+		return {
+			'name': cls.name,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 
 class GraphToTag(TimeStampMixin, Base):

@@ -180,23 +180,6 @@ var groupsPage = {
     }
 };
 
-var utils = {
-    initializeTabs: function () {
-        utils.selectTab(document.location.toString());
-
-        $('.nav-tabs a').on('shown.bs.tab', function (e) {
-            // Change hash for page-reload. It will add the appropriate hash tag in the url for current tab.
-            window.location.hash = e.target.hash;
-        });
-    },
-    selectTab: function (url) {
-        // Go to Specific Tab on Page Reload or Hyperlink
-        if (url.match('#')) {
-            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
-        }
-    }
-};
-
 var groupPage = {
     init: function () {
         /**
@@ -235,6 +218,13 @@ var groupPage = {
         }
     },
     SharedGraphsTable: {
+        visibilityFormatter: function (value, row) {
+            if (row.is_public === 1) {
+                return "<i class='fa fa-globe fa-lg'></i> Public";
+            } else {
+                return "<i class='fa fa-lock fa-lg'></i> Private";
+            }
+        },
         nameFormatter: function (value, row) {
             return $('<a>').attr('href', '/graphs/' + row.id).text(row.name)[0].outerHTML;
         },
