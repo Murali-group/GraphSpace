@@ -10,12 +10,150 @@
     <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
     <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
 
-    <div class="container graphs padding-bottom-6">
-        <h1 class="text-center">
-            {{ graph.name }}
-        </h1>
-        <div id="cyGraphContainer"></div>
+    <!--- Modals start here--->
+    <div>
+        <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Share Graph</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group zero-margin">
+                            <li class="list-group-item row gs-list-group-item">
+                                <span class="col-md-10 lead">
+                                    Share with public <i class="fa fa-globe fa-lg"></i>
+                                </span>
+
+                                <span class="col-md-2" style="text-align: right">
+                                    {% if graph.is_public == 0 %}
+                                        <button type="button" class="btn btn-default btn-sm"><i class="fa fa-share"></i>
+                                            Share
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-remove"></i>
+                                            Unshare
+                                        </button>
+                                    {% endif %}
+                                </span>
+                            </li>
+                        </ul>
+                        <ul class="list-group" style="max-height: 365px; overflow-x: hidden; height: auto">
+
+                            {% for group in groups %}
+                                <li class="list-group-item row gs-list-group-item">
+                                    <span class="col-md-10 lead">
+                                        {{ group.name }} <small>owned by: {{ group.owner_email }}</small>
+                                    </span>
+
+                                    <span class="col-md-2" style="text-align: right">
+                                        <button type="button"
+                                                class="btn btn-default btn-sm share-graph-btn {% if group.is_shared == 1 %}hidden{% endif %}"
+                                                onclick="graphPage.onShareGraphWithGroupBtn(this, {{ graph.id }}, {{ group.id }})">
+                                            <i class="fa fa-share"></i>
+                                            Share
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm unshare-graph-btn {% if group.is_shared == 0 %}hidden{% endif %}"
+                                                onclick="graphPage.onUnshareGraphWithGroupBtn(this, {{ graph.id }}, {{ group.id }})">
+                                            <i class="fa fa-remove"></i>
+                                            Unshare
+                                        </button>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <!--- Modals end here--->
+    <div id="wrapper" class="gs-full-height">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    <br><br>
+                </li>
+                <li>
+                    <a class="btn active" href="#" data-target="#searchPopover" data-container="body"
+                       data-placement="left" data-toggle="popover" title="Search">
+                        <i class="fa fa-search fa-lg"></i> Search
+                    </a>
+                    <div id="searchPopover" class="popover fade">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Enter node or edge ID">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default search-nodes-edges-btn" type="button"
+                                        onclick="graphPage.onSearchNodesEdgesBtnClick(this)">Submit
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <a class="btn" href="#" data-trigger="focus" data-target="#exportPopover" data-container="body"
+                       data-placement="left" data-toggle="popover">
+                        <i class="fa fa-download fa-lg"></i> Export
+                    </a>
+                    <div id="exportPopover" class="popover fade">
+                        <button type="button" class="btn btn-default">JSON</button>
+                        <button type="button" class="btn btn-default">PNG</button>
+                    </div>
+                </li>
+                <li>
+                    <a class="btn" href="#" data-toggle="modal" data-target="#shareGraphModal">
+                        <i class="fa fa-share-alt fa-lg"></i> Share
+                    </a>
+                </li>
+                <li>
+                    <a class="btn" href="#">
+                        <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
+                    </a>
+                </li>
+                <li>
+                    <a class="btn" href="#">
+                        Change Layout
+                    </a>
+                </li>
+                <li>
+                    <a class="btn" href="#">
+                        <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
+                    </a>
+                </li>
+                <li>
+                    <a class="btn" href="#">
+                        <i class="fa fa-save fa-lg"></i> Save Layout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="gs-full-height">
+            <div class="container-fluid graphs gs-full-height">
+                <div class="row gs-full-height">
+                    <div class="col-lg-12 gs-full-height">
+                        <div class="container graphs padding-bottom-6" style="margin: 0; width: 100%;">
+                            <h1 class="text-center">
+                                {{ graph.name }}
+                            </h1>
+                            <div id="cyGraphContainer"></div>
+                        </div>
+                        <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+
+
 
     <footer class="footer">
         <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
@@ -31,5 +169,25 @@
         $(document).ready(function () {
             graphPage.init();
         });
+    </script>
+    <!-- Menu Toggle Script -->
+    <script>
+        $("#menu-toggle").click(function (e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+
+        $(function () {
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                template: '<div class="popover gs-transparent-popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+                content: function () {
+                    return $($(this).data('target')).html();
+                }
+
+            })
+        })
+
+
     </script>
 {% endblock %}

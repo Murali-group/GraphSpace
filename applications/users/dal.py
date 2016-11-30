@@ -247,7 +247,7 @@ def get_users_by_group(db_session, group_id):
 
 
 @with_session
-def find_groups(db_session, owner_email, member_email, name, description, limit, offset, order_by=asc(Group.name)):
+def find_groups(db_session, owner_email, member_email, name, description, graph_ids, limit, offset, order_by=asc(Group.name)):
 	query = db_session.query(Group)
 
 	if order_by is not None:
@@ -265,6 +265,10 @@ def find_groups(db_session, owner_email, member_email, name, description, limit,
 	if member_email is not None:
 		query = query.options(joinedload('member_users'))
 		query = query.filter(Group.members.any(User.email == member_email))
+
+	if graph_ids is not None and len(graph_ids) > 0:
+		query = query.options(joinedload('shared_graphs'))
+		query = query.filter(Group.shared_graphs.any(Graph.id.in_(graph_ids)))
 
 	total = query.count()
 

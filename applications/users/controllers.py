@@ -91,7 +91,7 @@ def get_groups_by_owner_id(request, owner_id):
 	return db.get_groups_by_owner_id(request.db_session, owner_id=owner_id)
 
 
-def search_groups(request, owner_email=None, member_email=None, name=None, description=None, limit=20, offset=0, order='desc', sort='name'):
+def search_groups(request, owner_email=None, member_email=None, name=None, description=None, graph_ids=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Group.name
 	elif sort == 'update_at':
@@ -111,6 +111,7 @@ def search_groups(request, owner_email=None, member_email=None, name=None, descr
 						member_email=member_email,
 						name=name,
 						description=description,
+						graph_ids=graph_ids,
 						limit=limit,
 						offset=offset,
 						order_by=orber_by)

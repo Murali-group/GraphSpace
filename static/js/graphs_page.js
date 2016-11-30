@@ -19,7 +19,16 @@ var apis = {
         },
         delete: function (id, successCallback, errorCallback) {
             apis.jsonRequest('DELETE', apis.graphs.ENDPOINT + id, undefined, successCallback, errorCallback)
-        }
+        },
+        getSharedGroups: function (id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.graphs.ENDPOINT + id + '/groups', data, successCallback, errorCallback)
+        },
+        shareGraph: function (id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.graphs.ENDPOINT + id + '/groups', data, successCallback, errorCallback)
+        },
+        unshareGraph: function (graph_id, group_id, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.graphs.ENDPOINT + graph_id + '/groups/' + group_id, undefined, successCallback, errorCallback)
+        },
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -329,7 +338,50 @@ var graphPage = {
          * This function is called to setup the graph page.
          * It will initialize all the event listeners.
          */
+        graphPage.setupCytoscapeGraph();
 
+    },
+    onShareGraphWithGroupBtn: function (e, graph_id, group_id) {
+
+         apis.graphs.shareGraph(graph_id, {
+                'group_id': group_id
+            },
+            successCallback = function (response) {
+                // This method is called when group_to_graph relationship is successfully deleted.
+                // The entry from the table is deleted.
+                $(e).parent().find('.unshare-graph-btn').removeClass('hidden');
+                $(e).addClass('hidden');
+
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                alert(xhr.responseText);
+            });
+
+
+    },
+    onUnshareGraphWithGroupBtn: function (e, graph_id, group_id) {
+
+        apis.graphs.unshareGraph(graph_id, group_id,
+            successCallback = function (response) {
+                // This method is called when group_to_graph relationship is successfully deleted.
+                // The entry from the table is deleted.
+                $(e).parent().find('.share-graph-btn').removeClass('hidden');
+                $(e).addClass('hidden');
+
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                alert(xhr.responseText);
+            });
+    },
+    onSearchNodesEdgesBtnClick: function (e) {
+        console.debug($(e).parent().parent().find('input')[0]);
+    },
+    searchNodeAndEdges: function (e) {
+        $(e).val()
+    },
+    setupCytoscapeGraph: function () {
         graphPage.cyGraph = cytoscape({
             container: document.getElementById('cyGraphContainer'),
             boxSelectionEnabled: true,
@@ -559,4 +611,4 @@ var graphPage = {
 
     }
 
-}
+};

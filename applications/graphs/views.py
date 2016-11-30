@@ -1,6 +1,7 @@
 import json
 
 import applications.graphs.controllers as graphs
+import applications.users.controllers as users
 import graphspace.utils as utils
 from applications.graphs.forms import SearchForm
 from django.conf import settings
@@ -9,21 +10,20 @@ from django.shortcuts import render
 from django.template import RequestContext
 
 
-
 def upload_graph_page(request):
 	context = RequestContext(request, {})
 
 	if request.method == 'POST':
 		try:
 			if str(request.FILES['graph_file']).endswith("json"):
-				graph=add_graph(request, graph={
+				graph = add_graph(request, graph={
 					'name': request.POST.get('name', None),
 					'owner_email': request.POST.get('owner_email', None),
 					'is_public': request.POST.get('is_public', None),
 					'json': json.loads(request.FILES['graph_file'].read()),
 				})
 			else:
-				graph=add_graph(request, graph={
+				graph = add_graph(request, graph={
 					'name': request.POST.get('name', None),
 					'owner_email': request.POST.get('owner_email', None),
 					'is_public': request.POST.get('is_public', None),
@@ -56,18 +56,22 @@ def view_graph(request, graph_owner, graphname):
 		graph = graphs.get_graph(request, graph_owner, graphname)
 
 		if graph is None:
-			raise Exception("Graph: " + graphname + " does not exist for " + graph_owner + ".  Upload a graph with this name into GraphSpace in order to see it.")
+			raise Exception(
+				"Graph: " + graphname + " does not exist for " + graph_owner + ".  Upload a graph with this name into GraphSpace in order to see it.")
 
 		if not graphs.is_user_authorized_to_view_graph(request, request.session['uid'], graph.id):
-			raise Exception("You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.")
+			raise Exception(
+				"You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.")
 
 		layout = graphs.get_layout(request, layout_owner, layoutname, graph.id)
 
 		if layout is None:
 			if "layout" in request.GET and layoutname not in graphs.AUTOMATIC_LAYOUT_ALGORITHMS:
-				raise Exception("Layout: " + request.GET.get('layout') + " does not exist.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
-		elif layout.is_public !=1 and layout.is_shared !=1:
-			raise Exception(layout.owner_email + " has not shared " + request.GET.get('layout') + " layout yet.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
+				raise Exception("Layout: " + request.GET.get(
+					'layout') + " does not exist.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
+		elif layout.is_public != 1 and layout.is_shared != 1:
+			raise Exception(layout.owner_email + " has not shared " + request.GET.get(
+				'layout') + " layout yet.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
 		else:
 			context['default_layout_name'] = graph.default_layout.name
 			context['default_layout'] = utils.cytoscapePresetLayout(json.dump(graph.default_layout.json))
@@ -206,17 +210,17 @@ def get_graphs(request, query=dict()):
 	query = querydict
 
 	total, graphs_list = graphs.search_graphs(request,
-										owner_email=query.get('owner_email', None),
-										member_email=query.get('member_email', None),
-										names=list(filter(None, query.getlist('names[]', []))),
-										is_public=query.get('is_public', None),
-										nodes=list(filter(None, query.getlist('nodes[]', []))),
-										edges=list(filter(None, query.getlist('edges[]', []))),
-										tags=list(filter(None, query.getlist('tags[]', []))),
-										limit=query.get('limit', 20),
-										offset=query.get('offset', 0),
-										order=query.get('order', 'desc'),
-										sort=query.get('sort', 'name'))
+											  owner_email=query.get('owner_email', None),
+											  member_email=query.get('member_email', None),
+											  names=list(filter(None, query.getlist('names[]', []))),
+											  is_public=query.get('is_public', None),
+											  nodes=list(filter(None, query.getlist('nodes[]', []))),
+											  edges=list(filter(None, query.getlist('edges[]', []))),
+											  tags=list(filter(None, query.getlist('tags[]', []))),
+											  limit=query.get('limit', 20),
+											  offset=query.get('offset', 0),
+											  order=query.get('order', 'desc'),
+											  sort=query.get('sort', 'name'))
 
 	return {
 		'total': total,
@@ -243,12 +247,13 @@ def graphs_page(request):
 			})
 
 		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
+			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
 		else:
 			return render(request, 'graphs/graphs.html', context)
 	except Exception as e:
 		context['Error'] = str(e)
 		return render(request, 'graphs/error.html', context)
+
 
 def get_graph(request, graph_id):
 	"""
@@ -307,12 +312,12 @@ def add_graph(request, graph={}):
 	"""
 
 	return utils.serializer(graphs.add_graph(request,
-											name=graph.get('name', None),
-											is_public=graph.get('is_public', None),
-											json_graph=graph.get('json', None),
-											cyjs_graph=graph.get('cyjs', None),
-											tags=graph.get('tags', None),
-											owner_email=graph.get('owner_email', None)))
+											 name=graph.get('name', None),
+											 is_public=graph.get('is_public', None),
+											 json_graph=graph.get('json', None),
+											 cyjs_graph=graph.get('cyjs', None),
+											 tags=graph.get('tags', None),
+											 owner_email=graph.get('owner_email', None)))
 
 
 def update_graph(request, graph_id, graph={}):
@@ -348,12 +353,12 @@ def update_graph(request, graph_id, graph={}):
 	"""
 
 	return utils.serializer(graphs.update_graph(request,
-											graph_id=graph_id,
-											name=graph.get('name', None),
-											is_public=graph.get('is_public', None),
-											json_string=graph.get('json', None),
-											owner_email=graph.get('owner_email', None),
-											default_layout_id=graph.get('default_layout_id', None)))
+												graph_id=graph_id,
+												name=graph.get('name', None),
+												is_public=graph.get('is_public', None),
+												json_string=graph.get('json', None),
+												owner_email=graph.get('owner_email', None),
+												default_layout_id=graph.get('default_layout_id', None)))
 
 
 def delete_graph(request, graph_id):
@@ -400,9 +405,11 @@ def gs_graphs(request, graph_id=None):
 				return HttpResponse(json.dumps(get_graph(request, graph_id)), content_type="application/json",
 									status=200)
 			elif request.method == "POST" and graph_id is None:
-				return HttpResponse(json.dumps(add_graph(request, graph=json.loads(request.body))), content_type="application/json", status=201)
+				return HttpResponse(json.dumps(add_graph(request, graph=json.loads(request.body))),
+									content_type="application/json", status=201)
 			elif request.method == "PUT" and graph_id is not None:
-				return HttpResponse(json.dumps(update_graph(request, graph_id, graph=json.loads(request.body))), content_type="application/json",
+				return HttpResponse(json.dumps(update_graph(request, graph_id, graph=json.loads(request.body))),
+									content_type="application/json",
 									status=200)
 			elif request.method == "DELETE" and graph_id is not None:
 				delete_graph(request, graph_id)
@@ -431,11 +438,174 @@ def graph_page(request, graph_id):
 	if uid is not None:
 		context.push({
 			"graph": get_graph(request, graph_id),
+			"groups": [utils.serializer(group) for group in
+					   users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
+			"shared_groups": get_graph_groups(request, graph_id, query={'limit': None,'offset': None})['groups']
 		})
+		shared_group_ids = [group['id'] for group in context["shared_groups"]]
+		for group in context['groups']:
+			group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
+
 		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
+			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
 		else:
 			return render(request, 'graphs/graph.html', context)
 	else:
-		context['Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.!"
+		context[
+			'Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.!"
 		return render(request, 'graphs/error.html', context)
+
+
+def graph_groups(request, graph_id, group_id=None):
+	"""
+	Handles any request (GET/POST) sent to graphs/<graph_id>/groups or graphs/<graph_id>/groups/<group_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	graph_id : string
+		Unique ID of the graph.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		try:
+			if graph_id is None:
+				raise Exception("Graph ID is required.")
+
+			if request.method == "GET" and group_id is None:
+				return HttpResponse(json.dumps(get_graph_groups(request, graph_id, query=request.GET)),
+									content_type="application/json")
+			elif request.method == "POST" and group_id is None:
+				return HttpResponse(json.dumps(add_graph_group(request, graph_id)), content_type="application/json",
+									status=201)
+			elif request.method == "DELETE" and group_id is not None:
+				delete_graph_group(request, graph_id, group_id)
+				return HttpResponse(json.dumps({
+					"message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
+				}), content_type="application/json", status=200)
+		except Exception as e:
+			return HttpResponse(json.dumps({
+				"message": "BAD REQUEST"
+			}), content_type="application/json", status=400)
+
+
+def add_graph_group(request, graph_id):
+	"""
+	Body Parameters
+	----------
+	group_id : string
+		Unique ID of the group.
+
+	Parameters
+	----------
+	request : object
+		HTTP POST Request.
+
+	graph_id : string
+		User ID of the member. Required
+
+	Returns
+	-------
+	group_to_graph : object
+		Newly added group_to_graph relationship.
+
+	Raises
+	------
+
+	Notes
+	------
+	"""
+	return utils.serializer(users.add_group_graph(request,
+												  graph_id=graph_id,
+												  group_id=request.POST.get('group_id', None)))
+
+
+def delete_graph_group(request,  graph_id, group_id):
+	"""
+	Parameters
+	----------
+	request : object
+		HTTP POST Request.
+	group_id : string
+		Unique ID of the group. Required
+	graph_id : string
+		User ID of the member. Required
+
+
+	Returns
+	-------
+	None.
+
+	Raises
+	------
+
+	Notes
+	------
+	"""
+	users.delete_group_graph(request,
+							 group_id=group_id,
+							 graph_id=graph_id)
+
+
+def get_graph_groups(request, graph_id, query={}):
+	"""
+
+	Query Parameters
+	----------
+	owner_email : string
+		Email of the Owner of the groups.
+	member_email: string
+		Email of the member of the groups.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	name : string
+		Search for groups with given name. In order to search for groups with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all groups with xyz in their name.
+	description : string
+		Search for groups with given description. In order to search for groups with given description as a substring, wrap the description with percentage symbol. For example, %xyz% will search for all groups with xyz in their description.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	groups : List of Groups.
+		List of Group Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	total, groups = users.search_groups(request,
+										graph_ids=[graph_id],
+										owner_email=query.get('owner_email', None),
+										member_email=query.get('member_email', None),
+										name=query.get('name', None),
+										description=query.get('description', None),
+										limit=query.get('limit', 20),
+										offset=query.get('offset', 0),
+										order=query.get('order', 'desc'),
+										sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'groups': [utils.serializer(group) for group in groups]
+	}
