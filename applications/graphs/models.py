@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import json
+
 from applications.users.models import *
 from django.conf import settings
 from graphspace.mixins import *
@@ -43,7 +45,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 			'id': cls.id,
 			'owner_email': cls.owner_email,
 			'name': cls.name,
-			'json': cls.json,
+			'json': json.loads(cls.json),
 			'is_public': cls.is_public,
 			'tags': [tag.serialize() for tag in cls.tags],
 			'default_layout_id': cls.default_layout_id,
@@ -77,6 +79,17 @@ class Edge(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'name': cls.name,
+			'is_directed': cls.is_directed,
+			'head_node': cls.head_node.serialize(),
+			'tail_node': cls.tail_node.serialize(),
+			'graph_id': cls.graph_id,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 class Node(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'node'
@@ -97,6 +110,15 @@ class Node(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'name': cls.name,
+			'label': cls.label,
+			'graph_id': cls.graph_id,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 class GroupToGraph(TimeStampMixin, Base):
 	__tablename__ = 'group_to_graph'
@@ -131,9 +153,9 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	json = Column(String, nullable=False)
-	is_public = Column(Integer, nullable=False)
-	is_shared_with_groups = Column(Integer, nullable=False)
-	original_json = Column(String, nullable=False)
+	is_public = Column(Integer, nullable=False, default=0)
+	is_shared_with_groups = Column(Integer, nullable=False, default=0)
+	original_json = Column(String, nullable=True)
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
 	owner = relationship("User", back_populates="owned_layouts", uselist=False)
@@ -149,6 +171,19 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'name': cls.name,
+			'owner_email': cls.owner_email,
+			'graph_id': cls.graph_id,
+			'json': cls.json,
+			'is_public': cls.is_public,
+			'is_shared_with_groups': cls.is_shared_with_groups,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
 
 	# The id of the user who created the layout. The foreign key constraint ensures
 	# this person is present in the 'user' table. Not that owner_id need not be the

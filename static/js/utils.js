@@ -11,6 +11,7 @@ $(document).ready(function () {
         },
         delay: 15000,
         offset: 100,
+        z_index: 100000,
         type: 'success'
     });
 

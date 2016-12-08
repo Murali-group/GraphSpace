@@ -136,7 +136,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 		query = query.options(*options_group)
 
 	if group_ids is not None:
-		query = query.filter(Graph.shared_with_groups.any(Group.id.in_(group_ids)))
+		query = query.filter(Graph.groups.any(Group.id.in_(group_ids)))
 
 	edges = [] if edges is None else edges
 	nodes = [] if nodes is None else nodes
@@ -170,12 +170,34 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 
 	return total, query.all()
 
+
+@with_session
+def get_edge_by_id(db_session, id):
+	return db_session.query(Edge).filter(Edge.id == id).one_or_none()
+
+
 @with_session
 def add_edge(db_session, graph_id, head_node_id, tail_node_id, name, is_directed):
 	edge = Edge(name=name, graph_id=graph_id, head_node_id=head_node_id, tail_node_id = tail_node_id, is_directed = is_directed)
 	db_session.add(edge)
 	return edge
 
+@with_session
+def update_edge(db_session, id, updated_edge):
+	edge = db_session.query(Edge).filter(Edge.id == id).one_or_none()
+	for (key, value) in updated_edge.items():
+		setattr(edge, key, value)
+	return edge
+
+@with_session
+def delete_edge(db_session, id):
+	edge = db_session.query(Edge).filter(Edge.id == id).one_or_none()
+	db_session.delete(edge)
+	return edge
+
+@with_session
+def get_node_by_id(db_session, id):
+	return db_session.query(Node).filter(Node.id == id).one_or_none()
 
 @with_session
 def add_node(db_session, graph_id, name, label):
@@ -183,6 +205,19 @@ def add_node(db_session, graph_id, name, label):
 	db_session.add(node)
 	return node
 
+
+@with_session
+def update_node(db_session, id, updated_node):
+	node = db_session.query(Node).filter(Node.id == id).one_or_none()
+	for (key, value) in updated_node.items():
+		setattr(node, key, value)
+	return node
+
+@with_session
+def delete_node(db_session, id):
+	node = db_session.query(Node).filter(Node.id == id).one_or_none()
+	db_session.delete(node)
+	return node
 
 @with_session
 def remove_nodes_by_graph_id(db_session, graph_id):
@@ -223,3 +258,144 @@ def delete_graph_to_group(db_session, group_id, graph_id):
 	group_to_graph = db_session.query(GroupToGraph).filter(and_(GroupToGraph.group_id == group_id, GroupToGraph.graph_id == graph_id)).one_or_none()
 	db_session.delete(group_to_graph)
 	return group_to_graph
+
+@with_session
+def find_layouts(db_session, owner_email=None, is_public=None, is_shared_with_groups=None, name=None, graph_id=None, limit=None, offset=None, order_by=desc(Layout.updated_at)):
+	query = db_session.query(Layout)
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if owner_email is not None:
+		query = query.filter(Layout.owner_email.ilike(owner_email))
+
+	if name is not None:
+		query = query.filter(Layout.name.ilike(name))
+
+	if graph_id is not None:
+		query = query.filter(Layout.graph_id == graph_id)
+
+	if is_public is not None:
+		query = query.filter(Layout.is_public == is_public)
+
+	if is_shared_with_groups is not None:
+		query = query.filter(Layout.is_shared_with_groups == is_shared_with_groups)
+
+	total = query.count()
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()
+
+@with_session
+def get_layout_by_id(db_session, layout_id):
+	return db_session.query(Layout).filter(Layout.id == layout_id).one_or_none()
+
+@with_session
+def add_layout(db_session, owner_email, name, graph_id, is_public, is_shared_with_groups, json):
+	"""
+
+	Parameters
+	----------
+	db_session - Database session.
+	owner_email - ID of user who owns the group
+	name - Name of the layout
+	graph_id - ID of the graph the layout belongs to.
+	is_public - if layout is shared with everyone.
+	is_shared_with_groups - if layout is shared with groups where graph is shared.
+	json - json of the layouts.
+
+	Returns
+	-------
+
+	"""
+	layout = Layout(owner_email=owner_email, name=name, graph_id=graph_id, is_public=is_public, is_shared_with_groups=is_shared_with_groups, json=json)
+	db_session.add(layout)
+	return layout
+
+@with_session
+def update_layout(db_session, id, updated_layout):
+	"""
+
+	Parameters
+	----------
+	db_session: Database session.
+	id: Layout ID
+	updated_layout: Updated layout data
+
+	Returns
+	-------
+	Updated Layout Object
+
+	"""
+	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
+	for (key, value) in updated_layout.items():
+		setattr(layout, key, value)
+	return layout
+
+@with_session
+def delete_layout(db_session, id):
+	"""
+	Delete layout.
+	:param db_session: Database session.
+	:param id: Unique ID of the layout
+	:return: None
+	"""
+	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
+	db_session.delete(layout)
+	return
+
+@with_session
+def find_nodes(db_session, labels=None, names=None, graph_id=None, limit=None, offset=None, order_by=desc(Node.updated_at)):
+	query = db_session.query(Node)
+
+	if graph_id is not None:
+		query = query.filter(Node.graph_id == graph_id)
+
+	names = [] if names is None else names
+	labels = [] if labels is None else labels
+	if len(names+labels) > 0:
+		query = query.filter(or_(*([Node.name.ilike(name) for name in names]+[Node.label.ilike(label) for label in labels])))
+
+	total = query.count()
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()
+
+
+@with_session
+def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=None, limit=None, offset=None, order_by=desc(Node.updated_at)):
+	query = db_session.query(Edge)
+
+	if graph_id is not None:
+		query = query.filter(Edge.graph_id == graph_id)
+
+	if is_directed is not None:
+		query = query.filter(Edge.is_directed == is_directed)
+
+	names = [] if names is None else names
+	edges = [] if edges is None else edges
+	if len(names+edges) > 0:
+		query = query.options([joinedload('head_node'), joinedload('tail_node')])
+		names_filter = [Edge.name.ilike(name) for name in names]
+		edges_filter = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges]
+		edges_filter.extend([and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u,v in edges])
+		edges_filter.extend([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
+		edges_filter.extend([and_(Edge.tail_node.has(Node.label.ilike(u)), Edge.head_node.has(Node.label.ilike(v))) for u,v in edges])
+		query = query.filter(or_(*(edges_filter+names_filter)))
+
+	total = query.count()
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()

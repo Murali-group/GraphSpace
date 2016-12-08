@@ -154,14 +154,41 @@ def _convert_to_cytoscape_json(graphjson):
 		return graphjson
 
 
+def graphs_page(request):
+	"""
+		Wrapper view for the graphs page.
+
+		:param request: HTTP GET Request.
+	"""
+	context = RequestContext(request, {})
+	uid = request.session['uid'] if 'uid' in request.session else None
+	try:
+		context.push({
+			"public_graphs": get_graphs(request, query={'is_public': True}),
+		})
+		if uid is not None:
+			context.push({
+				"owned_graphs": get_graphs(request, query={'owner_email': uid}),
+				"shared_graphs": get_graphs(request, query={'member_email': uid})
+			})
+
+		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
+		else:
+			return render(request, 'graphs/graphs.html', context)
+	except Exception as e:
+		context['Error'] = str(e)
+		return render(request, 'graphs/error.html', context)
+
+
 def get_graphs(request, query=dict()):
 	"""
 	Query Parameters
 	----------
 	owner_email : string
 		Email of the Owner of the graphs.
-	member_email: string
-		Email of the member of the groups the graphs are shared with.
+	name: string
+		name of the graphs are shared with.
 	limit : integer
 		Number of entities to return. Default value is 20.
 	offset : integer
@@ -226,33 +253,6 @@ def get_graphs(request, query=dict()):
 		'total': total,
 		'graphs': [utils.serializer(graph) for graph in graphs_list]
 	}
-
-
-def graphs_page(request):
-	"""
-		Wrapper view for the graphs page.
-
-		:param request: HTTP GET Request.
-	"""
-	context = RequestContext(request, {})
-	uid = request.session['uid'] if 'uid' in request.session else None
-	try:
-		context.push({
-			"public_graphs": get_graphs(request, query={'is_public': True}),
-		})
-		if uid is not None:
-			context.push({
-				"owned_graphs": get_graphs(request, query={'owner_email': uid}),
-				"shared_graphs": get_graphs(request, query={'member_email': uid})
-			})
-
-		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
-		else:
-			return render(request, 'graphs/graphs.html', context)
-	except Exception as e:
-		context['Error'] = str(e)
-		return render(request, 'graphs/error.html', context)
 
 
 def get_graph(request, graph_id):
@@ -440,8 +440,10 @@ def graph_page(request, graph_id):
 			"graph": get_graph(request, graph_id),
 			"groups": [utils.serializer(group) for group in
 					   users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
-			"shared_groups": get_graph_groups(request, graph_id, query={'limit': None,'offset': None})['groups']
+			"shared_groups": get_graph_groups(request, graph_id, query={'limit': None,'offset': None})['groups'],
+			"layouts": get_layouts(request, query={"graph_id": graph_id, 'limit': None, 'offset': None})['layouts']
 		})
+		context['graph_json_string'] = json.dumps(context['graph']['json'])
 		shared_group_ids = [group['id'] for group in context["shared_groups"]]
 		for group in context['groups']:
 			group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
@@ -479,7 +481,7 @@ def graph_groups(request, graph_id, group_id=None):
 				return HttpResponse(json.dumps(get_graph_groups(request, graph_id, query=request.GET)),
 									content_type="application/json")
 			elif request.method == "POST" and group_id is None:
-				return HttpResponse(json.dumps(add_graph_group(request, graph_id)), content_type="application/json",
+				return HttpResponse(json.dumps(add_graph_group(request, graph_id, group=json.loads(request.body))), content_type="application/json",
 									status=201)
 			elif request.method == "DELETE" and group_id is not None:
 				delete_graph_group(request, graph_id, group_id)
@@ -492,7 +494,7 @@ def graph_groups(request, graph_id, group_id=None):
 			}), content_type="application/json", status=400)
 
 
-def add_graph_group(request, graph_id):
+def add_graph_group(request, graph_id, group={}):
 	"""
 	Body Parameters
 	----------
@@ -518,9 +520,10 @@ def add_graph_group(request, graph_id):
 	Notes
 	------
 	"""
+
 	return utils.serializer(users.add_group_graph(request,
 												  graph_id=graph_id,
-												  group_id=request.POST.get('group_id', None)))
+												  group_id=group.get('group_id', None)))
 
 
 def delete_graph_group(request,  graph_id, group_id):
@@ -609,3 +612,605 @@ def get_graph_groups(request, graph_id, query={}):
 		'total': total,
 		'groups': [utils.serializer(group) for group in groups]
 	}
+
+
+def layouts(request, layout_id=None):
+	"""
+	Handles any request (GET/POST) sent to /layouts or /layouts/<layout_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	graph_id : string
+		Unique ID of the graph.
+	layout_id: string
+		Unique ID of the layout.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		try:
+			if request.method == "GET" and layout_id is None:
+				return HttpResponse(json.dumps(get_layouts(request, query=request.GET)),
+									content_type="application/json")
+			elif request.method == "GET" and layout_id is not None:
+				return HttpResponse(json.dumps(get_layout(request, layout_id)),
+									content_type="application/json")
+			elif request.method == "POST" and layout_id is None:
+				return HttpResponse(json.dumps(add_layout(request, layout=json.loads(request.body))), content_type="application/json",
+									status=201)
+			elif request.method == "PUT" and layout_id is not None:
+				return HttpResponse(json.dumps(update_layout(request, layout_id, layout=json.loads(request.body))),
+									content_type="application/json",
+									status=200)
+			elif request.method == "DELETE" and layout_id is not None:
+				delete_layout(request, layout_id)
+				return HttpResponse(json.dumps({
+					"message": "Successfully deleted layout with id=%s" % (layout_id)
+				}), content_type="application/json", status=200)
+		except Exception as e:
+			return HttpResponse(json.dumps({
+				"message": "BAD REQUEST"
+			}), content_type="application/json", status=400)
+
+
+def get_layouts(request, query=dict()):
+	"""
+	Query Parameters
+	----------
+	owner_email : string
+		Email of the Owner of the groups.
+	graph_id : string
+		Unique ID of the graph for the layout.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	name : string
+		Search for groups with given name. In order to search for layouts with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all layouts with xyz in their name.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+	Parameters
+	----------
+	query : dict
+		Dictionary of query parameters.
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	groups : List of Layouts.
+		List of Layout Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+	"""
+
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	total, layouts = graphs.search_layouts(request,
+											owner_email=query.get('owner_email', None),
+											name=query.get('name', None),
+											graph_id=query.get('graph_id', None),
+											limit=query.get('limit', 20),
+											offset=query.get('offset', 0),
+											order=query.get('order', 'desc'),
+											sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'layouts': [utils.serializer(layout) for layout in layouts]
+	}
+
+
+def get_layout(request, layout_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	layout_id : string
+		Unique ID of the layout.
+
+	Returns
+	-------
+	layout: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	return utils.serializer(graphs.get_layout_by_id(request, layout_id))
+
+
+def add_layout(request, layout={}):
+	"""
+	Layout Parameters
+	----------
+	name : string
+		Name of the layout. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	graph_id : string
+		Unique ID of the graph for the layout. Required
+
+
+	Parameters
+	----------
+	layout : dict
+		Dictionary containing the data of the layout being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	layout : object
+		Newly created layout object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.add_layout(request,
+											 owner_email=layout.get('owner_email', None),
+											 name=layout.get('name', None),
+											 graph_id=layout.get('graph_id', None),
+											 is_public=layout.get('is_public', None),
+											 is_shared_with_groups=layout.get('is_shared_with_groups', None),
+											 json=layout.get('json', None)))
+
+
+def update_layout(request, layout_id, layout={}):
+	"""
+	Layout Parameters
+	----------
+	name : string
+		Name of the layout. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	graph_id : string
+		Unique ID of the graph for the layout. Required
+
+
+	Parameters
+	----------
+	layout : dict
+		Dictionary containing the data of the layout being added.
+	layout_id : string
+		Unique ID of the layout.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	layout : object
+		Updated layout object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+
+	"""
+
+	return utils.serializer(graphs.update_layout(request, layout_id,
+											 owner_email=layout.get('owner_email', None),
+											 name=layout.get('name', None),
+											 graph_id=layout.get('graph_id', None),
+											 is_public=layout.get('is_public', None),
+											 is_shared_with_groups=layout.get('is_shared_with_groups', None),
+											 json=layout.get('json', None)))
+
+
+def delete_layout(request, layout_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	layout_id : string
+		Unique ID of the layout.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	graphs.delete_layout_by_id(request, layout_id)
+
+
+def nodes(request, node_id=None):
+	"""
+	Handles any request (GET/POST) sent to nodes/ or nodes/<node_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	node_id : string
+		Unique ID of the node.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		try:
+			if request.method == "GET" and node_id is None:
+				return HttpResponse(json.dumps(get_nodes(request, query=request.GET)),
+									content_type="application/json")
+			elif request.method == "GET" and node_id is not None:
+				return HttpResponse(json.dumps(get_node(request, node_id)),
+									content_type="application/json")
+			elif request.method == "POST" and node_id is None:
+				return HttpResponse(json.dumps(add_node(request, node=json.loads(request.body))), content_type="application/json",
+									status=201)
+			elif request.method == "DELETE" and node_id is not None:
+				delete_node(request, node_id)
+				return HttpResponse(json.dumps({
+					"message": "Successfully deleted node with id=%s" % (node_id)
+				}), content_type="application/json", status=200)
+		except Exception as e:
+			return HttpResponse(json.dumps({
+				"message": "BAD REQUEST"
+			}), content_type="application/json", status=400)
+
+
+def get_nodes(request, query={}):
+	"""
+
+	Query Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	names : list of strings
+		Search for groups with given names. In order to search for groups with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all groups with xyz in their name.
+	labels : list of strings
+		Search for groups with given labels. In order to search for groups with given label as a substring, wrap the label with percentage symbol. For example, %xyz% will search for all groups with xyz in their label.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	total : integer
+		Number of nodes matching the request.
+	nodes : List of nodes.
+		List of Node Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	total, nodes_list = graphs.search_nodes(request,
+										graph_id=query.get('graph_id', None),
+										names=query.getlist('names[]', None),
+										labels=query.getlist('labels[]', None),
+										limit=query.get('limit', 20),
+										offset=query.get('offset', 0),
+										order=query.get('order', 'desc'),
+										sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'nodes': [utils.serializer(node) for node in nodes_list]
+	}
+
+
+def get_node(request, node_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	node_id : string
+		Unique ID of the node.
+
+	Returns
+	-------
+	node: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	return utils.serializer(graphs.get_node_by_id(request, node_id))
+
+def add_node(request, node={}):
+	"""
+	Node Parameters
+	----------
+	name : string
+		Name of the node. Required
+	label : string
+		Label for the node. Optional
+	graph_id : string
+		Unique ID of the graph for the node. Required
+
+
+	Parameters
+	----------
+	node : dict
+		Dictionary containing the data of the node being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	node : object
+		Newly created node object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.add_node(request,
+											 name=node.get('name', None),
+											 label=node.get('label', None),
+											 graph_id=node.get('graph_id', None)))
+
+
+def delete_node(request, node_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	node_id : string
+		Unique ID of the node.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	graphs.delete_node_by_id(request, node_id)
+
+
+def edges(request, edge_id=None):
+	"""
+	Handles any request (GET/POST) sent to edges/ or edges/<edge_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	edge_id : string
+		Unique ID of the edge.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		try:
+			if request.method == "GET" and edge_id is None:
+				return HttpResponse(json.dumps(get_edges(request, query=request.GET)),
+									content_type="application/json")
+			elif request.method == "GET" and edge_id is not None:
+				return HttpResponse(json.dumps(get_edge(request, edge_id)),
+									content_type="application/json")
+			elif request.method == "POST" and edge_id is None:
+				return HttpResponse(json.dumps(add_edge(request, edge=json.loads(request.body))), content_type="application/json",
+									status=201)
+			elif request.method == "DELETE" and edge_id is not None:
+				delete_edge(request, edge_id)
+				return HttpResponse(json.dumps({
+					"message": "Successfully deleted node with id=%s" % (edge_id)
+				}), content_type="application/json", status=200)
+		except Exception as e:
+			return HttpResponse(json.dumps({
+				"message": "BAD REQUEST"
+			}), content_type="application/json", status=400)
+
+
+def get_edges(request, query={}):
+	"""
+
+	Query Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	names : list of strings
+		Search for edges with given names. In order to search for edges with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all edges with xyz in their name.
+	edges : list of strings
+		Search for edges with the edge between given given list of node names separated by colon. In order to search for edges with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all edges with edge between nodes with 'xyz' and 'abc' in their node names.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	total : integer
+		Number of edges matching the request.
+	edges : List of edges.
+		List of Edge Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	total, edges_list = graphs.search_edges(request,
+										graph_id=query.get('graph_id', None),
+										names=query.getlist('names[]', None),
+										edges=query.getlist('edges[]', None),
+										limit=query.get('limit', 20),
+										offset=query.get('offset', 0),
+										order=query.get('order', 'desc'),
+										sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'edges': [utils.serializer(edge) for edge in edges_list]
+	}
+
+
+def get_edge(request, edge_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	edge_id : string
+		Unique ID of the edge.
+
+	Returns
+	-------
+	edge: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	return utils.serializer(graphs.get_edge_by_id(request, edge_id))
+
+def add_edge(request, edge={}):
+	"""
+	Edge Parameters
+	----------
+	name : string
+		Name of the edge. Required
+	head_node_id : string
+		Node ID for the head node. Required
+	tail_node_id : string
+		Node ID for the tail node. Required
+	graph_id : string
+		Unique ID of the graph for the edge. Required
+	is_directed: Integer
+		If the edge is directed or not. Default value is 0. Optional
+
+
+
+	Parameters
+	----------
+	edge : dict
+		Dictionary containing the data of the edge being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	edge : object
+		Newly created edge object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.add_edge(request,
+											 name=edge.get('name', None),
+											 head_node_id=edge.get('head_node_id', None),
+											 tail_node_id=edge.get('tail_node_id', None),
+											 is_directed=edge.get('is_directed', 0),
+											 graph_id=edge.get('graph_id', None)))
+
+
+def delete_edge(request, edge_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	edge_id : string
+		Unique ID of the edge.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	graphs.delete_edge_by_id(request, edge_id)
+

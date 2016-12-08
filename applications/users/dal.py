@@ -268,7 +268,7 @@ def find_groups(db_session, owner_email, member_email, name, description, graph_
 
 	if graph_ids is not None and len(graph_ids) > 0:
 		query = query.options(joinedload('shared_graphs'))
-		query = query.filter(Group.shared_graphs.any(Graph.id.in_(graph_ids)))
+		query = query.filter(Group.graphs.any(Graph.id.in_(graph_ids)))
 
 	total = query.count()
 

@@ -33,7 +33,7 @@ $(document).ready(function() {
         clock.start(); 
 
         //start tracking all movements
-        $(document).on("click focus blur keydown change",function(e){
+        $(document).on("click focus blur keydown chhange",function(e){
              logger.addEvent(e);
         });
 

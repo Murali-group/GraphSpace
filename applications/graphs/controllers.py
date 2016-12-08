@@ -6,6 +6,7 @@ from graphspace.wrappers import atomic_transaction
 from json_validator import *
 from graphspace.fileformat import GraphSpaceJSONFormat
 import networkx as nx
+from json import dumps, loads
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
 							   'default_grid']
@@ -348,3 +349,152 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 										order_by=orber_by)
 
 	return total, graphs_list
+
+
+def search_layouts(request, owner_email=None, name=None, graph_id=None, limit=20, offset=0, order='desc', sort='name'):
+	if sort == 'name':
+		sort_attr = db.Layout.name
+	elif sort == 'update_at':
+		sort_attr = db.Layout.updated_at
+	elif sort == 'owner_email':
+		sort_attr = db.Layout.owner_email
+	else:
+		sort_attr = db.Layout.name
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	total, layouts = db.find_layouts(request.db_session,
+										owner_email=owner_email,
+										name=name,
+										graph_id=graph_id,
+										limit=limit,
+										offset=offset,
+										order_by=orber_by)
+
+	return total, layouts
+
+
+def get_layout_by_id(request, layout_id):
+	return db.get_layout_by_id(request.db_session, layout_id)
+
+
+def add_layout(request, owner_email=None, name=None, graph_id=None, is_public=None, is_shared_with_groups=None, json=None):
+	if name is None or owner_email is None or graph_id is None:
+		raise Exception("Required Parameter is missing!")
+	return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_public=is_public, is_shared_with_groups=is_shared_with_groups, json=dumps(json))
+
+
+def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_public=None, is_shared_with_groups=None, json=None):
+	if layout_id is None:
+		raise Exception("Required Parameter is missing!")
+
+	layout = {}
+	if name is not None:
+		layout['name'] = name
+	if owner_email is not None:
+		layout['owner_email'] = owner_email
+	if graph_id is not None:
+		layout['graph_id'] = graph_id
+	if is_public is not None:
+		layout['is_public'] = is_public
+	if is_shared_with_groups is not None:
+		layout['is_shared_with_groups'] = is_shared_with_groups
+	if json is not None:
+		layout['json'] = dumps(json)
+
+	return db.update_layout(request.db_session, id=layout_id, updated_layout=layout)
+
+
+def delete_layout_by_id(request, layout_id):
+	db.delete_layout(request.db_session, id=layout_id)
+	return
+
+
+def search_nodes(request, graph_id=None, names=None, labels=None, limit=20, offset=0, order='desc', sort='name'):
+	if sort == 'name':
+		sort_attr = db.Node.name
+	elif sort == 'update_at':
+		sort_attr = db.Node.updated_at
+	elif sort == 'label':
+		sort_attr = db.Node.label
+	else:
+		sort_attr = db.Node.name
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
+
+	total, nodes = db.find_nodes(request.db_session,
+										names=names,
+										labels=labels,
+										graph_id=graph_id,
+										limit=limit,
+										offset=offset,
+										order_by=orber_by)
+
+	return total, nodes
+
+
+def get_node_by_id(request, node_id):
+	return db.get_node_by_id(request.db_session, node_id)
+
+
+def add_node(request, name=None, label=None, graph_id=None):
+	if name is None or graph_id is None:
+		raise Exception("Required Parameter is missing!")
+	return db.add_node(request.db_session, name=name, label=label, graph_id=graph_id)
+
+
+def delete_node_by_id(request, node_id):
+	db.delete_node(request.db_session, id=node_id)
+	return
+
+
+def search_edges(request, is_directed=None, names=None, edges=None, graph_id=None, limit=20, offset=0, order='desc', sort='name'):
+	if sort == 'name':
+		sort_attr = db.Edge.name
+	elif sort == 'update_at':
+		sort_attr = db.Edge.updated_at
+	else:
+		sort_attr = db.Edge.name
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	if edges is not None:
+		edges = [tuple(edge.split(':')) for edge in edges]
+
+	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
+
+	total, edges = db.find_edges(request.db_session,
+										names=names,
+										edges=edges,
+										is_directed=is_directed,
+										graph_id=graph_id,
+										limit=limit,
+										offset=offset,
+										order_by=orber_by)
+
+	return total, edges
+
+
+def get_edge_by_id(request, edge_id):
+	return db.get_edge_by_id(request.db_session, edge_id)
+
+
+def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_directed=0, graph_id=None):
+	if name is None or graph_id is None or head_node_id is None or tail_node_id is None:
+		raise Exception("Required Parameter is missing!")
+	return db.add_node(request.db_session, name=name, head_node_id=head_node_id, tail_node_id=tail_node_id, is_directed=is_directed, graph_id=graph_id)
+
+def delete_edge_by_id(request, edge_id):
+	db.delete_edge(request.db_session, id=edge_id)
+	return

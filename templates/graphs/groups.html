@@ -6,13 +6,13 @@
     <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
 {#    <script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>#}
 
-    <div class="container graphs padding-bottom-6">
-        <ul class="nav nav-pills nav-justified margin-bottom-4">
+    <div class="container-fluid zero-padding padding-bottom-6 padding-top-2">
+        <ul class="nav nav-tabs">
             <li class="active text-center">
-                <a href="#owner_of" data-toggle="tab">Owner of {{ owner_of.total }} groups</a>
+                <a href="#owner_of" data-toggle="tab">Owner of <span class="badge">{{ owner_of.total }}</span> groups</a>
             </li>
             <li class="text-center">
-                <a href="#member_of" data-toggle="tab">Member of {{ member_of.total }} groups</a>
+                <a href="#member_of" data-toggle="tab">Member of <span class="badge">{{ member_of.total }}</span> groups</a>
             </li>
 
             <li class="text-center">
@@ -20,7 +20,7 @@
             </li>
         </ul>
 
-        <div id="myTabContent" class="tab-content">
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
 
             <div class="tab-pane fade in active" id="owner_of">
                 <table id="OwnedGroupsTable"

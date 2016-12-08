@@ -4,8 +4,7 @@ html, body {
     width: 100%;
     padding: 0;
     margin: 0;
-
-    /*background-color: #eee;*/
+    background-color: #fafafa;
 }
 
 div.container-fluid {
@@ -37,6 +36,14 @@ div.container-fluid {
 
 .padding-top-6 {
     padding-top: 3%;
+}
+
+.padding-top-4 {
+    padding-top: 2%;
+}
+
+.padding-top-2 {
+    padding-top: 1%;
 }
 
 .padding-bottom-6 {
@@ -90,7 +97,7 @@ div.container-fluid {
 }
 
 .container.graphs, .container-fluid.graphs {
-	background-color: white;
+	background-color: #ffffff;
 	position: relative;
 	padding-top: 20px;
     height: 100%;
@@ -102,6 +109,14 @@ div.container-fluid {
 }
 /* PopOver CSS*/
 
+.popover {
+    z-index: 10000;
+}
+
+.bg-white {
+    background: white;
+}
+
 .gs-transparent-popover.popover {
     background: transparent;
     border: none;
@@ -112,9 +127,25 @@ div.container-fluid {
     display: none;
 }
 
-/* Side Bar Menu */
+/* Horizontal Nav bar*/
+ul.nav.nav-tabs > li {
+    padding: 0 1em;
+}
 
-/* Toggle Styles */
+ul.nav.nav-tabs > li > a {
+    color: #767676;
+}
+
+ul.nav.nav-tabs > li > a > span.badge {
+    color: #4c4c4c;
+    background-color: #eeeeee;
+}
+
+ul.nav.nav-tabs > li > a:hover {
+    color: #000;
+}
+
+/* Side Bar Menu */
 
 #wrapper {
     height: 100%;
