@@ -231,6 +231,14 @@
                                                 Tree
                                             </button>
                                         </li>
+                                        <li class="margin-bottom-2">
+                                            <button type="button"
+                                                    class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                                                    data-layout-id="cola"
+                                                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                                                Cola
+                                            </button>
+                                        </li>
                                         {% for layout in layouts %}
                                             <li class="margin-bottom-2">
                                                 <button type="button"
@@ -352,12 +360,15 @@
     </footer>
 
     <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.js' %}"></script>
+    <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
 
     <script>
         $(document).ready(function () {
+            console.log("Loading graph page");
             graphPage.init();
         });
     </script>

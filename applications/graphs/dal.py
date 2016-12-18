@@ -41,7 +41,11 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None,names=Non
 	tags_filter_group = [GraphTag.name.ilike(tag) for tag in tags]
 	nodes_filter_group = [Node.label.ilike(node) for node in nodes]
 	nodes_filter_group.extend([Node.name.ilike(node) for node in nodes])
-	edges_filter_group = [and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges]
+	edges_filter_group = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges]
+	edges_filter_group.extend([and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u,v in edges])
+	edges_filter_group.extend([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
+	edges_filter_group.extend([and_(Edge.tail_node.has(Node.label.ilike(u)), Edge.head_node.has(Node.label.ilike(v))) for u,v in edges])
+
 
 	options_group = []
 	if len(nodes_filter_group) > 0:
@@ -126,6 +130,8 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 		query = query.filter(*graph_filter_group)
 
 	options_group = []
+	if tags is not None and len(tags) > 0:
+		options_group.append(joinedload('graph_tags'))
 	if nodes is not None and len(nodes) > 0:
 		options_group.append(joinedload('nodes'))
 	if edges is not None and len(edges) > 0:
@@ -148,7 +154,11 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	nodes_filter = [Node.label.ilike(node) for node in nodes]
 	nodes_filter.extend([Node.name.ilike(node) for node in nodes])
 	edges_filter = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges]
+	edges_filter.extend([and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges])
+	edges_filter.extend([and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u,v in edges])
 	edges_filter.extend([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
+	edges_filter.extend([and_(Edge.tail_node.has(Node.label.ilike(u)), Edge.head_node.has(Node.label.ilike(v))) for u,v in edges])
+
 
 	combined_filter = []
 	if len(nodes_filter) > 0:
@@ -158,7 +168,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	if len(names_filter) > 0:
 		combined_filter.extend(names_filter)
 
-	query = query.filter(and_(or_(*combined_filter), *tags_filter))
+	query = query.filter(and_(or_(*combined_filter), Graph.tags.any(or_(*tags_filter))))
 
 	total = query.count()
 

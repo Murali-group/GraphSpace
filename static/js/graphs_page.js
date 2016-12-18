@@ -930,6 +930,12 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "grid"
             }
+        } else if (layout_name == "cola") {
+            graph_layout = {
+                name: "cola",
+                flow: { axis: 'y', minSeparation: 30 },
+                edgeSymDiffLength: 6
+            }
         }
         return graph_layout;
     }
