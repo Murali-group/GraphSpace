@@ -237,7 +237,7 @@ var graphsPage = {
 
             if (params.data["search"]) {
                 params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') === -1 || _.trim(s) !== '' ;
+                    return s.indexOf(':') === -1 || _.trim(s) !== '';
                 }), function (str) {
                     return '%' + str + '%';
                 });
@@ -372,6 +372,38 @@ var graphPage = {
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
         $('#saveLayoutBtn').click(function () {
             graphPage.saveLayout($('#layoutNameInput').val());
+        });
+
+        $('#layoutEditorBtn').click(function () {
+            graphPage.layoutEditor.init();
+        });
+
+        $('#exitLayoutEditorBtn').click(function () {
+            $('#exitLayoutBtn').removeClass('hidden');
+            $('#saveLayoutModal').modal('show');
+        });
+
+        $('#exitLayoutBtn, #saveLayoutBtn').click(function () {
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+        });
+
+        $('#saveLayoutModalBtn').click(function () {
+            $('#exitLayoutBtn').addClass('hidden');
+            $('#saveLayoutModal').modal('show');
+        });
+
+        $("#unselectBtn").click(function (e) {
+            //Unselect all nodes/edges when button is clicked
+            e.preventDefault();
+            cytoscapeGraph.unSelectAllNodes(graphPage.cyGraph);
+            cytoscapeGraph.unSelectAllEdges(graphPage.cyGraph);
+
+            $('input:checkbox[name=colors]').each(function (index) {
+                $(this).prop('checked', false);
+            });
+            $('input:checkbox[name=shapes]').each(function (index) {
+                $(this).prop('checked', false);
+            });
         });
 
     },
@@ -573,222 +605,7 @@ var graphPage = {
             layout: layout,
 
             //Style properties of NODE body
-            style: cytoscape.stylesheet()
-                .selector('node[width]').css({
-                    'width': 'data(width)'
-                })
-                .selector('node[height]').css({
-                    'height': 'data(height)'
-                })
-                .selector('node[shape]').css({
-                    'shape': 'data(shape)'
-                })
-                .selector('node[background_color]').css({
-                    'background-color': 'data(background_color)'
-                })
-                .selector('node[background_blacken]').css({
-                    'background-blacken': 'data(background_blacken)'
-                })
-                .selector('node[background_opacity]').css({
-                    'background-opacity': 'data(background_opacity)'
-                })
-                .selector('node[border_width]').css({
-                    'border-width': 'data(border_width)'
-                })
-                .selector('node[border_style]').css({
-                    'border-style': 'data(border_style)'
-                })
-                .selector('node[border_color]').css({
-                    'border-color': 'data(border_color)'
-                })
-                .selector('node[border_opacity]').css({
-                    'border-opacity': 'data(border_opacity)'
-                })
-
-                //BACKGROUND IMAGE PROPERTIES
-                .selector('node[background_image]').css({
-                    'background-image': 'data(background_image)'
-                })
-                .selector('node[background_image_opacity]').css({
-                    'background-image-opacity': 'data(background_image_opacity)'
-                })
-                .selector('node[background_width]').css({
-                    'background-width': 'data(background_width)'
-                })
-                .selector('node[background_height]').css({
-                    'background-height': 'data(background_height)'
-                })
-                .selector('node[background_fit]').css({
-                    'background-fit': 'data(background_fit)'
-                })
-                .selector('node[background_repeat]').css({
-                    'background-repeat': 'data(background_repeat)'
-                })
-                .selector('node[background_position_x]').css({
-                    'background-position-x': 'data(background_position_x)'
-                })
-                .selector('node[background_position_y]').css({
-                    'background-position-y': 'data(background_position_y)'
-                })
-                .selector('node[background_clip]').css({
-                    'background-clip': 'data(background_clip)'
-                })
-
-                //LABEL PROPERTIES
-                .selector('node[color]').css({
-                    'color': 'data(color)'
-                })
-                .selector('node[content]').css({
-                    'content': 'data(content)'
-                })
-                .selector('node[font_family]').css({
-                    'font-family': 'data(font_family)'
-                })
-                .selector('node[font_size]').css({
-                    'font-size': 'data(font_size)'
-                })
-                .selector('node[font_style]').css({
-                    'font-style': 'data(font_style)'
-                })
-                .selector('node[font_weight]').css({
-                    'font-weight': 'data(font_weight)'
-                })
-                .selector('node[text_transform]').css({
-                    'text-transform': 'data(text_transform)'
-                })
-                .selector('node[text_wrap]').css({
-                    'text-wrap': 'data(text_wrap)'
-                })
-                .selector('node[text_max_width]').css({
-                    'text-max-width': 'data(text_max_width)'
-                })
-                .selector('node[edge_text_rotation]').css({
-                    'edge-text-rotation': 'data(edge_text_rotation)'
-                })
-                .selector('node[text_opacity]').css({
-                    'text-opacity': 'data(text_opacity)'
-                })
-                .selector('node[text_outline_color]').css({
-                    'text-outline-color': 'data(text_outline_color)'
-                })
-                .selector('node[text_outline_opacity]').css({
-                    'text-outline-opacity': 'data(text_outline_opacity)'
-                })
-                .selector('node[text_outline_width]').css({
-                    'text-outline-width': 'data(text_outline_width)'
-                })
-                .selector('node[text_shadow_blur]').css({
-                    'text-shadow-blur': 'data(text_shadow_blur)'
-                })
-                .selector('node[text_shadow_color]').css({
-                    'text-shadow-color': 'data(text_shadow_color)'
-                })
-                .selector('node[text_shadow_offset_x]').css({
-                    'text-shadow-offset-x': 'data(text_shadow_offset_x)'
-                })
-                .selector('node[text_shadow_offset_y]').css({
-                    'text-shadow-offset-y': 'data(text_shadow_offset_y)'
-                })
-                .selector('node[text_shadow_opacity]').css({
-                    'text-shadow-opacity': 'data(text_shadow_opacity)'
-                })
-                .selector('node[text_background_shape]').css({
-                    'text-background-shape': 'data(text_background_shape)'
-                })
-                .selector('node[text_border_width]').css({
-                    'text-border-width': 'data(text_border_width)'
-                })
-                .selector('node[text_border_style]').css({
-                    'text-border-style': 'data(text_border_style)'
-                })
-                .selector('node[text_border_color]').css({
-                    'text-border-color': 'data(text_border_color)'
-                })
-                .selector('node[min_zoomed_font_size]').css({
-                    'min-zoomed-font-size': 'data(min_zoomed_font_size)'
-                })
-                .selector('node[text_halign]').css({
-                    'text-halign': 'data(text_halign)'
-                })
-                .selector('node[text_valign]').css({
-                    'text-valign': 'data(text_valign)'
-                })
-
-                //EDGE LINE PROPERTIES
-                .selector('edge[width]').css({
-                    'width': 'data(width)'
-                })
-                .selector('edge[curve_style]').css({
-                    'curve-style': 'data(curve_style)'
-                })
-                .selector('edge[haystack_radius]').css({
-                    'haystack-radius': 'data(haystack_radius)'
-                })
-                .selector('edge[control_point_step_size]').css({
-                    'control-point-step-size': 'data(control_point_step_size)'
-                })
-                .selector('edge[control_point_distance]').css({
-                    'control-point-distance': 'data(control_point_distance)'
-                })
-                .selector('edge[control_point_weight]').css({
-                    'control-point-weight': 'data(control_point_weight)'
-                })
-                .selector('edge[line_color]').css({
-                    'line-color': 'data(line_color)'
-                })
-                .selector('edge[line_style]').css({
-                    'line-style': 'data(line_style)'
-                })
-
-                //EDGE ARROW PROPERTIES
-                .selector('edge[source_arrow_color]').css({
-                    'source-arrow-color': 'data(source_arrow_color)'
-                })
-                .selector('edge[source_arrow_shape]').css({
-                    'source-arrow-shape': 'data(source_arrow_shape)'
-                })
-                .selector('edge[source_arrow_fill]').css({
-                    'source-arrow-fill': 'data(source_arrow_fill)'
-                })
-                .selector('edge[mid_source_arrow_color]').css({
-                    'mid-source-arrow-color': 'data(mid_source_arrow_color)'
-                })
-                .selector('edge[mid_source_arrow_shape]').css({
-                    'mid-source-arrow-shape': 'data(mid_source_arrow_shape)'
-                })
-                .selector('edge[mid_source_arrow_fill]').css({
-                    'mid-source-arrow-fill': 'data(mid_source_arrow_fill)'
-                })
-                .selector('edge[target_arrow_color]').css({
-                    'target-arrow-color': 'data(target_arrow_color)'
-                })
-                .selector('edge[target_arrow_shape]').css({
-                    'target-arrow-shape': 'data(target_arrow_shape)'
-                })
-                .selector('edge[target_arrow_fill]').css({
-                    'target-arrow-fill': 'data(target_arrow_fill)'
-                })
-                .selector('edge[mid_target_arrow_color]').css({
-                    'mid-target-arrow-color': 'data(mid_target_arrow_color)'
-                })
-                .selector('edge[mid_target_arrow_shape]').css({
-                    'mid-target-arrow-shape': 'data(mid_target_arrow_shape)'
-                })
-                .selector('edge[mid_target_arrow_fill]').css({
-                    'mid-target-arrow-fill': 'data(mid_target_arrow_fill)'
-                })
-                .selector('node:selected')
-                .css({
-                    'border-width': 3,
-                    'border-color': '#ff0000'
-                })
-                .selector('edge:selected')
-                .css({
-                    'width': 3,
-                    'line-color': '#ff0000',
-                    'target-arrow-color': '#ff0000',
-                    'source-arrow-color': '#ff0000'
-                }),
+            style: stylesheet
         });
 
     },
@@ -861,6 +678,137 @@ var graphPage = {
             );
         }
     },
+    layoutEditor: {
+        undoRedoManager: null,
+        init: function () {
+
+            graphPage.layoutEditor.undoRedoManager = new UndoManager(
+                onUndo = function (item) {
+                    console.log(item);
+                    if (item) {
+                        cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item);
+                        $('#redoBtn').removeClass('disabled');
+                    } else {
+                        $('#undoBtn').addClass('disabled');
+                    }
+                },
+                onRedo = function (item) {
+                    if (item) {
+                        cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item);
+                        $('#undoBtn').removeClass('disabled');
+                    } else {
+                        $('#redoBtn').addClass('disabled');
+                    }
+                },
+                onUpdate = function (item) {
+                    $('#undoBtn').removeClass('disabled');
+                }
+            );
+
+            graphPage.layoutEditor.undoRedoManager.update(cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph));
+            $('#undoBtn').addClass('disabled');
+
+            var colors = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                return node.data('background_color');
+            }));
+
+            var shapes = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                return node.data('shape');
+            }));
+
+            $('#selectShapes').html('');
+            $('#selectColors').html('');
+            _.each(shapes, function (shape) {
+                $('#selectShapes').append(
+                    $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
+                        $('<input>', {
+                            id: shape,
+                            type: 'checkbox',
+                            value: shape,
+                            name: 'shapes'
+                        })).append(_.capitalize(shape)));
+            });
+            _.each(colors, function (color) {
+                $('#selectColors').append(
+                    $('<label>', {class: "checkbox-inline zero-padding"}).css({
+                        'margin-left': '10px',
+                        'margin-right': '10px'
+                    }).append(
+                        $('<input>', {
+                            id: color,
+                            type: 'checkbox',
+                            value: color,
+                            name: 'colors'
+                        })).append($('<p>', {
+                        class: 'select-color-box'
+                    }).css('background', color)));
+            });
+
+            $('input:checkbox[name=shapes], input:checkbox[name=colors] ').change(function () {
+                var selectedShapes = _.map($('input:checkbox[name=shapes]:checked'), function (elem) {
+                    return $(elem).val();
+                });
+                var selectedColors = _.map($('input:checkbox[name=colors]:checked'), function (elem) {
+                    return $(elem).val();
+                });
+
+                console.log(selectedColors, selectedShapes);
+
+                if ($(this).attr('name') === 'colors') {
+                    var attributeName = 'background_color';
+                } else {
+                    var attributeName = 'shape';
+                }
+                var attributeValue = $(this).val();
+                var isSelected = $(this).is(":checked");
+
+                _.each(graphPage.cyGraph.nodes(), function (node) {
+
+                    if (attributeValue == node.data(attributeName)) {
+                        if (isSelected) {
+                            node.select();
+                        } else {
+                            if (_.indexOf(selectedColors, node.data('background_color')) === -1 && _.indexOf(selectedShapes, node.data('shape')) === -1) {
+                                node.unselect();
+                            }
+                        }
+                    }
+
+                });
+
+            });
+
+            $('.arrange_nodes').click(function () {
+                cytoscapeGraph.applyLayoutToCollection(
+                    graphPage.cyGraph,
+                    graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedNodes(graphPage.cyGraph)),
+                    $(this).data('layout')
+                );
+                graphPage.layoutEditor.undoRedoManager.update(cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph));
+            });
+
+            $('#undoBtn').click(function () {
+                graphPage.layoutEditor.undoRedoManager.undo();
+            });
+
+            $('#redoBtn').click(function () {
+                graphPage.layoutEditor.undoRedoManager.redo();
+            });
+
+            cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
+
+            $("#startTourBtn").click(function () {
+                var intro = introJs();
+                intro.setOptions({
+                    'scrollToElement': true,
+                    'showStepNumbers': false,
+                    'disableInteraction': true,
+                    'overlayOpacity': 0.5
+                });
+                intro.start();
+            });
+        }
+    }
 
 };
 
@@ -933,10 +881,344 @@ var cytoscapeGraph = {
         } else if (layout_name == "cola") {
             graph_layout = {
                 name: "cola",
-                flow: { axis: 'y', minSeparation: 30 },
+                flow: {axis: 'y', minSeparation: 30},
                 edgeSymDiffLength: 6
             }
         }
         return graph_layout;
+    },
+    hideGraphInformation: function (cy) {
+        /*
+         Function to hide information about the graph that the layout editor doesn't need to see.
+         */
+        cy.style()
+            .selector('node').style({
+                'font-size': "0px"
+            })
+            .selector('edge').style({
+                'line-color': 'black',
+                'line-style': 'solid',
+                'width': .1
+            })
+            .update(); // update the elements in the graph with the new style
+
+    },
+    showGraphInformation: function (cy) {
+        /*
+         Function to Show information about the graph that the layout editor hid from the users.
+         */
+        cy.style(stylesheet);
+    },
+    getRenderedNodePositionsMap: function (cy) {
+        var result = {};
+        _.each(cy.nodes(), function (node) {
+            result[node.id()] = node.renderedPosition();
+        });
+        return result;
+    },
+    setRenderedNodePositions: function (cy, positions) {
+        _.each(cy.nodes(), function (node) {
+            node.renderedPosition(positions[node.id()]);
+        });
+    },
+    unSelectAllNodes: function (cy) {
+        _.each(cy.nodes(), function (node) {
+            node.unselect();
+        });
+    },
+    unSelectAllEdges: function (cy) {
+        _.each(cy.edges(), function (edge) {
+            edge.unselect();
+        });
+    },
+    getAllSelectedNodes: function (cy) {
+        return _.filter(cy.nodes(), function (node) {
+            return node.selected();
+        });
+    },
+    applyLayoutToCollection: function (cy, collection, layout_name) {
+        if (layout_name === "circle") {
+            collection.layout(
+                {
+                    name: "circle",
+                    fit: false,
+                    avoidOverlap: false,
+                    padding: 0
+                });
+        } else if (layout_name === "fill_circle") {
+            collection.layout(
+                {
+                    name: "concentric",
+                    fit: false,
+                    avoidOverlap: false,
+                    padding: 40
+                });
+        } else if (layout_name === "grid") {
+            collection.layout(
+                {
+                    name: "grid",
+                    fit: false,
+                    avoidOverlap: true,
+                    condense: true
+                });
+        } else if (layout_name === "square") {
+            cytoscapeGraph.runSquareLayoutOnCollection(cy, collection);
+        } else if (layout_name === "horizontal") {
+            cytoscapeGraph.runHorizontalVerticalLayoutOnCollection(cy, collection, "horizontal");
+        } else if (layout_name === "vertical") {
+            cytoscapeGraph.runHorizontalVerticalLayoutOnCollection(cy, collection, "vertical");
+        } else if (layout_name === "release") {
+            cytoscapeGraph.runSqueezeReleaseOnCollection(collection, "release");
+        } else if (layout_name === "squeeze") {
+            cytoscapeGraph.runSqueezeReleaseOnCollection(collection, "squeeze");
+        }
+    },
+    runSqueezeReleaseOnCollection: function (collection, type) {
+        var data = cytoscapeGraph.computeCollectionCentroid(collection);
+
+        var centroid = data[0];
+        var selectedNodes = collection.nodes();
+
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var node = selectedNodes[i];
+            var position = node.renderedPosition();
+            var distance = cytoscapeGraph.travelDistance(centroid, position);
+
+            if (!isNaN(position.x)) {
+                if (position.x < centroid.x) {
+                    if (type === 'squeeze') {
+                        position.x += distance.x;
+                    } else {
+                        position.x -= distance.x;
+                    }
+
+                }
+                if (position.x > centroid.x) {
+                    if (type == 'squeeze') {
+                        position.x -= distance.x;
+                    } else {
+                        position.x += distance.x;
+                    }
+                }
+            }
+
+            if (!isNaN(position.y)) {
+                if (position.y < centroid.y) {
+                    if (type == 'squeeze') {
+                        position.y += distance.y;
+                    } else {
+                        position.y -= distance.y;
+                    }
+                }
+                if (position.y > centroid.y) {
+                    if (type == 'squeeze') {
+                        position.y -= distance.y;
+                    } else {
+                        position.y += distance.y;
+                    }
+                }
+            }
+
+            if (!isNaN(position.x) && !isNaN(position.y)) {
+                node.renderedPosition(position);
+            }
+        }
+    },
+    runSquareLayoutOnCollection: function (cy, collection) {
+        var minDistance = 0;
+        var selectedArray = [];
+
+        _.each(collection.nodes(), function (node) {
+            selectedArray.push(node);
+            minDistance = Math.max(node.boundingBox()["h"], minDistance);
+        });
+
+        //calculate center of the viewport
+        var center = {
+            x: cy.width() / 2,
+            y: cy.height() / 2
+        };
+
+
+        var radius = (selectedArray.length / 4 * minDistance) / 2;
+
+        if (selectedArray.length <= 4) {
+
+            if (selectedArray.length == 0) {
+                return;
+            } else if (selectedArray.length == 1) {
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y
+                }
+                selectedArray[0].renderedPosition(newPosition);
+            } else if (selectedArray.length == 2) {
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+
+            } else if (selectedArray.length == 3) {
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y - radius
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[2].renderedPosition(newPosition);
+
+            } else if (selectedArray.length == 4) {
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y - radius
+                }
+                selectedArray[0].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y - radius
+                }
+                selectedArray[1].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x + radius + minDistance,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[2].renderedPosition(newPosition);
+                var newPosition = {
+                    "x": center.x - radius,
+                    "y": center.y + radius + minDistance
+                }
+                selectedArray[3].renderedPosition(newPosition);
+            }
+            return;
+        }
+
+        //Group into regions (top, bottom, left, right) Assuem that we have at least 4 selected elements
+
+        //Top region
+        var topBar = selectedArray.slice(0, selectedArray.length / 4);
+
+        for (var i = 0; i < topBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius + (i * minDistance),
+                "y": center.y - radius
+            }
+            topBar[i].renderedPosition(newPosition);
+        }
+
+        //Bottom Region
+        var bottomBar = selectedArray.slice(selectedArray.length / 4, 2 * selectedArray.length / 4);
+
+        for (var i = 0; i < bottomBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius + (i * minDistance),
+                "y": center.y + radius
+            }
+            bottomBar[i].renderedPosition(newPosition);
+        }
+
+        //Left Region
+        var leftBar = selectedArray.slice(2 * selectedArray.length / 4, 3 * selectedArray.length / 4);
+
+        for (var i = 0; i < leftBar.length; i++) {
+            var newPosition = {
+                "x": center.x - radius,
+                "y": center.y - radius + (i * minDistance)
+            }
+            leftBar[i].renderedPosition(newPosition);
+        }
+
+        //Right Region
+        var rightBar = selectedArray.slice(3 * selectedArray.length / 4, 4 * selectedArray.length);
+
+        for (var i = 0; i < rightBar.length; i++) {
+            var newPosition = {
+                "x": center.x + radius,
+                "y": center.y - radius + (i * minDistance)
+            }
+            rightBar[i].renderedPosition(newPosition);
+        }
+    },
+    runHorizontalVerticalLayoutOnCollection: function (cy, collection, layout_name) {
+        var data = cytoscapeGraph.computeCollectionCentroid(collection);
+        console.log(layout_name, layout_name === "vertical" ? 1 : 2);
+        var center = {
+            x: cy.width() / 2,
+            y: cy.height() / 2
+        };
+
+        var selectedNodes = collection.nodes();
+        var minDistance = data[layout_name === "vertical" ? 2 : 1];
+
+        var radius = (selectedNodes.length / 4 * minDistance) / 2;
+
+        for (var i = 0; i < selectedNodes.length; i++) {
+            if (layout_name === "vertical") {
+                var newPosition = {
+                    "x": center.x,
+                    "y": center.y - radius + (i * minDistance)
+                };
+            } else {
+                var newPosition = {
+                    "x": center.x - radius + (i * minDistance),
+                    "y": center.y
+                };
+            }
+
+            selectedNodes[i].renderedPosition(newPosition);
+        }
+    },
+    computeCollectionCentroid: function (collection) {
+        var centroid = {x: 0, y: 0};
+        var minWidthDistance = 0;
+        var minHeightDistance = 0;
+
+        _.each(collection.nodes(), function (node) {
+            var position = node.renderedPosition();
+            centroid["x"] += position.x;
+            centroid["y"] += position.y;
+            minWidthDistance = Math.max(node.boundingBox()["w"], minWidthDistance);
+            minHeightDistance = Math.max(node.boundingBox()["h"], minHeightDistance);
+        });
+
+        centroid["x"] /= collection.nodes().length;
+        centroid["y"] /= collection.nodes().length;
+
+        return [centroid, minWidthDistance, minHeightDistance];
+    },
+    travelDistance: function (center, nodePosition) {
+        var a = Math.abs(center.x - nodePosition.x);
+        var b = Math.abs(center.y - nodePosition.y);
+
+        if (a == 0) {
+            a = 1;
+        }
+
+        var ratio = b / a;
+
+        var miniH = Math.sqrt(1 + ratio * ratio);
+
+        var distance = 0.10 * Math.sqrt(a * a + b * b);
+        var travelX = distance / miniH;
+        var travelY = ratio * travelX;
+
+        return {
+            x: travelX,
+            y: travelY
+        };
     }
+
 };

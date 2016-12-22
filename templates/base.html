@@ -23,11 +23,11 @@
 
     <!-- Custom styles for this base template -->
     {#        <link href="{% static 'graphs/css/base.css' %}" rel="stylesheet">#}
-    <link href="{% static 'css/graphspace.css' %}" rel="stylesheet">
-
     <script src="{% static 'graphs/js/jquery.min.js' %}"></script>
 
     <link rel="stylesheet" href={% static "components/bootstrap-table/src/bootstrap-table.css" %}>
+    <link href="{% static 'css/graphspace.css' %}" rel="stylesheet">
+
     <script src="{% static 'components/bootstrap/dist/js/bootstrap.js' %}"></script>
     <script src="{% static 'components/bootstrap/js/tooltip.js' %}"></script>
     <script src="{% static 'components/bootstrap/js/popover.js' %}"></script>
@@ -161,7 +161,7 @@
 </div>
 
 <!-- main content on each page -->
-<div class="container-fluid zero-padding zero-margin" style="padding-top: 3.6%" >
+<div class="container-fluid zero-padding zero-margin" style="padding-top: 3.6% !important;" >
 
     <input type="text" id="UserEmail" value="{{ uid }}" hidden/>
     {% block content %}

@@ -5,6 +5,7 @@ from django.http import HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
 from graphspace import utils
+from graphspace.wrappers import is_authenticated
 
 
 def groups_member(request):
@@ -241,6 +242,7 @@ def delete_group(request, group_id):
 	users.delete_group_by_id(request, group_id)
 
 
+@is_authenticated()
 def groups(request, group_id=None):
 	"""
 	Handles any request (GET/POST) sent to /groups or groups/<group_id>
@@ -364,6 +366,7 @@ def delete_group_member(request, group_id, member_id):
 							  member_id=member_id)
 
 
+@is_authenticated()
 def group_members(request, group_id, member_id=None):
 	"""
 	Handles any request (GET/POST) sent to groups/<group_id>/members or groups/<group_id>/members/<member_id>.
@@ -398,6 +401,7 @@ def group_members(request, group_id, member_id=None):
 			}), content_type="application/json", status=400)
 
 
+@is_authenticated()
 def group_graphs(request, group_id, graph_id=None):
 	"""
 	Handles any request (GET/POST) sent to groups/<group_id>/graphs or groups/<group_id>/graphs/<graph_id>.
@@ -548,6 +552,7 @@ def delete_group_graph(request, group_id, graph_id):
 							 graph_id=graph_id)
 
 
+@is_authenticated(redirect_url='/')
 def groups_page(request):
 	"""
 		Wrapper view for the groups page.
@@ -570,6 +575,7 @@ def groups_page(request):
 		return render(request, 'graphs/error.html', context)
 
 
+@is_authenticated(redirect_url='/')
 def group_page(request, group_id):
 	"""
 		Wrapper view for the group page. /groups/<group_id>

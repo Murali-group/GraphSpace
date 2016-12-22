@@ -384,7 +384,7 @@ def design_graph(request, uid, gid):
 	# Context contains all the elements we want to render on the web
 	# page. We fill in the various elements of context before calling
 	# the render() function.
-	#handle login
+	# handle login
 	# context = login(request)
 	context = {
 		"uid": request.session['uid'],

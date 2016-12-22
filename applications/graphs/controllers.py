@@ -7,6 +7,7 @@ from json_validator import *
 from graphspace.fileformat import GraphSpaceJSONFormat
 import networkx as nx
 from json import dumps, loads
+from graphspace.wrappers import is_authorized
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
 							   'default_grid']
@@ -21,6 +22,7 @@ def get_graph(request, graph_owner, graphname):
 	return graph
 
 
+@is_authorized('GRAPH_READ', graph_arg=1)
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
@@ -39,6 +41,30 @@ def is_user_authorized_to_view_graph(request, username, graph_id):
 			for group in graph.groups:
 				if users.controllers.is_member_of_group(request, username, group.id):
 					is_authorized = True
+	return is_authorized
+
+
+def is_user_authorized_to_update_graph(request, username, graph_id):
+	is_authorized = False
+
+	graph = db.get_graph_by_id(request.db_session, graph_id)
+
+	if graph is not None:  # Graph exists
+		if graph.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
+
+
+def is_user_authorized_to_delete_graph(request, username, graph_id):
+	is_authorized = False
+
+	graph = db.get_graph_by_id(request.db_session, graph_id)
+
+	if graph is not None:  # Graph exists
+		if graph.owner_email == username:
+			is_authorized = True
+
 	return is_authorized
 
 
@@ -170,6 +196,7 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 	return new_graph
 
 
+@is_authorized('GRAPH_UPDATE', graph_arg=1)
 @atomic_transaction
 def update_graph(request, graph_id, name=None, is_public=None, json_string=None, owner_email=None,
 				 default_layout_id=None):
@@ -200,6 +227,7 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
 
+@is_authorized('GRAPH_DELETE', graph_arg=1)
 def delete_graph_by_id(request, graph_id):
 	db.delete_graph(request.db_session, id=graph_id)
 	return

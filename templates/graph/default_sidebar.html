@@ -1,0 +1,139 @@
+<!-- Sidebar -->
+
+<ul id="defaultSideBar" class="sidebar-nav gs-sidebar-nav active">
+    <li>
+        <br>
+    </li>
+    <li>
+        <div class="form-group has-feedback" style="margin: 0 1em;" data-trigger="focus"
+             data-target="#searchPopover" data-container="body"
+             data-placement="left" data-toggle="popover">
+            <input type="text" class="form-control" id="inputSearchEdgesAndNodes"
+                   aria-describedby="inputSearchEdgesAndNodes" style="border-radius: 1em;"
+                   placeholder="Search" onkeyup="graphPage.onInputSearchEdgesAndNodes(this);">
+                                <span class="glyphicon glyphicon-search form-control-feedback"
+                                      aria-hidden="true"></span>
+        </div>
+        <div id="searchPopover" class="popover fade">
+            <p class="lead zero-margin zero-padding"
+               style="font-size: large; text-align: right;">
+                Search
+                for nodes and egdes.</p>
+        </div>
+    </li>
+    <li>
+        <a class="btn" href="#" data-trigger="focus" data-target="#exportPopover"
+           data-container="body"
+           data-placement="left" data-toggle="popover">
+            <i class="fa fa-download fa-lg"></i> Export
+        </a>
+        <div id="exportPopover" class="popover fade">
+            <button type="button" class="btn btn-default" onclick="graphPage.export('json');">
+                JSON
+            </button>
+            <button type="button" class="btn btn-default" onclick="graphPage.export('png');">PNG
+            </button>
+            <button type="button" class="btn btn-default" onclick="graphPage.export('jpg');">JPG
+            </button>
+        </div>
+    </li>
+    <li>
+        <a class="btn" href="#" data-toggle="modal" data-target="#shareGraphModal">
+            <i class="fa fa-share-alt fa-lg"></i> Share
+        </a>
+    </li>
+    <li>
+        <a class="btn" href="#">
+            <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
+        </a>
+    </li>
+    <li>
+        <a class="btn" href="#" data-trigger="focus" data-target="#changeLayoutPopover"
+           data-container="body"
+           data-placement="left" data-toggle="popover">
+            Change Layout
+        </a>
+        <div id="changeLayoutPopover" class="popover fade">
+            <p class="lead text-center zero-margin">Select Layout</p>
+            <ul class="bg-white"
+                style="list-style: none; max-height: 80%; overflow-x: hidden; height: auto; padding: 0.5em">
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="circle"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Circle
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="grid"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Grid
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="concentric"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Concentric
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cose"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Spring
+                        Embedder
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="breadthfirst"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Tree
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Cola
+                    </button>
+                </li>
+                {% for layout in layouts %}
+                    <li class="margin-bottom-2">
+                        <button type="button"
+                                class="btn btn-default gs-full-width select-layout-btn user-layout"
+                                data-layout-id="{{ layout.id }}"
+                                onclick="graphPage.onSelectLayoutBtnClick(this)">
+                            <b>{{ layout.name }}</b> <br> created by {{ layout.owner_email }}
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </li>
+    {% if uid %}
+    <li>
+        <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#layoutEditorSideBar">
+            <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
+        </a>
+    </li>
+    {% endif %}
+
+    {% if uid %}
+    <li>
+        <a id="saveLayoutModalBtn" class="btn" href="#" data-toggle="modal">
+            <i class="fa fa-save fa-lg"></i> Save Layout
+        </a>
+    </li>
+    {% endif %}
+
+</ul>
+

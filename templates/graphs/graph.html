@@ -7,9 +7,6 @@
         {% endif %}
     </script>
 
-    {#    <link href={% static "graphs/css/pager.css" %} rel="stylesheet">#}
-    {#    <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">#}
-
     <!--- Modals start here--->
     <div>
         <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
@@ -105,7 +102,7 @@
 
     </div>
     <!--- Modals end here--->
-    <div class="container-fluid zero-margin zero-padding padding-top-2">
+    <div class="container-fluid zero-margin zero-padding">
 
         <ul class="nav nav-tabs">
             <li class="active text-center">
@@ -252,11 +249,13 @@
                                     </ul>
                                 </div>
                             </li>
+                            {% if uid %}
                             <li>
-                                <a class="btn" href="#">
+                                <a id="layoutEditorBtn" class="btn" href="#editor">
                                     <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
                                 </a>
                             </li>
+                            {% endif %}
                             <li>
                                 <a class="btn" href="#" data-toggle="modal" data-target="#saveLayoutModal">
                                     <i class="fa fa-save fa-lg"></i> Save Layout
@@ -363,8 +362,10 @@
     <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.js' %}"></script>
     <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
     <!-- JSON support for Graph Page -->
+    <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
 
     <script>
         $(document).ready(function () {

@@ -15,6 +15,11 @@ $(document).ready(function () {
         type: 'success'
     });
 
+    $('.sidebar-nav-pills').click(function (e) {
+        $('.gs-sidebar-nav').removeClass('active');
+        $($(this).data('target')).addClass('active');
+    });
+
 });
 
 var utils = {
@@ -34,5 +39,39 @@ var utils = {
     },
     dateFormatter: function (value, row, index) {
         return moment(value).fromNow();
+    }
+};
+
+var UndoManager = function (onUndo, onRedo, onUpdate) {
+    this.state = [];
+    this.index = -1;
+
+    this.onUndo = onUndo;
+    this.onRedo = onRedo;
+    this.onUpdate = onUpdate;
+};
+
+UndoManager.prototype = {
+    constructor: UndoManager,
+    undo: function () {
+        if (this.index >= 0) {
+            this.index = this.index - 1;
+            this.onUndo(this.state[this.index]);
+        } else {
+            this.onUndo();
+        }
+    },
+    redo: function () {
+        if (this.index+1 < this.state.length) {
+            this.index = this.index + 1;
+            this.onRedo(this.state[this.index]);
+        } else {
+            this.onRedo();
+        }
+    },
+    update: function (action) {
+        this.index = this.index + 1
+        this.state = this.state.slice(0, this.index);
+        this.onUpdate(this.state.push(action));
     }
 };

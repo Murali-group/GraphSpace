@@ -2,10 +2,6 @@
 {% block content %}
     {% load staticfiles %}
 
-    <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
-    <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
-    {#    <script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>#}
-
     <div class="container graphs padding-bottom-6">
         <h1 class="text-center">{{ group.name }}</h1>
         {% if group.description and group.description|length != 0 %}

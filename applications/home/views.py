@@ -32,7 +32,7 @@ def login(request):
 	"""
 	if 'POST' == request.method:
 		try:
-			user = users.authenticate(request, username=request.POST['user_id'], password=request.POST['pw'])
+			user = users.authenticate_user(request, username=request.POST['user_id'], password=request.POST['pw'])
 
 			if user is not None:
 				request.session['uid'] = user['user_id']

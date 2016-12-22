@@ -2,6 +2,7 @@ from applications.users import views
 from django.conf.urls import url
 
 urlpatterns = [
+
 	url(r'^groups/$', views.groups_page, name='groups'),
 	url(r'^groups/(?P<group_id>[^/]+)$', views.group_page, name='group'),
 

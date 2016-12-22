@@ -5,7 +5,7 @@ import applications.users.dal as db
 from graphspace.utils import generate_uid
 
 
-def authenticate(request, username=None, password=None):
+def authenticate_user(request, username=None, password=None):
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
 
@@ -16,6 +16,7 @@ def authenticate(request, username=None, password=None):
 		#User object with associated information
 		if bcrypt.hashpw(password, hashed_pw) == hashed_pw:
 			return {
+				'id': user.id,
 				'user_id': user.email,
 				'password': user.password,
 				'admin': user.is_admin

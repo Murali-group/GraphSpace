@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import render
-
+from django.http import HttpResponseRedirect, HttpResponse, QueryDict
+import json
 
 class SQLAlchemySessionMiddleware(object):
 	def process_request(self, request):
@@ -35,11 +36,29 @@ class GraphSpaceMiddleware(object):
 		request.session['uid'] = request.session['uid'] if 'uid' in request.session else None
 
 	def process_response(self, request, response):
+		if 'HTTP_AUTHORIZATION' in request.META:
+			del request.session['uid']
 		return response
 
 	def process_exception(self, request, exception):
 		# TODO: Handle different types of error
-		return render(request, '500.html')
+		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+			if exception.message == 'Unauthenticated':
+				response = HttpResponse(content_type="application/json", status=401)
+				response['WWW-Authenticate'] = 'Basic'
+				return response
+			elif exception.message == 'Unauthorized':
+				response = HttpResponse(content_type="application/json", status=403)
+				response['WWW-Authenticate'] = 'Basic'
+				return response
+
+		context = {}
+		if exception.message == 'Unauthenticated':
+			context['message'] = 'You are not authenticated to view this page.'
+		elif exception.message == 'Unauthorized':
+			context['message'] = 'You are not authorized to view this page.'
+
+		return render(request, '500.html', context)
 
 
 

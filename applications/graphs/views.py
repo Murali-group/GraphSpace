@@ -8,6 +8,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
+from graphspace.wrappers import is_authenticated
 
 
 def upload_graph_page(request):
@@ -385,6 +386,7 @@ def delete_graph(request, graph_id):
 	graphs.delete_graph_by_id(request, graph_id)
 
 
+@is_authenticated()
 def gs_graphs(request, graph_id=None):
 	"""
 	Handles any request (GET/POST) sent to /graphs or graphs/<graph_id>
@@ -451,13 +453,14 @@ def graph_page(request, graph_id):
 		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
 			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
 		else:
-			return render(request, 'graphs/graph.html', context)
+			return render(request, 'graph/index.html', context)
 	else:
 		context[
 			'Error'] = "You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.!"
 		return render(request, 'graphs/error.html', context)
 
 
+@is_authenticated()
 def graph_groups(request, graph_id, group_id=None):
 	"""
 	Handles any request (GET/POST) sent to graphs/<graph_id>/groups or graphs/<graph_id>/groups/<group_id>.
@@ -614,6 +617,7 @@ def get_graph_groups(request, graph_id, query={}):
 	}
 
 
+@is_authenticated()
 def layouts(request, layout_id=None):
 	"""
 	Handles any request (GET/POST) sent to /layouts or /layouts/<layout_id>.
@@ -848,6 +852,7 @@ def delete_layout(request, layout_id):
 	graphs.delete_layout_by_id(request, layout_id)
 
 
+@is_authenticated()
 def nodes(request, node_id=None):
 	"""
 	Handles any request (GET/POST) sent to nodes/ or nodes/<node_id>.
@@ -1028,6 +1033,7 @@ def delete_node(request, node_id):
 	graphs.delete_node_by_id(request, node_id)
 
 
+@is_authenticated()
 def edges(request, edge_id=None):
 	"""
 	Handles any request (GET/POST) sent to edges/ or edges/<edge_id>.

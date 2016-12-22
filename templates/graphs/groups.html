@@ -2,11 +2,7 @@
 {% block content %}
     {% load staticfiles %}
 
-    <link href={% static "graphs/css/pager.css" %} rel="stylesheet">
-    <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">
-{#    <script type="text/javascript" src="{% static 'graphs/js/groups.js' %}"></script>#}
-
-    <div class="container-fluid zero-padding padding-bottom-6 padding-top-2">
+    <div class="container-fluid zero-padding padding-bottom-6">
         <ul class="nav nav-tabs">
             <li class="active text-center">
                 <a href="#owner_of" data-toggle="tab">Owner of <span class="badge">{{ owner_of.total }}</span> groups</a>
