@@ -4,7 +4,6 @@ import applications.graphs as graphs
 import applications.users.dal as db
 from graphspace.utils import generate_uid
 
-
 def authenticate_user(request, username=None, password=None):
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
@@ -23,6 +22,58 @@ def authenticate_user(request, username=None, password=None):
 			}
 	else:
 		return None
+
+
+def is_user_authorized_to_share_with_group(request, username, group_id):
+	is_authorized = False
+
+	group = db.get_group(request.db_session, group_id)
+
+	if group is not None:  # Graph exists
+		if group.owner_email == username:
+			is_authorized = True
+		elif is_member_of_group(request, username, group_id):  # graph is public
+			is_authorized = True
+
+	return is_authorized
+
+
+def is_user_authorized_to_delete_group(request, username, group_id):
+	is_authorized = False
+
+	group = db.get_group(request.db_session, group_id)
+
+	if group is not None:  # Graph exists
+		if group.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
+
+
+def is_user_authorized_to_view_group(request, username, group_id):
+	is_authorized = False
+
+	group = db.get_group(request.db_session, group_id)
+
+	if group is not None:  # Graph exists
+		if group.owner_email == username:
+			is_authorized = True
+		elif is_member_of_group(request, username, group_id):  # graph is public
+			is_authorized = True
+
+	return is_authorized
+
+
+def is_user_authorized_to_update_group(request, username, group_id):
+	is_authorized = False
+
+	group = db.get_group(request.db_session, group_id)
+
+	if group is not None:  # Graph exists
+		if group.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
 
 
 def get_user(request, email):

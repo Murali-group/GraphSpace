@@ -15,7 +15,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
 
-APPEND_SLASH=False
+APPEND_SLASH=True
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')

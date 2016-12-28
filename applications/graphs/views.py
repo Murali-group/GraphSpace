@@ -3,11 +3,13 @@ import json
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
 import graphspace.utils as utils
+import graphspace.authorization as authorization
 from applications.graphs.forms import SearchForm
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
+from graphspace.exceptions import MethodNotAllowed
 from graphspace.wrappers import is_authenticated
 
 
@@ -40,146 +42,50 @@ def upload_graph_page(request):
 		return render(request, 'graphs/upload_graph.html', context)
 
 
-def view_graph(request, graph_owner, graphname):
-	"""
-		View a graph with CytoscapeJS.
-
-		:param request: HTTP GET Request
-		:param graph_owner: Owner of the graph to view
-		:param graphname: Graph name of the graph to view
-	"""
-	context = RequestContext(request)
-	graphname = graphname.strip('/')
-	layoutname = request.GET.get('layout') if len(request.GET.get('layout', '')) > 0 else None
-	layout_owner = request.GET.get('layout_owner') if len(request.GET.get('layout_owner', '')) > 0 else None
-
-	try:
-		graph = graphs.get_graph(request, graph_owner, graphname)
-
-		if graph is None:
-			raise Exception(
-				"Graph: " + graphname + " does not exist for " + graph_owner + ".  Upload a graph with this name into GraphSpace in order to see it.")
-
-		if not graphs.is_user_authorized_to_view_graph(request, request.session['uid'], graph.id):
-			raise Exception(
-				"You are not authorized to view this graph, create an account and contact graph's owner for permission to see this graph.")
-
-		layout = graphs.get_layout(request, layout_owner, layoutname, graph.id)
-
-		if layout is None:
-			if "layout" in request.GET and layoutname not in graphs.AUTOMATIC_LAYOUT_ALGORITHMS:
-				raise Exception("Layout: " + request.GET.get(
-					'layout') + " does not exist.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
-		elif layout.is_public != 1 and layout.is_shared != 1:
-			raise Exception(layout.owner_email + " has not shared " + request.GET.get(
-				'layout') + " layout yet.  Click <a href='" + settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "'>here</a> to view this graph without the specified layout.")
-		else:
-			context['default_layout_name'] = graph.default_layout.name
-			context['default_layout'] = utils.cytoscapePresetLayout(json.dump(graph.default_layout.json))
-			context['layout_name'] = layout.name
-			context['layout_to_view'] = utils.cytoscapePresetLayout(json.dump(layout.json))
-			context['layout_urls'] = settings.URL_PATH + "graphs/" + graph_owner + "/" + graphname + "?layout="
-			context["layout_owner"] = layout.owner_email
-
-			# If user is logged in, display my layouts and shared layouts
-			if request.session['uid'] is not None:
-
-				context['my_layouts'] = []
-				context['shared_layouts'] = graph.layouts
-				context['my_shared_layouts'] = []
-
-				for layout in graph.layouts:
-					if layout.is_shared_with_groups == 0 and layout.is_public == 0:
-						context['my_layouts'].append(layout)
-						context['my_shared_layouts'].append(layout)
-
-		context["graph"] = _convert_to_cytoscape_json(graph.json)
-		context['draw_graph'] = True
-		context['shared_groups'] = [(group.name, group.owner_email) for group in graph.groups]
-		context['shared'] = 'Publicly Shared' if graph.is_public else 'Privately Shared'
-
-		json_data = json.loads(context['graph'])
-		if 'description' in json_data['metadata']:
-			context['description'] = json_data['metadata']['description'] + "</table></html>"
-		else:
-			context['description'] = ""
-
-		context['owner'] = graph_owner
-
-		# If the metadata has either a name or a title (backward-compatible)
-		# display it on the top of the graph
-		if 'name' in json_data['metadata']:
-			context['graph_name'] = json_data['metadata']['name']
-		elif 'title' in json_data['metadata']:
-			context['graph_name'] = json_data['metadata']['title']
-		else:
-			context['graph_name'] = ''
-
-		# graph id
-		context['graph_id'] = graphname
-
-		if len(json_data['graph']['edges']) > 0 and 'k' in json_data['graph']['edges'][0]['data']:
-			context['filters'] = True
-
-		# redirect if the user wishes to view the json data
-		if request.method == "GET" and 'view_json' in request.GET:
-			return HttpResponseRedirect("/json/%s/%s" % (graph_owner, graphname))
-
-		context['draw_graph'] = True
-		# Don't display the task_view
-		context["task_view"] = False
-		context["approve_view"] = False
-		context["researcher_view"] = True
-
-		return render(request, 'graphs/view_graph.html', context)
-
-	except Exception as e:
-		context['Error'] = str(e)
-		return render(request, 'graphs/error.html', context)
-
-
-def _convert_to_cytoscape_json(graphjson):
-	"""
-		Converts JSON to CytoscapeJS standards
-
-		:param graphjson: JSON of graph to render on CytoscapeJS
-		:return JSON: CytoscapeJS-compatible graphname
-	"""
-
-	temp_json = json.loads(graphjson)['graph']
-
-	# for Cytoscape.js, if data is in properties, then we need to convert (main difference)
-	if 'data' in temp_json:
-		return convert_json(graphjson)
-	else:
-		return graphjson
-
-
 def graphs_page(request):
 	"""
-		Wrapper view for the graphs page.
+		Wrapper view function for the following pages:
+		/graphs/
 
-		:param request: HTTP GET Request.
+		Parameters
+		----------
+		request : HTTP Request
+
+		Returns
+		-------
+		response : HTML Page Response
+			Rendered graphs list page in HTML.
+
+		Raises
+		------
+		MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+		Notes
+		------
 	"""
-	context = RequestContext(request, {})
-	uid = request.session['uid'] if 'uid' in request.session else None
-	try:
-		context.push({
-			"public_graphs": get_graphs(request, query={'is_public': True}),
-		})
-		if uid is not None:
-			context.push({
-				"owned_graphs": get_graphs(request, query={'owner_email': uid}),
-				"shared_graphs": get_graphs(request, query={'member_email': uid})
-			})
+	if 'GET' == request.method:
+		context = RequestContext(request, {})
+		uid = request.session['uid'] if 'uid' in request.session else None
+		try:
+			# context.push({
+			# 	"public_graphs": get_graphs(request, query={'is_public': True}),
+			# })
+			# if uid is not None:
+			# 	context.push({
+			# 		"owned_graphs": get_graphs(request, query={'owner_email': uid}),
+			# 		"shared_graphs": get_graphs(request, query={'member_email': uid})
+			# 	})
 
-		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts), content_type="application/json")
-		else:
-			return render(request, 'graphs/graphs.html', context)
-	except Exception as e:
-		context['Error'] = str(e)
-		return render(request, 'graphs/error.html', context)
+			if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+				return HttpResponse(json.dumps(context.dicts), content_type="application/json")
+			else:
+				return render(request, 'graphs/graphs.html', context)
+		except Exception as e:
+			context['Error'] = str(e)
+			return render(request, 'graphs/error.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
 
 
 def get_graphs(request, query=dict()):
@@ -277,6 +183,8 @@ def get_graph(request, graph_id):
 	------
 
 	"""
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
 	return utils.serializer(graphs.get_graph_by_id(request, graph_id))
 
 
@@ -352,6 +260,7 @@ def update_graph(request, graph_id, graph={}):
 	------
 
 	"""
+	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	return utils.serializer(graphs.update_graph(request,
 												graph_id=graph_id,
@@ -383,6 +292,7 @@ def delete_graph(request, graph_id):
 	------
 
 	"""
+	authorization.validate(request, permission='GRAPH_DELETE', graph_id=graph_id)
 	graphs.delete_graph_by_id(request, graph_id)
 
 
@@ -523,6 +433,8 @@ def add_graph_group(request, graph_id, group={}):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+	authorization.validate(request, permission='GROUP_SHARE', group_id=group.get('group_id', None))
 
 	return utils.serializer(users.add_group_graph(request,
 												  graph_id=graph_id,
@@ -551,6 +463,9 @@ def delete_graph_group(request,  graph_id, group_id):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+
 	users.delete_group_graph(request,
 							 group_id=group_id,
 							 graph_id=graph_id)
@@ -970,6 +885,7 @@ def get_node(request, node_id):
 
 	"""
 	return utils.serializer(graphs.get_node_by_id(request, node_id))
+
 
 def add_node(request, node={}):
 	"""

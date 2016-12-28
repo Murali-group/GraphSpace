@@ -78,21 +78,3 @@ def is_authenticated(redirect_url=None):
 		return inner_decorator
 	return wrapper
 
-
-def is_authorized(permission, graph_arg=None):
-	def wrapper(inner):
-		def inner_decorator(request, *args, **kwargs):
-			if graph_arg is not None:
-				if permission == 'GRAPH_READ' and not graphs.controllers.is_user_authorized_to_view_graph(request, username=request.session['uid'], graph_id = args[graph_arg-1]):
-					raise Exception('Unauthorized')
-				if permission == 'GRAPH_UPDATE' and not graphs.controllers.is_user_authorized_to_update_graph(request, username=request.session['uid'], graph_id = args[graph_arg-1]):
-					raise Exception('Unauthorized')
-				if permission == 'GRAPH_DELETE' and not graphs.controllers.is_user_authorized_to_delete_graph(request, username=request.session['uid'], graph_id = args[graph_arg-1]):
-					raise Exception('Unauthorized')
-			try:
-				return inner(request, *args, **kwargs)
-			except:
-				raise
-		return inner_decorator
-	return wrapper
-

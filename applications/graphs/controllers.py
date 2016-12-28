@@ -7,22 +7,11 @@ from json_validator import *
 from graphspace.fileformat import GraphSpaceJSONFormat
 import networkx as nx
 from json import dumps, loads
-from graphspace.wrappers import is_authorized
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
 							   'default_grid']
 
 
-def get_graph(request, graph_owner, graphname):
-	graph = db.get_graph(request.db_session, graph_owner,
-						 graphname) if graphname is not None and graph_owner is not None else None
-	# TODO: Check if we need verify json function call or not.
-	if graph is not None:
-		graph.json = verify_json(graph.json)
-	return graph
-
-
-@is_authorized('GRAPH_READ', graph_arg=1)
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
@@ -68,64 +57,18 @@ def is_user_authorized_to_delete_graph(request, username, graph_id):
 	return is_authorized
 
 
-def search_graphs_shared_with_user(request, uid, search_type, search_terms, tags, order_by, page, page_size):
-	user = users.controllers.get_user(request, uid)
+def is_user_authorized_to_share_graph(request, username, graph_id):
+	is_authorized = False
 
-	if user is None:
-		return []
-	else:
-		edges, nodes, names = [], [], []
-		for term in search_terms:
-			if ':' in term:
-				edges.append(term)
-			else:
-				names.append(term)
-				nodes.append(term)
+	graph = db.get_graph_by_id(request.db_session, graph_id)
 
-		return db.get_graphs_by_edges_and_nodes_and_names(request.db_session,
-														  group_ids=[group.id for group in user.member_groups],
-														  names=filter(None, names), nodes=filter(None, nodes),
-														  edges=edges, page=page, page_size=page_size,
-														  partial_matching=True if search_type == 'partial_search' else False,
-														  order=_convert_order_query_term_to_database_order_object(
-															  order_by), tags=tags)
+	if graph is not None:  # Graph exists
+		if graph.owner_email == username:
+			is_authorized = True
+		elif graph.is_public == 1:  # graph is public
+			is_authorized = True
 
-
-def search_graphs_owned_by_user(request, uid, search_type, search_terms, tags, order_by, page, page_size):
-	if uid is None:
-		return []
-	else:
-		edges, nodes, names = [], [], []
-		for term in search_terms:
-			if ':' in term:
-				edges.append(term)
-			else:
-				names.append(term)
-				nodes.append(term)
-
-		return db.get_graphs_by_edges_and_nodes_and_names(request.db_session, owner_email=uid,
-														  names=filter(None, names), nodes=filter(None, nodes),
-														  edges=edges, page=page, page_size=page_size,
-														  partial_matching=True if search_type == 'partial_search' else False,
-														  order=_convert_order_query_term_to_database_order_object(
-															  order_by), tags=tags)
-
-
-def search_public_graphs(request, uid, search_type, search_terms, tags, order_by, page, page_size):
-	edges, nodes, names = [], [], []
-	for term in search_terms:
-		if ':' in term:
-			edges.append(term)
-		else:
-			names.append(term)
-			nodes.append(term)
-
-	return db.get_graphs_by_edges_and_nodes_and_names(request.db_session, is_public=1, names=filter(None, names),
-													  nodes=filter(None, nodes), edges=edges, page=page,
-													  page_size=page_size,
-													  partial_matching=True if search_type == 'partial_search' else False,
-													  order=_convert_order_query_term_to_database_order_object(
-														  order_by), tags=tags)
+	return is_authorized
 
 
 def uploadJSONFile(request, username, graphJSON, title):
@@ -196,7 +139,6 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 	return new_graph
 
 
-@is_authorized('GRAPH_UPDATE', graph_arg=1)
 @atomic_transaction
 def update_graph(request, graph_id, name=None, is_public=None, json_string=None, owner_email=None,
 				 default_layout_id=None):
@@ -227,7 +169,6 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
 
-@is_authorized('GRAPH_DELETE', graph_arg=1)
 def delete_graph_by_id(request, graph_id):
 	db.delete_graph(request.db_session, id=graph_id)
 	return
@@ -296,16 +237,6 @@ def _convert_order_query_term_to_database_order_object(order_query):
 		return db.asc(attribute)
 	else:
 		return db.desc(attribute)
-
-
-def get_layout(request, layout_owner, layoutname, graph_id):
-	# if there is no layout specified in the request (query term), then render the default layout
-	# If there is a layout that is an automatic algorithm, simply return the default layout because the front-end JavaScript library handles the movement clientside
-	graph = db.get_graph_by_id(request.db_session, graph_id)
-	if layoutname is None or layoutname in AUTOMATIC_LAYOUT_ALGORITHMS or layout_owner is None:
-		return graph.default_layout
-	else:
-		return db.get_layout(request.db_session, owner_email=layout_owner, name=layoutname, graph_id=graph_id)
 
 
 def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=None, nodes=None, edges=None, tags=None,
@@ -522,6 +453,7 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 	if name is None or graph_id is None or head_node_id is None or tail_node_id is None:
 		raise Exception("Required Parameter is missing!")
 	return db.add_node(request.db_session, name=name, head_node_id=head_node_id, tail_node_id=tail_node_id, is_directed=is_directed, graph_id=graph_id)
+
 
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)

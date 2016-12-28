@@ -26,8 +26,8 @@
   <body>
     <div class="container">
       <h1 style='text-align: center;'>
-          {% if message %}
-              {{ message }}
+          {% if error_message %}
+              {{ error_message }}
           {% else %}
           Oops, something went wrong! The GraphSpace administrators have been notified.  Sorry for the inconvenience!
           {% endif %}

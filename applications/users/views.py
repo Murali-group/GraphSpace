@@ -5,56 +5,8 @@ from django.http import HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
 from graphspace import utils
+import graphspace.authorization as authorization
 from graphspace.wrappers import is_authenticated
-
-
-def groups_member(request):
-	"""
-		Render the Member Of page, showing the groups that the user belong to .
-
-		:param request: HTTP GET Request
-
-	"""
-	return _groups_page(request, 'member')
-
-
-def _groups_page(request, view_type):
-	"""
-		Wrapper view for the following pages:
-			groups/
-			groups/member/
-
-		:param request: HTTP GET Request
-		:param view_type: Type of view for the group (Example: owner of, member)
-	"""
-	context = RequestContext(request)  # context of the view to be passed in for rendering
-	uid = request.session['uid'] if 'uid' in request.session else None  # Checks to see if a user is currently logged on
-	context[
-		'view_type'] = view_type  # Send view_type to front end to tell the user (through button color) where they are
-
-	if uid is not None:  # User has to be logged in to get list of groups.
-		context['page'] = request.GET.get('page', 0)
-		context['page_size'] = request.GET.get('pageSize', 10)
-		context['order_by'] = 'group_ascending' if len(request.GET.get('order', '').strip()) == 0 else request.GET.get(
-			'order').strip()
-
-		context['member_groups'] = users.get_groups_by_member_id(request, uid, context['page'], context[
-			'page_size'])  # Get all the groups where logged in user is a member.
-		context['owned_groups'] = users.get_groups_by_owner_id(request, uid, context['page'], context[
-			'page_size'])  # Get all the groups owned by the logged in user.
-
-		return render(request, 'graphs/groups.html', context)
-	else:
-		context[
-			'Error'] = "You need to be logged in and also be a member of this group in order to see this group's contents!"
-		return render(request, 'graphs/error.html', context)
-
-	# if view_type == 'owner of' and context['my_groups'] == 0:
-	# 	context['message'] = "It appears that you are not an owner of any group.  Please create a group in order to own a group."
-	# elif view_type == 'member' and context['member_groups'] == 0 :
-	# 	context['message'] = "It appears as if you are not a member of any group. Please join a group in order for them to appear here."
-	# else:
-	# 	context['message'] = "It appears as if there are currently no groups on GraphSpace."
 
 
 def add_group(request, group={}):
@@ -176,6 +128,9 @@ def get_group(request, group_id):
 	------
 
 	"""
+
+	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
 	return utils.serializer(users.get_group_by_id(request, group_id))
 
 
@@ -212,6 +167,8 @@ def update_group(request, group_id, group={}):
 	------
 
 	"""
+	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+
 	return utils.serializer(users.update_group(request, group_id=group_id,
 											   name=group.get('name', None),
 											   description=group.get('description', None),
@@ -239,6 +196,8 @@ def delete_group(request, group_id):
 	------
 
 	"""
+	authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
+
 	users.delete_group_by_id(request, group_id)
 
 
@@ -299,6 +258,8 @@ def get_group_members(request, group_id):
 	------
 
 	"""
+	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
 	members = users.get_group_members(request, group_id)
 	return {
 		"members": [utils.serializer(user) for user in members],
@@ -333,6 +294,8 @@ def add_group_member(request, group_id):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+
 	return utils.serializer(users.add_group_member(request,
 												   group_id=group_id,
 												   member_id=request.POST.get('member_id', None),
@@ -361,6 +324,8 @@ def delete_group_member(request, group_id, member_id):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
+
 	users.delete_group_member(request,
 							  group_id=group_id,
 							  member_id=member_id)
@@ -520,6 +485,9 @@ def add_group_graph(request, group_id):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GRAPH_SHARE', graph_id=request.POST.get('graph_id', None))
+	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+
 	return utils.serializer(users.add_group_graph(request,
 												  group_id=group_id,
 												  graph_id=request.POST.get('graph_id', None)))
@@ -547,6 +515,9 @@ def delete_group_graph(request, group_id, graph_id):
 	Notes
 	------
 	"""
+	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+
 	users.delete_group_graph(request,
 							 group_id=group_id,
 							 graph_id=graph_id)

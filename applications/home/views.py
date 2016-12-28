@@ -5,23 +5,38 @@ from django.shortcuts import render
 import applications.users.controllers as users
 from django.template import RequestContext
 from graphspace.utils import *
+from graphspace.exceptions import *
 
 
-def index(request):
+def home_page(request):
 	"""
-		Render the main page.
+	Wrapper view function for the following pages:
+		/
+		/index
 
-		:param request: HTTP Request
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered home page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
 	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
-	context = RequestContext(request) # Checkout base.py file to see what context processors are being applied here.
-	print(context)
 	if 'GET' == request.method:
-		# Handle GET request to index page.
-		return render(request, 'home/index.html', context)
+		return render(request, 'home/index.html', context)  # Handle GET request to index page.
 	else:
-		# Handle other type of request methods like POST, PUT, UPDATE.
-		raise Exception
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
 def login(request):
@@ -31,19 +46,18 @@ def login(request):
 		:param request: HTTP Request
 	"""
 	if 'POST' == request.method:
-		try:
-			user = users.authenticate_user(request, username=request.POST['user_id'], password=request.POST['pw'])
+		user = users.authenticate_user(request, username=request.POST['user_id'], password=request.POST['pw'])
 
-			if user is not None:
-				request.session['uid'] = user['user_id']
-				request.session['admin'] = user['admin']
-				return HttpResponse(json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])), content_type="application/json")
-			else:
-				return HttpResponse(json.dumps(json_error_response(400, "User/Password not recognized!")), content_type="application/json")
-		except Exception as e:
-			return HttpResponse(json.dumps(json_error_response(400, str(e))), content_type="application/json")
+		if user is not None:
+			request.session['uid'] = user['user_id']
+			request.session['admin'] = user['admin']
+			return HttpResponse(
+				json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])),
+				content_type="application/json")
+		else:
+			raise ValidationError(request, ErrorCodes.VIEW.UserPasswordMisMatch)
 	else:
-		return HttpResponse(json.dumps(json_error_response(400)), content_type="application/json")
+		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 
 
 def register(request):
@@ -59,13 +73,12 @@ def register(request):
 		# RegisterForm is bound to POST data
 		register_form = RegisterForm(request.POST)
 		if register_form.is_valid():
-			try:
-				user = users.register(request, username=register_form.cleaned_data['user_id'], password=register_form.cleaned_data['password'])
-				return HttpResponse(json.dumps(json_success_response(200, message='Registered!')), content_type="application/json")
-			except Exception as e:
-				return HttpResponse(json.dumps(json_error_response(400, str(e))), content_type="application/json")
+			user = users.register(request, username=register_form.cleaned_data['user_id'],
+								  password=register_form.cleaned_data['password'])
+			return HttpResponse(json.dumps(json_success_response(200, message='Registered!')),
+								content_type="application/json")
 	else:
-		return HttpResponse(json.dumps(json_error_response(400)), content_type="application/json")
+		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 
 
 def logout(request):

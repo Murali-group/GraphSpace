@@ -2,6 +2,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 import json
+from graphspace.exceptions import *
 
 class SQLAlchemySessionMiddleware(object):
 	def process_request(self, request):
@@ -43,6 +44,8 @@ class GraphSpaceMiddleware(object):
 	def process_exception(self, request, exception):
 		# TODO: Handle different types of error
 		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+			if issubclass(type(exception), GraphSpaceError):
+				return HttpResponse(str(exception), content_type="application/json", status=exception.status)
 			if exception.message == 'Unauthenticated':
 				response = HttpResponse(content_type="application/json", status=401)
 				response['WWW-Authenticate'] = 'Basic'
@@ -52,11 +55,13 @@ class GraphSpaceMiddleware(object):
 				response['WWW-Authenticate'] = 'Basic'
 				return response
 
-		context = {}
+		context = exception.to_dict() if issubclass(type(exception), GraphSpaceError) else {}
+
 		if exception.message == 'Unauthenticated':
 			context['message'] = 'You are not authenticated to view this page.'
 		elif exception.message == 'Unauthorized':
 			context['message'] = 'You are not authorized to view this page.'
+
 
 		return render(request, '500.html', context)
 
