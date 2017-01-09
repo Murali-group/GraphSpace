@@ -4,6 +4,7 @@ import applications.users.controllers as users
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
+from django.views.decorators.csrf import csrf_exempt
 from graphspace import utils
 import graphspace.authorization as authorization
 from graphspace.wrappers import is_authenticated
@@ -51,7 +52,7 @@ def group_page(request, group_id):
 Groups APIs
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def groups_rest_api(request, group_id=None):
 	"""
@@ -341,7 +342,7 @@ def _delete_group(request, group_id):
 Group Members APIs
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def group_members_rest_api(request, group_id, member_id=None):
 	"""
@@ -512,7 +513,7 @@ def _delete_group_member(request, group_id, member_id):
 Group Graphs APIs
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def group_graphs_rest_api(request, group_id, graph_id=None):
 	"""

@@ -112,7 +112,7 @@ def graph_page(request, graph_id):
 Graphs APIs
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def graphs_rest_api(request, graph_id=None):
 	"""
@@ -440,7 +440,7 @@ def _delete_graph(request, graph_id):
 Graph Groups APIs.
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def graph_groups_rest_api(request, graph_id, group_id=None):
 	"""
@@ -663,7 +663,7 @@ def _get_graph_groups(request, graph_id, query={}):
 Graph Layouts APIs
 '''
 
-
+@csrf_exempt
 @is_authenticated()
 def graph_layouts_rest_api(request, graph_id, layout_id=None):
 	"""
@@ -959,7 +959,7 @@ def _delete_layout(request, graph_id, layout_id):
 
 	graphs.delete_layout_by_id(request, layout_id)
 
-
+@csrf_exempt
 @is_authenticated()
 def graph_nodes_rest_api(request, graph_id, node_id=None):
 	"""
@@ -1188,7 +1188,7 @@ def _delete_node(request, graph_id, node_id):
 
 	graphs.delete_node_by_id(request, node_id)
 
-
+@csrf_exempt
 @is_authenticated()
 def graph_edges_rest_api(request, graph_id, edge_id=None):
 	"""
