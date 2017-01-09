@@ -1351,6 +1351,11 @@ var cytoscapeGraph = {
                     avoidOverlap: true,
                     condense: true
                 });
+        } else if (layout_name === "cola") {
+            collection.layout(
+                {
+                    name: "cola"
+                });
         } else if (layout_name === "square") {
             cytoscapeGraph.runSquareLayoutOnCollection(cy, collection);
         } else if (layout_name === "horizontal") {
