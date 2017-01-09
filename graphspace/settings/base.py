@@ -24,14 +24,14 @@ DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
 # Application definition
 
 INSTALLED_APPS = (
-    'analytical',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'applications.users',
+	'analytical',
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'applications.users',
 	'applications.graphs'
 )
 
@@ -39,9 +39,10 @@ MIDDLEWARE_CLASSES = (
 	'django.contrib.sessions.middleware.SessionMiddleware',
 	'django.contrib.auth.middleware.AuthenticationMiddleware',
 	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'graphspace.middleware.SQLAlchemySessionMiddleware',
-    'graphspace.middleware.GraphSpaceMiddleware'
+	'django.middleware.common.CommonMiddleware',
+	'graphspace.middleware.SQLAlchemySessionMiddleware',
+	'graphspace.middleware.GraphSpaceMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
 )
 
 ROOT_URLCONF = 'graphspace.urls'
@@ -52,14 +53,14 @@ WSGI_APPLICATION = 'graphspace.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'gsdb',
-        'USER': 'adb',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
+	'default': {
+		'ENGINE': 'django.db.backends.postgresql_psycopg2',
+		'NAME': 'gsdb',
+		'USER': 'adb',
+		'PASSWORD': '',
+		'HOST': 'localhost',
+		'PORT': '5432'
+	}
 }
 
 ## Old Sqlite Implementation ###
@@ -94,27 +95,27 @@ EMAIL_PORT = 587
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
+	os.path.join(BASE_DIR, "static"),
 )
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates"],  #modify this line
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-	            'graphspace.context_processors.auth',
-                'graphspace.context_processors.static_urls',
-                'graphspace.context_processors.login_forms',
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+	{
+		'BACKEND': 'django.template.backends.django.DjangoTemplates',
+		'DIRS': ["templates"],  #modify this line
+		'APP_DIRS': True,
+		'OPTIONS': {
+			'context_processors': [
+				'graphspace.context_processors.auth',
+				'graphspace.context_processors.static_urls',
+				'graphspace.context_processors.login_forms',
+				'django.template.context_processors.debug',
+				'django.template.context_processors.request',
+				'django.contrib.auth.context_processors.auth',
+				'django.contrib.messages.context_processors.messages',
 
-            ],
-        },
-    },
+			],
+		},
+	},
 ]
 
 
@@ -125,13 +126,13 @@ AUTHENTICATION_BACKENDS = ('graphs.auth.AuthBackend.AuthBackend',)
 
 # Following the recommendation of the Django tutorial at
 PASSWORD_HASHERS = (
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
-    'django.contrib.auth.hashers.BCryptPasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.SHA1PasswordHasher',
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.CryptPasswordHasher',
+	'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+	'django.contrib.auth.hashers.BCryptPasswordHasher',
+	'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+	'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+	'django.contrib.auth.hashers.SHA1PasswordHasher',
+	'django.contrib.auth.hashers.MD5PasswordHasher',
+	'django.contrib.auth.hashers.CryptPasswordHasher',
 )
 
 BASE = declarative_base()

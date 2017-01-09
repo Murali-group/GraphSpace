@@ -1,0 +1,28 @@
+<table id="NodesTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="graphPage.nodesTable.getNodesByGraphID"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="nodes"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True">Node Name</th>
+        <th data-field="label">Node Label</th>
+        {#        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last#}
+        {#            Modified#}
+        {#        </th>#}
+        {% if uid %}
+            <th data-field="operations" data-visible="false">
+                Operations
+            </th>
+        {% endif %}
+    </tr>
+    </thead>
+</table>

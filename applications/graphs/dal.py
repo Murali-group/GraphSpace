@@ -270,7 +270,7 @@ def delete_graph_to_group(db_session, group_id, graph_id):
 	return group_to_graph
 
 @with_session
-def find_layouts(db_session, owner_email=None, is_public=None, is_shared_with_groups=None, name=None, graph_id=None, limit=None, offset=None, order_by=desc(Layout.updated_at)):
+def find_layouts(db_session, owner_email=None, is_shared=None, name=None, graph_id=None, limit=None, offset=None, order_by=desc(Layout.updated_at)):
 	query = db_session.query(Layout)
 
 	if order_by is not None:
@@ -285,11 +285,8 @@ def find_layouts(db_session, owner_email=None, is_public=None, is_shared_with_gr
 	if graph_id is not None:
 		query = query.filter(Layout.graph_id == graph_id)
 
-	if is_public is not None:
-		query = query.filter(Layout.is_public == is_public)
-
-	if is_shared_with_groups is not None:
-		query = query.filter(Layout.is_shared_with_groups == is_shared_with_groups)
+	if is_shared is not None:
+		query = query.filter(Layout.is_shared == is_shared)
 
 	total = query.count()
 
@@ -303,7 +300,7 @@ def get_layout_by_id(db_session, layout_id):
 	return db_session.query(Layout).filter(Layout.id == layout_id).one_or_none()
 
 @with_session
-def add_layout(db_session, owner_email, name, graph_id, is_public, is_shared_with_groups, json):
+def add_layout(db_session, owner_email, name, graph_id, is_shared, json):
 	"""
 
 	Parameters
@@ -312,15 +309,14 @@ def add_layout(db_session, owner_email, name, graph_id, is_public, is_shared_wit
 	owner_email - ID of user who owns the group
 	name - Name of the layout
 	graph_id - ID of the graph the layout belongs to.
-	is_public - if layout is shared with everyone.
-	is_shared_with_groups - if layout is shared with groups where graph is shared.
+	is_shared - if layout is shared with groups where graph is shared.
 	json - json of the layouts.
 
 	Returns
 	-------
 
 	"""
-	layout = Layout(owner_email=owner_email, name=name, graph_id=graph_id, is_public=is_public, is_shared_with_groups=is_shared_with_groups, json=json)
+	layout = Layout(owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, json=json)
 	db_session.add(layout)
 	return layout
 

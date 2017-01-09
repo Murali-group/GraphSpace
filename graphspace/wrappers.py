@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 import base64
 import applications.users as users
-import applications.graphs as graphs
+from graphspace.exceptions import UserNotAuthenticated
 
 
 def with_session(inner):
@@ -56,10 +56,7 @@ def has_basic_authentication(request):
 			if auth[0].lower() == "basic":
 				uname, passwd = base64.b64decode(auth[1]).split(':')
 				user = users.controllers.authenticate_user(request, username=uname, password=passwd)
-				if user is not None:
-					request.session['uid'] = user['user_id']
-					request.session['admin'] = user['admin']
-					return True
+				return user is not None
 	return False
 
 
@@ -72,7 +69,7 @@ def is_authenticated(redirect_url=None):
 				elif redirect_url is not None:
 					return redirect(redirect_url)
 				else:
-					raise Exception('Unauthenticated')
+					raise UserNotAuthenticated(request)
 			except:
 				raise
 		return inner_decorator

@@ -7,9 +7,6 @@
         {% endif %}
     </script>
 
-    {#    <link href={% static "graphs/css/pager.css" %} rel="stylesheet">#}
-    {#    <link href={% static "graphs/css/graphs.css" %} rel="stylesheet">#}
-
     <!--- Modals start here--->
     <div>
         <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
@@ -92,9 +89,13 @@
                             </div>
                             <br>
                             <div class="form-group">
-                                <button name="saveLayoutBtn" id="saveLayoutBtn" class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save Layout
+                                <button name="saveLayoutBtn" id="saveLayoutBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save
+                                    Layout
                                 </button>
-                                <button type="button" id="exitLayoutBtn" class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar" data-dismiss="modal">Exit without saving
+                                <button type="button" id="exitLayoutBtn"
+                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
+                                        data-dismiss="modal">Exit without saving
                                 </button>
                                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                             </div>
@@ -123,11 +124,11 @@
                 <a class="link-reset" href="#graph_edges_tab" data-toggle="tab">Edges <span
                         class="badge">{{ graph.json.graph.edges|length }}</span></a>
             </li>
-
-            <li class="text-center">
-                <a class="link-reset" href="#graph_layouts_tab" data-toggle="tab">Layouts <span
-                        class="badge">{{ layouts|length }}</span></a>
-            </li>
+            {% if uid %}
+                <li class="text-center">
+                    <a class="link-reset" href="#graph_layouts_tab" data-toggle="tab">Layouts</a>
+                </li>
+            {% endif %}
         </ul>
 
         <div id="myTabContent" class="tab-content gs-full-height bg-white">
@@ -139,6 +140,7 @@
                         {% if uid %}
                             {% include 'graph/layout_editor_sidebar.html' %}
                         {% endif %}
+                        {% include 'graph/filter_nodes_edges_sidebar.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
 
@@ -154,7 +156,10 @@
                                         </h1>
                                         <input type="text" id="GraphName" value="{{ graph.name }}" hidden/>
                                         <input type="text" id="GraphID" value="{{ graph.id }}" hidden/>
-                                        <p style="z-index=9999;position:fixed; top:40%; left:40%;" data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box." data-step='1'></p>
+                                        <p style="z-index=9999;position:fixed; top:40%; left:40%;"
+                                           data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box."
+                                           data-step='1'></p>
+                                        <div id="dialog"></div>
                                         <div id="cyGraphContainer"></div>
                                     </div>
                                     <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>
@@ -166,88 +171,33 @@
                 </div>
             </div>
             <div class="tab-pane fade gs-full-height container" id="graph_nodes_tab">
-                <table id="NodesTable"
-                       data-toggle="table"
-                       data-show-refresh="true"
-                       data-show-columns="true"
-                       data-show-toggle="true"
-                       data-ajax="graphPage.nodesTable.getNodesByGraphID"
-                       data-search="true"
-                       data-side-pagination="server"
-                       data-data-field="nodes"
-                       data-pagination="true"
-                       data-sort-name="name"
-                       data-id-field="id"
-                       data-sort-order="asc">
-                    <thead>
-                    <tr>
-                        <th data-field="name" data-sortable="True">Node Name</th>
-                        <th data-field="label">Node Label</th>
-                        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last
-                            Modified
-                        </th>
-                        <th data-field="operations">
-                            Operations
-                        </th>
-                    </tr>
-                    </thead>
-                </table>
+                {% include 'graph/nodes_table.html' %}
             </div>
             <div class="tab-pane fade gs-full-height container" id="graph_edges_tab">
-                <table id="EdgesTable"
-                       data-toggle="table"
-                       data-show-refresh="true"
-                       data-show-columns="true"
-                       data-show-toggle="true"
-                       data-ajax="graphPage.edgesTable.getEdgesByGraphID"
-                       data-search="true"
-                       data-side-pagination="server"
-                       data-data-field="edges"
-                       data-pagination="true"
-                       data-sort-name="name"
-                       data-id-field="id"
-                       data-sort-order="asc">
-                    <thead>
-                    <tr>
-                        <th data-field="name" data-sortable="True">Edge Name</th>
-                        <th data-field="is_directed" data-sortable="True">Is Directed ?</th>
-                        <th data-field="tail_node.label" data-sortable="True">Tail Node</th>
-                        <th data-field="head_node.label" data-sortable="True">Head Node</th>
-                        {#                        <th data-field="label">Node Label</th>#}
-                        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last
-                            Modified
-                        </th>
-                        <th data-field="operations">
-                            Operations
-                        </th>
-                    </tr>
-                    </thead>
-                </table>
+                {% include 'graph/edges_table.html' %}
             </div>
-            <div class="tab-pane fade gs-full-height" id="graph_layouts_tab">
-
-            </div>
+            {% if uid %}
+                <div class="tab-pane fade gs-full-height" id="graph_layouts_tab">
+                    {% include 'graph/layouts_table.html' %}
+                </div>
+            {% endif %}
         </div>
 
     </div>
 
 
-
-
-
-    <footer class="footer">
-        <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
-        <br><a href="http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
-    </footer>
-
     <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.js' %}"></script>
     <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
+
     <script type="text/javascript" src="{% static 'components/intro.js/intro.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/intro.js/introjs.css' %}">
+
+    <script type="text/javascript" src="{% static 'components/jquery-ui/jquery-ui.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'components/jquery-ui/themes/base/jquery-ui.min.css' %}">
+
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
 
 
@@ -257,6 +207,7 @@
             graphPage.init();
         });
     </script>
+
     <!-- Menu Toggle Script -->
     <script>
         $("#menu-toggle").click(function (e) {
@@ -274,7 +225,5 @@
 
             })
         })
-
-
     </script>
 {% endblock %}

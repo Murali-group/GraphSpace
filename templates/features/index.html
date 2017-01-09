@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <div class="container-fluid" style="height: auto">
+        <h1>GraphSpace Features</h1>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Upload Graphs</h3>
+        <ul>
+            <li><a href="{{ url }}help#upload_graphs_cyjs">Import</a> graphs created in <a
+                    href="http://www.cytoscape.org/">Cytoscape</a> directly into GraphSpace
+            </li>
+            <li><a href="{{ url }}help/programmers#json_ref">Create graphs</a> and <a
+                    href="{{ url }}help#upload_graphs">upload</a> it via the <a href="{{ url }}graphs/upload">Web
+                Interface</a> or through the <a href="help/programmers#add_graph">REST API</a></li>
+        </ul>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Interact with graphs</h3>
+        <ul>
+            <li>View a graph, customize layouts for a graph, and save <a href="{{ url }}help/#layout_panel">layouts</a>
+                for graphs
+            </li>
+            <li>Sequentially <a href="{{ url }}help/#step_panel">step through subgraphs</a> of the entire graph</li>
+        </ul>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Share graphs</h3>
+        <ul>
+            <li>Create <a href="{{ url }}help#groups">groups</a> and add collaborators</li>
+            <li>Share <a href="{{ url }}help#sharing_graphs">graphs among all members of a group</li>
+            <li>Share <a href="{{ url }}help#layout_panel">layouts</a> between collaborators</li>
+            <li>Share graphs with the <a href="{{ url }}help#public_private">world</a></li>
+        </ul>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Search graphs</h3>
+        <ul>
+            <li><a href="{{ url }}help/#search_panel">Search</a> for elements within a graph</li>
+            <li><a href="{{ url }}help/#search_panel">Search</a> for graphs that contain elements</li>
+        </ul>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Organize graphs</h3>
+        <ul>
+            <li><a href="{{ url }}help#tags">Tags</a> allow for organizing multiple graphs</li>
+            <li>Quickly <a href="{{ url }}help/programmers/#tags">search</a> for all graphs that match tag</li>
+        </ul>
+        <hr>
+        <h3 style="padding-top: 50px; margin-top: -40px;">Programmatically communicate with GraphSpace</h3>
+        <ul>
+            <li>Use the comphrehensive <a href="{{ url }}help/programmers">REST API</a></li>
+            <li><a href="{{ url }}help/programmers/#graphs">Construct graphs</a> and faciliate graph <a
+                    href="{{ url }}help/programmers/#add_graph">uploads</a></li>
+            <li>Create scripts to interact with features of GraphSpace</li>
+        </ul>
+    </div>
+
+{% endblock %}

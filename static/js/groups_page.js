@@ -143,6 +143,7 @@ var groupsPage = {
                 successCallback = function (response) {
                     // This method is called when groups are successfully fetched.
                     params.success(response);
+                    $('#ownedGroupsTotal').text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while fetching groups.
@@ -170,6 +171,7 @@ var groupsPage = {
                 successCallback = function (response) {
                     // This method is called when groups are successfully fetched.
                     params.success(response);
+                    $('#memberGroupsTotal').text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while fetching groups.

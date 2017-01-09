@@ -11,7 +11,7 @@ class LoginForm(forms.Form):
 	"""
 
 	# attrs to specify extra html attributes
-	user_id = forms.CharField(max_length=100, required=False, widget=forms.TextInput(
+	user_id = forms.CharField(max_length=100, label='User ID', required=False, widget=forms.TextInput(
 		attrs={
 			'placeholder': 'Email',
 			'class': 'form-control',
@@ -19,7 +19,7 @@ class LoginForm(forms.Form):
 			'id': 'email'
 		}))
 
-	pw = forms.CharField(required=False, widget=forms.PasswordInput(
+	pw = forms.CharField(required=False, label='Password', widget=forms.PasswordInput(
 		attrs={
 			'placeholder': 'Password',
 			'class': 'form-control',

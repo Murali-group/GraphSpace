@@ -1,0 +1,1343 @@
+This page describes the RESTful API provided by GraphSpace for uploading and managing your graphs. This API offers the following advantages:
+<ul>
+    <li>A user with an account can write software to upload several graphs in an automated manner.</li>
+    <li>In the <a href="http://json.org">JSON</a> for every uploaded graph, the user may specific the graph’s names,
+        details about it, and information on every node and edge.
+    </li>
+</ul>
+<p>In order to fully utilize the features of this RESTful API, you must have an account on GraphSpace.</p>
+</p>
+
+
+<h3>Prerequisites</h3>
+
+<p>
+    To execute the examples from the command line you will need an HTTP client. On Debian systems you can install one by
+    running </p>
+
+<pre>
+sudo apt-get install curl
+</pre>
+
+<hr>
+
+<h3>REST API Basics</h3>
+
+<p>All of the GraphSpace API documentation adhere to the following semantics.</p>
+
+<p>Anything in "[]" specifies a variable. For example, [email] means use GraphSpace account (email) in place of [email]
+    in the request.
+
+<p>Example GET graph request in the documentation is: <br>
+<pre>curl -X POST "http://localhost:8000/api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo</pre></p>
+
+<p>The same GET graph request for a graph named "example_graphname" and a GraphSpace email of "example@example.com" with
+    password "example_password" would be: <br>
+<pre>curl -X POST "http://localhost:8000/api/users/example@example.com/graph/get/example_graphname/" -F "username=example@example.com" -F "password=example_password"; echo</pre></p>
+
+<p>In general, API calls using this REST API will have a "StatusCode" property. This property adheres to the usual <a
+        href="http://www.restapitutorial.com/httpstatuscodes.html">REST API status codes</a>.</p>
+
+<h3>REST API calls</h3>
+
+<p>
+    Below is a list of the different REST API calls.
+</p>
+
+<ul>
+    <li><h4><a href="#graphs">Graphs</a></h4>
+        <ul>
+            <li><a href="#json_ref">JSON Reference</a></li>
+            <li><a href="#example">Example JSON</a></li>
+            <li><a href="#add_graph">Add graph</a></li>
+            <li><a href="#graph_exists">Graph Exists</a></li>
+            <li><a href="#get_graph">Get graph</a></li>
+            <li><a href="#update_graph">Update graph</a></li>
+            <li><a href="#remove_graph">Remove graph</a></li>
+            <li><a href="#get_user_graphs">Get user graphs</a></li>
+            <li><a href="#get_all_graphs">Get all graphs</a></li>
+            <li><a href="#make_graph_public">Make graph public</a></li>
+            <li><a href="#make_graph_private">Make graph private</a></li>
+        </ul>
+    </li>
+    <li><h4><a href="#groups">Groups</a></h4>
+        <ul>
+            <li><a href="#create_group">Create group</a></li>
+            <li><a href="#remove_group">Remove group</a></li>
+            <li><a href="#get_group">Get group</a></li>
+            <li><a href="#get_user_groups">Get groups a user belongs to</a></li>
+            <li><a href="#add_user_to_group">Add user to group</a></li>
+            <li><a href="#remove_user_from_group">Remove user from group</a></li>
+            <li><a href="#share_graph">Share a graph with a group</a></li>
+            <li><a href="#unshare_graph">Unshare a graph with a group</a></li>
+        </ul>
+    </li>
+    <li><h4><a href="#layouts">Layout</a></h4>
+        <ul>
+            <li><a href="#get_graph_layouts">Get all layouts for a graph.</a></li>
+            <li><a href="#get_layout">Get layout</a></li>
+            <li><a href="#create_layout">Create layout</a></li>
+            <li><a href="#update_layout">Update layout</a></li>
+        </ul>
+    </li>
+    <li><h4><a href="#tags">Tags</a></h4>
+        <ul>
+            <li><a href="#tag_for_user">Get Tags for User</a></li>
+            <li><a href="#tag_for_graph">Get Tags for Graph</a></li>
+            <li><a href="#make_graphs_for_tag_public">Make all graphs for a tag public</a></li>
+            <li><a href="#make_graphs_for_tag_private">Make all graphs for a tag private</a></li>
+            <li><a href="#delete_graphs_for_tag">Delete all graphs for a tag</a></li>
+        </ul>
+    </li>
+</ul>
+
+<hr>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="graphs">Graphs</h2>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="json_ref">JSON Reference</h3>
+<p>This section details the structure of the JSON that all graphs inserted into GraphSpace should follow. Any deviation
+    from this schema may result in GraphSpace rejecting the graph or problems in rendering the graph. For the sake of
+    completeness, we have copied the description of several of the node and edge attributes directly from the <a
+            href="http://js.cytoscape.org/">CytoscapeJS</a> documentation. We thank them for the excellent documentation
+    of their framework.
+
+<p>A properly formatted JSON for a graph in GraphSpace contains the following structure:
+
+<pre>
+{
+    "graph": {
+        "nodes": [],
+        "edges": []
+    },
+    "metadata": {
+        "title": "",
+        "description": "",
+        "tags": []
+    }
+}
+</pre>
+<hr>
+<h4>Node</h4>
+<!-- <p>GraphSpace supports all <a href="http://js.cytoscape.org/#style/node-body">node properties</a> provided through CytoscapeJS. In addition, GraphSpace also supports the following properties:</p> 
+ -->
+<p>This table lists all the properties that GraphSpace supports for a Node element.</p>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>id</td>
+        <td> A unique id representing the node. (<b>REQUIRED</b>)</td>
+    </tr>
+
+    <tr>
+        <td>content</td>
+        <td> The text that is displayed inside of the node.</td>
+    </tr>
+
+    <tr>
+        <td>popup</td>
+        <td> A string that will be displayed in a popup window when the user clicks the node. This string can be
+            HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)
+        </td>
+    </tr>
+
+    <tr>
+        <td>k</td>
+        <td> An integer index for this node. GraphSpace uses this attribute when the user seeks to <a
+                href="{{ url }}help/#step_panel">step through the nodes and edges of the graph</a>. (<b>This attribute
+            is specific to GraphSpace.</b>)
+        </td>
+    </tr>
+
+    <tr>
+        <td> background_color</td>
+        <td> The background color of the node. It may be the names of colors or <a
+                href="http://www.w3schools.com/tags/ref_colorpicker.asp">hexadecimal</a> values of the colors.
+        </td>
+    </tr>
+
+    <tr>
+        <td>height</td>
+        <td> The height of the node.</td>
+    </tr>
+
+    <tr>
+        <td>width</td>
+        </td>
+        <td> The width of the node.</td>
+    </tr>
+
+    <tr>
+        <td>shape</td>
+        <td> The shape of the node. May be: rectangle, roundrectangle, ellipse, triangle, pentagon, hexagon, heptagon,
+            octagon, star, diamond, vee, or rhomboid.
+        </td>
+    </tr>
+
+
+    <tr>
+        <td>background_blacken</td>
+        <td>Blackens the node's body for values from 0 to 1; whitens the node's body for values from 0 to -1.</td>
+    </tr>
+
+    <tr>
+        <td>background_opacity</td>
+        <td>The opacity level of the node's background color.</td>
+    </tr>
+
+    <tr>
+        <td>border_width</td>
+        <td>The size of the node's border.</td>
+    </tr>
+
+    <tr>
+        <td>border_style</td>
+        <td>The style of the node's border; may be solid, dotted, dashed, or double.</td>
+    </tr>
+
+    <tr>
+        <td>border_color</td>
+        <td>The color of the node's border.</td>
+    </tr>
+
+    <tr>
+        <td>border_opacity</td>
+        <td>The opacity of the node's border.</td>
+    </tr>
+
+    <tr>
+        <td>background_image</td>
+        <td>The URL that points to the image that should be used as the node's background. PNG, JPG, and SVG are
+            supported formats. You may use a data URI to use embedded images, thereby saving a HTTP request.
+        </td>
+    </tr>
+
+    <tr>
+        <td>background_image_opacity</td>
+        <td>The opacity of the background image.</td>
+    </tr>
+
+    <tr>
+        <td>background_width</td>
+        <td>Specifies the width of the image. A percent value (e.g. 50%) may be used to set the image width relative to
+            the node width. If used in combination with background-fit, then this value overrides the width of the image
+            in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default, which
+            uses the width of the image.
+        </td>
+    </tr>
+
+    <tr>
+        <td>background_height</td>
+        <td>Specifies the height of the image. A percent value (e.g. 50%) may be used to set the image height relative
+            to the node height. If used in combination with background-fit, then this value overrides the height of the
+            image in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default,
+            which uses the height of the image.
+        </td>
+    </tr>
+
+    <tr>
+        <td>background_fit</td>
+        <td>Specifies the width of the image. A percent value (e.g. 50%) may be used to set the image width relative to
+            the node width. If used in combination with background-fit, then this value overrides the width of the image
+            in calculating the fitting — thereby overriding the aspect ratio. The auto value is used by default, which
+            uses the width of the image.
+        </td>
+    </tr>
+
+    <tr>
+        <td>background_repeat</td>
+        <td>Whether to repeat the background image; may be no-repeat, repeat-x, repeat-y, or repeat.</td>
+    </tr>
+
+    <tr>
+        <td>background_position_x</td>
+        <td>The x position of the background image, measured in percent (e.g. 50%) or pixels (e.g. 10px).</td>
+    </tr>
+
+    <tr>
+        <td>background_position_y</td>
+        <td>The y position of the background image, measured in percent (e.g. 50%) or pixels (e.g. 10px).</td>
+    </tr>
+
+    <tr>
+        <td>background_clip</td>
+        <td>How background image clipping is handled; may be node for clipped to node shape or none for no clipping.
+        </td>
+    </tr>
+
+    <tr>
+        <td>color</td>
+        <td>The color of the text displayed inside the node.</td>
+    </tr>
+
+    <tr>
+        <td>font_family</td>
+        <td>A comma-separated list of font names to use on the node text.</td>
+    </tr>
+
+    <tr>
+        <td>font_size</td>
+        <td>The size of the node text.</td>
+    </tr>
+
+    <tr>
+        <td>font_style</td>
+        <td>A CSS font style to be applied to the node text.</td>
+    </tr>
+
+    <tr>
+        <td>font_weight</td>
+        <td>A CSS font weight to be applied to the node text.</td>
+    </tr>
+
+    <tr>
+        <td>text_transform</td>
+        <td>A transformation to apply to the label text; may be none, uppercase, or lowercase.</td>
+    </tr>
+
+    <tr>
+        <td>text_wrap</td>
+        <td>A wrapping style to apply to the label text; may be none for no wrapping (including manual newlines: \n) or
+            wrap for manual and/or autowrapping.
+        </td>
+    </tr>
+
+    <tr>
+        <td>text_max_width</td>
+        <td>The maximum width for wrapped text, applied when text-wrap is set to wrap. For only manual newlines (i.e.
+            \n), set a very large value like 1000px such that only your newline characters would apply.
+        </td>
+    </tr>
+
+    <tr>
+        <td>edge_text_rotation</td>
+        <td>Whether to rotate edge labels as the relative angle of an edge changes; may be none for page-aligned labels
+            or autorotate for edge-aligned labels. This works best with left-to-right text.
+        </td>
+    </tr>
+
+    <tr>
+        <td>text_opacity</td>
+        <td>The opacity of the label text, including its outline.</td>
+    </tr>
+
+    <tr>
+        <td>text_outline_color</td>
+        <td>The color of the outline around the element's label text.</td>
+    </tr>
+
+    <tr>
+        <td>text_outline_opacity</td>
+        <td>The opacity of the outline on label text.</td>
+    </tr>
+
+    <tr>
+        <td>text_outline_width</td>
+        <td>The size of the outline on label text.</td>
+    </tr>
+
+    <tr>
+        <td>text_shadow_blur</td>
+        <td>The shadow blur distance.</td>
+    </tr>
+
+    <tr>
+        <td>text_shadow_color</td>
+        <td>The color of the shadow.</td>
+    </tr>
+
+    <tr>
+        <td>text_shadow_offset_x</td>
+        <td>The x offset relative to the text where the shadow will be displayed, can be negative. If you set blur to 0,
+            add an offset to view your shadow.
+        </td>
+    </tr>
+
+    <tr>
+        <td>text_shadow_offset_y</td>
+        <td> The y offset relative to the text where the shadow will be displayed, can be negative. If you set blur to
+            0, add an offset to view your shadow.
+        </td>
+    </tr>
+
+    <tr>
+        <td>text_shadow_opacity</td>
+        <td>The opacity of the shadow on the text; the shadow is disabled for 0 (default value).</td>
+    </tr>
+
+    <tr>
+        <td>text_background_shape</td>
+        <td> The shape to use for the label background, can be rectangle or roundrectangle.</td>
+    </tr>
+
+    <tr>
+        <td>text_border_width</td>
+        <td>The width of the border around the label.</td>
+    </tr>
+
+    <tr>
+        <td>text_border_style</td>
+        <td>The style of the border around the label; may be solid, dotted, dashed, or double.</td>
+    </tr>
+
+    <tr>
+        <td>text_border_color</td>
+        <td>The color of the border around the label.</td>
+    </tr>
+
+    <tr>
+        <td>min_zoomed_font_size</td>
+        <td>If zooming makes the effective font size of the label smaller than this, then no label is shown.</td>
+    </tr>
+
+    <tr>
+        <td>text_halign</td>
+        <td>The vertical alignment of a label; may have value left, center, or right.</td>
+    </tr>
+
+    <tr>
+        <td>text_valign</td>
+        <td>The vertical alignment of a label; may have value top, center, or bottom.</td>
+    </tr>
+
+    </tbody>
+</table>
+<hr>
+<h4>Edge</h4>
+<p>This table lists all the properties that GraphSpace supports for an Edge element.</p>
+<table class="table">
+    <thead>
+    <tr>
+        <th> Name</th>
+        <td> Description</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td> source</td>
+        <td> The id of the node where the edge is coming from. (<b>REQUIRED</b>)</td>
+    </tr>
+    <tr>
+        <td> target</td>
+        <td> The id of the node where edge is going to. (<b>REQUIRED</b>)</td>
+    </tr>
+    <tr>
+        <td>popup</td>
+        <td> A string that will be displayed in a popup window when the user clicks the edge. This string can be
+            HTML-formatted. (<b>This attribute is specific to GraphSpace.</b>)
+        </td>
+    </tr>
+
+    <tr>
+        <td>k</td>
+        <td> An integer index for this edge. GraphSpace uses this attribute when the user seeks to <a
+                href="{{ url }}help/#step_panel">step through the nodes and edges of the graph</a>. (<b>This attribute
+            is specific to GraphSpace.</b>)
+        </td>
+    </tr>
+
+    <tr>
+        <td>width</td>
+        <td>The width of an edge's line.</td>
+    </tr>
+    <tr>
+        <td>line_color</td>
+        <td>The color of the edge's line.</td>
+    </tr>
+    <tr>
+        <td>line_style</td>
+        <td>The style of the edge's line; may be solid, dotted, or dashed.</td>
+    </tr>
+    <tr>
+        <td>source_arrow_color</td>
+        <td>The color of the edge's source arrow.</td>
+    </tr>
+    <tr>
+        <td>source_arrow_shape</td>
+        <td>The shape of the edge's source arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square,
+            circle, diamond, or none.
+        </td>
+    </tr>
+    <tr>
+        <td>source_arrow_fill</td>
+        <td>The fill state of the edge's source arrow; may be filled or hollow.</td>
+    </tr>
+    <tr>
+        <td>mid_source_arrow_color</td>
+        <td>The color of the edge's mid source arrow.</td>
+    </tr>
+    <tr>
+        <td>mid_source_arrow_shape</td>
+        <td>The shape of the edge's mid source arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square,
+            circle, diamond, or none.
+        </td>
+    </tr>
+    <tr>
+        <td>mid_source_arrow_fill</td>
+        <td>The fill state of the edge's mid source arrow; may be filled or hollow.</td>
+    </tr>
+    <tr>
+        <td>target_arrow_color</td>
+        <td>The color of the edge's target arrow.</td>
+    </tr>
+    <tr>
+        <td>target_arrow_shape</td>
+        <td>The shape of the edge's target arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square,
+            circle, diamond, or none.
+        </td>
+    </tr>
+    <tr>
+        <td>target_arrow_fill</td>
+        <td>The fill state of the edge's target arrow; may be filled or hollow.</td>
+    </tr>
+    <tr>
+        <td>mid_target_arrow_color</td>
+        <td>The color of the edge's target arrow.</td>
+    </tr>
+    <tr>
+        <td>mid_target_arrow_shape</td>
+        <td>The shape of the edge's target arrow; may be tee, triangle, triangle-tee, triangle-backcurve, square,
+            circle, diamond, or none.
+        </td>
+    </tr>
+    <tr>
+        <td>mid_target_arrow_fill</td>
+        <td>The fill state of the edge's target arrow; may be filled or hollow.</td>
+    </tr>
+    </tbody>
+</table>
+<hr>
+<h4 id="metadata">Metadata</h4>
+<p>Contains information information about the graph. Supports the following properties:</p>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th> Name</th>
+        <th> Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td> name</td>
+        <td> Name that is displayed on top of graph while viewing it.</td>
+    <tr>
+        <td> description</td>
+        <td> May be HTML formatted string. May be link to image hosted elsewhere. May simly be a string which contains
+            information such as a legend or significance of the graph.
+        </td>
+    <tr>
+        <td> tags</td>
+        <td> Array of strings. Used to categorize graphs. See <a href="{{ url }}help/#tags">Tags</a> for more
+            information.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="example">Example
+    JSON</h3>
+<p>The following example is a correctly structured JSON for GraphSpace.</p>
+<pre>
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P4314611",
+                    "content": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2,
+                    "k": 0
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P0810711",
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888",
+                    "k": 0
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "source": "P4314611",
+                    "target": "P0810711",
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle",
+                    "k": 0
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "title": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
+</pre>
+<hr>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="add_graph">Add graph</h3>
+
+In order to add a graph to GraphSpace, make the following POST request where [email] is your email and [password] is your password.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/add/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"; echo
+</pre>
+
+Here is an example of a basic graph JSON:
+<pre>
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P4314611",
+                    "content": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P0810711",
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "source": "P4314611",
+                    "target": "P0810711",
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle"
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "title": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graph inserted into GraphSpace!",
+    "StatusCode": 201
+}
+</pre>
+
+If JSON fails validation, it should give some sort of error as to why it failed
+
+<pre>
+{
+    "Error": "Property content not in JSON for node",
+    "StatusCode": 400
+}
+</pre>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="graph_exists">Graph
+    Exists</h3>
+
+Checks to see if there is a graph that a user owns in GraphSpace.  <b>Note</b>: This command
+<b>only</b> checks for graphs owned by the user making the request.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/exists/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "User [email] owns a graph with id [graphname]!",
+    "StatusCode": 200
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+    "Error": "User [email] owns no graph with id [graphname]!",
+    "StatusCode": 404
+}
+</pre>
+<hr>
+<h3 style="padding-top: 50px; margin-top: -40px;" style="padding-top: 50px; margin-top: -40px;" id="get_graph">Get
+    graph</h3>
+
+To get the JSON for an existing graph use the following GET command. You can only get the JSON for a graph that belongs to you or is shared with a group you belong to.  Here, [email] refers to the owner of the graph whose JSON you are trying to retrieve.  It may or may not be your email.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/get/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P4314611",
+                    "content": "DCC",
+                    "height": 50,
+                    "width": 50,
+                    "background_color": "yellow",
+                    "background_blacken": 0.1,
+                    "border_width": 2,
+                    "k": 0
+                }
+            }, 
+            {
+                "data": {
+                    "shape": "ellipse",
+                    "id":"P0810711",
+                    "content": "This is an example\n of how to use new lines for the content of\n a node.",
+                    "height": 150,
+                    "width": 150,
+                    "background_color": "red",
+                    "background_blacken": 0,
+                    "border_width": 5,
+                    "border_style": "double",
+                    "border_color": "black",
+                    "text_wrap": "wrap",
+                    "color": "black",
+                    "text_outline_width": 2,
+                    "text_outline_color": "#888",
+                    "k": 0
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "source": "P4314611",
+                    "target": "P0810711",
+                    "width": 12,
+                    "line_color": "blue",
+                    "line_style": "dotted",
+                    "source_arrow_color": "yellow",
+                    "target_arrow_shape": "triangle",
+                    "k": 0
+                }
+            }
+        ]
+
+    },
+    "metadata": {
+        "title": "Graph Name",
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
+</pre>
+
+Example failed response:
+
+<pre>
+{
+    "Error": "No Such Graph Exists!",
+    "StatusCode": 404
+}
+</pre>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="update_graph">Update graph</h3>
+If a user wants to update any information for a specific graph, they can do so using this command.  The user uploads the modified JSON of the graph to the server.  Note, a user can only update a graph if it already exists in GraphSpace for that user.
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/update/[graphname]/" -F "username=[email]" -F "password=[password]" -F graphname=@"path_to_json"
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Updated [graphname] for [email].",
+    "StatusCode": 201
+}
+</pre>
+
+Example failed response:
+
+<pre>
+{
+    "Error": "Can't update [graphname] because it does not exist for [email]",
+    "StatusCode": 404
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_graph">Remove graph</h3>
+
+To remove a graph use the following command. You can only remove a graph that belongs to you.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/delete/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Successfully deleted [graphname] owned by [email].",
+    "StatusCode": 200
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+    "Error": "No Such Graph Exists.",
+    "StatusCode": 404
+}
+</pre>
+
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_graphs">Get user graphs</h3>
+
+Get all ids of graphs belonging to the user making this request. The result is a JSON object containing a list of all graph ids for the specified user.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graphs/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example response:
+
+<pre>
+{
+    "Graphs": [
+        "tutorial_graph1",
+        "tutorail_graph2"
+    ],
+    "StatusCode": 200
+}
+</pre>
+
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_all_graphs">Get all graphs</h3>
+
+Get a summary of all graphs belonging to the user making this request and public graphs (viewable to all users of GS). The result is a JSON object containing a list of summarized inforation about graphs.
+
+<pre>
+curl -X POST "{{ url }}api/graphs/get/" -F "username=[email]" -F "password=[password]" -F "offset=[offset]" -F "limit=[limit]"; echo
+</pre>
+
+Note:
+<ul>
+    <li><b>Offset</b> is a optional field. Defaults to 10, limits the number of results in the response. Maximum is 1000
+    </li>
+    <li><b>Limit</b> is a optional field. Defaults to 0, used to offset the resultlist.</li>
+</ul>
+
+Example response:
+
+<pre>
+{
+  "metadata": {
+    "count": 2,
+    "limit": "25",
+    "offset": "0"
+  },
+  "result": [
+    {
+      "created_at": "2012-10-25T06:29:26",
+      "owner_email": "[email]",
+      "updated_at": "2013-10-16T17:49:51",
+      "num_edges": 2,
+      "num_nodes": 1,
+      "graphname": "tutorial_graph1"
+    },
+    {
+      "created_at": "2012-10-25T07:03:10",
+      "owner_email": "[email]",
+      "updated_at": "2013-10-16T17:50:13",
+      "num_edges": 2,
+      "num_nodes": 1,
+      "graphname": "tutorial_graph2"
+    }
+  "StatusCode": 200
+}
+</pre>
+
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="make_graph_public">Make graph public</h3>
+
+Makes a specific graph that user owns public (viewable to all users of GS). All layouts shared with groups will also become public.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/makeGraphPublic/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+    "Message": "Successfully made [graphname] owned by [email] public.",
+    "StatusCode": 200
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+    "Error": "Graph with name [graphname] doesn't exist under [email].",
+    "StatusCode": 404
+}
+</pre>
+<h3 style="padding-top: 50px; margin-top: -40px;" id="make_graph_private">Make graph private</h3>
+
+Makes a specific graph that user owns private (only groups that graph is shared with and owner of graph can see it).
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/makeGraphPrivate/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+    "Message": "Successfully made [graphname] owned by [email] public.",
+    "StatusCode": 200
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+    "Error": "Graph with name [graphname] doesn't exist under [email].",
+    "StatusCode": 404
+}
+</pre>
+<h2 style="padding-top: 50px; margin-top: -40px;" id="groups">Groups</h2>
+
+<p><b>Note: All spaces that are contained within the name of a group will be truncated for GET requests. For example, if
+    there is a group named: "Test 1", then the [group_id] for this group would be "Test1". </b></p>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="create_group">Create group</h3>
+
+To create a group, use the following command. You will be the owner of the group, and you will have to set the description later.
+
+<pre>
+curl -X POST "{{ url }}api/groups/add/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Group Id": "Test2",
+    "Message": "Group created!",
+    "Group Name": "Test2",
+    "StatusCode": 201
+}
+</pre>
+
+Example failure response:
+
+<pre>
+{
+    "Error": "Group name already exists for this account",
+    "StatusCode": 400
+}
+
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_group">Remove group</h3>
+
+To remove a group use the following command. You can only remove a group that you are the owner of.
+
+<pre>
+curl -X POST "{{ url }}api/groups/delete/[group_owner]/[groupname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Successfully deleted [groupname] owned by [group_owner].",
+    "StatusCode": 200
+}
+
+</pre>
+
+Example failed response:
+
+<pre>
+{
+    "Message": "Group not found!",
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_group">Get group</h3>
+
+Get a group by id. The result is a JSON object with the group's id, description, and owner, as well as the list of users belonging to the group, and the list of graph ids (and the user ids for those graphs) that are shared with the group.
+
+<pre>
+curl -X POST "{{ url }}api/groups/get/[group_owner]/[group_id]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+<pre>
+{
+    "Groups": {
+        "owner": "dsingh5270@gmail.com",
+        "graphs": [
+            "api_test",
+            "secret_feature"
+        ],
+        "group_id": "Test1",
+        "description": "This is test group to see if changing description works properly.",
+        "members": [
+            "annaritz@vt.edu",
+            "ategge@vt.edu",
+            "dsingh5270@gmail.com"
+        ]
+    },
+    "StatusCode": 200
+}
+
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="get_user_groups">Get groups a user belongs to</h3>
+
+Get groups a user belongs to. The result is a JSON object with a list of group ids.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/groups/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example response:
+
+<pre>
+{
+  "Groups": [
+      {
+          "group_owner": "[email]",
+          "groupId": "[Test1]"
+      }
+  ],
+  "StatusCode": 200
+}
+
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="add_user_to_group">Add user to group</h3>
+
+Add a user to a group. You can only add a user to a group that you belong to.
+
+<pre>
+curl -X POST "{{ url }}api/groups/[group_owner]/[groupname]/adduser/[member]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Successfully added user [member] to [groupname].",
+    "StatusCode": 200
+}
+</pre>
+
+Example failed response:
+
+<pre>
+{
+    "Error": "Group doesn't exist or user has already been added!",
+    "StatusCode": 400
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="remove_user_from_group">Remove user from group</h3>
+
+Remove a user from a group. You can remove yourself from any group, but you must be the owner of a group to remove other members.
+
+<pre>
+curl -X POST "{{ url }}api/groups/[group_owner]/[groupname]/removeuser/[member]/" -F "username=[email]" -F "password=[email]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Successfully removed user [member] from [groupname].",
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="share_graph">Share graph with a group</h3>
+
+Share a graph with a group, effectively giving all members in the group the ability to see a graph. You can only share graphs you own with groups you are a member of or the owner of.
+
+<pre>
+curl -X POST "{{ url }}api/users/graphs/[graph name]/share/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graph successfully shared with group!",
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id="unshare_graph">Unshare graph with a group</h3>
+
+Unshare a graph with a group, effectively removing read permission from all members in the group. You can only unshare graphs you own from groups you belong to.
+
+<pre>
+curl -X POST "{{ url }}api/users/graphs/[graphname]/unshare/[group_owner]/[group name]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graph successfully unshared with group!",
+    "StatusCode": 200
+}
+</pre>
+
+<h2 style="padding-top: 50px; margin-top: -40px;" id="layouts">Layouts</h2>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_graph_layouts'>Get all layouts for a Graph</h3>
+
+Get all the layouts that are attached to a certain graph.
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/[graphname]/layouts/get" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+    "metadata": {
+        "count": 2,
+        "limit": 10,
+        "offset": 0
+    },
+    "result": [
+        {
+            "graph_id": "tutorial_graph1",
+            "layout_id": 3,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout1",
+            "owner_id": "[email]"
+        },
+        {
+            "graph_id": "tutorial_graph2",
+            "layout_id": 607,
+            "json": "{}",
+            "user_id": "[email]",
+            "layout_name": "test_layout2",
+            "owner_id": "[email]"
+        }
+    ],
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='get_layout'>Get layout</h3>
+
+To get the JSON for an existing layout use the following command. You can only get the JSON for a layout that belongs to you or is shared with a group you belong to or available for public access. Here, [layout_id] refers to id of the layout whose JSON you are trying to retrieve.
+<pre>
+curl -X POST "{{ url }}layouts/get/[layout_id]" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "graph_id": "[graph_id]",
+  "layout_id": [layout_id],
+  "json": "[layout_json]",
+  "user_id": "[graph_owner]",
+  "layout_name": "[layout_name]",
+  "owner_id": "[layout_owner]"
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='create_layout'>Create layout</h3>
+
+In order to add a layout to a graph, make the following POST request where [email] is your email, [password] is your password, [layout_name] is the name of layout and [json] is the layout data as a JSON string.
+
+<pre>
+curl -X POST "{{ url }}api/users/[email]/graph/[graphname]/layouts/add" -F "username=[email]" -F "password=[password]" -F "json=[json]" -F "layout_name=[layout_name]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Added [layout_name] layout with id=619.",
+  "StatusCode": 201
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='update_layout'>Update layout</h3>
+
+If a user wants to update any information for a specific layout, they can do so using this command. The user uploads the modified JSON of the layout to the server. Note, a user can only update a layout if it already exists in GraphSpace for that user.
+<pre>
+curl -X POST "{{ url }}layouts/update/[layout_id]" -F "username=[email]" -F "password=[password]" -F "json=[json]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+  "Message": "Updated Layout with id=[layout_id].",
+  "StatusCode": 201
+}
+</pre>
+
+Example failed response:
+<pre>
+{
+  "Error": "No Such Layout Exists!",
+  "StatusCode": 404
+}
+</pre>
+
+
+<h2 style="padding-top: 50px; margin-top: -40px;" id="tags">Tags</h2>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='tag_for_user'>Get Tags for User</h3>
+
+Get all the tags that a user has for their graphs.
+<pre>
+curl -X POST "{{ url }}api/tags/user/[email]/" -F "username=[email]" -F "password=[password]"
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Tags": [
+        "tutorial,
+        "pathways",
+        "pictures",
+    ],
+    "StatusCode": 200
+}
+
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='tag_for_graph'>Get Tags for a Graph</h3>
+
+Get all the tags that are attached to a certain graph.
+<pre>
+curl -X POST "{{ url }}api/tags/user/[email]/[graphname]/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+<pre>
+{
+    "Tags": [
+        "tutorial"
+    ],
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='make_graphs_for_tag_public'>Make all graphs for a tag public</h3>
+
+Changes the privacy of all graphs that contain a [tag] under [email] public.
+<pre>
+curl -X POST "{{ url }}api/tags/user/[email]/[tag]/makePublic/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graphs with tag have been made public",
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='make_graphs_for_tag_private'>Make all graphs for a tag
+    private</h3>
+
+Changes the privacy of all graphs that contain a [tag] under [email] private.
+<pre>
+curl -X POST "{{ url }}api/tags/user/[email]/[tag]/makePrivate/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graph with tag have been made private",
+    "StatusCode": 200
+}
+</pre>
+
+<h3 style="padding-top: 50px; margin-top: -40px;" id='delete_graphs_for_tag'>Delete all graphs for a tag</h3>
+
+Delets all graphs that contain a [tag] under [email].
+<pre>
+curl -X POST "{{ url }}api/tags/user/[email]/[tag]/delete/" -F "username=[email]" -F "password=[password]"; echo
+</pre>
+
+Example successful response:
+
+<pre>
+{
+    "Message": "Graphs with tag have been deleted",
+    "StatusCode": 200
+}
+</pre>

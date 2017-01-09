@@ -47,6 +47,7 @@ class User(IDMixin, TimeStampMixin, Base):
 			'updated_at': cls.updated_at.isoformat()
 		}
 
+
 class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'password_reset_code'
 
@@ -61,6 +62,17 @@ class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+	def serialize(cls):
+		return {
+			'id': cls.id,
+			'email': cls.email,
+			'code': cls.code,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
+
+
 
 
 class Group(IDMixin, TimeStampMixin, Base):

@@ -112,9 +112,36 @@ div.container-fluid {
 }
 
 
+.ui-dialog { z-index: 1000 !important ;}
+
 .gs-list-group-item {
     border: none;
 }
+
+/*Navbar default*/
+
+.navbar-default {
+    background-color: #000000;
+    color: white;
+}
+
+nav.navbar.navbar-default {
+    margin: 0;
+}
+
+.navbar-default .navbar-nav>li>a, .navbar-default .navbar-brand {
+    color: white;
+    cursor: pointer;
+}
+
+.navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-brand:hover {
+    background-color: #d0d0d0;
+}
+
+.navbar-default .navbar-nav>.open>a {
+    background-color: #d0d0d0 !important;
+}
+
 /* PopOver CSS*/
 
 .popover {
@@ -123,6 +150,10 @@ div.container-fluid {
 
 .bg-white {
     background: white;
+}
+
+.bg-transparent {
+    background: transparent;
 }
 
 .gs-transparent-popover.popover {

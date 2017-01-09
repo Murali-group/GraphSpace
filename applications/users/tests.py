@@ -83,7 +83,7 @@ class UserModelTestCase(TestCase):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared_with_groups=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_shared=0, original_json='{}'))
 		self.session.commit()
 
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()

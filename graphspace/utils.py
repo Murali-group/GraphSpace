@@ -1,5 +1,6 @@
 import json
 import string
+import base64
 
 from django.utils.crypto import random
 
@@ -15,8 +16,19 @@ def generate_uid(size=20, chars=string.ascii_uppercase + string.digits):
 	return ''.join(random.choice(chars) for _ in range(size))
 
 
+def get_request_user(request):
+	if 'HTTP_AUTHORIZATION' in request.META:
+		auth = request.META['HTTP_AUTHORIZATION'].split()
+		if len(auth) == 2:
+			if auth[0].lower() == "basic":
+				uname, passwd = base64.b64decode(auth[1]).split(':')
+				return uname
+	return request.session['uid'] if 'uid' in request.session else None
+
+
 def serializer(obj):
 	return obj.serialize() if obj is not None else None
+
 
 def json_success_response(status_code=200, message=""):
 	return {
@@ -60,3 +72,4 @@ def cytoscapePresetLayout(csWebJson):
 			csJson[str(node_position['id'])]['shape'] = node_position['shape']
 
 	return json.dumps(csJson)
+

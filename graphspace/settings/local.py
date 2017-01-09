@@ -31,6 +31,11 @@ SECRET_KEY = 'this-is-a-secret-key-for-local-settings-only'
 # Sandbox (development) MTURK (fake money used)
 AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 
+# To configure the application to use the Console Backend for sending e-mail. It writes e-mails to standard out instead of sending them.
+# http://stackoverflow.com/questions/4642011/test-sending-email-without-email-server
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',

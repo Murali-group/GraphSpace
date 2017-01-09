@@ -1,23 +1,49 @@
 import applications.users as users
 import applications.graphs as graphs
+from graphspace.exceptions import UserNotAuthorized
+from graphspace.utils import get_request_user
 
 
-def validate(request, permission, graph_id=None, group_id=None):
+class UserRole:
+	ADMIN = 3
+	LOGGED_IN = 2
+	LOGGED_OFF = 1
+
+
+def user_role(request):
+	user_email = get_request_user(request)
+	user = users.controllers.get_user(request, user_email) if user_email is not None else None
+	if user is None:
+		return UserRole.LOGGED_OFF
+	elif user.is_admin:
+		return UserRole.ADMIN
+	else:
+		return UserRole.LOGGED_IN
+
+
+def validate(request, permission, graph_id=None, group_id=None, layout_id=None):
 	if graph_id is not None:
-		if permission == 'GRAPH_READ' and not graphs.controllers.is_user_authorized_to_view_graph(request, username=request.session['uid'], graph_id = graph_id):
-			raise Exception('Unauthorized')
-		if permission == 'GRAPH_UPDATE' and not graphs.controllers.is_user_authorized_to_update_graph(request, username=request.session['uid'], graph_id = graph_id):
-			raise Exception('Unauthorized')
-		if permission == 'GRAPH_DELETE' and not graphs.controllers.is_user_authorized_to_delete_graph(request, username=request.session['uid'], graph_id = graph_id):
-			raise Exception('Unauthorized')
-		if permission == 'GRAPH_SHARE' and not graphs.controllers.is_user_authorized_to_share_graph(request, username=request.session['uid'], graph_id = graph_id):
-			raise Exception('Unauthorized')
+		if permission == 'GRAPH_READ' and not graphs.controllers.is_user_authorized_to_view_graph(request, username=get_request_user(request), graph_id = graph_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GRAPH_UPDATE' and not graphs.controllers.is_user_authorized_to_update_graph(request, username=get_request_user(request), graph_id = graph_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GRAPH_DELETE' and not graphs.controllers.is_user_authorized_to_delete_graph(request, username=get_request_user(request), graph_id = graph_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GRAPH_SHARE' and not graphs.controllers.is_user_authorized_to_share_graph(request, username=get_request_user(request), graph_id = graph_id):
+			raise UserNotAuthorized(request)
 	if group_id is not None:
-		if permission == 'GROUP_READ' and not users.controllers.is_user_authorized_to_view_group(request, username=request.session['uid'], group_id = group_arg):
-			raise Exception('Unauthorized')
-		if permission == 'GROUP_UPDATE' and not users.controllers.is_user_authorized_to_update_group(request, username=request.session['uid'], group_id = group_arg):
-			raise Exception('Unauthorized')
-		if permission == 'GROUP_DELETE' and not users.controllers.is_user_authorized_to_delete_group(request, username=request.session['uid'], group_id = group_arg):
-			raise Exception('Unauthorized')
-		if permission == 'GROUP_SHARE' and not users.controllers.is_user_authorized_to_share_with_group(request, username=request.session['uid'], group_id = group_arg):
-			raise Exception('Unauthorized')
+		if permission == 'GROUP_READ' and not users.controllers.is_user_authorized_to_view_group(request, username=get_request_user(request), group_id = group_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GROUP_UPDATE' and not users.controllers.is_user_authorized_to_update_group(request, username=get_request_user(request), group_id = group_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GROUP_DELETE' and not users.controllers.is_user_authorized_to_delete_group(request, username=get_request_user(request), group_id = group_id):
+			raise UserNotAuthorized(request)
+		if permission == 'GROUP_SHARE' and not users.controllers.is_user_authorized_to_share_with_group(request, username=get_request_user(request), group_id = group_id):
+			raise UserNotAuthorized(request)
+	if layout_id is not None:
+		if permission == 'LAYOUT_READ' and not graphs.controllers.is_user_authorized_to_view_layout(request, username=get_request_user(request), layout_id = layout_id):
+			raise UserNotAuthorized(request)
+		if permission == 'LAYOUT_UPDATE' and not graphs.controllers.is_user_authorized_to_update_layout(request, username=get_request_user(request), layout_id = layout_id):
+			raise UserNotAuthorized(request)
+		if permission == 'LAYOUT_DELETE' and not graphs.controllers.is_user_authorized_to_delete_layout(request, username=get_request_user(request), layout_id = layout_id):
+			raise UserNotAuthorized(request)

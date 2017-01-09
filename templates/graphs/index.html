@@ -1,36 +1,79 @@
 {% extends 'base.html' %}
 {% block content %}
-	
-	    <div class="container">
+    {% load staticfiles %}
 
-			<div class="content">
+    <div class="container-fluid zero-padding padding-bottom-6">
 
-				<div class="jumbotron">
+        <ul class="nav nav-tabs">
+            {% if uid %}
+                <li class="active text-center">
+                    <a href="#owned_graphs" data-toggle="tab">My Graphs <span id="ownedGraphsTotal"
+                                                                              class="badge">{{ owned_graphs.total }}</span></a>
+                </li>
+                <li class="text-center">
+                    <a href="#shared_graphs" data-toggle="tab">Shared Graphs <span id="sharedGraphsTotal"
+                                                                                   class="badge">{{ shared_graphs.total }}</span></a>
+                </li>
+            {% endif %}
 
-					<h1>Welcome to GraphSpace!</h1>
+            <li class="text-center {% if not uid %} active {% endif %}">
+                <a href="#public_graphs" data-toggle="tab">Public Graphs <span id="publicGraphsTotal"
+                                                                               class="badge">{{ public_graphs.total }}</span></a>
+            </li>
 
-					<h4>The interactive graph sharing website.</h4>
+            <li class="text-center">
+                <a href="{% url 'upload_graph' %}">Upload New Graph</a>
+            </li>
+        </ul>
 
-					<br/>
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
+            <div id="toolbar">
+                <div class="form-inline" role="form">
+                    <div class="form-group">
+                        <span>Search: </span>
+                        <input name="search" style="width: 300px" class="form-control graphs-table-search" type="text"
+                               placeholder="Search Graphs, Nodes and Edges">
+                    </div>
+                    &nbsp;
+                    <div class="form-group">
+                        <span>Tags: </span>
+                        <input id="tagSearchBar" name="tags" class="form-control graphs-table-search" type="text"
+                               placeholder="Search Tags">
+                    </div>
+                    <button id="ok" type="submit" class="btn btn-default">Search</button>
+                    <a id="clear" class="btn btn-default">Clear Search</a>
+                </div>
+            </div>
 
-					{% if uid != None %}
-						<h4>You are logged in, go to <a href="/old/graphs_old">Graphs</a> to view your graphs or <a href="{% url 'upload_graphs' %}">upload</a> a new graph.<br>
-						</h4>
-					{% else %}
-						<h4>If you don't have an account right now, you can check out <a href="">public graphs</a> or <a href="/old/graphs_old/upload">upload</a> a new graph.<br></h4>
+            {% if uid %}
+                <div class="tab-pane fade in active" id="owned_graphs">
+                    {% include 'graphs/owned_graphs_table.html' %}
+                </div>
 
-					{% endif %}
+                <div class="tab-pane fade" id="shared_graphs">
+                    {% include 'graphs/shared_graphs_table.html' %}
+                </div>
+            {% endif %}
 
-					<br/>
+            <div class="tab-pane fade {% if not uid %} in active {% endif %}" id="public_graphs">
+                {% include 'graphs/public_graphs_table.html' %}
+            </div>
 
-					<h4>Please contact <b>T. M. Murali</b> at murali@cs.vt.edu if you have any questions about GraphSpace. </h4>
+            <div class="tab-pane fade" id="upload_graph">
+                Upload Graph
+            </div>
+        </div>
 
-					<br/>
+        {% include 'graphs/delete_graph_modal.html' %}
 
-				</div>
+    </div>
 
-			</div>
+    <!-- JSON support for Graphs Page -->
+    <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
 
-		</div>
+    <script>
+        $(document).ready(function () {
+            graphsPage.init();
+        });
+    </script>
 {% endblock %}
-

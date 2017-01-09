@@ -39,6 +39,182 @@ def home_page(request):
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
+def features_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/features
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered features page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		return render(request, 'features/index.html', context)  # Handle GET request to index page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+def help_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/help
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered help page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		return render(request, 'help/index.html', context)  # Handle GET request to index page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+def about_us_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/about_us
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered about us page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		return render(request, 'about_us/index.html', context)  # Handle GET request to index page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+def forgot_password_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/forgot_password
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered forgot password page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
+	elif 'POST' == request.method:
+		password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
+
+		if password_reset_code is not None:
+			users.send_password_reset_email(request, password_reset_code)
+			context["success_message"] = "Email has been sent!"
+		else:
+			context["error_message"] = "Email does not exist!"
+		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
+
+
+def reset_password_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/reset_password
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered reset password page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET and POST i.e. PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))
+		if password_reset_code is None:
+			context['error_message'] = "This password reset link is outdated. Please try resetting your password again."
+		else:
+			context['email'] = password_reset_code.email
+		return render(request, 'reset_password/index.html', context)  # Handle GET request to index page.
+	elif 'POST' == request.method:
+		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))
+
+		if password_reset_code is not None:
+			users.update_user(request, password_reset_code.user.id, password=request.POST['password'])
+			context["success_message"] = "Password updated for " + request.POST['reset_email']
+			context['email'] = password_reset_code.email
+			users.delete_password_reset_code(request, password_reset_code.id)
+		else:
+			context['error_message'] = "This password reset link is outdated. Please try resetting your password again."
+
+		return render(request, 'reset_password/index.html', context)  # Handle POST request to forgot password page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
+
+
 def login(request):
 	"""
 		Handles login (POST) request.
@@ -55,7 +231,7 @@ def login(request):
 				json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])),
 				content_type="application/json")
 		else:
-			raise ValidationError(request, ErrorCodes.VIEW.UserPasswordMisMatch)
+			raise ValidationError(request, ErrorCodes.Validation.UserPasswordMisMatch)
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 

@@ -71,6 +71,45 @@ def is_user_authorized_to_share_graph(request, username, graph_id):
 	return is_authorized
 
 
+def is_user_authorized_to_view_layout(request, username, layout_id):
+	is_authorized = False
+
+	layout = db.get_layout_by_id(request.db_session, layout_id)
+
+	if layout is not None:  # Layout doesnt exists
+		if layout.owner_email == username:
+			is_authorized = True
+		elif layout.is_shared == 1:  # layout is shared
+			for group in layout.graph.groups:
+				if users.controllers.is_member_of_group(request, username, group.id):
+					is_authorized = True  # layout is shared with the user
+	return is_authorized
+
+
+def is_user_authorized_to_update_layout(request, username, layout_id):
+	is_authorized = False
+
+	layout = db.get_layout_by_id(request.db_session, layout_id)
+
+	if layout is not None:  # Layout doesnt exists
+		if layout.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
+
+
+def is_user_authorized_to_delete_layout(request, username, layout_id):
+	is_authorized = False
+
+	layout = db.get_layout_by_id(request.db_session, layout_id)
+
+	if layout is not None:  # Layout doesnt exists
+		if layout.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
+
+
 def uploadJSONFile(request, username, graphJSON, title):
 	"""
 		Uploads JSON file to GraphSpace via /upload.
@@ -265,24 +304,9 @@ def delete_graph_to_group(request, group_id, graph_id):
 
 def search_graphs(request, owner_email=None, member_email=None, names=None, is_public=None, nodes=None, edges=None,
 				  tags=None, limit=20, offset=0, order='desc', sort='name'):
-	if sort == 'name':
-		sort_attr = db.Graph.name
-	elif sort == 'update_at':
-		sort_attr = db.Graph.updated_at
-	elif sort == 'owner_email':
-		sort_attr = db.Graph.owner_email
-	else:
-		sort_attr = db.Graph.name
 
-	if order == 'desc':
-		orber_by = db.desc(sort_attr)
-	else:
-		orber_by = db.asc(sort_attr)
-
-	if is_public is True:
-		is_public = 1
-	elif is_public is False:
-		is_public = 0
+	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
+	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 
 	if member_email is not None:
 		member_user = users.controllers.get_user(request, member_email)
@@ -294,6 +318,7 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 		group_ids = None
 	if edges is not None:
 		edges = [tuple(edge.split(':')) for edge in edges]
+
 
 	total, graphs_list = db.find_graphs(request.db_session,
 										owner_email=owner_email,
@@ -310,7 +335,7 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 	return total, graphs_list
 
 
-def search_layouts(request, owner_email=None, name=None, graph_id=None, limit=20, offset=0, order='desc', sort='name'):
+def search_layouts(request, owner_email=None, is_shared=None, name=None, graph_id=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Layout.name
 	elif sort == 'update_at':
@@ -327,6 +352,7 @@ def search_layouts(request, owner_email=None, name=None, graph_id=None, limit=20
 
 	total, layouts = db.find_layouts(request.db_session,
 										owner_email=owner_email,
+										is_shared=is_shared,
 										name=name,
 										graph_id=graph_id,
 										limit=limit,
@@ -340,13 +366,13 @@ def get_layout_by_id(request, layout_id):
 	return db.get_layout_by_id(request.db_session, layout_id)
 
 
-def add_layout(request, owner_email=None, name=None, graph_id=None, is_public=None, is_shared_with_groups=None, json=None):
+def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):
 	if name is None or owner_email is None or graph_id is None:
 		raise Exception("Required Parameter is missing!")
-	return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_public=is_public, is_shared_with_groups=is_shared_with_groups, json=dumps(json))
+	return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, json=dumps(json))
 
 
-def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_public=None, is_shared_with_groups=None, json=None):
+def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):
 	if layout_id is None:
 		raise Exception("Required Parameter is missing!")
 
@@ -357,10 +383,8 @@ def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None
 		layout['owner_email'] = owner_email
 	if graph_id is not None:
 		layout['graph_id'] = graph_id
-	if is_public is not None:
-		layout['is_public'] = is_public
-	if is_shared_with_groups is not None:
-		layout['is_shared_with_groups'] = is_shared_with_groups
+	if is_shared is not None:
+		layout['is_shared'] = is_shared
 	if json is not None:
 		layout['json'] = dumps(json)
 

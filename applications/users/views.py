@@ -7,9 +7,126 @@ from django.template import RequestContext
 from graphspace import utils
 import graphspace.authorization as authorization
 from graphspace.wrappers import is_authenticated
+from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
+from graphspace.utils import get_request_user
 
 
-def add_group(request, group={}):
+@is_authenticated(redirect_url='/')
+def groups_page(request):
+	"""
+		Wrapper view for the groups page.
+
+		:param request: HTTP GET Request.
+	"""
+	if 'GET' == request.method:
+		context = RequestContext(request, {})
+		return render(request, 'groups/index.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+@is_authenticated(redirect_url='/')
+def group_page(request, group_id):
+	"""
+		Wrapper view for the group page. /groups/<group_id>
+
+		:param request: HTTP GET Request.
+
+	Parameters
+	----------
+	group_id : string
+		Unique ID of the group. Required
+	"""
+	if 'GET' == request.method:
+		context = RequestContext(request, {})
+		context.push({
+			"group": _get_group(request, group_id),
+		})
+		return render(request, 'group/index.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+'''
+Groups APIs
+'''
+
+
+@is_authenticated()
+def groups_rest_api(request, group_id=None):
+	"""
+	Handles any request sent to following urls:
+		/api/v1/groups
+		/api/v1/groups/<group_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _groups_api(request, group_id=group_id)
+
+
+def groups_ajax_api(request, group_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/groups
+		/javascript/groups/<group_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _groups_api(request, group_id=group_id)
+
+
+def _groups_api(request, group_id=None):
+	"""
+	Handles any request (GET/POST) sent to /groups or groups/<group_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "GET" and group_id is None:
+			return HttpResponse(json.dumps(_get_groups(request, query=request.GET)), content_type="application/json")
+		elif request.method == "GET" and group_id is not None:
+			return HttpResponse(json.dumps(_get_group(request, group_id)), content_type="application/json",
+								status=200)
+		elif request.method == "POST" and group_id is None:
+			return HttpResponse(json.dumps(_add_group(request, group=request.POST)), content_type="application/json",
+								status=201)
+		elif request.method == "PUT" and group_id is not None:
+			return HttpResponse(json.dumps(_update_group(request, group_id, group=QueryDict(request.body))),
+								content_type="application/json",
+								status=200)
+		elif request.method == "DELETE" and group_id is not None:
+			_delete_group(request, group_id)
+			return HttpResponse(json.dumps({
+				"message": "Successfully deleted group with id=%s" % group_id
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_group(request, group={}):
 	"""
 	Group Parameters
 	----------
@@ -40,13 +157,21 @@ def add_group(request, group={}):
 	------
 
 	"""
+
+	# Validate add graph API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if get_request_user(request) != group.get('owner_email', None):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+							 args=group.get('owner_email', None))
+
 	return utils.serializer(users.add_group(request,
 											name=request.POST.get('name', None),
 											description=group.get('description', None),
 											owner_email=group.get('owner_email', None)))
 
 
-def get_groups(request, query={}):
+def _get_groups(request, query={}):
 	"""
 
 	Query Parameters
@@ -91,6 +216,15 @@ def get_groups(request, query={}):
 	------
 
 	"""
+
+	# Validate search graph groups API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if get_request_user(request) != query.get('member_email', None) \
+				and get_request_user(request) != query.get('owner_email', None):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGroupAccess,
+							 args=get_request_user(request))
+
 	total, groups = users.search_groups(request,
 										owner_email=query.get('owner_email', None),
 										member_email=query.get('member_email', None),
@@ -107,7 +241,7 @@ def get_groups(request, query={}):
 	}
 
 
-def get_group(request, group_id):
+def _get_group(request, group_id):
 	"""
 
 	Parameters
@@ -134,7 +268,8 @@ def get_group(request, group_id):
 	return utils.serializer(users.get_group_by_id(request, group_id))
 
 
-def update_group(request, group_id, group={}):
+@is_authenticated()
+def _update_group(request, group_id, group={}):
 	"""
 	Group Parameters
 	----------
@@ -175,7 +310,8 @@ def update_group(request, group_id, group={}):
 											   owner_email=group.get('owner_email', None)))
 
 
-def delete_group(request, group_id):
+@is_authenticated()
+def _delete_group(request, group_id):
 	"""
 
 	Parameters
@@ -201,10 +337,51 @@ def delete_group(request, group_id):
 	users.delete_group_by_id(request, group_id)
 
 
+'''
+Group Members APIs
+'''
+
+
 @is_authenticated()
-def groups(request, group_id=None):
+def group_members_rest_api(request, group_id, member_id=None):
 	"""
-	Handles any request (GET/POST) sent to /groups or groups/<group_id>
+	Handles any request sent to following urls:
+		/api/v1/groups/<group_id>/members
+		/api/v1/groups/<group_id>/members/<member_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _group_members_api(request, group_id, member_id=member_id)
+
+
+def group_members_ajax_api(request, group_id, member_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>/members
+		/javascript/groups/<group_id>/members/<member_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _group_members_api(request, group_id, member_id=member_id)
+
+
+def _group_members_api(request, group_id, member_id=None):
+	"""
+	Handles any request (GET/POST) sent to groups/<group_id>/members or groups/<group_id>/members/<member_id>.
 
 	Parameters
 	----------
@@ -215,29 +392,27 @@ def groups(request, group_id=None):
 
 	"""
 	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		try:
-			if request.method == "GET" and group_id is None:
-				return HttpResponse(json.dumps(get_groups(request, query=request.GET)), content_type="application/json")
-			elif request.method == "GET" and group_id is not None:
-				return HttpResponse(json.dumps(get_group(request, group_id)), content_type="application/json",
-									status=200)
-			elif request.method == "POST" and group_id is None:
-				return HttpResponse(json.dumps(add_group(request, group=request.POST)), content_type="application/json", status=201)
-			elif request.method == "PUT" and group_id is not None:
-				return HttpResponse(json.dumps(update_group(request, group_id, group=QueryDict(request.body))), content_type="application/json",
-									status=200)
-			elif request.method == "DELETE" and group_id is not None:
-				delete_group(request, group_id)
-				return HttpResponse(json.dumps({
-					"message": "Successfully deleted group with id=%s" % group_id
-				}), content_type="application/json", status=200)
-		except Exception as e:
+		if group_id is None:
+			raise Exception("Group ID is required.")
+
+		if request.method == "GET" and member_id is None:
+			return HttpResponse(json.dumps(_get_group_members(request, group_id)),
+								content_type="application/json")
+		elif request.method == "POST" and member_id is None:
+			return HttpResponse(json.dumps(_add_group_member(request, group_id)), content_type="application/json",
+								status=201)
+		elif request.method == "DELETE" and member_id is not None:
+			_delete_group_member(request, group_id, member_id)
 			return HttpResponse(json.dumps({
-				"message": "BAD REQUEST"
-			}), content_type="application/json", status=400)
+				"message": "Successfully deleted member with id=%s from group with id=%s" % (member_id, group_id)
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
 
 
-def get_group_members(request, group_id):
+def _get_group_members(request, group_id):
 	"""
 
 	Parameters
@@ -267,7 +442,8 @@ def get_group_members(request, group_id):
 	}
 
 
-def add_group_member(request, group_id):
+@is_authenticated()
+def _add_group_member(request, group_id):
 	"""
 	Body Parameters
 	----------
@@ -302,7 +478,8 @@ def add_group_member(request, group_id):
 												   member_email=request.POST.get('member_email', None)))
 
 
-def delete_group_member(request, group_id, member_id):
+@is_authenticated()
+def _delete_group_member(request, group_id, member_id):
 	"""
 	Parameters
 	----------
@@ -324,17 +501,24 @@ def delete_group_member(request, group_id, member_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
+	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
 	users.delete_group_member(request,
 							  group_id=group_id,
 							  member_id=member_id)
 
 
+'''
+Group Graphs APIs
+'''
+
+
 @is_authenticated()
-def group_members(request, group_id, member_id=None):
+def group_graphs_rest_api(request, group_id, graph_id=None):
 	"""
-	Handles any request (GET/POST) sent to groups/<group_id>/members or groups/<group_id>/members/<member_id>.
+	Handles any request sent to following urls:
+		/api/v1/groups/<group_id>/graphs
+		/api/v1/groups/<group_id>/graphs/<graph_id>
 
 	Parameters
 	----------
@@ -342,32 +526,31 @@ def group_members(request, group_id, member_id=None):
 
 	Returns
 	-------
+	response : JSON Response
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		try:
-			if group_id is None:
-				raise Exception("Group ID is required.")
-
-			if request.method == "GET" and member_id is None:
-				return HttpResponse(json.dumps(get_group_members(request, group_id)),
-									content_type="application/json")
-			elif request.method == "POST" and member_id is None:
-				return HttpResponse(json.dumps(add_group_member(request, group_id)), content_type="application/json",
-									status=201)
-			elif request.method == "DELETE" and member_id is not None:
-				delete_group_member(request, group_id, member_id)
-				return HttpResponse(json.dumps({
-					"message": "Successfully deleted member with id=%s from group with id=%s" % (member_id, group_id)
-				}), content_type="application/json", status=200)
-		except Exception as e:
-			return HttpResponse(json.dumps({
-				"message": "BAD REQUEST"
-			}), content_type="application/json", status=400)
+	return _group_graphs_api(request, group_id, graph_id=graph_id)
 
 
-@is_authenticated()
-def group_graphs(request, group_id, graph_id=None):
+def group_graphs_ajax_api(request, group_id, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>/graphs
+		/javascript/groups/<group_id>/graphs/<graph_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _group_graphs_api(request, group_id, graph_id=graph_id)
+
+
+def _group_graphs_api(request, group_id, graph_id=None):
 	"""
 	Handles any request (GET/POST) sent to groups/<group_id>/graphs or groups/<group_id>/graphs/<graph_id>.
 
@@ -382,28 +565,24 @@ def group_graphs(request, group_id, graph_id=None):
 
 	"""
 	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		try:
-			if group_id is None:
-				raise Exception("Group ID is required.")
-
-			if request.method == "GET" and graph_id is None:
-				return HttpResponse(json.dumps(get_group_graphs(request, group_id)),
-									content_type="application/json")
-			elif request.method == "POST" and graph_id is None:
-				return HttpResponse(json.dumps(add_group_graph(request, group_id)), content_type="application/json",
-									status=201)
-			elif request.method == "DELETE" and graph_id is not None:
-				delete_group_graph(request, group_id, graph_id)
-				return HttpResponse(json.dumps({
-					"message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
-				}), content_type="application/json", status=200)
-		except Exception as e:
+		if request.method == "GET" and graph_id is None:
+			return HttpResponse(json.dumps(_get_group_graphs(request, group_id)),
+								content_type="application/json")
+		elif request.method == "POST" and graph_id is None:
+			return HttpResponse(json.dumps(_add_group_graph(request, group_id)), content_type="application/json",
+								status=201)
+		elif request.method == "DELETE" and graph_id is not None:
+			_delete_group_graph(request, group_id, graph_id)
 			return HttpResponse(json.dumps({
-				"message": "BAD REQUEST"
-			}), content_type="application/json", status=400)
+				"message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
 
 
-def get_group_graphs(request, group_id):
+def _get_group_graphs(request, group_id):
 	"""
 
 	Query Parameters
@@ -442,6 +621,8 @@ def get_group_graphs(request, group_id):
 	------
 
 	"""
+	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
 	names = request.GET.get('names', None)
 	nodes = request.GET.get('nodes', None)
 	edges = request.GET.get('edges', None)
@@ -460,7 +641,8 @@ def get_group_graphs(request, group_id):
 	}
 
 
-def add_group_graph(request, group_id):
+@is_authenticated()
+def _add_group_graph(request, group_id):
 	"""
 	Body Parameters
 	----------
@@ -493,7 +675,8 @@ def add_group_graph(request, group_id):
 												  graph_id=request.POST.get('graph_id', None)))
 
 
-def delete_group_graph(request, group_id, graph_id):
+@is_authenticated()
+def _delete_group_graph(request, group_id, graph_id):
 	"""
 	Parameters
 	----------
@@ -523,51 +706,3 @@ def delete_group_graph(request, group_id, graph_id):
 							 graph_id=graph_id)
 
 
-@is_authenticated(redirect_url='/')
-def groups_page(request):
-	"""
-		Wrapper view for the groups page.
-
-		:param request: HTTP GET Request.
-	"""
-	context = RequestContext(request, {})
-	uid = request.session['uid'] if 'uid' in request.session else None
-	if uid is not None:
-		context.push({
-			"owner_of": get_groups(request, query={'owner_email': uid}),
-			"member_of": get_groups(request, query={'member_email': uid}),
-		})
-		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
-		else:
-			return render(request, 'graphs/groups.html', context)
-	else:
-		context['Error'] = "You need to be logged in and also be a member of this group in order to see this group's contents!"
-		return render(request, 'graphs/error.html', context)
-
-
-@is_authenticated(redirect_url='/')
-def group_page(request, group_id):
-	"""
-		Wrapper view for the group page. /groups/<group_id>
-
-		:param request: HTTP GET Request.
-
-	Parameters
-	----------
-	group_id : string
-		Unique ID of the group. Required
-	"""
-	context = RequestContext(request, {})
-	uid = request.session['uid'] if 'uid' in request.session else None
-	if uid is not None:
-		context.push({
-			"group": get_group(request, group_id),
-		})
-		if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-			return HttpResponse(json.dumps(context.dicts),content_type="application/json")
-		else:
-			return render(request, 'graphs/group.html', context)
-	else:
-		context['Error'] = "You need to be logged in and also be a member of this group in order to see this group's contents!"
-		return render(request, 'graphs/error.html', context)

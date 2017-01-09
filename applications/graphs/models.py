@@ -153,8 +153,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	json = Column(String, nullable=False)
-	is_public = Column(Integer, nullable=False, default=0)
-	is_shared_with_groups = Column(Integer, nullable=False, default=0)
+	is_shared = Column(Integer, nullable=False, default=0)
 	original_json = Column(String, nullable=True)
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
@@ -179,8 +178,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 			'owner_email': cls.owner_email,
 			'graph_id': cls.graph_id,
 			'json': cls.json,
-			'is_public': cls.is_public,
-			'is_shared_with_groups': cls.is_shared_with_groups,
+			'is_shared': cls.is_shared,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}

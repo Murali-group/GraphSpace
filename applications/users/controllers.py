@@ -1,8 +1,12 @@
 import bcrypt
 
+from django.conf import settings
+from django.core.mail import send_mail
+
 import applications.graphs as graphs
 import applications.users.dal as db
 from graphspace.utils import generate_uid
+
 
 def authenticate_user(request, username=None, password=None):
 	# check the username/password and return a User
@@ -22,6 +26,18 @@ def authenticate_user(request, username=None, password=None):
 			}
 	else:
 		return None
+
+
+def update_user(request, user_id, email=None, password=None, is_admin=None):
+	user = {}
+	if email is not None:
+		user['email'] = email
+	if password is not None:
+		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
+	if is_admin is not None:
+		user['is_admin'] = is_admin
+
+	return db.update_user(request.db_session, id=user_id, updated_user=user)
 
 
 def is_user_authorized_to_share_with_group(request, username, group_id):
@@ -239,3 +255,30 @@ def add_group_graph(request, group_id, graph_id):
 
 def delete_group_graph(request, group_id, graph_id):
 	return graphs.controllers.delete_graph_to_group(request, group_id=group_id, graph_id=graph_id)
+
+
+def get_password_reset_by_code(request, code):
+	return db.get_password_reset_by_code(request.db_session, code)
+
+
+def delete_password_reset_code(request, id):
+	return db.delete_password_reset(request.db_session, id)
+
+
+def add_user_to_password_reset(request, email):
+	password_reset_code = db.get_password_reset_by_email(request.db_session, email)
+	if password_reset_code is not None:
+		password_reset_code.code = generate_uid()
+		password_reset_code = db.update_password_reset(request.db_session, password_reset_code.id, password_reset_code.serialize())
+	else:
+		password_reset_code = db.add_password_reset(request.db_session, email)
+	return password_reset_code
+
+
+def send_password_reset_email(request, password_reset_code):
+	# Construct email message
+	mail_title = 'Password Reset Information for GraphSpace!'
+	message = 'Please go to the following url to reset your password: ' + settings.URL_PATH + 'reset_password/?code=' + password_reset_code.code
+	email_from = "GraphSpace Admin"
+
+	return send_mail(mail_title, message, email_from, [password_reset_code.email], fail_silently=False)
