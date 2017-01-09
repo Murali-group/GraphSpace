@@ -9,14 +9,14 @@ urlpatterns = [
 	# AJAX APIs Endpoints
 
 	# Groups
-	url(r'^javascript/groups/$', views.groups_ajax_api, name='groups_ajax_api'),
-	url(r'^javascript/groups/(?P<group_id>[^/]+)$', views.groups_ajax_api, name='groups_ajax_api'),
+	url(r'^ajax/groups/$', views.groups_ajax_api, name='groups_ajax_api'),
+	url(r'^ajax/groups/(?P<group_id>[^/]+)$', views.groups_ajax_api, name='groups_ajax_api'),
 	# Group Members
-	url(r'^javascript/groups/(?P<group_id>[^/]+)/members$', views.group_members_ajax_api, name='group_members_ajax_api'),
-	url(r'^javascript/groups/(?P<group_id>[^/]+)/members/(?P<member_id>[^/]+)$', views.group_members_ajax_api, name='group_members_ajax_api'),
+	url(r'^ajax/groups/(?P<group_id>[^/]+)/members$', views.group_members_ajax_api, name='group_members_ajax_api'),
+	url(r'^ajax/groups/(?P<group_id>[^/]+)/members/(?P<member_id>[^/]+)$', views.group_members_ajax_api, name='group_members_ajax_api'),
 	# Group Graphs
-	url(r'^javascript/groups/(?P<group_id>[^/]+)/graphs$', views.group_graphs_ajax_api, name='group_graphs_ajax_api'),
-	url(r'^javascript/groups/(?P<group_id>[^/]+)/graphs/(?P<graph_id>[^/]+)$', views.group_graphs_ajax_api, name='group_graphs_ajax_api'),
+	url(r'^ajax/groups/(?P<group_id>[^/]+)/graphs$', views.group_graphs_ajax_api, name='group_graphs_ajax_api'),
+	url(r'^ajax/groups/(?P<group_id>[^/]+)/graphs/(?P<graph_id>[^/]+)$', views.group_graphs_ajax_api, name='group_graphs_ajax_api'),
 
 	# REST APIs Endpoints
 

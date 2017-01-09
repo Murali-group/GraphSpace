@@ -4,7 +4,7 @@
 
 var apis = {
     graphs: {
-        ENDPOINT: '/javascript/graphs/',
+        ENDPOINT: '/ajax/graphs/',
         get: function (data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.graphs.ENDPOINT, data, successCallback, errorCallback)
         },
@@ -31,19 +31,19 @@ var apis = {
         }
     },
     nodes: {
-        ENDPOINT: _.template('/javascript/graphs/<%= graph_id %>/nodes/'),
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/nodes/'),
         get: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.nodes.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
     edges: {
-        ENDPOINT: _.template('/javascript/graphs/<%= graph_id %>/edges/'),
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
         get: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.edges.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
     layouts: {
-        ENDPOINT: _.template('/javascript/graphs/<%= graph_id %>/layouts/'),
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/layouts/'),
         get: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.layouts.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },

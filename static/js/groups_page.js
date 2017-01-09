@@ -5,7 +5,7 @@
 
 var apis = {
     groups: {
-        ENDPOINT: '/javascript/groups/',
+        ENDPOINT: '/ajax/groups/',
         get: function (data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.groups.ENDPOINT, data, successCallback, errorCallback)
         },

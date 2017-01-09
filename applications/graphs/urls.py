@@ -11,20 +11,20 @@ urlpatterns = [
 	# AJAX APIs Endpoints
 
 	# Graphs
-	url(r'^javascript/graphs/$', views.graphs_ajax_api, name='graphs_ajax_api'),
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)$', views.graphs_ajax_api, name='graph_ajax_api'),
+	url(r'^ajax/graphs/$', views.graphs_ajax_api, name='graphs_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)$', views.graphs_ajax_api, name='graph_ajax_api'),
 	# Graphs Groups
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/groups$', views.graph_groups_ajax_api, name='graph_groups_ajax_api'),
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/groups/(?P<group_id>[^/]+)$', views.graph_groups_ajax_api, name='graph_group_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups$', views.graph_groups_ajax_api, name='graph_groups_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups/(?P<group_id>[^/]+)$', views.graph_groups_ajax_api, name='graph_group_ajax_api'),
 	# Graph Nodes
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/nodes/$', views.graph_nodes_ajax_api, name='graph_nodes_ajax_api'),
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/nodes/(?P<node_id>[^/]+)$', views.graph_nodes_ajax_api, name='graph_nodes_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/nodes/$', views.graph_nodes_ajax_api, name='graph_nodes_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/nodes/(?P<node_id>[^/]+)$', views.graph_nodes_ajax_api, name='graph_nodes_ajax_api'),
 	# Graph Edges
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/edges/$', views.graph_edges_ajax_api, name='graph_edges_ajax_api'),
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/edges/(?P<edge_id>[^/]+)$', views.graph_edges_ajax_api, name='graph_edges_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/edges/$', views.graph_edges_ajax_api, name='graph_edges_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/edges/(?P<edge_id>[^/]+)$', views.graph_edges_ajax_api, name='graph_edges_ajax_api'),
 	# Graph Layouts
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
-	url(r'^javascript/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
 
 	# REST APIs Endpoints
 
