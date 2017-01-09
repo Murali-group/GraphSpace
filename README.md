@@ -12,7 +12,7 @@ GraphSpace has three dummy users:
 Requirements
 ===================================
 1. Python v2.7.10
-2. sqlite3 v3.8.10
+2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
 3. virtualenv
 
 Running GraphSpace locally
