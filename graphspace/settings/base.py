@@ -138,3 +138,22 @@ PASSWORD_HASHERS = (
 )
 
 BASE = declarative_base()
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug2.log'),
+        },
+    },
+    'loggers': {
+	    'applications': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

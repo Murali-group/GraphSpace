@@ -1,0 +1,42 @@
+(0.002) 
+            SELECT c.relname, c.relkind
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid); args=None
+(0.001) SELECT "django_migrations"."app", "django_migrations"."name" FROM "django_migrations"; args=()
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:27:20.943994+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 27, 20, 943994, tzinfo=<UTC>))
+(0.001) UPDATE "django_session" SET "session_data" = 'NTJiZjRjM2JiNjk2YTVhYTM4M2ZhNmM2MjU3Mjg1OTg0ZDVjYTEwZTp7ImFkbWluIjowfQ==', "expire_date" = '2017-01-23T19:27:20.952223+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NTJiZjRjM2JiNjk2YTVhYTM4M2ZhNmM2MjU3Mjg1OTg0ZDVjYTEwZTp7ImFkbWluIjowfQ==', datetime.datetime(2017, 1, 23, 19, 27, 20, 952223, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:27:20.971765+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 27, 20, 971765, tzinfo=<UTC>))
+(0.002) UPDATE "django_session" SET "session_data" = 'YjRlNzI3ODQwMDliNmIxODcyZWZhOWM2MWY5ZWUzYjlkODFiZmFlNTp7ImFkbWluIjowLCJ1aWQiOm51bGx9', "expire_date" = '2017-01-23T19:27:21.001664+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'YjRlNzI3ODQwMDliNmIxODcyZWZhOWM2MWY5ZWUzYjlkODFiZmFlNTp7ImFkbWluIjowLCJ1aWQiOm51bGx9', datetime.datetime(2017, 1, 23, 19, 27, 21, 1664, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:27:24.141056+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 27, 24, 141056, tzinfo=<UTC>))
+(0.001) UPDATE "django_session" SET "session_data" = 'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', "expire_date" = '2017-01-23T19:27:24.499009+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', datetime.datetime(2017, 1, 23, 19, 27, 24, 499009, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:27:24.534526+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 27, 24, 534526, tzinfo=<UTC>))
+(0.001) UPDATE "django_session" SET "session_data" = 'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', "expire_date" = '2017-01-23T19:27:24.549862+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', datetime.datetime(2017, 1, 23, 19, 27, 24, 549862, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) 
+            SELECT c.relname, c.relkind
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid); args=None
+(0.000) SELECT "django_migrations"."app", "django_migrations"."name" FROM "django_migrations"; args=()
+(0.002) 
+            SELECT c.relname, c.relkind
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid); args=None
+(0.000) SELECT "django_migrations"."app", "django_migrations"."name" FROM "django_migrations"; args=()
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:29:41.740358+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 29, 41, 740358, tzinfo=<UTC>))
+(0.000) UPDATE "django_session" SET "session_data" = 'NTJiZjRjM2JiNjk2YTVhYTM4M2ZhNmM2MjU3Mjg1OTg0ZDVjYTEwZTp7ImFkbWluIjowfQ==', "expire_date" = '2017-01-23T19:29:41.748696+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NTJiZjRjM2JiNjk2YTVhYTM4M2ZhNmM2MjU3Mjg1OTg0ZDVjYTEwZTp7ImFkbWluIjowfQ==', datetime.datetime(2017, 1, 23, 19, 29, 41, 748696, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:29:41.764555+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 29, 41, 764555, tzinfo=<UTC>))
+(0.001) UPDATE "django_session" SET "session_data" = 'YjRlNzI3ODQwMDliNmIxODcyZWZhOWM2MWY5ZWUzYjlkODFiZmFlNTp7ImFkbWluIjowLCJ1aWQiOm51bGx9', "expire_date" = '2017-01-23T19:29:41.795716+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'YjRlNzI3ODQwMDliNmIxODcyZWZhOWM2MWY5ZWUzYjlkODFiZmFlNTp7ImFkbWluIjowLCJ1aWQiOm51bGx9', datetime.datetime(2017, 1, 23, 19, 29, 41, 795716, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.001) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:29:45.029921+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 29, 45, 29921, tzinfo=<UTC>))
+username=adb@vt.edu password=aditya
+(0.001) UPDATE "django_session" SET "session_data" = 'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', "expire_date" = '2017-01-23T19:29:45.386764+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', datetime.datetime(2017, 1, 23, 19, 29, 45, 386764, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+(0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z' AND "django_session"."expire_date" > '2017-01-09T19:29:45.412626+00:00'::timestamptz); args=('hdx4ruq50lbp7lvv284vbyfl7b1opu8z', datetime.datetime(2017, 1, 9, 19, 29, 45, 412626, tzinfo=<UTC>))
+(0.001) UPDATE "django_session" SET "session_data" = 'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', "expire_date" = '2017-01-23T19:29:45.427377+00:00'::timestamptz WHERE "django_session"."session_key" = 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z'; args=(u'NDE1MzNiMTg0NDFhZmE0YjBlYWYxOWQ3ZGI1MDBkNzMzYmI3MWE0Yzp7ImFkbWluIjowLCJ1aWQiOiJhZGJAdnQuZWR1In0=', datetime.datetime(2017, 1, 23, 19, 29, 45, 427377, tzinfo=<UTC>), 'hdx4ruq50lbp7lvv284vbyfl7b1opu8z')
+username=adb@vt.edu password=aditya

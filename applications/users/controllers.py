@@ -7,8 +7,16 @@ import applications.graphs as graphs
 import applications.users.dal as db
 from graphspace.utils import generate_uid
 
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 
 def authenticate_user(request, username=None, password=None):
+	logger.info('username={0} password={1}'.format(username, password))
+
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
 
