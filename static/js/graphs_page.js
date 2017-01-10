@@ -1380,7 +1380,7 @@ var cytoscapeGraph = {
         } else if (layout_name == "cola") {
             graph_layout = {
                 name: "cola",
-                flow: {axis: 'y', minSeparation: 30},
+                flow: {axis: 'y', minSeparation: 25},
                 edgeSymDiffLength: 6
             }
         }

@@ -31,6 +31,5 @@
   },
   "_source": "https://github.com/cytoscape/cytoscape.js-cola.git",
   "_target": "^1.4.3",
-  "_originalSource": "cytoscape-cola",
-  "_direct": true
+  "_originalSource": "cytoscape-cola"
 }
