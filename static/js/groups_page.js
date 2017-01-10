@@ -33,9 +33,12 @@ var apis = {
         getMembers: function (group_id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.groups.ENDPOINT + group_id + '/members', data, successCallback, errorCallback)
         },
+        addMember: function (group_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.groups.ENDPOINT + group_id + '/members', data, successCallback, errorCallback)
+        },
         deleteMember: function (group_id, member_id, successCallback, errorCallback) {
             apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/members/' + member_id, undefined, successCallback, errorCallback)
-        },
+        }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -191,10 +194,39 @@ var groupPage = {
         console.log('Loading Group Page....');
         utils.initializeTabs();
         $('#UpdateGroupBtn').click(groupPage.updateGroupForm.submit);
-        $('#ConfirmRemoveGroupToGraphBtn').click(groupPage.SharedGraphsTable.onRemoveGroupToGraphConfirm)
-        $('#ConfirmRemoveGroupMemberBtn').click(groupPage.GroupMembersTable.onRemoveGroupMemberConfirm)
+        $('#ConfirmRemoveGroupToGraphBtn').click(groupPage.SharedGraphsTable.onRemoveGroupToGraphConfirm);
+        $('#ConfirmRemoveGroupMemberBtn').click(groupPage.GroupMembersTable.onRemoveGroupMemberConfirm);
+        $('#submitNewGroupMemberEmailBtn').click(groupPage.onAddGroupMember);
     },
+    onAddGroupMember: function (e) {
+        e.preventDefault();
+        if (_.isEmpty(_.trim($('#newGroupMemberEmailInput').val()))) {
+            $.notify({
+                message: 'Please enter a valid email id!'
+            }, {
+                type: 'warning'
+            });
+            return;
+        }
 
+        apis.groups.addMember($('#GroupID').val(), {
+                'member_email': _.trim($('#newGroupMemberEmailInput').val())
+            },
+            successCallback = function (response) {
+                // This method is called when a new group member relationship is successfully added.
+
+                $('#newGroupMemberEmailInput').val(''); // Reset Input field
+                $('#GroupMembersTable').bootstrapTable('refresh');
+            },
+            errorCallback = function (response) {
+                // This method is called when  error occurs while add group_to_user relationship.
+                $.notify({
+                    message: response.responseJSON.error_message
+                }, {
+                    type: 'danger'
+                });
+            });
+    },
     updateGroupForm: {
         submit: function (e) {
             e.preventDefault();

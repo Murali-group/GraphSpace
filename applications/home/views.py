@@ -222,7 +222,8 @@ def login(request):
 		:param request: HTTP Request
 	"""
 	if 'POST' == request.method:
-		user = users.authenticate_user(request, username=request.POST['user_id'], password=request.POST['pw'])
+		request_body = json.loads(request.body)
+		user = users.authenticate_user(request, username=request_body['user_id'], password=request_body['pw'])
 
 		if user is not None:
 			request.session['uid'] = user['user_id']
@@ -245,14 +246,22 @@ def register(request):
 		{"user_id": <user_id>, "password": <password>}
 	"""
 
-	if 'POST' == request.method and 'user_id' in request.POST and 'password' in request.POST:
-		# RegisterForm is bound to POST data
-		register_form = RegisterForm(request.POST)
-		if register_form.is_valid():
-			user = users.register(request, username=register_form.cleaned_data['user_id'],
-								  password=register_form.cleaned_data['password'])
+	if 'POST' == request.method:
+		request_body = json.loads(request.body)
+		if 'user_id' in request_body and 'password' in request_body:
+			# RegisterForm is bound to POST data
+			register_form = RegisterForm(request_body)
+			if register_form.is_valid():
+				user = users.register(request, username=register_form.cleaned_data['user_id'],
+				                      password=register_form.cleaned_data['password'])
+				if user is not None:
+					request.session['uid'] = user.email
+					request.session['admin'] = user.is_admin
+
 			return HttpResponse(json.dumps(json_success_response(200, message='Registered!')),
-								content_type="application/json")
+			                    content_type="application/json")
+		else:
+			raise BadRequest(request)
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 

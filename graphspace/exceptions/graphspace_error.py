@@ -37,6 +37,9 @@ class GraphSpaceError(Exception):
 	def to_dict(self):
 		return json.loads(str(self))
 
+	def get_status(self):
+		return self.status
+
 
 class ValidationError(GraphSpaceError):
 	def __init__(self, request, error_code):

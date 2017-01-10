@@ -169,12 +169,14 @@ class GraphSpaceJSONFormat:
 		# parse old json data
 		old_json = json.loads(original_json_string)
 
-		if 'data' in old_json['graph']:
+		if 'data' in old_json['graph'] and 'nodes' in old_json['graph']['data']:
 			old_nodes = old_json['graph']['data']['nodes']
 			old_edges = old_json['graph']['data']['edges']
-		else:
+		elif 'nodes' in old_json['graph'] and 'edges' in old_json['graph']:
 			old_nodes = [node['data'] for node in old_json['graph']['nodes']]
 			old_edges = [edge['data'] for edge in old_json['graph']['edges']]
+		else:
+			raise Exception("JSON of graph must have 'nodes' and 'edges' property")
 
 		new_nodes, new_edges = [], []
 
@@ -319,13 +321,14 @@ class GraphSpaceJSONFormat:
 		# recognized by CytoscapeJS
 		for node in original_json["graph"]["nodes"]:
 			node = node["data"]
-			# Check the data type of node, should be int, float or string
-			if not isinstance(node["name"], (basestring, int, float)):
-				raise Exception("All nodes must be strings, integers or floats")
 
 			# Check to see if name is in node
 			if "name" not in node:
 				raise Exception("All nodes must have a unique name.  Please verify that all nodes meet this requirement.")
+
+			# Check the data type of node, should be int, float or string
+			if not isinstance(node["name"], (basestring, int, float)):
+				raise Exception("All nodes must be strings, integers or floats")
 
 			if node["name"] not in unique_nodes:
 				unique_nodes.add(node["name"])

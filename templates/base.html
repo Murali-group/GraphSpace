@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="{% static 'css/graphspace.css' %}">
 
     <!-- Custom styles for this base template -->
-    <script src="{% static 'graphs/js/jquery.min.js' %}"></script>
+    <script src="{% static 'components/jquery/dist/jquery.min.js' %}"></script>
 
     <script src="{% static 'components/bootstrap/dist/js/bootstrap.js' %}"></script>
     <script src="{% static 'components/bootstrap/js/tooltip.js' %}"></script>
@@ -63,7 +63,8 @@
 
 <!-- JavaScript Placed at the end of the document so the pages load faster -->
 <script src="{% static 'js/utils.js' %}" type="text/javascript"></script>
-<script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/main.js' %}" type="text/javascript"></script>
+{#<script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>#}
 <script>
     // Solution found at http://stackoverflow.com/questions/17534661/make-anchor-link-go-some-pixels-above-where-its-linked-to
     // The function actually applying the offset
@@ -72,6 +73,7 @@
             window.scrollTo(window.scrollX, window.scrollY - 100);
         }
     }
+    header.init();
 
     // This will capture hash changes while on the page
     window.addEventListener("hashchange", offsetAnchor);

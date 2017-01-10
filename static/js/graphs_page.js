@@ -375,6 +375,9 @@ var graphPage = {
          * It will initialize all the event listeners.
          */
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+
+        utils.initializeTabs();
+
         $('#saveLayoutBtn').click(function () {
             graphPage.saveLayout($('#layoutNameInput').val());
         });
@@ -400,27 +403,46 @@ var graphPage = {
             $('#saveLayoutModal').modal('show');
         });
 
+        $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
+
         this.filterNodesEdges.init();
 
+        if (window.location.hash == '#editor') {
+            $('#layoutEditorBtn').trigger('click');
+        }
+
+        if (!_.isEmpty(utils.getURLParameter('auto_layout'))) {
+            graphPage.applyAutoLayout(utils.getURLParameter('auto_layout'));
+        } else if (!_.isEmpty(utils.getURLParameter('user_layout'))) {
+            graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
+        }
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
     },
+    applyAutoLayout: function (layout_id) {
+        graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
+        window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
+    },
+    applyUserLayout: function (layout_id) {
+        apis.layouts.getByID($('#GraphID').val(), layout_id,
+            successCallback = function (response) {
+                graphPage.applyLayout({
+                    name: 'preset',
+                    positions: JSON.parse(response['json'])
+                });
+                window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                alert("Layout does not exist or has not been shared yet!");
+            });
+    },
     onSelectLayoutBtnClick: function (e) {
         if ($(e).hasClass('auto-layout')) {
-            graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings($(e).data('layout-id')));
+            graphPage.applyAutoLayout($(e).data('layout-id'));
         } else {
-            apis.layouts.getByID($('#GraphID').val(), $(e).data('layout-id'),
-                successCallback = function (response) {
-                    graphPage.applyLayout({
-                        name: 'preset',
-                        positions: JSON.parse(response['json'])
-                    });
-                },
-                errorCallback = function (xhr, status, errorThrown) {
-                    // This method is called when  error occurs while deleting group_to_graph relationship.
-                    alert("Layout does not exist or has not been shared yet!");
-                });
+            graphPage.applyUserLayout($(e).data('layout-id'));
         }
     },
     applyLayout: function (layout) {
@@ -467,14 +489,35 @@ var graphPage = {
                 },
                 successCallback = function (response) {
                     $('#saveLayoutModal').modal('toggle');
+                    $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                    $('#SharedLayoutsTable').bootstrapTable('refresh');
                 },
-                errorCallback = function (xhr, status, errorThrown) {
+                errorCallback = function (response) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
-                    alert(xhr.responseText);
-                })
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
         }
 
 
+    },
+    addLayoutBtns: function (layout, domID) {
+        // domID: ID of the dom in which the layout btns will be inserted.
+        $('#' + domID).append(
+            $('<li>', {
+                class: "margin-bottom-2"
+            }).append(
+                $('<button>', {
+                    'type': "button",
+                    'class': "btn btn-default gs-full-width select-layout-btn user-layout",
+                    'data-layout-id': layout.id,
+                    'onclick': "graphPage.onSelectLayoutBtnClick(this)"
+                }).html('<b>' + layout.name + '</b> <br> created by ' + layout.owner_email)
+            )
+        );
     },
     onShareGraphWithPublicBtn: function (e, graph_id) {
 
@@ -729,6 +772,11 @@ var graphPage = {
                 successCallback = function (response) {
                     // This method is called when layouts are successfully fetched.
                     params.success(response);
+
+                    $('#userPrivateLayoutBtns').html('');
+                    _.each(response.layouts, function (layout) {
+                        graphPage.addLayoutBtns(layout, 'userPrivateLayoutBtns');
+                    });
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.
@@ -754,6 +802,11 @@ var graphPage = {
                 successCallback = function (response) {
                     // This method is called when layouts are successfully fetched.
                     params.success(response);
+
+                    $('#userSharedLayoutBtns').html('');
+                    _.each(response.layouts, function (layout) {
+                        graphPage.addLayoutBtns(layout, 'userSharedLayoutBtns');
+                    });
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.
@@ -775,8 +828,64 @@ var graphPage = {
         },
         operationEvents: {
             'click .delete-layout': function (e, value, row, index) {
-                $('#deleteGraphModal').data('graph-id', row.id).modal('show');
+                $('#deleteLayoutModal').data('layout-id', row.id).modal('show');
+            },
+            'click .edit-layout': function (e, value, row, index) {
+                window.location.href = window.location.origin + window.location.pathname + '?user_layout=' + row.id + '#editor';
+            },
+            'click .share-layout': function (e, value, row, index) {
+                apis.layouts.update($('#GraphID').val(), row.id, {'is_shared': 1},
+                    successCallback = function (response) {
+                        // This method is called when layout is successfully shared.
+                        // The entry from the table is deleted.
+                        $('#SharedLayoutsTable').bootstrapTable('refresh');
+                        $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                    },
+                    errorCallback = function (response) {
+                        // This method is called when  error occurs while sharing layout.
+                        $.notify({
+                            message: response.responseJSON.error_message
+                        }, {
+                            type: 'danger'
+                        });
+                    });
+            },
+            'click .unshare-layout': function (e, value, row, index) {
+                apis.layouts.update($('#GraphID').val(), row.id, {'is_shared': 0},
+                    successCallback = function (response) {
+                        // This method is called when layout is successfully unshared.
+                        // The entry from the table is deleted.
+                        $('#SharedLayoutsTable').bootstrapTable('refresh');
+                        $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                    },
+                    errorCallback = function (response) {
+                        // This method is called when  error occurs while unsharing layout.
+                        $.notify({
+                            message: response.responseJSON.error_message
+                        }, {
+                            type: 'danger'
+                        });
+                    });
             }
+        },
+        onConfirmRemoveGraph: function (e) {
+            e.preventDefault();
+            apis.layouts.delete($('#GraphID').val(), $('#deleteLayoutModal').data('layout-id'),
+                successCallback = function (response) {
+                    // This method is called when layout is successfully deleted.
+                    // The entry from the table is deleted.
+                    $('#SharedLayoutsTable').bootstrapTable('refresh');
+                    $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                    $('#deleteLayoutModal').modal('hide');
+                },
+                errorCallback = function (response) {
+                    // This method is called when  error occurs while deleting layout.
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
         },
     },
     edgesTable: {

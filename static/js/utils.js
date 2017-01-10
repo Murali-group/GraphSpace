@@ -2,6 +2,18 @@
  * Created by adb on 25/11/16.
  */
 
+function jsonRequest(method, url, data, successCallback, errorCallback) {
+    $.ajax({
+        headers: {
+            'Accept': 'application/json'
+        },
+        method: method,
+        data: method == 'GET' ? data : JSON.stringify(data),
+        url: url,
+        success: successCallback,
+        error: errorCallback
+    });
+}
 
 function getCookie(name) {
     var cookieValue = null;
@@ -44,31 +56,39 @@ $(document).ready(function () {
         z_index: 100000,
         type: 'success'
     });
-
-    $('.sidebar-nav-pills').click(function (e) {
-        $('.gs-sidebar-nav').removeClass('active');
-        $($(this).data('target')).addClass('active');
-    });
-
 });
 
 var utils = {
     initializeTabs: function () {
         utils.selectTab(document.location.toString());
 
-        $('.nav-pills a').on('shown.bs.tab', function (e) {
+        $('.nav-pills a, .nav-tabs a').on('shown.bs.tab', function (e) {
             // Change hash for page-reload. It will add the appropriate hash tag in the url for current tab.
             window.location.hash = e.target.hash;
+        });
+
+        $('.sidebar-nav-pills').click(function (e) {
+            $('.gs-sidebar-nav').removeClass('active');
+            $($(this).data('target')).addClass('active');
         });
     },
     selectTab: function (url) {
         // Go to Specific Tab on Page Reload or Hyperlink
         if (url.match('#')) {
-            $('.nav-pills a[href="#' + url.split('#')[1] + '"]').tab('show');
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
         }
     },
     dateFormatter: function (value, row, index) {
         return moment(value).fromNow();
+    },
+    getURLParameter: function (name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results == null) {
+            return null;
+        }
+        else {
+            return results[1] || 0;
+        }
     }
 };
 

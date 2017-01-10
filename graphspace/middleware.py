@@ -55,9 +55,7 @@ class GraphSpaceMiddleware(object):
 				response['WWW-Authenticate'] = 'Basic'
 				return response
 			else:
-				return HttpResponse(json.dumps({
-					"message": "BAD REQUEST"
-				}), content_type="application/json", status=400)
+				return HttpResponse(str(BadRequest(request, msg=str(exception))), content_type="application/json", status=400)
 
 		context = exception.to_dict() if issubclass(type(exception), GraphSpaceError) else {}
 

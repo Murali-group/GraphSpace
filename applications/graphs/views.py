@@ -34,7 +34,6 @@ def upload_graph_page(request):
 					'is_public': request.POST.get('is_public', None),
 					'cyjs': json.loads(request.FILES['graph_file'].read()),
 				})
-
 			context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
 		except Exception as e:
 			context['Error'] = str(e)
@@ -98,7 +97,8 @@ def graph_page(request, graph_id):
 			"shared_groups":
 				_get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
 					'groups'],
-			"layouts": _get_layouts(request, graph_id, query={'limit': None, 'offset': None, 'is_shared': 1})['layouts']
+			# "shared_layouts": _get_layouts(request, graph_id, query={'limit': None, 'offset': None, 'is_shared': 1})['layouts'],
+			# "private_layouts": _get_layouts(request, graph_id, query={'limit': None, 'offset': None, 'is_shared': 0, 'owner_email': uid})['layouts']
 		})
 
 		shared_group_ids = [group['id'] for group in context["shared_groups"]]

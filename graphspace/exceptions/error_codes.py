@@ -5,6 +5,8 @@ class ErrorCodes(object):
 		Codes can be used to check for specific errors.
 	"""
 	class Validation(object):
+		UserAlreadyExists = (1000, "User with `{0}` email id already exists!")
+
 		MethodNotAllowed = (1000, "Incoming request is not allowed")
 		BadRequest = (1001, "Bad Request")
 		UserPasswordMisMatch = (1002, "User/Password not recognized")

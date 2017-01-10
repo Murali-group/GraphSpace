@@ -57,7 +57,7 @@
         </a>
         <div id="changeLayoutPopover" class="popover fade">
             <p class="lead text-center zero-margin">Select Layout</p>
-            <ul class="bg-white"
+            <ul id="changeLayoutBtns" class="bg-white"
                 style="list-style: none; max-height: 80%; overflow-x: hidden; height: auto; padding: 0.5em">
                 <li class="margin-bottom-2">
                     <button type="button"
@@ -116,16 +116,12 @@
                         Cola
                     </button>
                 </li>
-                {% for layout in layouts %}
-                    <li class="margin-bottom-2">
-                        <button type="button"
-                                class="btn btn-default gs-full-width select-layout-btn user-layout"
-                                data-layout-id="{{ layout.id }}"
-                                onclick="graphPage.onSelectLayoutBtnClick(this)">
-                            <b>{{ layout.name }}</b> <br> created by {{ layout.owner_email }}
-                        </button>
-                    </li>
-                {% endfor %}
+                <span id="userPrivateLayoutBtns">
+
+                </span>
+                <span id="userSharedLayoutBtns">
+
+                </span>
             </ul>
         </div>
     </li>

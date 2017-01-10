@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 
 import applications.graphs as graphs
 import applications.users.dal as db
+from graphspace.exceptions import BadRequest, ErrorCodes
 from graphspace.utils import generate_uid
 
 # import the logging library
@@ -15,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 def authenticate_user(request, username=None, password=None):
-	logger.info('username={0} password={1}'.format(username, password))
 
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
@@ -106,12 +106,9 @@ def get_user(request, email):
 
 def register(request, username=None, password=None):
 	if db.get_user(request.db_session, username):
-		raise Exception("Email already exists!")
+		raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=username)
 
-	try:
-		return add_user(request, email=username, password=password)
-	except Exception as e:
-		raise e
+	return add_user(request, email=username, password=password)
 
 
 def add_user(request, email=None, password="graphspace_public_user", is_admin=0):
