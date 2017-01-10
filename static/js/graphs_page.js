@@ -404,6 +404,7 @@ var graphPage = {
         });
 
         $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
+        $('#ConfirmUpdateLayoutBtn').click(graphPage.layoutsTable.onConfirmUpdateGraph);
 
         this.filterNodesEdges.init();
 
@@ -831,7 +832,7 @@ var graphPage = {
                 $('#deleteLayoutModal').data('layout-id', row.id).modal('show');
             },
             'click .edit-layout': function (e, value, row, index) {
-                window.location.href = window.location.origin + window.location.pathname + '?user_layout=' + row.id + '#editor';
+                $('#editLayoutModal').data('layout-id', row.id).modal('show');
             },
             'click .share-layout': function (e, value, row, index) {
                 apis.layouts.update($('#GraphID').val(), row.id, {'is_shared': 1},
@@ -887,6 +888,27 @@ var graphPage = {
                     });
                 });
         },
+        onConfirmUpdateGraph: function (e) {
+            e.preventDefault();
+            apis.layouts.update($('#GraphID').val(), $('#editLayoutModal').data('layout-id'), {
+                    "name": $('#newlayoutNameInput').val()
+                },
+                successCallback = function (response) {
+                    // This method is called when layout is successfully updated.
+                    // The entry from the table is updated.
+                    $('#SharedLayoutsTable').bootstrapTable('refresh');
+                    $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                    $('#editLayoutModal').modal('hide');
+                },
+                errorCallback = function (response) {
+                    // This method is called when  error occurs while updating layout.
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+        }
     },
     edgesTable: {
         getEdgesByGraphID: function (params) {
