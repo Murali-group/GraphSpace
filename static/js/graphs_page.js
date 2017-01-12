@@ -1377,11 +1377,19 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "grid"
             }
-        } else if (layout_name == "cola") {
+        } else if (layout_name == 'cola') {
+            var shape_location = {
+                "triangle" : {x: 0, y: -500},
+                "ellipse" : {x: 0, y: 0},
+                "rectangle": {x:0, y: 500}
+            }
             graph_layout = {
                 name: "cola",
-                flow: {axis: 'y', minSeparation: 25},
-                edgeSymDiffLength: 6
+                //animate: false, //makes it timeout
+                //alignment: function(node){return (node.data('shape') == 'triangle') ? {x:50, y:90}:{x:50,y:10}}
+                alignment:function(node){return shape_location[node.data('shape')]},
+                avoidOverlap: true
+                //flow: {axis: 'y', minSeparation: 25}
             }
         }
         return graph_layout;
