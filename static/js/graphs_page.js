@@ -1378,6 +1378,10 @@ var cytoscapeGraph = {
                 name: "grid"
             }
         } else if (layout_name == 'cola') {
+            graph_layout = {
+                name: "cola"
+            }
+        } else if (layout_name == 'cola-test1') {
             var shape_location = {
                 "triangle" : {x: 0, y: -500},
                 "ellipse" : {x: 0, y: 0},
@@ -1385,10 +1389,48 @@ var cytoscapeGraph = {
             }
             graph_layout = {
                 name: "cola",
-                //animate: false, //makes it timeout
-                //alignment: function(node){return (node.data('shape') == 'triangle') ? {x:50, y:90}:{x:50,y:10}}
                 alignment:function(node){return shape_location[node.data('shape')]},
                 avoidOverlap: true
+                //flow: {axis: 'y', minSeparation: 25}
+            }
+        // } else if (layout_name == 'cola-test2') {
+        //     cy.add({
+        //          group: "nodes",
+        //          data: {id: 'triangle'}})
+        //     cy.batch(function(){
+        //         cy.nodes("[shape = 'triangle]").move({parent: 'triangle'})
+        //     })
+        //     graph_layout = {
+        //         name: "cola",
+        //         alignment: function (node) {
+        //             if (node.data('shape') == 'triangle') {
+        //                 node.move({parent: 'triangle'})
+        //             }
+        //         },
+        //         avoidOverlap: true
+        //         //flow: {axis: 'y', minSeparation: 25}
+        //     }
+        } else if (layout_name == 'grid-test1') {
+            var shape_location = {
+                "triangle": {row: 0},
+                "ellipse": {row: 1},
+                "rectangle": {row: 2}
+            }
+            graph_layout = {
+                name: "grid",
+                position: function (node) {
+                    return shape_location[node.data('shape')]
+                }
+            }
+        } else if (layout_name == 'grid-test2') {
+            var shape_vals = {
+                "triangle": {value : 0},
+                "ellipse": {value: 1},
+                "rectangle": {value: 2}
+            }
+            graph_layout = {
+                name: "grid",
+                sort: function(n1, n2){return shape_vals[n1.data('shape')].value - shape_vals[n2.data('shape')].value}
                 //flow: {axis: 'y', minSeparation: 25}
             }
         }
