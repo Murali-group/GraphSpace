@@ -417,6 +417,13 @@ var graphPage = {
         } else if (!_.isEmpty(utils.getURLParameter('user_layout'))) {
             graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
         }
+
+        $('#graphRepresentationTabBtn').click(function (e) {
+            window.setTimeout(function(){
+                $('#cyGraphContainer').css('height', '99%');
+            }, 100);
+
+        });
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
