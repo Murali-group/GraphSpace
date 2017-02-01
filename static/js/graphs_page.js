@@ -1391,7 +1391,7 @@ var cytoscapeGraph = {
                 name: "cola",
                 alignment:function(node){return shape_location[node.data('shape')]},
                 avoidOverlap: true
-                //flow: {axis: 'y', minSeparation: 25}
+                //flow: {axis: 'x', minSeparation: 25}
             }
         // } else if (layout_name == 'cola-test2') {
         //     cy.add({
@@ -1410,6 +1410,18 @@ var cytoscapeGraph = {
         //         avoidOverlap: true
         //         //flow: {axis: 'y', minSeparation: 25}
         //     }
+        } else if (layout_name == 'cola-test2') {
+            var shape_location = {
+                "triangle" : {x: 0, y: -500},
+                "ellipse" : {x: 0, y: 0},
+                "rectangle": {x:0, y: 500}
+            }
+            graph_layout = {
+                name: "cola",
+                //alignment:function(node){return shape_location[node.data('shape')]},
+                avoidOverlap: true,
+                flow: {axis: 'y', minSeparation: 25}
+            }
         } else if (layout_name == 'grid-test1') {
             var shape_location = {
                 "triangle": {row: 0},
