@@ -1381,48 +1381,68 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "cola"
             }
-        } else if (layout_name == 'cola-test1') {
+        } else if (layout_name == 'cola-set-align') {
             var shape_location = {
-                "triangle" : {x: 0, y: -500},
-                "ellipse" : {x: 0, y: 0},
-                "rectangle": {x:0, y: 500}
+                "triangle" : {y: -500},
+                //"ellipse" : {x: 0, y: 0},
+                "rectangle": {y: 500}
             }
             graph_layout = {
                 name: "cola",
                 alignment:function(node){return shape_location[node.data('shape')]},
                 avoidOverlap: true
-                //flow: {axis: 'x', minSeparation: 25}
             }
-        // } else if (layout_name == 'cola-test2') {
-        //     cy.add({
-        //          group: "nodes",
-        //          data: {id: 'triangle'}})
-        //     cy.batch(function(){
-        //         cy.nodes("[shape = 'triangle]").move({parent: 'triangle'})
-        //     })
-        //     graph_layout = {
-        //         name: "cola",
-        //         alignment: function (node) {
-        //             if (node.data('shape') == 'triangle') {
-        //                 node.move({parent: 'triangle'})
-        //             }
-        //         },
-        //         avoidOverlap: true
-        //         //flow: {axis: 'y', minSeparation: 25}
-        //     }
-        } else if (layout_name == 'cola-test2') {
+        } else if (layout_name == 'cola-set-align-and-flow') {
             var shape_location = {
-                "triangle" : {x: 0, y: -500},
-                "ellipse" : {x: 0, y: 0},
-                "rectangle": {x:0, y: 500}
+                "triangle" : {y: -500},
+                "rectangle": {y: 500}
             }
             graph_layout = {
                 name: "cola",
-                //alignment:function(node){return shape_location[node.data('shape')]},
+                alignment:function(node){return shape_location[node.data('shape')]},
                 avoidOverlap: true,
-                flow: {axis: 'y', minSeparation: 25}
+                flow: {axis: 'y', minSeparation: 1}
             }
-        } else if (layout_name == 'grid-test1') {
+        } else if (layout_name == 'cola-set-align-and-bounding-box') { //incomplete
+            var shape_location = {
+                "triangle" : {y: -500},
+                "rectangle": {y: 1000}
+            }
+            graph_layout = {
+                name: "cola",
+                boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                alignment:function(node){return shape_location[node.data('shape')]},
+                avoidOverlap: true,
+                flow: {axis: 'y', minSeparation: 1}
+            }
+        } else if (layout_name == 'cola-set-ghost-nodes') {
+            var triangle = {
+                data : {id: 'triangle'}
+            }
+            var rectangle = {
+                data: {id: 'rectangle'}
+            }
+            graph_json.graph["nodes"].push(triangle)
+            graph_json.graph["nodes"].push(rectangle)
+            var test1 = graph_json.graph["nodes"].pop()
+            var test2 = graph_json.graph["nodes"].pop()
+            console.log("test1: " + test1['data']['id']) //should print rectangle
+            console.log("test2: " + test2['data']['id']) //should print triangle
+            console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id'])
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                if (node_data['data']['shape'] == 'triangle') {
+                    console.log(node_data['data']['id'] + " is a triangle")
+                }
+            }
+            graph_layout = {
+                name: "cola"
+            }
+        } else if (layout_name == 'cola-set-edge-lengths') { //implement this
+            graph_layout = {
+                name: "cola"
+            }
+        } else if (layout_name == 'grid-set-row') {
             var shape_location = {
                 "triangle": {row: 0},
                 "ellipse": {row: 1},
@@ -1434,7 +1454,7 @@ var cytoscapeGraph = {
                     return shape_location[node.data('shape')]
                 }
             }
-        } else if (layout_name == 'grid-test2') {
+        } else if (layout_name == 'grid-sort-by-shape') {
             var shape_vals = {
                 "triangle": {value : 0},
                 "ellipse": {value: 1},
@@ -1443,7 +1463,6 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "grid",
                 sort: function(n1, n2){return shape_vals[n1.data('shape')].value - shape_vals[n2.data('shape')].value}
-                //flow: {axis: 'y', minSeparation: 25}
             }
         }
         return graph_layout;
