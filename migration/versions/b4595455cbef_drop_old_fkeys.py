@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-	password_reset
+	# password_reset
 	op.drop_constraint('password_reset_user_id_fkey', 'password_reset', type_='foreignkey')
 
 	# group
