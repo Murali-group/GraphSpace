@@ -17,44 +17,44 @@ depends_on = None
 
 
 def upgrade():
-	# password_reset
-	# op.drop_constraint('password_reset_user_id_fkey', 'password_reset', type_='foreignkey')
-	#
-	# # group
-	# op.drop_constraint('group_owner_id_fkey', 'group', type_='foreignkey')
-	#
-	# # graph
-	# op.drop_constraint('graph_user_id_fkey', 'graph', type_='foreignkey')
-	#
-	# # node
-	# op.drop_constraint('node_user_id_fkey', 'node', type_='foreignkey')
-	# op.drop_constraint('node_user_id_fkey1', 'node', type_='foreignkey')
-	#
-	# # edge
-	# op.drop_constraint('edge_user_id_fkey1', 'edge', type_='foreignkey')
-	# op.drop_constraint('edge_user_id_fkey2', 'edge', type_='foreignkey')
-	# op.drop_constraint('edge_user_id_fkey', 'edge', type_='foreignkey')
-	#
-	# # graph_to_tag
-	# op.drop_constraint('graph_to_tag_user_id_fkey', 'graph_to_tag', type_='foreignkey')
-	# op.drop_constraint('graph_to_tag_graph_id_fkey', 'graph_to_tag', type_='foreignkey')
-	# op.drop_constraint('graph_to_tag_tag_id_fkey', 'graph_to_tag', type_='foreignkey')
-	#
-	# # group_to_graph
-	# op.drop_constraint('group_to_graph_user_id_fkey', 'group_to_graph', type_='foreignkey')
-	# op.drop_constraint('group_to_graph_group_owner_fkey', 'group_to_graph', type_='foreignkey')
-	# op.drop_constraint('group_to_graph_group_id_fkey', 'group_to_graph', type_='foreignkey')
-	# op.drop_constraint('group_to_graph_graph_id_fkey', 'group_to_graph', type_='foreignkey')
-	#
-	# # group_to_user
-	# op.drop_constraint('group_to_user_user_id_fkey', 'group_to_user', type_='foreignkey')
-	# op.drop_constraint('group_to_user_group_owner_fkey', 'group_to_user', type_='foreignkey')
-	# op.drop_constraint('group_to_user_group_id_fkey', 'group_to_user', type_='foreignkey')
-	#
-	# # layout
-	# op.drop_constraint('layout_user_id_fkey', 'layout', type_='foreignkey')
-	# op.drop_constraint('layout_owner_id_fkey', 'layout', type_='foreignkey')
-	# op.drop_constraint('layout_graph_id_fkey', 'layout', type_='foreignkey')
+	password_reset
+	op.drop_constraint('password_reset_user_id_fkey', 'password_reset', type_='foreignkey')
+
+	# group
+	op.drop_constraint('group_owner_id_fkey', 'group', type_='foreignkey')
+
+	# graph
+	op.drop_constraint('graph_user_id_fkey', 'graph', type_='foreignkey')
+
+	# node
+	op.drop_constraint('node_user_id_fkey', 'node', type_='foreignkey')
+	op.drop_constraint('node_user_id_fkey1', 'node', type_='foreignkey')
+
+	# edge
+	op.drop_constraint('edge_user_id_fkey1', 'edge', type_='foreignkey')
+	op.drop_constraint('edge_user_id_fkey2', 'edge', type_='foreignkey')
+	op.drop_constraint('edge_user_id_fkey', 'edge', type_='foreignkey')
+
+	# graph_to_tag
+	op.drop_constraint('graph_to_tag_user_id_fkey', 'graph_to_tag', type_='foreignkey')
+	op.drop_constraint('graph_to_tag_graph_id_fkey', 'graph_to_tag', type_='foreignkey')
+	op.drop_constraint('graph_to_tag_tag_id_fkey', 'graph_to_tag', type_='foreignkey')
+
+	# group_to_graph
+	op.drop_constraint('group_to_graph_user_id_fkey', 'group_to_graph', type_='foreignkey')
+	op.drop_constraint('group_to_graph_group_owner_fkey', 'group_to_graph', type_='foreignkey')
+	op.drop_constraint('group_to_graph_group_id_fkey', 'group_to_graph', type_='foreignkey')
+	op.drop_constraint('group_to_graph_graph_id_fkey', 'group_to_graph', type_='foreignkey')
+
+	# group_to_user
+	op.drop_constraint('group_to_user_user_id_fkey', 'group_to_user', type_='foreignkey')
+	op.drop_constraint('group_to_user_group_owner_fkey', 'group_to_user', type_='foreignkey')
+	op.drop_constraint('group_to_user_group_id_fkey', 'group_to_user', type_='foreignkey')
+
+	# layout
+	op.drop_constraint('layout_user_id_fkey', 'layout', type_='foreignkey')
+	op.drop_constraint('layout_owner_id_fkey', 'layout', type_='foreignkey')
+	op.drop_constraint('layout_graph_id_fkey', 'layout', type_='foreignkey')
 	pass
 
 
