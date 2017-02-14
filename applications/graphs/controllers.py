@@ -4,7 +4,7 @@ import applications.graphs.dal as db
 import applications.users as users
 from graphspace.wrappers import atomic_transaction
 from json_validator import *
-from graphspace.fileformat import GraphSpaceJSONFormat
+from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat
 import networkx as nx
 from json import dumps, loads
 
@@ -307,6 +307,7 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 
 	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
 	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
+	is_public = int(is_public) if is_public is not None else None
 
 	if member_email is not None:
 		member_user = users.controllers.get_user(request, member_email)

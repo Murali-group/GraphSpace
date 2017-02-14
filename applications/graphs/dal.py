@@ -168,7 +168,10 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	if len(names_filter) > 0:
 		combined_filter.extend(names_filter)
 
-	query = query.filter(and_(or_(*combined_filter), Graph.tags.any(or_(*tags_filter))))
+	if len(tags_filter) > 0:
+		query = query.filter(and_(or_(*combined_filter), Graph.tags.any(or_(*tags_filter))))
+	else:
+		query = query.filter(or_(*combined_filter))
 
 	total = query.count()
 

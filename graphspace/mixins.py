@@ -5,8 +5,8 @@ from django.utils.datetime_safe import datetime
 """
 To share some functionality, such as a set of common columns, some common table options, or other mapped properties, across many classes.
 For example:
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    __mapper_args__= {'always_refresh': True}
+	__table_args__ = {'mysql_engine': 'InnoDB'}
+	__mapper_args__= {'always_refresh': True}
 TODO: Find out what args need to be set for postgreSQL.
 """
 
@@ -16,5 +16,5 @@ class IDMixin(object):
 
 
 class TimeStampMixin(object):
-	created_at = Column(TIMESTAMP, default=datetime.now())
-	updated_at = Column(TIMESTAMP, default=datetime.now())
+	created_at = Column(TIMESTAMP, default=datetime.now(), nullable=False)
+	updated_at = Column(TIMESTAMP, default=datetime.now(), nullable=False)
