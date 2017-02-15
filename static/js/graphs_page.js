@@ -419,7 +419,7 @@ var graphPage = {
         }
 
         $('#graphRepresentationTabBtn').click(function (e) {
-            window.setTimeout(function(){
+            window.setTimeout(function () {
                 $('#cyGraphContainer').css('height', '99%');
             }, 100);
 
@@ -694,6 +694,124 @@ var graphPage = {
             this.elements().removeCss('color');
         }
     },
+    setDefaultNodeProperties: function (nodeJSON) {
+        /**
+         * Sets default properties of node objects.
+         */
+
+        // DONE SO OLD GRAPHS WILL DISPLAY
+        //If the nodes in graphs already in database don't have width or height
+        // or unrecognized shape, have a default value
+        for (var i = 0; i < nodeJSON.length; i++) {
+            var nodeData = nodeJSON[i]['data'];
+
+            //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
+            //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
+            //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
+            var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid", "polygon"];
+
+            //If the node has a shape, make sure that shape is recognized by CytoscapeJS
+            //Otherwise, make shape an ellipse
+            if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
+
+                //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
+                if (nodeData['shape'] == 'square') {
+                    nodeData['shape'] = "rectangle"
+                } else {
+                    //Make default shape an ellipse
+                    nodeData['shape'] = 'ellipse';
+                }
+
+                //If shape is not found, default to ellipse
+                if (acceptedShapes.indexOf(nodeData["shape"]) == -1) {
+                    nodeData["shape"] = "ellipse";
+                }
+            } else if (nodeData.hasOwnProperty('shape') == false) {
+                nodeData['shape'] = "ellipse";
+            } else {
+                nodeData['shape'] = nodeData['shape'].toLowerCase();
+            }
+
+            //Pick default color if nothing is provided
+            if (nodeData['background_color'] == undefined) {
+                nodeData['background_color'] = "yellow";
+            } else {
+                var hexCode = colourNameToHex(nodeData['background_color']);
+                if (hexCode != false) {
+                    nodeData['background_color'] = hexCode;
+                } else {
+                    if (isHexaColor(addCharacterToHex(nodeData['background_color']))) {
+                        nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
+                    }
+                }
+            }
+
+            //Set border color to be black by default
+            if (nodeData["border_color"] == undefined) {
+                nodeData["border_color"] = "#888";
+            }
+
+            if (nodeData['text_halign'] == undefined) {
+                nodeData["text_halign"] = "center";
+            }
+
+            if (nodeData["text_valign"] == undefined) {
+                nodeData["text_valign"] = "center";
+            }
+
+            nodeJSON[i]['data'] = nodeData;
+        }
+        return nodeJSON;
+    },
+    setDefaultEdgeProperties: function (edgeJSON) {
+
+        // DONE SO OLD GRAPHS WILL DISPLAY
+        // NEW GRAPHS WILL HAVE EVERYTHING HANDLED AT UPLOAD TIME
+        // THIS IS ONLY AS A SECONDARY CHECK
+        var testEdges = new Array();
+
+        //If the EDGES in graphs already in database don't have color have a default value
+        for (var i = 0; i < edgeJSON.length; i++) {
+            var edgeData = edgeJSON[i]['data'];
+
+            //If edges don't have an ID, generate one
+            if (testEdges.indexOf(edgeData['id']) == -1) {
+                testEdges.push(edgeData['id']);
+            } else {
+                edgeData['id'] = edgeData['id'] + i;
+            }
+
+            //If edges don't have any color properties, choose default
+            if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
+                edgeData['line_color'] = "black";
+            } else {
+
+                //Color property maps to line_color
+                //DONE TO SUPPORT OLD GRAPHS
+                if (edgeData.hasOwnProperty('color')) {
+                    edgeData['line_color'] = edgeData['color'];
+                }
+                //Converts the line color into Hexadecimal so CytoscapeJS can user it
+                var hexCode = colourNameToHex(edgeData['line_color']);
+                if (hexCode != false) {
+                    edgeData['line_color'] = hexCode;
+                } else {
+                    if (isHexaColor(addCharacterToHex(edgeData['line_color']))) {
+                        edgeData['line_color'] = addCharacterToHex(edgeData['line_color']);
+                    }
+                }
+            }
+
+            //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
+            if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
+                edgeData['target_arrow_shape'] = 'none';
+            } else if (edgeData['directed'] == true) {
+                edgeData['target_arrow_shape'] = 'triangle';
+            }
+            edgeJSON[i]['data'] = edgeData;
+        }
+        return edgeJSON;
+    },
     contructCytoscapeGraph: function (layout) {
         if (!layout) {
             layout = {
@@ -703,6 +821,10 @@ var graphPage = {
                 animate: false
             };
         }
+
+        graph_json['graph']['nodes'] = graphPage.setDefaultNodeProperties(graph_json['graph']['nodes']);
+        graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
+
         return cytoscape({
             container: document.getElementById('cyGraphContainer'),
             boxSelectionEnabled: true,
@@ -718,6 +840,7 @@ var graphPage = {
             ready: function () {
                 //setup popup dialog for displaying dialog when nodes/edges
                 //are clicked for information.
+
                 $('#dialog').dialog({
                     autoOpen: false
                 });

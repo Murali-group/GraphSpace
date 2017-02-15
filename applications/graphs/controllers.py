@@ -12,8 +12,33 @@ AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'de
 							   'default_grid']
 
 
+def fix_graph_json(request, graph):
+
+	if graph.json is not None:
+		G = GraphSpaceJSONFormat.create_gsgraph(json.dumps(graph.json))
+		if graph.name is not None:
+			G.set_name(graph.name)
+
+	# # Add graph nodes
+	# node_name_to_id_map = get_node_name_to_id_map(request, graph.id)
+	# # Add graph edges
+	# edge_name_to_id_map = get_edge_name_to_id_map(request, graph.id)
+	#
+	# nx.set_node_attributes(G, 'nodeId', node_name_to_id_map)
+	# nx.set_edge_attributes(G, 'edgeId', edge_name_to_id_map)
+
+	new_graph = db.update_graph(request.db_session, id=graph.id, updated_graph={
+		'json': json.dumps(G.compute_json())
+	})
+
+	return new_graph
+
+
 def get_graph_by_id(request, graph_id):
-	return db.get_graph_by_id(request.db_session, graph_id)
+	graph = db.get_graph_by_id(request.db_session, graph_id)
+	# if graph is not None and graph.updated_at < datetime.now():
+	# 	graph = fix_graph_json(request, graph)
+	return graph
 
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
