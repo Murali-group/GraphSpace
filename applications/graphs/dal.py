@@ -68,7 +68,7 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None,names=Non
 	if len(combined_filter_group) > 0:
 		query = query.filter(or_(*combined_filter_group))
 
-	return query.order_by(order).limit(page_size).offset(page*page_size).all()
+	return query.order_by(order).limit(page_size).offset(page * page_size).all()
 
 
 @with_session
@@ -154,10 +154,10 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	nodes_filter = [Node.label.ilike(node) for node in nodes]
 	nodes_filter.extend([Node.name.ilike(node) for node in nodes])
 
-	edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u,v in edges]
-	edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u,v in edges])
-	edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u,v in edges])
-	edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u,v in edges])
+	edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u, v in edges]
+	edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u, v in edges])
+	edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u, v in edges])
+	edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u, v in edges])
 
 	combined_filter = []
 	if len(nodes_filter) > 0:
@@ -190,7 +190,14 @@ def get_edge_by_id(db_session, id):
 
 @with_session
 def add_edge(db_session, graph_id, head_node_id, tail_node_id, name, is_directed):
-	edge = Edge(name=name, graph_id=graph_id, head_node_id=head_node_id, tail_node_id = tail_node_id, is_directed = is_directed)
+	head_node = get_node_by_id(db_session, head_node_id)
+	tail_node = get_node_by_id(db_session, tail_node_id)
+
+	edge = Edge(name=name, graph_id=graph_id,
+	            head_node_id=head_node_id, tail_node_id=tail_node_id,
+	            head_node_name=head_node.name, tail_node_name=tail_node.name,
+	            head_node_label=head_node.label, tail_node_label=tail_node.label,
+	            is_directed=is_directed)
 	db_session.add(edge)
 	return edge
 
@@ -391,11 +398,11 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 	edges = [] if edges is None else edges
 	if len(names+edges) > 0:
 		names_filter = [Edge.name.ilike(name) for name in names]
-		edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u,v in edges]
-		edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u,v in edges])
-		edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u,v in edges])
-		edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u,v in edges])
-		query = query.filter(or_(*(edges_filter+names_filter)))
+		edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u, v in edges]
+		edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u, v in edges])
+		edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u, v in edges])
+		edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u, v in edges])
+		query = query.filter(or_(*(edges_filter + names_filter)))
 
 	total = query.count()
 

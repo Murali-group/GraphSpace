@@ -501,7 +501,7 @@ def get_edge_by_id(request, edge_id):
 def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_directed=0, graph_id=None):
 	if name is None or graph_id is None or head_node_id is None or tail_node_id is None:
 		raise Exception("Required Parameter is missing!")
-	return db.add_node(request.db_session, name=name, head_node_id=head_node_id, tail_node_id=tail_node_id, is_directed=is_directed, graph_id=graph_id)
+	return db.add_edge(request.db_session, name=name, head_node_id=head_node_id, tail_node_id=tail_node_id, is_directed=is_directed, graph_id=graph_id)
 
 
 def delete_edge_by_id(request, edge_id):

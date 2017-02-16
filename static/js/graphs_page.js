@@ -861,9 +861,7 @@ var graphPage = {
                 animate: false
             };
         }
-
         graph_json['graph']['nodes'] = graphPage.setDefaultNodeProperties(graph_json['graph']['nodes']);
-        graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
 
         return cytoscape({
             container: document.getElementById('cyGraphContainer'),
@@ -878,6 +876,8 @@ var graphPage = {
             style: stylesheet,
 
             ready: function () {
+                graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
+
                 //setup popup dialog for displaying dialog when nodes/edges
                 //are clicked for information.
 
