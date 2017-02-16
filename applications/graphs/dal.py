@@ -1,5 +1,5 @@
 from sqlalchemy import and_, or_, desc, asc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.users.models import *
 from graphspace.wrappers import with_session
@@ -133,9 +133,9 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	if tags is not None and len(tags) > 0:
 		options_group.append(joinedload('graph_tags'))
 	if nodes is not None and len(nodes) > 0:
-		options_group.append(joinedload('nodes'))
+		options_group.append(subqueryload('nodes'))
 	if edges is not None and len(edges) > 0:
-		options_group.append(joinedload('edges'))
+		options_group.append(subqueryload(Graph.edges))
 	if group_ids is not None and len(group_ids) > 0:
 		options_group.append(joinedload('shared_with_groups'))
 	if len(options_group) > 0:
@@ -153,12 +153,11 @@ def find_graphs(db_session, owner_email=None, group_ids=None, is_public=None, na
 	tags_filter = [GraphTag.name.ilike(tag) for tag in tags]
 	nodes_filter = [Node.label.ilike(node) for node in nodes]
 	nodes_filter.extend([Node.name.ilike(node) for node in nodes])
-	edges_filter = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges]
-	edges_filter.extend([and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges])
-	edges_filter.extend([and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u,v in edges])
-	edges_filter.extend([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
-	edges_filter.extend([and_(Edge.tail_node.has(Node.label.ilike(u)), Edge.head_node.has(Node.label.ilike(v))) for u,v in edges])
 
+	edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u,v in edges]
+	edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u,v in edges])
+	edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u,v in edges])
+	edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u,v in edges])
 
 	combined_filter = []
 	if len(nodes_filter) > 0:
@@ -391,12 +390,11 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 	names = [] if names is None else names
 	edges = [] if edges is None else edges
 	if len(names+edges) > 0:
-		query = query.options([joinedload('head_node'), joinedload('tail_node')])
 		names_filter = [Edge.name.ilike(name) for name in names]
-		edges_filter = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u,v in edges]
-		edges_filter.extend([and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u,v in edges])
-		edges_filter.extend([and_(Edge.head_node.has(Node.label.ilike(u)), Edge.tail_node.has(Node.label.ilike(v))) for u,v in edges])
-		edges_filter.extend([and_(Edge.tail_node.has(Node.label.ilike(u)), Edge.head_node.has(Node.label.ilike(v))) for u,v in edges])
+		edges_filter = [and_(Edge.head_node_name.ilike(u), Edge.tail_node_name.ilike(v)) for u,v in edges]
+		edges_filter.extend([and_(Edge.tail_node_name.ilike(u), Edge.head_node_name.ilike(v)) for u,v in edges])
+		edges_filter.extend([and_(Edge.head_node_label.ilike(u), Edge.tail_node_label.ilike(v)) for u,v in edges])
+		edges_filter.extend([and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v)) for u,v in edges])
 		query = query.filter(or_(*(edges_filter+names_filter)))
 
 	total = query.count()

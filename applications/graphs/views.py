@@ -96,9 +96,7 @@ def graph_page(request, graph_id):
 					   users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
 			"shared_groups":
 				_get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
-					'groups'],
-			# "shared_layouts": _get_layouts(request, graph_id, query={'limit': None, 'offset': None, 'is_shared': 1})['layouts'],
-			# "private_layouts": _get_layouts(request, graph_id, query={'limit': None, 'offset': None, 'is_shared': 0, 'owner_email': uid})['layouts']
+					'groups']
 		})
 
 		shared_group_ids = [group['id'] for group in context["shared_groups"]]

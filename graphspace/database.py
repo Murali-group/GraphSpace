@@ -17,7 +17,7 @@ class Database(object):
 		"""
 		config = settings.DATABASES['default']
 		self.engine = create_engine(''.join(
-			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=True)
 		# TODO: Find out what is the use of metadata and reflection.
 		settings.BASE.metadata.create_all(self.engine)
 		self.meta = sqlalchemy.schema.MetaData()

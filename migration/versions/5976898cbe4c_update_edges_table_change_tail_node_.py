@@ -17,18 +17,19 @@ depends_on = None
 
 
 def upgrade():
-    # # Replacing tail_node_id with node id in edge table
-	op.alter_column('edge', 'tail_node_id', new_column_name='old_tail_node_id')
+	# # Replacing tail_node_id with node id in edge table
+	op.alter_column('edge', 'tail_node_id', new_column_name='tail_node_name')
 	op.add_column('edge', sa.Column('tail_node_id', sa.Integer))
-	op.execute('UPDATE edge SET tail_node_id=n.id FROM "node" AS n WHERE n.name = edge.old_tail_node_id AND n.graph_id = edge.graph_id;')
-	op.drop_column('edge', 'old_tail_node_id')
+	op.execute('UPDATE edge SET tail_node_id=n.id FROM "node" AS n WHERE n.name = edge.tail_node_name AND n.graph_id = edge.graph_id;')
+	# op.drop_column('edge', 'tail_node_name')
 	op.alter_column('edge', 'tail_node_id', nullable=False)
 
 
 def downgrade():
-    # # undo Replacing tail_node_id with node id in edge table
+	# # undo Replacing tail_node_id with node id in edge table
 	op.alter_column('edge', 'tail_node_id', new_column_name='old_tail_node_id')
 	op.add_column('edge', sa.Column('tail_node_id', sa.String))
 	op.execute('UPDATE edge SET tail_node_id=n.name FROM "node" AS n WHERE n.id = edge.old_tail_node_id;')
 	op.drop_column('edge', 'old_tail_node_id')
+	op.drop_column('edge', 'tail_node_name')
 	op.alter_column('edge', 'tail_node_id', nullable=False)

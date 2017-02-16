@@ -345,7 +345,6 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 	if edges is not None:
 		edges = [tuple(edge.split(':')) for edge in edges]
 
-
 	total, graphs_list = db.find_graphs(request.db_session,
 										owner_email=owner_email,
 										names=names,

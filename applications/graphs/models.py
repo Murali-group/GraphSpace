@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 import json
 
+from sqlalchemy import ForeignKeyConstraint
+
 from applications.users.models import *
 from django.conf import settings
 from graphspace.mixins import *
@@ -60,6 +62,10 @@ class Edge(IDMixin, TimeStampMixin, Base):
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	head_node_id = Column(Integer, ForeignKey('node.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	tail_node_id = Column(Integer, ForeignKey('node.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	tail_node_name = Column(String, nullable=False)
+	head_node_name = Column(String, nullable=False)
+	tail_node_label = Column(String, nullable=False)
+	head_node_label = Column(String, nullable=False)
 	is_directed = Column(Integer, nullable=False)
 	name = Column(String, nullable=False)
 
@@ -71,6 +77,10 @@ class Edge(IDMixin, TimeStampMixin, Base):
 		UniqueConstraint('graph_id', 'head_node_id', 'tail_node_id',
 						 name='_edge_uc_graph_id_head_node_id_tail_node_id'),
 		UniqueConstraint('graph_id', 'name', name='_edge_uc_graph_id_name'),
+		ForeignKeyConstraint(['head_node_id', 'head_node_name'],  ['node.id', 'node.name'], ondelete="CASCADE", onupdate="CASCADE"),
+		ForeignKeyConstraint(['head_node_id', 'head_node_label'], ['node.id', 'node.label'], ondelete="CASCADE", onupdate="CASCADE"),
+		ForeignKeyConstraint(['tail_node_id', 'tail_node_name'],  ['node.id', 'node.name'], ondelete="CASCADE", onupdate="CASCADE"),
+		ForeignKeyConstraint(['tail_node_id', 'tail_node_label'], ['node.id', 'node.label'], ondelete="CASCADE", onupdate="CASCADE"),
 	)
 	indices = ()
 
@@ -102,7 +112,11 @@ class Node(IDMixin, TimeStampMixin, Base):
 	source_edges = relationship("Edge", foreign_keys="Edge.head_node_id", back_populates="head_node", cascade="all, delete-orphan")
 	target_edges = relationship("Edge", foreign_keys="Edge.tail_node_id", back_populates="tail_node", cascade="all, delete-orphan")
 
-	constraints = (UniqueConstraint('graph_id', 'name', name='_node_uc_graph_id_name'),)
+	constraints = (
+		UniqueConstraint('graph_id', 'name', name='_node_uc_graph_id_name'),
+		UniqueConstraint('id','name', name='_node_uc_id_name'),
+		UniqueConstraint('id','label', name='_node_uc_id_label'),
+	)
 	indices = ()
 
 	@declared_attr

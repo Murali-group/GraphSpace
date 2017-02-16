@@ -45,6 +45,10 @@ function addCharacterToHex(sNum) {
     }
 }
 
+function isArray(what) {
+    return Object.prototype.toString.call(what) === '[object Array]';
+}
+
 /**
  * Returns the HEX value of a color
  */

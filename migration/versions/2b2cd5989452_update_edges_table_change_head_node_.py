@@ -18,10 +18,10 @@ depends_on = None
 
 def upgrade():
 	# # Replacing head_node_id with node id in edge table
-	op.alter_column('edge', 'head_node_id', new_column_name='old_head_node_id')
+	op.alter_column('edge', 'head_node_id', new_column_name='head_node_name')
 	op.add_column('edge', sa.Column('head_node_id', sa.Integer))
-	op.execute('UPDATE edge SET head_node_id=n.id FROM "node" AS n WHERE n.name = edge.old_head_node_id AND n.graph_id = edge.graph_id;')
-	op.drop_column('edge', 'old_head_node_id')
+	op.execute('UPDATE edge SET head_node_id=n.id FROM "node" AS n WHERE n.name = edge.head_node_name AND n.graph_id = edge.graph_id;')
+	# op.drop_column('edge', 'head_node_name')
 	op.alter_column('edge', 'head_node_id', nullable=False)
 
 
@@ -31,4 +31,5 @@ def downgrade():
 	op.add_column('edge', sa.Column('head_node_id', sa.String))
 	op.execute('UPDATE edge SET head_node_id=n.name FROM "node" AS n WHERE n.id = edge.old_head_node_id;')
 	op.drop_column('edge', 'old_head_node_id')
+	op.drop_column('edge', 'head_node_name')
 	op.alter_column('edge', 'head_node_id', nullable=False)

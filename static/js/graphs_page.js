@@ -454,7 +454,45 @@ var graphPage = {
         }
     },
     applyLayout: function (layout) {
+        // TODO: Convert the old layout format to new layout format.
+            /*
+
+            The reason we need the new format is that it loads faster and it doesnt require any additional code for
+            pre processing whereas we need to format the old format before passing it to the cytoscape layout function.
+
+            The new format looks like :
+            var new_format = {
+                "json": {
+                    "<node_id>": {
+                        "x": 19.28,
+                        "y": 287.97
+                    },
+                    ....
+                }
+            };
+
+            var old_format = {
+                "json": [
+                    {
+                        "x": 19.28,
+                        "y": 287.97,
+                        "id": "<node_id>"
+                    },
+                    .....
+                ]
+            };
+             */
+
+        if (isArray(layout.positions)) {
+            var corrected_positions = {};
+            _.forEach(layout.positions, function (node) {
+                corrected_positions[node.id] = node;
+            });
+            layout.positions = corrected_positions;
+        }
+        console.log(layout);
         graphPage.cyGraph.layout(layout);
+
     },
     saveLayout: function (layoutName) {
 
@@ -470,20 +508,22 @@ var graphPage = {
                     if (action['action_type'] === 'select') {
                         action['data']['elements'] = action['data']['elements'].jsons();
                     }
-                    apis.logging.add({
-                            'layout_name': layoutName,
-                            'graph_id': $('#GraphID').val(),
-                            'user_id': $('#UserEmail').val(),
-                            'action': action,
-                            'step': i
-                        },
-                        successCallback = function (response) {
-                            console.log(response);
-                        },
-                        errorCallback = function (xhr, status, errorThrown) {
-                            // This method is called when  error occurs while deleting group_to_graph relationship.
-                            alert(xhr.responseText);
-                        })
+                    // Uncomment the code after setting up the elastic server.
+
+                    //apis.logging.add({
+                    //        'layout_name': layoutName,
+                    //        'graph_id': $('#GraphID').val(),
+                    //        'user_id': $('#UserEmail').val(),
+                    //        'action': action,
+                    //        'step': i
+                    //    },
+                    //    successCallback = function (response) {
+                    //        console.log(response);
+                    //    },
+                    //    errorCallback = function (xhr, status, errorThrown) {
+                    //        // This method is called when  error occurs while deleting group_to_graph relationship.
+                    //        alert(xhr.responseText);
+                    //    })
                 });
             }
 
