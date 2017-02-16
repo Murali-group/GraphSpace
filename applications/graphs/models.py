@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import json
 
-from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy import ForeignKeyConstraint, text
 
 from applications.users.models import *
 from django.conf import settings
@@ -34,8 +34,12 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
 
-	constraints = (UniqueConstraint('name', 'owner_email', name='_graph_uc_name_owner_email'),)
-	indices = ()
+	constraints = (
+		UniqueConstraint('name', 'owner_email', name='_graph_uc_name_owner_email'),
+	)
+	indices = (
+		Index('graph_idx_name', text("name gin_trgm_ops"), postgresql_using="gin"),
+	)
 
 	@declared_attr
 	def __table_args__(cls):
@@ -82,7 +86,12 @@ class Edge(IDMixin, TimeStampMixin, Base):
 		ForeignKeyConstraint(['tail_node_id', 'tail_node_name'],  ['node.id', 'node.name'], ondelete="CASCADE", onupdate="CASCADE"),
 		ForeignKeyConstraint(['tail_node_id', 'tail_node_label'], ['node.id', 'node.label'], ondelete="CASCADE", onupdate="CASCADE"),
 	)
-	indices = ()
+
+	indices = (
+		Index('edge_idx_head_label_tail_label', text("head_node_label, tail_node_label gin_trgm_ops"), postgresql_using="gin"),
+		Index('edge_idx_head_name_tail_name', text("head_node_name, tail_node_name gin_trgm_ops"), postgresql_using="gin"),
+		Index('edge_idx_head_id_tail_id', "head_node_id", "tail_node_label"),
+	)
 
 	@declared_attr
 	def __table_args__(cls):
@@ -117,7 +126,11 @@ class Node(IDMixin, TimeStampMixin, Base):
 		UniqueConstraint('id','name', name='_node_uc_id_name'),
 		UniqueConstraint('id','label', name='_node_uc_id_label'),
 	)
-	indices = ()
+
+	indices = (
+		Index('node_idx_name', text("name gin_trgm_ops"), postgresql_using="gin"),
+		Index('node_idx_label', text("label gin_trgm_ops"), postgresql_using="gin"),
+	)
 
 	@declared_attr
 	def __table_args__(cls):
