@@ -1334,63 +1334,14 @@ var graphPage = {
                 graphPage.filterNodesEdges.setInputK();
             });
 
-            /**
-             * When the input max bar changes from user, invoke changes to the graph
-             * as well as position the slider in its appropriate value.
-             */
-            $("#input_max").bind("change", function () {
-                if ($(this).val() < 0) {
-                    $(this).val(0);
-                }
-                var slider_max = $("#slider_max").slider("option", "max");
-                if ($(this).val() > slider_max) {
-                    $(this).val(slider_max);
-                }
-                graphPage.filterNodesEdges.setBarToValue(this, "slider_max");
-                graphPage.filterNodesEdges.applyMax(graph_json.graph);
-                graphPage.filterNodesEdges.setInputK();
-            });
-
             //Shows up to maximum k values
             $("#input_max").val(graphPage.filterNodesEdges.getLargestK(graph_json.graph));
 
             //When user slides, it changes value of slider as well
             //as updates graph to reflect max k values allowed in subgraph
-            $("#slider_max").slider({
-                step: 1,
-                min: 0,
-                max: graphPage.filterNodesEdges.getLargestK(graph_json.graph),
-                value: graphPage.filterNodesEdges.getLargestK(graph_json.graph),
-                slide: function (event, ui) {
-                    $("#input_max").val(ui.value);
-                    m_val = ui.value;
-                    if (m_val < 0) {
-                        m_val = 0;
-                        $(this).slider({
-                            value: 0
-                        });
-                    } else {
-                        $(this).slider({
-                            value: m_val
-                        });
-                        $("#slider").slider({
-                            max: m_val
-                        });
-                        $("#input_k").val($("#slider").slider('value'));
-                    }
-                },
-                change: function (event, ui) {
-                    if (event.originalEvent) {
-                        graphPage.filterNodesEdges.applyMax(graph_json.graph)
-                    }
-                }
-            });
-
-            //When user slides, it changes value of slider as well
-            //as updates graph to reflect max k values allowed in subgraph
             $("#slider").slider({
-                value: $("#slider_max").slider('value'),
-                max: $("#slider_max").slider('value'),
+                value: $("#input_max").val(),
+                max: $("#input_max").val(),
                 min: 0,
                 step: 1,
                 slide: function (event, ui) {
@@ -1496,9 +1447,8 @@ var graphPage = {
              * inputId the id of the input bar
              * barId  the id of the max paths shown bar.
              */
-            var slider_max = $("#slider_max").slider("option", "max");
-            if ($(inputId).val() > slider_max) {
-                $(inputId).val(slider_max);
+            if ($(inputId).val() > $("#input_max").val()) {
+                $(inputId).val($("#input_max").val());
             }
             graphPage.filterNodesEdges.showOnlyK();
         }
