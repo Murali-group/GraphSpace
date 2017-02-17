@@ -1479,7 +1479,7 @@ var cytoscapeGraph = {
     },
     export: function (cy, format, filename) {
         filename = filename ? filename : 'graph';
-        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cy.json()['elements'], null, 4)));
+        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({'graph': cy.json()['elements'], 'metadata': graph_json['metadata']}, null, 4)));
         $('<a>').attr('href', file).attr('download', filename + '.' + format)[0].click()
     },
     getAutomaticLayoutSettings: function (layout_name) {
