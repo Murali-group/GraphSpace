@@ -140,6 +140,19 @@ var stylesheet = cytoscape.stylesheet()
     })
 
     //EDGE LINE PROPERTIES
+
+
+    /*
+    The default stylesheet was updated in 2.7 to have greater performance by default. This means that haystack edges are used by default, and haystacks support only mid arrows.
+    If you set your edges in your stylesheet to beziers, then you can use source and target arrows.
+
+    Refer to : http://stackoverflow.com/questions/37822572/edge-target-arrows-not-working-in-cytoscape-js-2-7-0
+
+     */
+
+    .selector('edge').css({
+        'curve-style': 'bezier'
+    })
     .selector('edge[width]').css({
         'width': 'data(width)'
     })

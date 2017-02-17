@@ -3,7 +3,6 @@ import re
 from django.utils.datetime_safe import datetime
 
 
-
 class GSGraph(nx.DiGraph):
 	ALLOWED_NODE_SHAPES = ['rectangle', 'roundrectangle', 'ellipse', 'triangle',
 						   'pentagon', 'hexagon', 'heptagon', 'octagon', 'star',
