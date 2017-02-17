@@ -131,8 +131,8 @@ class GSGraph(nx.DiGraph):
 		node_properties = GSGraph.set_node_label_property(node_properties, label)
 		node_properties = GSGraph.set_node_shape_property(node_properties, shape)
 		node_properties = GSGraph.set_node_color_property(node_properties, color)
-		node_properties = GSGraph.set_node_width_property(node_properties, width)
-		node_properties = GSGraph.set_node_height_property(node_properties, height)
+		node_properties = GSGraph.set_node_width_property(node_properties, width, label)
+		node_properties = GSGraph.set_node_height_property(node_properties, height, label)
 		node_properties = GSGraph.set_node_vertical_alignment_property(node_properties, valign)
 		node_properties = GSGraph.set_node_horizontal_alignment_property(node_properties, halign)
 		node_properties = GSGraph.set_node_border_style_property(node_properties, style)
@@ -171,7 +171,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('name', name)
+		node_properties.update({'name': name})
 		return node_properties
 
 	@staticmethod
@@ -189,7 +189,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('id', id)
+		node_properties.update({'id': id})
 		return node_properties
 
 	@staticmethod
@@ -208,7 +208,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('content', label)
+		node_properties.update({'content': label})
 		node_properties = GSGraph.set_node_wrap_property(node_properties, 'wrap')
 		return node_properties
 
@@ -228,7 +228,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('content', label)
+		node_properties.update({'content': label})
 		node_properties = GSGraph.set_node_wrap_property(node_properties, 'wrap')
 		return node_properties
 
@@ -254,7 +254,7 @@ class GSGraph(nx.DiGraph):
 		"""
 		if wrap not in GSGraph.ALLOWED_NODE_TEXT_WRAP:
 			raise Exception('"%s" is not an allowed text wrap style.' % (wrap))
-		node_properties.update('text_wrap', wrap)
+		node_properties.update({'text_wrap': wrap})
 		return node_properties
 
 	@staticmethod
@@ -279,7 +279,7 @@ class GSGraph(nx.DiGraph):
 		"""
 		if shape not in GSGraph.ALLOWED_NODE_SHAPES:
 			raise Exception('"%s" is not an allowed shape.' % (shape))
-		node_properties.update('shape', shape)
+		node_properties.update({'shape': shape})
 		return node_properties
 
 	@staticmethod
@@ -307,7 +307,7 @@ class GSGraph(nx.DiGraph):
 		error = GSGraph.check_color_hex(color)
 		if error is not None:
 			raise Exception(error)
-		node_properties.update('background_color', color)
+		node_properties.update({'background_color': color})
 		return node_properties
 
 	@staticmethod
@@ -333,7 +333,7 @@ class GSGraph(nx.DiGraph):
 			labellines = label.split('\n')
 			height = len(labellines)*height_factor
 
-		node_properties.update('height', height)
+		node_properties.update({'height': height})
 		return node_properties
 
 	@staticmethod
@@ -358,7 +358,7 @@ class GSGraph(nx.DiGraph):
 			## take the longest width of the label after interpreting newlines.
 			labellines = label.split('\n')
 			width = max([len(l) for l in labellines])*width_factor
-		node_properties.update('width', width)
+		node_properties.update({'width': width})
 		return node_properties
 
 
@@ -378,7 +378,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('popup', popup)
+		node_properties.update({'popup': popup})
 		return node_properties
 
 	@staticmethod
@@ -400,7 +400,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('k', k)
+		node_properties.update({'k': k})
 		return node_properties
 
 
@@ -421,12 +421,12 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('text_outline_color', color)
+		node_properties.update({'text_outline_color': color})
 		node_properties = GSGraph.set_node_border_color_property(node_properties, color)
 		# also make outline thicker and text larger
-		node_properties.update('text_outline_width', 4)
+		node_properties.update({'text_outline_width': 4})
 		if whitetext:
-			node_properties.update('color', 'white')
+			node_properties.update({'color': 'white'})
 		return node_properties
 
 	@staticmethod
@@ -443,7 +443,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of node attributes.
 
 		"""
-		node_properties.update('border_width', border_width)
+		node_properties.update({'border_width': border_width})
 		return node_properties
 
 
@@ -469,7 +469,7 @@ class GSGraph(nx.DiGraph):
 		"""
 		if border_style not in GSGraph.ALLOWED_NODE_BORDER_STYLES:
 			raise Exception('"%s" is not an allowed node border style.' % (border_style))
-		node_properties.update('border_style', border_style)
+		node_properties.update({'border_style': border_style})
 		return node_properties
 
 	@staticmethod
@@ -496,7 +496,7 @@ class GSGraph(nx.DiGraph):
 		error = GSGraph.check_color_hex(border_color)
 		if error is not None:
 			raise Exception(error)
-		node_properties.update('border_color', border_color)
+		node_properties.update({'border_color': border_color})
 		return node_properties
 
 	@staticmethod
@@ -515,7 +515,7 @@ class GSGraph(nx.DiGraph):
 
 		"""
 
-		node_properties.update('text_valign', valign)
+		node_properties.update({'text_valign': valign})
 		return node_properties
 
 	@staticmethod
@@ -534,7 +534,7 @@ class GSGraph(nx.DiGraph):
 
 		"""
 
-		node_properties.update('text_halign', halign)
+		node_properties.update({'text_halign': halign})
 		return node_properties
 
 	def get_node_attribute(self, node_id, attr):
@@ -721,8 +721,8 @@ class GSGraph(nx.DiGraph):
 		if error is not None:
 			raise Exception(error)
 
-		edge_properties.update('line_color', color)
-		edge_properties.update('target_arrow_color', color)
+		edge_properties.update({'line_color': color})
+		edge_properties.update({'target_arrow_color': color})
 		return edge_properties
 
 
@@ -743,10 +743,10 @@ class GSGraph(nx.DiGraph):
 
 		"""
 		if directed:
-			edge_properties.update('directed', 'true')
+			edge_properties.update({'directed': 'true'})
 			edge_properties = GSGraph.set_edge_target_arrow_shape_property(edge_properties, arrow_shape)
 		else:
-			edge_properties.update('directed', 'false')
+			edge_properties.update({'directed': 'false'})
 			edge_properties = GSGraph.set_edge_target_arrow_shape_property(edge_properties, 'none')
 		return edge_properties
 
@@ -765,7 +765,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of edge attributes.
 
 		"""
-		edge_properties.update('width', width)
+		edge_properties.update({'width': width})
 		return edge_properties
 
 	@staticmethod
@@ -784,7 +784,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of edge attributes.
 
 		"""
-		edge_properties.update('popup', popup)
+		edge_properties.update({'popup': popup})
 		return edge_properties
 
 
@@ -823,7 +823,7 @@ class GSGraph(nx.DiGraph):
 		if targetk > k:
 			raise Exception('Attempting to add a k value %d for edge ("%s","%s"), but node "%s" has a larger k-value (%d).' % (k,source,target,target,targetk))
 
-		edge_properties.update('k', k)
+		edge_properties.update({'k': k})
 		return edge_properties
 
 	@staticmethod
@@ -840,7 +840,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of edge attributes.
 
 		"""
-		edge_properties.update('target_arrow_shape', arrow_shape)
+		edge_properties.update({'target_arrow_shape': arrow_shape})
 		return edge_properties
 
 	@staticmethod
@@ -858,7 +858,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of edge attributes.
 
 		"""
-		edge_properties.update('line_style', style)
+		edge_properties.update({'line_style': style})
 		return edge_properties
 
 
@@ -877,7 +877,7 @@ class GSGraph(nx.DiGraph):
 		Dictionary of edge attributes.
 
 		"""
-		edge_properties.update('target_arrow_fill', fill)
+		edge_properties.update({'target_arrow_fill': fill})
 		return edge_properties
 
 	def get_edge_attribute(self, source, target, attr):
