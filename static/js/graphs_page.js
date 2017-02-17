@@ -193,6 +193,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#sharedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["search"]) {
                 params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
@@ -239,6 +240,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#publicGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["search"]) {
                 params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
@@ -285,6 +287,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#ownedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["search"]) {
                 params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
