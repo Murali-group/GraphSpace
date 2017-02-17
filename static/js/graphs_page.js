@@ -378,6 +378,7 @@ var graphPage = {
          * It will initialize all the event listeners.
          */
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+        graphPage.cyGraph.panzoom();
 
         utils.initializeTabs();
 
@@ -882,7 +883,6 @@ var graphPage = {
             style: stylesheet,
 
             ready: function () {
-
 
                 //setup popup dialog for displaying dialog when nodes/edges
                 //are clicked for information.

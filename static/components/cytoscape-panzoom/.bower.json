@@ -1,0 +1,37 @@
+{
+  "name": "cytoscape-panzoom",
+  "version": "2.4.0",
+  "description": "Panzoom extension for Cytoscape.js",
+  "main": "cytoscape-panzoom.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cytoscape/cytoscape.js-panzoom.git"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "keywords": [
+    "cytoscape",
+    "cyext"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "^1.4 || ^2.0",
+    "cytoscape": "^2.0"
+  },
+  "homepage": "https://github.com/cytoscape/cytoscape.js-panzoom",
+  "_release": "2.4.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.4.0",
+    "commit": "22a9a3b47974b8c9ef9db418c0a2552325e6b7ab"
+  },
+  "_source": "https://github.com/cytoscape/cytoscape.js-panzoom.git",
+  "_target": "^2.4.0",
+  "_originalSource": "cytoscape-panzoom",
+  "_direct": true
+}

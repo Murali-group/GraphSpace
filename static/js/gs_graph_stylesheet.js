@@ -147,7 +147,6 @@ var stylesheet = cytoscape.stylesheet()
     If you set your edges in your stylesheet to beziers, then you can use source and target arrows.
 
     Refer to : http://stackoverflow.com/questions/37822572/edge-target-arrows-not-working-in-cytoscape-js-2-7-0
-
      */
 
     .selector('edge').css({
