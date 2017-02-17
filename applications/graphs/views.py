@@ -2,17 +2,16 @@ import json
 
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
-import graphspace.utils as utils
 import graphspace.authorization as authorization
-from applications.graphs.forms import SearchForm
+import graphspace.utils as utils
 from django.conf import settings
-from django.http import HttpResponseRedirect, HttpResponse, QueryDict
+from django.http import HttpResponse, QueryDict
 from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
-from graphspace.wrappers import is_authenticated
 from graphspace.utils import get_request_user
+from graphspace.wrappers import is_authenticated
 
 
 def upload_graph_page(request):
@@ -1083,7 +1082,7 @@ def _get_nodes(request, graph_id, query={}):
 	query = querydict
 
 	total, nodes_list = graphs.search_nodes(request,
-											graph_id=query.get('graph_id', None),
+											graph_id=graph_id,
 											names=query.getlist('names[]', None),
 											labels=query.getlist('labels[]', None),
 											limit=query.get('limit', 20),
@@ -1159,7 +1158,7 @@ def _add_node(request, graph_id, node={}):
 	return utils.serializer(graphs.add_node(request,
 											name=node.get('name', None),
 											label=node.get('label', None),
-											graph_id=node.get('graph_id', None)))
+											graph_id=graph_id))
 
 
 @is_authenticated()
@@ -1309,7 +1308,7 @@ def _get_edges(request, graph_id, query={}):
 	query = querydict
 
 	total, edges_list = graphs.search_edges(request,
-											graph_id=query.get('graph_id', None),
+											graph_id=graph_id,
 											names=query.getlist('names[]', None),
 											edges=query.getlist('edges[]', None),
 											limit=query.get('limit', 20),
@@ -1393,7 +1392,7 @@ def _add_edge(request, graph_id, edge={}):
 											head_node_id=edge.get('head_node_id', None),
 											tail_node_id=edge.get('tail_node_id', None),
 											is_directed=edge.get('is_directed', 0),
-											graph_id=edge.get('graph_id', None)))
+											graph_id=graph_id))
 
 
 @is_authenticated()

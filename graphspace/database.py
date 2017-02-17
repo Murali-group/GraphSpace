@@ -1,9 +1,10 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import sqlalchemy
-from django.conf import settings
 from contextlib import contextmanager
+
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from django.conf import settings
 
 
 class Database(object):
@@ -17,7 +18,7 @@ class Database(object):
 		"""
 		config = settings.DATABASES['default']
 		self.engine = create_engine(''.join(
-			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=True)
+			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
 		# TODO: Find out what is the use of metadata and reflection.
 		settings.BASE.metadata.create_all(self.engine)
 		self.meta = sqlalchemy.schema.MetaData()

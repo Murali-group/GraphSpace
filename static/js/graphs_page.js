@@ -662,35 +662,39 @@ var graphPage = {
                 return '%' + edge[0] + '%:%' + edge[1] + '%';
             });
             if (_.trim($(e).val()).length > 0) {
-                apis.nodes.get($('#GraphID').val(), {
-                        "names": nodes,
-                        "labels": nodes
-                    },
-                    successCallback = function (response) {
-                        _.each(response.nodes, function (node) {
-                            graphPage.cyGraph.$('#' + node.name).select();
-                        });
+                if (nodes.length > 0) {
+                    apis.nodes.get($('#GraphID').val(), {
+                            "names": nodes,
+                            "labels": nodes
+                        },
+                        successCallback = function (response) {
+                            _.each(response.nodes, function (node) {
+                                graphPage.cyGraph.$('#' + node.name).select();
+                            });
+                        },
+                        errorCallback = function (xhr, status, errorThrown) {
+                            alert(xhr.responseText);
+                        }
+                    );
+                }
 
-                    },
-                    errorCallback = function (xhr, status, errorThrown) {
-                        alert(xhr.responseText);
-                    });
-                apis.edges.get($('#GraphID').val(), {
-                        "edges": edges
-                    },
-                    successCallback = function (response) {
-                        _.each(response.edge, function (edge) {
-                            graphPage.cyGraph.edges('[edgeId=' + edge.id + ']').select();
-                        });
-
-                    },
-                    errorCallback = function (xhr, status, errorThrown) {
-                        alert(xhr.responseText);
-                    });
+                if (edges.length > 0) {
+                    apis.edges.get($('#GraphID').val(), {
+                            "edges": edges
+                        },
+                        successCallback = function (response) {
+                            _.each(response.edges, function (edge) {
+                                graphPage.cyGraph.edges("[name = '" + edge.name + "']").select();
+                            });
+                        },
+                        errorCallback = function (xhr, status, errorThrown) {
+                            alert(xhr.responseText);
+                        }
+                    );
+                }
             }
-
             graphPage.timeout = null;
-        }, 1000);
+        }, 250);
     },
     onSearchNodesEdgesBtnClick: function (e) {
         console.debug($(e).parent().parent().find('input')[0]);
@@ -814,11 +818,9 @@ var graphPage = {
         for (var i = 0; i < edgeJSON.length; i++) {
             var edgeData = edgeJSON[i]['data'];
 
-            //If edges don't have an ID, generate one
-            if (testEdges.indexOf(edgeData['id']) == -1) {
-                testEdges.push(edgeData['id']);
-            } else {
-                edgeData['id'] = edgeData['id'] + i;
+            //If edges don't have an name, use the id
+            if (!edgeData.hasOwnProperty('name')) {
+                edgeData['name'] = edgeData['id'];
             }
 
             //If edges don't have any color properties, choose default
@@ -862,6 +864,7 @@ var graphPage = {
             };
         }
         graph_json['graph']['nodes'] = graphPage.setDefaultNodeProperties(graph_json['graph']['nodes']);
+        graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
 
         return cytoscape({
             container: document.getElementById('cyGraphContainer'),
@@ -876,7 +879,7 @@ var graphPage = {
             style: stylesheet,
 
             ready: function () {
-                graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
+
 
                 //setup popup dialog for displaying dialog when nodes/edges
                 //are clicked for information.
