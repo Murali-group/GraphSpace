@@ -115,7 +115,11 @@
 
         <ul class="nav nav-tabs">
             <li class="active text-center">
-                <a id="graphRepresentationTabBtn" class="link-reset" href="#graph_representation_tab" data-toggle="tab">Graph Representation</a>
+                <a id="graphVisualizationTabBtn" class="link-reset" href="#graph_visualization_tab" data-toggle="tab">Graph Visualization</a>
+            </li>
+
+            <li class="text-center">
+                <a id="graphDetailsTabBtn" class="link-reset" href="#graph_details_tab" data-toggle="tab">Graph Details</a>
             </li>
 
             <li class="text-center">
@@ -135,7 +139,7 @@
         </ul>
 
         <div id="myTabContent" class="tab-content gs-full-height bg-white">
-            <div class="tab-pane fade in active gs-full-height" id="graph_representation_tab">
+            <div class="tab-pane fade in active gs-full-height" id="graph_visualization_tab">
                 <div id="wrapper" class="gs-full-height">
                     <!-- #sidebar-wrapper starts -->
                     <div id="sidebar-wrapper">
@@ -173,9 +177,15 @@
                     <!-- /#page-content-wrapper -->
                 </div>
             </div>
+
+            <div class="tab-pane fade gs-full-height container" id="graph_details_tab">
+                {% include 'graph/graph_details_tab.html' %}
+            </div>
+
             <div class="tab-pane fade gs-full-height container" id="graph_nodes_tab">
                 {% include 'graph/nodes_table.html' %}
             </div>
+
             <div class="tab-pane fade gs-full-height container" id="graph_edges_tab">
                 {% include 'graph/edges_table.html' %}
             </div>

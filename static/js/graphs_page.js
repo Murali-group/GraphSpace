@@ -418,7 +418,7 @@ var graphPage = {
             graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
         }
 
-        $('#graphRepresentationTabBtn').click(function (e) {
+        $('#graphVisualizationTabBtn').click(function (e) {
             window.setTimeout(function () {
                 $('#cyGraphContainer').css('height', '99%');
             }, 100);
