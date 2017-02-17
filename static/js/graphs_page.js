@@ -997,7 +997,7 @@ var graphPage = {
                 row['name'],
                 '</div>',
                 '<div class="pull-right">',
-                row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="edit-layout" href="javascript:void(0)" title="Delete Layout"> Edit <i class="fa fa-lg fa-pencil"></i> </a>&nbsp;' : '',
+                row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="edit-layout" href="javascript:void(0)" title="Rename Layout"> Rename <i class="fa fa-lg fa-pencil"></i> </a>&nbsp;' : '',
                 row['is_shared'] == 0 ? '&nbsp;<a class="share-layout" href="javascript:void(0)" title="Share Layout"> Share <i class="fa fa-lg fa-eye" aria-hidden="true"></i> </a>&nbsp;' : '<a class="unshare-layout" href="javascript:void(0)" title="Unshare Layout"> Unshare <i class="fa fa-lg fa-eye-slash" aria-hidden="true"></i> </a>&nbsp;',
                 row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="delete-layout" href="javascript:void(0)" title="Delete Layout"> Delete <i class="fa fa-lg fa-trash"></i> </a>' : '',
                 '</div>'
