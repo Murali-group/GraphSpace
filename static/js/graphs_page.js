@@ -1417,28 +1417,125 @@ var cytoscapeGraph = {
             }
         } else if (layout_name == 'cola-set-ghost-nodes') {
             var triangle = {
-                data : {id: 'triangle'}
-            }
+                data : {id: 'triangle', content: 'TRIANGLE'}
+            };
             var rectangle = {
                 data: {id: 'rectangle'}
-            }
-            graph_json.graph["nodes"].push(triangle)
-            graph_json.graph["nodes"].push(rectangle)
-            var test1 = graph_json.graph["nodes"].pop()
-            var test2 = graph_json.graph["nodes"].pop()
-            console.log("test1: " + test1['data']['id']) //should print rectangle
-            console.log("test2: " + test2['data']['id']) //should print triangle
-            console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id'])
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id']);
+
+            //Move over the nodes
             for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
                 var node_data = graph_json.graph['nodes'][i];
-                if (node_data['data']['shape'] == 'triangle') {
-                    console.log(node_data['data']['id'] + " is a triangle")
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle)
+
+            //Add in our ghost edges
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                node_data = graph_json.graph['nodes'][i];
+                if (node_data['data']['shape'] == 'triangle')
+                {
+                    console.log(node_data['data']['id'] + " is a triangle");
+                    var temp = {
+                        data: {id: 'triangle_temp' + i, source: 'triangle' , target: node_data['data']['id']}
+                    };
+                    newJSON['edges'].push(temp);
                 }
             }
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+            graph_layout = {
+                name: "cola",
+                boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                alignment: function(node){
+                    if(node.data('id') == 'triangle')
+                    {
+                        return {y: -1000}
+                    }
+                }
+            }
+
+            graphPage.cyGraph.load(holdJSON['graph'])
+        } else if (layout_name == 'cola-make-compound-nodes') { //based off ghost nodes
+            var triangle = {
+                data : {id: 'triangle', content: 'TRIANGLE'}
+            };
+            var rectangle = {
+                data: {id: 'rectangle', content: 'RECTANGLE'}
+            };
+            var other = {
+                data: {id: 'other', content: 'MISC'}
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id']);
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                var shape = node_data['data']['shape']
+                if(shape == 'triangle')
+                {
+                    node_data['data']['parent'] = 'triangle';
+                }
+                else if(shape == 'rectangle')
+                {
+                    node_data['data']['parent'] = 'rectangle';
+                }
+                else
+                {
+                    node_data['data']['parent'] = 'other';
+                }
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(other);
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
             graph_layout = {
                 name: "cola"
             }
         } else if (layout_name == 'cola-set-edge-lengths') { //implement this
+            graph_layout = {
+                name: "cola"
+            }
+        } else if (layout_name == 'cola-hide-grey') {
+            var hideList = graphPage.cyGraph.nodes().filterFn(function(ele){
+                return (ele.data('background_color') == '#D8D8D8')})
+            hideList.hide()
+            graph_layout = {
+                name: "cola"
+            }
+        } else if (layout_name == 'cola-show-grey') {
+            graphPage.cyGraph.nodes().show()
             graph_layout = {
                 name: "cola"
             }
