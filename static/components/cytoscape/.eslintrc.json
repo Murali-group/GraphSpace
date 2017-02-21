@@ -1,7 +1,8 @@
 {
     "env": {
         "commonjs": true,
-        "shared-node-browser": true
+        "shared-node-browser": true,
+        "mocha": true
     },
     "extends": "eslint:recommended",
     "rules": {
@@ -120,7 +121,7 @@
         "no-mixed-requires": "error",
         "no-multi-spaces": "off",
         "no-multi-str": "error",
-        "no-multiple-empty-lines": "error",
+        "no-multiple-empty-lines": "off",
         "no-native-reassign": "error",
         "no-negated-condition": "off",
         "no-nested-ternary": "off",

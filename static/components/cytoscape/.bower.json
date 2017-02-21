@@ -61,21 +61,19 @@
     "test",
     "debug",
     "gulpfile.js",
-    "*.sh",
     "package.json",
-    "README.md",
+    "CONTRIBUTING.md",
     "build",
     "node_modules"
   ],
-  "version": "2.7.11",
-  "_release": "2.7.11",
+  "version": "2.7.15",
+  "_release": "2.7.15",
   "_resolution": {
     "type": "version",
-    "tag": "v2.7.11",
-    "commit": "f33fcef8be116fd2c8b53e047be9047a52c60538"
+    "tag": "v2.7.15",
+    "commit": "ea3105d397e561cff55dd58d8dfeda02385ef8bc"
   },
   "_source": "https://github.com/cytoscape/cytoscape.js.git",
   "_target": "^2.7.11",
-  "_originalSource": "cytoscape",
-  "_direct": true
+  "_originalSource": "cytoscape"
 }

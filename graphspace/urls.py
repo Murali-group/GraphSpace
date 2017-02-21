@@ -9,6 +9,7 @@ urlpatterns = [
 	url(r'^', include('applications.home.urls')),
 	url(r'^', include('applications.graphs.urls')),
 	url(r'^', include('applications.users.urls')),
+	url(r'^', include('applications.uniprot.urls')),
 ]
 
 handler404 = 'graphs.views.handler_404'

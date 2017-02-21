@@ -93,8 +93,12 @@ var graphsPage = {
         });
 
         $('#clear').click(function () {
-            $('input.graphs-table-search').val('');
-            $('table').bootstrapTable('refresh');
+            graphsPage.searchBar.val(null).trigger('change');
+            var queryRows = $('#queryBuilder').find('.row');
+            for (i = 1; i < queryRows.length; i++) {
+                queryRows[i].remove();
+            }
+            graphsPage.queryBuilder.clearQueryField($('#queryBuilder').find('.row')[0]);
         });
 
         $('input.graphs-table-search').keypress(function (e) {
@@ -104,9 +108,285 @@ var graphsPage = {
             }
         });
 
+        graphsPage.searchBar = $(".graph-search").select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            placeholder: "Search graphs, nodes and edges."
+        });
+
+        graphsPage.searchBar.on('change', function (evt) {
+            var query = graphsPage.searchBar.val() && graphsPage.searchBar.val().length > 0 ? '?query=' + graphsPage.searchBar.val() : '';
+            window.history.pushState('query', 'Graphs Page', window.location.origin + window.location.pathname + query);
+            $("#ok").trigger("click");
+        });
+
+        if (utils.getURLParameter('query') && utils.getURLParameter('query') != "") {
+            _.each(_.split(utils.getURLParameter('query'), ','), function (val) {
+                graphsPage.searchBar.append(new Option(val, val, true, true)).trigger('change');
+            });
+        }
+
+        graphsPage.queryBuilder.initializeNodeSearchBar($("#queryBuilder").find('.row'));
+        graphsPage.queryBuilder.initializeEdgeSearchBar($("#queryBuilder").find('.edge-row'));
+
+        //show.bs.collapse
+
+        $('#advancedSearchCollapse').on('shown.bs.collapse', function () {
+            $('#advancedSearchBtn').text('Hide Advanced Search');
+            graphsPage.searchBar.prop('disabled', true);
+        });
+        $('#advancedSearchCollapse').on('hidden.bs.collapse', function () {
+            $('#advancedSearchBtn').text('Advanced Search');
+            graphsPage.searchBar.prop('disabled', false);
+        });
+
         $('#ConfirmRemoveGraphBtn').click(graphsPage.graphsTable.onRemoveGraphConfirm);
 
         utils.initializeTabs();
+    },
+    searchBar: null,
+    queryBuilder: {
+        computeQuery: function () {
+            return _.filter(_.map($('#queryBuilder').find('.row'), function (queryRow) {
+                if ($(queryRow).find('.datatype-select').val() == 'node') {
+                    return $(queryRow).find('.node-search').select2('data').length > 0 ? $(queryRow).find('.node-search').select2('data')[0].id : null;
+                } else {
+                    selectedHeadOption = $(queryRow).closest('.edge-search').find('.edge-head-search').select2('data') ? $(queryRow).closest('.edge-search').find('.edge-head-search').select2('data')[0] : null;
+                    selectedTailOption = $(queryRow).closest('.edge-search').find('.edge-tail-search').select2('data') ? $(queryRow).closest('.edge-search').find('.edge-tail-search').select2('data')[0] : null;
+                    if (selectedHeadOption && selectedTailOption) {
+                        return selectedHeadOption.id + ":" + selectedTailOption.id;
+                    } else {
+                        return null;
+                    }
+                }
+            }));
+        },
+        syncQuery: function () {
+            graphsPage.searchBar.find('option').remove();
+            _.each(graphsPage.queryBuilder.computeQuery(), function (val) {
+                graphsPage.searchBar.append(new Option(val, val, true, true)).trigger('change');
+            });
+        },
+        initializeNodeSearchBar: function (queryRow) {
+            queryRow.find('.datatype-select').select2();
+            queryRow.find('.datatype-select').on('change', function (evt) {
+                graphsPage.queryBuilder.changeQueryField($(this).closest('.row'), $(this).val());
+            });
+            queryRow.find('.node-search').select2({
+                tags: true,
+                tokenSeparators: [',', ' '],
+                placeholder: "Search by gene/protein alias.",
+                ajax: {
+                    url: "/ajax/aliases/",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: '%' + params.term + '%', // search term
+                            offset: 0, //params.page*30 - 30,
+                            limit: 100
+                        };
+                    },
+                    processResults: function (data, params) {
+                        // parse the results into the format expected by Select2
+                        // since we are using custom formatting functions we do not need to
+                        // alter the remote JSON data, except to indicate that infinite
+                        // scrolling can be used
+                        params.limit = params.limit || 100;
+
+                        return {
+                            results: data.uniprot_aliases,
+                            pagination: {
+                                more: (params.limit) < data.total_count
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                escapeMarkup: function (markup) {
+                    return markup;
+                }, // let our custom formatter work
+                minimumInputLength: 1,
+                templateResult: function (alias) {
+                    if (alias.alias_name) {
+                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
+                    } else {
+                        return alias.text;
+                    }
+                },
+                templateSelection: function (alias) {
+                    if (alias.alias_name) {
+                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
+                    } else {
+                        return alias.text;
+                    }
+                }
+            });
+
+            queryRow.find('.node-search').on('change', function (evt) {
+                graphsPage.queryBuilder.syncQuery()
+            });
+        },
+        initializeEdgeSearchBar: function (queryRow) {
+            queryRow.find('.datatype-select').select2();
+            queryRow.find('.datatype-select').on('change', function (evt) {
+                graphsPage.queryBuilder.changeQueryField($(this).closest('.row'), $(this).val());
+            });
+            queryRow.find('.edge-head-search, .edge-tail-search').select2({
+                tags: true,
+                tokenSeparators: [',', ' '],
+                placeholder: "Search by gene/protein alias.",
+                ajax: {
+                    url: "/ajax/aliases/",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: '%' + params.term + '%', // search term
+                            offset: 0, //params.page*30 - 30,
+                            limit: 100
+                        };
+                    },
+                    processResults: function (data, params) {
+                        // parse the results into the format expected by Select2
+                        // since we are using custom formatting functions we do not need to
+                        // alter the remote JSON data, except to indicate that infinite
+                        // scrolling can be used
+                        params.limit = params.limit || 100;
+
+                        return {
+                            results: data.uniprot_aliases,
+                            pagination: {
+                                more: (params.limit) < data.total_count
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                escapeMarkup: function (markup) {
+                    return markup;
+                }, // let our custom formatter work
+                minimumInputLength: 1,
+                templateResult: function (alias) {
+                    if (alias.alias_name) {
+                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
+                        ;
+                    } else {
+                        return alias.text;
+                    }
+                },
+                templateSelection: function (alias) {
+                    if (alias.alias_name) {
+                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
+                        ;
+                    } else {
+                        return alias.text;
+                    }
+                }
+            });
+
+            queryRow.find('.edge-head-search, .edge-tail-search').on('change', function (evt) {
+                graphsPage.queryBuilder.syncQuery()
+            });
+        },
+        clearQueryField: function (queryRow) {
+            if ($(queryRow).find('.datatype-select').val() == 'node') {
+                $(queryRow).find('.node-search').val(null).trigger("change");
+            } else {
+                $(queryRow).find('.edge-head-search').val(null).trigger("change");
+                $(queryRow).find('.edge-tail-search').val(null).trigger("change");
+            }
+            return queryRow;
+        },
+        removeQueryField: function (elem, queryType) {
+            if (queryType == 'edge') {
+                selectedHeadOption = $(elem).closest('.row').find('.edge-head-search').val();
+                selectedTailOption = $(elem).closest('.row').find('.edge-tail-search').val();
+                graphsPage.searchBar.find('option[value="' + selectedHeadOption + ":" + selectedTailOption + '"]').remove();
+                $(elem).closest('.row').remove();
+                if (selectedHeadOption && selectedTailOption) {
+                    graphsPage.searchBar.trigger('change');
+                }
+
+            } else {
+                selectedOption = $(elem).closest('.row').find('.node-search').val();
+                graphsPage.searchBar.find('option[value="' + selectedOption + '"]').remove();
+                $(elem).closest('.row').remove();
+                if (selectedOption) {
+                    graphsPage.searchBar.trigger('change');
+                }
+            }
+        },
+        addQueryField: function (elem, type) {
+            if (type == 'edge') {
+                $newQuery = $('<div class="row edge-search query-builder-field"> \
+                            <div class="col-md-1 or-label"><p class="lead" style="text-align: right">OR</p></div> \
+                            <div class="col-md-1"> \
+                                <select class="form-control datatype-select"> \
+                                    <option value="node" >Node</option> \
+                                    <option value="edge" selected>Edge</option> \
+                                </select> \
+                            </div> \
+                            <div class="col-md-1"><p class="lead" style="text-align: center">between</p></div> \
+                            <div class="col-md-3"> \
+                                <select class="edge-head-search" style="width: 100%"> \
+                                </select> \
+                            </div> \
+                            <div class="col-md-1"><p class="lead" style="text-align: center">and</p></div> \
+                            <div class="col-md-3"> \
+                                <select class="edge-tail-search" style="width: 100%"> \
+                                </select> \
+                            </div> \
+                            <div class="col-md-1 zero-margin zero-padding"> \
+                                <button class="btn btn-default btn-sm  add-query-btn" aria-label="add" \
+                                        style="border-color: transparent;color: green;" onclick="graphsPage.queryBuilder.addQueryField(this, \'edge\')"> \
+                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i> \
+                                </button> \
+                                <button class="btn btn-default btn-sm remove-query-btn" aria-label="remove" \
+                                        style="border-color: transparent;color: red;" onclick="graphsPage.queryBuilder.removeQueryField(this, \'edge\')"> \
+                                    <i class="fa fa-minus-circle fa-lg" aria-hidden="true"></i> \
+                                </button>  \
+                            </div> \
+                        </div>');
+                $(elem).closest('.row').after($newQuery);
+                graphsPage.queryBuilder.initializeEdgeSearchBar($newQuery);
+            } else {
+                $newQuery = $('<div class="row query-builder-field"> \
+                            <div class="col-md-1 or-label"><p class="lead" style="text-align: right">OR</p></div> \
+                            <div class="col-md-1"> \
+                                <select class="form-control datatype-select"> \
+                                    <option value="node" selected>Node</option> \
+                                    <option value="edge" >Edge</option> \
+                                </select> \
+                            </div> \
+                            <div class="col-md-8"> \
+                                <select class="node-search" style="width: 100%"> \
+                                </select> \
+                            </div> \
+                            <div class="col-md-1 zero-margin zero-padding"> \
+                                <button class="btn btn-default btn-sm  add-query-btn" aria-label="add" \
+                                        style="border-color: transparent;color: green;" onclick="graphsPage.queryBuilder.addQueryField(this, \'node\')"> \
+                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i> \
+                                </button> \
+                                <button class="btn btn-default btn-sm  remove-query-btn" aria-label="remove" \
+                                        style="border-color: transparent;color: red;" onclick="graphsPage.queryBuilder.removeQueryField(this, \'node\')"> \
+                                    <i class="fa fa-minus-circle fa-lg" aria-hidden="true"></i> \
+                                </button>  \
+                            </div> \
+                        </div>');
+                $(elem).closest('.row').after($newQuery);
+                graphsPage.queryBuilder.initializeNodeSearchBar($newQuery);
+            }
+            return $newQuery;
+        },
+        changeQueryField: function (queryRow, newType) {
+            $newQuery = graphsPage.queryBuilder.addQueryField(queryRow, newType);
+            if ($(queryRow).closest('.row').find('.or-label').html() == "") {
+                $newQuery.find('.or-label').html('');
+                $newQuery.find('.remove-query-btn').remove();
+            }
+            graphsPage.queryBuilder.removeQueryField(queryRow, newType == 'edge' ? 'node' : 'edge');
+        }
     },
     graphsTable: {
         searchTag: function (e) {
@@ -114,14 +394,14 @@ var graphsPage = {
             tags = _.uniq(_.pull(_.split($('#tagSearchBar').val(), ','), '', undefined));
 
             if (_.indexOf(tags, searchedTag) == -1) {
-                console.log(tags);
                 tags.push(searchedTag);
                 $('#tagSearchBar').val(_.join(tags, ','));
                 $("#ok").trigger("click");
             }
         },
         graphNameFormatter: function (value, row) {
-            return $('<a>').attr('href', '/graphs/' + row.id).text(value)[0].outerHTML;
+            var queryString = (graphsPage.searchBar.val() && graphsPage.searchBar.val().length > 0) ? '?query=' + _.join(graphsPage.searchBar.val(), ',') : '';
+            return $('<a>').attr('href', '/graphs/' + row.id + queryString).text(value)[0].outerHTML;
         },
         tagsFormatter: function (value, row) {
             links = "";
@@ -149,6 +429,28 @@ var graphsPage = {
             $('#toolbar').find('input[name]').each(function () {
                 params[$(this).attr('name')] = $(this).val();
             });
+            params['search'] = $('.graph-search').val() ? $('.graph-search').val() : [];
+            params['nodes'] = $('.node-search').val() ? $('.graph-search').val() : [];
+
+
+            params["names"] = _.map(_.filter(params["search"], function (s) {
+                return s.indexOf(':') === -1;
+            }), function (str) {
+                return '%' + str + '%';
+            });
+
+            params["nodes"] = _.map(params["nodes"], function (str) {
+                return '%' + str + '%';
+            });
+
+            params["nodes"] = _.union(params["names"], params['nodes']);
+            params["edges"] = _.map(_.filter(params["search"], function (s) {
+                return s.indexOf(':') !== -1;
+            }), function (str) {
+                edge = _.split(str, ':');
+                return '%' + edge[0] + '%:%' + edge[1] + '%';
+            });
+
             return params;
         },
         operationsFormatter: function (value, row, index) {
@@ -195,22 +497,6 @@ var graphsPage = {
              */
             $('#sharedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
-            if (params.data["search"]) {
-                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') === -1;
-                }), function (str) {
-                    return '%' + str + '%';
-                });
-
-                params.data["nodes"] = params.data["names"];
-                params.data["edges"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') !== -1;
-                }), function (str) {
-                    edge = _.split(str, ':');
-                    return '%' + edge[0] + '%:%' + edge[1] + '%';
-                });
-            }
-
             if (params.data["tags"]) {
                 params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
                     return '%' + str + '%';
@@ -242,22 +528,6 @@ var graphsPage = {
              */
             $('#publicGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
-            if (params.data["search"]) {
-                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') === -1 || _.trim(s) !== '';
-                }), function (str) {
-                    return '%' + str + '%';
-                });
-
-                params.data["nodes"] = params.data["names"];
-                params.data["edges"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') !== -1;
-                }), function (str) {
-                    edge = _.split(str, ':');
-                    return '%' + edge[0] + '%:%' + edge[1] + '%';
-                });
-            }
-
             if (params.data["tags"]) {
                 params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
                     return '%' + str + '%';
@@ -288,22 +558,6 @@ var graphsPage = {
              *          It contains parameters like limit, offset, search, sort, order.
              */
             $('#ownedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
-
-            if (params.data["search"]) {
-                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') === -1;
-                }), function (str) {
-                    return '%' + str + '%';
-                });
-
-                params.data["nodes"] = params.data["names"];
-                params.data["edges"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
-                    return s.indexOf(':') !== -1;
-                }), function (str) {
-                    edge = _.split(str, ':');
-                    return '%' + edge[0] + '%:%' + edge[1] + '%';
-                });
-            }
 
             if (params.data["tags"]) {
                 params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
@@ -428,6 +682,8 @@ var graphPage = {
             }, 100);
 
         });
+
+        $('#inputSearchEdgesAndNodes').val(utils.getURLParameter('query')).trigger('onkeyup');
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
@@ -459,33 +715,33 @@ var graphPage = {
     },
     applyLayout: function (layout) {
         // TODO: Convert the old layout format to new layout format.
-            /*
+        /*
 
-            The reason we need the new format is that it loads faster and it doesnt require any additional code for
-            pre processing whereas we need to format the old format before passing it to the cytoscape layout function.
+         The reason we need the new format is that it loads faster and it doesnt require any additional code for
+         pre processing whereas we need to format the old format before passing it to the cytoscape layout function.
 
-            The new format looks like :
-            var new_format = {
-                "json": {
-                    "<node_id>": {
-                        "x": 19.28,
-                        "y": 287.97
-                    },
-                    ....
-                }
-            };
+         The new format looks like :
+         var new_format = {
+         "json": {
+         "<node_id>": {
+         "x": 19.28,
+         "y": 287.97
+         },
+         ....
+         }
+         };
 
-            var old_format = {
-                "json": [
-                    {
-                        "x": 19.28,
-                        "y": 287.97,
-                        "id": "<node_id>"
-                    },
-                    .....
-                ]
-            };
-             */
+         var old_format = {
+         "json": [
+         {
+         "x": 19.28,
+         "y": 287.97,
+         "id": "<node_id>"
+         },
+         .....
+         ]
+         };
+         */
 
         if (isArray(layout.positions)) {
             var corrected_positions = {};
@@ -673,7 +929,7 @@ var graphPage = {
                         },
                         successCallback = function (response) {
                             _.each(response.nodes, function (node) {
-                                graphPage.cyGraph.$('#' + node.name).select();
+                                graphPage.cyGraph.$("[id = '" + node.name + "']").select();
                             });
                         },
                         errorCallback = function (xhr, status, errorThrown) {
@@ -699,12 +955,6 @@ var graphPage = {
             }
             graphPage.timeout = null;
         }, 250);
-    },
-    onSearchNodesEdgesBtnClick: function (e) {
-        console.debug($(e).parent().parent().find('input')[0]);
-    },
-    searchNodeAndEdges: function (e) {
-        $(e).val()
     },
     onTapGraphElement: function (evt) {
         this.elements().removeCss('color');
@@ -1479,7 +1729,10 @@ var cytoscapeGraph = {
     },
     export: function (cy, format, filename) {
         filename = filename ? filename : 'graph';
-        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({'graph': cy.json()['elements'], 'metadata': graph_json['metadata']}, null, 4)));
+        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+            'graph': cy.json()['elements'],
+            'metadata': graph_json['metadata']
+        }, null, 4)));
         $('<a>').attr('href', file).attr('download', filename + '.' + format)[0].click()
     },
     getAutomaticLayoutSettings: function (layout_name) {

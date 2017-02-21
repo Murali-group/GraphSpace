@@ -1,6 +1,6 @@
 {
   "name": "webcola",
-  "version": "3.3.0",
+  "version": "3.3.2",
   "homepage": "https://github.com/tgdwyer/WebCola",
   "authors": [
     "Tim Dwyer"
@@ -42,14 +42,13 @@
     "Gruntfile.js",
     "WebCola/*/"
   ],
-  "_release": "3.3.0",
+  "_release": "3.3.2",
   "_resolution": {
     "type": "version",
-    "tag": "v3.3.0",
-    "commit": "64447a1e501458a8e13399e95798d9c9c2bf12f9"
+    "tag": "v3.3.2",
+    "commit": "4dab7ffd5a5bb5499a3820c98ab3225a93cba046"
   },
   "_source": "https://github.com/tgdwyer/WebCola.git",
   "_target": "^3.3.0",
-  "_originalSource": "webcola",
-  "_direct": true
+  "_originalSource": "webcola"
 }

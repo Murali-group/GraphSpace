@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
     {% load staticfiles %}
+    <link href="{% static 'components/select2/dist/css/select2.min.css' %}" rel="stylesheet"/>
+    <script src="{% static 'components/select2/dist/js/select2.full.min.js' %}"></script>
 
     <div class="container-fluid zero-padding padding-bottom-6">
 
@@ -28,21 +30,54 @@
 
         <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
             <div id="toolbar">
-                <div class="form-inline" role="form">
-                    <div class="form-group">
-                        <span>Search: </span>
-                        <input name="search" style="width: 300px" class="form-control graphs-table-search" type="text"
-                               placeholder="Search Graphs, Nodes and Edges">
+                <div class="form-inline gs-full-width" role="form">
+                    <div class="form-group col-md-6">
+                        <select class="graph-search gs-full-width" multiple="multiple">
+                        </select>
                     </div>
                     &nbsp;
-                    <div class="form-group">
-                        <span>Tags: </span>
-                        <input id="tagSearchBar" name="tags" class="form-control graphs-table-search" type="text"
+                    <div class="form-group col-md-4">
+                        <input id="tagSearchBar" name="tags" class="form-control graphs-table-search gs-full-width"
+                               type="text"
                                placeholder="Search Tags">
                     </div>
                     <button id="ok" type="submit" class="btn btn-default">Search</button>
                     <a id="clear" class="btn btn-default">Clear Search</a>
                 </div>
+                <br>
+                <a id="advancedSearchBtn" class="pull-right" data-toggle="collapse" href="#advancedSearchCollapse"
+                   aria-expanded="false" aria-controls="advancedSearchCollapse" style="margin-right: 3.5%">
+                    Advanced Search
+                </a>
+                <br>
+                <div class="collapse gs-full-width col-md-12" id="advancedSearchCollapse">
+                    <p class="lead text-center"><u>Use the advanced query search builder below to create your search</u></p>
+                    <br>
+                    <div id="queryBuilder">
+                        <div class="row query-builder-field">
+                            <div class="col-md-1 or-label"></div>
+                            <div class="col-md-1">
+                                <select class="form-control datatype-select">
+                                    <option value="node" selected>Node</option>
+                                    <option value="edge">Edge</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <select class="node-search" style="width: 100%">
+                                </select>
+                            </div>
+                            <div class="col-md-1 zero-margin zero-padding">
+                                <button class="btn btn-default btn-sm add-query-btn" aria-label="add"
+                                        style="border-color: transparent;color: green;" onclick="graphsPage.queryBuilder.addQueryField(this);">
+                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                   </div>
+
+                </div>
+                <br>
+
             </div>
 
             {% if uid %}
@@ -75,5 +110,6 @@
         $(document).ready(function () {
             graphsPage.init();
         });
+
     </script>
 {% endblock %}

@@ -327,6 +327,14 @@ ul.nav.nav-tabs > li > a:hover {
     background: none;
 }
 
+.query-builder-field {
+    padding: 0.6em;
+}
+
+p.lead{
+    margin: 0 !important;
+}
+
 @media(min-width:768px) {
     #wrapper {
         padding-right: 250px;
