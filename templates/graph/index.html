@@ -148,6 +148,7 @@
                             {% include 'graph/layout_editor_sidebar.html' %}
                         {% endif %}
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
+                        {% include 'graph/node_editor.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
 
@@ -202,14 +203,18 @@
     <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/cytoscape-panzoom/cytoscape.js-panzoom.css' %}"/>
     <script type="text/javascript" src="{% static 'components/cytoscape-panzoom/cytoscape-panzoom.js' %}"></script>
-    <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.js' %}"></script>
-    <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
+    <script type="text/javascript" src="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'components/intro.js/intro.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/intro.js/introjs.css' %}">
 
     <script type="text/javascript" src="{% static 'components/jquery-ui/jquery-ui.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/jquery-ui/themes/base/jquery-ui.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+    <script type="text/javascript" charset="utf-8" src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
 
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>

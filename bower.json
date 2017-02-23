@@ -28,6 +28,8 @@
     "jquery-ui": "^1.12.1",
     "bootstrap-table": "^1.11.0",
     "cytoscape-panzoom": "^2.4.0",
-    "select2": "select2-dist#^4.0.3"
+    "select2": "select2-dist#^4.0.3",
+    "cytoscape-context-menus": "^2.1.1",
+    "bootstrap-colorpicker": "^2.5.1"
   }
 }
