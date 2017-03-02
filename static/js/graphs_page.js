@@ -632,11 +632,18 @@ var graphPage = {
          * It will initialize all the event listeners.
          */
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+
         graphPage.cyGraph.panzoom();
 
         utils.initializeTabs();
 
         $('#saveLayoutBtn').click(function () {
+            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
+
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+            // display node data as a popup
+            graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
+
             graphPage.saveLayout($('#layoutNameInput').val());
         });
 
@@ -649,13 +656,12 @@ var graphPage = {
             $('#saveLayoutModal').modal('show');
         });
 
-        $('#exitLayoutBtn, #saveLayoutBtn').click(function () {
+        $('#exitLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
             // display node data as a popup
             graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
-
         });
 
         $('#saveLayoutModalBtn').click(function () {
@@ -697,9 +703,10 @@ var graphPage = {
     applyUserLayout: function (layout_id) {
         apis.layouts.getByID($('#GraphID').val(), layout_id,
             successCallback = function (response) {
+                graphPage.applyLayoutStyle(JSON.parse(response['json'])['style']);
                 graphPage.applyLayout({
                     name: 'preset',
-                    positions: JSON.parse(response['json'])
+                    positions: JSON.parse(response['json'])['positions']
                 });
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
             },
@@ -716,7 +723,21 @@ var graphPage = {
         }
     },
     applyLayoutStyle: function (layoutStyle) {
-
+        layoutStyle = _.map(layoutStyle, function (elemStyle) {
+            elem = graphPage.cyGraph.elements(elemStyle['selector']);
+            if (elem.isNode()) {
+                return {
+                    'selector': elemStyle['selector'],
+                    'style': graphPage.getGraphSpaceNodeStyle(elemStyle['style'], elem.data())
+                }
+            } else {
+                return {
+                    'selector': elemStyle['selector'],
+                    'style': graphPage.getGraphSpaceEdgeStyle(elemStyle['style'], elem.data())
+                }
+            }
+        });
+        graphPage.cyGraph.style().fromJson(_.concat(defaultStylesheet, layoutStyle, selectedElementsStylesheet)).update();
     },
     applyLayout: function (layout) {
         // TODO: Convert the old layout format to new layout format.
@@ -758,6 +779,7 @@ var graphPage = {
 
     },
     saveLayout: function (layoutName) {
+        graphPage.cyGraph.elements().unselect();
 
         if (_.trim(layoutName).length === 0) {
             return $.notify({
@@ -769,7 +791,9 @@ var graphPage = {
             if (graphPage.layoutEditor.undoRedoManager) {
                 _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
                     if (action['action_type'] === 'select') {
-                        action['data']['elements'] = action['data']['elements'].jsons();
+                        if (action['data']['elements'].length > 0) {
+                            action['data']['elements'] = action['data']['elements'].jsons();
+                        }
                     }
                     // Uncomment the code after setting up the elastic server.
 
@@ -790,7 +814,10 @@ var graphPage = {
                 });
             }
 
-            layout_json = cytoscapeGraph.getLayout(graphPage.cyGraph);
+            layout_json = {
+                'positions': cytoscapeGraph.getNodePositions(graphPage.cyGraph),
+                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph)
+            };
 
             apis.layouts.add($('#GraphID').val(), {
                     "owner_email": $('#UserEmail').val(),
@@ -812,7 +839,6 @@ var graphPage = {
                     });
                 });
         }
-
 
     },
     addLayoutBtns: function (layout, domID) {
@@ -995,121 +1021,97 @@ var graphPage = {
             this.elements().removeCss('color');
         }
     },
-    setDefaultNodeProperties: function (nodeJSON) {
-        /**
-         * Sets default properties of node objects.
+    getGraphSpaceNodeStyle: function (nodeStyle, nodeData) {
+        /*
+         This function will check if the style object has valid values and fix them otherwise.
+
+         nodeStyle - JSON object of style attributes,
          */
 
-        // DONE SO OLD GRAPHS WILL DISPLAY
-        //If the nodes in graphs already in database don't have width or height
-        // or unrecognized shape, have a default value
-        for (var i = 0; i < nodeJSON.length; i++) {
-            var nodeData = nodeJSON[i]['data'];
+        //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
+        //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
+        //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
+        var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid", "polygon"];
 
-            //VALUES CONSISTENT AS OF CYTOSCAPEJS 2.5.0
-            //DONE TO SUPPORT OLD GRAPHS AND SETS A MINIMUM SETTINGS TO AT LEAST DISPLAY GRAPH IF USER
-            //DOESN'T HAVE ANY OTHER SETTINGS TO ALTER HOW THE NODES IN GRAPH LOOKS
-            var acceptedShapes = ["rectangle", "roundrectangle", "ellipse", "triangle", "pentagon", "hexagon", "heptagon", "octagon", "star", "diamond", "vee", "rhomboid", "polygon"];
-
-            //If the node has a shape, make sure that shape is recognized by CytoscapeJS
-            //Otherwise, make shape an ellipse
-            if (nodeData.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeData['shape'].toLowerCase()) == -1) {
-
-                //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
-                if (nodeData['shape'] == 'square') {
-                    nodeData['shape'] = "rectangle"
-                } else {
-                    //Make default shape an ellipse
-                    nodeData['shape'] = 'ellipse';
-                }
-
-                //If shape is not found, default to ellipse
-                if (acceptedShapes.indexOf(nodeData["shape"]) == -1) {
-                    nodeData["shape"] = "ellipse";
-                }
-            } else if (nodeData.hasOwnProperty('shape') == false) {
-                nodeData['shape'] = "ellipse";
-            } else {
-                nodeData['shape'] = nodeData['shape'].toLowerCase();
+        //If the node has a shape, make sure that shape is recognized by CytoscapeJS
+        //Otherwise, make shape an ellipse
+        if (nodeStyle.hasOwnProperty('shape') == true && acceptedShapes.indexOf(nodeStyle['shape'].toLowerCase()) == -1) {
+            //TO SUPPORT OLD GRAPHS THAT HAD THESE SHAPES
+            if (nodeStyle['shape'].toLowerCase() == 'square') {
+                nodeStyle['shape'] = "rectangle"
             }
-
-            //Pick default color if nothing is provided
-            if (nodeData['background_color'] == undefined) {
-                nodeData['background_color'] = "yellow";
-            } else {
-                var hexCode = colourNameToHex(nodeData['background_color']);
-                if (hexCode != false) {
-                    nodeData['background_color'] = hexCode;
-                } else {
-                    if (isHexaColor(addCharacterToHex(nodeData['background_color']))) {
-                        nodeData['background_color'] = addCharacterToHex(nodeData['background_color']);
-                    }
-                }
-            }
-
-            //Set border color to be black by default
-            if (nodeData["border_color"] == undefined) {
-                nodeData["border_color"] = "#888";
-            }
-
-            if (nodeData['text_halign'] == undefined) {
-                nodeData["text_halign"] = "center";
-            }
-
-            if (nodeData["text_valign"] == undefined) {
-                nodeData["text_valign"] = "center";
-            }
-
-            nodeJSON[i]['data'] = nodeData;
+        } else if (nodeStyle['shape']) {
+            nodeStyle['shape'] = nodeStyle['shape'].toLowerCase();
         }
-        return nodeJSON;
+
+        //Pick default color if nothing is provided
+        if (nodeStyle['background-color'] != undefined) {
+            var hexCode = colourNameToHex(nodeStyle['background-color']);
+            if (hexCode != false) {
+                nodeStyle['background-color'] = hexCode;
+            } else {
+                if (isHexaColor(addCharacterToHex(nodeStyle['background-color']))) {
+                    nodeStyle['background-color'] = addCharacterToHex(nodeStyle['background-color']);
+                }
+            }
+        }
+
+        return nodeStyle;
     },
-    setDefaultEdgeProperties: function (edgeJSON) {
+    getNodeStylesheet: function (nodeJSON) {
+        /**
+         * get style properties of node objects and set style object to null because if set it will set unmutable style properties.
+         */
+        return _.map(nodeJSON, function (node) {
+            return {
+                'selector': _.template("node[id='<%= id %>']")({'id': node['data']['id']}),
+                'style': graphPage.getGraphSpaceNodeStyle(node['style'], node['data'])
+            };
+        });
+    },
+    getGraphSpaceEdgeStyle: function (edgeStyle, edgeData) {
+        /*
+         This function will check if the style object has valid values and fix them otherwise.
 
-        // DONE SO OLD GRAPHS WILL DISPLAY
-        // NEW GRAPHS WILL HAVE EVERYTHING HANDLED AT UPLOAD TIME
-        // THIS IS ONLY AS A SECONDARY CHECK
-        var testEdges = new Array();
+         edgeStyle - JSON object of style attributes,
+         */
 
-        //If the EDGES in graphs already in database don't have color have a default value
-        for (var i = 0; i < edgeJSON.length; i++) {
-            var edgeData = edgeJSON[i]['data'];
-
-            //If edges don't have an name, use the id
-            if (!edgeData.hasOwnProperty('name')) {
-                edgeData['name'] = edgeData['id'];
-            }
-
-            //If edges don't have any color properties, choose default
-            if (edgeData['line_color'] == undefined && edgeData['color'] == undefined) {
-                edgeData['line_color'] = "black";
-            } else {
-
-                //Color property maps to line_color
-                //DONE TO SUPPORT OLD GRAPHS
-                if (edgeData.hasOwnProperty('color')) {
-                    edgeData['line_color'] = edgeData['color'];
-                }
-                //Converts the line color into Hexadecimal so CytoscapeJS can user it
-                var hexCode = colourNameToHex(edgeData['line_color']);
-                if (hexCode != false) {
-                    edgeData['line_color'] = hexCode;
-                } else {
-                    if (isHexaColor(addCharacterToHex(edgeData['line_color']))) {
-                        edgeData['line_color'] = addCharacterToHex(edgeData['line_color']);
-                    }
-                }
-            }
-
-            //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
-            if (edgeData['target_arrow_shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
-                edgeData['target_arrow_shape'] = 'none';
-            } else if (edgeData['directed'] == true) {
-                edgeData['target_arrow_shape'] = 'triangle';
-            }
-            edgeJSON[i]['data'] = edgeData;
+        //Color property maps to line_color
+        //DONE TO SUPPORT OLD GRAPHS
+        if (edgeStyle.hasOwnProperty('color')) {
+            edgeStyle['line-color'] = edgeStyle['color'];
         }
-        return edgeJSON;
+
+        if (edgeStyle['line-color'] != undefined) {
+            //Converts the line color into Hexadecimal so CytoscapeJS can user it
+            var hexCode = colourNameToHex(edgeStyle['line-color']);
+            if (hexCode != false) {
+                edgeStyle['line-color'] = hexCode;
+            } else {
+                if (isHexaColor(addCharacterToHex(edgeStyle['line-color']))) {
+                    edgeStyle['line-color'] = addCharacterToHex(edgeStyle['line-color']);
+                }
+            }
+        }
+
+        //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
+        if (edgeStyle['target-arrow-shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
+            edgeStyle['target-arrow-shape'] = 'none';
+        } else if (edgeData['directed'] == true) {
+            edgeStyle['target-arrow-shape'] = 'triangle';
+        }
+
+        return edgeStyle;
+    },
+    getEdgeStylesheet: function (edgeJSON) {
+
+        return _.map(edgeJSON, function (edge) {
+            return {
+                'selector': _.template("edge[name='<%= name %>']")({'name': edge['data']['name']}),
+                'style': graphPage.getGraphSpaceEdgeStyle(edge['style'], edge['data'])
+            };
+        });
+
     },
     contructCytoscapeGraph: function (layout) {
         if (!layout) {
@@ -1120,8 +1122,19 @@ var graphPage = {
                 animate: false
             };
         }
-        graph_json['graph']['nodes'] = graphPage.setDefaultNodeProperties(graph_json['graph']['nodes']);
-        graph_json['graph']['edges'] = graphPage.setDefaultEdgeProperties(graph_json['graph']['edges']);
+        var nodeStylesheet = graphPage.getNodeStylesheet(graph_json['graph']['nodes']);
+        var edgeStylesheet = graphPage.getEdgeStylesheet(graph_json['graph']['edges']);
+
+        graph_json['graph']['nodes'] = _.map(graph_json['graph']['nodes'], function (node) {
+            return {
+                "data": node['data']
+            }
+        });
+        graph_json['graph']['edges'] = _.map(graph_json['graph']['edges'], function (edge) {
+            return {
+                "data": edge['data']
+            }
+        });
 
         return cytoscape({
             container: document.getElementById('cyGraphContainer'),
@@ -1133,7 +1146,7 @@ var graphPage = {
             layout: layout,
 
             //Style properties of NODE body
-            style: stylesheet,
+            style: _.concat(defaultStylesheet, nodeStylesheet, edgeStylesheet, selectedElementsStylesheet),
 
             ready: function () {
 
@@ -1548,61 +1561,85 @@ var graphPage = {
                 });
 
                 $('input:checkbox[name=shapes], input:checkbox[name=colors] ').change(function () {
-                var selectedShapes = _.map($('input:checkbox[name=shapes]:checked'), function (elem) {
-                    return $(elem).val();
-                });
-                var selectedColors = _.map($('input:checkbox[name=colors]:checked'), function (elem) {
-                    return $(elem).val();
-                });
+                    var selectedShapes = _.map($('input:checkbox[name=shapes]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
+                    var selectedColors = _.map($('input:checkbox[name=colors]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
 
-                if ($(this).attr('name') === 'colors') {
-                    var attributeName = 'background_color';
-                } else {
-                    var attributeName = 'shape';
-                }
-                var attributeValue = $(this).val();
-                var isSelected = $(this).is(":checked");
+                    if ($(this).attr('name') === 'colors') {
+                        var attributeName = 'background-color';
+                    } else {
+                        var attributeName = 'shape';
+                    }
+                    var attributeValue = $(this).val();
+                    var isSelected = $(this).is(":checked");
 
-                _.each(graphPage.cyGraph.nodes(), function (node) {
+                    _.each(graphPage.cyGraph.nodes(), function (node) {
 
-                    if (attributeValue == node.data(attributeName)) {
-                        if (isSelected) {
-                            node.select();
-                        } else {
-                            if (_.indexOf(selectedColors, node.data('background_color')) === -1 && _.indexOf(selectedShapes, node.data('shape')) === -1) {
-                                node.unselect();
+                        if (attributeValue == node.style(attributeName)) {
+                            if (isSelected) {
+                                node.select();
+                            } else {
+                                if (_.indexOf(selectedColors, node.style('background-color')) === -1 && _.indexOf(selectedShapes, node.style('shape')) === -1) {
+                                    node.unselect();
+                                }
                             }
                         }
-                    }
 
-                });
+                    });
 
-                graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'select',
-                    'data': {
-                        'elements': graphPage.cyGraph.elements(':selected')
-                    }
+                    graphPage.layoutEditor.undoRedoManager.update({
+                        'action_type': 'select',
+                        'data': {
+                            'elements': graphPage.cyGraph.elements(':selected')
+                        }
+                    });
                 });
-            });
             }
         },
         nodeEditor: {
             init: function () {
                 $('#applyNodePropertiesBtn').click(function () {
-                    if (!_.isEmpty($('#nodeShape').val())) {
-                        graphPage.cyGraph.elements(':selected').data('shape', $('#nodeShape').val());
+                    nodeSelector = _.template("node[name='<%= name %>']");
+
+                    if (_.isEmpty($('#nodeWidth').val())) {
+                        return $.notify({
+                            message: 'Please enter valid width value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else if (_.isEmpty($('#nodeHeight').val())) {
+                        return $.notify({
+                            message: 'Please enter valid height value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else if (_.isEmpty($("#nodeBackgroundColorPicker").colorpicker('getValue'))) {
+                        return $.notify({
+                            message: 'Please enter valid color value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else if (_.isEmpty($('#nodeShape').val())) {
+                        return $.notify({
+                            message: 'Please enter valid shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
+                            graphPage.cyGraph.style().selector(nodeSelector({'name': elem.data('name')})).style({
+                                'shape': $('#nodeShape').val(),
+                                'width': _.toString($('#nodeWidth').val()) + 'px',
+                                'height': _.toString($('#nodeHeight').val()) + 'px',
+                                'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
+                            }).update();
+                        });
+                        graphPage.layoutEditor.nodeSelector.init();
                     }
 
-                    if (!_.isEmpty($('#nodeWidth').val())) {
-                        graphPage.cyGraph.elements(':selected').data('width', _.toString($('#nodeWidth').val()) + 'px');
-                    }
-
-                    if (!_.isEmpty($('#nodeHeight').val())) {
-                        graphPage.cyGraph.elements(':selected').data('height', _.toString($('#nodeHeight').val()) + 'px');
-                    }
-                    graphPage.cyGraph.elements(':selected').data('background_color', $("#nodeBackgroundColorPicker").colorpicker('getValue'));
-                    graphPage.cyGraph.style( stylesheet );
-                    graphPage.layoutEditor.nodeSelector.init();
                 });
             },
             open: function (collection) {
@@ -1825,7 +1862,7 @@ var cytoscapeGraph = {
             });
         }
     },
-    getLayout: function (cy) {
+    getNodePositions: function (cy) {
         /*
          *  gets location of all the nodes so that it can be save later.
          *  cy: cytoscape graph object
@@ -1839,6 +1876,24 @@ var cytoscapeGraph = {
             };
         }
         return layout;
+    },
+    getStylesheet: function (cy) {
+        /*
+         *  gets stylesheet for the graph.
+         *  
+         *  cy: cytoscape graph object
+         */
+
+        return _.map(cy.elements(), function (elem) {
+            return {
+                'selector': elem.isNode() ? _.template("node[name='<%= name %>']")({'name': elem.data('name')}) : _.template("edge[name='<%= name %>']")({'name': elem.data('name')}),
+                'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
+                    return style ? style['strValue'] : undefined
+                }), _.isNil)
+            }
+
+        });
+
     },
     export: function (cy, format, filename) {
         filename = filename ? filename : 'graph';
@@ -1902,11 +1957,6 @@ var cytoscapeGraph = {
             .selector('node').style({
                 'font-size': "0px"
             })
-            .selector('edge').style({
-                'line-color': 'black',
-                'line-style': 'solid',
-                'width': .1
-            })
             .update(); // update the elements in the graph with the new style
 
     },
@@ -1914,7 +1964,12 @@ var cytoscapeGraph = {
         /*
          Function to Show information about the graph that the layout editor hid from the users.
          */
-        cy.style(stylesheet);
+        cy.style()
+            .selector('node').style({
+                'font-size': "16px"
+            })
+            .update();
+        console.log('done');
     },
     getRenderedNodePositionsMap: function (cy) {
         var result = {};

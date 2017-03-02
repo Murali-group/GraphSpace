@@ -226,6 +226,9 @@ def add_group_member(request, group_id, member_id=None, member_email=None):
 	else:
 		raise Exception("Required Parameter is missing!")
 	if user is not None:
+		if db.get_group_to_user(request.db_session, group_id, user.id):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=user.email)
+
 		return db.add_group_to_user(request.db_session, group_id=group_id, user_id=user.id)
 	else:
 		raise Exception("User does not exit.")

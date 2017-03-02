@@ -1,5 +1,5 @@
 <div class="panel panel-default" style="margin-top: 10%">
-    <div class="panel-heading">Add group member</div>
+    <div class="panel-heading">Add group member by email id</div>
     <div class="panel-body">
         <div class="input-group">
             <input id="newGroupMemberEmailInput" type="text" class="form-control" placeholder="Enter email id....">
@@ -7,5 +7,18 @@
                 <button class="btn btn-default" type="button" id="submitNewGroupMemberEmailBtn">Submit</button>
             </span>
         </div>
+    </div>
+</div>
+
+<p class="lead text-center">OR</p>
+
+<div class="panel panel-default margin-top-8">
+    <div class="panel-heading">Send this signup link to your group members</div>
+    <div class="panel-body">
+        <p>Using the following link, new members can join this group on GraphSpace.</p>
+
+        <code>
+            {{ url }}groups/{{ group.id }}/join/?code={{ group.invite_code }}
+        </code>
     </div>
 </div>

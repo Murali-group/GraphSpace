@@ -2,13 +2,13 @@ import json
 
 import applications.users.controllers as users
 from django.http import HttpResponse, QueryDict
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from graphspace import utils
 import graphspace.authorization as authorization
 from graphspace.wrappers import is_authenticated
-from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
+from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes, GraphSpaceError
 from graphspace.utils import get_request_user
 
 
@@ -41,9 +41,65 @@ def group_page(request, group_id):
 	if 'GET' == request.method:
 		context = RequestContext(request, {})
 		context.push({
-			"group": _get_group(request, group_id),
+			"group": _get_group(request, int(group_id)),
 		})
 		return render(request, 'group/index.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+def join_group_page(request, group_id):
+	"""
+		Wrapper view for the join_group_page by invitation. /groups/<group_id>/invite/
+
+		:param request: HTTP GET Request.
+
+	Parameters
+	----------
+	group_id : string
+		Unique ID of the group. Required
+	"""
+	context = RequestContext(request, {})
+
+	if 'GET' == request.method:
+		group = users.get_group_by_id(request, group_id)
+		if group is not None and group.invite_code == request.GET.get('code', None):
+			if request.session['uid'] is None:
+				context.push({
+					"group": group,
+					"invite_code": request.GET.get('code', None)
+				})
+				return render(request, 'join_group/index.html', context)
+			else:
+				try:
+					users.add_group_member(request, group_id, member_email=request.session['uid'])
+				finally:
+					return redirect('/groups/'+group_id)
+		else:
+			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
+	elif 'POST' == request.method:
+
+		group = users.get_group_by_id(request, group_id)
+		if group is not None and group.invite_code == request.POST.get('code', None):
+			try:
+				if request.session['uid'] is None:
+					user = users.register(request, username=request.POST.get('user_id', None), password=request.POST.get('password', None))
+					if user is not None:
+						request.session['uid'] = user.email
+						request.session['admin'] = user.is_admin
+
+					users.add_group_member(request, group_id, member_id=user.id)
+
+				return redirect('/groups/'+group_id)
+			except GraphSpaceError as e:
+				context.push({
+					"error_message": e.get_message(),
+					"group": group,
+					"invite_code": request.POST.get('code', None)
+				})
+				return render(request, 'join_group/index.html', context)
+		else:
+			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 

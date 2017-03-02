@@ -372,3 +372,64 @@ var groupPage = {
         }
     }
 };
+
+var joinGroupPage = {
+    init: function () {
+        /**
+         * This function is called to setup the join group page.
+         * It will initialize all the event listeners.
+         */
+        console.log('Loading Join Group Page....');
+
+        $("#joinGraphSpaceBtn").click(function (e) {
+            joinGroupPage.onJoinGraphSpace(e);
+        });
+    },
+    onJoinGraphSpace: function (e) {
+        e.preventDefault();
+        e.preventDefault();
+        var user_id = $("#joinGroupUserEmailInput").val();
+        var password = $("#joinGroupUserPasswordInput").val();
+        var verify_password = $("#joinGroupUserVerifyPasswordInput").val();
+
+        if (!user_id || user_id.length == 0) {
+            $.notify({
+                message: 'Please enter your email!'
+            }, {
+                type: 'warning'
+            });
+            return;
+        }
+
+        if (!password || password.length == 0) {
+            $.notify({
+                message: 'Please enter a password for the account!'
+            }, {
+                type: 'warning'
+            });
+            return;
+        }
+
+        if (!verify_password || verify_password.length == 0) {
+            $.notify({
+                message: 'Please re-enter your password!'
+            }, {
+                type: 'warning'
+            });
+            return;
+        }
+
+        if (password !== verify_password) {
+            $.notify({
+                message: "Passwords do not match!"
+            }, {
+                type: 'warning'
+            });
+            return;
+        }
+
+
+        //POST Request to log in user
+        $('#joinGraphSpaceForm').submit();
+    }
+};

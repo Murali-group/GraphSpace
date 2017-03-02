@@ -40,6 +40,9 @@ class GraphSpaceError(Exception):
 	def get_status(self):
 		return self.status
 
+	def get_message(self):
+		return self.msg
+
 
 class ValidationError(GraphSpaceError):
 	def __init__(self, request, error_code):

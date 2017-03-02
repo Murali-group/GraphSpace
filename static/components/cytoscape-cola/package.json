@@ -1,6 +1,6 @@
 {
   "name": "cytoscape-cola",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "The Cola.js physics simulation layout for Cytoscape.js",
   "main": "cytoscape-cola.js",
   "scripts": {
@@ -28,8 +28,10 @@
     "jshint-stylish": "^1.0.0",
     "run-sequence": "^1.0.0"
   },
-  "peerDependencies": {
-    "cytoscape": "^2.4.0",
+  "dependencies": {
     "webcola": "^3.1.2"
+  },
+  "peerDependencies": {
+    "cytoscape": "^2.4.0"
   }
 }

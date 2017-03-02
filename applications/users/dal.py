@@ -149,7 +149,7 @@ def add_group(db_session, name, owner_email, description):
 	:param description: Description of the group
 	:return: None
 	"""
-	group = Group(name=name, owner_email=owner_email, description = description)
+	group = Group(name=name, owner_email=owner_email, description = description, invite_code=generate_uid(size=10))
 	db_session.add(group)
 	return group
 

@@ -585,7 +585,7 @@ class GSGraph(nx.DiGraph):
 		return self.get_node_attribute(node_id,'text_halign')
 
 	@staticmethod
-	def validate_node_properties(node_properties, nodes_list=[]):
+	def  validate_node_properties(node_properties, nodes_list=[]):
 		"""
 		Validates node properties. For example, we no more require all nodes to have a id. But we require all nodes to have a name.
 

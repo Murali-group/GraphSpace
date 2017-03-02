@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+    <div class="container-fluid margin-top-4" style="height: auto">
+
+        <p class="lead text-center">
+            <strong>{{ group.owner_email }}</strong> has invited you to join the <strong>{{ group.name }}</strong>
+            group.
+        </p>
+
+        <br>
+
+        <p class="lead text-center">
+            Join now to start collaborating!
+        </p>
+
+        <div class="panel panel-default" style="max-width: 700px; margin: 30px auto;">
+{#            <div class="panel-heading">Join {{ group.name }} on GraphSpace</div>#}
+            <div class="panel-body">
+                {% if success_message != None %}
+                    <div class="alert alert-success text-center" role="alert">
+                        {{ success_message }}
+                    </div>
+                {% elif error_message != None %}
+                    <div class="alert alert-danger text-center" role="alert">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+
+                <form id="joinGraphSpaceForm" method="POST" class="form-horizontal" role="form" action="/groups/{{ group.id }}/join/">
+                    <style>
+                        .control-label{
+                            text-align: left !important;
+                        }
+                    </style>
+
+                    {% csrf_token %}
+                    <input name="code" type="text" value="{{ invite_code }}" hidden />
+                    <div class="form-group margin-top-6">
+                        <label for="reset_email" class="col-sm-3 col-sm-offset-1 control-label">Email</label>
+                        <div class="col-sm-7">
+                            <input type="email" name="user_id" class="form-control" id="joinGroupUserEmailInput"
+                                   placeholder="Email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pass" class="col-sm-3 col-sm-offset-1 control-label">Password</label>
+                        <div class="col-sm-7">
+                            <input name="password" type="password" class="form-control" id="joinGroupUserPasswordInput"
+                                   placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="verifPass" class="col-sm-3 col-sm-offset-1 control-label">Re-Enter Password</label>
+                        <div class="col-sm-7">
+                            <input type="password" class="form-control" id="joinGroupUserVerifyPasswordInput" placeholder="Password">
+                        </div>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-6">
+                            <button type="submit" id="joinGraphSpaceBtn" class="btn btn-lg btn-success gs-full-width">Join GraphSpace</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON support for Groups Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            joinGroupPage.init();
+        });
+    </script>
+
+{% endblock %}
+

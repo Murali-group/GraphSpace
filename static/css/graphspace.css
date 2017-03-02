@@ -201,7 +201,7 @@ ul.nav.nav-tabs > li > a:hover {
 
 #sidebar-wrapper {
     z-index: 1000;
-    position: fixed;
+    position: absolute;
     right: 250px;
     width: 0;
     height: 100%;

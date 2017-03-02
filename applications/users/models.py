@@ -81,6 +81,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	description = Column(String, nullable=True)
+	invite_code = Column(String, nullable=False)
 
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
 	members = association_proxy('member_users', 'user')
@@ -98,6 +99,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 		return {
 			'id': cls.id,
 			'name': cls.name,
+			'invite_code': cls.invite_code,
 			'owner_email': cls.owner_email,
 			'description': cls.description,
 			'total_graphs': len(cls.graphs),

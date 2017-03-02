@@ -11,9 +11,11 @@
             <li class="text-center">
                 <a href="#members" data-toggle="tab">{{ group.total_members }} Members</a>
             </li>
+            {% if group.owner_email == uid %}
             <li class="text-center">
                 <a href="#update_group" data-toggle="tab">Update Group</a>
             </li>
+            {% endif %}
         </ul>
 
         <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
@@ -33,9 +35,11 @@
                     <div class="col-md-5 col-md-offset-1">
                         {% include 'group/group_members_table.html' %}
                     </div>
+                    {% if group.owner_email == uid %}
                     <div class="col-md-5">
                         {% include 'group/add_group_member.html' %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -54,11 +58,6 @@
 
     </div>
 
-    <footer class="footer">
-        <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
-        <br><a href="http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
-    </footer>
-
     <!-- JSON support for Groups Page -->
     <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
@@ -70,27 +69,3 @@
     </script>
 {% endblock %}
 
-{% block css-js-footer %}
-    <!-- load javascripts -->
-    <!-- javascript for side menu -->
-
-    <!--jQuery UI, needed for side menu -->
-    <script type="text/javascript" src="{% static 'graphs/js/jquery-ui.min.js' %}"></script>
-
-    <!-- JSON support for IE (needed to use JS API) -->
-    <script type="text/javascript" src="{% static 'graphs/json2.min.js' %}"></script>
-
-    <!-- load stylesheets -->
-    <!-- jQuery UI style sheet -->
-    <link rel="stylesheet" href="{% static 'graphs/css/jquery-ui.min.css' %}">
-
-    <!-- stylesheet for pager -->
-    <link href="{% static 'graphs/css/pager.css' %}" rel="stylesheet">
-
-    <!-- stylesheet for elements specified in this html(graphs.html) -->
-    <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/graphs.css' %}">
-
-    <!-- stylesheet for side menues -->
-    <link rel="stylesheet" type="text/css" href="{% static 'graphs/css/side_menu.css' %}">
-
-{% endblock %}
