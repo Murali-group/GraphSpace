@@ -468,7 +468,7 @@ def get_node_attribute(G,node_id,attr):
     else:
         return None
 
-## These node get() functions ensure that the correct attribute is called in the get_node_attribute() function.
+## These node get() functions ensure that the correct attribute is called in the get_data_attribute() function.
 ## They mirror the node add() functions.
 def get_node_label(G,node_id):
     return get_node_attribute(G,node_id,'content')

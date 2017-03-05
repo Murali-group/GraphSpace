@@ -12,33 +12,8 @@ AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'de
 							   'default_grid']
 
 
-def fix_graph_json(request, graph):
-
-	if graph.json is not None:
-		G = GraphSpaceJSONFormat.create_gsgraph(json.dumps(graph.json))
-		if graph.name is not None:
-			G.set_name(graph.name)
-
-	# # Add graph nodes
-	# node_name_to_id_map = get_node_name_to_id_map(request, graph.id)
-	# # Add graph edges
-	# edge_name_to_id_map = get_edge_name_to_id_map(request, graph.id)
-	#
-	# nx.set_node_attributes(G, 'nodeId', node_name_to_id_map)
-	# nx.set_edge_attributes(G, 'edgeId', edge_name_to_id_map)
-
-	new_graph = db.update_graph(request.db_session, id=graph.id, updated_graph={
-		'json': json.dumps(G.compute_json())
-	})
-
-	return new_graph
-
-
 def get_graph_by_id(request, graph_id):
-	graph = db.get_graph_by_id(request.db_session, graph_id)
-	# if graph is not None and graph.updated_at < datetime.now():
-	# 	graph = fix_graph_json(request, graph)
-	return graph
+	return db.get_graph_by_id(request.db_session, graph_id)
 
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
@@ -194,12 +169,6 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
-	nx.set_node_attributes(G, 'nodeId', node_name_to_id_map)
-	nx.set_edge_attributes(G, 'edgeId', edge_name_to_id_map)
-	new_graph = db.update_graph(request.db_session, id=new_graph.id, updated_graph={
-		'json': json.dumps(G.compute_json())
-	})
-
 	return new_graph
 
 
@@ -226,8 +195,7 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 		node_name_to_id_map = add_graph_nodes(request, graph_id, G.nodes(data=True))
 		# Add graph edges
 		edge_name_to_id_map = add_graph_edges(request, graph_id, G.edges(data=True), node_name_to_id_map)
-		nx.set_node_attributes(G, 'nodeId', node_name_to_id_map)
-		nx.set_edge_attributes(G, 'edgeId', edge_name_to_id_map)
+
 		graph['json'] = json.dumps(G.compute_json())
 
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
@@ -242,11 +210,11 @@ def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
 		# Make edge undirected if its target_arrow_shape attribute is set to none
-		is_directed = 0 if edge[2]['target_arrow_shape'] == 'none' else 1
+		is_directed = 0 if edge[2]['style']['target_arrow_shape'] == 'none' else 1
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),
-							   tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['name']),
+							   tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['data']['name']),
 							   is_directed=is_directed)
 		edge_name_to_id_map[(edge[0], edge[1])] = new_edge.id
 	return edge_name_to_id_map
@@ -256,7 +224,7 @@ def add_graph_nodes(request, graph_id, nodes):
 	node_name_to_id_map = dict()
 	for node in nodes:
 		# Add node to table
-		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['content'], graph_id=graph_id)
+		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['style']['content'], graph_id=graph_id)
 		node_name_to_id_map[new_node.name] = new_node.id
 	return node_name_to_id_map
 

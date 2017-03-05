@@ -36,5 +36,5 @@ def test_get_graph(graph_id):
 
 
 # test_graph_crud()
-test_post_graph(name="MyTestGraph1")
+test_post_graph(name="MyTestGraph3")
 # test_get_graph(77)
