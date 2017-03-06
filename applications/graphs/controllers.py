@@ -183,7 +183,7 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 	if is_public is not None:
 		graph['is_public'] = is_public
 	if default_layout_id is not None:
-		graph['default_layout_id'] = default_layout_id
+		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
 
 	if json_string is not None:
 		G = GraphSpaceJSONFormat.create_gsgraph(json.dumps(json_string))

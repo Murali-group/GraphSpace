@@ -692,6 +692,8 @@ var graphPage = {
         });
 
         $('#inputSearchEdgesAndNodes').val(utils.getURLParameter('query')).trigger('onkeyup');
+
+        graphPage.defaultLayoutWidget.init();
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
@@ -699,6 +701,7 @@ var graphPage = {
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
         window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
+        graphPage.defaultLayoutWidget.init(0);
     },
     applyUserLayout: function (layout_id) {
         apis.layouts.getByID($('#GraphID').val(), layout_id,
@@ -709,6 +712,7 @@ var graphPage = {
                     positions: JSON.parse(response['json'])['positions']
                 });
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
+                graphPage.defaultLayoutWidget.init(response['is_shared']);
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
@@ -1168,6 +1172,54 @@ var graphPage = {
             }
         });
 
+    },
+    defaultLayoutWidget: {
+        init: function (is_shared) {
+            if (utils.getURLParameter('auto_layout') || _.isNil(is_shared) || is_shared == 0) {
+                $('#setDefaultLayoutBtn').hide();
+                $('#removeDefaultLayoutBtn').hide();
+            } else if (utils.getURLParameter('user_layout') && utils.getURLParameter('user_layout') == default_layout_id) {
+                $('#setDefaultLayoutBtn').hide();
+                $('#removeDefaultLayoutBtn').show();
+            } else {
+                $('#setDefaultLayoutBtn').show();
+                $('#removeDefaultLayoutBtn').hide();
+            }
+        },
+        onSetDefaultLayoutBtn: function (e) {
+            apis.graphs.update($('#GraphID').val(), {
+                'default_layout_id': utils.getURLParameter('user_layout')
+            },
+            successCallback = function (response) {
+                default_layout_id = utils.getURLParameter('user_layout')
+                graphPage.defaultLayoutWidget.init(1);
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+            });
+        },
+        onRemoveDefaultLayoutBtn: function (e) {
+            apis.graphs.update($('#GraphID').val(), {
+                'default_layout_id': 0
+            },
+            successCallback = function (response) {
+                default_layout_id = null;
+                graphPage.defaultLayoutWidget.init(1);
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+            });
+        }
     },
     nodesTable: {
         getNodesByGraphID: function (params) {

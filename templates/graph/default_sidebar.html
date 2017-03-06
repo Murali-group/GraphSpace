@@ -1,9 +1,7 @@
 <!-- Sidebar -->
 
 <ul id="defaultSideBar" class="sidebar-nav gs-sidebar-nav active">
-    <li>
-        <br>
-    </li>
+
     <li>
         <div class="form-group has-feedback" style="margin: 0 1em;" data-trigger="focus"
              data-target="#searchPopover" data-container="body"
@@ -38,11 +36,11 @@
         </div>
     </li>
     {% if uid %}
-    <li>
-        <a class="btn" href="#" data-toggle="modal" data-target="#shareGraphModal">
-            <i class="fa fa-share-alt fa-lg"></i> Share
-        </a>
-    </li>
+        <li>
+            <a class="btn" href="#" data-toggle="modal" data-target="#shareGraphModal">
+                <i class="fa fa-share-alt fa-lg"></i> Share
+            </a>
+        </li>
     {% endif %}
     <li>
         <a class="btn sidebar-nav-pills" href="#filter_nodes_edges" data-target="#filterNodesEdgesSideBar">
@@ -110,19 +108,32 @@
         </div>
     </li>
     {% if uid %}
-    <li>
-        <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#layoutEditorSideBar">
-            <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
-        </a>
-    </li>
+        <li>
+            <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#layoutEditorSideBar">
+                <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
+            </a>
+        </li>
     {% endif %}
 
     {% if uid %}
-    <li>
-        <a id="saveLayoutModalBtn" class="btn" href="#" data-toggle="modal">
-            <i class="fa fa-save fa-lg"></i> Save Layout
-        </a>
-    </li>
+        <li>
+            <a id="saveLayoutModalBtn" class="btn" href="#" data-toggle="modal">
+                <i class="fa fa-save fa-lg"></i> Save Layout
+            </a>
+        </li>
+    {% endif %}
+
+    {% if uid and uid == graph.owner_email %}
+        <li>
+            <a id="setDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onSetDefaultLayoutBtn()">
+                Set as <br>default layout
+            </a>
+        </li>
+        <li>
+            <a id="removeDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onRemoveDefaultLayoutBtn()">
+                Remove as <br>default layout
+            </a>
+        </li>
     {% endif %}
 
 </ul>
