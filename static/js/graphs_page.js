@@ -483,7 +483,7 @@ var graphsPage = {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
-                    alert(xhr.responseText);
+                    $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
                 });
         },
     },
@@ -809,7 +809,7 @@ var graphPage = {
                     //    },
                     //    errorCallback = function (xhr, status, errorThrown) {
                     //        // This method is called when  error occurs while deleting group_to_graph relationship.
-                    //        alert(xhr.responseText);
+                    //        $.notify({                             message: xhr.responseJSON.error_message                         }, {                             type: 'danger'                         });
                     //    })
                 });
             }
@@ -870,7 +870,12 @@ var graphPage = {
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
-                alert(xhr.responseText);
+                $.notify({
+                    message: xhr.responseJSON.error_message
+                }, {
+                    type: 'danger'
+                });
+
             });
 
 
@@ -889,7 +894,7 @@ var graphPage = {
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
-                alert(xhr.responseText);
+                $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
             });
 
 
@@ -908,7 +913,7 @@ var graphPage = {
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
-                alert(xhr.responseText);
+                $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
             });
 
 
@@ -925,7 +930,7 @@ var graphPage = {
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
-                alert(xhr.responseText);
+                $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
             });
     },
     onInputSearchEdgesAndNodes: function (e) {
@@ -962,7 +967,7 @@ var graphPage = {
                             });
                         },
                         errorCallback = function (xhr, status, errorThrown) {
-                            alert(xhr.responseText);
+                            $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
                         }
                     );
                 }
@@ -977,7 +982,7 @@ var graphPage = {
                             });
                         },
                         errorCallback = function (xhr, status, errorThrown) {
-                            alert(xhr.responseText);
+                            $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
                         }
                     );
                 }
