@@ -1,7 +1,7 @@
 import json
 from applications.users.forms import RegisterForm
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import applications.users.controllers as users
 from django.template import RequestContext
 from graphspace.utils import *
@@ -279,3 +279,15 @@ def logout(request):
 		pass  # TODO: should something be done here?
 
 	return HttpResponseRedirect('/')  # redirect to the main page after logout.
+
+
+def images(request, query):
+	"""
+		Redirect request to /images to /static/images
+
+		The problem is that the link to images folder was hardcoded previously in the popups.
+
+		:param request: HTTP GET Request
+
+	"""
+	return redirect('/static' + request.path)

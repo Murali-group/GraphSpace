@@ -3,6 +3,7 @@ from django.conf.urls import url
 
 urlpatterns = [
 	url(r'^$', views.home_page, name='home'),
+	url(r'^images/(.*)$', views.images, name='images'),
 	url(r'^login/$', views.login, name='login'),
 	url(r'^register/$', views.register, name='register'),
 	url(r'^logout/$', views.logout, name='logout'),
