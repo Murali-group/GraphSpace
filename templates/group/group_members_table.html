@@ -8,7 +8,7 @@
        data-id-field="id">
     <thead>
     <tr>
-        <th data-field="email" data-sortable="true" data-halign="center" data-align="center">Email</th>
+        <th data-field="email" data-sortable="true" data-halign="center" data-align="center" data-formatter="groupPage.GroupMembersTable.userEmailFormatter">Email</th>
         {% if group.owner_email == uid %}
             <th data-field="operations"
                 data-formatter="groupPage.GroupMembersTable.operationsFormatter"

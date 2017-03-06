@@ -317,6 +317,14 @@ var groupPage = {
         }
     },
     GroupMembersTable: {
+        userEmailFormatter: function (value, row) {
+            if (value == $('#GroupOwnerEmail').val()) {
+                return value + ' (Group Owner)';
+            } else {
+                return value;
+            }
+
+        },
         operationsFormatter: function (value, row, index) {
             if (row.email == $('#GroupOwnerEmail').val()) {
                 return '';
