@@ -496,6 +496,9 @@ def upgrade():
 	op.alter_column('graph', 'json', new_column_name='old_json')
 	op.alter_column('graph', 'new_json', new_column_name='json')
 
+	op.alter_column('graph', 'old_json', nullable=True)
+	op.alter_column('layout', 'old_json', nullable=True)
+
 	op.drop_column('graph', 'style_json')
 
 
