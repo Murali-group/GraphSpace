@@ -1015,9 +1015,9 @@ var graphPage = {
                 $("#dialog").html("<p>" + target._private.data.popup + "</p>");
             }
             if (target._private.group == 'edges') {
-                $('#dialog').dialog('option', 'title', target._private.data.source + "->" + target._private.data.target);
+                $('#dialog').dialog('option', 'title', target._private.data.source + "-" + target._private.data.target);
             } else {
-                $('#dialog').dialog('option', 'title', target._private.data.content);
+                $('#dialog').dialog('option', 'title', target.style('label'));
             }
 
             $("#dialog").dialog({
