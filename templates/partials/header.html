@@ -15,7 +15,7 @@
                             {{ field }}
                         </div>
                     {% endfor %}
-                    <a class="pull-right" name="forgot" href="forgot_password">Forgot Password</a>
+                    <a class="pull-right" name="forgot" href="{% url 'forgot_password' %}">Forgot Password</a>
 
                     <button type="submit" name="signin" id="signinBtn" class="btn btn-success">Submit</button>
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
