@@ -1,7 +1,10 @@
 from datetime import datetime
 
+from sqlalchemy.exc import IntegrityError
+
 import applications.graphs.dal as db
 import applications.users as users
+from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace.wrappers import atomic_transaction
 from json_validator import *
 from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat
@@ -362,7 +365,10 @@ def get_layout_by_id(request, layout_id):
 def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):
 	if name is None or owner_email is None or graph_id is None:
 		raise Exception("Required Parameter is missing!")
-	return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, json=dumps(json))
+	try:
+		return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, json=dumps(json))
+	except IntegrityError as e:
+		raise BadRequest(request, error_code=ErrorCodes.Validation.LayoutNameAlreadyExists, args=name)
 
 
 def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):

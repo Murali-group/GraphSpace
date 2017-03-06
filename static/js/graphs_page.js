@@ -1191,7 +1191,7 @@ var graphPage = {
                 'default_layout_id': utils.getURLParameter('user_layout')
             },
             successCallback = function (response) {
-                default_layout_id = utils.getURLParameter('user_layout')
+                default_layout_id = utils.getURLParameter('user_layout');
                 graphPage.defaultLayoutWidget.init(1);
             },
             errorCallback = function (xhr, status, errorThrown) {

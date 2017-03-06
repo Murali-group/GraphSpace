@@ -223,7 +223,7 @@ $(document).ready(function () {
             align: "center"
         },
         delay: 15000,
-        offset: 100,
+        offset: 10,
         z_index: 100000,
         type: 'success'
     });
