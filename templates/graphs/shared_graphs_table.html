@@ -10,14 +10,14 @@
        data-pagination="true"
        data-sort-name="updated_at"
        data-id-field="id"
-       data-sort-order="asc">
+       data-sort-order="desc">
     <thead>
     <tr>
         <th data-field="name" data-sortable="True"
             data-formatter="graphsPage.graphsTable.graphNameFormatter">Graph Name
         </th>
         <th data-field="tags" data-formatter="graphsPage.graphsTable.tagsFormatter">Tags</th>
-        <th data-field="owner_email" data-formatter="graphsPage.graphsTable.ownerEmailFormatter">
+        <th data-field="owner_email" data-formatter="graphsPage.graphsTable.ownerEmailFormatter" data-sortable="True">
             Graph Owner
         </th>
         <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last
