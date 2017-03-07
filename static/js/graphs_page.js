@@ -495,6 +495,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#SharedGraphsTable').bootstrapTable('showLoading');
             $('#sharedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["tags"]) {
@@ -508,11 +509,13 @@ var graphsPage = {
             apis.graphs.get(params.data,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
+                    $('#SharedGraphsTable').bootstrapTable('hideLoading');
                     params.success(response);
                     $('#sharedGraphsTotal').text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching graphs.
+                    $('#SharedGraphsTable').bootstrapTable('hideLoading');
                     params.error('Error');
                 }
             );
@@ -526,6 +529,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#PublicGraphsTable').bootstrapTable('showLoading');
             $('#publicGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["tags"]) {
@@ -539,11 +543,13 @@ var graphsPage = {
             apis.graphs.get(params.data,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
+                    $('#PublicGraphsTable').bootstrapTable('hideLoading');
                     params.success(response);
                     $('#publicGraphsTotal').text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching graphs.
+                    $('#PublicGraphsTable').bootstrapTable('hideLoading');
                     params.error('Error');
                 }
             );
@@ -557,6 +563,8 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+            $('#OwnedGraphsTable').bootstrapTable('showLoading');
+
             $('#ownedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             if (params.data["tags"]) {
@@ -570,11 +578,13 @@ var graphsPage = {
             apis.graphs.get(params.data,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
+                    $('#OwnedGraphsTable').bootstrapTable('hideLoading');
                     params.success(response);
                     $('#ownedGraphsTotal').text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching graphs.
+                    $('#OwnedGraphsTable').bootstrapTable('hideLoading');
                     params.error('Error');
                 }
             );
