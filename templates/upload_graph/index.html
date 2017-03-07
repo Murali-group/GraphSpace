@@ -21,7 +21,8 @@
                                         <br>
                                         **Please note that this URL in your records. We will delete this graph after
                                         <b>30 days</b>. If you like GraphSpace and would like persistent storage of your
-                                        graphs, please consider <a id="create" class="alert-link">creating an account</a>.
+                                        graphs, please consider
+                                        <a id="create" class="alert-link">creating an account</a>.
                                         <br>
                                     {% endif %}
                                 </div>
@@ -67,7 +68,10 @@
                                 </div>
 
                                 <br>
-                                <button id="UploadGraphBtn" class="btn btn-primary gs-full-width">Submit</button>
+                                <button type="button" id="UploadGraphBtn" data-loading-text="Submitting..."
+                                        class="btn btn-primary gs-full-width" autocomplete="off">
+                                    Submit
+                                </button>
                             </form>
                             <br>
                             <hr>

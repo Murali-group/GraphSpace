@@ -617,17 +617,17 @@ var uploadGraphPage = {
                 }, {
                     type: 'warning'
                 });
-            }
-            var graph = $("#graphname").val();
-
-            if (_.trim($("#GraphFileInput").val()).length == 0) {
+            } else if (_.trim($("#GraphFileInput").val()).length == 0) {
                 return $.notify({
                     message: 'Please upload a valid file!',
                 }, {
                     type: 'warning'
                 });
+            } else {
+                var $btn = $(this).button('loading');
+                $("#UploadGraphForm").submit();
             }
-            $("#UploadGraphForm").submit();
+
         });
 
     }
