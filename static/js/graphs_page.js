@@ -1564,7 +1564,7 @@ var graphPage = {
                 graphPage.layoutEditor.undoRedoManager.redo();
             });
 
-            cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
+            //cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
 
             $("#startTourBtn").click(function () {
                 var intro = introJs();
@@ -1575,6 +1575,16 @@ var graphPage = {
                     'overlayOpacity': 0.5
                 });
                 intro.start();
+            });
+
+            $('#toggleNodeLabels').prop('checked', true);
+
+            $('#toggleNodeLabels').change(function (e) {
+                if ($('#toggleNodeLabels').is(":checked")) {
+                    cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+                } else {
+                    cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
+                }
             });
 
             graphPage.layoutEditor.nodeEditor.init();
