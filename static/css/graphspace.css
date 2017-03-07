@@ -97,11 +97,12 @@ div.container-fluid {
 
 #cyGraphContainer {
     width: 100%;
-    height: 80%;
+    height: 82%;
     position: relative;
     left: 0;
     top: 0;
     z-index: 999;
+    background-color: #fafafa;
 }
 
 .container.graphs, .container-fluid.graphs {
@@ -264,7 +265,10 @@ ul.nav.nav-tabs > li > a:hover {
     color: #333333;
 }
 
-.sidebar-nav li a.btn, .sidebar-nav li button.btn {
+.sidebar-nav > li > a.btn,
+.sidebar-nav > li > button.btn,
+.sidebar-nav > li > .btn-group > button.btn,
+.sidebar-nav > li > .btn-group > a.btn {
     display: block;
     max-width: 120px;
     margin: 0.5em auto;
@@ -286,6 +290,7 @@ ul.nav.nav-tabs > li > a:hover {
     box-shadow: 0 5px 11px 0 rgba(0,0,0,.18),0 4px 15px 0 rgba(0,0,0,.15);
 
 }
+
 
 .sidebar-nav li .btn-group > .btn  {
     box-shadow: none !important;

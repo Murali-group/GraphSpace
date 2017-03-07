@@ -48,64 +48,9 @@
         </a>
     </li>
     <li>
-        <a class="btn" href="#" data-trigger="focus" data-target="#changeLayoutPopover"
-           data-container="body"
-           data-placement="left" data-toggle="popover">
+        <a class="btn sidebar-nav-pills" href="#change_layout" data-target="#changeLayoutSidebar">
             Change Layout
         </a>
-        <div id="changeLayoutPopover" class="popover fade">
-            <p class="lead text-center zero-margin">Select Layout</p>
-            <ul id="changeLayoutBtns" class="bg-white"
-                style="list-style: none; max-height: 80%; overflow-x: hidden; height: auto; padding: 0.5em">
-                <li class="margin-bottom-2">
-                    <button type="button"
-                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="circle"
-                            onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Circle
-                    </button>
-                </li>
-                <li class="margin-bottom-2">
-                    <button type="button"
-                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="grid"
-                            onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Grid
-                    </button>
-                </li>
-                <li class="margin-bottom-2">
-                    <button type="button"
-                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="concentric"
-                            onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Concentric
-                    </button>
-                </li>
-                <li class="margin-bottom-2">
-                    <button type="button"
-                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="cose"
-                            onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Spring
-                        Embedder
-                    </button>
-                </li>
-                <li class="margin-bottom-2">
-                    <button type="button"
-                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="breadthfirst"
-                            onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Tree
-                    </button>
-                </li>
-                <span id="userPrivateLayoutBtns">
-
-                </span>
-                <span id="userSharedLayoutBtns">
-
-                </span>
-            </ul>
-        </div>
     </li>
     {% if uid %}
         <li>
