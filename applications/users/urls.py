@@ -10,6 +10,9 @@ urlpatterns = [
 
 	# AJAX APIs Endpoints
 
+	# Users
+	url(r'^ajax/users/$', views.users_ajax_api, name='users_ajax_api'),
+
 	# Groups
 	url(r'^ajax/groups/$', views.groups_ajax_api, name='groups_ajax_api'),
 	url(r'^ajax/groups/(?P<group_id>[^/]+)$', views.groups_ajax_api, name='groups_ajax_api'),

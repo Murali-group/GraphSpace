@@ -193,6 +193,56 @@ var groupPage = {
          */
         console.log('Loading Group Page....');
         utils.initializeTabs();
+
+        $('.new_group_member_email_input').select2({
+            placeholder: "Enter email id.....",
+            ajax: {
+                url: "/ajax/users/",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        email: '%' + params.term + '%', // search term
+                        offset: 0, //params.page*30 - 30,
+                        limit: 100
+                    };
+                },
+                processResults: function (data, params) {
+                    // parse the results into the format expected by Select2
+                    // since we are using custom formatting functions we do not need to
+                    // alter the remote JSON data, except to indicate that infinite
+                    // scrolling can be used
+                    params.limit = params.limit || 100;
+
+                    return {
+                        results: data.users,
+                        pagination: {
+                            more: (params.limit) < data.total_count
+                        }
+                    };
+                },
+                cache: true
+            },
+            escapeMarkup: function (markup) {
+                return markup;
+            }, // let our custom formatter work
+            minimumInputLength: 1,
+            templateResult: function (user) {
+                    if (user.email) {
+                        return user.email;
+                    } else {
+                        return user.text;
+                    }
+                },
+            templateSelection: function (user) {
+                    if (user.email) {
+                        return user.email;
+                    } else {
+                        return user.text;
+                    }
+                }
+        });
+
         $('#UpdateGroupBtn').click(groupPage.updateGroupForm.submit);
         $('#ConfirmRemoveGroupToGraphBtn').click(groupPage.SharedGraphsTable.onRemoveGroupToGraphConfirm);
         $('#ConfirmRemoveGroupMemberBtn').click(groupPage.GroupMembersTable.onRemoveGroupMemberConfirm);
@@ -200,7 +250,7 @@ var groupPage = {
     },
     onAddGroupMember: function (e) {
         e.preventDefault();
-        if (_.isEmpty(_.trim($('#newGroupMemberEmailInput').val()))) {
+        if (_.isEmpty(_.trim($('.new_group_member_email_input').val()))) {
             $.notify({
                 message: 'Please enter a valid email id!'
             }, {
@@ -210,16 +260,17 @@ var groupPage = {
         }
 
         apis.groups.addMember($('#GroupID').val(), {
-                'member_email': _.trim($('#newGroupMemberEmailInput').val())
+                'member_id': _.trim($('.new_group_member_email_input').val())
             },
             successCallback = function (response) {
                 // This method is called when a new group member relationship is successfully added.
 
-                $('#newGroupMemberEmailInput').val(''); // Reset Input field
+                $('.new_group_member_email_input').val(null).trigger("change"); // Reset Input field
                 $('#GroupMembersTable').bootstrapTable('refresh');
             },
             errorCallback = function (response) {
                 // This method is called when  error occurs while add group_to_user relationship.
+                $('.new_group_member_email_input').val(null).trigger("change"); // Reset Input field
                 $.notify({
                     message: response.responseJSON.error_message
                 }, {

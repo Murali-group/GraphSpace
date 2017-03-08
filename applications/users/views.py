@@ -105,6 +105,101 @@ def join_group_page(request, group_id):
 
 
 '''
+Users APIs
+'''
+
+
+def users_ajax_api(request):
+	"""
+	Handles any request sent to following urls:
+		/javascript/users
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _users_api(request)
+
+
+def _users_api(request):
+	"""
+	Handles any request (GET/POST) sent to /users.
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+	if 'application/json' in request.META.get('HTTP_ACCEPT', None):
+		if request.method == "GET":
+			return HttpResponse(json.dumps(_get_users(request, query=request.GET)), content_type="application/json")
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+
+def _get_users(request, query={}):
+	"""
+
+	Query Parameters
+	----------
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	email : string
+		Search for users with given email. In order to search for users with given email as a substring, wrap the email with percentage symbol. For example, %xyz% will search for all users with xyz in their email.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+	Parameters
+	----------
+	query : dict
+		Dictionary of query parameters.
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	users : List of Users.
+		List of User Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	# Validate search graph groups API request
+
+	total, users_list = users.search_users(request,
+										email=query.get('email', None),
+										limit=query.get('limit', 20),
+										offset=query.get('offset', 0),
+										order=query.get('order', 'asc'),
+										sort=query.get('sort', 'email'))
+
+	return {
+		'total': total,
+		'users': [utils.serializer(user) for user in users_list]
+	}
+
+'''
 Groups APIs
 '''
 

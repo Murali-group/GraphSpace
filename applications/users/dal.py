@@ -141,6 +141,26 @@ def delete_password_reset(db_session, id):
 
 
 @with_session
+def find_users(db_session, email, limit, offset, order_by=asc(User.email)):
+	query = db_session.query(User)
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if email is not None:
+		query = query.filter(User.email.ilike(email))
+
+	query = query.filter(User.email.notilike('%public_user%'));
+
+	total = query.count()
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()
+
+
+@with_session
 def add_group(db_session, name, owner_email, description):
 	"""
 	:param db_session: Database session.

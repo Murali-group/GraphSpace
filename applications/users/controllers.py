@@ -104,6 +104,28 @@ def get_user(request, email):
 	return db.get_user(request.db_session, email) if email is not None else None
 
 
+def search_users(request, email=None, limit=20, offset=0, order='desc', sort='name'):
+	if sort == 'email':
+		sort_attr = db.User.email
+	elif sort == 'updated_at':
+		sort_attr = db.User.updated_at
+	else:
+		sort_attr = db.User.email
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	total, users = db.find_users(request.db_session,
+						email=email,
+						limit=limit,
+						offset=offset,
+						order_by=orber_by)
+
+	return total, users
+
+
 def register(request, username=None, password=None):
 	if db.get_user(request.db_session, username):
 		raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=username)
@@ -167,7 +189,7 @@ def get_groups_by_owner_id(request, owner_id):
 def search_groups(request, owner_email=None, member_email=None, name=None, description=None, graph_ids=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Group.name
-	elif sort == 'update_at':
+	elif sort == 'updated_at':
 		sort_attr = db.Group.updated_at
 	elif sort == 'owner_email':
 		sort_attr = db.Group.owner_email
