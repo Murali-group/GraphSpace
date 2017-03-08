@@ -1198,37 +1198,37 @@ var graphPage = {
         },
         onSetDefaultLayoutBtn: function (e) {
             apis.graphs.update($('#GraphID').val(), {
-                'default_layout_id': utils.getURLParameter('user_layout')
-            },
-            successCallback = function (response) {
-                default_layout_id = utils.getURLParameter('user_layout');
-                graphPage.defaultLayoutWidget.init(1);
-            },
-            errorCallback = function (xhr, status, errorThrown) {
-                // This method is called when  error occurs while deleting group_to_graph relationship.
-                $.notify({
+                    'default_layout_id': utils.getURLParameter('user_layout')
+                },
+                successCallback = function (response) {
+                    default_layout_id = utils.getURLParameter('user_layout');
+                    graphPage.defaultLayoutWidget.init(1);
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting group_to_graph relationship.
+                    $.notify({
                         message: response.responseJSON.error_message
                     }, {
                         type: 'danger'
                     });
-            });
+                });
         },
         onRemoveDefaultLayoutBtn: function (e) {
             apis.graphs.update($('#GraphID').val(), {
-                'default_layout_id': 0
-            },
-            successCallback = function (response) {
-                default_layout_id = null;
-                graphPage.defaultLayoutWidget.init(1);
-            },
-            errorCallback = function (xhr, status, errorThrown) {
-                // This method is called when  error occurs while deleting group_to_graph relationship.
-                $.notify({
+                    'default_layout_id': 0
+                },
+                successCallback = function (response) {
+                    default_layout_id = null;
+                    graphPage.defaultLayoutWidget.init(1);
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting group_to_graph relationship.
+                    $.notify({
                         message: response.responseJSON.error_message
                     }, {
                         type: 'danger'
                     });
-            });
+                });
         }
     },
     nodesTable: {
@@ -1597,7 +1597,30 @@ var graphPage = {
                 }
             });
 
+            graphPage.cyGraph.elements().on('select, unselect', function () {
+                if (graphPage.cyGraph.nodes(':selected').length > 0) {
+                    $('#editSelectedNodesBtn').show();
+                } else {
+                    $('#editSelectedNodesBtn').hide();
+                }
+
+                if (graphPage.cyGraph.edges(':selected').length > 0) {
+                    $('#editSelectedEdgesBtn').show();
+                } else {
+                    $('#editSelectedEdgesBtn').hide();
+                }
+            });
+
+            $('#editSelectedNodesBtn').click(function () {
+                graphPage.layoutEditor.nodeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.nodes(':selected')));
+            });
+
+            $('#editSelectedEdgesBtn').click(function () {
+                graphPage.layoutEditor.edgeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.edges(':selected')));
+            });
+
             graphPage.layoutEditor.nodeEditor.init();
+            graphPage.layoutEditor.edgeEditor.init();
 
         },
         nodeSelector: {
@@ -1729,6 +1752,61 @@ var graphPage = {
                 $('#nodeHeight').val(_.replace(collection.style('height'), 'px', ''));
 
                 $("#nodeBackgroundColorPicker").colorpicker();
+            }
+
+        },
+        edgeEditor: {
+            init: function () {
+                $('#applyEdgePropertiesBtn').click(function () {
+                    edgeSelector = _.template("edge[name='<%= name %>']");
+
+                    if (_.isEmpty($('#edgeWidth').val())) {
+                        return $.notify({
+                            message: 'Please enter valid width value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else if (_.isEmpty($("#edgeLineColorPicker").colorpicker('getValue'))) {
+                        return $.notify({
+                            message: 'Please enter valid color value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else if (_.isEmpty($('#edgeStyle').val())) {
+                        return $.notify({
+                            message: 'Please enter valid style value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
+                            graphPage.cyGraph.style().selector(edgeSelector({'name': elem.data('name')})).style({
+                                'line-style': $('#edgeStyle').val(),
+                                'width': _.toString($('#edgeWidth').val()) + 'px',
+                                'line-color': $("#edgeLineColorPicker").colorpicker('getValue')
+                            }).update();
+                        });
+                        graphPage.cyGraph.style().selector('edge:selected').style({
+                            'width': 3,
+                            'line-color': '#ff0000',
+                            'target-arrow-color': '#ff0000',
+                            'source-arrow-color': '#ff0000'
+                        }).update()
+                    }
+
+                });
+            },
+            open: function (collection) {
+                $('.gs-sidebar-nav').removeClass('active');
+                $('#edgeEditorSideBar').addClass('active');
+
+                collection.unselect();
+                $('#edgeLineColor').val(collection.style('line-color'));
+                $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
+                $('#edgeStyle').val(collection.style('line-style'));
+
+                $("#edgeLineColorPicker").colorpicker();
+                collection.select();
             }
 
         }
@@ -1978,7 +2056,7 @@ var cytoscapeGraph = {
             'graph': cy.json()['elements'],
             'metadata': graph_json['metadata']
         }, null, 4)));
-        var link =  $('<a>').attr('href', file).attr('download', filename + '.' + format);
+        var link = $('<a>').attr('href', file).attr('download', filename + '.' + format);
         $('body').append(link);
         link.get(0).click();
         link.get(0).remove();
