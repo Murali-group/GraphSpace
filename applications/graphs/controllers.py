@@ -7,7 +7,7 @@ import applications.users as users
 from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace.wrappers import atomic_transaction
 from json_validator import *
-from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat
+from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat, CyJSFormat
 import networkx as nx
 from json import dumps, loads
 
@@ -157,7 +157,11 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 			G.set_tags(tags)
 	else:
 		# TODO: add code to handle cyjs format
-		pass
+		G = CyJSFormat.create_gsgraph(json.dumps(cyjs_graph))
+		if name is not None:
+			G.set_name(name)
+		if tags is not None:
+			G.set_tags(tags)
 
 	owner_email = users.controllers.add_user(request).email if owner_email is None else owner_email
 
@@ -213,7 +217,7 @@ def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
 		# Make edge undirected if its target_arrow_shape attribute is set to none
-		is_directed = 0 if edge[2]['style']['target_arrow_shape'] == 'none' else 1
+		is_directed = 0 if 'target-arrow-shape' in edge[2]['style'] and edge[2]['style']['target-arrow-shape'] == 'none' else 1
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),

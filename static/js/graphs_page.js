@@ -1141,13 +1141,21 @@ var graphPage = {
                 animate: false
             };
         }
+
         var nodeStylesheet = graphPage.getNodeStylesheet(graph_json['graph']['nodes']);
         var edgeStylesheet = graphPage.getEdgeStylesheet(graph_json['graph']['edges']);
 
         graph_json['graph']['nodes'] = _.map(graph_json['graph']['nodes'], function (node) {
-            return {
+            var newNode = {
                 "data": node['data']
+            };
+            if ('position' in node) {
+                newNode['position'] = node['position'];
+                layout = {
+                    name: 'preset'
+                };
             }
+            return newNode
         });
         graph_json['graph']['edges'] = _.map(graph_json['graph']['edges'], function (edge) {
             return {
