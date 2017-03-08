@@ -624,7 +624,7 @@ var uploadGraphPage = {
                     type: 'warning'
                 });
             } else {
-                var $btn = $(this).button('loading');
+                $(this).button('loading');
                 $("#UploadGraphForm").submit();
             }
 
