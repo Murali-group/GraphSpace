@@ -113,7 +113,35 @@
     </div>
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
-        <p class="lead container-fluid padding-top-2 padding-bottom-2">{{ graph.owner_email }} / <a class="text-center" href="{{ request.path }}">{{ graph.name }}</a></p>
+        <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
+            <div class="col-md-10">
+                <p class="lead">{{ graph.owner_email }} / <a
+                        class="text-center" href="{{ request.path }}">{{ graph.name }}</a></p>
+            </div>
+            <div class="col-md-2">
+                {% if uid %}
+                    <a class="btn btn-default pull-right btn-sm" href="#" data-toggle="modal" data-target="#shareGraphModal">
+                        <i class="fa fa-share-alt fa-lg"></i> Share
+                    </a>
+                {% endif %}
+                <a class="btn btn-default pull-right btn-sm" href="#" data-trigger="focus" data-target="#exportPopover"
+                   data-container="body"
+                   data-placement="bottom" data-toggle="popover" style="margin-right: 1em !important;">
+                    <i class="fa fa-download fa-lg"></i> Export
+                </a>
+                <div id="exportPopover" class="popover fade">
+                    <button type="button" class="btn btn-default" onclick="graphPage.export('json');">
+                        JSON
+                    </button>
+                    <button type="button" class="btn btn-default" onclick="graphPage.export('png');">PNG
+                    </button>
+                    <button type="button" class="btn btn-default" onclick="graphPage.export('jpg');">JPG
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
         <ul class="nav nav-tabs">
             <li class="active text-center">
                 <a id="graphVisualizationTabBtn" class="link-reset" href="#graph_visualization_tab" data-toggle="tab">Graph

@@ -1,7 +1,7 @@
 <!-- Sidebar -->
 
 <ul id="defaultSideBar" class="sidebar-nav gs-sidebar-nav active">
-
+    <li></li>
     <li>
         <div class="form-group has-feedback" style="margin: 0 1em;" data-trigger="focus"
              data-target="#searchPopover" data-container="body"
@@ -14,34 +14,14 @@
         </div>
         <div id="searchPopover" class="popover fade">
             <p class="lead zero-margin zero-padding"
-               style="font-size: large; text-align: right;">
-                Search
-                for nodes and edges.</p>
+               style="font-size: medium; text-align: right; ">
+                Search for nodes and edges.</p>
         </div>
     </li>
     <li>
-        <a class="btn" href="#" data-trigger="focus" data-target="#exportPopover"
-           data-container="body"
-           data-placement="left" data-toggle="popover">
-            <i class="fa fa-download fa-lg"></i> Export
-        </a>
-        <div id="exportPopover" class="popover fade">
-            <button type="button" class="btn btn-default" onclick="graphPage.export('json');">
-                JSON
-            </button>
-            <button type="button" class="btn btn-default" onclick="graphPage.export('png');">PNG
-            </button>
-            <button type="button" class="btn btn-default" onclick="graphPage.export('jpg');">JPG
-            </button>
-        </div>
+
     </li>
-    {% if uid %}
-        <li>
-            <a class="btn" href="#" data-toggle="modal" data-target="#shareGraphModal">
-                <i class="fa fa-share-alt fa-lg"></i> Share
-            </a>
-        </li>
-    {% endif %}
+
     <li>
         <a class="btn sidebar-nav-pills" href="#filter_nodes_edges" data-target="#filterNodesEdgesSideBar">
             <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
