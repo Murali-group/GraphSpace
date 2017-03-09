@@ -2060,14 +2060,35 @@ var cytoscapeGraph = {
     },
     export: function (cy, format, filename) {
         filename = filename ? filename : 'graph';
-        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-            'graph': cy.json()['elements'],
-            'metadata': graph_json['metadata']
-        }, null, 4)));
+        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getGraphSpaceJSON(cy), null, 4)));
         var link = $('<a>').attr('href', file).attr('download', filename + '.' + format);
         $('body').append(link);
         link.get(0).click();
         link.get(0).remove();
+    },
+    getGraphSpaceJSON: function (cy) {
+        return {
+            'graph': {
+                'nodes': _.map(cy.nodes(), function (elem) {
+                    return {
+                        'data': elem.data(),
+                        'position': elem.position(),
+                        'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
+                            return style ? style['strValue'] : undefined
+                        }), _.isNil)
+                    }
+                }),
+                'edges': _.map(cy.edges(), function (elem) {
+                    return {
+                        'data': elem.data(),
+                        'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
+                            return style ? style['strValue'] : undefined
+                        }), _.isNil)
+                    }
+                })
+            },
+            'metadata': graph_json['metadata']
+        };
     },
     getAutomaticLayoutSettings: function (layout_name) {
         //The following code retrieves the specified layout

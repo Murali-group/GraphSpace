@@ -78,7 +78,11 @@ class GraphSpaceJSONFormat:
 			# but new CytoscapeJS uses the content property
 			if 'label' in node['data']:
 				node['style']['content'] = node['data']['label']
-				del node['data']['label']
+				node['data'].pop('label', None)
+
+			if 'label' in node['style']:
+				node['style']['content'] = node['style']['label']
+				node['style'].pop('label', None)
 
 			# It will copy id value to the name attribute, even if the name attribute is provided by the user.
 			if 'id' in node['data']:
