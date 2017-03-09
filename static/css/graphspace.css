@@ -5,6 +5,9 @@ html, body {
     padding: 0;
     margin: 0;
     background-color: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 div.container-fluid {
@@ -122,7 +125,7 @@ div.container-fluid {
 /*Navbar default*/
 
 .navbar-default {
-    background-color: #000000;
+    background-color: #24292e;
     color: white;
 }
 
@@ -130,13 +133,23 @@ nav.navbar.navbar-default {
     margin: 0;
 }
 
-.navbar-default .navbar-nav>li>a, .navbar-default .navbar-brand {
-    color: white;
+.navbar-default .navbar-nav>li>a {
     cursor: pointer;
+    display: block;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+}
+
+.navbar-default .navbar-brand {
+    cursor: pointer;
+    display: block;
+    font-weight: 600;
+    color: white;
 }
 
 .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-brand:hover {
-    background-color: #d0d0d0;
+    color: white;
+    background-color: #000000 !important;
 }
 
 .navbar-default .navbar-nav>.open>a {

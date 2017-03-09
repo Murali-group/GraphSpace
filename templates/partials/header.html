@@ -1,86 +1,8 @@
 <!-- LogIn Modal -->
-<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Log In</h4>
-            </div>
-            <div class="modal-body">
-
-                <form method="post" id="register_form" class="register_form" role="form">
-                    {% csrf_token %}
-                    {% for field in login_form %}
-                        <div class="form-group">
-                            <span class="field_label">{{ field.label }}:</span>
-                            {{ field }}
-                        </div>
-                    {% endfor %}
-                    <a class="pull-right" name="forgot" href="{% url 'forgot_password' %}">Forgot Password</a>
-
-                    <button type="submit" name="signin" id="signinBtn" class="btn btn-success">Submit</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-
-                </form>
-
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partials/login_modal.html' %}
 
 <!-- Create Modal -->
-<div class="modal fade" id="signupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Create Account</h4>
-            </div>
-            <div class="modal-body">
-
-                <form method="post" id="register_form" class="register_form" role="form">
-                    {% csrf_token %}
-                    <div class="register_fields">
-                        {% for field in register_form %}
-                            <div class="form-group">
-                                <span class="field_label">{{ field.label }}:</span>
-                                {{ field }}
-                            </div>
-                        {% endfor %}
-                        <button name="register" id="registerBtn" class="btn btn-success">Register</button>
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Forgot Modal -->
-<div class="modal fade" id="forgotModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Forgot Information</h4>
-            </div>
-            <div class="modal-body">
-
-                <form method="post" class="forgot_form" name="forgot_form" id="forgot_form" role="form">
-                    {% csrf_token %}
-                    <div class="forgot_fields">
-                        <div class="control-group">
-                            <label for="forgot_email">Email:</label>
-                            <input id="forgot_email" class="form-control" maxlength="32" type="text" name="forgot_email"
-                                   autocomplete="off"/>
-                        </div>
-                        <br/>
-                        <button type="submit" name="forgot" id="forgot_send" class="btn btn-success">Send Email</button>
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partials/login_modal.html' %}
 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
@@ -104,24 +26,6 @@
                 <li><a href="{% url 'about_us' %}" style="text-align:center">About Us</a></li>
             </ul>
 
-            <!-- display login form if not logged in -->
-
-            {#                <form method="post" action="/login" id="login" class="navbar-form navbar-right" role="form">#}
-            {#                    {% for field in login_form %}#}
-            {#                        <div class="form-group">#}
-            {#                            {{ field }}#}
-            {#                        </div>#}
-            {#                    {% endfor %}#}
-            {##}
-            {#                    <!-- TODO: this button is not integrated into LoginForm. This may be integrated. -->#}
-            {#                    <button type="submit" name="signin" id="signin" class="btn btn-success">Sign in</button>#}
-            {#                    <button name="create" class="btn btn-primary" data-toggle="modal" data-target="#createModal">Create#}
-            {#                        Account#}
-            {#                    </button>#}
-            {#                    <!-- <button name="forgot" class="btn btn-danger" data-toggle="modal" data-target="#forgotModal">Forgot</button> -->#}
-            {#                    &nbsp;&nbsp;&nbsp;&nbsp;<a name="forgot" data-toggle="modal" data-target="#forgotModal" href="">Forgot</a>#}
-            {#                </form>#}
-
             <div class="nav navbar-nav navbar-right">
                 {% if uid == None %}
                     <li><a href="#login" data-toggle="modal" data-target="#loginModal">Log In</a></li>
@@ -138,8 +42,6 @@
                     </li>
                 {% endif %}
             </div>
-
-
         </div><!--/.nav-collapse -->
     </div>
 </div>

@@ -1,0 +1,27 @@
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Log In</h4>
+            </div>
+            <div class="modal-body">
+
+                <form method="post" id="register_form" class="register_form" role="form">
+                    {% csrf_token %}
+                    {% for field in login_form %}
+                        <div class="form-group">
+                            <span class="field_label">{{ field.label }}:</span>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                    <a class="pull-right" name="forgot" href="{% url 'forgot_password' %}">Forgot Password</a>
+
+                    <button type="submit" name="signin" id="signinBtn" class="btn btn-success">Submit</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -83,9 +83,14 @@ def is_user_authorized_to_view_layout(request, username, layout_id):
 		if layout.owner_email == username:
 			is_authorized = True
 		elif layout.is_shared == 1:  # layout is shared
-			for group in layout.graph.groups:
-				if users.controllers.is_member_of_group(request, username, group.id):
-					is_authorized = True  # layout is shared with the user
+			if get_graph_by_id(request, layout.graph_id).is_public == 1:
+				is_authorized = True
+			else:
+				for group in layout.graph.groups:
+					if users.controllers.is_member_of_group(request, username, group.id):
+						is_authorized = True  # layout is shared with the user
+
+
 	return is_authorized
 
 
