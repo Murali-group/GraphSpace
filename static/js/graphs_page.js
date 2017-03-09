@@ -1473,12 +1473,15 @@ var graphPage = {
             graphPage.layoutEditor.undoRedoManager = new UndoManager(
                 onUndo = function (item) {
                     if (item) {
-                        if (item['action_type'] === 'select') {
-                            graphPage.cyGraph.elements('*').unselect();
-                            graphPage.cyGraph.collection(item['data']['elements']).select();
-                        } else {
-                            cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item['data']['positions']);
-                        }
+
+                        graphPage.cyGraph.elements('*').unselect();
+                        graphPage.cyGraph.collection(item['data']['elements']).select();
+
+                        cytoscapeGraph.applyStylesheet(graphPage.cyGraph, {
+                            'style': item['data']['style']
+                        });
+                        cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item['data']['positions']);
+
                         $('#redoBtn').removeClass('disabled');
                     } else {
                         $('#undoBtn').addClass('disabled');
@@ -1486,12 +1489,14 @@ var graphPage = {
                 },
                 onRedo = function (item) {
                     if (item) {
-                        if (item['action_type'] === 'select') {
-                            graphPage.cyGraph.elements('*').unselect();
-                            graphPage.cyGraph.collection(item['data']['elements']).select();
-                        } else {
-                            cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item['data']['positions']);
-                        }
+                        graphPage.cyGraph.elements('*').unselect();
+                        graphPage.cyGraph.collection(item['data']['elements']).select();
+
+                        cytoscapeGraph.applyStylesheet(graphPage.cyGraph, {
+                            'style': item['data']['style']
+                        });
+                        cytoscapeGraph.setRenderedNodePositions(graphPage.cyGraph, item['data']['positions']);
+
                         $('#undoBtn').removeClass('disabled');
                     } else {
                         $('#redoBtn').addClass('disabled');
@@ -1503,24 +1508,21 @@ var graphPage = {
             );
 
             graphPage.layoutEditor.undoRedoManager.update({
-                'action_type': 'move',
+                'action_type': 'init',
                 'data': {
-                    'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph)
-                }
-            });
-
-            graphPage.layoutEditor.undoRedoManager.update({
-                'action_type': 'select',
-                'data': {
+                    'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                    'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
                     'elements': graphPage.cyGraph.elements(':selected')
                 }
             });
 
             graphPage.cyGraph.on('free', function (e) {
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'move',
+                    'action_type': 'move_node',
                     'data': {
-                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph)
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                        'elements': graphPage.cyGraph.elements(':selected')
                     }
                 });
             });
@@ -1528,8 +1530,10 @@ var graphPage = {
             // display node data as a popup
             graphPage.cyGraph.unbind('tap').on('tap', function (evt) {
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'select',
+                    'action_type': 'select_node',
                     'data': {
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
                         'elements': graphPage.cyGraph.elements(':selected')
                     }
                 });
@@ -1551,8 +1555,10 @@ var graphPage = {
                 });
 
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'select',
+                    'action_type': 'unselect_all',
                     'data': {
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
                         'elements': graphPage.cyGraph.elements(':selected')
                     }
                 });
@@ -1561,15 +1567,19 @@ var graphPage = {
             graphPage.layoutEditor.nodeSelector.init();
 
             $('.arrange_nodes').click(function () {
+
                 cytoscapeGraph.applyLayoutToCollection(
                     graphPage.cyGraph,
                     graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedNodes(graphPage.cyGraph)),
                     $(this).data('layout')
                 );
+
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'move',
+                    'action_type': 'arrange_node',
                     'data': {
-                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph)
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                        'elements': graphPage.cyGraph.elements(':selected')
                     }
                 });
             });
@@ -1636,8 +1646,19 @@ var graphPage = {
                 var reader = new FileReader();
                 reader.onload = function (event) {
                     var obj = JSON.parse(event.target.result);
-                    //TODO: Validate stylesheet file.
-                    cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj);
+
+                    if (cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj)) {
+                        graphPage.layoutEditor.undoRedoManager.update({
+                            'action_type': 'style',
+                            'data': {
+                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                                'elements': graphPage.cyGraph.elements(':selected')
+                            }
+                        });
+                    } else {
+                        graphPage.layoutEditor.undoRedoManager.undo();
+                    }
                 };
                 reader.readAsText(event.target.files[0]);
             });
@@ -1713,6 +1734,8 @@ var graphPage = {
                     graphPage.layoutEditor.undoRedoManager.update({
                         'action_type': 'select',
                         'data': {
+                            'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                            'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
                             'elements': graphPage.cyGraph.elements(':selected')
                         }
                     });
@@ -1722,6 +1745,7 @@ var graphPage = {
         nodeEditor: {
             init: function () {
                 $('#applyNodePropertiesBtn').click(function () {
+
                     nodeSelector = _.template("node[name='<%= name %>']");
 
                     if (_.isEmpty($('#nodeWidth').val())) {
@@ -1749,15 +1773,27 @@ var graphPage = {
                             type: 'warning'
                         });
                     } else {
+
+                        var tempStyle = graphPage.cyGraph.style();
                         _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
-                            graphPage.cyGraph.style().selector(nodeSelector({'name': elem.data('name')})).style({
+                            tempStyle = tempStyle.selector(nodeSelector({'name': elem.data('name')})).style({
                                 'shape': $('#nodeShape').val(),
                                 'width': _.toString($('#nodeWidth').val()) + 'px',
                                 'height': _.toString($('#nodeHeight').val()) + 'px',
                                 'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
-                            }).update();
+                            });
                         });
+                        tempStyle.update();
                         graphPage.layoutEditor.nodeSelector.init();
+
+                        graphPage.layoutEditor.undoRedoManager.update({
+                            'action_type': 'style',
+                            'data': {
+                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                                'elements': graphPage.cyGraph.elements(':selected')
+                            }
+                        });
                     }
 
                 });
@@ -1799,19 +1835,30 @@ var graphPage = {
                             type: 'warning'
                         });
                     } else {
+
+                        var tempStyle = graphPage.cyGraph.style();
                         _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
-                            graphPage.cyGraph.style().selector(edgeSelector({'name': elem.data('name')})).style({
+                            tempStyle = tempStyle.style().selector(edgeSelector({'name': elem.data('name')})).style({
                                 'line-style': $('#edgeStyle').val(),
                                 'width': _.toString($('#edgeWidth').val()) + 'px',
                                 'line-color': $("#edgeLineColorPicker").colorpicker('getValue')
-                            }).update();
+                            });
                         });
-                        graphPage.cyGraph.style().selector('edge:selected').style({
+                        tempStyle.selector('edge:selected').style({
                             'width': 3,
                             'line-color': '#ff0000',
                             'target-arrow-color': '#ff0000',
                             'source-arrow-color': '#ff0000'
-                        }).update()
+                        }).update();
+
+                        graphPage.layoutEditor.undoRedoManager.update({
+                            'action_type': 'style',
+                            'data': {
+                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                                'elements': graphPage.cyGraph.elements(':selected')
+                            }
+                        });
                     }
 
                 });
@@ -2059,13 +2106,14 @@ var cytoscapeGraph = {
                 var tempCy = cy.style();
                 _.each(stylesheetJSON, function (elemStyle) {
                     if (elemStyle['selector'].indexOf(':selected') == -1) {
-                        tempCy = tempCy.selector(elemStyle['selector']).style(elemStyle['css']);
+                        tempCy = tempCy.selector(elemStyle['selector']).style('css' in elemStyle ? elemStyle['css'] : elemStyle['style']);
                     }
                 });
-                _.each(selectedElementsStylesheet, function(elemStyle){
+                _.each(selectedElementsStylesheet, function (elemStyle) {
                     tempCy = tempCy.selector(elemStyle['selector']).style(elemStyle['style']);
                 });
                 tempCy.update();
+                return true;
             } else {
                 throw "Invalid cytoscape stylesheet file!"
             }
@@ -2076,6 +2124,7 @@ var cytoscapeGraph = {
             }, {
                 type: 'danger'
             });
+            return false;
         }
     },
     getStylesheet: function (cy) {
