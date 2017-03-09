@@ -472,9 +472,9 @@ var graphsPage = {
         onRemoveGraphConfirm: function (e) {
             e.preventDefault();
             $('table').bootstrapTable('remove', {
-                        field: 'id',
-                        values: [$('#deleteGraphModal').data('graph-id')]
-                    });
+                field: 'id',
+                values: [$('#deleteGraphModal').data('graph-id')]
+            });
             $('#deleteGraphModal').modal('hide');
             $.notify({message: 'Submitted the request to delete the graph. The graph will be deleted in sometime.'}, {type: 'info'});
 
@@ -1775,12 +1775,19 @@ var graphPage = {
                         }, {
                             type: 'warning'
                         });
+                    } else if (_.isEmpty($('#nodeLabel').val())) {
+                        return $.notify({
+                            message: 'Please enter valid label value!',
+                        }, {
+                            type: 'warning'
+                        });
                     } else {
 
                         var tempStyle = graphPage.cyGraph.style();
                         _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
                             tempStyle = tempStyle.selector(nodeSelector({'name': elem.data('name')})).style({
                                 'shape': $('#nodeShape').val(),
+                                'content': $('#nodeLabel').val(),
                                 'width': _.toString($('#nodeWidth').val()) + 'px',
                                 'height': _.toString($('#nodeHeight').val()) + 'px',
                                 'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
@@ -1809,6 +1816,7 @@ var graphPage = {
                 $('#nodeBackgroundColor').val(collection.style('background-color'));
                 $('#nodeWidth').val(_.replace(collection.style('width'), 'px', ''));
                 $('#nodeHeight').val(_.replace(collection.style('height'), 'px', ''));
+                $('#nodeLabel').val(collection.style('content'));
 
                 $("#nodeBackgroundColorPicker").colorpicker();
             }
