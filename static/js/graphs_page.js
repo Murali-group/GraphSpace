@@ -471,15 +471,18 @@ var graphsPage = {
         },
         onRemoveGraphConfirm: function (e) {
             e.preventDefault();
+            $('table').bootstrapTable('remove', {
+                        field: 'id',
+                        values: [$('#deleteGraphModal').data('graph-id')]
+                    });
+            $('#deleteGraphModal').modal('hide');
+            $.notify({message: 'Submitted the request to delete the graph. The graph will be deleted in sometime.'}, {type: 'info'});
+
             apis.graphs.delete($('#deleteGraphModal').data('graph-id'),
                 successCallback = function (response) {
                     // This method is called when graph is successfully deleted.
                     // The entry from the table is deleted.
-                    $('table').bootstrapTable('remove', {
-                        field: 'id',
-                        values: [$('#deleteGraphModal').data('graph-id')]
-                    });
-                    $('#deleteGraphModal').modal('hide');
+                    $.notify({message: 'Successfully deleted the graph with id=' + $('#deleteGraphModal').data('graph-id')}, {type: 'success'});
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
