@@ -265,8 +265,7 @@ ul.nav.nav-tabs > li > a:hover {
     color: #333333;
 }
 
-.sidebar-nav > li > a.btn,
-.sidebar-nav > li > button.btn,
+.sidebar-nav > li > .btn,
 .sidebar-nav > li > .btn-group > button.btn,
 .sidebar-nav > li > .btn-group > a.btn {
     display: block;

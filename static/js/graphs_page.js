@@ -1630,6 +1630,18 @@ var graphPage = {
             graphPage.layoutEditor.nodeEditor.init();
             graphPage.layoutEditor.edgeEditor.init();
 
+
+            $('#importCytoscapeStyleBtn').change(function (e) {
+                //console.log($('#importCytoscapeStyleBtn').files);
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    var obj = JSON.parse(event.target.result);
+                    //TODO: Validate stylesheet file.
+                    cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj);
+                };
+                reader.readAsText(event.target.files[0]);
+            });
+
         },
         nodeSelector: {
             init: function () {
@@ -2040,6 +2052,32 @@ var cytoscapeGraph = {
         }
         return layout;
     },
+    applyStylesheet: function (cy, stylesheetJSON) {
+        try {
+            stylesheetJSON = _.isArray(stylesheetJSON) ? stylesheetJSON[0]['style'] : stylesheetJSON['style'];
+            if (stylesheetJSON) {
+                var tempCy = cy.style();
+                _.each(stylesheetJSON, function (elemStyle) {
+                    if (elemStyle['selector'].indexOf(':selected') == -1) {
+                        tempCy = tempCy.selector(elemStyle['selector']).style(elemStyle['css']);
+                    }
+                });
+                _.each(selectedElementsStylesheet, function(elemStyle){
+                    tempCy = tempCy.selector(elemStyle['selector']).style(elemStyle['style']);
+                });
+                tempCy.update();
+            } else {
+                throw "Invalid cytoscape stylesheet file!"
+            }
+        }
+        catch (err) {
+            $.notify({
+                message: 'Invalid cytoscape stylesheet file!'
+            }, {
+                type: 'danger'
+            });
+        }
+    },
     getStylesheet: function (cy) {
         /*
          *  gets stylesheet for the graph.
@@ -2054,7 +2092,6 @@ var cytoscapeGraph = {
                     return style ? style['strValue'] : undefined
                 }), _.isNil)
             }
-
         });
 
     },
