@@ -87,6 +87,7 @@ def graph_page(request, graph_id):
 	uid = request.session['uid'] if 'uid' in request.session else None
 
 	context.push({"graph": _get_graph(request, graph_id)})
+	context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
 	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"]['default_layout_id'] else None})
 
 	if context["default_layout_id"] is not None and request.GET.get('user_layout') is None and request.GET.get('auto_layout') is None:
