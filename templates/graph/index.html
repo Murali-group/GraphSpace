@@ -113,14 +113,16 @@
     </div>
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
-
+        <p class="lead container-fluid padding-top-2 padding-bottom-2">{{ graph.owner_email }} / <a class="text-center" href="{{ request.path }}">{{ graph.name }}</a></p>
         <ul class="nav nav-tabs">
             <li class="active text-center">
-                <a id="graphVisualizationTabBtn" class="link-reset" href="#graph_visualization_tab" data-toggle="tab">Graph Visualization</a>
+                <a id="graphVisualizationTabBtn" class="link-reset" href="#graph_visualization_tab" data-toggle="tab">Graph
+                    Visualization</a>
             </li>
 
             <li class="text-center">
-                <a id="graphDetailsTabBtn" class="link-reset" href="#graph_details_tab" data-toggle="tab">Graph Details</a>
+                <a id="graphDetailsTabBtn" class="link-reset" href="#graph_details_tab" data-toggle="tab">Graph
+                    Details</a>
             </li>
 
             <li class="text-center">
@@ -162,9 +164,6 @@
                                 <div class="col-lg-12 gs-full-height">
                                     <div class="gs-full-height padding-bottom-6"
                                          style="margin: 0; width: 100%;">
-                                        <h1 class="text-center">
-                                            {{ graph.name }}
-                                        </h1>
                                         <input type="text" id="GraphName" value="{{ graph.name }}" hidden/>
                                         <input type="text" id="GraphID" value="{{ graph.id }}" hidden/>
                                         <p style="z-index=9999;position:fixed; top:40%; left:40%;"
@@ -173,7 +172,7 @@
                                         <div id="dialog"></div>
                                         <div id="cyGraphContainer"></div>
                                     </div>
-{#                                    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>#}
+                                    {#                                    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>#}
                                 </div>
                             </div>
                         </div>
@@ -207,8 +206,10 @@
     <link rel="stylesheet" href="{% static 'components/cytoscape-panzoom/cytoscape.js-panzoom.css' %}"/>
     <script type="text/javascript" src="{% static 'components/cytoscape-panzoom/cytoscape-panzoom.js' %}"></script>
 
-    <link rel="stylesheet" type="text/css" href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
-    <script type="text/javascript" src="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.js' %}"></script>
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
+    <script type="text/javascript"
+            src="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'components/intro.js/intro.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/intro.js/introjs.css' %}">
@@ -216,8 +217,10 @@
     <script type="text/javascript" src="{% static 'components/jquery-ui/jquery-ui.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/jquery-ui/themes/base/jquery-ui.min.css' %}">
 
-    <link rel="stylesheet" href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
-    <script type="text/javascript" charset="utf-8" src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
+    <link rel="stylesheet"
+          href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+    <script type="text/javascript" charset="utf-8"
+            src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
 
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
@@ -233,10 +236,10 @@
 
     <!-- Menu Toggle Script -->
     <script>
-{#        $("#menu-toggle").click(function (e) {#}
-{#            e.preventDefault();#}
-{#            $("#wrapper").toggleClass("toggled");#}
-{#        });#}
+        {#        $("#menu-toggle").click(function (e) {#}
+        {#            e.preventDefault();#}
+        {#            $("#wrapper").toggleClass("toggled");#}
+        {#        });#}
 
         $(function () {
             $('[data-toggle="popover"]').popover({

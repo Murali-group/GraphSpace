@@ -49,6 +49,14 @@ div.container-fluid {
     padding-top: 1% !important;
 }
 
+.padding-bottom-2 {
+    padding-bottom: 1% !important;
+}
+
+.padding-bottom-4 {
+    padding-bottom: 2% !important;
+}
+
 .padding-bottom-6 {
     padding-bottom: 3% !important;
 }
@@ -105,7 +113,7 @@ div.container-fluid {
     left: 0;
     top: 0;
     z-index: 999;
-    background-color: #fafafa;
+    background-color: white;
 }
 
 .container.graphs, .container-fluid.graphs {
@@ -226,6 +234,7 @@ ul.nav.nav-tabs > li > a:hover {
     -moz-transition: all 0.5s ease;
     -o-transition: all 0.5s ease;
     transition: all 0.5s ease;
+    border-left: 5px double rgba(36, 41, 46, 0.21);
 }
 
 #wrapper.toggled #sidebar-wrapper {
