@@ -729,7 +729,7 @@ var graphPage = {
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
-                alert("Layout does not exist or has not been shared yet!");
+                $.notify({message: "You are not authorized to access this layout, create an account and contact resource's owner for permission to access this layout."}, {type: 'danger'});
             });
     },
     onSelectLayoutBtnClick: function (e) {
@@ -805,31 +805,31 @@ var graphPage = {
                 type: 'warning'
             });
         } else {
-            if (graphPage.layoutEditor.undoRedoManager) {
-                _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
-                    if (action['action_type'] === 'select') {
-                        if (action['data']['elements'].length > 0) {
-                            action['data']['elements'] = action['data']['elements'].jsons();
-                        }
-                    }
-                    // Uncomment the code after setting up the elastic server.
-
-                    //apis.logging.add({
-                    //        'layout_name': layoutName,
-                    //        'graph_id': $('#GraphID').val(),
-                    //        'user_id': $('#UserEmail').val(),
-                    //        'action': action,
-                    //        'step': i
-                    //    },
-                    //    successCallback = function (response) {
-                    //        console.log(response);
-                    //    },
-                    //    errorCallback = function (xhr, status, errorThrown) {
-                    //        // This method is called when  error occurs while deleting group_to_graph relationship.
-                    //        $.notify({                             message: xhr.responseJSON.error_message                         }, {                             type: 'danger'                         });
-                    //    })
-                });
-            }
+            //if (graphPage.layoutEditor.undoRedoManager) {
+            //    _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
+            //        if (action['action_type'] === 'select') {
+            //            if (action['data']['elements'].length > 0) {
+            //                action['data']['elements'] = action['data']['elements'].jsons();
+            //            }
+            //        }
+            //        // Uncomment the code after setting up the elastic server.
+            //
+            //        //apis.logging.add({
+            //        //        'layout_name': layoutName,
+            //        //        'graph_id': $('#GraphID').val(),
+            //        //        'user_id': $('#UserEmail').val(),
+            //        //        'action': action,
+            //        //        'step': i
+            //        //    },
+            //        //    successCallback = function (response) {
+            //        //        console.log(response);
+            //        //    },
+            //        //    errorCallback = function (xhr, status, errorThrown) {
+            //        //        // This method is called when  error occurs while deleting group_to_graph relationship.
+            //        //        $.notify({                             message: xhr.responseJSON.error_message                         }, {                             type: 'danger'                         });
+            //        //    })
+            //    });
+            //}
 
             layout_json = {
                 'positions': cytoscapeGraph.getNodePositions(graphPage.cyGraph),
