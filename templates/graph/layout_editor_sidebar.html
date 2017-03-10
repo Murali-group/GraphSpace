@@ -3,15 +3,30 @@
 <ul id="layoutEditorSideBar" class="sidebar-nav gs-sidebar-nav">
 
     <li>
-        <a id="exitLayoutEditorBtn" class="btn btn-sm" href="#">
-            <i class="fa fa-chevron-left"></i> Exit
+        <a id="exitLayoutEditorBtn" class="btn btn-xs d-inline-block" href="#">
+            <i class="fa fa-chevron-left"></i> Save and Exit
+        </a>
+        <a id="startTourBtn" class="btn btn-xs d-inline-block" href="#">
+            Start Tour
         </a>
     </li>
 
     <li>
-        <a id="startTourBtn" class="btn btn-sm" href="#">
-            Start Tour
-        </a>
+        <label class="btn btn-default btn-xs d-inline-block" for="importCytoscapeStyleBtn">
+            <input id="importCytoscapeStyleBtn" name="cy_style_file" type="file" style="display:none;">
+            <i class="fa fa-upload" title="Import Style"></i> Import Style
+        </label>
+
+        <div class="btn-group d-inline-block">
+            <a id="undoBtn" class="btn btn-default btn-xs disabled" href="#" data-intro="Undo previous action."
+               data-step="8">
+                <i class="fa fa-undo" title="Undo"></i> Undo
+            </a>
+            <a id="redoBtn" class="btn btn-default btn-xs disabled" href="#" data-intro="Redo previous action."
+               data-step="9">
+                Redo <i class="fa fa-repeat" title="Redo"></i>
+            </a>
+        </div>
     </li>
 
     <li class="text-center">
@@ -23,36 +38,27 @@
         </div>
     </li>
 
-    <li>
-        <label class="btn btn-default btn-sm" for="importCytoscapeStyleBtn">
-            <input id="importCytoscapeStyleBtn" name="cy_style_file" type="file" style="display:none;">
-            Import Style
-        </label>
-    </li>
 
     <li>
-        <a id="editSelectedNodesBtn" class="btn btn-sm" href="#" data-intro="This option lets you edit selected nodes."
-           data-step="7" style="display: none">
-            Edit selected nodes
+        <a id="editSelectedNodesBtn" class="btn btn-xs disabled d-inline-block" href="#" data-intro="This option lets you edit selected nodes."
+           data-step="7" >
+            Edit selected <br> nodes
         </a>
-        <a id="editSelectedEdgesBtn" class="btn btn-sm" href="#" data-intro="This option lets you edit selected edges."
-           data-step="7" style="display: none">
-            Edit selected edges
-        </a>
-    </li>
 
-    <li>
-        <p class="lead text-center zero-margin">Select</p>
+        <a id="editSelectedEdgesBtn" class="btn btn-xs disabled d-inline-block" href="#" data-intro="This option lets you edit selected edges."
+           data-step="7">
+            Edit selected <br> edges
+        </a>
     </li>
 
     <li class="text-center" data-intro='You can select multiple nodes that have the same shape.' data-step='5'>
-        <h5 class="text-center">Shapes</h5>
+        <h5 class="text-center">Select nodes by shape</h5>
         <div id="selectShapes" style="text-align: left"></div>
 
     </li>
     <li class="text-center" data-intro='You can select multiple nodes that have the same background color.'
         data-step='6'>
-        <h5 class="text-center">Colors</h5>
+        <h5 class="text-center">Select nodes by color</h5>
         <div id="selectColors" style="text-align: left; margin-left: 1.5em;"></div>
     </li>
 
@@ -64,70 +70,55 @@
     </li>
 
     <li class="text-center">
-        <div class="btn-group">
-            <a id="undoBtn" class="btn btn-default btn-sm disabled" href="#" data-intro="Undo previous action."
-               data-step="8">
-                <i class="fa fa-undo" title="Undo"></i> Undo
-            </a>
-            <a id="redoBtn" class="btn btn-default btn-sm disabled" href="#" data-intro="Redo previous action."
-               data-step="9">
-                Redo <i class="fa fa-repeat" title="Redo"></i>
-            </a>
-        </div>
-    </li>
-
-    <li>
-        <p class="lead text-center zero-margin">Arrange</p>
-    </li>
-
-    <li class="text-center">
+        <h5 class="text-center">Arrange nodes</h5>
         <div class="btn-group">
             <button title="Arranges all selected nodes in open circle"
                     data-intro="Arrange all the selected nodes along the periphery of a circle." data-step="10"
-                    data-position="top" id="circle_selected" class="btn btn-default btn-sm move arrange_nodes"
+                    data-position="top" id="circle_selected" class="btn btn-default btn-xs move arrange_nodes"
                     data-layout="circle">
                 &nbsp;<i class="fa fa-circle-o"></i>&nbsp;&nbsp;
             </button>
             <button title="Arranges all selected  nodes in dense circle" data-position="top"
                     data-intro="Arrange all selected nodes inside a circle." data-step="11" data-position="top"
-                    data-layout="fill_circle" class="btn btn-default btn-sm move arrange_nodes" value="circle_selected">
+                    data-layout="fill_circle" class="btn btn-default btn-xs move arrange_nodes" value="circle_selected">
                 &nbsp;<i class="fa fa-circle"></i>&nbsp;&nbsp;
             </button>
             <button title="Arranges all selected  nodes in open square" data-position="top"
                     data-intro="Arrange all the selected nodes along the perimeter of a square." data-step="12"
-                    data-position="top" data-layout="square" class="btn btn-default btn-sm move arrange_nodes"
+                    data-position="top" data-layout="square" class="btn btn-default btn-xs move arrange_nodes"
                     value="square_selected">
                 &nbsp;<i class="fa fa-square-o"></i>&nbsp;&nbsp;
             </button>
             <button title="Arranges all selected  nodes in dense square" data-position="top"
                     data-intro="Arrange all selected nodes into a grid." data-step="13" data-position="top"
-                    data-layout="grid" class="btn btn-default btn-sm move arrange_nodes" value="square_selected">
+                    data-layout="grid" class="btn btn-default btn-xs move arrange_nodes" value="square_selected">
                 &nbsp;<i class="fa fa-square"></i>&nbsp;&nbsp;
             </button>
         </div>
-        <br><br>
+        <br>
+        <br>
         <div class="btn-group">
             <button title="Arranges all selected  nodes in vertical line" data-position="top"
                     data-intro="Arrange all selected nodes along a vertical line." data-step="14" value="vertical"
-                    class="btn btn-default btn-sm arrange_nodes" data-layout="vertical"
+                    class="btn btn-default btn-xs arrange_nodes" data-layout="vertical"
                     style="display: block; margin: 0 auto;">
                 &nbsp;<i class="fa-rotate-90 fa fa-minus"></i>&nbsp;&nbsp;
             </button>
             <button title="Arranges all selected  nodes in horizontal line" data-position="top"
                     data-intro="Arrange all selected nodes along a horizontal line." data-step="15" value="horizontal"
-                    class="btn btn-default btn-sm arrange_nodes" data-layout="horizontal"
+                    class="btn btn-default btn-xs arrange_nodes" data-layout="horizontal"
                     style="display: block; margin: 0 auto;">
                 &nbsp;<i class="fa fa-minus"></i>&nbsp;&nbsp;
             </button>
             <button title="Move all selected  nodes closer to each other" data-position="top"
                     data-intro="Move all selected nodes closer to each other." data-step="16" data-position="top"
-                    class="btn btn-default btn-sm arrange_nodes" style="display: block; margin: 0 auto;" value="squeeze"
+                    class="btn btn-default btn-xs arrange_nodes" style="display: block; margin: 0 auto;" value="squeeze"
                     data-layout="squeeze">
                 &nbsp;<span class="glyphicon glyphicon-resize-small"></span>&nbsp;&nbsp;
             </button>
             <button title="Move all selected nodes away from each other" data-position="top"
                     data-intro="Move all selected nodes away from each other." data-step="17" value="release"
-                    class="btn btn-default btn-sm arrange_nodes" data-layout="release"
+                    class="btn btn-default btn-xs arrange_nodes" data-layout="release"
                     style="display: block; margin: 0 auto;">
                 &nbsp;<span class="glyphicon glyphicon-resize-full"></span>&nbsp;&nbsp;
             </button>

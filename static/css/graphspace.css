@@ -10,12 +10,11 @@ html, body {
     line-height: 1.5;
 }
 
-
 div.container-fluid {
-	/* should occupy entire page */
-	width: 100%;
-	height: 100%;
-	margin: 0;
+    /* should occupy entire page */
+    width: 100%;
+    height: 100%;
+    margin: 0;
 }
 
 .mask {
@@ -29,7 +28,7 @@ div.container-fluid {
     color: white;
     position: fixed;
     bottom: 0;
-    width:100%;
+    width: 100%;
 }
 
 .zero-margin {
@@ -127,7 +126,7 @@ div.container-fluid {
 
 #cyGraphContainer {
     width: 100%;
-    height: 82%;
+    height: 100%;
     position: relative;
     left: 0;
     top: 0;
@@ -136,14 +135,15 @@ div.container-fluid {
 }
 
 .container.graphs, .container-fluid.graphs {
-	background-color: #ffffff;
-	position: relative;
-	padding-top: 20px;
+    background-color: #ffffff;
+    position: relative;
+    padding-top: 20px;
     height: 100%;
 }
 
-
-.ui-dialog { z-index: 1000 !important ;}
+.ui-dialog {
+    z-index: 1000 !important;
+}
 
 .gs-list-group-item {
     border: none;
@@ -161,11 +161,11 @@ nav.navbar.navbar-default {
     margin: 0;
 }
 
-.navbar-default .navbar-nav>li>a {
+.navbar-default .navbar-nav > li > a {
     cursor: pointer;
     display: block;
     font-weight: 600;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .navbar-default .navbar-brand {
@@ -175,12 +175,12 @@ nav.navbar.navbar-default {
     color: white;
 }
 
-.navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-brand:hover {
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-brand:hover {
     color: white;
     background-color: #000000 !important;
 }
 
-.navbar-default .navbar-nav>.open>a {
+.navbar-default .navbar-nav > .open > a {
     background-color: #d0d0d0 !important;
 }
 
@@ -248,7 +248,7 @@ ul.nav.nav-tabs > li > a:hover {
     width: 0;
     height: 100%;
     margin-right: -250px;
-    overflow-y: auto;
+    overflow-y: scroll;
     background: transparent;
     -webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;
@@ -272,10 +272,9 @@ ul.nav.nav-tabs > li > a:hover {
     margin-left: -250px;
 }
 
-
-.select-color-box{
-    width:20px;
-    height:20px;
+.select-color-box {
+    width: 20px;
+    height: 20px;
     margin-right: 1em;
 }
 
@@ -285,7 +284,7 @@ ul.nav.nav-tabs > li > a:hover {
     position: absolute;
     top: 0;
     width: 250px;
-    padding: 4% 4%;
+    padding: 1% 1%;
     list-style: none;
 }
 
@@ -293,12 +292,17 @@ ul.nav.nav-tabs > li > a:hover {
     display: none;
 }
 
+.d-inline-block {
+    display: inline-block !important;
+}
+
 .gs-sidebar-nav.active {
     display: block;
 }
 
 .sidebar-nav li {
-        padding: 10px;
+    padding: 10px;
+    text-align: center;
 }
 
 .sidebar-nav li a {
@@ -312,7 +316,7 @@ ul.nav.nav-tabs > li > a:hover {
 .sidebar-nav > li > .btn-group > a.btn {
     display: block;
     max-width: 120px;
-    margin: 0.5em auto;
+    margin: 0 auto;
     background-color: #4285F4;
     color: #fff;
     border-radius: 2px;
@@ -328,12 +332,11 @@ ul.nav.nav-tabs > li > a:hover {
     cursor: pointer;
     touch-action: manipulation;
     border: transparent;
-    box-shadow: 0 5px 11px 0 rgba(0,0,0,.18),0 4px 15px 0 rgba(0,0,0,.15);
+    box-shadow: 0 5px 11px 0 rgba(0, 0, 0, .18), 0 4px 15px 0 rgba(0, 0, 0, .15);
 
 }
 
-
-.sidebar-nav li .btn-group > .btn  {
+.sidebar-nav li .btn-group > .btn {
     box-shadow: none !important;
     border: 0.25px solid rgba(6, 9, 21, 0.24)
 }
@@ -350,7 +353,7 @@ ul.nav.nav-tabs > li > a:hover {
 .sidebar-nav li a:hover {
     text-decoration: none;
     color: #333333;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .sidebar-nav li a:active,
@@ -377,11 +380,11 @@ ul.nav.nav-tabs > li > a:hover {
     padding: 0.6em;
 }
 
-p.lead{
+p.lead {
     margin: 0 !important;
 }
 
-@media(min-width:768px) {
+@media (min-width: 768px) {
     #wrapper {
         padding-right: 250px;
     }

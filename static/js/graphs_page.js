@@ -1620,15 +1620,15 @@ var graphPage = {
 
             graphPage.cyGraph.elements().on('select, unselect', function () {
                 if (graphPage.cyGraph.nodes(':selected').length > 0) {
-                    $('#editSelectedNodesBtn').show();
+                    $('#editSelectedNodesBtn').removeClass('disabled');
                 } else {
-                    $('#editSelectedNodesBtn').hide();
+                    $('#editSelectedNodesBtn').addClass('disabled');
                 }
 
                 if (graphPage.cyGraph.edges(':selected').length > 0) {
-                    $('#editSelectedEdgesBtn').show();
+                    $('#editSelectedEdgesBtn').removeClass('disabled');
                 } else {
-                    $('#editSelectedEdgesBtn').hide();
+                    $('#editSelectedEdgesBtn').addClass('disabled');
                 }
 
             });
