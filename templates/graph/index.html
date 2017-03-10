@@ -195,21 +195,16 @@
                     <!-- Page Content -->
                     <div id="page-content-wrapper" class="gs-full-height">
                         <div class="gs-full-height zero-margin zero-padding">
-                            <div class="row gs-full-height">
-                                <div class="col-lg-12 gs-full-height">
-                                    <div class="gs-full-height"
-                                         style="margin: 0; width: 100%;">
+                            <div class="gs-full-height"
+                                 style="margin: 0; width: 100%;">
 
-                                        <input type="text" id="GraphName" value="{{ graph.name }}" hidden/>
-                                        <input type="text" id="GraphID" value="{{ graph.id }}" hidden/>
-                                        <p style="z-index:9999;position:fixed; top:40%; left:40%;"
-                                           data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box."
-                                           data-step='1'></p>
-                                        <div id="dialog"></div>
-                                        <div id="cyGraphContainer"></div>
-                                    </div>
-                                    {#                                    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>#}
-                                </div>
+                                <input type="text" id="GraphName" value="{{ graph.name }}" hidden/>
+                                <input type="text" id="GraphID" value="{{ graph.id }}" hidden/>
+                                <p style="z-index:9999;position:fixed; top:40%; left:40%;"
+                                   data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box."
+                                   data-step='1'></p>
+                                <div id="dialog"></div>
+                                <div id="cyGraphContainer"></div>
                             </div>
                         </div>
                     </div>
