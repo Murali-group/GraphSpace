@@ -1630,6 +1630,7 @@ var graphPage = {
                 } else {
                     $('#editSelectedEdgesBtn').hide();
                 }
+
             });
 
             $('#editSelectedNodesBtn').click(function () {
@@ -1664,6 +1665,121 @@ var graphPage = {
                     }
                 };
                 reader.readAsText(event.target.files[0]);
+            });
+
+            $("#nodeBackgroundColorPicker").colorpicker();
+            $("#edgeLineColorPicker").colorpicker();
+
+            $('#nodeWidth').on('input', function (e) {
+                if (_.isEmpty($('#nodeWidth').val())) {
+                    return $.notify({
+                        message: 'Please enter valid width value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.nodeEditor.updateNodeProperty({
+                        'width': _.toString($('#nodeWidth').val()) + 'px'
+                    });
+                }
+            });
+
+            $('#nodeHeight').on('input', function (e) {
+                if (_.isEmpty($('#nodeHeight').val())) {
+                    return $.notify({
+                        message: 'Please enter valid height value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.nodeEditor.updateNodeProperty({
+                        'height': _.toString($('#nodeHeight').val()) + 'px'
+                    });
+                }
+            });
+
+            $('#nodeBackgroundColorPicker').on('changeColor', function (e) {
+                if (_.isEmpty($("#nodeBackgroundColorPicker").colorpicker('getValue'))) {
+                    return $.notify({
+                        message: 'Please enter valid color value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.nodeEditor.updateNodeProperty({
+                        'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
+                    });
+                }
+            });
+
+            $('#nodeShape').on('change', function (e) {
+                if (_.isEmpty($('#nodeShape').val())) {
+                    return $.notify({
+                        message: 'Please enter valid shape value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.nodeEditor.updateNodeProperty({
+                        'shape': $('#nodeShape').val()
+                    });
+                }
+            });
+
+            $('#nodeLabel').on('input', function (e) {
+                if (_.isEmpty($('#nodeShape').val())) {
+                    return $.notify({
+                        message: 'Please enter valid label value!'
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.nodeEditor.updateNodeProperty({
+                        'content': $('#nodeLabel').val()
+                    });
+                }
+            });
+
+            $('#edgeWidth').on('input', function (e) {
+                if (_.isEmpty($('#edgeWidth').val())) {
+                    return $.notify({
+                        message: 'Please enter valid width value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                        'width': _.toString($('#edgeWidth').val()) + 'px'
+                    });
+                }
+            });
+
+            $('#edgeLineColorPicker').on('changeColor', function (e) {
+                if (_.isEmpty($("#edgeLineColorPicker").colorpicker('getValue'))) {
+                    return $.notify({
+                        message: 'Please enter valid color value!'
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                        'line-color': $("#edgeLineColorPicker").colorpicker('getValue')
+                    });
+                }
+            });
+
+            $('#edgeStyle').on('change', function (e) {
+                if (_.isEmpty($('#edgeStyle').val())) {
+                    return $.notify({
+                        message: 'Please enter valid style value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                        'line-style': $('#edgeStyle').val()
+                    });
+                }
             });
 
         },
@@ -1747,144 +1863,100 @@ var graphPage = {
         },
         nodeEditor: {
             init: function () {
-                $('#applyNodePropertiesBtn').click(function () {
+                var collection = graphPage.cyGraph.nodes(':selected');
+                if (collection.length > 0) {
+                    $('#nodeShape').val(collection.style('shape'));
+                    $('#nodeWidth').val(_.replace(collection.style('width'), 'px', ''));
+                    $('#nodeHeight').val(_.replace(collection.style('height'), 'px', ''));
+                    $('#nodeLabel').val(collection.style('content'));
 
-                    nodeSelector = _.template("node[name='<%= name %>']");
-
-                    if (_.isEmpty($('#nodeWidth').val())) {
-                        return $.notify({
-                            message: 'Please enter valid width value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($('#nodeHeight').val())) {
-                        return $.notify({
-                            message: 'Please enter valid height value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($("#nodeBackgroundColorPicker").colorpicker('getValue'))) {
-                        return $.notify({
-                            message: 'Please enter valid color value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($('#nodeShape').val())) {
-                        return $.notify({
-                            message: 'Please enter valid shape value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($('#nodeLabel').val())) {
-                        return $.notify({
-                            message: 'Please enter valid label value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else {
-
-                        var tempStyle = graphPage.cyGraph.style();
-                        _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
-                            tempStyle = tempStyle.selector(nodeSelector({'name': elem.data('name')})).style({
-                                'shape': $('#nodeShape').val(),
-                                'content': $('#nodeLabel').val(),
-                                'width': _.toString($('#nodeWidth').val()) + 'px',
-                                'height': _.toString($('#nodeHeight').val()) + 'px',
-                                'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
-                            });
-                        });
-                        tempStyle.update();
-                        graphPage.layoutEditor.nodeSelector.init();
-
-                        graphPage.layoutEditor.undoRedoManager.update({
-                            'action_type': 'style',
-                            'data': {
-                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
-                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                                'elements': graphPage.cyGraph.elements(':selected')
-                            }
-                        });
+                    $("#nodeBackgroundColorPicker").colorpicker('setValue', collection.style('background-color'));
+                }
+            },
+            updateNodeProperty: function (styleJSON) {
+                nodeSelector = _.template("node[name='<%= name %>']");
+                var tempStyle = graphPage.cyGraph.style();
+                _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
+                    tempStyle = tempStyle.selector(nodeSelector({'name': elem.data('name')})).style(styleJSON);
+                });
+                tempStyle.update();
+                graphPage.layoutEditor.nodeSelector.init();
+                graphPage.layoutEditor.undoRedoManager.update({
+                    'action_type': 'style',
+                    'data': {
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                        'elements': graphPage.cyGraph.elements(':selected')
                     }
-
                 });
             },
             open: function (collection) {
+                graphPage.cyGraph.on('free', function (e) {
+                    if (e.cyTarget !== this) {
+                        var collection = graphPage.cyGraph.nodes(':selected');
+                        if (collection.length > 0) {
+                            $('#nodeShape').val(collection.style('shape'));
+                            $('#nodeWidth').val(_.replace(collection.style('width'), 'px', ''));
+                            $('#nodeHeight').val(_.replace(collection.style('height'), 'px', ''));
+                            $('#nodeLabel').val(collection.style('content'));
+                            $("#nodeBackgroundColorPicker").colorpicker('setValue', collection.style('background-color'));
+                        }
+                    }
+                });
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#nodeEditorSideBar').addClass('active');
-
-                $('#nodeShape').val(collection.style('shape'));
-                $('#nodeBackgroundColor').val(collection.style('background-color'));
-                $('#nodeWidth').val(_.replace(collection.style('width'), 'px', ''));
-                $('#nodeHeight').val(_.replace(collection.style('height'), 'px', ''));
-                $('#nodeLabel').val(collection.style('content'));
-
-                $("#nodeBackgroundColorPicker").colorpicker();
+                graphPage.layoutEditor.nodeEditor.init();
             }
-
         },
         edgeEditor: {
             init: function () {
-                $('#applyEdgePropertiesBtn').click(function () {
-                    edgeSelector = _.template("edge[name='<%= name %>']");
-
-                    if (_.isEmpty($('#edgeWidth').val())) {
-                        return $.notify({
-                            message: 'Please enter valid width value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($("#edgeLineColorPicker").colorpicker('getValue'))) {
-                        return $.notify({
-                            message: 'Please enter valid color value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else if (_.isEmpty($('#edgeStyle').val())) {
-                        return $.notify({
-                            message: 'Please enter valid style value!',
-                        }, {
-                            type: 'warning'
-                        });
-                    } else {
-
-                        var tempStyle = graphPage.cyGraph.style();
-                        _.each(graphPage.cyGraph.elements(':selected'), function (elem) {
-                            tempStyle = tempStyle.style().selector(edgeSelector({'name': elem.data('name')})).style({
-                                'line-style': $('#edgeStyle').val(),
-                                'width': _.toString($('#edgeWidth').val()) + 'px',
-                                'line-color': $("#edgeLineColorPicker").colorpicker('getValue')
-                            });
-                        });
-                        tempStyle.selector('edge:selected').style({
-                            'width': 3,
-                            'line-color': '#ff0000',
-                            'target-arrow-color': '#ff0000',
-                            'source-arrow-color': '#ff0000'
-                        }).update();
-
-                        graphPage.layoutEditor.undoRedoManager.update({
-                            'action_type': 'style',
-                            'data': {
-                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
-                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                                'elements': graphPage.cyGraph.elements(':selected')
-                            }
-                        });
+                var collection = graphPage.cyGraph.edges(':selected');
+                if (collection.length > 0) {
+                    collection.unselect();
+                    $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
+                    $('#edgeStyle').val(collection.style('line-style'));
+                    $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
+                    collection.select();
+                }
+            },
+            updateEdgeProperty: function (styleJSON) {
+                edgeSelector = _.template("edge[name='<%= name %>']");
+                var tempStyle = graphPage.cyGraph.style();
+                _.each(graphPage.cyGraph.edges(':selected'), function (elem) {
+                    tempStyle = tempStyle.style().selector(edgeSelector({'name': elem.data('name')})).style(styleJSON);
+                });
+                tempStyle.selector('edge:selected').style({
+                    'width': 3,
+                    'line-color': '#ff0000',
+                    'target-arrow-color': '#ff0000',
+                    'source-arrow-color': '#ff0000'
+                }).update();
+                graphPage.layoutEditor.undoRedoManager.update({
+                    'action_type': 'style',
+                    'data': {
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                        'elements': graphPage.cyGraph.elements(':selected')
                     }
-
                 });
             },
             open: function (collection) {
+
+                graphPage.cyGraph.edges().on('free', function (e) {
+                    var collection = graphPage.cyGraph.edges(':selected');
+                    if (collection.length > 0) {
+                        collection.unselect();
+                        $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
+                        $('#edgeStyle').val(collection.style('line-style'));
+                        $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
+                        collection.select();
+                    }
+                });
+
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#edgeEditorSideBar').addClass('active');
+                graphPage.layoutEditor.edgeEditor.init();
 
-                collection.unselect();
-                $('#edgeLineColor').val(collection.style('line-color'));
-                $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
-                $('#edgeStyle').val(collection.style('line-style'));
-
-                $("#edgeLineColorPicker").colorpicker();
-                collection.select();
             }
 
         }
