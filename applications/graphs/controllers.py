@@ -223,7 +223,6 @@ def delete_graph_by_id(request, graph_id):
 def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
-		# Make edge undirected if its target_arrow_shape attribute is set to none
 		is_directed = 0 if 'is_directed' not in edge[2]['data'] else edge[2]['data']['is_directed']
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge

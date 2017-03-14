@@ -13,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-# from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat
+from graphspace.graphs.formatter.json_formatter import CyJSFormat
 
 revision = '7df7ee83a212'
 down_revision = 'c4c8fd40b021'
@@ -24,7 +24,7 @@ graphhelper = sa.Table(
 	'graph',
 	sa.MetaData(),
 	sa.Column('id', sa.Integer, primary_key=True),
-	sa.Column('json', sa.String)
+	sa.Column('graph_json', sa.String)
 )
 
 nodehelper = sa.Table(
@@ -65,7 +65,7 @@ def add_graph_nodes(connection, graph_id, nodes):
 
 	for node in nodes:
 		# Add node to table
-		id, name, label = add_node(connection, name=node[0], label=node[1]['style']['content'], graph_id=graph_id)
+		id, name, label = add_node(connection, name=node[0], label=node[1]['data']['label'], graph_id=graph_id)
 		node_name_to_id_map[name] = id
 		node_id_to_label_map[id] = label
 	return node_name_to_id_map, node_id_to_label_map
@@ -88,9 +88,7 @@ def add_edge(connection, name, head_node_id, tail_node_id, tail_node_name, head_
 def add_graph_edges(connection, graph_id, edges, node_name_to_id_map, node_id_to_label_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
-		# Make edge undirected if its target_arrow_shape attribute is set to none
-		is_directed = 0 if 'target-arrow-shape' in edge[2]['style'] and edge[2]['style'][
-			                                                                'target-arrow-shape'] == 'none' else 1
+		is_directed = 0 if 'is_directed' not in edge[2]['data'] else edge[2]['data']['is_directed']
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		add_edge(connection,
@@ -106,32 +104,32 @@ def add_graph_edges(connection, graph_id, edges, node_name_to_id_map, node_id_to
 
 
 def upgrade():
-	# connection = op.get_bind()
-	# graph_ids = set()
-	#
-	# for graph in connection.execute(graphhelper.select().distinct(graphhelper.c.id)):
-	# 	graph_ids.add(graph.id)
-	#
-	# graphs_with_elements = set()
-	#
-	# for node in connection.execute(nodehelper.select().distinct(nodehelper.c.graph_id)):
-	# 	graphs_with_elements.add(node.graph_id)
-	#
-	# graph_ids.difference_update(graphs_with_elements)
-	#
-	# for edge in connection.execute(edgehelper.select().distinct(edgehelper.c.graph_id)):
-	# 	graphs_with_elements.add(edge.graph_id)
-	#
-	# graph_ids.difference_update(graphs_with_elements)
-	#
-	# for graph in connection.execute(graphhelper.select().where(graphhelper.c.id.in_(graph_ids))):
-	# 	G = GraphSpaceJSONFormat.create_gsgraph(graph.json)
-	# 	# Add graph nodes
-	# 	node_name_to_id_map, node_id_to_label_map = add_graph_nodes(connection, graph.id, G.nodes(data=True))
-	# 	# Add graph edges
-	# 	edge_name_to_id_map = add_graph_edges(connection, graph.id, G.edges(data=True), node_name_to_id_map,
-	# 	                                      node_id_to_label_map)
-	pass
+	connection = op.get_bind()
+	graph_ids = set()
+
+	for graph in connection.execute(graphhelper.select().distinct(graphhelper.c.id)):
+		graph_ids.add(graph.id)
+
+	graphs_with_elements = set()
+
+	for node in connection.execute(nodehelper.select().distinct(nodehelper.c.graph_id)):
+		graphs_with_elements.add(node.graph_id)
+
+	graph_ids.difference_update(graphs_with_elements)
+
+	for edge in connection.execute(edgehelper.select().distinct(edgehelper.c.graph_id)):
+		graphs_with_elements.add(edge.graph_id)
+
+	graph_ids.difference_update(graphs_with_elements)
+
+	for graph in connection.execute(graphhelper.select().where(graphhelper.c.id.in_(graph_ids))):
+		print(graph.id)
+		G = CyJSFormat.create_gsgraph(graph.graph_json)
+		# Add graph nodes
+		node_name_to_id_map, node_id_to_label_map = add_graph_nodes(connection, graph.id, G.nodes(data=True))
+		# Add graph edges
+		edge_name_to_id_map = add_graph_edges(connection, graph.id, G.edges(data=True), node_name_to_id_map,
+		                                      node_id_to_label_map)
 
 
 def downgrade():
