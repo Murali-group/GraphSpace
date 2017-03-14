@@ -4,17 +4,74 @@ Revision ID: c4c8fd40b021
 Revises: 9aecafcc7ca3
 Create Date: 2017-02-27 16:03:58.257014
 
+We would like to split our json structures into three types of json structure:
+
+1. Graph Structure
+2. Style
+3. Node positions
+
+This information will be stored in two tables
+
+1. graph table
+	a. graph_json - structure of the graph and their annotations
+	b. style_json - base styling of the graph.
+
+2. layout table - layout consists of both location and style information.
+	a. positions_json - map of node locations
+	b. style_json - styling for the layout
+
+
+Here is the format of all the three JSON structures:
+
+GRAPH JSON
+----------
+
+elements:
+	nodes:
+		data:
+		position:
+	edges:
+		data:
+		position:
+data:
+
+POSITIONS JSON
+----------
+
+	{
+		'<node_id>': {
+				'x': 27.22,
+				'y': 11.98
+			},
+			....
+	}
+
+
+STYLE JSON
+----------
+
+	[
+		{
+		  selector: 'node',
+		  style: {
+			'background-color': 'red'
+		  }
+		},
+		...
+	]
+
+
+
+
 The format accepted by GraphSpace will look like this:
 
-graph:
+elements:
 	nodes:
 		data:
 		positions:
-		style:
 	edges:
 		data:
-		style:
-metadata:
+data:
 	tags:
 	description:
 	name:
@@ -25,15 +82,13 @@ aand stored in graph JSON on upload:
 GRAPH JSON
 ----------
 
-graph:
+elements:
 	nodes:
 		data:
 		positions:
-		style:
 	edges:
 		data:
-		style:
-metadata:
+data:
 	tags:
 	description:
 	name:
@@ -51,6 +106,9 @@ graph:
 			background_color:
 			shape:
 			...
+		position:
+			x:
+			y:
 	edges:
 		data:
 			source:
@@ -58,6 +116,9 @@ graph:
 			background_color:
 			shape:
 			...
+		position:
+			x:
+			y:
 metadata:
 	tags:
 	description:
@@ -65,28 +126,43 @@ metadata:
 
 NEW graph JSON format looks like this:
 
-graph:
+GRAPH JSON
+----------
+
+elements:
 	nodes:
 		data:
 			id:
 			content:
-		style:
-			background-color:
-			shape:
+		position:
+			x:
+			y:
 	edges:
 		data:
 			source:
 			target:
-		style:
-			background-color:
-			shape:
-metadata:
+		position:
+			x:
+			y:
+data:
 	tags:
 	description:
 	name:
 
 
-The style attributes also move to all the layout json for that graph.
+STYLE JSON
+---------
+
+[
+	{
+		selector: 'node',
+		style: {
+			'background-color': 'red'
+		}
+	},
+	...
+]
+
 
 
 OLD layout JSON format looks like two different format:
@@ -115,22 +191,29 @@ OLD format 2:
 
 NEW layout JSON format looks like this:
 
-positions:{
+positions_json
+---------------
+
+{
 	'<node_id>': {
 			'x': 27.22,
 			'y': 11.98
 		},
 		....
-	},
-style:[
-		{
-		  selector: 'node',
-		  style: {
+},
+
+style_json
+-----------
+
+[
+	{
+		selector: 'node',
+		style: {
 			'background-color': 'red'
-		  }
-		},
-		...
-	]
+		}
+	},
+	...
+]
 
 
 """
@@ -152,7 +235,7 @@ graphhelper = sa.Table(
 	sa.Column('id', sa.Integer, primary_key=True),
 	sa.Column('owner_email', sa.String),
 	sa.Column('json', sa.String),
-	sa.Column('new_json', sa.String),
+	sa.Column('graph_json', sa.String),
 	sa.Column('style_json', sa.String),
 	sa.Column('default_layout_id', sa.Integer)
 )
@@ -166,7 +249,7 @@ layouthelper = sa.Table(
 	sa.Column('owner_email', sa.String),
 	sa.Column('is_shared', sa.String),
 	sa.Column('json', sa.String),
-	sa.Column('new_json', sa.String)
+	sa.Column('style_json', sa.String)
 )
 
 node_data_attr_to_style_attr_map = {
@@ -192,7 +275,7 @@ node_data_attr_to_style_attr_map = {
 	'background_clip': 'background-clip',
 
 	'color': 'color',
-	'content': 'content',
+	# 'content': 'content',
 	'font_family': 'font-family',
 	'font_size': 'font-size',
 	'font_style': 'font-style',
@@ -313,12 +396,12 @@ def clean_graph_json(original_json_string):
 	for node in old_nodes:
 		# Used for backwards-compatibility since some JSON have label
 		# but new CytoscapeJS uses the content property
-		if 'label' in node:
-			node['content'] = node['label']
-			del node['label']
+		if 'content' in node:
+			node['label'] = node['content']
+			del node['content']
 		# If the node has any content inside of it, display that content, otherwise, just make it an empty string
-		if 'content' not in node:
-			node['content'] = ""
+		if 'label' not in node:
+			node['label'] = ""
 
 		# we do not use user provided id's anymore. if name is not provided we use ids for name.
 		if 'id' in node and 'name' not in node:
@@ -364,6 +447,12 @@ def clean_graph_json(original_json_string):
 		if 'target_arrow_shape' not in edge:
 			edge['target_arrow_shape'] = "none"
 
+		if "is_directed" not in edge:
+			if edge['target_arrow_shape'] == "none":
+				edge['is_directed'] = 0
+			else:
+				edge['is_directed'] = 1
+
 		new_edges.append({"data": edge})
 
 	# If name is not provided, name is data
@@ -372,10 +461,10 @@ def clean_graph_json(original_json_string):
 
 	# build the new json
 	new_json = {}
-	new_json['metadata'] = old_json['metadata']
-	new_json['graph'] = {}
-	new_json['graph']['nodes'] = new_nodes
-	new_json['graph']['edges'] = new_edges
+	new_json['data'] = old_json['metadata']
+	new_json['elements'] = {}
+	new_json['elements']['nodes'] = new_nodes
+	new_json['elements']['edges'] = new_edges
 
 	return new_json
 
@@ -384,16 +473,15 @@ def parse_old_graph_json(old_graph_json):
 	old_graph_json = clean_graph_json(old_graph_json)
 
 	new_graph_json = {
-		'metadata': old_graph_json['metadata'],
-		'graph': {
+		'data': old_graph_json['data'],
+		'elements': {
 			'nodes': [],
 			'edges': []
 		}
 	}
 
 	style_json = []
-	for node in old_graph_json['graph']['nodes']:
-		node['data']['name'] = node['data']['id']
+	for node in old_graph_json['elements']['nodes']:
 		node_style = {
 			'selector': "node[name = '%s']" % node['data']['name'],
 			'style': {}
@@ -405,12 +493,13 @@ def parse_old_graph_json(old_graph_json):
 
 		if len(node_style['style'].keys()) > 0:
 			style_json.append(node_style)
-			node['style'] = node_style['style']
 
-		new_graph_json['graph']['nodes'].append(node)
+		new_graph_json['elements']['nodes'].append(node)
 
-	for edge in old_graph_json['graph']['edges']:
-		edge['data']['name'] = '%s-%s' % (edge['data']['source'], edge['data']['target'])
+	for edge in old_graph_json['elements']['edges']:
+		if 'name' not in edge['data']:
+			edge['data']['name'] = '%s-%s' % (edge['data']['source'], edge['data']['target'])
+
 		edge_style = {
 			'selector': "edge[name = '%s']" % edge['data']['name'],
 			'style': {}
@@ -422,24 +511,20 @@ def parse_old_graph_json(old_graph_json):
 
 		if len(edge_style['style'].keys()) > 0:
 			style_json.append(edge_style)
-			edge['style'] = edge_style['style']
 
-		new_graph_json['graph']['edges'].append(edge)
+		new_graph_json['elements']['edges'].append(edge)
 
 	return new_graph_json, style_json
 
 
-def construct_new_layout_json(old_layout_json, style_json):
-	new_layout_json = {
-		'positions': {},
-		'style': style_json
-	}
+def construct_new_layout_json(old_layout_json):
+	new_layout_json = {}
 
 	if isinstance(old_layout_json, dict):
-		new_layout_json['positions'] = old_layout_json
+		new_layout_json = old_layout_json
 	else:
 		for obj in old_layout_json:
-			new_layout_json['positions'][obj['id']] = {
+			new_layout_json[obj['id']] = {
 				'x': obj['x'],
 				'y': obj['y'],
 			}
@@ -451,55 +536,44 @@ def upgrade():
 	# we build a quick link for the current connection of alembic
 	connection = op.get_bind()
 	print('started')
-	op.add_column('layout', sa.Column('new_json', sa.String))
-	op.add_column('graph', sa.Column('new_json', sa.String))
+	op.add_column('layout', sa.Column('style_json', sa.String))
+	op.add_column('graph', sa.Column('graph_json', sa.String))
 	op.add_column('graph', sa.Column('style_json', sa.String))
 
 	for graph in connection.execute(graphhelper.select()):
-		new_json, style_json = parse_old_graph_json(graph.json)
+		graph_json, style_json = parse_old_graph_json(graph.json)
 
 		connection.execute(
 			graphhelper.update().where(
 				graphhelper.c.id == graph.id
 			).values(
-				new_json=json.dumps(new_json),
-				style_json=json.dumps(style_json),
+				graph_json=json.dumps(graph_json),
+				style_json=json.dumps({
+					"format_version": "1.0",
+					"generated_by": "graphspace-2.0.0",
+					"target_cytoscapejs_version": "~2.1",
+					'style': style_json
+				}),
 			)
 		)
 
-	# connection.execute(
-	# 	layouthelper.insert().values(
-	# 		name='initial_layout',
-	# 		owner_email=graph.owner_email,
-	# 		is_shared=0,
-	# 		graph_id=graph.id,
-	# 		json=json.dumps({}),
-	# 		new_json=json.dumps(style_json),
-	# 	)
-	# )
-
 	for layout in connection.execute(layouthelper.select()):
 		for graph in connection.execute(graphhelper.select().where(graphhelper.c.id == layout.graph_id)):
-			new_json = construct_new_layout_json(json.loads(layout.json), json.loads(graph.style_json))
+			new_json = construct_new_layout_json(json.loads(layout.json))
 			connection.execute(
 				layouthelper.update().where(
 					layouthelper.c.id == layout.id
 				).values(
-					new_json=json.dumps(new_json)
+					json=json.dumps(new_json),
+					style_json=graph.style_json
 				)
 			)
-	op.alter_column('graph', 'new_json', nullable=False)
-	op.alter_column('layout', 'new_json', nullable=False)
+	op.alter_column('graph', 'graph_json', nullable=False)
+	op.alter_column('layout', 'style_json', nullable=False)
 
-	op.alter_column('layout', 'json', new_column_name='old_json')
-	op.alter_column('layout', 'new_json', new_column_name='json')
-	op.alter_column('graph', 'json', new_column_name='old_json')
-	op.alter_column('graph', 'new_json', new_column_name='json')
+	op.alter_column('layout', 'json', new_column_name='positions_json')
 
-	op.alter_column('graph', 'old_json', nullable=True)
-	op.alter_column('layout', 'old_json', nullable=True)
-
-	op.drop_column('graph', 'style_json')
+	op.alter_column('graph', 'json', nullable=True)
 
 
 def downgrade():
@@ -510,10 +584,10 @@ def downgrade():
 	# 			layouthelper.c.name == 'initial_layout'
 	# 		)
 	# )
-	op.drop_column('layout', 'json')
-	op.drop_column('graph', 'json')
+	op.drop_column('layout', 'style_json')
+	op.drop_column('graph', 'style_json')
+	op.drop_column('graph', 'graph_json')
 
-	op.alter_column('layout', 'old_json', new_column_name='json', nullable=True)
-	op.alter_column('graph', 'old_json', new_column_name='json', nullable=True)
+	op.alter_column('graph', 'json', nullable=False)
 
-# op.drop_column('graph', 'style_json')
+	op.alter_column('layout', 'positions_json', new_column_name='json')

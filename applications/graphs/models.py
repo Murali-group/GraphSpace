@@ -19,7 +19,8 @@ class Graph(IDMixin, TimeStampMixin, Base):
 
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	json = Column(String, nullable=False)
+	graph_json = Column(String, nullable=False)
+	style_json = Column(String, nullable=False)
 	is_public = Column(Integer, nullable=False, default=0)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
 							   nullable=True)
@@ -51,7 +52,8 @@ class Graph(IDMixin, TimeStampMixin, Base):
 			'id': cls.id,
 			'owner_email': cls.owner_email,
 			'name': cls.name,
-			'json': json.loads(cls.json),
+			'graph_json': json.loads(cls.graph_json),
+			'style_json': json.loads(cls.style_json),
 			'is_public': cls.is_public,
 			'tags': [tag.serialize() for tag in cls.tags],
 			'default_layout_id': cls.default_layout_id,
@@ -147,6 +149,7 @@ class Node(IDMixin, TimeStampMixin, Base):
 			'updated_at': cls.updated_at.isoformat()
 		}
 
+
 class GroupToGraph(TimeStampMixin, Base):
 	__tablename__ = 'group_to_graph'
 
@@ -179,7 +182,8 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	json = Column(String, nullable=False)
+	positions_json = Column(String, nullable=False)
+	style_json = Column(String, nullable=False)
 	is_shared = Column(Integer, nullable=False, default=0)
 	original_json = Column(String, nullable=True)
 
@@ -204,7 +208,8 @@ class Layout(IDMixin, TimeStampMixin, Base):
 			'name': cls.name,
 			'owner_email': cls.owner_email,
 			'graph_id': cls.graph_id,
-			'json': cls.json,
+			'positions_json': cls.positions_json,
+			'style_json': cls.style_json,
 			'is_shared': cls.is_shared,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()

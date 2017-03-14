@@ -602,10 +602,12 @@ var uploadGraphPage = {
          * It will initialize all the event listeners.
          */
 
-        $('.browse').click(function () {
-            var file = $(this).parent().parent().parent().find('.file');
+        $('.browse').click(function (e) {
+            e.preventDefault();
+            var file = $(this).parent().parent().find('.file');
             file.trigger('click');
         });
+
         $('.file').change(function () {
             $(this).parent().find('.form-control').val($(this).val().replace(/C:\\fakepath\\/i, ''));
         });
@@ -719,10 +721,10 @@ var graphPage = {
     applyUserLayout: function (layout_id) {
         apis.layouts.getByID($('#GraphID').val(), layout_id,
             successCallback = function (response) {
-                graphPage.applyLayoutStyle(JSON.parse(response['json'])['style']);
+                graphPage.applyLayoutStyle(JSON.parse(response['style_json']));
                 graphPage.applyLayout({
                     name: 'preset',
-                    positions: JSON.parse(response['json'])['positions']
+                    positions: JSON.parse(response['positions_json'])
                 });
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
                 graphPage.defaultLayoutWidget.init(response['is_shared']);
@@ -740,7 +742,7 @@ var graphPage = {
         }
     },
     applyLayoutStyle: function (layoutStyle) {
-        layoutStyle = _.map(layoutStyle, function (elemStyle) {
+        layoutStyle = _.map(cytoscapeGraph.parseStylesheet(layoutStyle), function (elemStyle) {
             elem = graphPage.cyGraph.elements(elemStyle['selector']);
             if (elem.isNode()) {
                 return {
@@ -831,16 +833,20 @@ var graphPage = {
             //    });
             //}
 
-            layout_json = {
-                'positions': cytoscapeGraph.getNodePositions(graphPage.cyGraph),
-                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph)
-            };
+            positions_json = cytoscapeGraph.getNodePositions(graphPage.cyGraph);
+            style_json = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
 
             apis.layouts.add($('#GraphID').val(), {
                     "owner_email": $('#UserEmail').val(),
                     "graph_id": $('#GraphID').val(),
                     "name": layoutName,
-                    "json": layout_json
+                    "positions_json": positions_json,
+                    "style_json": {
+                        "format_version": "1.0",
+					    "generated_by": "graphspace-2.0.0",
+					    "target_cytoscapejs_version": "~2.7",
+                        "style": style_json
+                    }
                 },
                 successCallback = function (response) {
                     $('#saveLayoutModal').modal('toggle');
@@ -1145,10 +1151,7 @@ var graphPage = {
             };
         }
 
-        var nodeStylesheet = graphPage.getNodeStylesheet(graph_json['graph']['nodes']);
-        var edgeStylesheet = graphPage.getEdgeStylesheet(graph_json['graph']['edges']);
-
-        graph_json['graph']['nodes'] = _.map(graph_json['graph']['nodes'], function (node) {
+        graph_json['elements']['nodes'] = _.map(graph_json['elements']['nodes'], function (node) {
             var newNode = {
                 "data": node['data']
             };
@@ -1160,7 +1163,8 @@ var graphPage = {
             }
             return newNode
         });
-        graph_json['graph']['edges'] = _.map(graph_json['graph']['edges'], function (edge) {
+
+        graph_json['elements']['edges'] = _.map(graph_json['elements']['edges'], function (edge) {
             return {
                 "data": edge['data']
             }
@@ -1172,11 +1176,11 @@ var graphPage = {
             autounselectify: false,
             minZoom: 1e-2,
             maxZoom: 1e2,
-            elements: graph_json['graph'],
+            elements: graph_json['elements'],
             layout: layout,
 
             //Style properties of NODE body
-            style: _.concat(defaultStylesheet, nodeStylesheet, edgeStylesheet, selectedElementsStylesheet),
+            style: _.concat(defaultStylesheet, cytoscapeGraph.parseStylesheet(style_json), selectedElementsStylesheet),
 
             ready: function () {
 
@@ -1964,7 +1968,7 @@ var graphPage = {
     filterNodesEdges: {
         init: function () {
             //Hides appropriate nodes based on k value
-            $("#input_k").val(graphPage.filterNodesEdges.getLargestK(graph_json.graph));
+            $("#input_k").val(graphPage.filterNodesEdges.getLargestK(graph_json.elements));
 
             /*
              * When input_k bar is changed, update the nodes shown in the graph.
@@ -1974,7 +1978,7 @@ var graphPage = {
             });
 
             //Shows up to maximum k values
-            $("#input_max").val(graphPage.filterNodesEdges.getLargestK(graph_json.graph));
+            $("#input_max").val(graphPage.filterNodesEdges.getLargestK(graph_json.elements));
 
             //When user slides, it changes value of slider as well
             //as updates graph to reflect max k values allowed in subgraph
@@ -2048,8 +2052,8 @@ var graphPage = {
             var nodeNames = Array();
 
             //Get all edges that meet the max quantifier
-            for (var i = 0; i < graph_json.graph['edges'].length; i++) {
-                var edge_data = graph_json.graph['edges'][i];
+            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
+                var edge_data = graph_json.elements['edges'][i];
                 if (edge_data['data']['k'] <= maxVal) {
                     newJSON['edges'].push(edge_data);
                     nodeNames.push(edge_data['data']['source']);
@@ -2058,8 +2062,8 @@ var graphPage = {
             }
 
             //Get all nodes that meet the max quantifier
-            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
-                var node_data = graph_json.graph['nodes'][i];
+            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
+                var node_data = graph_json.elements['nodes'][i];
                 if (nodeNames.indexOf(node_data['data']['id']) > -1) {
                     newJSON['nodes'].push(node_data);
                 }
@@ -2184,7 +2188,7 @@ var cytoscapeGraph = {
     },
     applyStylesheet: function (cy, stylesheetJSON) {
         try {
-            stylesheetJSON = _.isArray(stylesheetJSON) ? stylesheetJSON[0]['style'] : stylesheetJSON['style'];
+            stylesheetJSON = cytoscapeGraph.parseStylesheet(stylesheetJSON);
             if (stylesheetJSON) {
                 var tempCy = cy.style();
                 _.each(stylesheetJSON, function (elemStyle) {
@@ -2237,7 +2241,7 @@ var cytoscapeGraph = {
     },
     getGraphSpaceJSON: function (cy) {
         return {
-            'graph': {
+            'elements': {
                 'nodes': _.map(cy.nodes(), function (elem) {
                     return {
                         'data': elem.data(),
@@ -2256,7 +2260,7 @@ var cytoscapeGraph = {
                     }
                 })
             },
-            'metadata': graph_json['metadata']
+            'data': graph_json['data']
         };
     },
     getAutomaticLayoutSettings: function (layout_name) {
@@ -2637,6 +2641,16 @@ var cytoscapeGraph = {
             x: travelX,
             y: travelY
         };
+    },
+    parseStylesheet: function (styleJSON) {
+        styleJSON = _.isArray(styleJSON) ? styleJSON : [styleJSON];
+        return _.flatten(_.map(styleJSON, function(stylesheet){
+            return _.map(stylesheet.style || [], function (elemStyle) {
+                return _.mapKeys(elemStyle, function (value, key) {
+                    return key == 'css' ? 'style' : key;
+                });
+            })
+        }));
     }
 
 };

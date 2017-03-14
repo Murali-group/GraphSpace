@@ -4,6 +4,7 @@
     <script type="text/javascript">
         {% if not Error %}
             var graph_json = {{ graph_json_string|safe }};
+            var style_json = {{ style_json_string|safe }};
             var default_layout_id = {% if default_layout_id %}{{ default_layout_id|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>
@@ -162,12 +163,12 @@
 
             <li class="text-center">
                 <a class="link-reset" href="#graph_nodes_tab" data-toggle="tab">Nodes <span
-                        class="badge">{{ graph.json.graph.nodes|length }}</span> </a>
+                        class="badge">{{ graph.graph_json.elements.nodes|length }}</span> </a>
             </li>
 
             <li class="text-center">
                 <a class="link-reset" href="#graph_edges_tab" data-toggle="tab">Edges <span
-                        class="badge">{{ graph.json.graph.edges|length }}</span></a>
+                        class="badge">{{ graph.graph_json.elements.edges|length }}</span></a>
             </li>
             {% if uid %}
                 <li class="text-center">

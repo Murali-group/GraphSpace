@@ -8,7 +8,7 @@ var defaultStylesheet = [
     {
         'selector': 'node',
         'style': {
-            'content': 'data(name)',
+            'content': 'data(label)',
             'shape': 'ellipse',
             'background-color': 'yellow',
             'border-color': '#888',

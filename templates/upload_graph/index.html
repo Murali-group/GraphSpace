@@ -52,10 +52,26 @@
                                 {% endif %}
 
                                 <div class="control-group">
-                                    <label for="GraphFileInput">Upload a file in one of the following formats: .cyjs or
-                                        .json :</label>
+                                    <label for="GraphFileInput">Upload the network file:</label>
                                     <input id="GraphFileInput" type="file" name="graph_file" class="file"
                                            accept=".cyjs,.json">
+                                    <div class="input-group col-xs-12">
+                                        <input type="text" class="browse form-control"
+                                               placeholder="Required">
+                                        <span class="input-group-btn">
+                                            <button class="browse btn btn-default" type="button">
+                                                <i class="glyphicon glyphicon-search"></i> Browse
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <br>
+
+                                <div class="control-group">
+                                    <label for="StyleFileInput">Upload the style file (Optional):</label>
+                                    <input id="StyleFileInput" type="file" name="style_file" class="file"
+                                           accept=".json">
                                     <div class="input-group col-xs-12">
                                         <input type="text" class="browse form-control"
                                                placeholder="Required">

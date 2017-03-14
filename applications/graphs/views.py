@@ -19,20 +19,13 @@ def upload_graph_page(request):
 
 	if request.method == 'POST':
 		try:
-			if str(request.FILES['graph_file']).endswith("json"):
-				graph = _add_graph(request, graph={
-					'name': request.POST.get('name', None),
-					'owner_email': request.POST.get('owner_email', None),
-					'is_public': request.POST.get('is_public', None),
-					'json': json.loads(request.FILES['graph_file'].read()),
-				})
-			else:
-				graph = _add_graph(request, graph={
-					'name': request.POST.get('name', None),
-					'owner_email': request.POST.get('owner_email', None),
-					'is_public': request.POST.get('is_public', None),
-					'cyjs': json.loads(request.FILES['graph_file'].read()),
-				})
+			graph = _add_graph(request, graph={
+				'name': request.POST.get('name', None),
+				'owner_email': request.POST.get('owner_email', None),
+				'is_public': request.POST.get('is_public', None),
+				'graph_json': json.loads(request.FILES['graph_file'].read()),
+				'style_json': json.loads(request.FILES['style_file'].read()) if 'style_file' in request.FILES else None
+			})
 			context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
 		except Exception as e:
 			context['Error'] = str(e)
@@ -95,9 +88,10 @@ def graph_page(request, graph_id):
 	if default_layout is not None and default_layout.is_shared == 1 and request.GET.get('user_layout') is None and request.GET.get('auto_layout') is None:
 		return redirect(request.path+'?user_layout='+context["default_layout_id"])
 
-	context['graph_json_string'] = json.dumps(context['graph']['json'])
-	context['description'] = context['graph']['json']['metadata']['description'] if 'metadata' in context[
-		'graph']['json'] and 'description' in context['graph']['json']['metadata'] else ''
+	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
+	context['style_json_string'] = json.dumps(context['graph']['style_json'])
+	context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
+		'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
 
 	if uid is not None:
 		context.push({
@@ -367,8 +361,8 @@ def _add_graph(request, graph={}):
 	return utils.serializer(graphs.add_graph(request,
 	                                         name=graph.get('name', None),
 	                                         is_public=graph.get('is_public', None),
-	                                         json_graph=graph.get('json', None),
-	                                         cyjs_graph=graph.get('cyjs', None),
+	                                         graph_json=graph.get('graph_json', None),
+	                                         style_json=graph.get('style_json', None),
 	                                         tags=graph.get('tags', None),
 	                                         owner_email=graph.get('owner_email', None)))
 
@@ -414,7 +408,8 @@ def _update_graph(request, graph_id, graph={}):
 	                                            graph_id=graph_id,
 	                                            name=graph.get('name', None),
 	                                            is_public=graph.get('is_public', None),
-	                                            json_string=graph.get('json', None),
+	                                            graph_json=graph.get('graph_json', None),
+	                                            style_json=graph.get('style_json', None),
 	                                            owner_email=graph.get('owner_email',
 	                                                                  None) if user_role == authorization.UserRole.ADMIN else None,
 	                                            default_layout_id=graph.get('default_layout_id', None)))
@@ -894,7 +889,9 @@ def _add_layout(request, graph_id, layout={}):
 	                                          name=layout.get('name', None),
 	                                          graph_id=layout.get('graph_id', None),
 	                                          is_shared=layout.get('is_shared', None),
-	                                          json=layout.get('json', None)))
+	                                          positions_json=layout.get('positions_json', None),
+	                                          style_json=layout.get('style_json', None),
+	                                          ))
 
 
 @is_authenticated()
@@ -941,7 +938,9 @@ def _update_layout(request, graph_id, layout_id, layout={}):
 	                                             name=layout.get('name', None),
 	                                             graph_id=layout.get('graph_id', None),
 	                                             is_shared=layout.get('is_shared', None),
-	                                             json=layout.get('json', None)))
+	                                             positions_json=layout.get('positions_json', None),
+	                                             style_json=layout.get('style_json', None),
+	                                             ))
 
 
 @is_authenticated()

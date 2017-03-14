@@ -5,9 +5,10 @@ from sqlalchemy.exc import IntegrityError
 import applications.graphs.dal as db
 import applications.users as users
 from graphspace.exceptions import ErrorCodes, BadRequest
+from graphspace.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
 from json_validator import *
-from graphspace.graphs.formatter.json_formatter import GraphSpaceJSONFormat, CyJSFormat
+from graphspace.graphs.formatter.json_formatter import CyJSFormat
 import networkx as nx
 from json import dumps, loads
 
@@ -148,21 +149,17 @@ def uploadJSONFile(request, username, graphJSON, title):
 
 
 @atomic_transaction
-def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cyjs_graph=None, owner_email=None,
+def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
 			  default_layout_id=None):
 	# If graph already exists for user, alert them
 	if db.get_graph(request.db_session, owner_email, name) is not None:
 		raise Exception('Graph ' + name + ' already exists for ' + owner_email + '!')
 
-	if json_graph is not None:
-		G = GraphSpaceJSONFormat.create_gsgraph(json.dumps(json_graph))
-		if name is not None:
-			G.set_name(name)
-		if tags is not None:
-			G.set_tags(tags)
-	else:
+	if graph_json is not None:
 		# TODO: add code to handle cyjs format
-		G = CyJSFormat.create_gsgraph(json.dumps(cyjs_graph))
+		G = CyJSFormat.create_gsgraph(json.dumps(graph_json))
+		if style_json is not None:
+			G.set_style_json(style_json)
 		if name is not None:
 			G.set_name(name)
 		if tags is not None:
@@ -171,7 +168,7 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 	owner_email = users.controllers.add_user(request).email if owner_email is None else owner_email
 
 	# Construct new graph to add to database
-	new_graph = db.add_graph(request.db_session, name=name, owner_email=owner_email, json=json.dumps(G.get_json()),
+	new_graph = db.add_graph(request.db_session, name=name, owner_email=owner_email, graph_json=json.dumps(G.get_graph_json()), style_json=json.dumps(G.get_style_json()),
 							 is_public=is_public, default_layout_id=default_layout_id)
 	# Add graph tags
 	for tag in G.get_tags():
@@ -185,7 +182,7 @@ def add_graph(request, name=None, tags=None, is_public=None, json_graph=None, cy
 
 
 @atomic_transaction
-def update_graph(request, graph_id, name=None, is_public=None, json_string=None, owner_email=None,
+def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
 				 default_layout_id=None):
 	graph = {}
 	if name is not None:
@@ -197,8 +194,13 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 	if default_layout_id is not None:
 		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
 
-	if json_string is not None:
-		G = GraphSpaceJSONFormat.create_gsgraph(json.dumps(json_string))
+	if style_json is not None:
+		GSGraph.validate_style_json(style_json)
+		graph['style_json'] = style_json
+
+	if graph_json is not None:
+		G = CyJSFormat.create_gsgraph(json.dumps(graph_json))
+
 		if name is not None:
 			G.set_name(name)
 
@@ -208,7 +210,7 @@ def update_graph(request, graph_id, name=None, is_public=None, json_string=None,
 		# Add graph edges
 		edge_name_to_id_map = add_graph_edges(request, graph_id, G.edges(data=True), node_name_to_id_map)
 
-		graph['json'] = json.dumps(G.compute_json())
+		graph['graph_json'] = json.dumps(G.get_graph_json())
 
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
@@ -222,7 +224,7 @@ def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
 		# Make edge undirected if its target_arrow_shape attribute is set to none
-		is_directed = 0 if 'target-arrow-shape' in edge[2]['style'] and edge[2]['style']['target-arrow-shape'] == 'none' else 1
+		is_directed = 0 if 'is_directed' not in edge[2]['data'] else edge[2]['data']['is_directed']
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),
@@ -236,7 +238,7 @@ def add_graph_nodes(request, graph_id, nodes):
 	node_name_to_id_map = dict()
 	for node in nodes:
 		# Add node to table
-		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['style']['content'], graph_id=graph_id)
+		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['data']['label'], graph_id=graph_id)
 		node_name_to_id_map[new_node.name] = new_node.id
 	return node_name_to_id_map
 
@@ -245,15 +247,6 @@ def add_graph_tag(request, graph_id, tag_name):
 	tag = db.get_tag_by_name(request.db_session, tag_name)
 	tag_id = tag.id if tag is not None else db.add_tag(request.db_session, name=tag_name).id
 	db.add_tag_to_graph(request.db_session, graph_id=graph_id, tag_id=tag_id)
-
-
-def _validate_and_load_graph_json(graph_json_string):
-	clean_json, validation_errors = validate_clean_json(graph_json_string)
-
-	if validation_errors is not None:
-		raise Exception(validation_errors)
-
-	return clean_json
 
 
 def _convert_order_query_term_to_database_order_object(order_query):
@@ -371,16 +364,16 @@ def get_layout_by_id(request, layout_id):
 	return db.get_layout_by_id(request.db_session, layout_id)
 
 
-def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):
+def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, style_json=None, positions_json=None):
 	if name is None or owner_email is None or graph_id is None:
 		raise Exception("Required Parameter is missing!")
 	try:
-		return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, json=dumps(json))
+		return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, style_json=dumps(style_json), positions_json=dumps(positions_json))
 	except IntegrityError as e:
 		raise BadRequest(request, error_code=ErrorCodes.Validation.LayoutNameAlreadyExists, args=name)
 
 
-def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_shared=None, json=None):
+def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_shared=None, style_json=None, positions_json=None):
 	if layout_id is None:
 		raise Exception("Required Parameter is missing!")
 
@@ -393,8 +386,10 @@ def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None
 		layout['graph_id'] = graph_id
 	if is_shared is not None:
 		layout['is_shared'] = is_shared
-	if json is not None:
-		layout['json'] = dumps(json)
+	if style_json is not None:
+		layout['style_json'] = dumps(style_json)
+	if positions_json is not None:
+		layout['positions_json'] = dumps(positions_json)
 
 	return db.update_layout(request.db_session, id=layout_id, updated_layout=layout)
 
