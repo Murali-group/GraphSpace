@@ -1,9 +1,5 @@
 from __future__ import unicode_literals
 
-import json
-
-from sqlalchemy import ForeignKeyConstraint, text
-
 from applications.users.models import *
 from django.conf import settings
 from graphspace.mixins import *
@@ -234,6 +230,7 @@ class GraphTag(IDMixin, TimeStampMixin, Base):
 
 	def serialize(cls):
 		return {
+			'id': cls.id,
 			'name': cls.name,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()

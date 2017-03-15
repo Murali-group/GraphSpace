@@ -126,7 +126,7 @@ div.container-fluid {
 
 #cyGraphContainer {
     width: 100%;
-    height: 80%;
+    height: 78%;
     position: absolute;
     left: 0px;
     top: 0px;
@@ -382,6 +382,26 @@ ul.nav.nav-tabs > li > a:hover {
 
 p.lead {
     margin: 0 !important;
+}
+
+.tag-cloud a.tag-anchor {
+    margin-right: 4px;
+    font-size: x-small;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    display: inline-block;
+    background: #f0f0f0;
+    color: #069;
+}
+
+.tag-cloud a.tag-anchor:active,
+.tag-cloud a.tag-anchor:focus,
+.tag-cloud a.tag-anchor:hover {
+    background: #069;
+    color: #fff;
+    text-decoration: none;
 }
 
 @media (min-width: 768px) {

@@ -93,6 +93,7 @@ var graphsPage = {
         });
 
         $('#clear').click(function () {
+            $('#tagSearchBar').val(null);
             graphsPage.searchBar.val(null).trigger('change');
             var queryRows = $('#queryBuilder').find('.row');
             for (i = 1; i < queryRows.length; i++) {
@@ -1979,6 +1980,10 @@ var graphPage = {
 
             //Shows up to maximum k values
             $("#input_max").val(graphPage.filterNodesEdges.getLargestK(graph_json.elements));
+
+            if ($("#input_max").val() == 0) {
+                $('#filterNodesEdgesSideBarBtn').hide();
+            }
 
             //When user slides, it changes value of slider as well
             //as updates graph to reflect max k values allowed in subgraph

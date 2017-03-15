@@ -57,7 +57,9 @@ def graphs_page(request):
 		------
 	"""
 	if 'GET' == request.method:
-		context = RequestContext(request, {})
+		context = RequestContext(request, {
+			"tags": request.GET.get('tags', '')
+		})
 		return render(request, 'graphs/index.html', context)
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
@@ -92,6 +94,13 @@ def graph_page(request, graph_id):
 	context['style_json_string'] = json.dumps(context['graph']['style_json'])
 	context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
 		'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
+
+	if 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
+		context['title'] = context['graph']['graph_json']['data']['name']
+	elif 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
+		context['title'] = context['graph']['graph_json']['data']['title']
+	else:
+		context['title'] = ''
 
 	if uid is not None:
 		context.push({

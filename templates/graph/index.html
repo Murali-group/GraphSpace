@@ -116,12 +116,29 @@
     <div class="container-fluid zero-margin zero-padding">
         <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
             <div class="col-md-10">
-                {% if is_posted_by_public_user %}
-                    <p class="lead">Anonymous User / <a
-                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a></p>
-                {% else %}
-                    <p class="lead">{{ graph.owner_email }} / <a
-                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a></p>
+                <p class="lead">
+                    {% if is_posted_by_public_user %}
+                        Anonymous User / <a
+                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a>
+                    {% else %}
+                        {{ graph.owner_email }} / <a
+                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a>
+                    {% endif %}
+                </p>
+                <h4 class="zero-margin d-inline-block">
+                    <small>
+                        {{ title }}
+                    </small>
+                </h4>
+                {% if graph.tags %}
+                    <div class="tag-cloud d-inline-block" id="Tags" >
+                        {% for tag in graph.tags %}
+                            <a class="tag-anchor"
+                               href="{% url 'graphs' %}?tags={{ tag.name | slugify }}">
+                                <i class="fa fa-hashtag"></i> {{ tag.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             </div>
 
@@ -133,9 +150,9 @@
                     </a>
                 {% endif %}
                 <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                    <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
-                        Export <span class="caret"></span>
+                        <i class="fa fa-download fa-lg"></i> Export <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         <li><a onclick="graphPage.export('png');">Network Graphics (.png)</a></li>
@@ -157,7 +174,7 @@
 
             <li class="text-center">
                 <a id="graphDetailsTabBtn" class="link-reset" href="#graph_details_tab" data-toggle="tab">Graph
-                    Details</a>
+                    Information</a>
             </li>
 
             <li class="text-center">
