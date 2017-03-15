@@ -843,8 +843,8 @@ var graphPage = {
                     "positions_json": positions_json,
                     "style_json": {
                         "format_version": "1.0",
-					    "generated_by": "graphspace-2.0.0",
-					    "target_cytoscapejs_version": "~2.7",
+                        "generated_by": "graphspace-2.0.0",
+                        "target_cytoscapejs_version": "~2.7",
                         "style": style_json
                     }
                 },
@@ -2233,22 +2233,39 @@ var cytoscapeGraph = {
     },
     export: function (cy, format, filename) {
         filename = filename ? filename : 'graph';
-        var file = (format === 'jpg') ? cy.jpg({'full': true}) : (format === 'png' ? cy.png({'full': true}) : "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getGraphSpaceJSON(cy), null, 4)));
-        var link = $('<a>').attr('href', file).attr('download', filename + '.' + format);
+        var file = undefined;
+        var fileformat = undefined;
+        if (format === 'jpg') {
+            file = cy.jpg({'full': true});
+            fileformat = '.jpg';
+        } else if (format === 'png') {
+            file = cy.png({'full': true});
+            fileformat = '.png';
+        } else if (format === 'cyjs') {
+            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getNetworkAndViewJSON(cy), null, 4));
+            fileformat = '.cyjs';
+        } else if (format === 'style') {
+            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getStyleJSON(cy), null, 4));
+            fileformat = '.json';
+        } else {
+            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getNetworkJSON(cy), null, 4));
+            fileformat = '.cyjs';
+        }
+
+        var link = $('<a>').attr('href', file).attr('download', filename + fileformat);
         $('body').append(link);
         link.get(0).click();
         link.get(0).remove();
     },
-    getGraphSpaceJSON: function (cy) {
+    getNetworkJSON: function (cy) {
         return {
+            "format_version" : "1.0",
+            "generated_by" : "graphspace-2.0.0",
+            "target_cytoscapejs_version" : "~2.7",
             'elements': {
                 'nodes': _.map(cy.nodes(), function (elem) {
                     return {
-                        'data': elem.data(),
-                        'position': elem.position(),
-                        'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
-                            return style ? style['strValue'] : undefined
-                        }), _.isNil)
+                        'data': elem.data()
                     }
                 }),
                 'edges': _.map(cy.edges(), function (elem) {
@@ -2261,6 +2278,38 @@ var cytoscapeGraph = {
                 })
             },
             'data': graph_json['data']
+        };
+    },
+    getNetworkAndViewJSON: function (cy) {
+        return {
+            "format_version" : "1.0",
+            "generated_by" : "graphspace-2.0.0",
+            "target_cytoscapejs_version" : "~2.7",
+            'elements': {
+                'nodes': _.map(cy.nodes(), function (elem) {
+                    return {
+                        'data': elem.data(),
+                        'position': elem.position()
+                    }
+                }),
+                'edges': _.map(cy.edges(), function (elem) {
+                    return {
+                        'data': elem.data(),
+                        'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
+                            return style ? style['strValue'] : undefined
+                        }), _.isNil)
+                    }
+                })
+            },
+            'data': graph_json['data']
+        };
+    },
+    getStyleJSON: function (cy) {
+        return {
+            "format_version": "1.0",
+            "generated_by": "graphspace-2.0.0",
+            "target_cytoscapejs_version": "~2.7",
+            'style': cytoscapeGraph.getStylesheet(cy)
         };
     },
     getAutomaticLayoutSettings: function (layout_name) {
@@ -2644,7 +2693,7 @@ var cytoscapeGraph = {
     },
     parseStylesheet: function (styleJSON) {
         styleJSON = _.isArray(styleJSON) ? styleJSON : [styleJSON];
-        return _.flatten(_.map(styleJSON, function(stylesheet){
+        return _.flatten(_.map(styleJSON, function (stylesheet) {
             return _.map(stylesheet.style || [], function (elemStyle) {
                 return _.mapKeys(elemStyle, function (value, key) {
                     return key == 'css' ? 'style' : key;

@@ -132,19 +132,18 @@
                         <i class="fa fa-share-alt fa-lg"></i> Share
                     </a>
                 {% endif %}
-                <a class="btn btn-default pull-right btn-sm" href="#" data-trigger="focus" data-target="#exportPopover"
-                   data-container="body"
-                   data-placement="left" data-toggle="popover" style="margin-right: 1em !important;">
-                    <i class="fa fa-download fa-lg"></i> Export
-                </a>
-                <div id="exportPopover" class="popover fade">
-                    <button type="button" class="btn btn-default" onclick="graphPage.export('json');">
-                        JSON
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        Export <span class="caret"></span>
                     </button>
-                    <button type="button" class="btn btn-default" onclick="graphPage.export('png');">PNG
-                    </button>
-                    <button type="button" class="btn btn-default" onclick="graphPage.export('jpg');">JPG
-                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a onclick="graphPage.export('png');">Network Graphics (.png)</a></li>
+                        <li><a onclick="graphPage.export('jpg');">Network Graphics (.jpg)</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a onclick="graphPage.export('cyjs');">Network Data (.cyjs)</a></li>
+                        <li><a onclick="graphPage.export('style');">Network Stylesheet (.json)</a></li>
+                    </ul>
                 </div>
             </div>
 
