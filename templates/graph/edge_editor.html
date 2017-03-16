@@ -1,11 +1,6 @@
 <ul id="edgeEditorSideBar" class="sidebar-nav gs-sidebar-nav">
     <li><p class="lead text-center">Edit Selected Edges</p></li>
     <li>
-        <a class="btn sidebar-nav-pills" href="#" data-target="#layoutEditorSideBar">
-            <i class="fa fa-chevron-left"></i> Back
-        </a>
-    </li>
-    <li>
         <div class="form-horizontal">
             <div class="form-group">
                 <label for="edgeLineColorPicker" class="col-sm-4 control-label">Line Color</label>
@@ -31,6 +26,21 @@
                         <option value="dashed">dashed</option>
                     </select>
                 </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.layoutEditor.edgeEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.layoutEditor.edgeEditor.close(save=true);">
+                    Ok
+                </button>
             </div>
         </div>
     </li>

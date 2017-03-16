@@ -404,6 +404,10 @@ p.lead {
     text-decoration: none;
 }
 
+.colorpicker-alpha {
+    display: none !important;
+}
+
 @media (min-width: 768px) {
     #wrapper {
         padding-right: 250px;

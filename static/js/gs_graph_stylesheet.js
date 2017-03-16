@@ -2,7 +2,8 @@ var defaultStylesheet = [
     {
         'selector': 'edge',
         'style': {
-            'curve-style': 'bezier'
+            'curve-style': 'bezier',
+            'line-style': 'solid'
         }
     },
     {
@@ -27,17 +28,17 @@ var defaultStylesheet = [
 var selectedElementsStylesheet = [{
     'selector': 'node:selected',
     'style': {
-        'border-width': 3,
-        'border-color': '#ff0000'
+        'overlay-color': '#eebd9a',
+        'overlay-padding': 10,
+        'overlay-opacity': 0.3
     }
 },
     {
         'selector': 'edge:selected',
         'style': {
-            'width': 3,
-            'line-color': '#ff0000',
-            'target-arrow-color': '#ff0000',
-            'source-arrow-color': '#ff0000'
+            'overlay-color': '#eebd9a',
+            'overlay-padding': 10,
+            'overlay-opacity': 0.3
         }
     }
 ]

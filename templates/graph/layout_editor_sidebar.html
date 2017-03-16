@@ -4,7 +4,7 @@
 
     <li>
         <a id="exitLayoutEditorBtn" class="btn btn-xs d-inline-block" href="#">
-            <i class="fa fa-chevron-left"></i> Save and Exit
+            <i class="fa fa-chevron-left"></i> Exit Layout Editor
         </a>
         <a id="startTourBtn" class="btn btn-xs d-inline-block" href="#">
             Start Tour
@@ -12,11 +12,6 @@
     </li>
 
     <li>
-        <label class="btn btn-default btn-xs d-inline-block" for="importCytoscapeStyleBtn">
-            <input id="importCytoscapeStyleBtn" name="cy_style_file" type="file" style="display:none;">
-            <i class="fa fa-upload" title="Import Style"></i> Import Style
-        </label>
-
         <div class="btn-group d-inline-block">
             <a id="undoBtn" class="btn btn-default btn-xs disabled" href="#" data-intro="Undo previous action."
                data-step="8">
@@ -29,6 +24,29 @@
         </div>
     </li>
 
+    <hr>
+
+    <li>
+        <a id="editSelectedNodesBtn" class="btn btn-xs disabled d-inline-block" href="#"
+           data-intro="This option lets you edit selected nodes."
+           data-step="7">
+            Edit selected <br> nodes
+        </a>
+
+        <a id="editSelectedEdgesBtn" class="btn btn-xs disabled d-inline-block" href="#"
+           data-intro="This option lets you edit selected edges."
+           data-step="7">
+            Edit selected <br> edges
+        </a>
+    </li>
+
+    <li>
+        <label class="btn btn-default btn-xs d-inline-block" for="importCytoscapeStyleBtn">
+            <input id="importCytoscapeStyleBtn" name="cy_style_file" type="file" style="display:none;">
+            <i class="fa fa-upload" title="Import Style"></i> Import Style
+        </label>
+    </li>
+
     <li class="text-center">
         <div class="checkbox">
             <label>
@@ -38,19 +56,7 @@
         </div>
     </li>
 
-
-    <li>
-        <a id="editSelectedNodesBtn" class="btn btn-xs disabled d-inline-block" href="#" data-intro="This option lets you edit selected nodes."
-           data-step="7" >
-            Edit selected <br> nodes
-        </a>
-
-        <a id="editSelectedEdgesBtn" class="btn btn-xs disabled d-inline-block" href="#" data-intro="This option lets you edit selected edges."
-           data-step="7">
-            Edit selected <br> edges
-        </a>
-    </li>
-
+    <hr>
     <li class="text-center" data-intro='You can select multiple nodes that have the same shape.' data-step='5'>
         <h5 class="text-center">Select nodes by shape</h5>
         <div id="selectShapes" style="text-align: left"></div>
@@ -68,6 +74,8 @@
             Unselect all nodes
         </a>
     </li>
+
+    <hr>
 
     <li class="text-center">
         <h5 class="text-center">Arrange nodes</h5>

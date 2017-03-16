@@ -220,8 +220,9 @@ style_json
 import json
 from datetime import datetime
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'c4c8fd40b021'
@@ -233,11 +234,9 @@ graphhelper = sa.Table(
 	'graph',
 	sa.MetaData(),
 	sa.Column('id', sa.Integer, primary_key=True),
-	sa.Column('owner_email', sa.String),
 	sa.Column('json', sa.String),
 	sa.Column('graph_json', sa.String),
-	sa.Column('style_json', sa.String),
-	sa.Column('default_layout_id', sa.Integer)
+	sa.Column('style_json', sa.String)
 )
 
 layouthelper = sa.Table(
@@ -542,7 +541,6 @@ def upgrade():
 
 	for graph in connection.execute(graphhelper.select()):
 		graph_json, style_json = parse_old_graph_json(graph.json)
-
 		connection.execute(
 			graphhelper.update().where(
 				graphhelper.c.id == graph.id
@@ -584,6 +582,8 @@ def downgrade():
 	# 			layouthelper.c.name == 'initial_layout'
 	# 		)
 	# )
+
+	op.execute('delete from graph where json is NULL;')
 	op.drop_column('layout', 'style_json')
 	op.drop_column('graph', 'style_json')
 	op.drop_column('graph', 'graph_json')

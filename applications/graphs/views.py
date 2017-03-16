@@ -95,10 +95,10 @@ def graph_page(request, graph_id):
 	context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
 		'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
 
-	if 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
-		context['title'] = context['graph']['graph_json']['data']['name']
-	elif 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
+	if 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
 		context['title'] = context['graph']['graph_json']['data']['title']
+	elif 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
+		context['title'] = context['graph']['graph_json']['data']['name']
 	else:
 		context['title'] = ''
 

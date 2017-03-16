@@ -1,11 +1,6 @@
 <ul id="nodeEditorSideBar" class="sidebar-nav gs-sidebar-nav">
     <li><p class="lead text-center">Edit Selected Nodes</p></li>
     <li>
-        <a class="btn sidebar-nav-pills" href="#" data-target="#layoutEditorSideBar">
-            <i class="fa fa-chevron-left"></i> Back
-        </a>
-    </li>
-    <li>
         <div class="form-horizontal">
             <div class="form-group">
                 <label for="nodeWidth" class="col-sm-4 control-label">Color</label>
@@ -52,6 +47,21 @@
                 <div class="col-sm-8">
                     <input type="text" class="form-control" id="nodeLabel" placeholder="label"/>
                 </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.layoutEditor.nodeEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.layoutEditor.nodeEditor.close(save=true);">
+                    Ok
+                </button>
             </div>
         </div>
     </li>
