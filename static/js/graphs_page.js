@@ -873,7 +873,7 @@ var graphPage = {
             }).append(
                 $('<button>', {
                     'type': "button",
-                    'class': "btn btn-default gs-full-width select-layout-btn user-layout",
+                    'class': "btn btn-xs btn-default gs-full-width select-layout-btn user-layout",
                     'data-layout-id': layout.id,
                     'onclick': "graphPage.onSelectLayoutBtnClick(this)"
                 }).html('<b>' + layout.name + '</b> <br> created by ' + layout.owner_email)
@@ -1293,6 +1293,9 @@ var graphPage = {
                     // This method is called when layouts are successfully fetched.
                     params.success(response);
 
+                    if (response.total > 0) {
+                        $('#selectSavedLayoutHeading').show();
+                    }
                     $('#userPrivateLayoutBtns').html('');
                     _.each(response.layouts, function (layout) {
                         graphPage.addLayoutBtns(layout, 'userPrivateLayoutBtns');
@@ -1323,6 +1326,9 @@ var graphPage = {
                     // This method is called when layouts are successfully fetched.
                     params.success(response);
 
+                    if (response.total > 0) {
+                        $('#selectSavedLayoutHeading').show();
+                    }
                     $('#userSharedLayoutBtns').html('');
                     _.each(response.layouts, function (layout) {
                         graphPage.addLayoutBtns(layout, 'userSharedLayoutBtns');
@@ -1336,12 +1342,13 @@ var graphPage = {
         },
         operationsFormatter: function (value, row, index) {
             return [
-                '<div class="pull-left">',
+                '<div class="pull-left"><strong>',
                 row['name'],
+                '</strong><br><small>', 'created by ',row['owner_email'],'</small>',
                 '</div>',
-                '<div class="pull-right">',
+                '<div class="pull-right margin-top-1">',
                 row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="edit-layout" href="javascript:void(0)" title="Rename Layout"> Rename <i class="fa fa-lg fa-pencil"></i> </a>&nbsp;' : '',
-                row['is_shared'] == 0 ? '&nbsp;<a class="share-layout" href="javascript:void(0)" title="Share Layout"> Share <i class="fa fa-lg fa-eye" aria-hidden="true"></i> </a>&nbsp;' : '<a class="unshare-layout" href="javascript:void(0)" title="Unshare Layout"> Unshare <i class="fa fa-lg fa-eye-slash" aria-hidden="true"></i> </a>&nbsp;',
+                row['owner_email'] == $('#UserEmail').val() ? (row['is_shared'] == 0 ? '&nbsp;<a class="share-layout" href="javascript:void(0)" title="Share Layout"> Share <i class="fa fa-lg fa-eye" aria-hidden="true"></i> </a>&nbsp;' : '<a class="unshare-layout" href="javascript:void(0)" title="Unshare Layout"> Unshare <i class="fa fa-lg fa-eye-slash" aria-hidden="true"></i> </a>&nbsp;') : '',
                 row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="delete-layout" href="javascript:void(0)" title="Delete Layout"> Delete <i class="fa fa-lg fa-trash"></i> </a>' : '',
                 '</div>'
             ].join('');

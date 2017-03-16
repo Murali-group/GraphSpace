@@ -10,6 +10,7 @@ from graphspace.wrappers import atomic_transaction
 from json_validator import *
 from graphspace.graphs.formatter.json_formatter import CyJSFormat
 import networkx as nx
+import json
 from json import dumps, loads
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
