@@ -1782,7 +1782,7 @@ var graphPage = {
                     tempStyle = tempStyle.selector(nodeSelector({'name': elem.data('name')})).style(styleJSON);
                 });
                 tempStyle.selector('node:selected').style({
-                    'overlay-color': '#eebd9a',
+                    'overlay-color': 'red',
                     'overlay-padding': 10,
                     'overlay-opacity': 0.3
                 }).update();
@@ -1930,7 +1930,7 @@ var graphPage = {
                     tempStyle = tempStyle.style().selector(edgeSelector({'name': elem.data('name')})).style(styleJSON);
                 });
                 tempStyle.selector('edge:selected').style({
-                    'overlay-color': '#eebd9a',
+                    'overlay-color': 'red',
                     'overlay-padding': 10,
                     'overlay-opacity': 0.3
                 }).update();
