@@ -28,7 +28,7 @@ var defaultStylesheet = [
 var selectedElementsStylesheet = [{
     'selector': 'node:selected',
     'style': {
-        'overlay-color': '#eebd9a',
+        'overlay-color': 'red',
         'overlay-padding': 10,
         'overlay-opacity': 0.3
     }
@@ -36,7 +36,7 @@ var selectedElementsStylesheet = [{
     {
         'selector': 'edge:selected',
         'style': {
-            'overlay-color': '#eebd9a',
+            'overlay-color': 'red',
             'overlay-padding': 10,
             'overlay-opacity': 0.3
         }
