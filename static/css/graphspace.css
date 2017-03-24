@@ -175,7 +175,7 @@ nav.navbar.navbar-default {
     color: white;
 }
 
-.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-brand:hover {
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus, .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
     color: white;
     background-color: #000000 !important;
 }
