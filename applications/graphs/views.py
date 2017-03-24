@@ -83,12 +83,18 @@ def graph_page(request, graph_id):
 
 	context.push({"graph": _get_graph(request, graph_id)})
 	context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
-	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"]['default_layout_id'] else None})
+	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
+		'default_layout_id'] else None})
 
-	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"]['default_layout_id'] is not None else None
+	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
+		                                                                                            'default_layout_id'] is not None else None
 
-	if default_layout is not None and default_layout.is_shared == 1 and request.GET.get('user_layout') is None and request.GET.get('auto_layout') is None:
-		return redirect(request.path+'?user_layout='+context["default_layout_id"])
+	if default_layout is not None and default_layout.is_shared == 1 and request.GET.get(
+			'user_layout') is None and request.GET.get('auto_layout') is None:
+		if '?' in request.get_full_path():
+			return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
+		else:
+			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
 
 	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
 	context['style_json_string'] = json.dumps(context['graph']['style_json'])
