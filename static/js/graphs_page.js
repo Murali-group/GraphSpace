@@ -2228,7 +2228,7 @@ var cytoscapeGraph = {
         try {
             stylesheetJSON = cytoscapeGraph.parseStylesheet(stylesheetJSON);
             if (stylesheetJSON) {
-                var tempCy = cy.style();
+                var tempCy = cy.style().resetToDefault();
                 _.each(stylesheetJSON, function (elemStyle) {
                     if (elemStyle['selector'].indexOf(':selected') == -1) {
                         tempCy = tempCy.selector(elemStyle['selector']).style('css' in elemStyle ? elemStyle['css'] : elemStyle['style']);

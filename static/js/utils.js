@@ -275,7 +275,7 @@ var UndoManager = function (onUndo, onRedo, onUpdate) {
 UndoManager.prototype = {
     constructor: UndoManager,
     undo: function () {
-        if (this.index >= 0) {
+        if (this.index > 0) {
             this.index = this.index - 1;
             this.onUndo(this.state[this.index]);
         } else {
