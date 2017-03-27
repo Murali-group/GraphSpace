@@ -219,8 +219,6 @@ def _get_graphs(request, query=dict()):
 		Email of the Owner of the graphs. Required if member_email is not provided, user is not admin and is_public is not set to True.
 	member_email : string
 		Email of the User with which the graphs are shared. Required if owner_email is not provided, user is not admin and is_public is not set to True.
-	name: string
-		name of the graphs are shared with.
 	limit : integer
 		Number of entities to return. Default value is 20.
 	offset : integer
