@@ -341,9 +341,9 @@ types:
       updated_at: string
       is_shared: number
       graph_id: number
-      positions_json: object
-      style_json: object
-      
+      positions_json: string
+      style_json: string
+
 /graphs:
   description: APIs to access graphs on GraphSpace.
   displayName: Graphs
@@ -354,24 +354,24 @@ types:
       is_public?: integer
       owner_email?: string
       member_email?: string
-      limit?: 
-        description: Number of entities to return. 
+      limit?:
+        description: Number of entities to return.
         default: 20
         type: integer
-      offset?: 
+      offset?:
         description: Offset the list of returned entities by this number.
         default: 0
         type: integer
-      names?: 
+      names?:
         description: Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
         type: string[]
-      nodes?: 
+      nodes?:
         description: Search for graphs with given given list of node names. In order to search for graphs with given node name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node name.
         type: string[]
-      edges?: 
+      edges?:
         description: Search for graphs with the edge between given given list of node names separated by colon. In order to search for graphs with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edge between nodes with 'xyz' and 'abc' in their node names.
         type: string[]
-      tags?: 
+      tags?:
         description: Search for graphs with the given given list of tag names. In order to search for graphs with given tag as a substring, wrap the name of the tag with percentage symbol. For example, %xyz% will search for all graphs with 'xyz' in their tag names.
         type: string[]
       order?:
@@ -395,7 +395,7 @@ types:
       201:
         body:
           application/json:
-            type: Graph                   
+            type: Graph
   /{id}:
     description: APIs to access a specific graph on GraphSpace.
     displayName: Graph
@@ -439,7 +439,6 @@ types:
                 type: Layout[]
       post:
         description: Create a new Graph Layout.
-      
                 
 /groups:
   description: APIs to access groups on GraphSpace.
