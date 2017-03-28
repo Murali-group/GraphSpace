@@ -1845,13 +1845,8 @@ var graphPage = {
                 });
 
                 $('#nodeLabel').on('input', function (e) {
-                    if (_.isEmpty($('#nodeShape').val())) {
-                        return $.notify({
-                            message: 'Please enter valid label value!'
-                        }, {
-                            type: 'warning'
-                        });
-                    } else {
+                    if (!_.isEmpty($('#nodeLabel').val())) {
+
                         graphPage.layoutEditor.nodeEditor.updateNodeProperty({
                             'content': $('#nodeLabel').val()
                         });
