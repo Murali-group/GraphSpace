@@ -69,7 +69,7 @@ class CyJSFormat:
 			if 'id' in node['data']:
 				node['data']['name'] = node['data']['id']
 
-			if 'label' not in node:
+			if 'label' not in node['data']:
 				node['data']['label'] = ""
 
 			new_nodes.append(node)

@@ -224,7 +224,7 @@ def delete_graph_by_id(request, graph_id):
 def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
-		is_directed = 0 if 'is_directed' not in edge[2]['data'] else edge[2]['data']['is_directed']
+		is_directed = 0 if 'is_directed' not in edge[2]['data'] or not edge[2]['data']['is_directed'] else 1
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),

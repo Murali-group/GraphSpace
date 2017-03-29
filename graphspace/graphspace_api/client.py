@@ -66,7 +66,8 @@ class GraphSpace:
 									  'name': graph.get_name(),
 									  'is_public': 0 if is_public is None else is_public,
 									  'owner_email': self.username,
-									  'json': graph.compute_json()
+									  'graph_json': graph.compute_graph_json(),
+									  'style_json': graph.get_style_json()
 								  }).json()
 
 	def get_graph(self, graph_id):
