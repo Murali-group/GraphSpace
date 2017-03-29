@@ -5,11 +5,10 @@ from sqlalchemy.exc import IntegrityError
 import applications.graphs.dal as db
 import applications.users as users
 from graphspace.exceptions import ErrorCodes, BadRequest
-from graphspace.graphs.classes.gsgraph import GSGraph
+from graphspace_api.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
-from json_validator import *
-from graphspace.graphs.formatter.json_formatter import CyJSFormat
-import networkx as nx
+from graphspace_api.graphs.formatter.json_formatter import CyJSFormat
+
 import json
 from json import dumps, loads
 

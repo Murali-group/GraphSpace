@@ -1,0 +1,7 @@
+setup.py
+GraphSpace.egg-info/PKG-INFO
+GraphSpace.egg-info/SOURCES.txt
+GraphSpace.egg-info/dependency_links.txt
+GraphSpace.egg-info/not-zip-safe
+GraphSpace.egg-info/requires.txt
+GraphSpace.egg-info/top_level.txt
