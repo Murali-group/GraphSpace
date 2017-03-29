@@ -5,9 +5,9 @@ from sqlalchemy.exc import IntegrityError
 import applications.graphs.dal as db
 import applications.users as users
 from graphspace.exceptions import ErrorCodes, BadRequest
-from graphspace_api.graphs.classes.gsgraph import GSGraph
+from graphspace_python.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
-from graphspace_api.graphs.formatter.json_formatter import CyJSFormat
+from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
 
 import json
 from json import dumps, loads
@@ -196,7 +196,7 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 	if style_json is not None:
 		GSGraph.validate_style_json(style_json)
-		graph['style_json'] = style_json
+		graph['style_json'] = json.dumps(style_json)
 
 	if graph_json is not None:
 		G = CyJSFormat.create_gsgraph(json.dumps(graph_json))

@@ -13,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-from graphspace_api.graphs.formatter.json_formatter import CyJSFormat
+from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
 
 revision = '7df7ee83a212'
 down_revision = 'c4c8fd40b021'
