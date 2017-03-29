@@ -446,7 +446,33 @@ var graphPage = {
         }
     },
     applyLayout: function (layout) {
-        graphPage.cyGraph.layout(layout);
+        if(layout['name'] == 'subLayout')
+        {
+            var triOptions = {
+                name: 'cola',
+                animate: true,
+                flow: {axis: 'x'},
+                boundingBox: {x1:0,y1: -1100,w: 1000,h: 1000}
+            }
+            var rectOptions = {
+                name: 'cola',
+                flow: {axis: 'y'},
+                animate: true,
+                boundingBox: {x1:0,y1: 1100,w: 1000,h: 1000}
+            }
+            var otherOptions = {
+                name: 'cola',
+                animate: true,
+                boundingBox: {x1:0,y1: 0,w: 1000,h: 1000}
+            }
+            graphPage.cyGraph.nodes("[shape = 'triangle']").layout(triOptions);
+            graphPage.cyGraph.nodes("[shape = 'ellipse']").layout(otherOptions);
+            graphPage.cyGraph.nodes("[shape = 'rectangle']").layout(rectOptions);
+        }
+        if(layout['name'] != 'subLayout')
+        {
+            graphPage.cyGraph.layout(layout);
+        }
     },
     saveLayout: function (layoutName) {
 
@@ -1353,7 +1379,8 @@ var cytoscapeGraph = {
                 avoidOverlap: true,
                 animate: false
             }
-        } else if (layout_name == "concentric") {
+        }
+        else if (layout_name == "concentric") {
             graph_layout = {
                 name: "concentric",
                 fit: true,
@@ -1361,7 +1388,8 @@ var cytoscapeGraph = {
                 avoidOverlap: true,
                 animate: false
             }
-        } else if (layout_name == "circle") {
+        }
+        else if (layout_name == "circle") {
             graph_layout = {
                 name: "circle",
                 padding: 10,
@@ -1369,30 +1397,36 @@ var cytoscapeGraph = {
                 avoidOverlap: true,
                 animate: false
             }
-        } else if (layout_name == 'cose') {
+        }
+        else if (layout_name == 'cose') {
             graph_layout = {
                 name: "cose"
             }
-        } else if (layout_name == "grid") {
+        }
+        else if (layout_name == "grid") {
             graph_layout = {
                 name: "grid"
             }
-        } else if (layout_name == 'cola') {
+        }
+        else if (layout_name == 'cola') {
             graph_layout = {
                 name: "cola"
             }
-        } else if (layout_name == 'cola-set-align') {
+        } //nothing fancy
+        else if (layout_name == 'cola-set-align') {
             var shape_location = {
-                "triangle" : {y: -500},
+                "triangle" : {y: 0},
                 //"ellipse" : {x: 0, y: 0},
-                "rectangle": {y: 500}
+                "rectangle": {y: 1000}
             }
             graph_layout = {
                 name: "cola",
+                boundingBox : {x1: 0,y1: 0,x2: 1000,y2: 1000},
                 alignment:function(node){return shape_location[node.data('shape')]},
                 avoidOverlap: true
             }
-        } else if (layout_name == 'cola-set-align-and-flow') {
+        } //set the y alignment of each node
+        else if (layout_name == 'cola-set-align-and-flow') {
             var shape_location = {
                 "triangle" : {y: -500},
                 "rectangle": {y: 500}
@@ -1403,7 +1437,8 @@ var cytoscapeGraph = {
                 avoidOverlap: true,
                 flow: {axis: 'y', minSeparation: 1}
             }
-        } else if (layout_name == 'cola-set-align-and-bounding-box') { //incomplete
+        } //set the y alignment of each
+        else if (layout_name == 'cola-set-align-and-bounding-box') { //incomplete
             var shape_location = {
                 "triangle" : {y: -500},
                 "rectangle": {y: 1000}
@@ -1415,12 +1450,19 @@ var cytoscapeGraph = {
                 avoidOverlap: true,
                 flow: {axis: 'y', minSeparation: 1}
             }
-        } else if (layout_name == 'cola-set-ghost-nodes') {
+        } //play with
+        else if (layout_name == 'cola-set-ghost-nodes') {
             var triangle = {
                 data : {id: 'triangle', content: 'TRIANGLE'}
             };
             var rectangle = {
-                data: {id: 'rectangle'}
+                data: {id: 'rectangle', content: 'RECTANGLE'}
+            };
+            var middleTri = {
+                data : {id: 'middleTri', content: 'MIDDLETRI'}
+            };
+            var middleRect = {
+                data: {id: 'middleRect', content: 'MIDDLERECT'}
             };
             var newJSON = {
                 "nodes": new Array(),
@@ -1442,7 +1484,10 @@ var cytoscapeGraph = {
             }
 
             //Add in our ghost node
-            newJSON['nodes'].push(triangle)
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(middleTri);
+            newJSON['nodes'].push(middleRect);
 
             //Add in our ghost edges
             for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
@@ -1454,6 +1499,34 @@ var cytoscapeGraph = {
                         data: {id: 'triangle_temp' + i, source: 'triangle' , target: node_data['data']['id']}
                     };
                     newJSON['edges'].push(temp);
+                    var temp2 = {
+                        data: {id: 'midTri_temp' + i, source: node_data['data']['id'], target: 'middleTri'}
+                    };
+                    newJSON['edges'].push(temp2);
+                }
+                else if (node_data['data']['shape'] == 'rectangle')
+                {
+                    console.log(node_data['data']['id'] + " is a rectangle");
+                    var temp = {
+                        data: {id: 'rectangle_temp' + i, source: node_data['data']['id'] , target: 'rectangle'}
+                    };
+                    newJSON['edges'].push(temp);
+                    var temp2 = {
+                        data: {id: 'midRect_temp' + i, source: 'middleRect', target: node_data['data']['id']}
+                    };
+                    newJSON['edges'].push(temp2);
+                }
+                else
+                {
+                    console.log(node_data['data']['id'] + " is neither");
+                    var temp = {
+                        data: {id: 'midTriOth_temp' + i, source: 'middleTri', target: node_data['data']['id']}
+                    };
+                    newJSON['edges'].push(temp);
+                    var temp2 = {
+                        data: {id: 'midRectOth_temp' + i, source: node_data['data']['id'], target: 'middleRect'}
+                    };
+                    newJSON['edges'].push(temp2);
                 }
             }
 
@@ -1461,32 +1534,384 @@ var cytoscapeGraph = {
             graphPage.cyGraph.load(newJSON);
             graph_layout = {
                 name: "cola",
-                boundingBox: {x1: -250, y1:-250, w:500, h:500},
-                alignment: function(node){
-                    if(node.data('id') == 'triangle')
-                    {
-                        return {y: -1000}
-                    }
-                }
+                //boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                flow: {axis: 'y', minSeparation: 1500}
             }
 
-            graphPage.cyGraph.load(holdJSON['graph'])
-        } else if (layout_name == 'cola-make-compound-nodes') { //based off ghost nodes
+        }
+        else if (layout_name == 'cola-compound-colored-shapes-no-align') { //based off ghost nodes
             var triangle = {
-                data : {id: 'triangle', content: 'TRIANGLE'}
+                data: {id: 'triangle', content: 'TRIANGLE'}
             };
             var rectangle = {
                 data: {id: 'rectangle', content: 'RECTANGLE'}
             };
+            var middle = {
+                data: {id: 'middle'}
+            };
+            var grey = {
+                data: {
+                    id: 'grey',
+                    content: 'GREY',
+                    parent: 'middle'
+                }
+            };
             var other = {
-                data: {id: 'other', content: 'MISC'}
+                data: {
+                    id: 'other',
+                    content: 'MISC',
+                    parent: 'middle'
+                }
             };
             var newJSON = {
                 "nodes": new Array(),
                 "edges": new Array()
             };
 
-            console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id']);
+            //For checking alignment
+            var foundTriangle = false;
+            var foundSquare = false;
+            var foundOther = false;
+
+            //determine what colors we have
+            var colors = new Array();
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                var shape = node_data['data']['shape'];
+                var color = node_data['data']['background_color'];
+                if (color == 'grey' || color == 'gray' || color == '#D8D8D8') {
+                    node_data['data']['parent'] = 'grey';
+                }
+                else {
+                    if (shape == 'triangle') {
+                        node_data['data']['parent'] = 'triangle';
+                    }
+                    else if (shape == 'rectangle') {
+                        node_data['data']['parent'] = 'rectangle';
+                    }
+                    else {
+                        node_data['data']['parent'] = 'other';
+                    }
+                }
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(middle)
+            newJSON['nodes'].push(other);
+            newJSON['nodes'].push(grey);
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+            graph_layout = {
+                name: "cola"
+            }
+        } //Cola-esque, but can't set position
+        else if (layout_name == 'cola-hide-grey') {
+            var hideList = graphPage.cyGraph.nodes().filterFn(function(ele){
+                return (ele.data('background_color') == '#D8D8D8')})
+            hideList.hide()
+            graph_layout = {
+                name: "cola"
+            }
+        } //hides grey nodes
+        else if (layout_name == 'cola-show-grey') {
+            graphPage.cyGraph.nodes().show()
+            graph_layout = {
+                name: "cola"
+            }
+        } //shows grey nodes
+
+        //-------------------------- Most Recent Changes --------------------------------------------------------
+        else if (layout_name == 'cola-remove-undirected') {
+            var triangle = {
+                data : {id: 'triangle', content: 'TRIANGLE'}
+            };
+            var rectangle = {
+                data: {id: 'rectangle', content: 'RECTANGLE'}
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()};
+
+            //console.log("First edge is: " + graph_json.graph["edges"][0]['data']['directed']);
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                //Only keep the directed edges
+                if(edge_data['data']['directed'] == 'true')
+                {
+                    //console.log(edge_data['data']['id'] + "is directed:" + edge_data['data']['directed']);
+                    //edge_data['data']['target_arrow_shape'] = 'triangle';
+                    newJSON['edges'].push(edge_data);
+                    console.log('From: ' + edge_data['data']['source'] + ", To: " + edge_data['data']['target']);
+                }
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+
+            //Add in our ghost edges
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                node_data = graph_json.graph['nodes'][i];
+                //console.log(node_data['data']['id'] + "has degree " + node_data['degree']);
+                if (node_data['data']['shape'] == 'triangle')
+                {
+                    //console.log(node_data['data']['id'] + " is a triangle");
+                    var temp = {
+                        data: {id: 'triangle_temp' + i, source: 'triangle' , target: node_data['data']['id'], directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                else if (node_data['data']['shape'] == 'rectangle')
+                {
+                    //console.log(node_data['data']['id'] + " is a rectangle");
+                    var temp = {
+                        data: {id: 'rectangle_temp' + i, source: node_data['data']['id'] , target: 'rectangle', directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                //console.log('Roots are: ' + newJSON['nodes'].roots());
+            }
+
+            //var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+            console.log('The roots are: ')
+            console.log(graphPage.cyGraph.nodes().roots()[0]);
+
+            var connectedNodes = graphPage.cyGraph.edges().connectedNodes();
+            var unConnectedNodes = graphPage.cyGraph.nodes().difference(connectedNodes);
+
+            console.log(unConnectedNodes);
+
+            // for(var i=0; i < unConnectedNodes.length; i++)
+            // {
+            //     console.log(unConnectedNodes[i]['_private']['data']['id'] + " is not connected")
+            // }
+
+            //Just in case, let's remove any nodes with no edges
+            graphPage.cyGraph.remove(unConnectedNodes);
+            graph_layout = {
+                name: "cola",
+                //boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                flow: {axis: 'y', minSeparation: 400}
+            }
+        }
+        else if (layout_name == 'cola-make-directed') {
+            var triangle = {
+                data : {id: 'triangle', content: 'TRIANGLE'}
+            };
+            var rectangle = {
+                data: {id: 'rectangle', content: 'RECTANGLE'}
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()};
+
+            //console.log("First edge is: " + graph_json.graph["edges"][0]['data']['directed']);
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                //console.log(edge_data['id'] + "is " + edge_data['data']['directed']);
+                if(edge_data['data']['directed'] == 'true')
+                {
+                    console.log('From: ' + edge_data['data']['source'] + ", To: " + edge_data['data']['target']);
+                }
+                //If the edge isn't directed, we're going to put in an edge facing the opposite direction
+                if(edge_data['data']['directed'] == 'false')
+                {
+                    //console.log("is undirected.")
+                    var temp = {
+                        data: {id: 'directed_temp' + i, source: edge_data['data']['target'] , target: edge_data['data']['source'], directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                newJSON['edges'].push(edge_data);
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+
+            //Add in our ghost edges
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                node_data = graph_json.graph['nodes'][i];
+                if (node_data['data']['shape'] == 'triangle')
+                {
+                    //console.log(node_data['data']['id'] + " is a triangle");
+                    var temp = {
+                        data: {id: 'triangle_temp' + i, source: 'triangle' , target: node_data['data']['id'], directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                else if (node_data['data']['shape'] == 'rectangle')
+                {
+                    //console.log(node_data['data']['id'] + " is a rectangle");
+                    var temp = {
+                        data: {id: 'rectangle_temp' + i, source: node_data['data']['id'] , target: 'rectangle', directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                //console.log('Roots are: ' + newJSON['nodes'].roots());
+            }
+
+            graphPage.cyGraph.load(newJSON);
+            //console.log('The roots are: ' + graphPage.cyGraph.nodes().roots()['data']['id']);
+            graph_layout = {
+                name: "cola",
+
+                //boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                flow: {axis: 'y', minSeparation: 1000}
+            }
+        }
+        else if (layout_name == 'cola-remove-undirected-no-source-sink') {
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()};
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                //If the edge is directed, then we'll keep it.
+                if(edge_data['data']['directed'] == 'true')
+                {
+                    //console.log(edge_data['data']['id'] + "is directed:" + edge_data['data']['directed']);
+                    newJSON['edges'].push(edge_data);
+                    console.log('From: ' + edge_data['data']['source'] + ", To: " + edge_data['data']['target']);
+                }
+            }
+
+            //var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+
+            var connectedNodes = graphPage.cyGraph.edges().connectedNodes();
+            var unConnectedNodes = graphPage.cyGraph.nodes().difference(connectedNodes);
+
+            //console.log(unConnectedNodes);
+
+            for(var i=0; i < unConnectedNodes.length; i++)
+            {
+                console.log(unConnectedNodes[i]['_private']['data']['id'] + " is not connected")
+            }
+
+            //Just in case, we're going to remove the unconnected nodes
+            graphPage.cyGraph.remove(unConnectedNodes);
+            graph_layout = {
+                name: "cola",
+
+                //boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                flow: {axis: 'y', minSeparation: 300}
+            }
+        }
+        else if (layout_name == 'cola-make-directed-no-source-sink') {
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()};
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                //console.log(edge_data['id'] + "is " + edge_data['data']['directed']);
+                if(edge_data['data']['directed'] == 'true')
+                {
+                    console.log('From: ' + edge_data['data']['source'] + ", To: " + edge_data['data']['target']);
+                }
+                //If the edge is undirected, we're going to add an edge going the other way
+                if(edge_data['data']['directed'] == 'false')
+                {
+                    //console.log("is undirected.")
+                    var temp = {
+                        data: {id: 'directed_temp' + i, source: edge_data['data']['target'] , target: edge_data['data']['source'], directed: 'true'}
+                    };
+                    newJSON['edges'].push(temp);
+                }
+                newJSON['edges'].push(edge_data);
+            }
+
+            graphPage.cyGraph.load(newJSON);
+            //console.log('The roots are: ' + graphPage.cyGraph.nodes().roots()['data']['id']);
+            graph_layout = {
+                name: "cola",
+
+                //boundingBox: {x1: -250, y1:-250, w:500, h:500},
+                flow: {axis: 'y', minSeparation: 1000}
+            }
+        }
+        else if (layout_name == 'subLayout') {
+            graph_layout = {
+                name: "subLayout"
+            }
+        }
+
+        //-------------------------- Not visible in GraphSpace, kept in case ------------------------------------
+        else if (layout_name == 'cola-make-compound-nodes-shapes') { //based off ghost nodes
+            var triangle = {
+                data: {
+                    id: 'triangle',
+                    content: 'TRIANGLE',
+                    //background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var rectangle = {
+                data: {
+                    id: 'rectangle',
+                    content: 'RECTANGLE',
+                    //background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var other = {
+                data: {
+                    id: 'other',
+                    content: 'MISC',
+                    background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            //console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id']);
 
             //Move over the nodes
             for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
@@ -1523,23 +1948,280 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "cola"
             }
-        } else if (layout_name == 'cola-set-edge-lengths') { //implement this
+        } //basic separation by shape
+        else if (layout_name == 'cola-flow-compound-nodes-shapes') { //based off ghost nodes
+            var triangle = {
+                data: {
+                    id: 'triangle',
+                    content: 'TRIANGLE',
+                    //background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var rectangle = {
+                data: {
+                    id: 'rectangle',
+                    content: 'RECTANGLE',
+                    //background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var other = {
+                data: {
+                    id: 'other',
+                    content: 'MISC',
+                    background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            var triangleToOther = {
+                data: {
+                    id: 'triangleToOther',
+                    source: 'triangle',
+                    target: 'other'
+                }
+            };
+            var otherToRectangle = {
+                data: {
+                    id: 'otherToRectangle',
+                    source: 'other',
+                    target: 'rectangle'
+                }
+            };
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                var shape = node_data['data']['shape']
+                if(shape == 'triangle')
+                {
+                    node_data['data']['parent'] = 'triangle';
+                }
+                else if(shape == 'rectangle')
+                {
+                    node_data['data']['parent'] = 'rectangle';
+                }
+                else
+                {
+                    node_data['data']['parent'] = 'other';
+                }
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(other);
+
+            //Add in ghost edges
+            newJSON['edges'].push(triangleToOther);
+            newJSON['edges'].push(otherToRectangle);
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
             graph_layout = {
                 name: "cola"
             }
-        } else if (layout_name == 'cola-hide-grey') {
-            var hideList = graphPage.cyGraph.nodes().filterFn(function(ele){
-                return (ele.data('background_color') == '#D8D8D8')})
-            hideList.hide()
-            graph_layout = {
-                name: "cola"
+        } //does not work
+        else if (layout_name == 'cola-align-compound-nodes-shapes') { //based off ghost nodes
+            var triangle = {
+                data: {
+                    id: 'triangle',
+                    content: 'TRIANGLE',
+                    background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var rectangle = {
+                data: {
+                    id: 'rectangle',
+                    content: 'RECTANGLE',
+                    background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var other = {
+                data: {
+                    id: 'other',
+                    content: 'MISC',
+                    background_opacity: 0,
+                    border_opacity: 0
+                }
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            var shape_location = {
+                "triangle" : {y: -500},
+                //"ellipse" : {x: 0, y: 0},
+                "rectangle": {y: 500}
             }
-        } else if (layout_name == 'cola-show-grey') {
-            graphPage.cyGraph.nodes().show()
-            graph_layout = {
-                name: "cola"
+
+            //console.log("First node is: " + graph_json.graph["nodes"][0]['data']['id']);
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                var shape = node_data['data']['shape']
+                if(shape == 'triangle')
+                {
+                    node_data['data']['parent'] = 'triangle';
+                }
+                else if(shape == 'rectangle')
+                {
+                    node_data['data']['parent'] = 'rectangle';
+                }
+                else
+                {
+                    node_data['data']['parent'] = 'other';
+                }
+                newJSON['nodes'].push(node_data);
             }
-        } else if (layout_name == 'grid-set-row') {
+
+            //Move over the edges
+            for(var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(other);
+
+
+            triangle.descendants().makeLayout({name: 'grid'}).run();
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+            graph_layout = {
+                name: "cola",
+                alignment:function(node){return shape_location[node.data('shape')]}
+            }
+        } //does not work
+        else if (layout_name == 'cola-compound-colored-shapes-set-align') { //based off ghost nodes
+            var triangle = {
+                data: {id: 'triangle', content: 'TRIANGLE'}
+            };
+            var rectangle = {
+                data: {id: 'rectangle', content: 'RECTANGLE'}
+            };
+            var middle = {
+                data: {id: 'middle'}
+            };
+            var grey = {
+                data: {
+                    id: 'grey',
+                    content: 'GREY',
+                    parent: 'middle'
+                }
+            };
+            var other = {
+                data: {
+                    id: 'other',
+                    content: 'MISC',
+                    parent: 'middle'
+                }
+            };
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            //For checking alignment
+            var foundTriangle = false;
+            var foundSquare = false;
+            var foundOther = false;
+
+            //determine what colors we have
+            var colors = new Array();
+
+            //Move over the nodes
+            for (var i = 0; i < graph_json.graph['nodes'].length; i++) {
+                var node_data = graph_json.graph['nodes'][i];
+                var shape = node_data['data']['shape'];
+                var color = node_data['data']['background_color'];
+                if (color == 'grey' || color == 'gray' || color == '#D8D8D8') {
+                    node_data['data']['parent'] = 'grey';
+                }
+                else {
+                    if (shape == 'triangle') {
+                        node_data['data']['parent'] = 'triangle';
+                    }
+                    else if (shape == 'rectangle') {
+                        node_data['data']['parent'] = 'rectangle';
+                    }
+                    else {
+                        node_data['data']['parent'] = 'other';
+                    }
+                }
+                newJSON['nodes'].push(node_data);
+            }
+
+            //Move over the edges
+            for (var i = 0; i < graph_json.graph['edges'].length; i++) {
+                var edge_data = graph_json.graph['edges'][i];
+                newJSON['edges'].push(edge_data)
+            }
+
+            //Add in our ghost node
+            newJSON['nodes'].push(triangle);
+            newJSON['nodes'].push(rectangle);
+            newJSON['nodes'].push(middle)
+            newJSON['nodes'].push(other);
+            newJSON['nodes'].push(grey);
+
+            var holdJSON = graph_json;
+            graphPage.cyGraph.load(newJSON);
+            graph_layout = {
+                name: "cola",
+                alignment: function(node){ //Set the alignment of one node in each layer
+                    var tempShape = node.data('shape');
+                    var tempColor = node.data('background_color')
+                    if(!foundTriangle || !foundSquare || !foundOther) {
+                        if (tempShape == 'triangle') {
+                            if(tempColor != 'grey' && tempColor != 'gray' && tempColor != '#D8D8D8') {
+                                if (!foundTriangle) {
+                                    foundTriangle = true;
+                                    console.log(node.data('id') + "is triangles center")
+                                    return {y: -1000};
+                                }
+                            }
+                        }
+                        else if (tempShape == 'rectangle') {
+                            if(tempColor != 'grey' && tempColor != 'gray' && tempColor != '#D8D8D8') {
+                                if (!foundSquare) {
+                                    foundSquare = true;
+                                    console.log(node.data('id') + "is rectangles center")
+                                    return {y: 1000}
+                                }
+                            }
+                        }
+                        else {
+                            if (!foundOther) {
+                                foundOther = true;
+                                console.log(node.data('id') + "is others center")
+                                return {y: 0}
+                            }
+                        }
+                    }
+                }
+            }
+        } //No longer is 'cola'-esque
+        else if (layout_name == 'grid-set-row') {
             var shape_location = {
                 "triangle": {row: 0},
                 "ellipse": {row: 1},
@@ -1551,7 +2233,8 @@ var cytoscapeGraph = {
                     return shape_location[node.data('shape')]
                 }
             }
-        } else if (layout_name == 'grid-sort-by-shape') {
+        } //close, puts each shape in a row
+        else if (layout_name == 'grid-sort-by-shape') {
             var shape_vals = {
                 "triangle": {value : 0},
                 "ellipse": {value: 1},
@@ -1561,7 +2244,8 @@ var cytoscapeGraph = {
                 name: "grid",
                 sort: function(n1, n2){return shape_vals[n1.data('shape')].value - shape_vals[n2.data('shape')].value}
             }
-        }
+        } //less close, sorts by shape in grid
+
         return graph_layout;
     },
     hideGraphInformation: function (cy) {

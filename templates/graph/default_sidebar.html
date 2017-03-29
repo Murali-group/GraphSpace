@@ -111,6 +111,14 @@
                 <li class="margin-bottom-2">
                     <button type="button"
                             class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="subLayout"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Sub Layout
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
                             data-layout-id="cola-set-align"
                             onclick="graphPage.onSelectLayoutBtnClick(this)">
                         Cola Set Align
@@ -143,17 +151,57 @@
                 <li class="margin-bottom-2">
                     <button type="button"
                             class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="cola-make-compound-nodes"
+                            data-layout-id="cola-make-compound-nodes-shapes"
                             onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Cola Make Compound Nodes
+                        Cola Compound Sep. Shapes
+                    </button>
+                </li>
+<!--            <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="grid-set-row"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Grid Set Row
                     </button>
                 </li>
                 <li class="margin-bottom-2">
                     <button type="button"
                             class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="cola-set-edge-lengths"
+                            data-layout-id="grid-sort-by-shape"
                             onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Cola Set Edge Lengths
+                        Grid Sort by Shape
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-flow-compound-nodes-shapes"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Flow Comp. Nodes Shapes
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-align-compound-nodes-shapes"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Align Comp. Nodes Shapes
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-compound-colored-shapes-set-align"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Align Comp. Sep. Color Shapes
+                    </button>
+                </li> --> <!-- Hidden Buttons -->
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-compound-colored-shapes-no-align"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        No Align Comp. Sep. Color Shapes
                     </button>
                 </li>
                 <li class="margin-bottom-2">
@@ -175,17 +223,33 @@
                 <li class="margin-bottom-2">
                     <button type="button"
                             class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="grid-set-row"
+                            data-layout-id="cola-remove-undirected"
                             onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Grid Set Row
+                        Cola Remove Undirected
                     </button>
                 </li>
                 <li class="margin-bottom-2">
                     <button type="button"
                             class="btn btn-default gs-full-width select-layout-btn auto-layout"
-                            data-layout-id="grid-sort-by-shape"
+                            data-layout-id="cola-make-directed"
                             onclick="graphPage.onSelectLayoutBtnClick(this)">
-                        Grid Sort by Shape
+                        Cola Make Bidirectional
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-remove-undirected-no-source-sink"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Cola Remove Undirected NoSS
+                    </button>
+                </li>
+                <li class="margin-bottom-2">
+                    <button type="button"
+                            class="btn btn-default gs-full-width select-layout-btn auto-layout"
+                            data-layout-id="cola-make-directed-no-source-sink"
+                            onclick="graphPage.onSelectLayoutBtnClick(this)">
+                        Cola Make Bidirectional NoSS
                     </button>
                 </li>
                 <span id="userPrivateLayoutBtns">
