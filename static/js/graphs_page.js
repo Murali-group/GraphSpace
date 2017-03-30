@@ -977,8 +977,9 @@ var graphPage = {
                 return s.indexOf(':') !== -1;
             }), function (str) {
                 edge = _.split(str, ':');
-                return '%' + edge[0] + '%:%' + edge[1] + '%';
+                return '%' + _.trim(edge[0]) + '%:%' + _.trim(edge[1]) + '%';
             });
+
             if (_.trim($(e).val()).length > 0) {
                 if (nodes.length > 0) {
                     apis.nodes.get($('#GraphID').val(), {
@@ -987,7 +988,7 @@ var graphPage = {
                         },
                         successCallback = function (response) {
                             _.each(response.nodes, function (node) {
-                                graphPage.cyGraph.$("[id = '" + node.name + "']").select();
+                                graphPage.cyGraph.nodes("[name = '" + node.name + "']").select();
                             });
                         },
                         errorCallback = function (xhr, status, errorThrown) {
