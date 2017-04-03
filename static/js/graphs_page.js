@@ -1736,6 +1736,8 @@ var graphPage = {
                             node.unselect();
                         } else if (selectedColors.length > 0 || selectedShapes.length > 0){
                             node.select();
+                        } else {
+                            node.unselect();
                         }
 
                     });
