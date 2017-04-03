@@ -1345,7 +1345,7 @@ var graphPage = {
             return [
                 '<div class="pull-left"><strong>',
                 row['name'],
-                '</strong><br><small>', 'created by ',row['owner_email'],'</small>',
+                '</strong><br><small>', 'created by ', row['owner_email'], '</small>',
                 '</div>',
                 '<div class="pull-right margin-top-1">',
                 row['owner_email'] == $('#UserEmail').val() ? '&nbsp;<a class="edit-layout" href="javascript:void(0)" title="Rename Layout"> Rename <i class="fa fa-lg fa-pencil"></i> </a>&nbsp;' : '',
@@ -1732,14 +1732,10 @@ var graphPage = {
 
                     _.each(graphPage.cyGraph.nodes(), function (node) {
 
-                        if (attributeValue == node.style(attributeName)) {
-                            if (isSelected) {
-                                node.select();
-                            } else {
-                                if (_.indexOf(selectedColors, node.style('background-color')) === -1 && _.indexOf(selectedShapes, node.style('shape')) === -1) {
-                                    node.unselect();
-                                }
-                            }
+                        if ((selectedColors.length > 0 && _.indexOf(selectedColors, node.style('background-color')) === -1) || (selectedShapes.length > 0 && _.indexOf(selectedShapes, node.style('shape')) === -1)) {
+                            node.unselect();
+                        } else {
+                            node.select();
                         }
 
                     });
@@ -2733,7 +2729,7 @@ var cytoscapeGraph = {
                     return key == 'css' ? 'style' : key;
                 });
             })
-        })), function(elemStyle){
+        })), function (elemStyle) {
             return elemStyle['selector'].indexOf(':selected') == -1;
         });
     }
