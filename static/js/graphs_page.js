@@ -1734,7 +1734,7 @@ var graphPage = {
 
                         if ((selectedColors.length > 0 && _.indexOf(selectedColors, node.style('background-color')) === -1) || (selectedShapes.length > 0 && _.indexOf(selectedShapes, node.style('shape')) === -1)) {
                             node.unselect();
-                        } else {
+                        } else if (selectedColors.length > 0 || selectedShapes.length > 0){
                             node.select();
                         }
 
