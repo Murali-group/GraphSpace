@@ -1892,7 +1892,8 @@ var graphPage = {
                     collection.unselect();
                     $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
                     $('#edgeStyle').val(collection.style('line-style'));
-                    $('#edgeArrowShape').val(collection.style('target-arrow-shape'));
+                    $('#edgeSourceArrowShape').val(collection.style('source-arrow-shape'));
+                    $('#edgeTargetArrowShape').val(collection.style('target-arrow-shape'));
                     $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
                     collection.select();
                 } else {
@@ -1915,7 +1916,8 @@ var graphPage = {
                 } else {
                     graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
                         'line-color': $("#edgeLineColorPicker").colorpicker('getValue'),
-                        'target-arrow-color': $("#edgeLineColorPicker").colorpicker('getValue')
+                        'target-arrow-color': $("#edgeLineColorPicker").colorpicker('getValue'),
+                        'source-arrow-color': $("#edgeLineColorPicker").colorpicker('getValue')
                     });
                 }
 
@@ -1990,7 +1992,7 @@ var graphPage = {
                     }
                 });
 
-                $('#edgeArrowShape').on('change', function (e) {
+                $('#edgeSourceArrowShape').on('change', function (e) {
                     if (_.isEmpty($('#edgeArrowShape').val())) {
                         return $.notify({
                             message: 'Please enter valid arrow shape value!',
@@ -1999,7 +2001,21 @@ var graphPage = {
                         });
                     } else {
                         graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
-                            'target-arrow-shape': $('#edgeArrowShape').val()
+                            'source-arrow-shape': $('#edgeSourceArrowShape').val()
+                        });
+                    }
+                });
+
+                $('#edgeTargetArrowShape').on('change', function (e) {
+                    if (_.isEmpty($('#edgeArrowShape').val())) {
+                        return $.notify({
+                            message: 'Please enter valid arrow shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                            'target-arrow-shape': $('#edgeTargetArrowShape').val()
                         });
                     }
                 });

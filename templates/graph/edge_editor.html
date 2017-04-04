@@ -28,9 +28,24 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="edgeArrowShape" class="col-sm-4 control-label">Arrow Shape</label>
+                <label for="edgeSourceArrowShape" class="col-sm-4 control-label">Arrow Shape</label>
                 <div class="col-sm-8">
-                    <select id="edgeArrowShape" class="form-control">
+                    <select id="edgeSourceArrowShape" class="form-control">
+                        <option value="none">none</option>
+                        <option value="triangle">triangle</option>
+                        <option value="tee">tee</option>
+                        <option value="triangle-tee">triangle-tee</option>
+                        <option value="triangle-backcurve">triangle-backcurve</option>
+                        <option value="square">square</option>
+                        <option value="circle">circle</option>
+                        <option value="diamond">diamond</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeTargetArrowShape" class="col-sm-4 control-label">Arrow Shape</label>
+                <div class="col-sm-8">
+                    <select id="edgeTargetArrowShape" class="form-control">
                         <option value="none">none</option>
                         <option value="triangle">triangle</option>
                         <option value="tee">tee</option>
