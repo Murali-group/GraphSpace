@@ -1993,7 +1993,7 @@ var graphPage = {
                 });
 
                 $('#edgeSourceArrowShape').on('change', function (e) {
-                    if (_.isEmpty($('#edgeArrowShape').val())) {
+                    if (_.isEmpty($('#edgeSourceArrowShape').val())) {
                         return $.notify({
                             message: 'Please enter valid arrow shape value!',
                         }, {
@@ -2007,7 +2007,7 @@ var graphPage = {
                 });
 
                 $('#edgeTargetArrowShape').on('change', function (e) {
-                    if (_.isEmpty($('#edgeArrowShape').val())) {
+                    if (_.isEmpty($('#edgeTargetArrowShape').val())) {
                         return $.notify({
                             message: 'Please enter valid arrow shape value!',
                         }, {
