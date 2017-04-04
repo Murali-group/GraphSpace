@@ -2285,12 +2285,12 @@ var cytoscapeGraph = {
          *  
          *  cy: cytoscape graph object
          */
-
+        var selectedElementStyleAttributes = ['overlay-opacity', 'overlay-color', 'overlay-padding'];
         return _.map(cy.elements(), function (elem) {
             return {
                 'selector': elem.isNode() ? _.template("node[name='<%= name %>']")({'name': elem.data('name')}) : _.template("edge[name='<%= name %>']")({'name': elem.data('name')}),
                 'style': _.omitBy(_.mapValues(elem._private.style, function (style) {
-                    return style ? style['strValue'] : undefined
+                    return style ? (selectedElementStyleAttributes.indexOf(style['name']) == -1 ? style['strValue'] : undefined) : undefined
                 }), _.isNil)
             }
         });
