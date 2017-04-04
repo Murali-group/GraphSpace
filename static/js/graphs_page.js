@@ -1878,7 +1878,8 @@ var graphPage = {
                     });
                 } else {
                     graphPage.layoutEditor.nodeEditor.updateNodeProperty({
-                        'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue')
+                        'background-color': $("#nodeBackgroundColorPicker").colorpicker('getValue'),
+                        'text-outline-color': $("#nodeBackgroundColorPicker").colorpicker('getValue'),
                     });
                 }
             }
@@ -1891,6 +1892,7 @@ var graphPage = {
                     collection.unselect();
                     $('#edgeWidth').val(_.replace(collection.style('width'), 'px', ''));
                     $('#edgeStyle').val(collection.style('line-style'));
+                    $('#edgeArrowShape').val(collection.style('target-arrow-shape'));
                     $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
                     collection.select();
                 } else {
@@ -1912,7 +1914,8 @@ var graphPage = {
                     });
                 } else {
                     graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
-                        'line-color': $("#edgeLineColorPicker").colorpicker('getValue')
+                        'line-color': $("#edgeLineColorPicker").colorpicker('getValue'),
+                        'target-arrow-color': $("#edgeLineColorPicker").colorpicker('getValue')
                     });
                 }
 
@@ -1983,6 +1986,20 @@ var graphPage = {
                     } else {
                         graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
                             'line-style': $('#edgeStyle').val()
+                        });
+                    }
+                });
+
+                $('#edgeArrowShape').on('change', function (e) {
+                    if (_.isEmpty($('#edgeArrowShape').val())) {
+                        return $.notify({
+                            message: 'Please enter valid arrow shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                            'target-arrow-shape': $('#edgeArrowShape').val()
                         });
                     }
                 });
