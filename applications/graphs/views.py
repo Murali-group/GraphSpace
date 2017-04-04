@@ -65,6 +65,24 @@ def graphs_page(request):
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
+def graph_page_by_name(request, email, graph_name):
+	"""
+	Redirects to the appropriate graph page. This is only for supporting older URLs.
+
+	Parameters
+	----------
+	email : string
+		User Email Address. Required
+	graph_name : string
+		Name of the Graph.
+	"""
+	graph = graphs.get_graph_by_name(request, owner_email=email, name=graph_name)
+	if graph is not None:
+		return redirect('/graphs/' + str(graph.id))
+	else:
+		return redirect('/')
+
+
 def graph_page(request, graph_id):
 	"""
 		Wrapper view for the group page. /graphs/<graph_id>

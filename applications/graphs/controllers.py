@@ -215,6 +215,10 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
 
+def get_graph_by_name(request, owner_email, name):
+	return db.get_graph(request.db_session, owner_email=owner_email, name=name)
+
+
 def delete_graph_by_id(request, graph_id):
 	db.delete_graph(request.db_session, id=graph_id)
 	return
