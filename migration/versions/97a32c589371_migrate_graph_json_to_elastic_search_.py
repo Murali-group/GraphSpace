@@ -1,7 +1,7 @@
 """migrate graph json to elastic search engine
 
 Revision ID: 97a32c589371
-Revises: 7df7ee83a212
+Revises: 67bfd4a0665b
 Create Date: 2017-03-31 13:00:12.667770
 
 """
@@ -15,7 +15,8 @@ from graphspace.data_type import DataType
 
 # revision identifiers, used by Alembic.
 revision = '97a32c589371'
-down_revision = '7df7ee83a212'
+# down_revision = '7df7ee83a212'
+down_revision = '67bfd4a0665b'
 branch_labels = None
 depends_on = None
 
