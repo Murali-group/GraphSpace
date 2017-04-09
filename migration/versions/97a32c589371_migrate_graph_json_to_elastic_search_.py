@@ -67,12 +67,16 @@ def upgrade():
 	connection = op.get_bind()
 	es.indices.create(index='graphs', ignore=400)
 	es.indices.put_template(name='template_common', body=json.loads(template))
-
-	for graph in connection.execute(graphhelper.select()):
-		es.index(index="graphs", doc_type="json", id=graph.id, body=map_attributes(json.loads(graph.graph_json)))
+	total = connection.execute(graphhelper.select()).rowcount
+	offset = 0
+	while offset < total:
+		offset += 1000
+		for graph in connection.execute(graphhelper.select().limit(1000).offset(offset)):
+			es.index(index="graphs", doc_type="json", id=graph.id, body=map_attributes(json.loads(graph.graph_json)))
 	pass
 
 
 def downgrade():
 	es = Elasticsearch()
 	es.indices.delete(index='graphs', ignore=[400, 404])
+	pass
