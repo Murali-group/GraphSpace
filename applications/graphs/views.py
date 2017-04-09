@@ -170,8 +170,8 @@ def graphs_rest_api(request, graph_id=None):
 def graphs_ajax_api(request, graph_id=None):
 	"""
 	Handles any request sent to following urls:
-		/javascript/graphs
-		/javascript/graphs/<graph_id>
+		/ajax/graphs
+		/ajax/graphs/<graph_id>
 
 	Parameters
 	----------
@@ -183,6 +183,64 @@ def graphs_ajax_api(request, graph_id=None):
 
 	"""
 	return _graphs_api(request, graph_id=graph_id)
+
+
+@csrf_exempt
+def graphs_advanced_search_ajax_api(request):
+	"""
+	Handles any request sent to following urls:
+		/ajax/graphs
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "POST":
+			querydict = QueryDict('', mutable=True)
+			querydict.update(request.GET)
+			queryparams = querydict
+
+			# Validate search graphs API request
+			user_role = authorization.user_role(request)
+			if user_role == authorization.UserRole.LOGGED_IN:
+				if queryparams.get('owner_email', None) is None \
+						and queryparams.get('member_email', None) is None \
+						and queryparams.get('is_public', None) != '1':
+					raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
+				if queryparams.get('is_public', None) != '1':
+					if get_request_user(request) != queryparams.get('member_email', None) \
+							and get_request_user(request) != queryparams.get('owner_email', None):
+						raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+						                 args=queryparams.get('owner_email', None))
+
+			total, graphs_list = graphs.search_graphs1(request,
+			                                           owner_email=queryparams.get('owner_email', None),
+			                                           member_email=queryparams.get('member_email', None),
+			                                           names=list(filter(None, queryparams.getlist('names[]', []))),
+			                                           is_public=queryparams.get('is_public', None),
+			                                           nodes=list(filter(None, queryparams.getlist('nodes[]', []))),
+			                                           edges=list(filter(None, queryparams.getlist('edges[]', []))),
+			                                           tags=list(filter(None, queryparams.getlist('tags[]', []))),
+			                                           limit=queryparams.get('limit', 20),
+			                                           offset=queryparams.get('offset', 0),
+			                                           order=queryparams.get('order', 'desc'),
+			                                           sort=queryparams.get('sort', 'name'),
+			                                           query=json.loads(request.body))
+
+			return HttpResponse(json.dumps({
+				'total': total,
+				'graphs': [utils.serializer(graph) for graph in graphs_list]
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
+	else:
+		raise BadRequest(request)
 
 
 def _graphs_api(request, graph_id=None):

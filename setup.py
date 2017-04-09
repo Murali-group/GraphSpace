@@ -19,7 +19,7 @@ setup(
     author_email = 'adb@vt.edu',
     description = 'The interactive graph sharing website.',
     long_description=long_description,
-    packages=[],
+    packages=['graphspace'],
     include_package_data=False,
     classifiers=[
         'Environment :: Web Environment',

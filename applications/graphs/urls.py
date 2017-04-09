@@ -13,6 +13,7 @@ urlpatterns = [
 
 	# Graphs
 	url(r'^ajax/graphs/$', views.graphs_ajax_api, name='graphs_ajax_api'),
+	url(r'^ajax/graphs/advanced_search$', views.graphs_advanced_search_ajax_api, name='graphs_advanced_search_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)$', views.graphs_ajax_api, name='graph_ajax_api'),
 	# Graphs Groups
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups$', views.graph_groups_ajax_api, name='graph_groups_ajax_api'),

@@ -5,6 +5,10 @@
 var apis = {
     graphs: {
         ENDPOINT: '/ajax/graphs/',
+        search: function (queryParams, data, successCallback, errorCallback) {
+            console.log(JSON.stringify(data));
+            apis.jsonRequest('POST', apis.graphs.ENDPOINT + 'advanced_search' + '?' + $.param(queryParams), data, successCallback, errorCallback)
+        },
         get: function (data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.graphs.ENDPOINT, data, successCallback, errorCallback)
         },
@@ -93,13 +97,17 @@ var graphsPage = {
         });
 
         $('#clear').click(function () {
-            $('#tagSearchBar').val(null);
-            graphsPage.searchBar.val(null).trigger('change');
+            //$('#tagSearchBar').val(null);
+            graphsPage.searchBar.val(null);
+            graphsPage.tagsBar.val(null);
+            $(' .graphs-filter-field ').val(null);
+
             var queryRows = $('#queryBuilder').find('.row');
             for (i = 1; i < queryRows.length; i++) {
                 queryRows[i].remove();
             }
             graphsPage.queryBuilder.clearQueryField($('#queryBuilder').find('.row')[0]);
+            $("#ok").trigger("click");
         });
 
         $('input.graphs-table-search').keypress(function (e) {
@@ -114,9 +122,20 @@ var graphsPage = {
             tokenSeparators: [',', ' '],
             placeholder: "Search graphs, nodes and edges."
         });
+        graphsPage.tagsBar = $(".tags-search").select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            placeholder: "Search tags"
+        });
 
         graphsPage.searchBar.on('change', function (evt) {
             var query = graphsPage.searchBar.val() && graphsPage.searchBar.val().length > 0 ? '?query=' + graphsPage.searchBar.val() : '';
+            window.history.pushState('query', 'Graphs Page', window.location.origin + window.location.pathname + query);
+            $("#ok").trigger("click");
+        });
+
+        graphsPage.tagsBar.on('change', function (evt) {
+            var query = graphsPage.tagsBar.val() && graphsPage.tagsBar.val().length > 0 ? '?tags=' + graphsPage.tagsBar.val() : '';
             window.history.pushState('query', 'Graphs Page', window.location.origin + window.location.pathname + query);
             $("#ok").trigger("click");
         });
@@ -127,25 +146,156 @@ var graphsPage = {
             });
         }
 
+        if (utils.getURLParameter('tags') && utils.getURLParameter('tags') != "") {
+            _.each(_.split(utils.getURLParameter('tags'), ','), function (val) {
+                graphsPage.tagsBar.append(new Option(val, val, true, true)).trigger('change');
+            });
+        }
+
+        $("#ok").trigger("click");
+
         graphsPage.queryBuilder.initializeNodeSearchBar($("#queryBuilder").find('.row'));
         graphsPage.queryBuilder.initializeEdgeSearchBar($("#queryBuilder").find('.edge-row'));
 
         //show.bs.collapse
 
         $('#advancedSearchCollapse').on('shown.bs.collapse', function () {
-            $('#advancedSearchBtn').text('Hide Advanced Search');
+            $('#advancedSearchBtn').text('Hide Filters');
             graphsPage.searchBar.prop('disabled', true);
+            graphsPage.tagsBar.prop('disabled', true);
         });
         $('#advancedSearchCollapse').on('hidden.bs.collapse', function () {
-            $('#advancedSearchBtn').text('Advanced Search');
+            $('#advancedSearchBtn').text('More filters');
             graphsPage.searchBar.prop('disabled', false);
+            graphsPage.tagsBar.prop('disabled', false);
         });
 
         $('#ConfirmRemoveGraphBtn').click(graphsPage.graphsTable.onRemoveGraphConfirm);
+        graphsPage.advancedQueryBuilder.init();
 
         utils.initializeTabs();
     },
     searchBar: null,
+    tagsBar: null,
+    advancedQueryBuilder: {
+        init: function () {
+
+        },
+        computeQuery: function () {
+            var query = $.extend(true, {}, searchQueryTemplateJSON);
+            var nodeQueryString = graphsPage.advancedQueryBuilder.getNodeSearchQuery();
+            var edgeQueryString = graphsPage.advancedQueryBuilder.getEdgeSearchQuery();
+            var edgeSearchOperator = $('#edgeSearchOperator').val();
+            var networkQueryString = graphsPage.advancedQueryBuilder.getNetworkSearchQuery();
+            var networkSearchOperator = $('#networkSearchOperator').val();
+
+            if (nodeQueryString) {
+                var nodeQuery = $.extend(true, {}, nodeSubQueryTemplateJSON);
+                nodeQuery.nested.query.bool.must[0].query_string.query = nodeQueryString;
+                query.query.bool.should.push(nodeQuery);
+            }
+
+            if (edgeQueryString) {
+                var edgeQuery = $.extend(true, {}, edgeSubQueryTemplateJSON);
+                edgeQuery.nested.query.bool.must[0].query_string.query = edgeQueryString;
+
+                if (edgeSearchOperator == 'OR') {
+                    query.query.bool.should.push(edgeQuery);
+                } else if (edgeSearchOperator == 'AND') {
+                    query.query.bool.must.push(edgeQuery);
+                } else {
+                    query.query.bool.must_not.push(edgeQuery);
+                }
+            }
+
+            if (networkQueryString) {
+                var networkQuery = $.extend(true, {}, networkSubQueryTemplateJSON);
+                networkQuery.nested.query.bool.must[0].query_string.query = networkQueryString;
+
+                if (networkSearchOperator == 'OR') {
+                    query.query.bool.should.push(networkQuery);
+                } else if (networkSearchOperator == 'AND') {
+                    query.query.bool.must.push(networkQuery);
+                } else {
+                    query.query.bool.must_not.push(networkQuery);
+                }
+            }
+
+            //var nodes = _.map(_.filter($('.graph-search').val() ? $('.graph-search').val() : [], function (s) {
+            //        return s.indexOf(':') === -1;
+            //    }), function (str) {
+            //        return str;
+            //    });
+            //var names = nodes;
+
+            //if (names.length > 0) {
+            //    _.each(names, function(n){
+            //        var networkQuery = $.extend(true, {}, networkSubQueryTemplateJSON);
+            //        networkQuery.nested.query.bool.must = [];
+            //        temp = _.template('object_data.string_name:*<%= name %>* OR object_data.string_title:*<%= name %>*');
+            //        networkQuery.nested.query.bool.must.push({
+            //            "query_string": {
+            //                "query": temp({ 'name': n })
+            //            }
+            //        });
+            //        query.query.bool.should.push(networkQuery)
+            //    });
+            //}
+
+            //if (nodes.length > 0) {
+            //    _.each(nodes, function(n){
+            //        var nodeQuery = $.extend(true, {}, nodeSubQueryTemplateJSON);
+            //        nodeQuery.nested.query.bool.must = [];
+            //        temp = _.template('object_elements.object_nodes.object_data.string_name:*<%= node %>* OR object_elements.object_nodes.object_data.string_label:*<%= node %>*');
+            //        nodeQuery.nested.query.bool.should.push({
+            //            "query_string": {
+            //                "query": temp({ 'node': n })
+            //            }
+            //        });
+            //        query.query.bool.should.push(nodeQuery)
+            //    });
+            //}
+
+            return (nodeQueryString || edgeQueryString || networkQueryString) ? query : null;
+        },
+        parseAttributes: function (query) {
+            var attributes = _.replace(' ' + query, /[\(\[\{\]\}\)~]/g, ' ').match(/\s(.+?):/g);
+            if (attributes) {
+                return _.uniq(attributes.map(function (term) {
+                    return _.split(term, ' ').slice(-1)[0];
+                }))
+            } else {
+                return [];
+            }
+        },
+        getNodeSearchQuery: function () {
+            var query = _.trim($('#nodeSearchQuery').val());
+
+            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
+                query = _.replace(query, new RegExp(term, "g"), 'object_elements.object_nodes.object_data.string_' + term);
+            });
+
+            return _.isEmpty(query) ? null : '(' + query + ')';
+        },
+        getEdgeSearchQuery: function () {
+            var query = _.trim($('#edgeSearchQuery').val());
+
+            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
+                query = _.replace(query, new RegExp(term, "g"), 'object_elements.object_edges.object_data.string_' + term);
+            });
+
+            return _.isEmpty(query) ? null : '(' + query + ')';
+        },
+        getNetworkSearchQuery: function () {
+            var query = _.trim($('#networkSearchQuery').val());
+
+            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
+                query = _.replace(query, new RegExp(term, "g"), 'object_data.string_' + term);
+            });
+
+            return _.isEmpty(query) ? null : '(' + query + ')';
+        }
+    },
     queryBuilder: {
         computeQuery: function () {
             return _.filter(_.map($('#queryBuilder').find('.row'), function (queryRow) {
@@ -392,12 +542,21 @@ var graphsPage = {
     graphsTable: {
         searchTag: function (e) {
             searchedTag = $(e).text();
-            tags = _.uniq(_.pull(_.split($('#tagSearchBar').val(), ','), '', undefined));
+            tags = _.uniq(_.pull(graphsPage.tagsBar.val(), '', undefined));
+            //tags = _.uniq(_.pull(_.split($('#tagSearchBar').val(), ','), '', undefined));
 
             if (_.indexOf(tags, searchedTag) == -1) {
                 tags.push(searchedTag);
-                $('#tagSearchBar').val(_.join(tags, ','));
-                $("#ok").trigger("click");
+
+                if (tags && tags.length > 0) {
+                    graphsPage.tagsBar.html('');
+                    _.each(tags, function (tag) {
+                        graphsPage.tagsBar.append(new Option(tag, tag, true, true));
+                    });
+                    graphsPage.tagsBar.trigger('change');
+                }
+                //$('#tagSearchBar').val(_.join(tags, ','));
+                //$("#ok").trigger("click");
             }
         },
         graphNameFormatter: function (value, row) {
@@ -427,31 +586,42 @@ var graphsPage = {
         },
         queryParams: function (params) {
             //var params = {};
-            $('#toolbar').find('input[name]').each(function () {
-                params[$(this).attr('name')] = $(this).val();
-            });
-            params['search'] = $('.graph-search').val() ? $('.graph-search').val() : [];
-            params['nodes'] = $('.node-search').val() ? $('.graph-search').val() : [];
 
+            var search = $('.graph-search').val() ? $('.graph-search').val() : [];
+            var nodes = $('.graph-search').val() ? $('.graph-search').val() : [];
+            var tags = $('.tags-search').val() ? $('.tags-search').val() : [];
 
-            params["names"] = _.map(_.filter(params["search"], function (s) {
+            var names = _.map(_.filter(search, function (s) {
                 return s.indexOf(':') === -1;
             }), function (str) {
                 return '%' + str + '%';
             });
 
-            params["nodes"] = _.map(params["nodes"], function (str) {
+
+            tags = _.map(tags, function (str) {
                 return '%' + str + '%';
             });
 
-            params["nodes"] = _.union(params["names"], params['nodes']);
-            params["edges"] = _.map(_.filter(params["search"], function (s) {
+            nodes = names;
+
+            edges = _.map(_.filter(search, function (s) {
                 return s.indexOf(':') !== -1;
             }), function (str) {
                 edge = _.split(str, ':');
                 return '%' + edge[0] + '%:%' + edge[1] + '%';
             });
 
+            params["nodes"] = nodes;
+            params["names"] = names;
+            params["edges"] = edges;
+            params["tags"] = tags;
+
+            var query = graphsPage.advancedQueryBuilder.computeQuery();
+            if (query) {
+                params['query'] = query;
+            } else {
+                params['query'] = {};
+            }
             return params;
         },
         operationsFormatter: function (value, row, index) {
@@ -502,15 +672,12 @@ var graphsPage = {
             $('#SharedGraphsTable').bootstrapTable('showLoading');
             $('#sharedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
-            if (params.data["tags"]) {
-                params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
-                    return '%' + str + '%';
-                });
-            }
+            query = params.data['query']
+            delete params.data.query;
 
             params.data["member_email"] = $('#UserEmail').val();
 
-            apis.graphs.get(params.data,
+            apis.graphs.search(params.data, query,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
                     $('#SharedGraphsTable').bootstrapTable('hideLoading');
@@ -536,15 +703,13 @@ var graphsPage = {
             $('#PublicGraphsTable').bootstrapTable('showLoading');
             $('#publicGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
-            if (params.data["tags"]) {
-                params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
-                    return '%' + str + '%';
-                });
-            }
+            query = params.data['query']
+            delete params.data.query;
 
             params.data["is_public"] = 1;
 
-            apis.graphs.get(params.data,
+
+            apis.graphs.search(params.data, query,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
                     $('#PublicGraphsTable').bootstrapTable('hideLoading');
@@ -571,15 +736,12 @@ var graphsPage = {
 
             $('#ownedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
-            if (params.data["tags"]) {
-                params.data["tags"] = _.map(_.split(params.data["tags"], ','), function (str) {
-                    return '%' + str + '%';
-                });
-            }
+            query = params.data['query']
+            delete params.data.query;
 
             params.data["owner_email"] = $('#UserEmail').val();
 
-            apis.graphs.get(params.data,
+            apis.graphs.search(params.data, query,
                 successCallback = function (response) {
                     // This method is called when graphs are successfully fetched.
                     $('#OwnedGraphsTable').bootstrapTable('hideLoading');
@@ -1734,7 +1896,7 @@ var graphPage = {
 
                         if ((selectedColors.length > 0 && _.indexOf(selectedColors, node.style('background-color')) === -1) || (selectedShapes.length > 0 && _.indexOf(selectedShapes, node.style('shape')) === -1)) {
                             node.unselect();
-                        } else if (selectedColors.length > 0 || selectedShapes.length > 0){
+                        } else if (selectedColors.length > 0 || selectedShapes.length > 0) {
                             node.select();
                         } else {
                             node.unselect();

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 from sqlalchemy.ext.declarative import declarative_base
 
 import os
+from elasticsearch import Elasticsearch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
@@ -137,6 +138,7 @@ PASSWORD_HASHERS = (
 )
 
 BASE = declarative_base()
+ELASTIC_CLIENT = Elasticsearch()
 
 LOGGING = {
     'version': 1,

@@ -23,3 +23,4 @@ snowballstemmer==1.2.1
 Sphinx==1.4.4
 SQLAlchemy==1.0.14
 graphspace_python>=0.01
+enum34
