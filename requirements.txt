@@ -25,3 +25,4 @@ SQLAlchemy==1.0.14
 graphspace_python>=0.01
 enum34
 elasticsearch>=5.0.0,<6.0.0
+elasticsearch-dsl>=5.0.0,<6.0.0
