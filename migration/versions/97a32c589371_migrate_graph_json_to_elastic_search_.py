@@ -27,6 +27,7 @@ graphhelper = sa.Table(
 	sa.Column('graph_json', sa.String)
 )
 
+template = "{\"template\":\"graphs\",\"order\":0,\"settings\":{\"index\":{\"refresh_interval\":\"30s\",\"analysis\":{\"analyzer\":{\"my_analyzer\":{\"type\":\"custom\",\"tokenizer\":\"my_ngram_tokenizer\",\"filter\":[\"lowercase\",\"my_ngram_filter\"]}},\"filter\":{\"my_ngram_filter\":{\"type\":\"ngram\",\"max_gram\":50,\"min_gram\":2}},\"tokenizer\":{\"my_ngram_tokenizer\":{\"type\":\"ngram\",\"min_gram\":2,\"max_gram\":50,\"token_chars\":[\"letter\",\"digit\",\"punctuation\"]}}}}},\"mappings\":{\"json\":{\"date_detection\":false,\"_all\":{\"enabled\":false},\"dynamic_templates\":[{\"default_string_mapping\":{\"match\":\"*\",\"match_mapping_type\":\"string\",\"mapping\":{\"type\":\"string\"}}},{\"geopoint_mapping\":{\"mapping\":{\"geohash_precision\":\"1km\",\"type\":\"geo_point\",\"doc_values\":true,\"geohash_prefix\":true,\"lat_lon\":true,\"fielddata\":{\"precision\":\"10m\",\"format\":\"compressed\"}},\"match\":\"geopoint_*\"}},{\"string_mapping\":{\"match\":\"string_*\",\"mapping\":{\"type\":\"string\",\"index\":\"analyzed\",\"analyzer\":\"my_analyzer\",\"fields\":{\"raw\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}},{\"bool_mapping\":{\"match\":\"bool_*\",\"mapping\":{\"type\":\"boolean\"}}},{\"object_mapping\":{\"match\":\"object_*\",\"mapping\":{\"type\":\"nested\"}}},{\"datetime_mapping\":{\"match\":\"datetime_*\",\"mapping\":{\"type\":\"date\"}}},{\"long_mapping\":{\"match\":\"long_*\",\"mapping\":{\"type\":\"long\"}}},{\"double_mapping\":{\"match\":\"double_*\",\"mapping\":{\"type\":\"double\"}}}]}}}"
 
 def map_attributes(attributes):
 
@@ -65,6 +66,7 @@ def upgrade():
 	es = Elasticsearch()
 	connection = op.get_bind()
 	es.indices.create(index='graphs', ignore=400)
+	es.indices.put_template(id='template_common', body=json.loads(template))
 
 	for graph in connection.execute(graphhelper.select()):
 		es.index(index="graphs", doc_type="json", id=graph.id, body=map_attributes(json.loads(graph.graph_json)))
