@@ -1132,7 +1132,8 @@ var graphPage = {
             nodes = _.map(_.filter(_.pull(_.split(_.trim($(e).val()), ','), ''), function (s) {
                 return s.indexOf(':') === -1;
             }), function (str) {
-                return '%' + _.trim(str) + '%';
+                //return '%' + _.trim(str) + '%';
+                return _.trim(str);
             });
 
             edges = _.map(_.filter(_.split(_.trim($(e).val()), ','), function (s) {
@@ -1144,19 +1145,30 @@ var graphPage = {
 
             if (_.trim($(e).val()).length > 0) {
                 if (nodes.length > 0) {
-                    apis.nodes.get($('#GraphID').val(), {
-                            "names": nodes,
-                            "labels": nodes
-                        },
-                        successCallback = function (response) {
-                            _.each(response.nodes, function (node) {
-                                graphPage.cyGraph.nodes("[name = '" + node.name + "']").select();
-                            });
-                        },
-                        errorCallback = function (xhr, status, errorThrown) {
-                            $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
-                        }
-                    );
+                    graphPage.cyGraph.nodes().forEach(function (ele, i, eles) {
+                        _.each(nodes, function(node){
+                            if (ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
+                                ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
+                                ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1 ) {
+                                ele.select();
+                            }
+                        });
+
+                    });
+
+                    //apis.nodes.get($('#GraphID').val(), {
+                    //        "names": nodes,
+                    //        "labels": nodes
+                    //    },
+                    //    successCallback = function (response) {
+                    //        _.each(response.nodes, function (node) {
+                    //            graphPage.cyGraph.nodes("[name = '" + node.name + "']").select();
+                    //        });
+                    //    },
+                    //    errorCallback = function (xhr, status, errorThrown) {
+                    //        $.notify({message: xhr.responseJSON.error_message}, {type: 'danger'});
+                    //    }
+                    //);
                 }
 
                 if (edges.length > 0) {

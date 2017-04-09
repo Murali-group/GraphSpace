@@ -181,6 +181,7 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
+	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=new_graph.graph_json, refresh=True)
 	return new_graph
 
 
@@ -215,6 +216,8 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
+		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body=G.get_graph_json(), refresh=True)
+
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
 
@@ -223,6 +226,7 @@ def get_graph_by_name(request, owner_email, name):
 
 
 def delete_graph_by_id(request, graph_id):
+	settings.ELASTIC_CLIENT.delete(index="graphs", doc_type='json', id=graph_id, refresh=True)
 	db.delete_graph(request.db_session, id=graph_id)
 	return
 
@@ -351,7 +355,7 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 						"bool": {
 							"must": {
 								"query_string": {
-									"query": "object_elements.object_nodes.object_data.string_name:{0} OR object_elements.object_nodes.object_data.string_label:{0}".format(
+									"query": "object_elements.object_nodes.object_data.string_name:{0} OR object_elements.object_nodes.object_data.string_label:{0} OR object_elements.object_nodes.object_data.string_aliases:{0}".format(
 										node.replace('%', '*'))
 								}
 							}
