@@ -66,7 +66,7 @@ def upgrade():
 	es = Elasticsearch()
 	connection = op.get_bind()
 	es.indices.create(index='graphs', ignore=400)
-	es.indices.put_template(id='template_common', body=json.loads(template))
+	es.indices.put_template(name='template_common', body=json.loads(template))
 
 	for graph in connection.execute(graphhelper.select()):
 		es.index(index="graphs", doc_type="json", id=graph.id, body=map_attributes(json.loads(graph.graph_json)))
