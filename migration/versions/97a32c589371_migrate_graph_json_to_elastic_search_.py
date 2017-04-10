@@ -65,13 +65,15 @@ def jsonify_graph_jsonstring(graph_jsonstring):
 def upgrade():
 	es = Elasticsearch()
 	connection = op.get_bind()
+	es.indices.delete(index='graphs', ignore=[400, 404])
 	es.indices.create(index='graphs', ignore=400)
 	es.indices.put_template(name='template_common', body=json.loads(template))
 	total = connection.execute(graphhelper.select()).rowcount
 	offset = 0
 	while offset < total:
-		offset += 1000
-		for graph in connection.execute(graphhelper.select().limit(1000).offset(offset)):
+		offset += 100
+		for graph in connection.execute(graphhelper.select().order_by("id").limit(100).offset(offset)):
+			print(graph.id)
 			es.index(index="graphs", doc_type="json", id=graph.id, body=map_attributes(json.loads(graph.graph_json)))
 	pass
 
