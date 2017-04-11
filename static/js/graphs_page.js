@@ -110,7 +110,7 @@ var graphsPage = {
         graphsPage.searchBar = $(".graph-search").select2({
             tags: true,
             tokenSeparators: [',', ' ', '-'],
-            placeholder: "Search graphs, nodes and edges."
+            placeholder: "Search for networks"
         });
 
         graphsPage.searchBar.on('change', function (evt) {
@@ -482,7 +482,16 @@ var graphPage = {
 
         });
 
-        $('#inputSearchEdgesAndNodes').val(utils.getURLParameter('query')).trigger('onkeyup');
+        if (utils.getURLParameter('query')) {
+            var searchquery = _.map(_.filter(_.pull(_.split(_.trim(utils.getURLParameter('query')), ','), ''), function (s) {
+                return s.indexOf(':') === -1;
+            }), function (str) {
+                return _.trim(str);
+            }).join(',');
+
+            $('#inputSearchEdgesAndNodes').val(searchquery).trigger('onkeyup');
+        }
+
 
         graphPage.defaultLayoutWidget.init();
     },
