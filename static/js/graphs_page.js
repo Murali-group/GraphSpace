@@ -91,9 +91,8 @@ var graphsPage = {
          */
         console.log('Loading Graphs Page....');
 
-        $('table').bootstrapTable('refresh');
-
         $('#ok').click(function () {
+            $.xhrPool.abortAll();
             $('table').bootstrapTable('refresh');
         });
 
@@ -297,6 +296,7 @@ var graphsPage = {
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
              */
+
             $('#SharedGraphsTable').bootstrapTable('showLoading');
             $('#sharedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
