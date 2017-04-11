@@ -783,6 +783,8 @@ var graphPage = {
                 if (_.isArrayLike(dataValue)) {
                     if (utils.isNumeric(searchedValue)) {
                         return dataValue.indexOf(searchedValue) !== -1;
+                    } else if (_.isString(dataValue)) {
+                        return (''+dataValue).toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
                     } else {
                         return dataValue.join(' ').toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
                     }
