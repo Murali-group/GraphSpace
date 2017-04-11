@@ -97,8 +97,7 @@ var graphsPage = {
         });
 
         $('#clear').click(function () {
-            graphsPage.searchBar.val(null).trigger("change");;
-            graphsPage.tagsBar.val(null).trigger("change");;
+            graphsPage.searchBar.val(null).trigger("change");
         });
 
         $('input.graphs-table-search').keypress(function (e) {
@@ -113,20 +112,9 @@ var graphsPage = {
             tokenSeparators: [',', ' ', '-'],
             placeholder: "Search graphs, nodes and edges."
         });
-        graphsPage.tagsBar = $(".tags-search").select2({
-            tags: true,
-            tokenSeparators: [',', ' ', '-'],
-            placeholder: "Search tags"
-        });
 
         graphsPage.searchBar.on('change', function (evt) {
             var query = graphsPage.searchBar.val() && graphsPage.searchBar.val().length > 0 ? '?query=' + graphsPage.searchBar.val() : '';
-            window.history.pushState('query', 'Graphs Page', window.location.origin + window.location.pathname + query);
-            $("#ok").trigger("click");
-        });
-
-        graphsPage.tagsBar.on('change', function (evt) {
-            var query = graphsPage.tagsBar.val() && graphsPage.tagsBar.val().length > 0 ? '?tags=' + graphsPage.tagsBar.val() : '';
             window.history.pushState('query', 'Graphs Page', window.location.origin + window.location.pathname + query);
             $("#ok").trigger("click");
         });
@@ -139,7 +127,7 @@ var graphsPage = {
 
         if (utils.getURLParameter('tags') && utils.getURLParameter('tags') != "") {
             _.each(_.split(utils.getURLParameter('tags'), ','), function (val) {
-                graphsPage.tagsBar.append(new Option(val, val, true, true)).trigger('change');
+                graphsPage.searchBar.append(new Option(val, val, true, true)).trigger('change');
             });
         }
 
@@ -148,30 +136,34 @@ var graphsPage = {
         utils.initializeTabs();
     },
     searchBar: null,
-    tagsBar: null,
     advancedQueryBuilder: {
         computeQuery: function () {
             var query = $.extend(true, {}, searchQueryTemplateJSON);
             var search = $('.graph-search').val() ? $('.graph-search').val() : [];
 
             if (search.length > 0) {
-                nodeQuery = _.map(search, function (term) {
-                    if (term.indexOf(':') === -1) {
-                        var temp = _.template('object_elements.object_nodes.object_data.string_name:*<%= node %>* OR object_elements.object_nodes.object_data.string_label:*<%= node %>* OR object_elements.object_nodes.object_data.string_aliases:*<%= node %>*')
-                        return '(' + temp({'node': term}) + ')';
-                    } else {
-                        return '(object_elements.object_nodes.object_data.string_' + term.split(':')[0] + ':*' + term.split(':')[1] + '*)';
-                    }
+
+                nodeQuery = _.map(_.filter(_.pull(search, ''), function (s) {
+                    return s.indexOf(':') === -1;
+                }), function (term) {
+                    var temp = _.template('object_elements.object_nodes.object_data.string_name:*<%= node %>* OR object_elements.object_nodes.object_data.string_label:*<%= node %>* OR object_elements.object_nodes.object_data.string_aliases:*<%= node %>*')
+                    return '(' + temp({'node': term}) + ')';
                 });
 
-                networkQuery = _.map(search, function (term) {
+                networkQuery = _.flatten(_.map(search, function (term) {
                     if (term.indexOf(':') === -1) {
                         var temp = _.template('object_data.string_name:*<%= name %>*');
                         return '(' + temp({'name': term}) + ')';
                     } else {
-                        return '(object_data.string_' + term.split(':')[0] + ':*' + term.split(':')[1] + '*)';
+                        var attr = term.split(':')[0];
+                        var val = term.split(':')[1];
+                        return _.split(val, '-').map(function(n){
+                            return '(object_data.string_' + attr+ ':*' + n + '*)';
+                        });
                     }
-                });
+                }));
+
+                console.log(networkQuery);
 
                 query.query.bool.should.push({
                     "query_string": {
@@ -192,18 +184,18 @@ var graphsPage = {
     },
     graphsTable: {
         searchTag: function (e) {
-            searchedTag = $(e).text();
-            tags = _.uniq(_.pull(graphsPage.tagsBar.val(), '', undefined));
+            searchedTag = 'tags:'+$(e).text();
+            search = _.uniq(_.pull(graphsPage.searchBar.val(), '', undefined));
 
-            if (_.indexOf(tags, searchedTag) == -1) {
-                tags.push(searchedTag);
+            if (_.indexOf(search, searchedTag) == -1) {
+                search.push(searchedTag);
 
-                if (tags && tags.length > 0) {
-                    graphsPage.tagsBar.html('');
-                    _.each(tags, function (tag) {
-                        graphsPage.tagsBar.append(new Option(tag, tag, true, true));
+                if (search && search.length > 0) {
+                    graphsPage.searchBar.html('');
+                    _.each(search, function (term) {
+                        graphsPage.searchBar.append(new Option(term, term, true, true));
                     });
-                    graphsPage.tagsBar.trigger('change');
+                    graphsPage.searchBar.trigger('change');
                 }
             }
         },
@@ -235,13 +227,6 @@ var graphsPage = {
         queryParams: function (params) {
 
             var search = $('.graph-search').val() ? $('.graph-search').val() : [];
-            var tags = $('.tags-search').val() ? $('.tags-search').val() : [];
-
-            tags = _.map(tags, function (str) {
-                return '%' + str + '%';
-            });
-
-            params["tags"] = tags;
 
             var query = graphsPage.advancedQueryBuilder.computeQuery();
             if (query) {
@@ -779,12 +764,15 @@ var graphPage = {
                  3. If dataValue is a list of numbers and searchedValue is present in the list.
                  4. _.isEqual(dataValue, searchedValue) -> This method supports comparing arrays, array buffers, booleans, date objects, error objects, maps, numbers, Object objects, regexes, sets, strings, symbols, and typed arrays.
                  */
+                if (_.isNil(searchedValue) || _.isEmpty(searchedValue)) {
+                    return false;
+                }
 
                 if (_.isArrayLike(dataValue)) {
                     if (utils.isNumeric(searchedValue)) {
                         return dataValue.indexOf(searchedValue) !== -1;
                     } else if (_.isString(dataValue)) {
-                        return (''+dataValue).toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
+                        return ('' + dataValue).toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
                     } else {
                         return dataValue.join(' ').toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
                     }

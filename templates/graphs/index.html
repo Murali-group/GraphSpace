@@ -32,20 +32,28 @@
         <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
             <div id="toolbar" class="">
                 <div class="row" role="form">
-                    <div class="col-md-5 margin-top-2">
+                    <div class="col-md-10 margin-top-2">
                         <select class="graph-search gs-full-width" multiple="multiple">
                         </select>
                     </div>
-                    <div class="col-md-5 margin-top-2">
-                        <select class="tags-search gs-full-width" multiple="multiple">
-                        </select>
-                    </div>
-                    <div class="col-md-2 margin-top-2" style="text-align: left">
+                    <div class="col-md-2 margin-top-2" style="text-align: right">
                         <button id="ok" type="submit" class="btn btn-default">Search</button>
                         <a id="clear" class="btn btn-default">Clear Search</a>
                     </div>
                 </div>
-                <br>
+                <div class="row margin-top-2">
+                    <div class="col-md-8">
+                        <small>Search Examples:</small>
+                        <a href="/graphs?query=wnt"><span class="label label-default">wnt</span></a>
+                        <a href="/graphs?query=wnt,fzd "><span class="label label-default">wnt,fzd</span></a>
+                        <a href="/graphs?query=name:netpath"><span class="label label-default">name:netpath</span></a>
+                        <a href="/graphs?query=wnt,name:kegg"><span class="label label-default">wnt,name:kegg</span></a>
+                        <a href="/graphs?query=tags:kegg-networks"><span class="label label-default">tags:kegg-networks</span></a>
+                    </div>
+                    <div class="col-md-4" style="text-align: right">
+                        <a href="http://manual.graphspace.org/en/latest/Searching_Graphs.html" target="_blank">Documentation on Searching in GraphSpace</a>
+                    </div>
+                </div>
             </div>
 
             {% if uid %}
