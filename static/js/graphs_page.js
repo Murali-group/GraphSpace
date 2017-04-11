@@ -127,7 +127,7 @@ var graphsPage = {
 
         if (utils.getURLParameter('tags') && utils.getURLParameter('tags') != "") {
             _.each(_.split(utils.getURLParameter('tags'), ','), function (val) {
-                graphsPage.searchBar.append(new Option(val, val, true, true)).trigger('change');
+                graphsPage.searchBar.append(new Option('tags:' + val, 'tags:' + val, true, true)).trigger('change');
             });
         }
 
@@ -157,8 +157,8 @@ var graphsPage = {
                     } else {
                         var attr = term.split(':')[0];
                         var val = term.split(':')[1];
-                        return _.split(val, '-').map(function(n){
-                            return '(object_data.string_' + attr+ ':*' + n + '*)';
+                        return _.split(val, '-').map(function (n) {
+                            return '(object_data.string_' + attr + ':*' + n + '*)';
                         });
                     }
                 }));
@@ -184,7 +184,7 @@ var graphsPage = {
     },
     graphsTable: {
         searchTag: function (e) {
-            searchedTag = 'tags:'+$(e).text();
+            searchedTag = 'tags:' + $(e).text();
             search = _.uniq(_.pull(graphsPage.searchBar.val(), '', undefined));
 
             if (_.indexOf(search, searchedTag) == -1) {
