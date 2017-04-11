@@ -14,10 +14,27 @@ from json import dumps, loads
 
 from django.conf import settings
 from elasticsearch_dsl import Search, Q
+from graphspace.data_type import DataType
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
                                'default_grid']
 
+def map_attributes(attributes):
+
+	mapped_attributes = {}
+	if attributes and isinstance(attributes, dict) and DataType.forValue(attributes) == DataType.DICT:
+		for key, value in attributes.items():
+			value_type = DataType.forValue(value)
+			key_prefix = value_type.prefix()
+			mapped_key = key_prefix + key if not key.startswith(key_prefix) else key
+			if value_type == DataType.DICT:
+				mapped_attributes[mapped_key] = map_attributes(value)
+			else:
+				mapped_attributes[mapped_key] = DataType.dateToStr(value, value_type)
+	elif attributes and isinstance(attributes, list) and DataType.forValue(attributes) == DataType.DICT:
+		return [map_attributes(item) for item in attributes]
+
+	return mapped_attributes
 
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
@@ -181,7 +198,8 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
-	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=new_graph.graph_json, refresh=True)
+	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=map_attributes(json.loads(new_graph.graph_json)), refresh=True)
+
 	return new_graph
 
 
@@ -216,7 +234,7 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
-		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body=G.get_graph_json(), refresh=True)
+		settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=graph_id, body=map_attributes(G.get_graph_json()), refresh=True)
 
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
