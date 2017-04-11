@@ -91,15 +91,15 @@ var graphsPage = {
          */
         console.log('Loading Graphs Page....');
 
+        $('table').bootstrapTable('refresh');
+
         $('#ok').click(function () {
             $('table').bootstrapTable('refresh');
         });
 
         $('#clear').click(function () {
-            graphsPage.searchBar.val(null);
-            graphsPage.tagsBar.val(null);
-            $(' .graphs-filter-field ').val(null);
-            $("#ok").trigger("click");
+            graphsPage.searchBar.val(null).trigger("change");;
+            graphsPage.tagsBar.val(null).trigger("change");;
         });
 
         $('input.graphs-table-search').keypress(function (e) {
