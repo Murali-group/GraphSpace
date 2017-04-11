@@ -97,16 +97,9 @@ var graphsPage = {
         });
 
         $('#clear').click(function () {
-            //$('#tagSearchBar').val(null);
             graphsPage.searchBar.val(null);
             graphsPage.tagsBar.val(null);
             $(' .graphs-filter-field ').val(null);
-
-            var queryRows = $('#queryBuilder').find('.row');
-            for (i = 1; i < queryRows.length; i++) {
-                queryRows[i].remove();
-            }
-            graphsPage.queryBuilder.clearQueryField($('#queryBuilder').find('.row')[0]);
             $("#ok").trigger("click");
         });
 
@@ -119,12 +112,12 @@ var graphsPage = {
 
         graphsPage.searchBar = $(".graph-search").select2({
             tags: true,
-            tokenSeparators: [',', ' '],
+            tokenSeparators: [',', ' ', '-'],
             placeholder: "Search graphs, nodes and edges."
         });
         graphsPage.tagsBar = $(".tags-search").select2({
             tags: true,
-            tokenSeparators: [',', ' '],
+            tokenSeparators: [',', ' ', '-'],
             placeholder: "Search tags"
         });
 
@@ -154,396 +147,57 @@ var graphsPage = {
 
         $("#ok").trigger("click");
 
-        graphsPage.queryBuilder.initializeNodeSearchBar($("#queryBuilder").find('.row'));
-        graphsPage.queryBuilder.initializeEdgeSearchBar($("#queryBuilder").find('.edge-row'));
-
-        //show.bs.collapse
-
-        $('#advancedSearchCollapse').on('shown.bs.collapse', function () {
-            $('#advancedSearchBtn').text('Hide Filters');
-            graphsPage.searchBar.prop('disabled', true);
-            graphsPage.tagsBar.prop('disabled', true);
-        });
-        $('#advancedSearchCollapse').on('hidden.bs.collapse', function () {
-            $('#advancedSearchBtn').text('More filters');
-            graphsPage.searchBar.prop('disabled', false);
-            graphsPage.tagsBar.prop('disabled', false);
-        });
-
         $('#ConfirmRemoveGraphBtn').click(graphsPage.graphsTable.onRemoveGraphConfirm);
-        graphsPage.advancedQueryBuilder.init();
 
         utils.initializeTabs();
     },
     searchBar: null,
     tagsBar: null,
     advancedQueryBuilder: {
-        init: function () {
-
-        },
         computeQuery: function () {
             var query = $.extend(true, {}, searchQueryTemplateJSON);
-            var nodeQueryString = graphsPage.advancedQueryBuilder.getNodeSearchQuery();
-            var edgeQueryString = graphsPage.advancedQueryBuilder.getEdgeSearchQuery();
-            var edgeSearchOperator = $('#edgeSearchOperator').val();
-            var networkQueryString = graphsPage.advancedQueryBuilder.getNetworkSearchQuery();
-            var networkSearchOperator = $('#networkSearchOperator').val();
+            var search = $('.graph-search').val() ? $('.graph-search').val() : [];
 
-            if (nodeQueryString) {
-                var nodeQuery = $.extend(true, {}, nodeSubQueryTemplateJSON);
-                nodeQuery.nested.query.bool.must[0].query_string.query = nodeQueryString;
-                query.query.bool.should.push(nodeQuery);
-            }
-
-            if (edgeQueryString) {
-                var edgeQuery = $.extend(true, {}, edgeSubQueryTemplateJSON);
-                edgeQuery.nested.query.bool.must[0].query_string.query = edgeQueryString;
-
-                if (edgeSearchOperator == 'OR') {
-                    query.query.bool.should.push(edgeQuery);
-                } else if (edgeSearchOperator == 'AND') {
-                    query.query.bool.must.push(edgeQuery);
-                } else {
-                    query.query.bool.must_not.push(edgeQuery);
-                }
-            }
-
-            if (networkQueryString) {
-                var networkQuery = $.extend(true, {}, networkSubQueryTemplateJSON);
-                networkQuery.nested.query.bool.must[0].query_string.query = networkQueryString;
-
-                if (networkSearchOperator == 'OR') {
-                    query.query.bool.should.push(networkQuery);
-                } else if (networkSearchOperator == 'AND') {
-                    query.query.bool.must.push(networkQuery);
-                } else {
-                    query.query.bool.must_not.push(networkQuery);
-                }
-            }
-
-            //var nodes = _.map(_.filter($('.graph-search').val() ? $('.graph-search').val() : [], function (s) {
-            //        return s.indexOf(':') === -1;
-            //    }), function (str) {
-            //        return str;
-            //    });
-            //var names = nodes;
-
-            //if (names.length > 0) {
-            //    _.each(names, function(n){
-            //        var networkQuery = $.extend(true, {}, networkSubQueryTemplateJSON);
-            //        networkQuery.nested.query.bool.must = [];
-            //        temp = _.template('object_data.string_name:*<%= name %>* OR object_data.string_title:*<%= name %>*');
-            //        networkQuery.nested.query.bool.must.push({
-            //            "query_string": {
-            //                "query": temp({ 'name': n })
-            //            }
-            //        });
-            //        query.query.bool.should.push(networkQuery)
-            //    });
-            //}
-
-            //if (nodes.length > 0) {
-            //    _.each(nodes, function(n){
-            //        var nodeQuery = $.extend(true, {}, nodeSubQueryTemplateJSON);
-            //        nodeQuery.nested.query.bool.must = [];
-            //        temp = _.template('object_elements.object_nodes.object_data.string_name:*<%= node %>* OR object_elements.object_nodes.object_data.string_label:*<%= node %>*');
-            //        nodeQuery.nested.query.bool.should.push({
-            //            "query_string": {
-            //                "query": temp({ 'node': n })
-            //            }
-            //        });
-            //        query.query.bool.should.push(nodeQuery)
-            //    });
-            //}
-
-            return (nodeQueryString || edgeQueryString || networkQueryString) ? query : null;
-        },
-        parseAttributes: function (query) {
-            var attributes = _.replace(' ' + query, /[\(\[\{\]\}\)~]/g, ' ').match(/\s(.+?):/g);
-            if (attributes) {
-                return _.uniq(attributes.map(function (term) {
-                    return _.split(term, ' ').slice(-1)[0];
-                }))
-            } else {
-                return [];
-            }
-        },
-        getNodeSearchQuery: function () {
-            var query = _.trim($('#nodeSearchQuery').val());
-
-            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
-                query = _.replace(query, new RegExp(term, "g"), 'object_elements.object_nodes.object_data.string_' + term);
-            });
-
-            return _.isEmpty(query) ? null : '(' + query + ')';
-        },
-        getEdgeSearchQuery: function () {
-            var query = _.trim($('#edgeSearchQuery').val());
-
-            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
-                query = _.replace(query, new RegExp(term, "g"), 'object_elements.object_edges.object_data.string_' + term);
-            });
-
-            return _.isEmpty(query) ? null : '(' + query + ')';
-        },
-        getNetworkSearchQuery: function () {
-            var query = _.trim($('#networkSearchQuery').val());
-
-            _.each(graphsPage.advancedQueryBuilder.parseAttributes(query), function (term) {
-                query = _.replace(query, new RegExp(term, "g"), 'object_data.string_' + term);
-            });
-
-            return _.isEmpty(query) ? null : '(' + query + ')';
-        }
-    },
-    queryBuilder: {
-        computeQuery: function () {
-            return _.filter(_.map($('#queryBuilder').find('.row'), function (queryRow) {
-                if ($(queryRow).find('.datatype-select').val() == 'node') {
-                    return $(queryRow).find('.node-search').select2('data').length > 0 ? $(queryRow).find('.node-search').select2('data')[0].id : null;
-                } else {
-                    selectedHeadOption = $(queryRow).closest('.edge-search').find('.edge-head-search').select2('data') ? $(queryRow).closest('.edge-search').find('.edge-head-search').select2('data')[0] : null;
-                    selectedTailOption = $(queryRow).closest('.edge-search').find('.edge-tail-search').select2('data') ? $(queryRow).closest('.edge-search').find('.edge-tail-search').select2('data')[0] : null;
-                    if (selectedHeadOption && selectedTailOption) {
-                        return selectedHeadOption.id + ":" + selectedTailOption.id;
+            if (search.length > 0) {
+                nodeQuery = _.map(search, function (term) {
+                    if (term.indexOf(':') === -1) {
+                        var temp = _.template('object_elements.object_nodes.object_data.string_name:*<%= node %>* OR object_elements.object_nodes.object_data.string_label:*<%= node %>* OR object_elements.object_nodes.object_data.string_aliases:*<%= node %>*')
+                        return '(' + temp({'node': term}) + ')';
                     } else {
-                        return null;
+                        return '(object_elements.object_nodes.object_data.string_' + term.split(':')[0] + ':*' + term.split(':')[1] + '*)';
                     }
-                }
-            }));
-        },
-        syncQuery: function () {
-            graphsPage.searchBar.find('option').remove();
-            _.each(graphsPage.queryBuilder.computeQuery(), function (val) {
-                graphsPage.searchBar.append(new Option(val, val, true, true)).trigger('change');
-            });
-        },
-        initializeNodeSearchBar: function (queryRow) {
-            queryRow.find('.datatype-select').select2();
-            queryRow.find('.datatype-select').on('change', function (evt) {
-                graphsPage.queryBuilder.changeQueryField($(this).closest('.row'), $(this).val());
-            });
-            queryRow.find('.node-search').select2({
-                tags: true,
-                tokenSeparators: [',', ' '],
-                placeholder: "Search by gene/protein alias.",
-                ajax: {
-                    url: "/ajax/aliases/",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: '%' + params.term + '%', // search term
-                            offset: 0, //params.page*30 - 30,
-                            limit: 100
-                        };
-                    },
-                    processResults: function (data, params) {
-                        // parse the results into the format expected by Select2
-                        // since we are using custom formatting functions we do not need to
-                        // alter the remote JSON data, except to indicate that infinite
-                        // scrolling can be used
-                        params.limit = params.limit || 100;
+                });
 
-                        return {
-                            results: data.uniprot_aliases,
-                            pagination: {
-                                more: (params.limit) < data.total_count
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                escapeMarkup: function (markup) {
-                    return markup;
-                }, // let our custom formatter work
-                minimumInputLength: 1,
-                templateResult: function (alias) {
-                    if (alias.alias_name) {
-                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
+                networkQuery = _.map(search, function (term) {
+                    if (term.indexOf(':') === -1) {
+                        var temp = _.template('object_data.string_name:*<%= name %>*');
+                        return '(' + temp({'name': term}) + ')';
                     } else {
-                        return alias.text;
+                        return '(object_data.string_' + term.split(':')[0] + ':*' + term.split(':')[1] + '*)';
                     }
-                },
-                templateSelection: function (alias) {
-                    if (alias.alias_name) {
-                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
-                    } else {
-                        return alias.text;
+                });
+
+                query.query.bool.should.push({
+                    "query_string": {
+                        "query": nodeQuery.join(' AND '),
+                        "analyze_wildcard": true
                     }
-                }
-            });
-
-            queryRow.find('.node-search').on('change', function (evt) {
-                graphsPage.queryBuilder.syncQuery()
-            });
-        },
-        initializeEdgeSearchBar: function (queryRow) {
-            queryRow.find('.datatype-select').select2();
-            queryRow.find('.datatype-select').on('change', function (evt) {
-                graphsPage.queryBuilder.changeQueryField($(this).closest('.row'), $(this).val());
-            });
-            queryRow.find('.edge-head-search, .edge-tail-search').select2({
-                tags: true,
-                tokenSeparators: [',', ' '],
-                placeholder: "Search by gene/protein alias.",
-                ajax: {
-                    url: "/ajax/aliases/",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: '%' + params.term + '%', // search term
-                            offset: 0, //params.page*30 - 30,
-                            limit: 100
-                        };
-                    },
-                    processResults: function (data, params) {
-                        // parse the results into the format expected by Select2
-                        // since we are using custom formatting functions we do not need to
-                        // alter the remote JSON data, except to indicate that infinite
-                        // scrolling can be used
-                        params.limit = params.limit || 100;
-
-                        return {
-                            results: data.uniprot_aliases,
-                            pagination: {
-                                more: (params.limit) < data.total_count
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                escapeMarkup: function (markup) {
-                    return markup;
-                }, // let our custom formatter work
-                minimumInputLength: 1,
-                templateResult: function (alias) {
-                    if (alias.alias_name) {
-                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
-                        ;
-                    } else {
-                        return alias.text;
+                });
+                query.query.bool.should.push({
+                    "query_string": {
+                        "query": networkQuery.join(' AND '),
+                        "analyze_wildcard": true
                     }
-                },
-                templateSelection: function (alias) {
-                    if (alias.alias_name) {
-                        return alias.alias_name + " (UniProtKB: " + alias.id + " )";
-                        ;
-                    } else {
-                        return alias.text;
-                    }
-                }
-            });
+                });
+            }
 
-            queryRow.find('.edge-head-search, .edge-tail-search').on('change', function (evt) {
-                graphsPage.queryBuilder.syncQuery()
-            });
-        },
-        clearQueryField: function (queryRow) {
-            if ($(queryRow).find('.datatype-select').val() == 'node') {
-                $(queryRow).find('.node-search').val(null).trigger("change");
-            } else {
-                $(queryRow).find('.edge-head-search').val(null).trigger("change");
-                $(queryRow).find('.edge-tail-search').val(null).trigger("change");
-            }
-            return queryRow;
-        },
-        removeQueryField: function (elem, queryType) {
-            if (queryType == 'edge') {
-                selectedHeadOption = $(elem).closest('.row').find('.edge-head-search').val();
-                selectedTailOption = $(elem).closest('.row').find('.edge-tail-search').val();
-                graphsPage.searchBar.find('option[value="' + selectedHeadOption + ":" + selectedTailOption + '"]').remove();
-                $(elem).closest('.row').remove();
-                if (selectedHeadOption && selectedTailOption) {
-                    graphsPage.searchBar.trigger('change');
-                }
-
-            } else {
-                selectedOption = $(elem).closest('.row').find('.node-search').val();
-                graphsPage.searchBar.find('option[value="' + selectedOption + '"]').remove();
-                $(elem).closest('.row').remove();
-                if (selectedOption) {
-                    graphsPage.searchBar.trigger('change');
-                }
-            }
-        },
-        addQueryField: function (elem, type) {
-            if (type == 'edge') {
-                $newQuery = $('<div class="row edge-search query-builder-field"> \
-                            <div class="col-md-1 or-label"><p class="lead" style="text-align: right">OR</p></div> \
-                            <div class="col-md-1"> \
-                                <select class="form-control datatype-select"> \
-                                    <option value="node" >Node</option> \
-                                    <option value="edge" selected>Edge</option> \
-                                </select> \
-                            </div> \
-                            <div class="col-md-1"><p class="lead" style="text-align: center">between</p></div> \
-                            <div class="col-md-3"> \
-                                <select class="edge-head-search" style="width: 100%"> \
-                                </select> \
-                            </div> \
-                            <div class="col-md-1"><p class="lead" style="text-align: center">and</p></div> \
-                            <div class="col-md-3"> \
-                                <select class="edge-tail-search" style="width: 100%"> \
-                                </select> \
-                            </div> \
-                            <div class="col-md-1 zero-margin zero-padding"> \
-                                <button class="btn btn-default btn-sm  add-query-btn" aria-label="add" \
-                                        style="border-color: transparent;color: green;" onclick="graphsPage.queryBuilder.addQueryField(this, \'edge\')"> \
-                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i> \
-                                </button> \
-                                <button class="btn btn-default btn-sm remove-query-btn" aria-label="remove" \
-                                        style="border-color: transparent;color: red;" onclick="graphsPage.queryBuilder.removeQueryField(this, \'edge\')"> \
-                                    <i class="fa fa-minus-circle fa-lg" aria-hidden="true"></i> \
-                                </button>  \
-                            </div> \
-                        </div>');
-                $(elem).closest('.row').after($newQuery);
-                graphsPage.queryBuilder.initializeEdgeSearchBar($newQuery);
-            } else {
-                $newQuery = $('<div class="row query-builder-field"> \
-                            <div class="col-md-1 or-label"><p class="lead" style="text-align: right">OR</p></div> \
-                            <div class="col-md-1"> \
-                                <select class="form-control datatype-select"> \
-                                    <option value="node" selected>Node</option> \
-                                    <option value="edge" >Edge</option> \
-                                </select> \
-                            </div> \
-                            <div class="col-md-8"> \
-                                <select class="node-search" style="width: 100%"> \
-                                </select> \
-                            </div> \
-                            <div class="col-md-1 zero-margin zero-padding"> \
-                                <button class="btn btn-default btn-sm  add-query-btn" aria-label="add" \
-                                        style="border-color: transparent;color: green;" onclick="graphsPage.queryBuilder.addQueryField(this, \'node\')"> \
-                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i> \
-                                </button> \
-                                <button class="btn btn-default btn-sm  remove-query-btn" aria-label="remove" \
-                                        style="border-color: transparent;color: red;" onclick="graphsPage.queryBuilder.removeQueryField(this, \'node\')"> \
-                                    <i class="fa fa-minus-circle fa-lg" aria-hidden="true"></i> \
-                                </button>  \
-                            </div> \
-                        </div>');
-                $(elem).closest('.row').after($newQuery);
-                graphsPage.queryBuilder.initializeNodeSearchBar($newQuery);
-            }
-            return $newQuery;
-        },
-        changeQueryField: function (queryRow, newType) {
-            $newQuery = graphsPage.queryBuilder.addQueryField(queryRow, newType);
-            if ($(queryRow).closest('.row').find('.or-label').html() == "") {
-                $newQuery.find('.or-label').html('');
-                $newQuery.find('.remove-query-btn').remove();
-            }
-            graphsPage.queryBuilder.removeQueryField(queryRow, newType == 'edge' ? 'node' : 'edge');
+            return (search.length > 0) ? query : null;
         }
     },
     graphsTable: {
         searchTag: function (e) {
             searchedTag = $(e).text();
             tags = _.uniq(_.pull(graphsPage.tagsBar.val(), '', undefined));
-            //tags = _.uniq(_.pull(_.split($('#tagSearchBar').val(), ','), '', undefined));
 
             if (_.indexOf(tags, searchedTag) == -1) {
                 tags.push(searchedTag);
@@ -555,8 +209,6 @@ var graphsPage = {
                     });
                     graphsPage.tagsBar.trigger('change');
                 }
-                //$('#tagSearchBar').val(_.join(tags, ','));
-                //$("#ok").trigger("click");
             }
         },
         graphNameFormatter: function (value, row) {
@@ -585,35 +237,14 @@ var graphsPage = {
             }
         },
         queryParams: function (params) {
-            //var params = {};
 
             var search = $('.graph-search').val() ? $('.graph-search').val() : [];
-            var nodes = $('.graph-search').val() ? $('.graph-search').val() : [];
             var tags = $('.tags-search').val() ? $('.tags-search').val() : [];
-
-            var names = _.map(_.filter(search, function (s) {
-                return s.indexOf(':') === -1;
-            }), function (str) {
-                return '%' + str + '%';
-            });
-
 
             tags = _.map(tags, function (str) {
                 return '%' + str + '%';
             });
 
-            nodes = names;
-
-            edges = _.map(_.filter(search, function (s) {
-                return s.indexOf(':') !== -1;
-            }), function (str) {
-                edge = _.split(str, ':');
-                return '%' + edge[0] + '%:%' + edge[1] + '%';
-            });
-
-            params["nodes"] = nodes;
-            params["names"] = names;
-            params["edges"] = edges;
             params["tags"] = tags;
 
             var query = graphsPage.advancedQueryBuilder.computeQuery();
@@ -1130,30 +761,57 @@ var graphPage = {
         graphPage.timeout = setTimeout(function () { // Wait for User to Stop Typing, Using JavaScript
 
             nodes = _.map(_.filter(_.pull(_.split(_.trim($(e).val()), ','), ''), function (s) {
-                return s.indexOf(':') === -1;
+                return s.indexOf('::') === -1;
             }), function (str) {
                 //return '%' + _.trim(str) + '%';
                 return _.trim(str);
             });
 
             edges = _.map(_.filter(_.split(_.trim($(e).val()), ','), function (s) {
-                return s.indexOf(':') !== -1;
+                return s.indexOf('::') !== -1;
             }), function (str) {
-                edge = _.split(str, ':');
+                edge = _.split(str, '::');
                 return '%' + _.trim(edge[0]) + '%:%' + _.trim(edge[1]) + '%';
             });
+
+            var elementComparator = function (dataValue, searchedValue) {
+                /*
+                 This function will return true if one of the following condition is true:
+                 1. If both values are strings and searchedValue is substring of dataValue.
+                 2. If dataValue is list of string and searchedValue is a substring of one of the strings in dataValue.
+                 3. If dataValue is a list of numbers and searchedValue is present in the list.
+                 4. _.isEqual(dataValue, searchedValue) -> This method supports comparing arrays, array buffers, booleans, date objects, error objects, maps, numbers, Object objects, regexes, sets, strings, symbols, and typed arrays.
+                 */
+
+                if (_.isArrayLike(dataValue)) {
+                    if (utils.isNumeric(searchedValue)) {
+                        return dataValue.indexOf(searchedValue) !== -1;
+                    } else {
+                        return dataValue.join(' ').toLowerCase().indexOf(searchedValue.toLowerCase()) !== -1;
+                    }
+                } else {
+                    return _.isEqual('' + dataValue, searchedValue);
+                }
+            };
 
             if (_.trim($(e).val()).length > 0) {
                 if (nodes.length > 0) {
                     graphPage.cyGraph.nodes().forEach(function (ele, i, eles) {
-                        _.each(nodes, function(node){
-                            if (ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1 ) {
-                                ele.select();
+                        _.each(nodes, function (node) {
+                            if (node.indexOf(':') === -1 && node.indexOf('>') === -1 && node.indexOf('<') === -1 && node.indexOf('=') === -1) {
+                                if (ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
+                                    ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
+                                    ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1) {
+                                    ele.select();
+                                }
+                            } else if (node.indexOf('>') !== -1 || node.indexOf('<') !== -1 || node.indexOf('=') !== -1) {
+                                graphPage.cyGraph.nodes("node[" + node + "]").select();
+                            } else {
+                                if (_.isEqualWith(ele.data(node.split(':')[0]), node.split(':')[1], elementComparator)) {
+                                    ele.select();
+                                }
                             }
                         });
-
                     });
 
                     //apis.nodes.get($('#GraphID').val(), {

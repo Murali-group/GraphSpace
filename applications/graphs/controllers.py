@@ -336,47 +336,13 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 	else:
 		graph_ids = None
 
-	if nodes is not None and len(nodes) > 0:
-		s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
-		q = {
-			"_source": False,
-			"query": {
-				"bool": {
-					"must": [],
-					"minimum_should_match": 1
-				}
-			}
-		}
-		for node in nodes:
-			q['query']['bool']['must'].append({
-				"nested": {
-					"path": "object_elements.object_nodes.object_data",
-					"query": {
-						"bool": {
-							"must": {
-								"query_string": {
-									"query": "object_elements.object_nodes.object_data.string_name:{0} OR object_elements.object_nodes.object_data.string_label:{0} OR object_elements.object_nodes.object_data.string_aliases:{0}".format(
-										node.replace('%', '*'))
-								}
-							}
-						}
-					}
-				}
-			})
-		s.update_from_dict(q)
-		s.source(False)
-		graph_with_given_nodes = [int(hit.meta.id) for hit in s.scan()]
-	else:
-		graph_with_given_nodes = None
-
 	total, graphs_list = db.find_graphs(request.db_session,
 	                                    owner_email=owner_email,
-	                                    graph_with_given_nodes=graph_with_given_nodes,
 	                                    graph_ids=graph_ids,
 	                                    is_public=is_public,
 	                                    group_ids=group_ids,
 	                                    names=names,
-	                                    nodes=None,
+	                                    nodes=nodes,
 	                                    edges=edges,
 	                                    tags=tags,
 	                                    limit=limit,

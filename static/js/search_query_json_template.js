@@ -1,22 +1,6 @@
 /**
  * Created by adb on 08/04/17.
  */
-var edgeSubQueryTemplateJSON = {
-    "nested": {
-        "path": "object_elements.object_edges.object_data",
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "query_string": {
-                            "query": "*"
-                        }
-                    }
-                ]
-            }
-        }
-    }
-};
 
 var nodeSubQueryTemplateJSON = {
     "nested": {

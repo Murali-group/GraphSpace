@@ -229,6 +229,7 @@ $(document).ready(function () {
     });
 });
 
+
 var utils = {
     initializeTabs: function () {
         utils.selectTab(document.location.toString());
@@ -260,6 +261,9 @@ var utils = {
         else {
             return results[1] || 0;
         }
+    },
+    isNumeric: function (n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
     }
 };
 

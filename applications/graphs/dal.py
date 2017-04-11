@@ -125,7 +125,7 @@ def get_graph_by_id(db_session, id):
 
 
 @with_session
-def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, graph_with_given_nodes=None, is_public=None, names=None, nodes=None,
+def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
@@ -181,9 +181,6 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, gr
 				and_(Edge.tail_node_label.ilike(u), Edge.head_node_label.ilike(v))
 			]
 			elements_filter.append(Graph.edges.any(or_(*edge_filter)))
-
-	if graph_with_given_nodes is not None:
-		elements_filter.append(Graph.id.in_(graph_with_given_nodes))
 
 	combinded_filter = []
 	if len(elements_filter) > 0:

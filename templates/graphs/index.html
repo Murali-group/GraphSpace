@@ -40,95 +40,9 @@
                     <div class="form-group col-md-4">
                         <select class="tags-search gs-full-width" multiple="multiple">
                         </select>
-{#                        <input id="tagSearchBar" name="tags" class="form-control graphs-table-search tags-search gs-full-width"#}
-{#                               type="text"#}
-{#                               placeholder="Search Tags" value="{{ tags }}">#}
                     </div>
                     <button id="ok" type="submit" class="btn btn-default">Search</button>
                     <a id="clear" class="btn btn-default">Clear Search</a>
-                </div>
-                <br>
-                <a id="advancedSearchBtn" class="pull-right" data-toggle="collapse" href="#advancedSearchCollapse"
-                   aria-expanded="false" aria-controls="advancedSearchCollapse" style="margin-right: 3.5%">
-                    More filters
-                </a>
-                <br>
-                <div class="collapse gs-full-width col-md-12" id="advancedSearchCollapse">
-{#                    <p class="lead text-center"><u>Use the advanced query search builder below to create your search</u>#}
-{#                    <p class="lead text-center">Filter networks by node, edge and network attributes.</p>#}
-{#                    <br>#}
-                    <div id="queryBuilder" style="display: none">
-                        <div class="row query-builder-field">
-                            <div class="col-md-1 or-label"></div>
-                            <div class="col-md-1">
-                                <select class="form-control datatype-select">
-                                    <option value="node" selected>Node</option>
-                                    <option value="edge">Edge</option>
-                                </select>
-                            </div>
-                            <div class="col-md-8">
-                                <select class="node-search" style="width: 100%">
-                                </select>
-                            </div>
-                            <div class="col-md-1 zero-margin zero-padding">
-                                <button class="btn btn-default btn-sm add-query-btn" aria-label="add"
-                                        style="border-color: transparent;color: green;"
-                                        onclick="graphsPage.queryBuilder.addQueryField(this);">
-                                    <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="AdvancedQueryBuilder">
-                        <div class="row">
-                            <div class="col-md-1 col-md-offset-1 or-and-label"></div>
-                            <div class="col-md-1">
-                                <p>
-                                    Node Attributes
-                                </p>
-                            </div>
-                            <div class="col-md-8">
-                                <input id="nodeSearchQuery" class="form-control  graphs-filter-field gs-full-width" type="text" placeholder="e.g., name:egfr OR label:egfr "/>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-md-1 col-md-offset-1 or-and-label">
-                                <select name="edgeSearchOperator" id="edgeSearchOperator" class="form-control">
-                                    <option value="OR">OR</option>
-                                    <option value="AND" selected>AND</option>
-                                </select>
-                            </div>
-                            <div class="col-md-1">
-                                <p>
-                                    Edge Attributes
-                                </p>
-                            </div>
-                            <div class="col-md-8">
-                                <input id="edgeSearchQuery" class="form-control graphs-filter-field gs-full-width" type="text" placeholder="e.g., source:wnt OR target:fzd "/>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-md-1 col-md-offset-1 or-and-label">
-                                <select name="networkSearchOperator" id="networkSearchOperator" class="form-control">
-                                    <option value="OR">OR</option>
-                                    <option value="AND" selected>AND</option>
-                                </select>
-                            </div>
-                            <div class="col-md-1">
-
-                                <p>
-                                    Network Attributes
-                                </p>
-
-                            </div>
-                            <div class="col-md-8">
-                                <input id="networkSearchQuery" class="form-control  graphs-filter-field gs-full-width" type="text" placeholder="e.g., name:kegg OR tags:pathlinker "/>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
                 <br>
 
