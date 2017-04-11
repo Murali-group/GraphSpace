@@ -6,7 +6,6 @@ var apis = {
     graphs: {
         ENDPOINT: '/ajax/graphs/',
         search: function (queryParams, data, successCallback, errorCallback) {
-            console.log(JSON.stringify(data));
             apis.jsonRequest('POST', apis.graphs.ENDPOINT + 'advanced_search' + '?' + $.param(queryParams), data, successCallback, errorCallback)
         },
         get: function (data, successCallback, errorCallback) {
@@ -144,8 +143,6 @@ var graphsPage = {
                 graphsPage.tagsBar.append(new Option(val, val, true, true)).trigger('change');
             });
         }
-
-        $("#ok").trigger("click");
 
         $('#ConfirmRemoveGraphBtn').click(graphsPage.graphsTable.onRemoveGraphConfirm);
 
