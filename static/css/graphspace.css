@@ -10,6 +10,10 @@ html, body {
     line-height: 1.5;
 }
 
+a {
+    cursor: pointer;
+}
+
 div.container-fluid {
     /* should occupy entire page */
     width: 100%;
