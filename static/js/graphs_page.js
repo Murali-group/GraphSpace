@@ -2128,23 +2128,33 @@ var cytoscapeGraph = {
         filename = filename ? filename : 'graph';
         var file = undefined;
         var fileformat = undefined;
+        var bob = undefined;
+        var MIME_TYPE = undefined;
+
         if (format === 'jpg') {
-            file = cy.jpg({'full': true});
+            var b64key = 'base64,';
+            var b64 = cy.jpg({'full': true}).substring( cy.jpg({'full': true}).indexOf(b64key) + b64key.length );
+            blob = utils.base64ToBlob( b64, 'image/jpeg' );
             fileformat = '.jpg';
         } else if (format === 'png') {
-            file = cy.png({'full': true});
+            var b64key = 'base64,';
+            var b64 = cy.png({'full': true}).substring( cy.png({'full': true}).indexOf(b64key) + b64key.length );
+            blob = utils.base64ToBlob( b64, 'image/png' );
             fileformat = '.png';
         } else if (format === 'cyjs') {
-            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getNetworkAndViewJSON(cy), null, 4));
+            MIME_TYPE = "application/json";
+            blob = new Blob([JSON.stringify(cytoscapeGraph.getNetworkAndViewJSON(cy), null, 4)], {type: MIME_TYPE});
             fileformat = '.cyjs';
         } else if (format === 'style') {
-            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getStyleJSON(cy), null, 4));
+            MIME_TYPE = "application/json";
+            blob = new Blob([JSON.stringify(cytoscapeGraph.getStyleJSON(cy), null, 4)], {type: MIME_TYPE});
             fileformat = '.json';
         } else {
-            file = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cytoscapeGraph.getNetworkJSON(cy), null, 4));
+            MIME_TYPE = "application/json";
+            blob = new Blob([JSON.stringify(cytoscapeGraph.getNetworkJSON(cy), null, 4)], {type: MIME_TYPE});
             fileformat = '.cyjs';
         }
-
+        file = window.URL.createObjectURL(blob);
         var link = $('<a>').attr('href', file).attr('download', filename + fileformat);
         $('body').append(link);
         link.get(0).click();
