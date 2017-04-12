@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block content %}
+    <div class="container-fluid zero-padding zero-margin">
+
+        <div class="content">
+
+            <div class="gs-banner">
+                <div class="mask">
+                    <div class="container-fluid">
+                        <div class="row banner-text container-fluid">
+                            <div class="col-md-12" style="text-align: center">
+                                <h1>Welcome to GraphSpace!</h1>
+
+                                <h2>
+                                    <small>The interactive graph sharing website.</small>
+                                </h2>
+
+                                <br/>
+                                <br>
+
+                                {% if uid == None %}
+                                    <a class="btn btn-default btn-lg" href="{% url 'graphs' %}">
+                                        <i class="fa fa-globe fa-lg"></i> Public Graphs
+                                    </a>
+
+                                    <a class="btn btn-default btn-lg" href="{% url 'upload_graph' %}">
+                                        <i class="fa fa-upload fa-lg"></i> Upload Graph
+                                    </a>
+
+                                {% else %}
+                                    <a class="btn btn-default btn-lg" href="{% url 'graphs' %}">
+                                        My Graphs
+                                    </a>
+
+                                    <a class="btn btn-default btn-lg" href="{% url 'upload_graph' %}">
+                                        <i class="fa fa-upload fa-lg"></i> Upload Graph
+                                    </a>
+                                {% endif %}
+
+                                <br>
+                                <br>
+                                {% if uid != None %}
+                                    <p class="lead">You are logged in, go to <a href="{% url 'graphs' %}">Graphs</a> to
+                                        view your
+                                        graphs or <a
+                                                href="{% url 'upload_graph' %}">upload</a> a new graph.<br>
+                                    </p>
+                                {% else %}
+                                    <p class="lead">If you don't have an account right now, you can check out <a
+                                            href="{% url 'graphs' %}">public
+                                        graphs</a> or <a href="{% url 'upload_graph' %}">upload</a> a new graph.<br>
+                                    </p>
+
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gs-features">
+                <div class="container-fluid">
+                    <h1 class="text-center">Features</h1>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                Upload Graphs
+                            </h4>
+                            <ul>
+                                <li><a href="{{ url }}help#upload_graphs_cyjs">Import</a> graphs created in <a
+                                        href="http://www.cytoscape.org/">Cytoscape</a> directly into GraphSpace
+                                </li>
+                                <li><a href="{{ url }}help/programmers#json_ref">Create graphs</a> and <a
+                                        href="{{ url }}help#upload_graphs">upload</a> it via the <a
+                                        href="{{ url }}graphs/upload">Web
+                                    Interface</a> or through the <a href="help/programmers#add_graph">REST API</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                Interact with graphs
+                            </h4>
+                            <ul>
+                                <li>View a graph, customize layouts for a graph, and save <a
+                                        href="{{ url }}help/#layout_panel">layouts</a>
+                                    for graphs
+                                </li>
+                                <li>Sequentially <a href="{{ url }}help/#step_panel">step through subgraphs</a> of the
+                                    entire graph
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                Share graphs
+                            </h4>
+                            <ul>
+                                <li>Create <a href="{{ url }}help#groups">groups</a> and add collaborators</li>
+                                <li>Share <a href="{{ url }}help#sharing_graphs">graphs among all members of a group</a>
+                                </li>
+                                <li>Share <a href="{{ url }}help#layout_panel">layouts</a> between collaborators</li>
+                                <li>Share graphs with the <a href="{{ url }}help#public_private">world</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row margin-top-4">
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                Search graphs
+                            </h4>
+                            <ul>
+                                <li><a href="{{ url }}help/#search_panel">Search</a> for elements within a graph
+                                </li>
+                                <li><a href="{{ url }}help/#search_panel">Search</a> for graphs that contain
+                                    elements
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                Organize graphs
+                            </h4>
+                            <ul>
+                                <li><a href="{{ url }}help#tags">Tags</a> allow for organizing multiple graphs</li>
+                                <li>Quickly <a href="{{ url }}help/programmers/#tags">search</a> for all graphs that
+                                    match tag
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-center">
+                                RESTful APIs
+                            </h4>
+                            <ul>
+                                <li>Use the comphrehensive <a href="{{ url }}help/programmers">REST API</a></li>
+                                <li><a href="{{ url }}help/programmers/#graphs">Construct graphs</a> and faciliate
+                                    graph
+                                    <a
+                                            href="{{ url }}help/programmers/#add_graph">uploads</a></li>
+                                <li>Create scripts to interact with features of GraphSpace</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="gs-footer padding-top-2 padding-bottom-2">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p >Please contact <a class="link-reset" href="http://bioinformatics.cs.vt.edu/~murali/"><b>T. M. Murali</b></a> at murali@cs.vt.edu if you have any questions
+                    about GraphSpace.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="http://bioinformatics.cs.vt.edu/~murali/" class="pull-right">
+                            <img class="img-responsive" src="{% static '/images/csb-logo.png' %}" alt="CSB Logo" style="width: 5em;"/>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

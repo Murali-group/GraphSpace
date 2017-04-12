@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+    <div class="container-fluid zero-padding padding-bottom-6" style="height: auto; margin-top: 5px;">
+
+        <ul class="nav nav-tabs">
+
+            <li class="active text-center">
+                <a href="#tutorial" data-toggle="tab">Tutorial</a>
+            </li>
+            <li class="text-center">
+                <a href="#users_guide" data-toggle="tab">User's Guide</a>
+            </li>
+            <li class="text-center">
+                <a href="#programmers_guide" data-toggle="tab">Programmer's Guide</a>
+            </li>
+
+        </ul>
+
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
+
+            <div class="tab-pane fade in active" id="tutorial">
+                {% include 'help/tutorial.html' %}
+            </div>
+
+            <div class="tab-pane fade" id="users_guide">
+                {% include 'help/users_guide.html' %}
+            </div>
+
+            <div class="tab-pane fade" id="programmers_guide">
+                {% include 'help/programmers_guide.html' %}
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

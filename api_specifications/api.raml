@@ -1,0 +1,474 @@
+#%RAML 1.0
+title: GraphSpace REST API Services
+version: v1
+baseUri: http://www.graphspace.org/{version}
+protocols: [ HTTP ]
+mediaType: application/json
+
+securitySchemes: 
+  basicAuth:
+    description: Each request must contain the headers necessary for basic authentication
+    type: Basic Authentication
+    describedBy:
+      headers:
+        Authorization:
+          description: Used to send the Base64-encoded "username:password" credentials
+          type: string
+      responses:
+        401:
+          description: |
+            Unauthorized. Either the provided username and password
+            combination is invalid, or the user is not allowed to access
+            the content provided by the requested URL.
+
+types:
+  Style:
+    properties: 
+      style: object
+      selector: string
+  StyleJSON:
+    description: Graph Style JSON
+    example: |
+      {
+        "style": [
+          {
+            "style": {
+              "border-color": "#888",
+              "border-width": "2px",
+              "height": "50px",
+              "width": "50px",
+              "shape": "ellipse",
+              "background-blacken": "0.1",
+              "text-halign": "center",
+              "label": "DCC",
+              "text-valign": "center",
+              "background-color": "yellow"
+            },
+            "selector": "node[name='P4314611']"
+          },
+          {
+            "style": {
+              "text-outline-color": "#888",
+              "color": "black",
+              "text-outline-width": "2px",
+              "border-color": "black",
+              "text-valign": "center",
+              "border-width": "5px",
+              "label": "This is an example\n of how to use new lines for the content of\n a node.",
+              "width": "150px",
+              "shape": "ellipse",
+              "text-wrap": "wrap",
+              "background-blacken": "0",
+              "text-halign": "center",
+              "height": "150px",
+              "border-style": "double",
+              "background-color": "red"
+            },
+            "selector": "node[name='P0810711']"
+          },
+          {
+            "style": {
+              "line-color": "blue",
+              "target-arrow-shape": "triangle",
+              "source-arrow-color": "yellow",
+              "width": "12px",
+              "curve-style": "bezier",
+              "line-style": "dotted"
+            },
+            "selector": "edge[name='P4314611-P0810711']"
+          }
+        ],
+        "target_cytoscapejs_version": "~2.7",
+        "generated_by": "graphspace-2.0.0",
+        "format_version": "1.0"
+      }
+    properties: 
+      style: Style[]
+  GraphJSON:
+    description: Graph defined in CYJS format
+    example: |
+      {
+        "elements": {
+          "nodes": [
+            {
+              "position": {
+                "y": 277.5,
+                "x": 297.5
+              },
+              "data": {
+                "k": 0,
+                "id": "P4314611",
+                "name": "P4314611",
+                "label": ""
+              }
+            },
+            {
+              "position": {
+                "y": 277.5,
+                "x": 892.5
+              },
+              "data": {
+                "k": 0,
+                "id": "P0810711",
+                "name": "P0810711",
+                "label": ""
+              }
+            }
+          ],
+          "edges": [
+            {
+              "data": {
+                "target": "P0810711",
+                "k": 0,
+                "source": "P4314611",
+                "is_directed": 1,
+                "id": "P4314611-P0810711",
+                "name": "P4314611-P0810711"
+              },
+              "style": {
+                "line-color": "blue",
+                "target-arrow-shape": "triangle",
+                "source-arrow-color": "yellow",
+                "width": "12px",
+                "curve-style": "bezier",
+                "line-style": "dotted"
+              }
+            }
+          ]
+        },
+        "data": {
+          "description": "Description of graph.. can also point to an image hosted elsewhere",
+          "name": "My first graph",
+          "tags": [
+            "tutorial"
+          ]
+        }
+      }
+    properties:
+      elements: 
+        properties: 
+          nodes: array
+          edges: array
+      data:
+        properties:
+          description: string
+          name: string
+          tags: array
+  Graph:
+    description: Graph object
+    example: |
+      {
+        "style_json": {
+          "style": [
+            {
+              "style": {
+                "border-color": "#888",
+                "border-width": "2px",
+                "height": "50px",
+                "width": "50px",
+                "shape": "ellipse",
+                "background-blacken": "0.1",
+                "text-halign": "center",
+                "label": "DCC",
+                "text-valign": "center",
+                "background-color": "yellow"
+              },
+              "selector": "node[name='P4314611']"
+            },
+            {
+              "style": {
+                "text-outline-color": "#888",
+                "color": "black",
+                "text-outline-width": "2px",
+                "border-color": "black",
+                "text-valign": "center",
+                "border-width": "5px",
+                "label": "This is an example\n of how to use new lines for the content of\n a node.",
+                "width": "150px",
+                "shape": "ellipse",
+                "text-wrap": "wrap",
+                "background-blacken": "0",
+                "text-halign": "center",
+                "height": "150px",
+                "border-style": "double",
+                "background-color": "red"
+              },
+              "selector": "node[name='P0810711']"
+            },
+            {
+              "style": {
+                "line-color": "blue",
+                "target-arrow-shape": "triangle",
+                "source-arrow-color": "yellow",
+                "width": "12px",
+                "curve-style": "bezier",
+                "line-style": "dotted"
+              },
+              "selector": "edge[name='P4314611-P0810711']"
+            }
+          ],
+          "target_cytoscapejs_version": "~2.7",
+          "generated_by": "graphspace-2.0.0",
+          "format_version": "1.0"
+        },
+        "name": "My first graph",
+        "tags": [
+          {
+            "updated_at": "2017-02-15T20:58:32.818474",
+            "created_at": "2017-02-15T20:58:32.818474",
+            "id": 11210,
+            "name": "tutorial"
+          }
+        ],
+        "updated_at": "2017-03-25T15:37:20.728954",
+        "is_public": 0,
+        "created_at": "2017-03-25T15:37:20.728954",
+        "owner_email": "user1@example.com",
+        "default_layout_id": 0,
+        "id": 21384,
+        "graph_json": {
+          "elements": {
+            "nodes": [
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 297.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P4314611",
+                  "name": "P4314611",
+                  "label": ""
+                }
+              },
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 892.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P0810711",
+                  "name": "P0810711",
+                  "label": ""
+                }
+              }
+            ],
+            "edges": [
+              {
+                "data": {
+                  "target": "P0810711",
+                  "k": 0,
+                  "source": "P4314611",
+                  "is_directed": 1,
+                  "id": "P4314611-P0810711",
+                  "name": "P4314611-P0810711"
+                },
+                "style": {
+                  "line-color": "blue",
+                  "target-arrow-shape": "triangle",
+                  "source-arrow-color": "yellow",
+                  "width": "12px",
+                  "curve-style": "bezier",
+                  "line-style": "dotted"
+                }
+              }
+            ]
+          },
+          "data": {
+            "description": "Description of graph.. can also point to an image hosted elsewhere",
+            "name": "My first graph",
+            "tags": [
+              "tutorial"
+            ]
+          }
+        }
+      }
+    properties: 
+      id: integer
+      name: string
+      owner_email: string
+      is_public: integer
+      created_at: string
+      updated_at: string
+      tags: array
+      style_json: StyleJSON
+      graph_json: GraphJSON
+      default_layout_id: integer
+  Group:
+    description: Group object
+    example: |
+      {
+        "total_graphs": 1,
+        "total_members": 2,
+        "name": "Test Group",
+        "updated_at": "2017-02-15T20:58:32.818474",
+        "created_at": "2017-02-15T20:58:32.818474",
+        "owner_email": "user1@example.com",
+        "id": 87,
+        "invite_code": "XXXXXXX",
+        "description": "Test Group"
+      }
+    properties: 
+      id: integer
+      name: string
+      owner_email: string
+      created_at: string
+      updated_at: string
+      invite_code: string
+      description: string
+      total_graphs: number
+      total_members: number
+  Layout:
+    description: Layout object
+    example: |
+      {
+        "style_json": "{\"style\": [{\"style\": {\"font-size\": \"16px\", \"border-color\": \"#888\", \"border-width\": \"2px\", \"height\": \"50px\", \"width\": \"50px\", \"shape\": \"ellipse\", \"background-blacken\": \"0.1\", \"text-halign\": \"center\", \"label\": \"DCC\", \"text-valign\": \"center\", \"background-color\": \"yellow\"}, \"selector\": \"node[name='P4314611']\"}, {\"style\": {\"text-outline-color\": \"#888\", \"font-size\": \"16px\", \"text-outline-width\": \"2px\", \"color\": \"black\", \"border-width\": \"5px\", \"label\": \"This is an example\\n of how to use new lines for the content of\\n a node.\", \"border-color\": \"black\", \"shape\": \"ellipse\", \"border-style\": \"double\", \"text-wrap\": \"wrap\", \"background-blacken\": \"0\", \"text-halign\": \"center\", \"height\": \"150px\", \"text-valign\": \"center\", \"width\": \"150px\", \"background-color\": \"red\"}, \"selector\": \"node[name='P0810711']\"}, {\"style\": {\"line-color\": \"blue\", \"target-arrow-shape\": \"triangle\", \"source-arrow-color\": \"yellow\", \"width\": \"12px\", \"curve-style\": \"bezier\", \"line-style\": \"dotted\"}, \"selector\": \"edge[name='P4314611-P0810711']\"}], \"target_cytoscapejs_version\": \"~2.7\", \"generated_by\": \"graphspace-2.0.0\", \"format_version\": \"1.0\"}",
+        "graph_id": 21384,
+        "name": "My saved layout 1",
+        "positions_json": "{\"P4314611\": {\"y\": 277.5, \"x\": 297.5}, \"P0810711\": {\"y\": 247.32300884955745, \"x\": 896.6150442477876}}",
+        "updated_at": "2017-03-27T07:59:35.416245",
+        "created_at": "2017-03-27T07:59:35.416245",
+        "owner_email": "user1@example.com",
+        "id": 86350,
+        "is_shared": 0
+      }
+    properties:
+      id: integer
+      name: string
+      owner_email: string
+      created_at: string
+      updated_at: string
+      is_shared: number
+      graph_id: number
+      positions_json: string
+      style_json: string
+
+/graphs:
+  description: APIs to access graphs on GraphSpace.
+  displayName: Graphs
+  get:
+    description: List all Graphs matching query criteria, if provided; otherwise list all Graph
+    queryParameters:
+      name?: string
+      is_public?: integer
+      owner_email?: string
+      member_email?: string
+      limit?:
+        description: Number of entities to return.
+        default: 20
+        type: integer
+      offset?:
+        description: Offset the list of returned entities by this number.
+        default: 0
+        type: integer
+      names?:
+        description: Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+        type: string[]
+      nodes?:
+        description: Search for graphs with given given list of node names. In order to search for graphs with given node name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node name.
+        type: string[]
+      edges?:
+        description: Search for graphs with the edge between given given list of node names separated by colon. In order to search for graphs with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edge between nodes with 'xyz' and 'abc' in their node names.
+        type: string[]
+      tags?:
+        description: Search for graphs with the given given list of tag names. In order to search for graphs with given tag as a substring, wrap the name of the tag with percentage symbol. For example, %xyz% will search for all graphs with 'xyz' in their tag names.
+        type: string[]
+      order?:
+        description: Defines the column sort order, can only be 'asc' or 'desc'.
+        type: string
+      sort?:
+        description: Defines which column will be sorted.
+        type: string
+        example: "name"
+    responses:
+      200:
+        body:
+          application/json:
+            type: Graph[]
+  post:
+    description: Create a new Graph.
+    body:
+      application/json:
+        type: Graph
+    responses:
+      201:
+        body:
+          application/json:
+            type: Graph
+  /{id}:
+    description: APIs to access a specific graph on GraphSpace.
+    displayName: Graph
+    get:
+      description: Get a Graph by id
+      responses:
+        200:
+          body:
+            application/json:
+              type: Graph
+    put:
+      description: Update a Graph by id
+      body:
+        application/json:
+          type: Graph
+      responses:
+        200:
+          body:
+            application/json:
+              type: Graph
+    delete:
+      description: Delete a Graph by id
+      responses:
+        200:
+          body:
+            application/json:
+              type: object
+              example: |
+                {
+                  "message": "Successfully deleted graph with id=21341"
+                }
+    /layouts:
+      description: APIs to access layouts of a specific graph on GraphSpace.
+      displayName: Graph Layouts
+      get:
+        description: List all Graph Layouts matching query criteria, if provided; otherwise list all Graph Layouts.
+        responses:
+          200:
+            body:
+              application/json:
+                type: Layout[]
+      post:
+        description: Create a new Graph Layout.
+                
+/groups:
+  description: APIs to access groups on GraphSpace.
+  displayName: Groups
+  get:
+    description: List all Groups matching the query criteria, if provided; otherwise list all Groups.
+    queryParameters:
+      name?: string
+      owner_email?: string
+      member_email?: string
+      description?:
+        description: Search for groups with given description. In order to search for groups with given description as a substring, wrap the description with percentage symbol. For example, %xyz% will search for all groups with xyz in their description.
+        type: string
+      limit?: 
+        description: Number of entities to return. 
+        default: 20
+        type: integer
+      offset?: 
+        description: Offset the list of returned entities by this number.
+        default: 0
+        type: integer
+      order?:
+        description: Defines the column sort order, can only be 'asc' or 'desc'.
+        type: string
+      sort?:
+        description: Defines which column will be sorted.
+        type: string
+        example: "name"
+    responses:
+      200:
+        body:
+          application/json:
+            type: Group[]

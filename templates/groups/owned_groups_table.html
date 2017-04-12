@@ -1,0 +1,28 @@
+<table id="OwnedGroupsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="true"
+       data-show-toggle="true"
+       data-ajax="groupsPage.ownedGroupsTable.getGroupsByOwner"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="groups"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True" data-formatter="groupsPage.groupsTable.nameFormatter">Group Name</th>
+        <th data-field="description">Group Description</th>
+        <th data-field="total_graphs">#Graphs</th>
+        <th data-field="total_members">#Members</th>
+        <th data-field="owner_email">Group Owner</th>
+        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
+        <th data-field="operations" data-formatter="groupsPage.groupsTable.operationsFormatter"
+            data-events="groupsPage.groupsTable.operationEvents">
+            Operations
+        </th>
+    </tr>
+    </thead>
+</table>

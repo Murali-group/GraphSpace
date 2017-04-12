@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <div class="container-fluid margin-top-4" style="height: auto">
+        <div class="panel panel-default" style="max-width: 700px; margin: 0 auto;">
+            <div class="panel-heading">Forgot Information</div>
+            <div class="panel-body">
+                {% if success_message != None %}
+                    <div class="alert alert-success" role="alert">
+                        {{ success_message }}
+                    </div>
+                {% elif error_message != None %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="forgot_form" name="forgot_form" id="forgot_form" role="form">
+                    {% csrf_token %}
+                    <div class="forgot_fields">
+                        <div class="control-group">
+                            <label for="forgot_email">Email:</label>
+                            <input id="forgot_email" class="form-control" maxlength="32" type="text" name="forgot_email"
+                                   autocomplete="off"/>
+                        </div>
+                        <br/>
+                        <button type="submit" name="forgot" id="forgot_send" class="btn btn-success">Send Email</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

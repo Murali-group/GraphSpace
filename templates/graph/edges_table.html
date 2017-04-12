@@ -1,0 +1,30 @@
+<table id="EdgesTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="graphPage.edgesTable.getEdgesByGraphID"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="edges"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True">Edge Name</th>
+{#        <th data-field="is_directed" data-sortable="True">Is Directed ?</th>#}
+        <th data-field="tail_node.label">Tail Node</th>
+        <th data-field="head_node.label">Head Node</th>
+        {#        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last#}
+        {#            Modified#}
+        {#        </th>#}
+        {% if uid %}
+            <th data-field="operations" data-visible="false">
+                Operations
+            </th>
+        {% endif %}
+    </tr>
+    </thead>
+</table>

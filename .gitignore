@@ -11,7 +11,10 @@ production.py
 # Ignore updates to IDE specific configurations
 .idea
 
-GraphSpace.egg-info
+static/components/*
+
+GraphSpace_Server.egg-info
 dist
 build
 venv
+debug*

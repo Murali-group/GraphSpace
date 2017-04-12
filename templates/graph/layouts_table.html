@@ -1,0 +1,52 @@
+<div class="row padding-top-4">
+    <div class="col-md-offset-2 col-md-4">
+        <table id="PrivateLayoutsTable"
+               data-toggle="table"
+               data-page-size="100"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="graphPage.layoutsTable.getPrivateLayoutsByGraphID"
+               data-search="false"
+               data-side-pagination="server"
+               data-data-field="layouts"
+               data-pagination="true"
+               data-sort-name="name"
+               data-id-field="id"
+               data-sort-order="asc">
+            <thead>
+            <tr>
+                <th data-field="operations" data-formatter="graphPage.layoutsTable.operationsFormatter"
+                    data-events="graphPage.layoutsTable.operationEvents">
+                    Private Layouts
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="col-md-4">
+        <table id="SharedLayoutsTable"
+               data-toggle="table"
+               data-page-size="100"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="graphPage.layoutsTable.getSharedLayoutsByGraphID"
+               data-search="false"
+               data-side-pagination="server"
+               data-data-field="layouts"
+               data-pagination="true"
+               data-sort-name="name"
+               data-id-field="id"
+               data-sort-order="asc">
+            <thead>
+            <tr>
+                <th data-field="operations" data-formatter="graphPage.layoutsTable.operationsFormatter"
+                    data-events="graphPage.layoutsTable.operationEvents">
+                    Shared Layouts
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>

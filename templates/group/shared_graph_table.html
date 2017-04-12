@@ -1,0 +1,33 @@
+<table id="SharedGraphsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="groupPage.SharedGraphsTable.getGraphsSharedToGroup"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="graphs"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True" data-formatter="groupPage.SharedGraphsTable.nameFormatter">Graph
+            Name
+        </th>
+        <th data-field="owner_email" data-sortable="True">Graph Owner</th>
+        <th data-field="is_public" data-formatter="groupPage.SharedGraphsTable.visibilityFormatter"
+            data-sortable="True">Visibility
+        </th>
+        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
+        {% if group.owner_email == uid %}
+            <th data-field="operations"
+                data-formatter="groupPage.SharedGraphsTable.operationsFormatter"
+                data-events="groupPage.SharedGraphsTable.operationEvents">
+                Operations
+            </th>
+        {% endif %}
+    </tr>
+    </thead>
+</table>
