@@ -54,14 +54,14 @@ WSGI_APPLICATION = 'graphspace.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'gsdb',
-		'USER': 'adb',
-		'PASSWORD': '',
-		'HOST': 'localhost',
-		'PORT': '5432'
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'migrate3',
+        'USER': 'adb',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432'
+    }
 }
 
 ## Old Sqlite Implementation ###
