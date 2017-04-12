@@ -39,7 +39,6 @@ def upgrade():
 	connection = op.get_bind()
 
 	for graph in connection.execute(graphhelper.select().order_by("id")):
-		print (graph.id)
 		graph_json = json.loads(graph.graph_json)
 		if 'elements' in graph_json and 'nodes' in graph_json['elements']:
 			for node in graph_json['elements']['nodes']:

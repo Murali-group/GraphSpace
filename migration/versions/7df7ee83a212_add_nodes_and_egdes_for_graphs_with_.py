@@ -88,7 +88,7 @@ def add_edge(connection, name, head_node_id, tail_node_id, tail_node_name, head_
 def add_graph_edges(connection, graph_id, edges, node_name_to_id_map, node_id_to_label_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
-		is_directed = 0 if 'is_directed' not in edge[2]['data'] else edge[2]['data']['is_directed']
+		is_directed = 0 if 'is_directed' not in edge[2]['data'] else 1 if edge[2]['data']['is_directed'] else 0
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		add_edge(connection,
