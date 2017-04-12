@@ -73,8 +73,6 @@ class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 		}
 
 
-
-
 class Group(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'group'
 

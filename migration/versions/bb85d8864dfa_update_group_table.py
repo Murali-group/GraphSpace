@@ -31,6 +31,8 @@ def upgrade():
 	# Rename email column
 	op.alter_column('group', 'owner_id', new_column_name='owner_email')
 
+	op.alter_column('group', 'description', nullable=True)
+
 	# Create New Index
 	op.create_index('_group_uc_name_owner_email', 'group', ['name', 'owner_email'], unique=True)
 
