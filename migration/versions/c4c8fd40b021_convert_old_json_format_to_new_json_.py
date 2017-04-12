@@ -539,21 +539,20 @@ def upgrade():
 	op.add_column('graph', sa.Column('graph_json', sa.String))
 	op.add_column('graph', sa.Column('style_json', sa.String))
 
-	for graph in connection.execute(graphhelper.select()):
-		graph_json, style_json = parse_old_graph_json(graph.json)
-		connection.execute(
-			graphhelper.update().where(
-				graphhelper.c.id == graph.id
-			).values(
+	graphtotal = connection.execute(graphhelper.select()).rowcount
+	offset = 0
+	while offset < graphtotal:
+		offset += 100
+		for graph in connection.execute(graphhelper.select().order_by("id").limit(100).offset(offset)):
+			graph_json, style_json = parse_old_graph_json(graph.json)
+			connection.execute(graphhelper.update().where(graphhelper.c.id == graph.id).values(
 				graph_json=json.dumps(graph_json),
 				style_json=json.dumps({
 					"format_version": "1.0",
 					"generated_by": "graphspace-2.0.0",
 					"target_cytoscapejs_version": "~2.1",
 					'style': style_json
-				}),
-			)
-		)
+				})))
 
 	for layout in connection.execute(layouthelper.select()):
 		for graph in connection.execute(graphhelper.select().where(graphhelper.c.id == layout.graph_id)):
@@ -566,6 +565,7 @@ def upgrade():
 					style_json=graph.style_json
 				)
 			)
+
 	op.alter_column('graph', 'graph_json', nullable=False)
 	op.alter_column('layout', 'style_json', nullable=False)
 
