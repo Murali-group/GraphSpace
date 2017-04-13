@@ -1,5 +1,37 @@
 <div class="margin-top-4">
-    <table>
-        {{ description|safe }}
-    </table>
+    <style>
+        img {
+            max-width: 200px;
+        }
+    </style>
+    <div class="row">
+        <div class="col-md-6">
+            <table>
+                {{ description|safe }}
+            </table>
+        </div>
+        <div class="col-md-6">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                    {% if 'data' in graph.graph_json %}
+                    {% for k,v in graph.graph_json.data.items %}
+                        {% if k != 'description' %}
+                            <tr>
+                                <td>{{ k|safe}}</td>
+                                <td>{{ v|safe }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    {% endif %}
+
+
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>

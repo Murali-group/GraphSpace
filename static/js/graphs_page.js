@@ -205,10 +205,12 @@ var graphsPage = {
         },
         tagsFormatter: function (value, row) {
             links = "";
-            for (i in row.tags) {
-                links += $('<a>').attr('href', '#').html($('<span>').attr('class', 'label label-info tag-btn').attr('onclick', 'graphsPage.graphsTable.searchTag(this);').text(row.tags[i].name)[0])[0].outerHTML + '&nbsp;';
+            if ('data' in row.graph_json && 'tags' in row.graph_json.data) {
+                links = _.map(row.graph_json.data.tags, function(tag){
+                    return $('<a>').attr('href', '#').html($('<span>').attr('class', 'label label-info tag-btn').attr('onclick', 'graphsPage.graphsTable.searchTag(this);').text(tag)[0])[0].outerHTML + '&nbsp;';
+                });
             }
-            return links
+            return links.join('');
         },
         ownerEmailFormatter: function (value, row) {
             if (_.startsWith(row.owner_email, 'public_user_')) {
@@ -2110,7 +2112,7 @@ var cytoscapeGraph = {
     getStylesheet: function (cy) {
         /*
          *  gets stylesheet for the graph.
-         *  
+         *
          *  cy: cytoscape graph object
          */
         var selectedElementStyleAttributes = ['overlay-opacity', 'overlay-color', 'overlay-padding'];
@@ -2133,13 +2135,13 @@ var cytoscapeGraph = {
 
         if (format === 'jpg') {
             var b64key = 'base64,';
-            var b64 = cy.jpg({'full': true}).substring( cy.jpg({'full': true}).indexOf(b64key) + b64key.length );
-            blob = utils.base64ToBlob( b64, 'image/jpeg' );
+            var b64 = cy.jpg({'full': true}).substring(cy.jpg({'full': true}).indexOf(b64key) + b64key.length);
+            blob = utils.base64ToBlob(b64, 'image/jpeg');
             fileformat = '.jpg';
         } else if (format === 'png') {
             var b64key = 'base64,';
-            var b64 = cy.png({'full': true}).substring( cy.png({'full': true}).indexOf(b64key) + b64key.length );
-            blob = utils.base64ToBlob( b64, 'image/png' );
+            var b64 = cy.png({'full': true}).substring(cy.png({'full': true}).indexOf(b64key) + b64key.length);
+            blob = utils.base64ToBlob(b64, 'image/png');
             fileformat = '.png';
         } else if (format === 'cyjs') {
             MIME_TYPE = "application/json";

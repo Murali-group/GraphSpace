@@ -53,7 +53,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 			'graph_json': json.loads(cls.graph_json),
 			'style_json': json.loads(cls.style_json),
 			'is_public': cls.is_public,
-			'tags': [tag.serialize() for tag in cls.tags],
+			'tags': [tag.name for tag in cls.tags],
 			'default_layout_id': cls.default_layout_id,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()

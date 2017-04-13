@@ -162,7 +162,6 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 	names = [] if names is None else names
 	tags = [] if tags is None else tags
 
-
 	elements_filter = []
 	names_filter = []
 

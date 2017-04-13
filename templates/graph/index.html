@@ -130,12 +130,12 @@
                     {% endif %}
                     </small>
                 </h4>
-                {% if graph.tags %}
+                {% if 'data' in graph.graph_json and 'tags' in graph.graph_json.data%}
                     <div class="tag-cloud d-inline-block" id="Tags" >
-                        {% for tag in graph.tags %}
+                        {% for tag in graph.graph_json.data.tags %}
                             <a class="tag-anchor"
-                               href="{% url 'graphs' %}?tags={{ tag.name | slugify }}">
-                                <i class="fa fa-hashtag"></i> {{ tag.name }}
+                               href="{% url 'graphs' %}?tags={{ tag | slugify }}">
+                                <i class="fa fa-hashtag"></i> {{ tag }}
                             </a>
                         {% endfor %}
                     </div>

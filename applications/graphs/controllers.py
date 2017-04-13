@@ -59,11 +59,14 @@ def is_user_authorized_to_view_graph(request, username, graph_id):
 
 def is_user_authorized_to_update_graph(request, username, graph_id):
 	is_authorized = False
+	user = users.controllers.get_user(request, username)
 
 	graph = db.get_graph_by_id(request.db_session, graph_id)
 
 	if graph is not None:  # Graph exists
 		if graph.owner_email == username:
+			is_authorized = True
+		elif user is not None and user.is_admin == 1:
 			is_authorized = True
 
 	return is_authorized
