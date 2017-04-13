@@ -17,8 +17,8 @@
                         <th>Attribute</th>
                         <th>Value</th>
                     </tr>
-                    {% if 'data' in graph.graph_json %}
-                    {% for k,v in graph.graph_json.data.items %}
+
+                    {% for k,v in data.items %}
                         {% if k != 'description' %}
                             <tr>
                                 <td>{{ k|safe}}</td>
@@ -26,8 +26,6 @@
                             </tr>
                         {% endif %}
                     {% endfor %}
-                    {% endif %}
-
 
                 </table>
             </div>

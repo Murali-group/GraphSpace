@@ -22,7 +22,7 @@ depends_on = None
 
 def upgrade():
 	graphspace = GraphSpace('adb@vt.edu', 'XXXX')
-	graphspace.set_api_host('localhost:8000')
+	# graphspace.set_api_host('localhost:8000')
 	response = graphspace.get_public_graphs(limit=70)
 	for graph in response['graphs']:
 		graph_json = graph['graph_json']
