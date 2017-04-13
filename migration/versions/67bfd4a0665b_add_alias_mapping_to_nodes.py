@@ -25,6 +25,11 @@ graphhelper = sa.Table(
 	sa.Column('name', sa.String),
 	sa.Column('graph_json', sa.String)
 )
+graphhelper1 = sa.Table(
+	'graph',
+	sa.MetaData(),
+	sa.Column('id', sa.Integer, primary_key=True),
+)
 
 uniprothelper = sa.Table(
 	'uniprot_alias',
@@ -38,33 +43,37 @@ uniprothelper = sa.Table(
 def upgrade():
 	connection = op.get_bind()
 
-	for graph in connection.execute(graphhelper.select().order_by("id")):
-		graph_json = json.loads(graph.graph_json)
-		if 'elements' in graph_json and 'nodes' in graph_json['elements']:
-			for node in graph_json['elements']['nodes']:
-				if 'data' in node and 'aliases' not in 'data':
-					node['data']['aliases'] = []
-					for uniprot_mapping in connection.execute(
-							uniprothelper.select().where(uniprothelper.c.accession_number == str(node['data']['id']))):
-						node['data']['aliases'].append(uniprot_mapping.alias_source + ':' + uniprot_mapping.alias_name)
+	graphtotal = connection.execute(graphhelper1.select()).rowcount
+	offset = 0
+	while offset < graphtotal:
+		for graph in connection.execute(graphhelper.select().order_by("id").limit(100).offset(offset)):
+			graph_json = json.loads(graph.graph_json)
+			if 'elements' in graph_json and 'nodes' in graph_json['elements']:
+				for node in graph_json['elements']['nodes']:
+					if 'data' in node and 'aliases' not in 'data':
+						node['data']['aliases'] = []
+						for uniprot_mapping in connection.execute(
+								uniprothelper.select().where(uniprothelper.c.accession_number == str(node['data']['id']))):
+							node['data']['aliases'].append(uniprot_mapping.alias_source + ':' + uniprot_mapping.alias_name)
 
-		if 'data' in graph_json and 'title' in graph_json['data'] and len(graph_json['data']['title'].strip()) > 0:
-			graph_json['data']['title'] = graph_json['data']['title']
-		elif 'data' in graph_json and 'name' in graph_json['data'] and len(graph_json['data']['name'].strip()) > 0:
-			graph_json['data']['title'] = graph_json['data']['name']
-		else:
-			graph_json['data']['title'] = ''
+			if 'data' in graph_json and 'title' in graph_json['data'] and len(graph_json['data']['title'].strip()) > 0:
+				graph_json['data']['title'] = graph_json['data']['title']
+			elif 'data' in graph_json and 'name' in graph_json['data'] and len(graph_json['data']['name'].strip()) > 0:
+				graph_json['data']['title'] = graph_json['data']['name']
+			else:
+				graph_json['data']['title'] = ''
 
-		graph_json['data']['name'] = graph.name
+			graph_json['data']['name'] = graph.name
 
-		connection.execute(
-			graphhelper.update().where(
-				graphhelper.c.id == graph.id
-			).values(
-				graph_json=json.dumps(graph_json)
+			connection.execute(
+				graphhelper.update().where(
+					graphhelper.c.id == graph.id
+				).values(
+					graph_json=json.dumps(graph_json)
+				)
 			)
-		)
-pass
+		offset += 100
+
 
 
 def downgrade():
