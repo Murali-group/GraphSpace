@@ -32,17 +32,24 @@ def upgrade():
 
 		if '2015-bioinformatics-xtalk' in tags:
 			G.set_data({
-				'pubmed': '26400040',
-				'pubmed_title': 'Xtalk: a path-based approach for identifying crosstalk between signaling pathways.',
-				'pubmed_authors': ['Allison N. Tegge', 'Nicholas Sharp', 'T. M. Murali']
+				'pmid': '26400040',
+				'paper_title': 'Xtalk: a path-based approach for identifying crosstalk between signaling pathways.',
+				'authors': ['Allison N. Tegge', 'Nicholas Sharp', 'T. M. Murali']
 			})
 		elif '2013-jcb-linker' in tags:
 			G.set_data({
-				'pubmed': '23641868',
-				'pubmed_title': 'Top-down network analysis to drive bottom-up modeling of physiological processes.',
+				'pmid': '23641868',
+				'paper_title': 'Pathways on demand: automated reconstruction of human signaling networks.',
 				'organism': 'Saccharomyces cerevisiae',
 				'taxon_id': '559292',
-				'pubmed_authors': ['Christopher L. Poirel', 'Richard R. Rodrigues','Katherine C. Chen','John J. Tyson','T.M. Murali']
+				'pubmed_authors': ['Christopher L. Poirel', 'Richard R. Rodrigues','Katherine C. Chen','John J. Tyson', 'T. M. Murali']
+			})
+		elif 'pathlinker-paper' in tags or '2015-npj-sysbio-appl-pathlinker' in tags:
+			G.set_data({
+				'paper_title': 'Top-down network analysis to drive bottom-up modeling of physiological processes.',
+				'organism': 'Homo sapiens',
+				'taxon_id': '9606',
+				'pubmed_authors': ['Anna Ritz', 'Christopher L Poirel', 'Allison N Tegge', 'Nicholas Sharp', 'Kelsey Simmons', 'Allison Powell', 'Shiv D Kale', 'T. M. Murali']
 			})
 		print(graph['id'])
 		response = graphspace.update_graph(graph['name'], owner_email=graph['owner_email'], graph=G, is_public=graph['is_public'])
