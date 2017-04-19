@@ -204,7 +204,7 @@ var graphsPage = {
             return $('<a>').attr('href', '/graphs/' + row.id + queryString).text(value)[0].outerHTML;
         },
         tagsFormatter: function (value, row) {
-            links = "";
+            links = [];
             if ('data' in row.graph_json && 'tags' in row.graph_json.data) {
                 links = _.map(row.graph_json.data.tags, function(tag){
                     return $('<a>').attr('href', '#').html($('<span>').attr('class', 'label label-info tag-btn').attr('onclick', 'graphsPage.graphsTable.searchTag(this);').text(tag)[0])[0].outerHTML + '&nbsp;';

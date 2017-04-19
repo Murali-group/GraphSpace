@@ -887,9 +887,8 @@ def _get_layouts(request, graph_id, query=dict()):
 	user_role = authorization.user_role(request)
 	if user_role == authorization.UserRole.LOGGED_IN:
 		if get_request_user(request) != query.get('owner_email', None) \
-				and query.get('is_shared', None) is not None and int(query.get('is_shared', None)) != 1:
-			raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedLayoutAccess,
-			                 args=get_request_user(request))
+				and (query.get('is_shared', None) is None or int(query.get('is_shared', 0)) != 1):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedLayoutAccess, args=get_request_user(request))
 
 	total, layouts = graphs.search_layouts(request,
 	                                       owner_email=query.get('owner_email', None),
