@@ -15,6 +15,7 @@ Requirements
 2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
 3. virtualenv
 4. [bower](https://bower.io/)
+5. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
 
 Running GraphSpace locally
 ===================================
