@@ -3,11 +3,11 @@ from django.conf.urls import url
 
 urlpatterns = [
 
+	url(r'^profile/$', views.user_page, name='user_profile'),
 	url(r'^groups/$', views.groups_page, name='groups'),
 	url(r'^groups/(?P<group_id>[^/]+)$', views.group_page, name='group'),
 
 	url(r'^groups/(?P<group_id>[^/]+)/join/$', views.join_group_page, name='signup_by_invitation'),
-	url(r'^profile/$', views.user_page, name='user_profile'),
 
 	# AJAX APIs Endpoints
 

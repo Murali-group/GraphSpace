@@ -6,11 +6,26 @@
         <div class="content">
           <div class="container-fluid">
 
-            <h1>Profile</h1>
+            <h1 class="padding-top-2 padding-bottom-2">My Profile</h1>
 
-              <h5>UserID: {{user.id}}</h5>
-              <h5>Email: {{user.email}}</h5>
-              <h5>Auth Token: {{user.auth_token}}</h5>
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <tbody>
+                  <tr>
+                    <td><strong>UserID</strong></td>
+                    <td>{{user.id}}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Email</strong></td>
+                    <td>{{user.email}}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Auth Token</strong></td>
+                    <td>{{user.auth_token}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
           </div>
         </div>
