@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block content %}
+    <div class="container-fluid zero-padding zero-margin">
+
+        <div class="content">
+          <div class="container-fluid">
+
+            <h1>Profile</h1>
+
+              <h5>UserID: {{user.id}}</h5>
+              <h5>Email: {{user.email}}</h5>
+              <h5>Auth Token: {{user.auth_token}}</h5>
+
+          </div>
+        </div>
+
+    </div>
+{% endblock %}

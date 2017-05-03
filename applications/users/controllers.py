@@ -1,4 +1,5 @@
 import bcrypt
+import base64
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -103,6 +104,10 @@ def is_user_authorized_to_update_group(request, username, group_id):
 def get_user(request, email):
 	return db.get_user(request.db_session, email) if email is not None else None
 
+def get_user_profile(request, email):
+	user = db.get_user(request.db_session, email) if email is not None else None
+	auth_token = 'Basic %s' % base64.b64encode('{0}:{1}'.format(user.email, user.password)) if user is not None else None
+	return user, auth_token
 
 def search_users(request, email=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'email':

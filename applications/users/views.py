@@ -11,6 +11,22 @@ from graphspace.wrappers import is_authenticated
 from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes, GraphSpaceError
 from graphspace.utils import get_request_user
 
+@is_authenticated(redirect_url='/')
+def user_page(request):
+	"""
+		Wrapper view for the user page.
+
+		:param request: HTTP GET Request.
+	"""
+	if 'GET' == request.method:
+		context = RequestContext(request, {})
+		context.push({
+			"user": _get_user(request)
+		})
+		return render(request, 'user_profile/index.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
 
 @is_authenticated(redirect_url='/')
 def groups_page(request):
@@ -107,6 +123,27 @@ def join_group_page(request, group_id):
 '''
 Users APIs
 '''
+
+def _get_user(request):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	user : User object.
+
+	"""
+	user_email = get_request_user(request)
+	user_object, auth_token = users.get_user_profile(request, user_email) if user_email is not None else None
+	return {
+		"id": user_object.id,
+		"email": user_object.email,
+		"auth_token": auth_token
+	}
 
 
 def users_ajax_api(request):
@@ -856,5 +893,3 @@ def _delete_group_graph(request, group_id, graph_id):
 	users.delete_group_graph(request,
 							 group_id=group_id,
 							 graph_id=graph_id)
-
-
