@@ -1,0 +1,35 @@
+<div class="margin-top-4">
+    <style>
+        img {
+            max-width: 200px;
+        }
+    </style>
+    <div class="row">
+        <div class="col-md-6">
+            <table>
+                {{ description|safe }}
+            </table>
+        </div>
+        <div class="col-md-6">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+
+                    {% for k,v in data.items %}
+                        {% if k != 'description' %}
+                            <tr>
+                                <td>{{ k|safe}}</td>
+                                <td>{{ v|safe }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+    <link href="{% static 'components/select2/dist/css/select2.min.css' %}" rel="stylesheet"/>
+    <script src="{% static 'components/select2/dist/js/select2.full.min.js' %}"></script>
+
+
+    <div class="container-fluid zero-padding padding-bottom-6" style="margin-top: 5px;">
+
+        <ul class="nav nav-tabs">
+            <li class="active text-center">
+                <a href="#shared_graphs" data-toggle="tab">{{ group.total_graphs }} Shared Graphs</a>
+            </li>
+            <li class="text-center">
+                <a href="#members" data-toggle="tab">{{ group.total_members }} Members</a>
+            </li>
+            {% if group.owner_email == uid %}
+            <li class="text-center">
+                <a href="#update_group" data-toggle="tab">Update Group</a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
+
+            <h2 class="text-center">
+                {{ group.name }}
+                <small>{% if group.description and group.description|length != 0 %}
+                    {{ group.description }}{% endif %}</small>
+            </h2>
+
+            <div class="tab-pane fade in active" id="shared_graphs">
+                {% include 'group/shared_graph_table.html' %}
+            </div>
+
+            <div class="tab-pane fade" id="members">
+                <div class="row">
+                    <div class="col-md-5 col-md-offset-1">
+                        {% include 'group/group_members_table.html' %}
+                    </div>
+                    {% if group.owner_email == uid %}
+                    <div class="col-md-5">
+                        {% include 'group/add_group_member.html' %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="update_group">
+                <div class="panel panel-default" style="max-width:400px; width:50%; margin: 0 auto;">
+                    <div class="panel-body">
+                        {% include 'group/update_group_form.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'group/unshare_graph_modal.html' %}
+        {% include 'group/remove_group_member_modal.html' %}
+
+
+    </div>
+
+    <!-- JSON support for Groups Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            groupPage.init();
+        });
+    </script>
+{% endblock %}
+

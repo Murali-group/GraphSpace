@@ -1,0 +1,59 @@
+<!-- Sidebar -->
+
+<ul id="defaultSideBar" class="sidebar-nav gs-sidebar-nav active">
+    <li>
+        <br>
+    </li>
+    <li>
+        <div class="form-group has-feedback" style="margin: 0 0.6em;"
+             data-target="#searchPopover" data-container="body" data-trigger="focus"
+             data-placement="top" data-toggle="popover">
+            <input type="text" class="form-control" id="inputSearchEdgesAndNodes"
+                   aria-describedby="inputSearchEdgesAndNodes" style="border-radius: 1em;"
+                   placeholder="Search for nodes and edges" onkeyup="graphPage.onInputSearchEdgesAndNodes(this);">
+                                <span class="glyphicon glyphicon-search form-control-feedback"
+                                      aria-hidden="true"></span>
+        </div>
+        <div id="searchPopover" class="popover fade">
+            <p class="lead zero-margin zero-padding"
+               style="font-size: medium; text-align: right; ">
+                Search for nodes and edges</p>
+        </div>
+    </li>
+    <li>
+
+    </li>
+
+    <li id="filterNodesEdgesSideBarBtn">
+        <a class="btn sidebar-nav-pills" href="#filter_nodes_edges" data-target="#filterNodesEdgesSideBar">
+            <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
+        </a>
+    </li>
+    <li>
+        <a class="btn sidebar-nav-pills" href="#change_layout" data-target="#changeLayoutSidebar">
+            Change Layout
+        </a>
+    </li>
+    {% if uid %}
+        <li>
+            <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#layoutEditorSideBar">
+                <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
+            </a>
+        </li>
+    {% endif %}
+
+    {% if uid and uid == graph.owner_email %}
+        <li>
+            <a id="setDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onSetDefaultLayoutBtn()">
+                Set as <br>default layout
+            </a>
+        </li>
+        <li>
+            <a id="removeDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onRemoveDefaultLayoutBtn()">
+                Remove as <br>default layout
+            </a>
+        </li>
+    {% endif %}
+
+</ul>
+

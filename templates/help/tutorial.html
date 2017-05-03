@@ -1,0 +1,120 @@
+<h1>Tutorial on interacting with GraphSpace</h1>
+<hr>
+
+<ul>
+    <li><h4><a href="#logging_in">Logging In</a></h4>
+    <li><h4><a href="#in_search">Searching within Multiple Graphs</a></h4>
+    <li><h4><a href="#search_single">Searching within a Single Graph</a></h4>
+    <li><h4><a href="#graph_interaction">Interacting with a Graph</a></h4>
+    <li><h4><a href="#auto_layouts">Automatic and Manual Layouts</a></h4>
+</ul>
+<hr>
+
+<div id="tutorial" style="text-align: center;">
+    <div id="logging_in">
+        <h2 style="padding-top: 50px; margin-top: -40px;">Logging In</h2>
+        <p>The <a href="{{ url }}">welcome page</a> greets a user when the user visits GraphSpace. We assume that the
+            user has already created an account and uploaded graphs via the upload page or the RESTful API.</p>
+        <br>
+        <img width="80%" height="80%" align="middle" src="../../static/images/log_in.png"></img>
+        <br><br>
+
+        <br>
+        <p>The user logs in and is provided a link to the list of graphs that the user can access.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/logged_in.png"></img>
+        <br><br>
+        <br>
+        <p>Clicking on the link titled "Graphs" takes the user to a page that lists the graphs accessible by the user.
+            In this example, this user owns 33 graphs and can access public graphs. No graphs are shared with this
+            user.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/graphs.png"></img>
+        <br><br>
+    </div>
+
+    <div id="in_search">
+        <h2 style="padding-top: 50px; margin-top: -40px;">Searching within Multiple Graphs</h2>
+        <br>
+        <p>The user searches this list for graphs that contain the protein CTNNB1 (the symbol for &beta;-catenin, a
+            transcriptional regulator in the Wnt signaling pathway) obtaining a reduced list of graphs. The selection of
+            the button "Similar" means that the any protein whose label or identifier contains "CTNNB1" as a substring
+            will match this search. This image shows the result of this search. There are six graphs owned by the user
+            and two public graphs that contain this protein. Each link in the "Graph Id" column will take the user to a
+            specific graph with the search term highlighted.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/graph_search.png"></img>
+
+        <br><br>
+        <p>The user clicks on the graph with the id "KEGG-Wnt-signaling-pathway" and reaches the graph for the Wnt
+            pathway with the searched node highlighted.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/view_graph.png"></img>
+
+    </div>
+
+    <div id="search_single">
+        <h2 style="padding-top: 50px; margin-top: -40px;">Searching within a Single Graph</h2>
+        <br>
+        <p>The same search interface greets the user on the page for this graph, which allows the user to add more
+            search terms for nodes (Wnt in this example).</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/in_search.png"></img>
+        <br><br>
+        <p>The user can also add search terms for edges ("Wnt:Fzd" in this example). Since the user has selected the
+            "similar" option for the search, any edge whose tail node identifier or label contains "Wnt" and whose head
+            node identifier or label contains "Fzd" matches the query.</p>
+        <br>
+        <img width="80%" height="80%" align="middle" src="../../static/images/search_edge.png"></img>
+        <br><br>
+        <p>By selecting an "Exact" option, the user can perform a new search for nodes that are an exact match to the
+            query, which is "BAMBI" in this figure.</p>
+        <br>
+        <img width="80%" height="80%" align="middle" src="../../static/images/bambi.png"></img>
+        <br><br>
+        <p>Figure 9: GraphSpace also supports exact searches for edges.</p>
+        <br>
+        <img width="80%" height="80%" align="middle" src="../../static/images/edge_search2.png"></img>
+    </div>
+
+    <div id="graph_interaction">
+        <h2 style="padding-top: 50px; margin-top: -40px;">Interacting with a Graph</h2>
+        <p>As its name suggests, the "Graph details" panel displays information about the entire graph, e.g., a legend
+            of node and edge shapes and colors.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/interact_1.png"></img>
+        <br><br>
+        <p>Clicking on a node pops up a panel with information on that node.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/interact_2.png"></img>
+        <br><br>
+        <br>
+        <p>Clicking on a edge pops up a panel with information on that edge. The information that appears in "Graph
+            Details" and the pop-up panels must be included in the JSON for the graph uploaded by the user using the
+            RESTful API.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/interact_3.png"></img>
+
+        <br><br>
+        <p>A user can export a graph in PNG format and view the JSON string for the graph. GraphSpace does not support
+            any other export formats since it relies on Cytoscape.js for this functionality, which implements only
+            export to PNG format.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/interact_4.png"></img>
+
+    </div>
+
+    <div id="auto_layouts">
+        <h2 style="padding-top: 50px; margin-top: -40px;">Automatic and Manual Layouts</h2>
+        <p>The layout panel for a graph displays two alternatives: automatic and manual.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/auto_1.png"></img>
+        <br><br>
+        <p>Clicking on the first choice reveals the name of layout algorithms supported by GraphSpace through its use of
+            Cytoscape.js.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/auto_2.png"></img>
+        <br><br>
+        <p>Clicking on the "Manual" tab shows that there are two "Private" layouts, meaning that the user has not yet
+            shared them with any other user. The user has created them in earlier sessions by manually modifying the
+            positions of nodes and edges created by some automatic layout algorithm and saving the layout. The icons
+            next to each layout name provide (i) a direct link to this layout, (ii) allow the user to change its name,
+            (iii) share it with other users who have access to this graph, (iv) delete this layout, and (v) make it the
+            default layout, i.e., instruct GraphSpace to display this layout whenever a user visits the page for this
+            graph.</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/auto_3.png"></img>
+        <br><br>
+        <p>The user selects to view the layout titled "manual-top-to-bottom".</p>
+        <img width="80%" height="80%" align="middle" src="../../static/images/auto_4.png"></img>
+        <br><br>
+    </div>
+</div>

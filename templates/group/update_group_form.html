@@ -1,0 +1,22 @@
+<form id="UpdateGroupForm" role="form">
+    <input type="text" id="GroupID" hidden value="{{ group.id }}">
+    <input type="text" id="GroupOwnerEmail" hidden value="{{ group.owner_email }}">
+    <div class="control-group">
+        <label for="GroupNameInput">Group Name:</label>
+        <input id="GroupNameInput" class="form-control" maxlength="32" type="text"
+               name="group_name" autocomplete="off" placeholder="Required"
+               value="{{ group.name }}"/>
+    </div>
+
+    <br>
+
+    <div class="control-group">
+        <label for="GroupDescriptionInput">Group Description:</label>
+        <input id="GroupDescriptionInput" class="form-control" maxlength="200" type="text"
+               name="description" autocomplete="off" placeholder="Optional"
+               value="{% if group.description %} {{ group.description }} {% endif %}"/>
+    </div>
+
+    <br>
+    <button id="UpdateGroupBtn" class="btn btn-primary gs-full-width">Update Group</button>
+</form>

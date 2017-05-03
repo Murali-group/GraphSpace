@@ -1,0 +1,35 @@
+<table id="OwnedGraphsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-query-params="graphsPage.graphsTable.queryParams"
+       data-ajax="graphsPage.ownedGraphsTable.getGraphsByOwner"
+       data-side-pagination="server"
+       data-data-field="graphs"
+       data-pagination="true"
+       data-sort-name="updated_at"
+       data-id-field="id"
+       data-sort-order="desc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True"
+            data-formatter="graphsPage.graphsTable.graphNameFormatter">Graph Name
+        </th>
+        <th data-field="tags" data-formatter="graphsPage.graphsTable.tagsFormatter">Tags</th>
+        <th data-field="owner_email" data-formatter="graphsPage.graphsTable.ownerEmailFormatter" data-sortable="True">
+            Graph Owner
+        </th>
+        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last
+            Modified
+        </th>
+        <th data-field="is_public" data-sortable="True"
+            data-formatter="graphsPage.graphsTable.visibilityFormatter">Visibility
+        </th>
+        <th data-field="operations" data-formatter="graphsPage.graphsTable.operationsFormatter"
+            data-events="graphsPage.graphsTable.operationEvents">
+            Operations
+        </th>
+    </tr>
+    </thead>
+</table>

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+    <div class="container-fluid graphs padding-bottom-6">
+        <div class="content">
+
+            <h1 class="text-center">Upload Graph</h1>
+            <div class="row">
+
+                <div class="col-md-offset-3 col-md-6 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+
+                            {% if Success != None %}
+                                <div class="alert alert-success" role="alert">
+                                    <p style="display: inline">Graph is now viewable at:</p>
+                                    <a href="{{ Success }}" class="alert-link">{{ Success }}!</a>
+                                    {% if uid == None %}
+                                        <br>
+                                        <br>
+                                        **Please note that this URL in your records. We will delete this graph after
+                                        <b>30 days</b>. If you like GraphSpace and would like persistent storage of your
+                                        graphs, please consider
+                                        <a id="create" class="alert-link">creating an account</a>.
+                                        <br>
+                                    {% endif %}
+                                </div>
+                            {% elif Error != None %}
+                                <div class="alert alert-danger" role="alert">
+                                    <samp>Error: {{ Error }}</samp>
+                                </div>
+                            {% endif %}
+
+
+                            <form id="UploadGraphForm" action="{% url 'upload_graph' %}" role="form"
+                                  enctype="multipart/form-data" method="POST">
+                                {% csrf_token %}
+                                <div class="control-group">
+                                    <label for="GraphNameInput">Graph Name:</label>
+                                    <input id="GraphNameInput" class="form-control" maxlength="32" type="text"
+                                           name="name" autocomplete="off" placeholder="Required"/>
+                                </div>
+
+                                <br>
+
+                                {% if uid %}
+                                    <input type="number" name="is_public" hidden value="0"/>
+                                    <input type="string" name="owner_email" hidden value="{{ uid }}"/>
+                                {% else %}
+                                    <input type="number" name="is_public" hidden value="1"/>
+                                {% endif %}
+
+                                <div class="control-group">
+                                    <label for="GraphFileInput">Upload the network file:</label>
+                                    <input id="GraphFileInput" type="file" name="graph_file" class="file"
+                                           accept=".cyjs,.json">
+                                    <div class="input-group col-xs-12">
+                                        <input type="text" class="browse form-control"
+                                               placeholder="Required">
+                                        <span class="input-group-btn">
+                                            <button class="browse btn btn-default" type="button">
+                                                <i class="glyphicon glyphicon-search"></i> Browse
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <br>
+
+                                <div class="control-group">
+                                    <label for="StyleFileInput">Upload the style file (Optional):</label>
+                                    <input id="StyleFileInput" type="file" name="style_file" class="file"
+                                           accept=".json">
+                                    <div class="input-group col-xs-12">
+                                        <input type="text" class="browse form-control"
+                                               placeholder="Optional">
+                                        <span class="input-group-btn">
+                                            <button class="browse btn btn-default" type="button">
+                                                <i class="glyphicon glyphicon-search"></i> Browse
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <br>
+                                <button type="button" id="UploadGraphBtn" data-loading-text="Submitting..."
+                                        class="btn btn-primary gs-full-width" autocomplete="off">
+                                    Submit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            uploadGraphPage.init();
+        });
+    </script>
+
+{% endblock %}

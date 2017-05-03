@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+    <link href="{% static 'components/select2/dist/css/select2.min.css' %}" rel="stylesheet"/>
+    <script src="{% static 'components/select2/dist/js/select2.full.min.js' %}"></script>
+
+    <div class="container-fluid zero-padding padding-bottom-6" style="margin-top: 5px;">
+        {% csrf_token %}
+        <ul class="nav nav-tabs">
+            {% if uid %}
+                <li class="active text-center">
+                    <a href="#owned_graphs" data-toggle="tab">My Graphs <span id="ownedGraphsTotal"
+                                                                              class="badge">{{ owned_graphs.total }}</span></a>
+                </li>
+                <li class="text-center">
+                    <a href="#shared_graphs" data-toggle="tab">Shared Graphs <span id="sharedGraphsTotal"
+                                                                                   class="badge">{{ shared_graphs.total }}</span></a>
+                </li>
+            {% endif %}
+
+            <li class="text-center {% if not uid %} active {% endif %}">
+                <a href="#public_graphs" data-toggle="tab">Public Graphs <span id="publicGraphsTotal"
+                                                                               class="badge">{{ public_graphs.total }}</span></a>
+            </li>
+
+            <li class="text-center">
+                <a href="{% url 'upload_graph' %}">Upload New Graph</a>
+            </li>
+        </ul>
+
+
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
+            <div id="toolbar" class="">
+                <div class="row" role="form">
+                    <div class="col-md-10 margin-top-2">
+                        <select class="graph-search gs-full-width" multiple="multiple">
+                        </select>
+                    </div>
+                    <div class="col-md-2 margin-top-2" style="text-align: right">
+                        <button id="ok" type="submit" class="btn btn-default">Search</button>
+                        <a id="clear" class="btn btn-default">Clear Search</a>
+                    </div>
+                </div>
+                <div class="row margin-top-2">
+                    <div class="col-md-8">
+                        <small>Search Examples:</small>
+                        <a href="/graphs?query=wnt"><span class="label label-default">wnt</span></a>
+                        <a href="/graphs?query=wnt,fzd "><span class="label label-default">wnt,fzd</span></a>
+                        <a href="/graphs?query=pmid:26400040"><span class="label label-default">pmid:26400040</span></a>
+                        <a href="/graphs?query=wnt,tags:kegg-networks"><span class="label label-default">wnt,tags:kegg-networks</span></a>
+                        <a href="/graphs?query=paper_title:Xtalk"><span class="label label-default">paper_title:Xtalk</span></a>
+                    </div>
+                    <div class="col-md-4" style="text-align: right">
+                        <a href="http://manual.graphspace.org/en/latest/Searching_Graphs.html" target="_blank">Documentation on Searching in GraphSpace</a>
+                    </div>
+                </div>
+            </div>
+
+            {% if uid %}
+                <div class="tab-pane fade in active" id="owned_graphs">
+                    {% include 'graphs/owned_graphs_table.html' %}
+                </div>
+
+                <div class="tab-pane fade" id="shared_graphs">
+                    {% include 'graphs/shared_graphs_table.html' %}
+                </div>
+            {% endif %}
+
+            <div class="tab-pane fade {% if not uid %} in active {% endif %}" id="public_graphs">
+                {% include 'graphs/public_graphs_table.html' %}
+            </div>
+
+            <div class="tab-pane fade" id="upload_graph">
+                Upload Graph
+            </div>
+        </div>
+
+        {% include 'graphs/delete_graph_modal.html' %}
+
+    </div>
+
+    <!-- JSON support for Graphs Page -->
+    <script type="text/javascript" src="{% static 'js/search_query_json_template.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            graphsPage.init();
+        });
+
+    </script>
+{% endblock %}

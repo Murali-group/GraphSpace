@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+    <script type="text/javascript">
+        {% if not Error %}
+            var graph_json = {{ graph_json_string|safe }};
+            var style_json = {{ style_json_string|safe }};
+            var default_layout_id = {% if default_layout_id %}{{ default_layout_id|safe }}{% else %}null{% endif %};
+        {% endif %}
+    </script>
+
+    <!--- Modals start here--->
+    <div>
+        {% include 'graph/delete_layout_modal.html' %}
+        {% include 'graph/edit_layout_modal.html' %}
+
+        <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Share Graph</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group zero-margin">
+                            <li class="list-group-item row gs-list-group-item">
+                                <span class="col-md-10 lead">
+                                    Share with public <i class="fa fa-globe fa-lg"></i>
+                                </span>
+
+                                <span class="col-md-2" style="text-align: right">
+                                    <button type="button"
+                                            class="btn btn-default btn-sm share-graph-btn {% if graph.is_public == 1 %}hidden{% endif %}"
+                                            onclick="graphPage.onShareGraphWithPublicBtn(this,{{ graph.id }})">
+                                        <i class="fa fa-share"></i>
+                                        Share
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm unshare-graph-btn {% if graph.is_public == 0 %}hidden{% endif %}"
+                                            onclick="graphPage.onUnshareGraphWithPublicBtn(this,{{ graph.id }})">
+                                        <i class="fa fa-remove"></i>
+                                        Unshare
+                                    </button>
+                                </span>
+                            </li>
+                        </ul>
+                        <ul class="list-group" style="max-height: 365px; overflow-x: hidden; height: auto">
+
+                            {% for group in groups %}
+                                <li class="list-group-item row gs-list-group-item">
+                                    <span class="col-md-10 lead">
+                                        {{ group.name }} <small>owned by: {{ group.owner_email }}</small>
+                                    </span>
+
+                                    <span class="col-md-2" style="text-align: right">
+                                        <button type="button"
+                                                class="btn btn-default btn-sm share-graph-btn {% if group.is_shared == 1 %}hidden{% endif %}"
+                                                onclick="graphPage.onShareGraphWithGroupBtn(this, {{ graph.id }}, {{ group.id }})">
+                                            <i class="fa fa-share"></i>
+                                            Share
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm unshare-graph-btn {% if group.is_shared == 0 %}hidden{% endif %}"
+                                                onclick="graphPage.onUnshareGraphWithGroupBtn(this, {{ graph.id }}, {{ group.id }})">
+                                            <i class="fa fa-remove"></i>
+                                            Unshare
+                                        </button>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Layout Modal -->
+        <div class="modal fade" id="saveLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveLayoutModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="layout_fields">
+                            <div class="control-group">
+                                <label for="layoutNameInput">Layout Name</label>
+                                <input id="layoutNameInput" class="form-control" type="text" name="layout_name"
+                                       autocomplete="off"/>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button name="saveLayoutBtn" id="saveLayoutBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save
+                                    Layout
+                                </button>
+                                <button type="button" id="exitLayoutBtn"
+                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
+                                        data-dismiss="modal">Exit without saving
+                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!--- Modals end here--->
+    <div class="container-fluid zero-margin zero-padding">
+        <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
+            <div class="col-md-10">
+                <p class="lead">
+                    {{ title }}
+                </p>
+                <h4 class="zero-margin d-inline-block">
+                    <small>
+                    {% if is_posted_by_public_user %}
+                        Anonymous User / <a
+                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a>
+                    {% else %}
+                        {{ graph.owner_email }} / <a
+                            class="text-center" href="{{ request.path }}">{{ graph.name }}</a>
+                    {% endif %}
+                    </small>
+                </h4>
+                {% if 'data' in graph.graph_json and 'tags' in graph.graph_json.data%}
+                    <div class="tag-cloud d-inline-block" id="Tags" >
+                        {% for tag in graph.graph_json.data.tags %}
+                            <a class="tag-anchor"
+                               href="{% url 'graphs' %}?tags={{ tag | slugify }}">
+                                <i class="fa fa-hashtag"></i> {{ tag }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-2">
+                {% if uid and uid == graph.owner_email %}
+                    <a class="btn btn-default pull-right btn-sm" href="#" data-toggle="modal"
+                       data-target="#shareGraphModal">
+                        <i class="fa fa-share-alt fa-lg"></i> Share
+                    </a>
+                {% endif %}
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-download fa-lg"></i> Export <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a onclick="graphPage.export('png');">Network Graphics (.png)</a></li>
+                        <li><a onclick="graphPage.export('jpg');">Network Graphics (.jpg)</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a onclick="graphPage.export('cyjs');">Network Data (.cyjs)</a></li>
+                        <li><a onclick="graphPage.export('style');">Network Stylesheet (.json)</a></li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <ul class="nav nav-tabs">
+            <li class="active text-center">
+                <a id="graphVisualizationTabBtn" class="link-reset" href="#graph_visualization_tab" data-toggle="tab">Graph
+                    Visualization</a>
+            </li>
+
+            <li class="text-center">
+                <a id="graphDetailsTabBtn" class="link-reset" href="#graph_details_tab" data-toggle="tab">Graph
+                    Information</a>
+            </li>
+
+            <li class="text-center">
+                <a class="link-reset" href="#graph_nodes_tab" data-toggle="tab">Nodes <span
+                        class="badge">{{ graph.graph_json.elements.nodes|length }}</span> </a>
+            </li>
+
+            <li class="text-center">
+                <a class="link-reset" href="#graph_edges_tab" data-toggle="tab">Edges <span
+                        class="badge">{{ graph.graph_json.elements.edges|length }}</span></a>
+            </li>
+            {% if uid %}
+                <li class="text-center">
+                    <a class="link-reset" href="#graph_layouts_tab" data-toggle="tab">Layouts</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <div id="myTabContent" class="tab-content gs-full-height bg-white">
+            <div class="tab-pane fade in active gs-full-height" id="graph_visualization_tab">
+                <div id="wrapper" class="gs-full-height">
+                    <!-- #sidebar-wrapper starts -->
+                    <div id="sidebar-wrapper">
+                        {% include 'graph/default_sidebar.html' %}
+                        {% if uid %}
+                            {% include 'graph/layout_editor_sidebar.html' %}
+                        {% endif %}
+                        {% include 'graph/filter_nodes_edges_sidebar.html' %}
+                        {% include 'graph/change_layout_sidebar.html' %}
+                        {% include 'graph/node_editor.html' %}
+                        {% include 'graph/edge_editor.html' %}
+                    </div>
+                    <!-- #sidebar-wrapper ends -->
+
+                    <!-- Page Content -->
+                    <div id="page-content-wrapper" class="gs-full-height">
+                        <div class="gs-full-height zero-margin zero-padding">
+                            <div class="gs-full-height"
+                                 style="margin: 0; width: 100%;">
+
+                                <input type="text" id="GraphName" value="{{ graph.name }}" hidden/>
+                                <input type="text" id="GraphID" value="{{ graph.id }}" hidden/>
+                                <p style="z-index:9999;position:fixed; top:40%; left:40%;"
+                                   data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box."
+                                   data-step='1'></p>
+                                <div id="dialog"></div>
+                                <div id="cyGraphContainer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /#page-content-wrapper -->
+                </div>
+            </div>
+
+            <div class="tab-pane fade gs-full-height container" id="graph_details_tab">
+                {% include 'graph/graph_details_tab.html' %}
+            </div>
+
+            <div class="tab-pane fade gs-full-height container" id="graph_nodes_tab">
+                {% include 'graph/nodes_table.html' %}
+            </div>
+
+            <div class="tab-pane fade gs-full-height container" id="graph_edges_tab">
+                {% include 'graph/edges_table.html' %}
+            </div>
+            {% if uid %}
+                <div class="tab-pane fade gs-full-height" id="graph_layouts_tab">
+                    {% include 'graph/layouts_table.html' %}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+
+    <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'components/cytoscape-panzoom/cytoscape.js-panzoom.css' %}"/>
+    <script type="text/javascript" src="{% static 'components/cytoscape-panzoom/cytoscape-panzoom.js' %}"></script>
+
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
+    <script type="text/javascript"
+            src="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'components/intro.js/intro.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'components/intro.js/introjs.css' %}">
+
+    <script type="text/javascript" src="{% static 'components/jquery-ui/jquery-ui.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'components/jquery-ui/themes/base/jquery-ui.min.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+    <script type="text/javascript" charset="utf-8"
+            src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
+
+    <!-- JSON support for Graph Page -->
+    <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            console.log("Loading graph page");
+            graphPage.init();
+        });
+    </script>
+
+    <!-- Menu Toggle Script -->
+    <script>
+        {#        $("#menu-toggle").click(function (e) {#}
+        {#            e.preventDefault();#}
+        {#            $("#wrapper").toggleClass("toggled");#}
+        {#        });#}
+
+        $(function () {
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                template: '<div class="popover gs-transparent-popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+                content: function () {
+                    return $($(this).data('target')).html();
+                }
+
+            })
+        })
+    </script>
+{% endblock %}

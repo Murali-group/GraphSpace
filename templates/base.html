@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<!-- Base template for web pages used in GraphSpace. Every pages in GraphSpace are based on this htmll template. -->
+{% load staticfiles %}
+{% load google_analytics %}
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <title>GraphSpace</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{% static 'components/bootstrap/dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href={% static "components/bootstrap-table/src/bootstrap-table.css" %}>
+    <link rel="stylesheet" href="{% static 'components/font-awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'components/animate.css/animate.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/graphspace.css' %}">
+
+    <!-- Custom styles for this base template -->
+    <script src="{% static 'components/jquery/dist/jquery.min.js' %}"></script>
+
+    <script type="text/javascript">
+    $(function() {
+        $.xhrPool = [];
+        $.xhrPool.abortAll = function() {
+            $(this).each(function(i, jqXHR) {   //  cycle through list of recorded connection
+                jqXHR.abort();  //  aborts connection
+                $.xhrPool.splice(i, 1); //  removes from list by index
+            });
+        }
+        $.ajaxSetup({
+            beforeSend: function(jqXHR) { $.xhrPool.push(jqXHR); }, //  annd connection to list
+            complete: function(jqXHR) {
+                var i = $.xhrPool.indexOf(jqXHR);   //  get index for current connection completed
+                if (i > -1) $.xhrPool.splice(i, 1); //  removes from list by index
+            }
+        });
+    })
+    </script>
+
+    <script src="{% static 'components/bootstrap/dist/js/bootstrap.js' %}"></script>
+    <script src="{% static 'components/bootstrap/js/tooltip.js' %}"></script>
+    <script src="{% static 'components/bootstrap/js/popover.js' %}"></script>
+    <script src="{% static "components/bootstrap-table/src/bootstrap-table.js" %}"></script>
+    <script src="{% static "components/lodash/dist/lodash.min.js" %}"></script>
+    <script src="{% static "components/moment/min/moment.min.js" %}"></script>
+    <script src="{% static "components/remarkable-bootstrap-notify/dist/bootstrap-notify.min.js" %}"></script>
+
+    {% google_analytics %}
+
+    <!-- Came with Bootstrap template -->
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<!-- main content on each page -->
+<div class="container-fluid zero-padding zero-margin" style="margin-top: 49px !important;">
+    <!-- Header -->
+    {% include 'partials/header.html' %}
+
+    <input type="text" id="UserEmail" value="{{ uid }}" hidden/>
+    {% block content %}
+    {% endblock %}
+
+{#    {% include 'partials/footer.html' %}#}
+</div>
+<!-- /.container -->
+
+<!-- JavaScript Placed at the end of the document so the pages load faster -->
+<script src="{% static 'js/utils.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/main.js' %}" type="text/javascript"></script>
+{#<script src="{% static 'graphs/js/base.js' %}" type="text/javascript"></script>#}
+<script>
+    // Solution found at http://stackoverflow.com/questions/17534661/make-anchor-link-go-some-pixels-above-where-its-linked-to
+    // The function actually applying the offset
+    function offsetAnchor() {
+        if (location.hash.length !== 0) {
+            window.scrollTo(window.scrollX, window.scrollY - 200);
+        }
+    }
+    header.init();
+
+    // This will capture hash changes while on the page
+    window.addEventListener("hashchange", offsetAnchor);
+
+    // This is here so that when you enter the page with a hash,
+    // it can provide the offset in that case too. Having a timeout
+    // seems necessary to allow the browser to jump to the anchor first.
+    window.setTimeout(offsetAnchor, 2); // The delay of 1 is arbitrary and may not always work right (although it did in my testing).
+</script>
+
+
+</body>
+</html>
+

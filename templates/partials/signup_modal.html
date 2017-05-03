@@ -1,0 +1,26 @@
+<div class="modal fade" id="signupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Create Account</h4>
+            </div>
+            <div class="modal-body">
+
+                <form method="post" id="register_form" class="register_form" role="form">
+                    {% csrf_token %}
+                    <div class="register_fields">
+                        {% for field in register_form %}
+                            <div class="form-group">
+                                <span class="field_label">{{ field.label }}:</span>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        <button name="register" id="registerBtn" class="btn btn-success">Register</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

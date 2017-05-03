@@ -1,0 +1,22 @@
+<table id="GroupMembersTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-ajax="groupPage.GroupMembersTable.getGroupMembers"
+       data-search="false"
+       data-pagination="true"
+       data-sort-name="email"
+       data-id-field="id">
+    <thead>
+    <tr>
+        <th data-field="email" data-sortable="true" data-halign="center" data-align="center" data-formatter="groupPage.GroupMembersTable.userEmailFormatter">Email</th>
+        {% if group.owner_email == uid %}
+            <th data-field="operations"
+                data-formatter="groupPage.GroupMembersTable.operationsFormatter"
+                data-events="groupPage.GroupMembersTable.operationEvents" data-halign="center"
+                data-align="center">
+                Operations
+            </th>
+        {% endif %}
+    </tr>
+    </thead>
+</table>
