@@ -104,7 +104,15 @@ def is_user_authorized_to_update_group(request, username, group_id):
 def get_user(request, email):
 	return db.get_user(request.db_session, email) if email is not None else None
 
-def get_user_profile(request, email):
+def get_user_profile(request, email=None):
+	"""
+	Get user details required to show in profile page. Generate auth_token and return.
+	Return None if no email is provided.
+
+	:param db_session: Database session.
+	:param email: Email of the user. Default value is None.
+	:return: User object and auth_token
+	"""
 	user = db.get_user(request.db_session, email) if email is not None else None
 	auth_token = 'Basic %s' % base64.b64encode('{0}:{1}'.format(user.email, user.password)) if user is not None else None
 	return user, auth_token

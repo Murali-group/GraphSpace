@@ -14,14 +14,20 @@ from graphspace.utils import get_request_user
 @is_authenticated(redirect_url='/')
 def user_page(request):
 	"""
-		Wrapper view for the user page.
+		Wrapper view for the user profile page.
 
 		:param request: HTTP GET Request.
 	"""
 	if 'GET' == request.method:
 		context = RequestContext(request, {})
+		user_email = get_request_user(request)
+		user_object, auth_token = users.get_user_profile(request, user_email) if user_email is not None else None
 		context.push({
-			"user": _get_user(request)
+			"user": {
+				"id": user_object.id,
+				"email": user_object.email,
+				"auth_token": auth_token
+			}
 		})
 		return render(request, 'user_profile/index.html', context)
 	else:
@@ -123,28 +129,6 @@ def join_group_page(request, group_id):
 '''
 Users APIs
 '''
-
-def _get_user(request):
-	"""
-
-	Parameters
-	----------
-	request : object
-		HTTP GET Request.
-
-	Returns
-	-------
-	user : User object.
-
-	"""
-	user_email = get_request_user(request)
-	user_object, auth_token = users.get_user_profile(request, user_email) if user_email is not None else None
-	return {
-		"id": user_object.id,
-		"email": user_object.email,
-		"auth_token": auth_token
-	}
-
 
 def users_ajax_api(request):
 	"""
