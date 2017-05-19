@@ -446,7 +446,7 @@ var graphPage = {
 
         $('#exitLayoutEditorBtn').click(function () {
             $('#exitLayoutBtn').removeClass('hidden');
-            $('#saveLayoutModal').modal('show');
+            $('#saveOnExitLayoutModal').modal('show');
         });
 
         $('#exitLayoutBtn').click(function () {
