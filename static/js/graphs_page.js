@@ -440,6 +440,16 @@ var graphPage = {
             graphPage.saveLayout($('#saveOnExitLayoutNameInput').val(), '#saveOnExitLayoutModal');
         });
 
+        $('#saveLayoutBtn').click(function () {
+            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
+
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+            // display node data as a popup
+            graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
+
+            graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
+        });
+
         $('#layoutEditorBtn').click(function () {
             graphPage.layoutEditor.init();
         });
@@ -447,6 +457,11 @@ var graphPage = {
         $('#exitLayoutEditorBtn').click(function () {
             $('#exitLayoutBtn').removeClass('hidden');
             $('#saveOnExitLayoutModal').modal('show');
+        });
+
+        $('#saveLayoutEditorBtn').click(function () {
+            $('#exitLayoutBtn').removeClass('hidden');
+            $('#saveLayoutModal').modal('show');
         });
 
         $('#exitLayoutBtn').click(function () {

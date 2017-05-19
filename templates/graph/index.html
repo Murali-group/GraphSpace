@@ -110,6 +110,37 @@
             </div>
         </div>
 
+        <!-- Save Layout Modal -->
+        <div class="modal fade" id="saveLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveLayoutModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="layout_fields">
+                            <div class="control-group">
+                                <label for="layoutNameInput">Layout Name</label>
+                                <input id="saveLayoutNameInput" class="form-control" type="text" name="layout_name"
+                                       autocomplete="off"/>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button name="saveLayoutBtn" id="saveLayoutBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#layoutEditorSideBar">Save
+                                    Layout
+                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
