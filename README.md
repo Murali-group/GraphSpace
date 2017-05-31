@@ -78,14 +78,6 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
-Testing the GraphSpace REST API
-=================================
-
-1. Follow the instructions above to run GraphSpace locally or on Apache2.
-2. Navigate to the tests directory in GraphSpace: `cd tests`
-2. Enter python command to run test cases: `python restapi_test.py`
-
-This script will test all the REST API commands supported by the GraphSpace server.  If something fails, it will display the error.
 
 Contributing
 =================
