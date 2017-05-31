@@ -75,6 +75,40 @@
                 </div>
             </div>
         </div>
+    
+        <!-- Save on Exit Layout Modal -->
+        <div class="modal fade" id="saveOnExitLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveOnExitLayoutModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="layout_fields">
+                            <div class="control-group">
+                                <label for="layoutNameInput">Layout Name</label>
+                                <input id="saveOnExitLayoutNameInput" class="form-control" type="text" name="layout_name"
+                                       autocomplete="off"/>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button name="saveOnExitLayoutBtn" id="saveOnExitLayoutBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save
+                                </button>
+                                <button type="button" id="exitLayoutBtn"
+                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
+                                        data-dismiss="modal">Exit without saving
+                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Save Layout Modal -->
         <div class="modal fade" id="saveLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveLayoutModalLabel"
@@ -89,18 +123,13 @@
                         <div class="layout_fields">
                             <div class="control-group">
                                 <label for="layoutNameInput">Layout Name</label>
-                                <input id="layoutNameInput" class="form-control" type="text" name="layout_name"
+                                <input id="saveLayoutNameInput" class="form-control" type="text" name="layout_name"
                                        autocomplete="off"/>
                             </div>
                             <br>
                             <div class="form-group">
                                 <button name="saveLayoutBtn" id="saveLayoutBtn"
-                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save
-                                    Layout
-                                </button>
-                                <button type="button" id="exitLayoutBtn"
-                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
-                                        data-dismiss="modal">Exit without saving
+                                        class="btn btn-success sidebar-nav-pills" data-target="#layoutEditorSideBar">Save
                                 </button>
                                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                             </div>

@@ -430,6 +430,16 @@ var graphPage = {
 
         utils.initializeTabs();
 
+        $('#saveOnExitLayoutBtn').click(function () {
+            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
+
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+            // display node data as a popup
+            graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
+
+            graphPage.saveLayout($('#saveOnExitLayoutNameInput').val(), '#saveOnExitLayoutModal');
+        });
+
         $('#saveLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
@@ -437,7 +447,7 @@ var graphPage = {
             // display node data as a popup
             graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
 
-            graphPage.saveLayout($('#layoutNameInput').val());
+            graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
 
         $('#layoutEditorBtn').click(function () {
@@ -445,6 +455,11 @@ var graphPage = {
         });
 
         $('#exitLayoutEditorBtn').click(function () {
+            $('#exitLayoutBtn').removeClass('hidden');
+            $('#saveOnExitLayoutModal').modal('show');
+        });
+
+        $('#saveLayoutEditorBtn').click(function () {
             $('#exitLayoutBtn').removeClass('hidden');
             $('#saveLayoutModal').modal('show');
         });
@@ -455,11 +470,6 @@ var graphPage = {
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
             // display node data as a popup
             graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
-        });
-
-        $('#saveLayoutModalBtn').click(function () {
-            $('#exitLayoutBtn').addClass('hidden');
-            $('#saveLayoutModal').modal('show');
         });
 
         $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
@@ -584,7 +594,7 @@ var graphPage = {
         graphPage.cyGraph.layout(layout);
 
     },
-    saveLayout: function (layoutName) {
+    saveLayout: function (layoutName, modalNameId) {
         graphPage.cyGraph.elements().unselect();
 
         if (_.trim(layoutName).length === 0) {
@@ -636,7 +646,7 @@ var graphPage = {
                     }
                 },
                 successCallback = function (response) {
-                    $('#saveLayoutModal').modal('toggle');
+                    $(modalNameId).modal('toggle');
                     $('#PrivateLayoutsTable').bootstrapTable('refresh');
                     $('#SharedLayoutsTable').bootstrapTable('refresh');
                 },
