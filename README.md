@@ -27,7 +27,19 @@ In order to run GraphSpace, please install sqlite3 and both the Python runtime a
 3. Create a virtual environment for the project: `virtualenv venv`
 4. Start using the virtual environment: `source venv/bin/activate`
 5. Install graphspace: `sh install.sh`
-6. Change the postgres user credentials in DATABASES in `/graphspace/settings/local.py` 
+6. In `/graphspace/settings/local.py` file, change the postgres user credentials:
+   ```
+   DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': <database name>,
+            'USER': <user name>,
+            'PASSWORD': <password (if any)>,
+            'HOST': 'localhost',
+            'PORT': '5432'
+        }
+    }
+   ```
 7. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
 8. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
