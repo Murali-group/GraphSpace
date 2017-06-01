@@ -594,7 +594,7 @@ var graphPage = {
         graphPage.cyGraph.layout(layout);
 
     },
-    saveLayout: function (layoutName, modalNameId) {
+    saveLayout: function (layoutName, elementName) {
         graphPage.cyGraph.elements().unselect();
 
         if (_.trim(layoutName).length === 0) {
@@ -646,7 +646,7 @@ var graphPage = {
                     }
                 },
                 successCallback = function (response) {
-                    $(modalNameId).modal('toggle');
+                    $(elementName).modal('toggle');
                     $('#PrivateLayoutsTable').bootstrapTable('refresh');
                     $('#SharedLayoutsTable').bootstrapTable('refresh');
                 },
