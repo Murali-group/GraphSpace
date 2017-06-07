@@ -16,6 +16,7 @@ class Notification(IDMixin, TimeStampMixin, Base):
 
 	message = Column(String, nullable=False)
 	type = Column(Enum("owner", "group", "watching", name="notification_types"))
+	status = Column(Enum("read", "new", name="notification_status"))
 
 	owner_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
 	owner = relationship("User", back_populates="notification", uselist=False)
