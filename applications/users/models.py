@@ -5,6 +5,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 
 from applications.graphs.models import *
+from applications.notifications.models import *
 
 Base = settings.BASE
 
@@ -28,6 +29,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
 	owned_graphs = relationship("Graph", back_populates="owner", cascade="all, delete-orphan")
 	owned_layouts = relationship("Layout", back_populates="owner", cascade="all, delete-orphan")
+	notification = relationship("Notification", back_populates="owner", cascade="all, delete-orphan")
 
 	member_groups = association_proxy('user_groups', 'group')
 
@@ -84,6 +86,8 @@ class Group(IDMixin, TimeStampMixin, Base):
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
 	members = association_proxy('member_users', 'user')
 	graphs = association_proxy('shared_graphs', 'graph')
+
+	notification = relationship("Notification", back_populates="group", cascade="all, delete-orphan")
 
 	constraints = (UniqueConstraint('name', 'owner_email', name='_group_uc_name_owner_email'),)
 	indices = ()
