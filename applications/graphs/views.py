@@ -2,6 +2,7 @@ import json
 
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
+import applications.graphs.tasks as task
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -27,6 +28,13 @@ def upload_graph_page(request):
 				'style_json': json.loads(request.FILES['style_file'].read()) if 'style_file' in request.FILES else None
 			})
 			context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
+
+			# Notification 
+			task.send_message.apply_async(('owner', json.dumps({
+					'owner_email': request.POST.get('owner_email', None),
+					'message': 'New graph added',
+					'graph_id': graph['id']
+				})))
 		except Exception as e:
 			context['Error'] = str(e)
 

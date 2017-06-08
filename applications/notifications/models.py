@@ -24,6 +24,9 @@ class Notification(IDMixin, TimeStampMixin, Base):
 	group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
 	group = relationship("Group", back_populates="notification", uselist=False)
 
+	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	graph = relationship("Graph", back_populates="notification", uselist=False) 
+
 	constraints = ()
 	indices = ()
 
@@ -37,8 +40,10 @@ class Notification(IDMixin, TimeStampMixin, Base):
 			'id': cls.id,
 			'message': cls.message,
 			'type': cls.type,
-			'owner_id': cls.owner_id,
+			'status': cls.status,
+			'owner_email': cls.owner_email,
 			'group_id': cls.group_id,
+			'graph_id': cls.graph_id,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}
