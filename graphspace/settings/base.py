@@ -34,7 +34,8 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 	'applications.users',
 	'applications.graphs',
-	'applications.notifications'
+	'applications.notifications',
+	'django_celery_results'
 )
 
 MIDDLEWARE_CLASSES = (
