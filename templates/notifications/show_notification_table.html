@@ -1,0 +1,25 @@
+<table id="NotificationsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="false"
+       data-ajax="notificationsPage.notificationsTable.getAllNotifications"
+       data-search="false"
+       data-side-pagination="server"
+       data-data-field="notifications"
+       data-pagination="true"
+       data-sort-name="created_at"
+       data-id-field="id"
+       data-sort-order="desc">
+    <thead>
+    <tr>
+        <th data-field="message">Message</th>
+        <th data-field="status">Status</th>
+        <th data-field="created_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
+        <th data-field="operations" data-formatter="notificationsPage.notificationsTable.operationsFormatter"
+            data-evenotification.notificationsTable.operationEvents">
+            Operations
+        </th>
+    </tr>
+    </thead>
+</table>
