@@ -39,8 +39,9 @@ var notificationsPage = {
         utils.initializeTabs();
     },
     notificationsTable: {
-        nameFormatter: function (value, row) {
-            return $('<a>').attr('href', location.pathname + row.id).text(row.name)[0].outerHTML;
+        messageFormatter: function (value, row) {
+            console.log(row)
+            return $('<a>').attr('href', '/graphs/' + row.graph_id).text(row.message)[0].outerHTML;
         },
         operationsFormatter: function (value, row, index) {
             return [
