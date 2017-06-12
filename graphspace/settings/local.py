@@ -1,11 +1,13 @@
 from graphspace.settings.base import *
+from confluent_kafka import Consumer, Producer
 
 # variables for setting up account through which GraphSpace emails
 EMAIL_HOST = 'NONE'
 EMAIL_HOST_USER = 'NONE'
 EMAIL_HOST_PASSWORD = 'NONE'
 
-# If error is thrown, display the error in the browser (ONLY FOR LOCAL MACHINES)
+# If error is thrown, display the error in the browser (ONLY FOR LOCAL
+# MACHINES)
 DEBUG = True
 TEMPLATE_DEBUG = True
 
@@ -15,7 +17,8 @@ URL_PATH = "http://localhost:8000/"
 # If tracking is enabled for GraphSpace in Google Analytics
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 
-# Keys given by creating a requestor account on Amazon Mechanical Turk (https://www.mturk.com/mturk/welcome)
+# Keys given by creating a requestor account on Amazon Mechanical Turk
+# (https://www.mturk.com/mturk/welcome)
 AWSACCESSKEYID = 'None'
 SECRETKEY = 'None'
 
@@ -47,13 +50,19 @@ DATABASES = {
     }
 }
 
-# Celery configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-
-CELERY_RESULT_BACKEND = 'django-db'
-
 # Kafka Configuration
 KAFKA_URL = 'localhost:9092'
+
+KAFKA_CONSUMER = Consumer({
+    'bootstrap.servers': KAFKA_URL,
+    'group.id': 'graphspace',
+    'default.topic.config': {
+        'auto.offset.reset': 'smallest'
+    }
+})
+
+KAFKA_CONSUMER.subscribe(['owner'])
+
+KAFKA_PRODUCER = Producer({
+    'bootstrap.servers': KAFKA_URL
+})

@@ -16,3 +16,7 @@ application = get_wsgi_application()
 from graphspace.database import *
 from django.conf import settings
 settings.db = Database()
+
+from applications.notifications.consumer import *
+con = Consumer()
+con.start()
