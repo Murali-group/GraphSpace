@@ -25,7 +25,7 @@ class OwnerNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
 
     owner_email = Column(String, ForeignKey(
         'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
-    owner = relationship("User", back_populates="notification", uselist=False)
+    owner = relationship("User", back_populates="owned_notifications", uselist=False)
 
     constraints = ()
     indices = ()

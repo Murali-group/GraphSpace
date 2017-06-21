@@ -33,8 +33,6 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
 
-	notification = relationship("Notification", back_populates="graph", cascade="all, delete-orphan")
-
 	constraints = (
 		UniqueConstraint('name', 'owner_email', name='_graph_uc_name_owner_email'),
 	)
