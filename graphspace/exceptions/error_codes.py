@@ -29,4 +29,4 @@ class ErrorCodes(object):
 		LayoutNameAlreadyExists = (1014, "Layout with name `{0}` already exists.")
 
 		# Notification API
-		NotAllowedNotificationAccess = (1007, "User is not authorized to access notifications.")
+		NotAllowedNotificationAccess = (1015, "User is not authorized to access notifications.")
