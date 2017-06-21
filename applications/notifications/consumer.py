@@ -9,18 +9,18 @@ from confluent_kafka import Consumer, KafkaError
 from json import loads
 
 
-class Consumer(threading.Thread):
+class OwnerConsumer(threading.Thread):
     daemon = True
 
     def run(self):
         running = True
         while running:
-            message = settings.KAFKA_CONSUMER.poll(timeout=5)
-            if message and message.value():
+            message = settings.KAFKA_OWNER_CONSUMER.poll(
+                timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT)
+            if message is not None and message.value():
                 notify = loads(message.value())
-                notify['type'] = 'owner'
-                notifications.add_notification(**notify)
-            elif message and message.error().code() != KafkaError._PARTITION_EOF:
+                notifications.add_owner_notification(**notify)
+            elif message is not None and message.error().code() != KafkaError._PARTITION_EOF:
                 # Message ended
                 running = False
         return

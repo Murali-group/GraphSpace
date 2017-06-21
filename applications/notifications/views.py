@@ -93,7 +93,7 @@ def _get_notifications(request, query={}):
     ----------
     owner_email : string
             Email of the Owner of the notification.
-    status: string
+    is_read: string
             Status of the notification [new, read].
     limit : integer
             Number of entities to return. Default value is 20.
@@ -133,17 +133,20 @@ def _get_notifications(request, query={}):
             raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
                              args=get_request_user(request))
 
-    total, notifications = notification_controllers.search_notifications(request,
-                                                                         owner_email=query.get(
-                                                                             'owner_email', None),
-                                                                         status=query.get(
-                                                                             'status', None),
-                                                                         type=query.get(
-                                                                             'type', None),
-                                                                         limit=query.get(
-                                                                             'limit', 20),
-                                                                         offset=query.get('offset', 0))
+    type = query.get('type', None)
 
+    if type == 'owner':
+        total, notifications = notification_controllers.search_owner_notifications(request,
+                                                                                   owner_email=query.get(
+                                                                                       'owner_email', None),
+                                                                                   is_read=query.get(
+                                                                                       'is_read', None),
+                                                                                   limit=query.get(
+                                                                                       'limit', 20),
+                                                                                   offset=query.get('offset', 0))
+    else:
+        raise BadRequest(
+            request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
     return {
         'total': total,
         'notifications': [utils.serializer(notification) for notification in notifications]

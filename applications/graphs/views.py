@@ -2,7 +2,7 @@ import json
 
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
-import applications.graphs.producer as producer
+import graphspace.producer as producer
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -31,12 +31,17 @@ def upload_graph_page(request):
                 "graphs/" + str(graph['id'])
 
             # Notification
-            producer.send_message('owner', {
-                'owner_email': request.POST.get('owner_email', None),
-                'message': 'New graph added',
-                'graph_id': graph['id']
-            })
-            
+            if request.POST.get('owner_email', None) is not None:
+                # The notification message should be send only for a logged in
+                # user
+                producer.send_message('owner', {
+                    'owner_email': graph.get('owner_email', None),
+                    'message': settings.NOTIFICATION_MESSAGE['owner']['upload_graph'].format(name=graph.get('name', '')),
+                    'resource': 'graph',
+                    'resource_id': graph['id'],
+                    'type': 'upload'
+                })
+
         except Exception as e:
             context['Error'] = str(e)
 
