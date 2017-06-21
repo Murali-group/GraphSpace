@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, func, TIMESTAMP, Index
+from sqlalchemy import Column, Integer, func, TIMESTAMP, Index, Boolean
 from sqlalchemy.ext.declarative import declared_attr
 from django.utils.datetime_safe import datetime
 
@@ -12,9 +12,15 @@ TODO: Find out what args need to be set for postgreSQL.
 
 
 class IDMixin(object):
-	id = Column(Integer, primary_key=True, autoincrement=True, index=True, unique=True)
+    id = Column(Integer, primary_key=True,
+                autoincrement=True, index=True, unique=True)
 
 
 class TimeStampMixin(object):
-	created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-	updated_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+
+
+class EmailMixin(object):
+    is_email_sent = Column(Boolean, default=False)
+    emailed_at = Column(TIMESTAMP, nullable=True)

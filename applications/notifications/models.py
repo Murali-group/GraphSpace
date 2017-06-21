@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from applications.users.models import *
 from django.conf import settings
 from graphspace.mixins import *
-from sqlalchemy import ForeignKeyConstraint, text, Enum
+from sqlalchemy import ForeignKeyConstraint, text, Enum, Boolean
 
 Base = settings.BASE
 
@@ -11,39 +11,41 @@ Base = settings.BASE
 # ================== Table Definitions =================== #
 
 
-class Notification(IDMixin, TimeStampMixin, Base):
-	__tablename__ = 'notification'
+class OwnerNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
+    __tablename__ = 'owner_notification'
 
-	message = Column(String, nullable=False)
-	type = Column(Enum("owner", "group", "watching", name="notification_types"))
-	status = Column(Enum("read", "new", name="notification_status"))
+    message = Column(String, nullable=False)
+    type = Column(Enum("create", "upload", "update",
+                       "delete", name="owner_notification_types"))
+    resource = Column(Enum("graph", "layout", "group",
+                           name="owner_notification_resource"))
+    resource_id = Column(Integer, nullable=False)
 
-	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
-	owner = relationship("User", back_populates="notification", uselist=False)
+    is_read = Column(Boolean, default=False)
 
-	group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
-	group = relationship("Group", back_populates="notification", uselist=False)
+    owner_email = Column(String, ForeignKey(
+        'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+    owner = relationship("User", back_populates="notification", uselist=False)
 
-	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	graph = relationship("Graph", back_populates="notification", uselist=False) 
+    constraints = ()
+    indices = ()
 
-	constraints = ()
-	indices = ()
+    @declared_attr
+    def __table_args__(cls):
+        args = cls.constraints + cls.indices
+        return args
 
-	@declared_attr
-	def __table_args__(cls):
-		args = cls.constraints + cls.indices
-		return args
-
-	def serialize(cls):
-		return {
-			'id': cls.id,
-			'message': cls.message,
-			'type': cls.type,
-			'status': cls.status,
-			'owner_email': cls.owner_email,
-			'group_id': cls.group_id,
-			'graph_id': cls.graph_id,
-			'created_at': cls.created_at.isoformat(),
-			'updated_at': cls.updated_at.isoformat()
-		}
+    def serialize(cls):
+        return {
+            'id': cls.id,
+            'message': cls.message,
+            'type': cls.type,
+            'is_read': cls.is_read,
+            'is_email_sent': cls.is_email_sent,
+            'resource': cls.resource,
+            'resource_id': cls.resource_id,
+            'owner_email': cls.owner_email,
+            'created_at': cls.created_at.isoformat(),
+            'updated_at': cls.updated_at.isoformat(),
+            'emailed_at': cls.emailed_at.isoformat()
+        }
