@@ -53,7 +53,7 @@ DATABASES = {
 # Kafka Configuration
 KAFKA_URL = 'localhost:9092'
 
-KAFKA_CONSUMER = Consumer({
+KAFKA_OWNER_CONSUMER = Consumer({
     'bootstrap.servers': KAFKA_URL,
     'group.id': 'graphspace',
     'default.topic.config': {
@@ -61,7 +61,9 @@ KAFKA_CONSUMER = Consumer({
     }
 })
 
-KAFKA_CONSUMER.subscribe(['owner'])
+KAFKA_OWNER_CONSUMER.subscribe(['owner'])
+
+KAFKA_CONSUMER_POLL_TIMEOUT = 5
 
 KAFKA_PRODUCER = Producer({
     'bootstrap.servers': KAFKA_URL

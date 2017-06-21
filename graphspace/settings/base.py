@@ -16,7 +16,7 @@ from elasticsearch import Elasticsearch
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
 
-APPEND_SLASH=True
+APPEND_SLASH = True
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
@@ -34,8 +34,7 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 	'applications.users',
 	'applications.graphs',
-	'applications.notifications',
-	'django_celery_results'
+	'applications.notifications'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,7 +124,9 @@ TEMPLATES = [
 
 LOGIN_REDIRECT_URL = '/'
 
-# for authentication. Since we need to use SQL Alchemy for the ORM, we cannot use the authentication backend automatically provided by Django when using the Django ORM.
+# for authentication. Since we need to use SQL Alchemy for the ORM, we
+# cannot use the authentication backend automatically provided by Django
+# when using the Django ORM.
 AUTHENTICATION_BACKENDS = ('graphs.auth.AuthBackend.AuthBackend',)
 
 # Following the recommendation of the Django tutorial at
@@ -159,4 +160,20 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+
+# Notification messages
+NOTIFICATION_MESSAGE = {
+	'owner': {
+		'upload_graph': 'New graph {name} uploaded.',
+		'create_layout': 'New layout {name} created.',
+		'create_group': 'New group {name} created.',
+		'delete_graph': 'Graph {name} deleted.',
+		'update_graph': 'Graph {name} updated.',
+		'delete_layout': 'Layout {name} deleted.',
+		'update_layout': 'Layout {name} updated.',
+		'delete_group': 'Group {name} deleted.',
+		'update_group': 'Group {name} updated.',
+	}
 }

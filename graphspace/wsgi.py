@@ -18,5 +18,5 @@ from django.conf import settings
 settings.db = Database()
 
 from applications.notifications.consumer import *
-con = Consumer()
-con.start()
+ocon = OwnerConsumer()
+ocon.start()
