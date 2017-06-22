@@ -1,0 +1,67 @@
+<div class="row">
+
+  <div class="col-md-3">
+    <ul class="nav nav-pills nav-stacked" id="read-unread-tabs">
+      <li class="active"><a href="#unread" data-toggle="pill">Unread <span id="unreadOwnerNotificationTotal" class="badge">{{ owner_notification.total }}</span></a></li>
+      <li><a href="#all" data-toggle="pill">All notifications</a></li>
+    </ul>
+  </div>
+
+  <div class="col-md-9">
+    <div class="tab-content">
+      <div class="tab-pane active" id="unread">
+        <div id="owner-toolbar">
+            <button id="owner-mark-all-read" type="submit" class="btn btn-default">Mark all as read</button>
+        </div>
+        <table id="unreadOwnerNotificationTable" class="table-no-bordered"
+               data-toggle="table"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="notificationsPage.notificationsTable.getNotifications"
+               data-query-params="notificationsPage.ownerNotificationsTable.unreadNotificationQuery"
+               data-search="false"
+               data-side-pagination="server"
+               data-data-field="notifications"
+               data-pagination="true"
+               data-sort-name="created_at"
+               data-id-field="id"
+               data-sort-order="desc"
+               data-toolbar="#owner-toolbar">
+            <thead>
+            <tr>
+                <th data-field="message" data-valign="center" data-formatter="notificationsPage.notificationsTable.messageFormatter" data-events="notificationsPage.notificationsTable.operationEvents">Notifications</th>
+                <th data-field="created_at" data-valign="center" data-align="center" data-formatter="utils.dateFormatter"></th>
+                <th data-field="operations" data-valign="center" data-align="right" data-formatter="notificationsPage.notificationsTable.operationsFormatter" ></th>
+            </tr>
+            </thead>
+        </table>
+      </div>
+      <div class="tab-pane" id="all">
+        <table id="allOwnerNotificationTable" class="table-no-bordered"
+               data-toggle="table"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="notificationsPage.notificationsTable.getNotifications"
+               data-query-params="notificationsPage.ownerNotificationsTable.allNotificationQuery"
+               data-search="false"
+               data-side-pagination="server"
+               data-data-field="notifications"
+               data-pagination="true"
+               data-sort-name="created_at"
+               data-id-field="id"
+               data-sort-order="desc">
+            <thead>
+            <tr>
+                <th data-field="message" data-valign="center" data-formatter="notificationsPage.notificationsTable.messageFormatter" data-events="notificationsPage.notificationsTable.operationEvents">Notifications</th>
+                <th data-field="created_at" data-valign="center" data-align="center" data-formatter="utils.dateFormatter"></th>
+                <th data-field="operations" data-valign="center" data-align="right" data-formatter="notificationsPage.notificationsTable.operationsFormatter" ></th>
+            </tr>
+            </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -134,19 +134,27 @@ def _get_notifications(request, query={}):
                              args=get_request_user(request))
 
     type = query.get('type', None)
+    is_read = query.get('is_read', None)
+
+    if is_read == 'true':
+        is_read = True
+    elif is_read == 'false':
+        is_read = False 
+    else:
+        is_read = None
 
     if type == 'owner':
         total, notifications = notification_controllers.search_owner_notifications(request,
                                                                                    owner_email=query.get(
                                                                                        'owner_email', None),
-                                                                                   is_read=query.get(
-                                                                                       'is_read', None),
+                                                                                   is_read=is_read,
                                                                                    limit=query.get(
                                                                                        'limit', 20),
                                                                                    offset=query.get('offset', 0))
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
+
     return {
         'total': total,
         'notifications': [utils.serializer(notification) for notification in notifications]

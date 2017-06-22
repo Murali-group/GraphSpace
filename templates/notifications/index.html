@@ -2,10 +2,24 @@
 {% block content %}
 {% load staticfiles %}
     <div class="container-fluid zero-padding padding-bottom-6" style="margin-top: 5px;">
+        {% csrf_token %}
+        <ul class="nav nav-tabs">
+            <li class="active text-center">
+                <a href="#owner_notification" data-toggle="tab">Owner</a>
+            </li>
+            <li class="text-center">
+                <a href="#group_notification" data-toggle="tab">Group <span id="groupNotificationTotal"
+                                                                               class="badge">{{ group_notification.total }}</span></a>
+            </li>
+            <li class="text-center">
+                <a href="#watching_notification" data-toggle="tab">Watching <span id="watchingNotificationTotal"
+                                                                               class="badge">{{ watching_notification.total }}</span></a>
+            </li>
+        </ul>
         <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
 
-            <div class="tab-pane fade in active" id="owner_of">
-                {% include 'notifications/show_notification_table.html' %}
+            <div class="tab-pane fade in active" id="owner_notification">
+                {% include 'notifications/owner_notification_table.html' %}
             </div>
 
         </div>

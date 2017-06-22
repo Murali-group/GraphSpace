@@ -39,14 +39,13 @@ var notificationsPage = {
         utils.initializeTabs();
     },
     notificationsTable: {
-        messageFormatter: function (value, row) {
-            console.log(row)
-            return $('<a>').attr('href', '/graphs/' + row.graph_id).text(row.message)[0].outerHTML;
+        messageFormatter: function (value, row, index) {
+            return $('<a>').attr('href', '/'+ row.resource + '/' + row.resource_id).text(row.message)[0].outerHTML;
         },
         operationsFormatter: function (value, row, index) {
             return [
-                '<a class="mark-as-read btn btn-default btn-sm" href="javascript:void(0)" title="Mark as read">',
-                'Mark as read</i>',
+                '<a class="mark-as-read" href="javascript:void(0)" title="Mark as read">',
+                '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
                 '</a>'
             ].join('');
         },
@@ -55,31 +54,56 @@ var notificationsPage = {
                 // Mark as read
             }
         },
-        getAllNotifications: function (params) {
+        getNotifications: function (params) {
             /**
-             * This is the custom ajax request used to load notifications in notificationsTable.
+             * This is the custom ajax request used to load notifications.
              *
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search.
              */
-
-            if (params.data["search"]) {
-                // Currently we assume that term entered in the search bar is used to search for the group name only.
-                params.data["name"] = '%' + params.data["search"] + '%';
-            }
+            $(params.data["tableIdName"]).bootstrapTable('showLoading');
+            $(params.data["totalIdName"]).html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
             params.data["owner_email"] = $('#UserEmail').val();
 
             apis.notifications.get(params.data,
                 successCallback = function (response) {
                     // This method is called when notifications are successfully fetched.
+                    $(params.data["tableIdName"]).bootstrapTable('hideLoading');
                     params.success(response);
-                    $('#ownedGroupsTotal').text(response.total);
+                    $(params.data["totalIdName"]).text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while fetching notifications.
                     params.error('Error');
                 }
             );
+        },
+    },
+    ownerNotificationsTable:{
+        unreadNotificationQuery: function(params){
+            /**
+             * This is the custom query params function used to load parameters for unread notification ajax request.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search.
+             */
+            params["type"] = 'owner';
+            params["totalIdName"] = '#unreadOwnerNotificationTotal';
+            params["tableIdName"] = '#unreadOwnerNotificationTable';
+            params["is_read"] = false;
+            return params
+        },
+        allNotificationQuery: function(params){
+            /**
+             * This is the custom query params function used to load parameters for all notification ajax requests.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search.
+             */
+            params["type"] = 'owner';
+            params["totalIdName"] = '#allOwnerNotificationTotal';
+            params["tableIdName"] = '#allOwnerNotificationTable';
+            return params
         }
     }
 };

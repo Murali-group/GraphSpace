@@ -46,6 +46,5 @@ class OwnerNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
             'resource_id': cls.resource_id,
             'owner_email': cls.owner_email,
             'created_at': cls.created_at.isoformat(),
-            'updated_at': cls.updated_at.isoformat(),
-            'emailed_at': cls.emailed_at.isoformat()
+            'updated_at': cls.updated_at.isoformat()
         }
