@@ -8,6 +8,8 @@ from confluent_kafka import Consumer, KafkaError
 
 from json import loads
 
+import traceback
+
 
 class OwnerConsumer(threading.Thread):
     daemon = True
@@ -15,13 +17,17 @@ class OwnerConsumer(threading.Thread):
     def run(self):
         running = True
         while running:
-            message = settings.KAFKA_OWNER_CONSUMER.poll(
-                timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT)
+            message = settings.KAFKA_OWNER_CONSUMER.poll()
+            print message
+            #timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT
             if message is not None and message.value():
                 #print message.value()
                 notify = loads(message.value())
                 notifications.add_owner_notification(**notify)
+            """
             elif message is not None and message.error().code() != KafkaError._PARTITION_EOF:
                 # Message ended
                 running = False
-        return
+            """
+
+        return settings.KAFKA_OWNER_CONSUMER.close()
