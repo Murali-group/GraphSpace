@@ -94,7 +94,10 @@ var notificationsPage = {
                         // This method is called when notifications are successfully fetched.
                         $('#all-owner-notification-table').bootstrapTable('refresh')
                         $.notify({message: response.message}, {type: 'success'});
-                        $(this).parents('tr').remove();
+                        $('#unread-owner-notification-table').bootstrapTable('remove', {
+                            field: 'id',
+                            values: [row['id']]
+                        });
                     },
                     errorCallback = function () {
                         // This method is called when  error occurs while updating reads.
