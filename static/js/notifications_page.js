@@ -12,8 +12,12 @@ var apis = {
         update: function (id, data, successCallback, errorCallback) {
             apis.jsonRequest('PUT', apis.notifications.ENDPOINT + id, data, successCallback, errorCallback)
         },
-        read: function(data, successCallback, errorCallback){
-            apis.jsonRequest('PUT', apis.notifications.ENDPOINT + 'read/', data, successCallback, errorCallback)
+        read: function(id, data, successCallback, errorCallback){
+            url = apis.notifications.ENDPOINT + 'read/'
+            if(id != null){
+                url = url + id
+            }
+            apis.jsonRequest('PUT', url, data, successCallback, errorCallback)
         }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -44,11 +48,14 @@ var notificationsPage = {
                 owner_email: $('#UserEmail').val(),
                 type: 'owner'
             }
-            apis.notifications.read(data,
+            apis.notifications.read(
+                id = null,
+                data = data,
                 successCallback = function (response) {
                     // This method is called when notifications are successfully fetched.
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
                     $('#all-owner-notification-table').bootstrapTable('refresh')
+                    $.notify({message: response.message}, {type: 'success'});
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while updating reads.
@@ -71,10 +78,29 @@ var notificationsPage = {
                     '</a>'
                 ].join('');
             }
+            return '' 
         },
         operationEvents: {
             'click .mark-as-read': function (e, value, row, index) {
                 // Mark as read
+                data = {
+                    owner_email: $('#UserEmail').val(),
+                    type: 'owner'
+                }
+                apis.notifications.read(
+                    id = row['id'],
+                    data = data,
+                    successCallback = function (response) {
+                        // This method is called when notifications are successfully fetched.
+                        $('#all-owner-notification-table').bootstrapTable('refresh')
+                        $.notify({message: response.message}, {type: 'success'});
+                        $(this).parents('tr').remove();
+                    },
+                    errorCallback = function () {
+                        // This method is called when  error occurs while updating reads.
+                        $.notify({message: 'Error'}, {type: 'danger'});
+                    }
+                );
             }
         },
         getNotifications: function (params) {

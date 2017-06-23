@@ -50,16 +50,12 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, or
 @with_session
 def read_owner_notifications(db_session, owner_email, notification_id=None):
     query = db_session.query(OwnerNotification)
-
-    query.filter(OwnerNotification.owner_email.ilike(owner_email))
-
+    query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
     if notification_id is not None:
-        query.filter(OwnerNotification.id.is_(notification_id))
+        query = query.filter(OwnerNotification.id == notification_id)
 
-    query.filter(OwnerNotification.is_read.is_(False))
-
+    query = query.filter(OwnerNotification.is_read.is_(False))
     total = query.count()
-
-    query.update({'is_read': True})
+    query = query.update({'is_read': True}, synchronize_session=False)
 
     return total

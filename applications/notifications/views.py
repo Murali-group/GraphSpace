@@ -93,9 +93,13 @@ def _notifications_api(request, notification_id=None):
         if request.method == "GET" and notification_id is None:
             return HttpResponse(json.dumps(_get_notifications(request, query=request.GET)), content_type="application/json")
         elif request.method == "PUT":
-            return HttpResponse(json.dumps(_update_notifications_read(request, notification_id=notification_id, query=QueryDict(request.body))),
-                                content_type="application/json",
-                                status=200)
+            return HttpResponse(json.dumps(_update_notifications_read(
+                    request,
+                    notification_id=notification_id,
+                    query=QueryDict(request.body))
+                ),
+                content_type="application/json",
+                status=200)
         else:
             # Handle other type of request methods like OPTIONS etc.
             raise MethodNotAllowed(request)
