@@ -68,7 +68,7 @@ var notificationsPage = {
     },
     notificationsTable: {
         messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/'+ row.resource + '/' + row.resource_id).text(row.message)[0].outerHTML;
+            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/' + row.resource + '/' + row.resource_id + '?owner_email=' + $('#UserEmail').val() + '&type=owner').text(row.message)[0].outerHTML;
         },
         operationsFormatter: function (value, row, index) {
             if (!row.is_read){

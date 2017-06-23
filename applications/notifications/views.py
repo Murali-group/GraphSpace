@@ -5,7 +5,7 @@ import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
 from django.http import HttpResponse, QueryDict
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
 from graphspace.utils import get_request_user
@@ -77,6 +77,41 @@ def notifications_read(request, notification_id=None):
     return _notifications_api(request, notification_id=notification_id)
 
 
+def notification_redirect(request, notification_id, resource, resource_id):
+    """
+    Handles any request sent to following urls:
+            /notification/<notification-id>/redirect/<resource>/<resource-id>
+
+    Parameters
+    ----------
+    request - HTTP Request
+
+    Returns
+    -------
+    response : JSON Response
+
+    """
+    query = request.GET
+    type = query.get('type', None)
+    owner_email = query.get('owner_email', None)
+    # Validate get notifications API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != owner_email:
+            raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
+                             args=get_request_user(request))
+    if type == 'owner':
+        message = notification_controllers.read_owner_notifications(request,
+                                                                    owner_email=owner_email,
+                                                                    notification_id=notification_id
+                                                                    )
+    else:
+        raise BadRequest(
+            request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
+
+    return redirect('/{resource}/{resource_id}'.format(resource=resource, resource_id=resource_id))
+
+
 def _notifications_api(request, notification_id=None):
     """
     Handles any request (GET/POST) sent to /notifications or notifications/<notification_id>
@@ -94,10 +129,10 @@ def _notifications_api(request, notification_id=None):
             return HttpResponse(json.dumps(_get_notifications(request, query=request.GET)), content_type="application/json")
         elif request.method == "PUT":
             return HttpResponse(json.dumps(_update_notifications_read(
-                    request,
-                    notification_id=notification_id,
-                    query=QueryDict(request.body))
-                ),
+                request,
+                notification_id=notification_id,
+                query=QueryDict(request.body))
+            ),
                 content_type="application/json",
                 status=200)
         else:

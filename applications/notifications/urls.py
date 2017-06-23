@@ -7,6 +7,9 @@ urlpatterns = [
 
     # Show notification page
     url(r'^notifications/$', views.notifications_page, name='notifications'),
+    # Mark as read when clicked on notification and redirect
+    url(r'^notification/(?P<notification_id>[^/]+)/redirect/(?P<resource>[^/]+)/(?P<resource_id>[^/]+)$',
+        views.notification_redirect, name='notification_redirect'),
     # Mark notification as read
     url(r'^ajax/notifications/read/(?P<notification_id>[^/]+)$',
         views.notifications_read, name='notifications_read'),
