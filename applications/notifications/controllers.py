@@ -34,8 +34,8 @@ def search_owner_notifications(request, owner_email=None, is_read=None, limit=20
 
 def read_owner_notifications(request, owner_email, notification_id=None):
 
-    total = db.read_owner_notifications(request.db_session,
-                                        owner_email=owner_email,
-                                        notification_id=notification_id)
+    total, notify = db.read_owner_notifications(request.db_session,
+                                                owner_email=owner_email,
+                                                notification_id=notification_id)
 
-    return "{total} notifications marked as read.".format(total=total)
+    return "{total} notifications marked as read.".format(total=total), notify

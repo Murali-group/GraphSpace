@@ -1,6 +1,8 @@
 import json
 
 import applications.notifications.controllers as notification_controllers
+import applications.graphs.controllers as graph_controllers
+import applications.users.controllers as user_controllers
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -77,7 +79,7 @@ def notifications_read(request, notification_id=None):
     return _notifications_api(request, notification_id=notification_id)
 
 
-def notification_redirect(request, notification_id, resource, resource_id):
+def notification_redirect(request, notification_id):
     """
     Handles any request sent to following urls:
             /notification/<notification-id>/redirect/<resource>/<resource-id>
@@ -101,15 +103,31 @@ def notification_redirect(request, notification_id, resource, resource_id):
             raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
                              args=get_request_user(request))
     if type == 'owner':
-        message = notification_controllers.read_owner_notifications(request,
-                                                                    owner_email=owner_email,
-                                                                    notification_id=notification_id
-                                                                    )
+        message, notify = notification_controllers.read_owner_notifications(request,
+                                                                            owner_email=owner_email,
+                                                                            notification_id=notification_id
+                                                                            )
+        notify = utils.serializer(notify)
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
 
-    return redirect('/{resource}/{resource_id}'.format(resource=resource, resource_id=resource_id))
+    url = '/{resource}/{resource_id}'.format(**notify)
+    resource = notify.get('resource', None)
+    resource_id = notify.get('resource_id', None)
+    if resource == 'layout':
+        return_value = utils.serializer(
+            graph_controllers.get_layout_by_id(request, resource_id))
+        if return_value is not None:
+            url = '/graphs/{graph_id}?user_layout={id}'.format(**return_value)
+    elif resource == 'graph':
+        return_value = graph_controllers.get_graph_by_id(request, resource_id)
+    elif resource == 'group':
+        return_value = user_controllers.get_group_by_id(request, resource_id)
+    if return_value is None:
+        url = '/notifications'
+    print url
+    return redirect(url)
 
 
 def _notifications_api(request, notification_id=None):
@@ -258,11 +276,11 @@ def _update_notifications_read(request, notification_id=None, query={}):
     type = query.get('type', None)
 
     if type == 'owner':
-        message = notification_controllers.read_owner_notifications(request,
-                                                                    owner_email=query.get(
-                                                                        'owner_email', None),
-                                                                    notification_id=notification_id
-                                                                    )
+        message, notify = notification_controllers.read_owner_notifications(request,
+                                                                            owner_email=query.get(
+                                                                                'owner_email', None),
+                                                                            notification_id=notification_id
+                                                                            )
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
