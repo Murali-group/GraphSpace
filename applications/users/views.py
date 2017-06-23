@@ -1,6 +1,8 @@
 import json
 
 import applications.users.controllers as users
+import graphspace.producer as producer
+from django.conf import settings
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -23,7 +25,8 @@ def groups_page(request):
 		context = RequestContext(request, {})
 		return render(request, 'groups/index.html', context)
 	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+		# Handle other type of request methods like POST, PUT, UPDATE.
+		raise MethodNotAllowed(request)
 
 
 @is_authenticated(redirect_url='/')
@@ -45,7 +48,8 @@ def group_page(request, group_id):
 		})
 		return render(request, 'group/index.html', context)
 	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+		# Handle other type of request methods like POST, PUT, UPDATE.
+		raise MethodNotAllowed(request)
 
 
 def join_group_page(request, group_id):
@@ -72,25 +76,28 @@ def join_group_page(request, group_id):
 				return render(request, 'join_group/index.html', context)
 			else:
 				try:
-					users.add_group_member(request, group_id, member_email=request.session['uid'])
+					users.add_group_member(
+					    request, group_id, member_email=request.session['uid'])
 				finally:
-					return redirect('/groups/'+group_id)
+					return redirect('/groups/' + group_id)
 		else:
-			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
+			# TODO: change it to signup page. Currently we dont have a signup link.
+			return redirect('/')
 	elif 'POST' == request.method:
 
 		group = users.get_group_by_id(request, group_id)
 		if group is not None and group.invite_code == request.POST.get('code', None):
 			try:
 				if request.session['uid'] is None:
-					user = users.register(request, username=request.POST.get('user_id', None), password=request.POST.get('password', None))
+					user = users.register(request, username=request.POST.get(
+					    'user_id', None), password=request.POST.get('password', None))
 					if user is not None:
 						request.session['uid'] = user.email
 						request.session['admin'] = user.is_admin
 
 					users.add_group_member(request, group_id, member_id=user.id)
 
-				return redirect('/groups/'+group_id)
+				return redirect('/groups/' + group_id)
 			except GraphSpaceError as e:
 				context.push({
 					"error_message": e.get_message(),
@@ -99,9 +106,11 @@ def join_group_page(request, group_id):
 				})
 				return render(request, 'join_group/index.html', context)
 		else:
-			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
+			# TODO: change it to signup page. Currently we dont have a signup link.
+			return redirect('/')
 	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+		# Handle other type of request methods like POST, PUT, UPDATE.
+		raise MethodNotAllowed(request)
 
 
 '''
@@ -142,7 +151,8 @@ def _users_api(request):
 		if request.method == "GET":
 			return HttpResponse(json.dumps(_get_users(request, query=request.GET)), content_type="application/json")
 		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+			# Handle other type of request methods like OPTIONS etc.
+			raise MethodNotAllowed(request)
 	else:
 		raise BadRequest(request)
 
@@ -202,6 +212,7 @@ def _get_users(request, query={}):
 '''
 Groups APIs
 '''
+
 
 @csrf_exempt
 @is_authenticated()
@@ -272,7 +283,8 @@ def _groups_api(request, group_id=None):
 				"message": "Successfully deleted group with id=%s" % group_id
 			}), content_type="application/json", status=200)
 		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+			# Handle other type of request methods like OPTIONS etc.
+			raise MethodNotAllowed(request)
 	else:
 		raise BadRequest(request)
 
@@ -317,10 +329,24 @@ def _add_group(request, group={}):
 			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
 							 args=group.get('owner_email', None))
 
-	return utils.serializer(users.add_group(request,
+	return_value = utils.serializer(users.add_group(request,
 											name=request.POST.get('name', None),
 											description=group.get('description', None),
 											owner_email=group.get('owner_email', None)))
+	
+	# Notification
+	if group.get('owner_email', None) is not None:
+		# The notification message should be send only for a logged in
+		# user
+		producer.send_message('owner', {
+			'owner_email': group.get('owner_email', None),
+			'message': settings.NOTIFICATION_MESSAGE['owner']['create_group'].format(name=request.POST.get('name', None)),
+			'resource': 'group',
+			'resource_id': return_value.get('id',None),
+			'type': 'create'
+		})
+
+	return return_value
 
 
 def _get_groups(request, query={}):
@@ -456,10 +482,20 @@ def _update_group(request, group_id, group={}):
 	"""
 	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
-	return utils.serializer(users.update_group(request, group_id=group_id,
+	return_value = utils.serializer(users.update_group(request, group_id=group_id,
 											   name=group.get('name', None),
 											   description=group.get('description', None),
 											   owner_email=group.get('owner_email', None)))
+
+	producer.send_message('owner', {
+		'owner_email': return_value.get('owner_email', None),
+		'message': settings.NOTIFICATION_MESSAGE['owner']['update_group'].format(name=return_value.get('name', None)),
+		'resource': 'group',
+		'resource_id': group_id,
+		'type': 'update'
+	})
+
+	return return_value
 
 
 @is_authenticated()
@@ -486,7 +522,18 @@ def _delete_group(request, group_id):
 	"""
 	authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
 
-	users.delete_group_by_id(request, group_id)
+	return_value = utils.serializer(users.delete_group_by_id(request, group_id))
+
+	# Notification
+	producer.send_message('owner', {
+		'owner_email': get_request_user(request),
+		'message': settings.NOTIFICATION_MESSAGE['owner']['delete_group'].format(name=return_value.get('name', None)),
+		'resource': 'group',
+		'resource_id': group_id,
+		'type': 'delete'
+	})
+
+	return return_value
 
 
 '''

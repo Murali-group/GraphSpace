@@ -247,9 +247,9 @@ def get_graph_by_name(request, owner_email, name):
 
 
 def delete_graph_by_id(request, graph_id):
-	db.delete_graph(request.db_session, id=graph_id)
+	graph = db.delete_graph(request.db_session, id=graph_id)
 	settings.ELASTIC_CLIENT.delete(index="graphs", doc_type='json', id=graph_id, refresh=True)
-	return
+	return graph
 
 
 def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
@@ -493,8 +493,7 @@ def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None
 
 
 def delete_layout_by_id(request, layout_id):
-	db.delete_layout(request.db_session, id=layout_id)
-	return
+	return db.delete_layout(request.db_session, id=layout_id)
 
 
 def search_nodes(request, graph_id=None, names=None, labels=None, limit=20, offset=0, order='desc', sort='name'):

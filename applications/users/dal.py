@@ -210,7 +210,7 @@ def delete_group(db_session, id):
 	"""
 	group = db_session.query(Group).filter(Group.id == id).one_or_none()
 	db_session.delete(group)
-	return
+	return group
 
 
 @with_session

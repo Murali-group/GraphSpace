@@ -116,7 +116,7 @@ def delete_graph(db_session, id):
 	"""
 	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
 	db_session.delete(graph)
-	return
+	return graph
 
 
 @with_session
@@ -398,7 +398,7 @@ def delete_layout(db_session, id):
 	"""
 	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
 	db_session.delete(layout)
-	return
+	return layout
 
 
 @with_session

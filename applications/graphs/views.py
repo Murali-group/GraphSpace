@@ -539,18 +539,29 @@ def _update_graph(request, graph_id, graph={}):
         request, permission='GRAPH_UPDATE', graph_id=graph_id)
     user_role = authorization.user_role(request)
 
-    return utils.serializer(graphs.update_graph(request,
-                                                graph_id=graph_id,
-                                                name=graph.get('name', None),
-                                                is_public=graph.get(
-                                                    'is_public', None),
-                                                graph_json=graph.get(
-                                                    'graph_json', None),
-                                                style_json=graph.get(
-                                                    'style_json', None),
-                                                owner_email=graph.get('owner_email',
-                                                                      None) if user_role == authorization.UserRole.ADMIN else None,
-                                                default_layout_id=graph.get('default_layout_id', None)))
+    return_value = utils.serializer(graphs.update_graph(request,
+                                                        graph_id=graph_id,
+                                                        name=graph.get(
+                                                            'name', None),
+                                                        is_public=graph.get(
+                                                            'is_public', None),
+                                                        graph_json=graph.get(
+                                                            'graph_json', None),
+                                                        style_json=graph.get(
+                                                            'style_json', None),
+                                                        owner_email=graph.get('owner_email',
+                                                                              None) if user_role == authorization.UserRole.ADMIN else None,
+                                                        default_layout_id=graph.get('default_layout_id', None)))
+    if graph.get('owner_email', None) is not None:
+        producer.send_message('owner', {
+            'owner_email': graph.get('owner_email', None),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['update_graph'].format(name=graph.get('name', None)),
+            'resource': 'graph',
+            'resource_id': graph_id,
+            'type': 'update'
+        })
+
+    return return_value
 
 
 @is_authenticated()
@@ -577,9 +588,17 @@ def _delete_graph(request, graph_id):
     """
     authorization.validate(
         request, permission='GRAPH_DELETE', graph_id=graph_id)
-    graphs.delete_graph_by_id(request, graph_id)
+    return_value = utils.serializer(
+        graphs.delete_graph_by_id(request, graph_id))
 
-
+    # Notification
+    producer.send_message('owner', {
+        'owner_email': get_request_user(request),
+        'message': settings.NOTIFICATION_MESSAGE['owner']['delete_graph'].format(name=return_value.get('name', None)),
+        'resource': 'graph',
+        'resource_id': graph_id,
+        'type': 'delete'
+    })
 '''
 Graph Groups APIs.
 '''
@@ -1037,19 +1056,33 @@ def _add_layout(request, graph_id, layout={}):
             raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateLayoutForOtherUser,
                              args=layout.get('owner_email', None))
 
-    return utils.serializer(graphs.add_layout(request,
-                                              owner_email=layout.get(
-                                                  'owner_email', None),
-                                              name=layout.get('name', None),
-                                              graph_id=layout.get(
-                                                  'graph_id', None),
-                                              is_shared=layout.get(
-                                                  'is_shared', None),
-                                              positions_json=layout.get(
-                                                  'positions_json', None),
-                                              style_json=layout.get(
-                                                  'style_json', None),
-                                              ))
+    return_value = utils.serializer(graphs.add_layout(request,
+                                                      owner_email=layout.get(
+                                                          'owner_email', None),
+                                                      name=layout.get(
+                                                          'name', None),
+                                                      graph_id=layout.get(
+                                                          'graph_id', None),
+                                                      is_shared=layout.get(
+                                                          'is_shared', None),
+                                                      positions_json=layout.get(
+                                                          'positions_json', None),
+                                                      style_json=layout.get(
+                                                          'style_json', None),
+                                                      ))
+    # Notification
+    if layout.get('owner_email', None) is not None:
+        # The notification message should be send only for a logged in
+        # user
+        producer.send_message('owner', {
+            'owner_email': layout.get('owner_email', None),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['create_layout'].format(name=layout.get('name', '')),
+            'resource': 'layout',
+            'resource_id': return_value['id'],
+            'type': 'create'
+        })
+
+    return return_value
 
 
 @is_authenticated()
@@ -1091,19 +1124,32 @@ def _update_layout(request, graph_id, layout_id, layout={}):
         request, permission='LAYOUT_UPDATE', layout_id=layout_id)
     user_role = authorization.user_role(request)
 
-    return utils.serializer(graphs.update_layout(request, layout_id,
-                                                 owner_email=layout.get('owner_email',
-                                                                        None) if user_role == authorization.UserRole.ADMIN else None,
-                                                 name=layout.get('name', None),
-                                                 graph_id=layout.get(
-                                                     'graph_id', None),
-                                                 is_shared=layout.get(
-                                                     'is_shared', None),
-                                                 positions_json=layout.get(
-                                                     'positions_json', None),
-                                                 style_json=layout.get(
-                                                     'style_json', None),
-                                                 ))
+    return_value = utils.serializer(graphs.update_layout(request, layout_id,
+                                                         owner_email=layout.get('owner_email',
+                                                                                None) if user_role == authorization.UserRole.ADMIN else None,
+                                                         name=layout.get(
+                                                             'name', None),
+                                                         graph_id=layout.get(
+                                                             'graph_id', None),
+                                                         is_shared=layout.get(
+                                                             'is_shared', None),
+                                                         positions_json=layout.get(
+                                                             'positions_json', None),
+                                                         style_json=layout.get(
+                                                             'style_json', None),
+                                                         ))
+
+    # Notification
+    if layout.get('owner_email', None) is not None:
+        producer.send_message('owner', {
+            'owner_email': layout.get('owner_email', None),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['update_layout'].format(name=layout.get('name', None)),
+            'resource': 'layout',
+            'resource_id': layout_id,
+            'type': 'update'
+        })
+
+    return return_value
 
 
 @is_authenticated()
@@ -1131,7 +1177,17 @@ def _delete_layout(request, graph_id, layout_id):
     authorization.validate(
         request, permission='LAYOUT_DELETE', layout_id=layout_id)
 
-    graphs.delete_layout_by_id(request, layout_id)
+    return_value = utils.serializer(
+        graphs.delete_layout_by_id(request, layout_id))
+
+    # Notification
+    producer.send_message('owner', {
+        'owner_email': get_request_user(request),
+        'message': settings.NOTIFICATION_MESSAGE['owner']['delete_layout'].format(name=return_value.get(layout_id, None)),
+        'resource': 'layout',
+        'resource_id': layout_id,
+        'type': 'delete'
+    })
 
 
 @csrf_exempt

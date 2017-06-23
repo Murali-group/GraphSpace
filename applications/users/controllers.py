@@ -219,8 +219,7 @@ def get_group_by_id(request, group_id):
 
 
 def delete_group_by_id(request, group_id):
-	db.delete_group(request.db_session, id=group_id)
-	return
+	return db.delete_group(request.db_session, id=group_id)
 
 
 def update_group(request, group_id, name, description, owner_email):
