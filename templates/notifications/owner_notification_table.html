@@ -2,7 +2,7 @@
 
   <div class="col-md-3">
     <ul class="nav nav-pills nav-stacked" id="read-unread-tabs">
-      <li class="active"><a href="#unread" data-toggle="pill">Unread <span id="unreadOwnerNotificationTotal" class="badge">{{ owner_notification.total }}</span></a></li>
+      <li class="active"><a href="#unread" data-toggle="pill">Unread <span id="unread-owner-notification-total" class="badge">{{ owner_notification.total }}</span></a></li>
       <li><a href="#all" data-toggle="pill">All notifications</a></li>
     </ul>
   </div>
@@ -13,7 +13,7 @@
         <div id="owner-toolbar">
             <button id="owner-mark-all-read" type="submit" class="btn btn-default">Mark all as read</button>
         </div>
-        <table id="unreadOwnerNotificationTable" class="table-no-bordered"
+        <table id="unread-owner-notification-table" class="table-no-bordered"
                data-toggle="table"
                data-show-refresh="false"
                data-show-columns="false"
@@ -38,7 +38,7 @@
         </table>
       </div>
       <div class="tab-pane" id="all">
-        <table id="allOwnerNotificationTable" class="table-no-bordered"
+        <table id="all-owner-notification-table" class="table-no-bordered"
                data-toggle="table"
                data-show-refresh="false"
                data-show-columns="false"

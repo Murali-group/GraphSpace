@@ -18,6 +18,7 @@ class OwnerConsumer(threading.Thread):
             message = settings.KAFKA_OWNER_CONSUMER.poll(
                 timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT)
             if message is not None and message.value():
+                #print message.value()
                 notify = loads(message.value())
                 notifications.add_owner_notification(**notify)
             elif message is not None and message.error().code() != KafkaError._PARTITION_EOF:

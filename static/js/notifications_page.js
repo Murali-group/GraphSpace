@@ -12,6 +12,9 @@ var apis = {
         update: function (id, data, successCallback, errorCallback) {
             apis.jsonRequest('PUT', apis.notifications.ENDPOINT + id, data, successCallback, errorCallback)
         },
+        read: function(data, successCallback, errorCallback){
+            apis.jsonRequest('PUT', apis.notifications.ENDPOINT + 'read/', data, successCallback, errorCallback)
+        }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -36,6 +39,24 @@ var notificationsPage = {
          */
         console.log('Loading Notifications Page....');
 
+        $('#owner-mark-all-read').click(function(){
+            data = {
+                owner_email: $('#UserEmail').val(),
+                type: 'owner'
+            }
+            apis.notifications.read(data,
+                successCallback = function (response) {
+                    // This method is called when notifications are successfully fetched.
+                    $('#unread-owner-notification-table').bootstrapTable('refresh')
+                    $('#all-owner-notification-table').bootstrapTable('refresh')
+                },
+                errorCallback = function () {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({message: 'Error'}, {type: 'danger'});
+                }
+            );
+        })
+
         utils.initializeTabs();
     },
     notificationsTable: {
@@ -43,11 +64,13 @@ var notificationsPage = {
             return $('<a>').attr('href', '/'+ row.resource + '/' + row.resource_id).text(row.message)[0].outerHTML;
         },
         operationsFormatter: function (value, row, index) {
-            return [
-                '<a class="mark-as-read" href="javascript:void(0)" title="Mark as read">',
-                '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
-                '</a>'
-            ].join('');
+            if (!row.is_read){
+                return [
+                    '<a class="mark-as-read" href="javascript:void(0)" title="Mark as read">',
+                    '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
+                    '</a>'
+                ].join('');
+            }
         },
         operationEvents: {
             'click .mark-as-read': function (e, value, row, index) {
@@ -88,8 +111,8 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             params["type"] = 'owner';
-            params["totalIdName"] = '#unreadOwnerNotificationTotal';
-            params["tableIdName"] = '#unreadOwnerNotificationTable';
+            params["totalIdName"] = '#unread-owner-notification-total';
+            params["tableIdName"] = '#unread-owner-notification-table';
             params["is_read"] = false;
             return params
         },
@@ -101,8 +124,8 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             params["type"] = 'owner';
-            params["totalIdName"] = '#allOwnerNotificationTotal';
-            params["tableIdName"] = '#allOwnerNotificationTable';
+            params["totalIdName"] = '#all-owner-notification-total';
+            params["tableIdName"] = '#all-owner-notification-table';
             return params
         }
     }

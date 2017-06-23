@@ -45,8 +45,25 @@ def notifications_page(request):
 def notifications_ajax_api(request, notification_id=None):
     """
     Handles any request sent to following urls:
-            /javascript/notifications
-            /javascript/notifications/<group_id>
+            /ajax/notifications
+
+    Parameters
+    ----------
+    request - HTTP Request
+
+    Returns
+    -------
+    response : JSON Response
+
+    """
+    return _notifications_api(request, notification_id=notification_id)
+
+
+def notifications_read(request, notification_id=None):
+    """
+    Handles any request sent to following urls:
+            /ajax/notifications/read
+            /ajax/notifications/read/<notification-id>
 
     Parameters
     ----------
@@ -75,8 +92,8 @@ def _notifications_api(request, notification_id=None):
     if request.META.get('HTTP_ACCEPT', None) == 'application/json':
         if request.method == "GET" and notification_id is None:
             return HttpResponse(json.dumps(_get_notifications(request, query=request.GET)), content_type="application/json")
-        elif request.method == "PUT" and notification_id is not None:
-            return HttpResponse(json.dumps(_update_notification(request, notification_id, notification=QueryDict(request.body))),
+        elif request.method == "PUT":
+            return HttpResponse(json.dumps(_update_notifications_read(request, notification_id=notification_id, query=QueryDict(request.body))),
                                 content_type="application/json",
                                 status=200)
         else:
@@ -139,7 +156,7 @@ def _get_notifications(request, query={}):
     if is_read == 'true':
         is_read = True
     elif is_read == 'false':
-        is_read = False 
+        is_read = False
     else:
         is_read = None
 
@@ -158,4 +175,59 @@ def _get_notifications(request, query={}):
     return {
         'total': total,
         'notifications': [utils.serializer(notification) for notification in notifications]
+    }
+
+
+def _update_notifications_read(request, notification_id=None, query={}):
+    """
+
+    Query Parameters
+    ----------
+    owner_email : string
+            Email of the Owner of the notification.
+    type : string
+            Type of the notification [owner, group, watching].
+
+    Parameters
+    ----------
+    query : dict
+            Dictionary of query parameters.
+    request : object
+            HTTP GET Request.
+    owner_email : string
+            Email of the Owner of the notification.
+
+    Returns
+    -------
+    message : Message that notifications/notification has been marked read.
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+
+    # Validate get notifications API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != query.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
+                             args=get_request_user(request))
+
+    type = query.get('type', None)
+
+    if type == 'owner':
+        message = notification_controllers.read_owner_notifications(request,
+                                                                    owner_email=query.get(
+                                                                        'owner_email', None),
+                                                                    notification_id=notification_id
+                                                                    )
+    else:
+        raise BadRequest(
+            request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
+
+    return {
+        'message': message
     }
