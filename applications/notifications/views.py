@@ -113,6 +113,11 @@ def notification_redirect(request, notification_id):
                                                                             notification_id=notification_id
                                                                             )
         notify = utils.serializer(notify)
+    elif type == 'group':
+        message, notify = notification_controllers.read_group_notifications(request,
+                                                                            member_email=owner_email,
+                                                                            notification_id=notification_id)
+        notify = utils.serializer(notify)
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
@@ -129,6 +134,8 @@ def notification_redirect(request, notification_id):
         return_value = graph_controllers.get_graph_by_id(request, resource_id)
     elif resource == 'group':
         return_value = user_controllers.get_group_by_id(request, resource_id)
+    else:
+        return_value = None
     if return_value is None:
         url = '/notifications'
     return redirect(url)
