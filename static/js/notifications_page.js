@@ -68,6 +68,30 @@ var notificationsPage = {
             );
         })
 
+        $('#group-mark-all-read').click(function(){
+            data = {
+                owner_email: $('#UserEmail').val(),
+                type: 'group'
+            }
+            apis.notifications.read(
+                id = null,
+                data = data,
+                successCallback = function (response) {
+                    // This method is called when notifications are successfully fetched.
+                    notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                        is_read = false, 
+                        total_val_id = '#unread-group-notification-total', 
+                        table_div_id = '#unread-group-notification-tables', 
+                        refresh_tabs = true)
+                    $.notify({message: response.message}, {type: 'success'});
+                },
+                errorCallback = function () {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({message: 'Error'}, {type: 'danger'});
+                }
+            );
+        })
+
         // Get group notification on click
         $('#all-group-notification').click(function(){
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
@@ -88,7 +112,7 @@ var notificationsPage = {
             total_val_id = '#unread-group-notification-total', 
             table_div_id = '#unread-group-notification-tables', 
             refresh_tabs = true)
-        
+
         utils.initializeTabs();
     },
     notificationsTable: {
