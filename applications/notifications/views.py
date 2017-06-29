@@ -296,7 +296,13 @@ def _update_notifications_read(request, notification_id=None, query={}):
                                                                             notification_id=notification_id
                                                                             )
     elif type == 'group':
-        pass
+        message, notify = notification_controllers.read_group_notifications(request,
+                                                                            member_email=query.get(
+                                                                                'owner_email', None),
+                                                                            group_id=query.get(
+                                                                                'group_id', None),
+                                                                            notification_id=notification_id
+                                                                            )
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))

@@ -70,20 +70,28 @@ var notificationsPage = {
 
         // Get group notification on click
         $('#all-group-notification').click(function(){
-            notificationsPage.groupNotificationsTable.notificationsGroupCount(null, '#all-group-notification-total', '#all-group-notification-tables')
+            notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                is_read = null, 
+                total_val_id = '#all-group-notification-total', 
+                table_div_id = '#all-group-notification-tables', 
+                refresh_tabs = true)
         })
         $('#unread-group-notification').click(function(){
-            notificationsPage.groupNotificationsTable.notificationsGroupCount(false, '#unread-group-notification-total', '#unread-group-notification-tables')
+            notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                is_read = false, 
+                total_val_id = '#unread-group-notification-total', 
+                table_div_id = '#unread-group-notification-tables', 
+                refresh_tabs = true)    
         })
-
-        notificationsPage.groupNotificationsTable.notificationsGroupCount(false, '#unread-group-notification-total', '#unread-group-notification-tables')
-
+        notificationsPage.groupNotificationsTable.notificationsGroupCount(
+            is_read = false, 
+            total_val_id = '#unread-group-notification-total', 
+            table_div_id = '#unread-group-notification-tables', 
+            refresh_tabs = true)
+        
         utils.initializeTabs();
     },
     notificationsTable: {
-        messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=owner').text(row.message)[0].outerHTML;
-        },
         operationsFormatter: function (value, row, index) {
             if (!row.is_read){
                 return [
@@ -93,6 +101,11 @@ var notificationsPage = {
                 ].join('');
             }
             return '' 
+        }
+    },
+    ownerNotificationsTable:{
+        messageFormatter: function (value, row, index) {
+            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=owner').text(row.message)[0].outerHTML;
         },
         operationEvents: {
             'click .mark-as-read': function (e, value, row, index) {
@@ -119,9 +132,7 @@ var notificationsPage = {
                     }
                 );
             }
-        }
-    },
-    ownerNotificationsTable:{
+        },
         unreadNotificationQuery: function(){
             /**
              * This is the custom ajaxOptions function used to load parameters for unread notification ajax request.
@@ -130,13 +141,13 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             return {
-                  options: {
+                options: {
                     type: 'owner',
                     totalIdName: '#unread-owner-notification-total',
                     tableIdName: '#unread-owner-notification-table',
                     is_read: false
-                  }
-               }
+                }
+            }
         },
         allNotificationQuery: function(params){
             /**
@@ -180,9 +191,43 @@ var notificationsPage = {
                     params.error('Error');
                 }
             );
-        },
+        }
     },
     groupNotificationsTable:{
+        messageFormatter: function (value, row, index) {
+            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=group').text(row.message)[0].outerHTML;
+        },
+        operationEvents: {
+            'click .mark-as-read': function (e, value, row, index) {
+                // Mark as read
+                data = {
+                    owner_email: $('#UserEmail').val(),
+                    type: 'group'
+                }
+                apis.notifications.read(
+                    id = row['id'],
+                    data = data,
+                    successCallback = function (response) {
+                        // This method is called when notifications are successfully fetched.
+                        notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                            is_read = false, 
+                            total_val_id = '#unread-group-notification-total', 
+                            table_div_id = '#unread-group-notification-tables', 
+                            refresh_tabs = false)
+                        $.notify({message: response.message}, {type: 'success'});
+                        $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
+                            field: 'id',
+                            values: [row['id']]
+                        });
+
+                    },
+                    errorCallback = function () {
+                        // This method is called when  error occurs while updating reads.
+                        $.notify({message: 'Error'}, {type: 'danger'});
+                    }
+                );
+            }
+        },
         getNotifications: function (params) {
             /**
              * This is the custom ajax request used to load group notifications.
@@ -211,7 +256,7 @@ var notificationsPage = {
                 }
             );
         },
-        notificationsGroupCount: function(is_read, total_val_id, table_div_id){
+        notificationsGroupCount: function(is_read, total_val_id, table_div_id, refresh_tabs=true){
             // Get list of groups in group notification
             data = {
                 'member_email': $('#UserEmail').val()
@@ -231,7 +276,9 @@ var notificationsPage = {
                     var glist = $('ul.group-tabs')
                     var gtable = $(table_div_id)
                     glist.empty()
-                    gtable.empty()
+                    if(refresh_tabs){
+                        gtable.empty()
+                    }
                     $(total_val_id).text(response.total);
 
                     $.each(response.groups, function(i){
@@ -246,51 +293,53 @@ var notificationsPage = {
                                 .text(response.groups[i]['count'])
                                 .appendTo(a)
 
-                        var table = $('<table/>')
-                                    .attr('id','group-table-' + is_read + '-' + response.groups[i]['group']['id'])
-                                    .attr('data-toggle','table')
-                                    .addClass('table-no-bordered')
+                        // Refresh the tables in a tab only when complete table update needed
+                        if(refresh_tabs){
+                            var table = $('<table/>')
+                                        .attr('id','group-table-' + is_read + '-' + response.groups[i]['group']['id'])
+                                        .attr('data-toggle','table')
+                                        .addClass('table-no-bordered')
+                                        .appendTo(gtable)
+
+                            var br = $('<br/>')
                                     .appendTo(gtable)
 
-                        var br = $('<br/>')
-                                .appendTo(gtable)
+                            options["group_id"] = response.groups[i]['group']['id']
+                            options["tableIdName"] = '#group-table-' + response.groups[i]['group']['id']
 
-                        options["group_id"] = response.groups[i]['group']['id']
-                        options["tableIdName"] = '#group-table-' + response.groups[i]['group']['id']
-
-                        table.bootstrapTable({
-                            ajax: notificationsPage.groupNotificationsTable.getNotifications,
-                            ajaxOptions: {
-                                options: options
-                            },
-                            sidePagination: 'server',
-                            pagination: true,
-                            dataField: 'notifications',
-                            sortName: 'created_at',
-                            sortOrder: 'desc',
-                            columns:[
-                                {
-                                    field: 'message',
-                                    title: response.groups[i]['group']['name'],
-                                    valign: 'center',
-                                    formatter: notificationsPage.notificationsTable.messageFormatter,
-                                    events: notificationsPage.notificationsTable.operationEvents
+                            table.bootstrapTable({
+                                ajax: notificationsPage.groupNotificationsTable.getNotifications,
+                                ajaxOptions: {
+                                    options: options
                                 },
-                                {
-                                    field: 'created_at',
-                                    valign: 'center',
-                                    align: 'center',
-                                    formatter: utils.dateFormatter,
-                                },
-                                {
-                                    field: 'operations',
-                                    valign: 'center',
-                                    align: 'right',
-                                    formatter: notificationsPage.notificationsTable.operationsFormatter,
-                                    events: notificationsPage.notificationsTable.operationEvents
-                                }
-                            ]
-                        }) 
+                                sidePagination: 'server',
+                                pagination: true,
+                                dataField: 'notifications',
+                                sortName: 'created_at',
+                                sortOrder: 'desc',
+                                columns:[
+                                    {
+                                        field: 'message',
+                                        title: response.groups[i]['group']['name'],
+                                        valign: 'center',
+                                        formatter: notificationsPage.groupNotificationsTable.messageFormatter
+                                    },
+                                    {
+                                        field: 'created_at',
+                                        valign: 'center',
+                                        align: 'center',
+                                        formatter: utils.dateFormatter,
+                                    },
+                                    {
+                                        field: 'operations',
+                                        valign: 'center',
+                                        align: 'right',
+                                        formatter: notificationsPage.notificationsTable.operationsFormatter,
+                                        events: notificationsPage.groupNotificationsTable.operationEvents
+                                    }
+                                ]
+                            })
+                        } 
                     })
                 },
                 errorCallback = function () {
