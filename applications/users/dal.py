@@ -42,11 +42,11 @@ def get_user(db_session, email):
 @with_session
 def get_user_by_id(db_session, id):
 	"""
-	Get a user with given email.
+	Get a user with given id.
 
 	:param db_session: Database session.
 	:param id: id of the user.
-	:return: User if email exists else None.
+	:return: User if id exists else None.
 	"""
 	return db_session.query(User).filter(User.id == id).one_or_none()
 

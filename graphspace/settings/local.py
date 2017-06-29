@@ -53,17 +53,24 @@ DATABASES = {
 # Kafka Configuration
 KAFKA_URL = 'localhost:9092'
 
-KAFKA_OWNER_CONSUMER = Consumer({
+KAFKA_CONFIG = {
     'bootstrap.servers': KAFKA_URL,
     'group.id': 'graphspace',
     'default.topic.config': {
         'auto.offset.reset': 'smallest'
     }
-})
+}
 
-KAFKA_OWNER_CONSUMER.subscribe(['owner'])
+# Consumer for owner notification
+KAFKA_CONSUMER = {
+    "owner": Consumer(KAFKA_CONFIG),
+    "group": Consumer(KAFKA_CONFIG)
+}
 
-KAFKA_CONSUMER_POLL_TIMEOUT = 5
+KAFKA_CONSUMER["owner"].subscribe(['owner'])
+KAFKA_CONSUMER["group"].subscribe(['group'])
+
+KAFKA_CONSUMER_POLL_TIMEOUT = 2
 
 KAFKA_PRODUCER = Producer({
     'bootstrap.servers': KAFKA_URL

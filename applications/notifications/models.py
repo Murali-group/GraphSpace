@@ -60,16 +60,15 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
     resource = Column(Enum("graph", "layout", "group_member",
                            name="group_notification_resource"))
     resource_id = Column(Integer, nullable=False)
-
     is_read = Column(Boolean, default=False)
 
-    group_member_email = Column(String, ForeignKey(
-        'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+    member_email = Column(String, ForeignKey(
+        'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     group_member = relationship(
         "User", back_populates="group_notifications", uselist=False)
 
     group_id = Column(Integer, ForeignKey(
-        'group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+        'group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     group = relationship(
         "Group", back_populates="group_notifications", uselist=False)
 
@@ -90,7 +89,8 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
             'is_email_sent': cls.is_email_sent,
             'resource': cls.resource,
             'resource_id': cls.resource_id,
-            'owner_email': cls.owner_email,
+            'member_email': cls.member_email,
+            'group_id': cls.group_id,
             'created_at': cls.created_at.isoformat(),
             'updated_at': cls.updated_at.isoformat()
         }

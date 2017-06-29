@@ -671,10 +671,27 @@ def _add_group_member(request, group_id):
 	"""
 	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
-	return utils.serializer(users.add_group_member(request,
+	member_email = request.POST.get('member_email', None)
+
+	group_member = utils.serializer(users.add_group_member(request,
 												   group_id=group_id,
 												   member_id=request.POST.get('member_id', None),
-												   member_email=request.POST.get('member_email', None)))
+												   member_email=member_email))
+
+	if member_email is None:
+		member_email = utils.serializer(users.get_user_by_id(request, 
+										id=request.POST.get('member_id', None))).get('email', '')
+
+	# Notification
+	producer.send_message('group', {
+		'group_id': group_id,	
+		'message': settings.NOTIFICATION_MESSAGE['group']['add_member'].format(name=member_email),
+		'resource': 'group_member',
+		'resource_id': group_member['user_id'],
+		'type': 'add'
+		})
+
+	return group_member
 
 
 @is_authenticated()

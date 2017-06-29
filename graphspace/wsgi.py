@@ -18,5 +18,11 @@ from django.conf import settings
 settings.db = Database()
 
 from applications.notifications.consumer import *
-ocon = OwnerConsumer()
+
+# Start owner notification consumer
+ocon = Consumer("owner")
 ocon.start()
+
+#Start group notification consumer
+gcon = Consumer("group")
+gcon.start()

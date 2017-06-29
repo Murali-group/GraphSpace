@@ -2,6 +2,7 @@ from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.notifications.models import *
+import applications.users.dal as db_users
 from graphspace.wrappers import with_session
 
 
@@ -23,6 +24,33 @@ def add_owner_notification(db_session, message, type, resource, resource_id, own
     notify = OwnerNotification(message=message, type=type, resource=resource, resource_id=resource_id,
                                owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent)
     db_session.add(notify)
+    return notify
+
+
+@with_session
+def add_group_notification(db_session, message, type, resource, resource_id, group_id, is_read=False, is_email_sent=False):
+    """
+    Add a new group notification.
+
+    :param db_session: Database session.
+    :param message: Message of the notification.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param resource_id: Resource ID the notification is related to.
+    :param group_id: ID of the notification's group.
+    :param is_read: Check if notification is read or not.
+    :param is_email_sent: Check if email has been sent for the notification or not.
+    :return: list of GroupNotification
+    """
+
+    group_members = db_users.get_users_by_group(
+        db_session=db_session, group_id=group_id)
+
+    notify = []
+    for mem in group_members:
+        notify.append(GroupNotification(message=message, type=type, resource=resource, resource_id=resource_id,
+                                        member_email=mem.email, group_id=group_id, is_read=is_read, is_email_sent=is_email_sent))
+    db_session.bulk_save_objects(notify)
     return notify
 
 

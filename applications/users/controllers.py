@@ -104,6 +104,10 @@ def get_user(request, email):
 	return db.get_user(request.db_session, email) if email is not None else None
 
 
+def get_user_by_id(request, id):
+	return db.get_user_by_id(request.db_session, id=id) if id is not None else None
+
+
 def search_users(request, email=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'email':
 		sort_attr = db.User.email
