@@ -28,12 +28,29 @@ def add_group_notification(message, type, resource, resource_id, group_id, is_re
     return notify
 
 
+# Search for owner notification
 def search_owner_notifications(request, owner_email=None, is_read=None, limit=20, offset=0):
     sort_attr = db.OwnerNotification.created_at
     orber_by = db.desc(sort_attr)
 
     total, notifications = db.find_owner_notifications(request.db_session,
                                                        owner_email=owner_email,
+                                                       is_read=is_read,
+                                                       limit=limit,
+                                                       offset=offset,
+                                                       order_by=orber_by)
+
+    return total, notifications
+
+
+# Search for group notification
+def search_group_notifications(request, member_email, group_id=None, is_read=None, limit=20, offset=0):
+    sort_attr = db.GroupNotification.created_at
+    orber_by = db.desc(sort_attr)
+
+    total, notifications = db.find_group_notifications(request.db_session,
+                                                       member_email=member_email,
+                                                       group_id=group_id,
                                                        is_read=is_read,
                                                        limit=limit,
                                                        offset=offset,
@@ -49,3 +66,13 @@ def read_owner_notifications(request, owner_email, notification_id=None):
                                                 notification_id=notification_id)
 
     return "{total} notifications marked as read.".format(total=total), notify
+
+
+# Get notification count per group for all groups
+def get_notification_count_per_group(request, member_email, is_read=None):
+
+    total, count_per_group = db.get_notification_count_per_group(request.db_session,
+                                                          member_email=member_email,
+                                                          is_read=is_read)
+
+    return total, count_per_group

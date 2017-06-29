@@ -15,6 +15,9 @@ urlpatterns = [
         views.notifications_read, name='notifications_read'),
     url(r'^ajax/notifications/read/$',
         views.notifications_read, name='notifications_read'),
+    # Get number of notifications in each group
+    url(r'^ajax/notifications/group-count/$', views.notification_count_per_group,
+        name='notification_count_per_group'),
     # Show notifications
     url(r'^ajax/notifications/$', views.notifications_ajax_api,
         name='notifications_ajax_api'),

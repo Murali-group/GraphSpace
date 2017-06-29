@@ -9,10 +9,12 @@ from django.conf import settings
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render, redirect
 from django.template import RequestContext
+from graphspace.wrappers import is_authenticated
 from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
 from graphspace.utils import get_request_user
 
 
+@is_authenticated(redirect_url='/')
 def notifications_page(request):
     """
             Wrapper view function for the following pages:
@@ -44,6 +46,7 @@ def notifications_page(request):
         raise MethodNotAllowed(request)
 
 
+@is_authenticated(redirect_url='/')
 def notifications_ajax_api(request, notification_id=None):
     """
     Handles any request sent to following urls:
@@ -61,6 +64,7 @@ def notifications_ajax_api(request, notification_id=None):
     return _notifications_api(request, notification_id=notification_id)
 
 
+@is_authenticated(redirect_url='/')
 def notifications_read(request, notification_id=None):
     """
     Handles any request sent to following urls:
@@ -79,6 +83,7 @@ def notifications_read(request, notification_id=None):
     return _notifications_api(request, notification_id=notification_id)
 
 
+@is_authenticated(redirect_url='/')
 def notification_redirect(request, notification_id):
     """
     Handles any request sent to following urls:
@@ -126,7 +131,6 @@ def notification_redirect(request, notification_id):
         return_value = user_controllers.get_group_by_id(request, resource_id)
     if return_value is None:
         url = '/notifications'
-    print url
     return redirect(url)
 
 
@@ -225,6 +229,16 @@ def _get_notifications(request, query={}):
                                                                                    limit=query.get(
                                                                                        'limit', 20),
                                                                                    offset=query.get('offset', 0))
+    elif type == 'group':
+        total, notifications = notification_controllers.search_group_notifications(request,
+                                                                                   member_email=query.get(
+                                                                                       'owner_email', None),
+                                                                                   group_id=query.get(
+                                                                                       'group_id', None),
+                                                                                   is_read=is_read,
+                                                                                   limit=query.get(
+                                                                                       'limit', 20),
+                                                                                   offset=query.get('offset', 0))
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
@@ -281,6 +295,8 @@ def _update_notifications_read(request, notification_id=None, query={}):
                                                                                 'owner_email', None),
                                                                             notification_id=notification_id
                                                                             )
+    elif type == 'group':
+        pass
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
@@ -288,3 +304,49 @@ def _update_notifications_read(request, notification_id=None, query={}):
     return {
         'message': message
     }
+
+
+@is_authenticated(redirect_url='/')
+def notification_count_per_group(request):
+    """
+    Handles any request sent to following urls:
+            /notification/group-count
+
+    Parameters
+    ----------
+    request - HTTP Request
+
+    Returns
+    -------
+    response : JSON Response
+
+    """
+
+    query = request.GET
+    member_email = query.get('member_email', None)
+    is_read = query.get('is_read', None)
+
+    if is_read == 'true':
+        is_read = True
+    elif is_read == 'false':
+        is_read = False
+    else:
+        is_read = None
+
+    # Validate get notifications API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != member_email:
+            raise BadRequest(
+                request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess, args=get_request_user(request))
+
+    total, count_per_group = notification_controllers.get_notification_count_per_group(request,
+                                                                                       member_email=member_email,
+                                                                                       is_read=is_read)
+
+    return HttpResponse(json.dumps({
+        'total': total,
+        'groups': [{'group': utils.serializer(g[0]), 'count': int(g[1])} for g in count_per_group]
+    }),
+        content_type="application/json",
+        status=200)

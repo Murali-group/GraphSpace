@@ -1,7 +1,8 @@
-from sqlalchemy import and_, or_, desc, asc
+from sqlalchemy import and_, or_, desc, asc, func
 from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.notifications.models import *
+from applications.users.models import *
 import applications.users.dal as db_users
 from graphspace.wrappers import with_session
 
@@ -76,6 +77,31 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, or
 
 
 @with_session
+def find_group_notifications(db_session, member_email, group_id, is_read, limit, offset, order_by=asc(GroupNotification.created_at)):
+    query = db_session.query(GroupNotification)
+
+    if order_by is not None:
+        query = query.order_by(order_by)
+
+    if member_email is not None:
+        query = query.filter(
+            GroupNotification.member_email.ilike(member_email))
+
+    if group_id is not None:
+        query = query.filter(GroupNotification.group_id == group_id)
+
+    if is_read is not None:
+        query = query.filter(GroupNotification.is_read.is_(is_read))
+
+    total = query.count()
+
+    if offset is not None and limit is not None:
+        query = query.limit(limit).offset(offset)
+
+    return total, query.all()
+
+
+@with_session
 def read_owner_notifications(db_session, owner_email, notification_id=None):
     query = db_session.query(OwnerNotification)
     query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
@@ -89,3 +115,25 @@ def read_owner_notifications(db_session, owner_email, notification_id=None):
     query = query.update({'is_read': True}, synchronize_session=False)
 
     return total, notify
+
+
+# Get notification count per group for all groups
+@with_session
+def get_notification_count_per_group(db_session, member_email, is_read=None):
+    subquery = db_session.query(GroupNotification.group_id, func.count(
+        GroupNotification.group_id).label('count'))
+    subquery = subquery.filter(GroupNotification.member_email.ilike(
+        member_email))
+    total_query = db_session.query(GroupNotification).filter(GroupNotification.member_email.ilike(member_email))
+    
+    if is_read is not None:
+        subquery = subquery.filter(GroupNotification.is_read.is_(is_read))
+        total_query = total_query.filter(GroupNotification.is_read.is_(is_read))
+
+    subquery = subquery.group_by(GroupNotification.group_id).subquery()
+
+    query = db_session.query(Group, subquery.c.count).join(
+        subquery, subquery.c.group_id == Group.id).order_by(subquery.c.count.desc())
+
+    total = total_query.count()
+    return total, query.all()
