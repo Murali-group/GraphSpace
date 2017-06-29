@@ -25,7 +25,53 @@ class OwnerNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
 
     owner_email = Column(String, ForeignKey(
         'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
-    owner = relationship("User", back_populates="owned_notifications", uselist=False)
+    owner = relationship(
+        "User", back_populates="owned_notifications", uselist=False)
+
+    constraints = ()
+    indices = ()
+
+    @declared_attr
+    def __table_args__(cls):
+        args = cls.constraints + cls.indices
+        return args
+
+    def serialize(cls):
+        return {
+            'id': cls.id,
+            'message': cls.message,
+            'type': cls.type,
+            'is_read': cls.is_read,
+            'is_email_sent': cls.is_email_sent,
+            'resource': cls.resource,
+            'resource_id': cls.resource_id,
+            'owner_email': cls.owner_email,
+            'created_at': cls.created_at.isoformat(),
+            'updated_at': cls.updated_at.isoformat()
+        }
+
+
+class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
+    __tablename__ = 'group_notification'
+
+    message = Column(String, nullable=False)
+    type = Column(Enum("share", "unshare", "add",
+                       "remove", name="group_notification_types"))
+    resource = Column(Enum("graph", "layout", "group_member",
+                           name="group_notification_resource"))
+    resource_id = Column(Integer, nullable=False)
+
+    is_read = Column(Boolean, default=False)
+
+    group_member_email = Column(String, ForeignKey(
+        'user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+    group_member = relationship(
+        "User", back_populates="group_notifications", uselist=False)
+
+    group_id = Column(Integer, ForeignKey(
+        'group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+    group = relationship(
+        "Group", back_populates="group_notifications", uselist=False)
 
     constraints = ()
     indices = ()
