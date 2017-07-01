@@ -718,9 +718,22 @@ def _add_graph_group(request, graph_id, group={}):
     authorization.validate(request, permission='GROUP_SHARE',
                            group_id=group.get('group_id', None))
 
-    return utils.serializer(users.add_group_graph(request,
-                                                  graph_id=graph_id,
-                                                  group_id=group.get('group_id', None)))
+    group_graph = utils.serializer(users.add_group_graph(request,
+                                                  group_id=group.get('group_id', None),
+                                                  graph_id=graph_id))
+
+    graph = utils.serializer(graphs.get_graph_by_id(request, graph_id=graph_id))
+
+    # Notification
+    producer.send_message('group', {
+        'group_id': group_graph['group_id'],   
+        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name','')),
+        'resource': 'graph',
+        'resource_id': graph_id,
+        'type': 'share'
+        })
+
+    return group_graph
 
 
 def _delete_graph_group(request, graph_id, group_id):
@@ -753,6 +766,17 @@ def _delete_graph_group(request, graph_id, group_id):
     users.delete_group_graph(request,
                              group_id=group_id,
                              graph_id=graph_id)
+
+    graph = utils.serializer(graphs.get_graph_by_id(request, graph_id=graph_id))
+    
+    # Notification
+    producer.send_message('group', {
+        'group_id': group_id,   
+        'message': settings.NOTIFICATION_MESSAGE['group']['unshare_graph'].format(name=graph.get('name','')),
+        'resource': 'graph',
+        'resource_id': graph_id,
+        'type': 'unshare'
+        })
 
 
 def _get_graph_groups(request, graph_id, query={}):
