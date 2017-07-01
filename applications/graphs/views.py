@@ -727,7 +727,7 @@ def _add_graph_group(request, graph_id, group={}):
     # Notification
     producer.send_message('group', {
         'group_id': group_graph['group_id'],   
-        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name','')),
+        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name',''), user=request.session['uid']),
         'resource': 'graph',
         'resource_id': graph_id,
         'type': 'share'
@@ -768,7 +768,7 @@ def _delete_graph_group(request, graph_id, group_id):
                              graph_id=graph_id)
 
     graph = utils.serializer(graphs.get_graph_by_id(request, graph_id=graph_id))
-    
+
     # Notification
     producer.send_message('group', {
         'group_id': group_id,   
