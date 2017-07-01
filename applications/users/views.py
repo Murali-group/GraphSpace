@@ -707,7 +707,8 @@ def _add_group_member(request, group_id):
 		'message': settings.NOTIFICATION_MESSAGE['group']['add_member'].format(name=member_email),
 		'resource': 'group_member',
 		'resource_id': group_member['user_id'],
-		'type': 'add'
+		'type': 'add',
+		'owner_email': request.session.get('uid', None)
 		})
 
 	return group_member

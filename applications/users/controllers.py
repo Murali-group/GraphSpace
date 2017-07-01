@@ -190,6 +190,16 @@ def get_groups_by_owner_id(request, owner_id):
 	return db.get_groups_by_owner_id(request.db_session, owner_id=owner_id)
 
 
+def get_groups_by_graph_id(request, graph_id):
+	"""
+	Returns all groups where graph is shared.
+	:param request: HTTP Request
+	:param graph_id: id of graph which is shared
+	:return: list of Groups
+	"""
+	return db.get_groups_by_graph_id(request.db_session, graph_id=graph_id)
+
+
 def search_groups(request, owner_email=None, member_email=None, name=None, description=None, graph_ids=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Group.name

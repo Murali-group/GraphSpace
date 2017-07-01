@@ -276,6 +276,17 @@ def get_groups_by_owner_id(db_session, owner_id):
 		return None
 
 
+@with_session
+def get_groups_by_graph_id(db_session, graph_id):
+	"""
+	Returns all groups where graph is shared.
+	:param request: HTTP Request
+	:param graph_id: id of graph which is shared
+	:return: list of Groups
+	"""
+	return [group_to_graph.group for group_to_graph in db_session.query(GroupToGraph).filter(GroupToGraph.graph_id == graph_id).all()]
+
+
 # @with_session
 def get_users_by_group(db_session, group_id):
 	"""

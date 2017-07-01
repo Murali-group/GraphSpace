@@ -19,10 +19,15 @@ def add_owner_notification(message, type, resource, resource_id, owner_email=Non
 
 
 # Function to add group notification to database
-def add_group_notification(message, type, resource, resource_id, group_id, is_read=False, is_email_sent=False):
+def add_group_notification(message, type, resource, resource_id, group_id=None, group_ids=[], owner_email=None, is_read=False, is_email_sent=False):
     sess = Database().session()
-    notify = db.add_group_notification(sess, message=message, type=type, group_id=group_id,
-                                       resource=resource, resource_id=resource_id, is_read=is_read, is_email_sent=is_email_sent)
+    if group_id is None:
+        for gid in group_ids:
+            notify = db.add_group_notification(sess, message=message, type=type, group_id=gid, resource=resource,
+                                               resource_id=resource_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent)
+    else:
+        notify = db.add_group_notification(sess, message=message, type=type, group_id=group_id, resource=resource,
+                                           resource_id=resource_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent)
     # Apply changes to DB as the Middleware is not called
     sess.commit()
     return notify

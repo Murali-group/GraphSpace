@@ -29,7 +29,7 @@ def add_owner_notification(db_session, message, type, resource, resource_id, own
 
 
 @with_session
-def add_group_notification(db_session, message, type, resource, resource_id, group_id, is_read=False, is_email_sent=False):
+def add_group_notification(db_session, message, type, resource, resource_id, group_id, owner_email=None, is_read=False, is_email_sent=False):
     """
     Add a new group notification.
 
@@ -39,6 +39,7 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
     :param resource: Resource type (graph,layout,group) of this notification.
     :param resource_id: Resource ID the notification is related to.
     :param group_id: ID of the notification's group.
+    :param owner_email: Email of user who created the notification.
     :param is_read: Check if notification is read or not.
     :param is_email_sent: Check if email has been sent for the notification or not.
     :return: list of GroupNotification
@@ -50,7 +51,7 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
     notify = []
     for mem in group_members:
         notify.append(GroupNotification(message=message, type=type, resource=resource, resource_id=resource_id,
-                                        member_email=mem.email, group_id=group_id, is_read=is_read, is_email_sent=is_email_sent))
+                                        member_email=mem.email, group_id=group_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent))
     db_session.bulk_save_objects(notify)
     return notify
 

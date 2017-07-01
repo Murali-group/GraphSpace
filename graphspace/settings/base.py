@@ -177,9 +177,9 @@ NOTIFICATION_MESSAGE = {
 		'update_group': 'Group {name} updated.',
 	},
 	'group':{
-		'share_graph': 'Graph {name} shared by {user}.',
+		'share_graph': 'Graph {name} shared.',
 		'unshare_graph': 'Graph {name} removed.',
-		'share_layout': 'Layout {name} shared by {user}.',
+		'share_layout': 'Layout {name} shared.',
 		'unshare_layout': 'Layout {name} removed.',
 		'add_member': 'New group member {name} added.',
 		'remove_member': 'Group member {name} removed.'

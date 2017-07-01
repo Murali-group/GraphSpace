@@ -727,10 +727,11 @@ def _add_graph_group(request, graph_id, group={}):
     # Notification
     producer.send_message('group', {
         'group_id': group_graph['group_id'],   
-        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name',''), user=request.session['uid']),
+        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name','')),
         'resource': 'graph',
         'resource_id': graph_id,
-        'type': 'share'
+        'type': 'share',
+        'owner_email': request.session.get('uid', None)
         })
 
     return group_graph
@@ -775,7 +776,8 @@ def _delete_graph_group(request, graph_id, group_id):
         'message': settings.NOTIFICATION_MESSAGE['group']['unshare_graph'].format(name=graph.get('name','')),
         'resource': 'graph',
         'resource_id': graph_id,
-        'type': 'unshare'
+        'type': 'unshare',
+        'owner_email': request.session.get('uid', None)
         })
 
 
@@ -1094,6 +1096,7 @@ def _add_layout(request, graph_id, layout={}):
                                                       style_json=layout.get(
                                                           'style_json', None),
                                                       ))
+
     # Notification
     if layout.get('owner_email', None) is not None:
         # The notification message should be send only for a logged in
@@ -1164,7 +1167,27 @@ def _update_layout(request, graph_id, layout_id, layout={}):
                                                          ))
 
     # Notification
-    if layout.get('owner_email', None) is not None:
+    if layout.get('is_shared', None) == 1:
+        group_ids = [utils.serializer(group)['id'] for group in users.get_groups_by_graph_id(request, graph_id=graph_id)]
+        producer.send_message('group', {
+            'group_ids': group_ids,   
+            'message': settings.NOTIFICATION_MESSAGE['group']['share_layout'].format(name=return_value.get('name','')),
+            'resource': 'layout',
+            'resource_id': layout_id,
+            'type': 'share',
+            'owner_email': request.session.get('uid', None)
+            })
+    elif layout.get('is_shared', None) == 0:
+        group_ids = [utils.serializer(group)['id'] for group in users.get_groups_by_graph_id(request, graph_id=graph_id)]
+        producer.send_message('group', {
+            'group_ids': group_ids,   
+            'message': settings.NOTIFICATION_MESSAGE['group']['unshare_layout'].format(name=return_value.get('name','')),
+            'resource': 'layout',
+            'resource_id': layout_id,
+            'type': 'unshare',
+            'owner_email': request.session.get('uid', None)
+            })
+    else:
         producer.send_message('owner', {
             'owner_email': layout.get('owner_email', None),
             'message': settings.NOTIFICATION_MESSAGE['owner']['update_layout'].format(name=layout.get('name', None)),
