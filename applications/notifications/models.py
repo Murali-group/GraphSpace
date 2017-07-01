@@ -92,6 +92,7 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
             'resource': cls.resource,
             'resource_id': cls.resource_id,
             'member_email': cls.member_email,
+            'owner_email': cls.owner_email,
             'group_id': cls.group_id,
             'created_at': cls.created_at.isoformat(),
             'updated_at': cls.updated_at.isoformat()
