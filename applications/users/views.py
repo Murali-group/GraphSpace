@@ -76,8 +76,17 @@ def join_group_page(request, group_id):
 				return render(request, 'join_group/index.html', context)
 			else:
 				try:
-					users.add_group_member(
-					    request, group_id, member_email=request.session['uid'])
+					group_member = utils.serializer(users.add_group_member(request, 
+						group_id, member_email=request.session['uid']))
+
+					# Notification
+					producer.send_message('group', {
+						'group_id': group_id,	
+						'message': settings.NOTIFICATION_MESSAGE['group']['add_member'].format(name=request.session['uid']),
+						'resource': 'group_member',
+						'resource_id': group_member['user_id'],
+						'type': 'add'
+						})
 				finally:
 					return redirect('/groups/' + group_id)
 		else:
@@ -95,7 +104,17 @@ def join_group_page(request, group_id):
 						request.session['uid'] = user.email
 						request.session['admin'] = user.is_admin
 
-					users.add_group_member(request, group_id, member_id=user.id)
+					group_member = utils.serializer(users.add_group_member(request, 
+						group_id, member_id=user.id))
+
+					# Notification
+					producer.send_message('group', {
+						'group_id': group_id,	
+						'message': settings.NOTIFICATION_MESSAGE['group']['add_member'].format(name=request.POST.get('user_id', '')),
+						'resource': 'group_member',
+						'resource_id': group_member['user_id'],
+						'type': 'add'
+						})
 
 				return redirect('/groups/' + group_id)
 			except GraphSpaceError as e:
