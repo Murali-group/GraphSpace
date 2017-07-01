@@ -67,6 +67,8 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
     group_member = relationship(
         "User", back_populates="group_notifications", uselist=False)
 
+    owner_email = Column(String, nullable=False)
+
     group_id = Column(Integer, ForeignKey(
         'group.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     group = relationship(
