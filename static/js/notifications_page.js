@@ -304,7 +304,11 @@ var notificationsPage = {
                         gtable.empty()
                     }
                     $(total_val_id).text(response.total);
-
+                    if(response.groups.length == 0){
+                        $('<center/>')
+                        .text("No new notifications")
+                        .appendTo(gtable)
+                    }
                     $.each(response.groups, function(i){
                         var li = $('<li/>')
                                 .appendTo(glist)
@@ -331,6 +335,16 @@ var notificationsPage = {
                             options["group_id"] = response.groups[i]['group']['id']
                             options["tableIdName"] = '#group-table-' + response.groups[i]['group']['id']
 
+                            markAllReadTitle = [
+                                            '<a class="mark-',
+                                            response.groups[i]['group']['name'],
+                                            '-',
+                                            response.groups[i]['group']['id'],
+                                            '-as-read" title="Mark all as read">',
+                                            '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
+                                            '</a>'
+                                        ]
+
                             table.bootstrapTable({
                                 ajax: notificationsPage.groupNotificationsTable.getNotifications,
                                 ajaxOptions: {
@@ -344,7 +358,7 @@ var notificationsPage = {
                                 columns:[
                                     {
                                         field: 'message',
-                                        title: response.groups[i]['group']['name'],
+                                        title: response.groups[i]['group']['name'], 
                                         valign: 'center',
                                         formatter: notificationsPage.groupNotificationsTable.messageFormatter
                                     },
@@ -356,12 +370,43 @@ var notificationsPage = {
                                     },
                                     {
                                         field: 'operations',
+                                        title: markAllReadTitle.join(''),
                                         valign: 'center',
                                         align: 'right',
                                         formatter: notificationsPage.notificationsTable.operationsFormatter,
                                         events: notificationsPage.groupNotificationsTable.operationEvents
                                     }
                                 ]
+                            })
+
+                            // Handling click event for Mark as read for specific groups
+                            $('.mark-' + response.groups[i]['group']['name'] + '-' + response.groups[i]['group']['id'] + '-as-read').click(function(){
+                                data = {
+                                    owner_email: $('#UserEmail').val(),
+                                    type: 'group',
+                                    group_id: response.groups[i]['group']['id']
+                                }
+                                apis.notifications.read(
+                                    id = null,
+                                    data = data,
+                                    apis.notifications.read(
+                                        id = null,
+                                        data = data,
+                                        successCallback = function (response) {
+                                            // This method is called when notifications are successfully fetched.
+                                            notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                                                is_read = false, 
+                                                total_val_id = '#unread-group-notification-total', 
+                                                table_div_id = '#unread-group-notification-tables', 
+                                                refresh_tabs = true)
+                                            $.notify({message: response.message}, {type: 'success'});
+                                        },
+                                        errorCallback = function () {
+                                            // This method is called when  error occurs while updating reads.
+                                            $.notify({message: 'Error'}, {type: 'danger'});
+                                        }
+                                    )
+                                );
                             })
                         } 
                     })
