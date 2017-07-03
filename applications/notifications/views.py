@@ -127,9 +127,12 @@ def notification_redirect(request, notification_id):
     resource_id = notify.get('resource_id', None)
     if resource == 'layout':
         return_value = utils.serializer(
-            graph_controllers.get_layout_by_id(request, resource_id))
+            graph_controllers.get_layout_by_id(request, layout_id=resource_id, include_deleted=True))
         if return_value is not None:
-            url = '/graphs/{graph_id}?user_layout={id}'.format(**return_value)
+            if return_value.get('is_deleted', False):
+                url = '/graphs/{graph_id}'.format(**return_value)
+            else:
+                url = '/graphs/{graph_id}?user_layout={id}'.format(**return_value)
     elif resource == 'graph':
         return_value = graph_controllers.get_graph_by_id(request, resource_id)
     elif resource == 'group':
