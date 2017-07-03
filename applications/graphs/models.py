@@ -210,6 +210,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 			'positions_json': cls.positions_json,
 			'style_json': cls.style_json,
 			'is_shared': cls.is_shared,
+			'is_deleted': cls.is_deleted,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}
