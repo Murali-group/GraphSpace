@@ -428,7 +428,7 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 
 
 def search_layouts(request, owner_email=None, is_shared=None, name=None, graph_id=None, limit=20, offset=0,
-                   order='desc', sort='name'):
+                   is_deleted=False, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Layout.name
 	elif sort == 'update_at':
@@ -450,13 +450,14 @@ def search_layouts(request, owner_email=None, is_shared=None, name=None, graph_i
 	                                 graph_id=graph_id,
 	                                 limit=limit,
 	                                 offset=offset,
+	                                 is_deleted=is_deleted,
 	                                 order_by=orber_by)
 
 	return total, layouts
 
 
-def get_layout_by_id(request, layout_id):
-	return db.get_layout_by_id(request.db_session, layout_id)
+def get_layout_by_id(request, layout_id, is_deleted=False):
+	return db.get_layout_by_id(request.db_session, layout_id, is_deleted=False)
 
 
 def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, style_json=None,
