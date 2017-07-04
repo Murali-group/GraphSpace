@@ -1,11 +1,11 @@
 #%RAML 1.0
 title: GraphSpace REST API Services
 version: v1
-baseUri: http://www.graphspace.org/{version}
+baseUri: http://www.graphspace.org/api/{version}
 protocols: [ HTTP ]
 mediaType: application/json
 
-securitySchemes: 
+securitySchemes:
   basicAuth:
     description: Each request must contain the headers necessary for basic authentication
     type: Basic Authentication
@@ -23,7 +23,7 @@ securitySchemes:
 
 types:
   Style:
-    properties: 
+    properties:
       style: object
       selector: string
   StyleJSON:
@@ -77,12 +77,9 @@ types:
             },
             "selector": "edge[name='P4314611-P0810711']"
           }
-        ],
-        "target_cytoscapejs_version": "~2.7",
-        "generated_by": "graphspace-2.0.0",
-        "format_version": "1.0"
+        ]
       }
-    properties: 
+    properties:
       style: Style[]
   GraphJSON:
     description: Graph defined in CYJS format
@@ -145,8 +142,8 @@ types:
         }
       }
     properties:
-      elements: 
-        properties: 
+      elements:
+        properties:
           nodes: array
           edges: array
       data:
@@ -206,19 +203,136 @@ types:
               },
               "selector": "edge[name='P4314611-P0810711']"
             }
-          ],
-          "target_cytoscapejs_version": "~2.7",
-          "generated_by": "graphspace-2.0.0",
-          "format_version": "1.0"
+          ]
         },
         "name": "My first graph",
         "tags": [
-          {
-            "updated_at": "2017-02-15T20:58:32.818474",
-            "created_at": "2017-02-15T20:58:32.818474",
-            "id": 11210,
-            "name": "tutorial"
+          "tutorial", "sample"
+        ],
+        "is_public": 0,
+        "owner_email": "user1@example.com",
+        "graph_json": {
+          "elements": {
+            "nodes": [
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 297.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P4314611",
+                  "name": "P4314611",
+                  "label": ""
+                }
+              },
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 892.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P0810711",
+                  "name": "P0810711",
+                  "label": ""
+                }
+              }
+            ],
+            "edges": [
+              {
+                "data": {
+                  "target": "P0810711",
+                  "k": 0,
+                  "source": "P4314611",
+                  "is_directed": 1,
+                  "id": "P4314611-P0810711",
+                  "name": "P4314611-P0810711"
+                },
+                "style": {
+                  "line-color": "blue",
+                  "target-arrow-shape": "triangle",
+                  "source-arrow-color": "yellow",
+                  "width": "12px",
+                  "curve-style": "bezier",
+                  "line-style": "dotted"
+                }
+              }
+            ]
+          },
+          "data": {
+            "description": "Description of graph.. can also point to an image hosted elsewhere",
+            "name": "My first graph",
+            "tags": [
+              "tutorial", "sample"
+            ]
           }
+        }
+      }
+    properties:
+      name: string
+      owner_email: string
+      is_public: number
+      tags: array
+      style_json: StyleJSON
+      graph_json: GraphJSON
+  GraphResponse:
+    description: Graph Response object
+    example: |
+      {
+        "style_json": {
+          "style": [
+            {
+              "style": {
+                "border-color": "#888",
+                "border-width": "2px",
+                "height": "50px",
+                "width": "50px",
+                "shape": "ellipse",
+                "background-blacken": "0.1",
+                "text-halign": "center",
+                "label": "DCC",
+                "text-valign": "center",
+                "background-color": "yellow"
+              },
+              "selector": "node[name='P4314611']"
+            },
+            {
+              "style": {
+                "text-outline-color": "#888",
+                "color": "black",
+                "text-outline-width": "2px",
+                "border-color": "black",
+                "text-valign": "center",
+                "border-width": "5px",
+                "label": "This is an example\n of how to use new lines for the content of\n a node.",
+                "width": "150px",
+                "shape": "ellipse",
+                "text-wrap": "wrap",
+                "background-blacken": "0",
+                "text-halign": "center",
+                "height": "150px",
+                "border-style": "double",
+                "background-color": "red"
+              },
+              "selector": "node[name='P0810711']"
+            },
+            {
+              "style": {
+                "line-color": "blue",
+                "target-arrow-shape": "triangle",
+                "source-arrow-color": "yellow",
+                "width": "12px",
+                "curve-style": "bezier",
+                "line-style": "dotted"
+              },
+              "selector": "edge[name='P4314611-P0810711']"
+            }
+          ]
+        },
+        "name": "My first graph",
+        "tags": [
+          "tutorial", "sample"
         ],
         "updated_at": "2017-03-25T15:37:20.728954",
         "is_public": 0,
@@ -279,24 +393,36 @@ types:
             "description": "Description of graph.. can also point to an image hosted elsewhere",
             "name": "My first graph",
             "tags": [
-              "tutorial"
+              "tutorial", "sample"
             ]
           }
         }
       }
-    properties: 
-      id: integer
+    properties:
+      id: number
       name: string
       owner_email: string
-      is_public: integer
-      created_at: string
-      updated_at: string
+      is_public: number
       tags: array
       style_json: StyleJSON
       graph_json: GraphJSON
-      default_layout_id: integer
+      created_at: string
+      updated_at: string
+      default_layout_id: number
   Group:
     description: Group object
+    example: |
+      {
+        "name": "Test Group",
+        "owner_email": "user1@example.com",
+        "description": "Test Group"
+      }
+    properties:
+      name: string
+      owner_email: string
+      description: string
+  GroupResponse:
+    description: Group Response object
     example: |
       {
         "total_graphs": 1,
@@ -309,18 +435,92 @@ types:
         "invite_code": "XXXXXXX",
         "description": "Test Group"
       }
-    properties: 
-      id: integer
+    properties:
+      id: number
       name: string
       owner_email: string
+      description: string
       created_at: string
       updated_at: string
       invite_code: string
-      description: string
       total_graphs: number
       total_members: number
   Layout:
     description: Layout object
+    example:
+      {
+        "name": "dummy",
+        "is_shared": 1,
+        "graph_id": 21462,
+        "owner_email": "user1@example.com",
+        "style_json": {
+          "style": [
+              {
+                  "selector": "node[name='P4314611']",
+                  "style": {
+                      "border-color": "#888",
+                      "text-halign": "center",
+                      "text-valign": "center",
+                      "border-width": "2px",
+                      "height": "50px",
+                      "width": "50px",
+                      "shape": "ellipse",
+                      "background-blacken": "0.1",
+                      "background-color": "yellow"
+                  }
+              },
+              {
+                  "selector": "node[name='P0810711']",
+                  "style": {
+                      "text-halign": "center",
+                      "text-valign": "center",
+                      "text-outline-color": "#888",
+                      "text-outline-width": "2px",
+                      "border-color": "black",
+                      "border-width": "5px",
+                      "height": "150px",
+                      "shape": "ellipse",
+                      "color": "black",
+                      "border-style": "double",
+                      "text-wrap": "wrap",
+                      "background-blacken": "0",
+                      "width": "150px",
+                      "background-color": "red"
+                  }
+              },
+              {
+                  "selector": "edge[name='P4314611-P0810711']",
+                  "style": {
+                      "curve-style": "bezier",
+                      "line-style": "dotted",
+                      "width": "12px",
+                      "line-color": "blue",
+                      "source-arrow-color": "yellow",
+                      "target-arrow-shape": "triangle"
+                  }
+              }
+          ]
+        },
+        "positions_json": {
+            "P4314611": {
+                "y": 87,
+                "x": 35
+            },
+            "P0810711": {
+                "y": 87.89306358381505,
+                "x": 208.18593448940268
+            }
+        }
+      }
+    properties:
+      name: string
+      owner_email: string
+      is_shared: number
+      graph_id: number
+      positions_json: object
+      style_json: StyleJSON
+  LayoutResponse:
+    description: Layout Response object
     example: |
       {
         "style_json": "{\"style\": [{\"style\": {\"font-size\": \"16px\", \"border-color\": \"#888\", \"border-width\": \"2px\", \"height\": \"50px\", \"width\": \"50px\", \"shape\": \"ellipse\", \"background-blacken\": \"0.1\", \"text-halign\": \"center\", \"label\": \"DCC\", \"text-valign\": \"center\", \"background-color\": \"yellow\"}, \"selector\": \"node[name='P4314611']\"}, {\"style\": {\"text-outline-color\": \"#888\", \"font-size\": \"16px\", \"text-outline-width\": \"2px\", \"color\": \"black\", \"border-width\": \"5px\", \"label\": \"This is an example\\n of how to use new lines for the content of\\n a node.\", \"border-color\": \"black\", \"shape\": \"ellipse\", \"border-style\": \"double\", \"text-wrap\": \"wrap\", \"background-blacken\": \"0\", \"text-halign\": \"center\", \"height\": \"150px\", \"text-valign\": \"center\", \"width\": \"150px\", \"background-color\": \"red\"}, \"selector\": \"node[name='P0810711']\"}, {\"style\": {\"line-color\": \"blue\", \"target-arrow-shape\": \"triangle\", \"source-arrow-color\": \"yellow\", \"width\": \"12px\", \"curve-style\": \"bezier\", \"line-style\": \"dotted\"}, \"selector\": \"edge[name='P4314611-P0810711']\"}], \"target_cytoscapejs_version\": \"~2.7\", \"generated_by\": \"graphspace-2.0.0\", \"format_version\": \"1.0\"}",
@@ -334,7 +534,7 @@ types:
         "is_shared": 0
       }
     properties:
-      id: integer
+      id: number
       name: string
       owner_email: string
       created_at: string
@@ -343,6 +543,36 @@ types:
       graph_id: number
       positions_json: string
       style_json: string
+  Member:
+    description: Member Response object
+    example: |
+      {
+          "updated_at": "2017-04-14T00:55:46.775762",
+          "created_at": "2017-04-14T00:55:46.775762",
+          "id": 45,
+          "email": "user1@example.com"
+      }
+    properties:
+      id: number
+      email: string
+      created_at: string
+      updated_at: string
+  Error:
+    description: Error object
+    example: |
+      {
+          "status_code": 400,
+          "http_request": "GET /api/v1/graphs/",
+          "error_message": "`is_public` is required to be set to True when `owner_email` and `member_email` are not provided.",
+          "error_code": 1006,
+          "error_details": "https://www.graphspace.org/docs/errors/1006"
+      }
+    properties:
+      status_code: number
+      http_request: string
+      error_message: string
+      error_code: number
+      error_details: string
 
 /graphs:
   description: APIs to access graphs on GraphSpace.
@@ -351,17 +581,17 @@ types:
     description: List all Graphs matching query criteria, if provided; otherwise list all Graph
     queryParameters:
       name?: string
-      is_public?: integer
+      is_public?: number
       owner_email?: string
       member_email?: string
       limit?:
         description: Number of entities to return.
         default: 20
-        type: integer
+        type: number
       offset?:
         description: Offset the list of returned entities by this number.
         default: 0
-        type: integer
+        type: number
       names?:
         description: Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
         type: string[]
@@ -383,9 +613,18 @@ types:
         example: "name"
     responses:
       200:
+        description: SUCCESS
         body:
           application/json:
-            type: Graph[]
+            type: object
+            properties:
+              total: number
+              graphs: GraphResponse[]
+      400:
+        description: BAD REQUEST
+        body:
+          application/json:
+            type: Error
   post:
     description: Create a new Graph.
     body:
@@ -393,9 +632,15 @@ types:
         type: Graph
     responses:
       201:
+        description: SUCCESS
         body:
           application/json:
-            type: Graph
+            type: GraphResponse
+      400:
+        description: BAD REQUEST
+        body:
+          application/json:
+            type: Error
   /{id}:
     description: APIs to access a specific graph on GraphSpace.
     displayName: Graph
@@ -403,9 +648,15 @@ types:
       description: Get a Graph by id
       responses:
         200:
+          description: SUCCESS
           body:
             application/json:
-              type: Graph
+              type: GraphResponse
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
     put:
       description: Update a Graph by id
       body:
@@ -413,33 +664,151 @@ types:
           type: Graph
       responses:
         200:
+          description: SUCCESS
           body:
             application/json:
-              type: Graph
+              type: GraphResponse
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
     delete:
       description: Delete a Graph by id
       responses:
         200:
+          description: SUCCESS
           body:
             application/json:
               type: object
+              properties:
+                message: string
               example: |
                 {
                   "message": "Successfully deleted graph with id=21341"
                 }
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
     /layouts:
       description: APIs to access layouts of a specific graph on GraphSpace.
       displayName: Graph Layouts
       get:
         description: List all Graph Layouts matching query criteria, if provided; otherwise list all Graph Layouts.
+        queryParameters:
+          owner_email?: string
+          is_shared?: number
+          name?:
+            description: Search for layouts with given name. In order to search for layouts with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all layouts with xyz in their name.
+            type: string
+          limit?:
+            description: Number of entities to return.
+            default: 20
+            type: number
+          offset?:
+            description: Offset the list of returned entities by this number.
+            default: 0
+            type: number
+          order?:
+            description: Defines the column sort order, can only be 'asc' or 'desc'.
+            type: string
+          sort?:
+            description: Defines which column will be sorted.
+            type: string
+            example: "name"
         responses:
           200:
+            description: SUCCESS
             body:
               application/json:
-                type: Layout[]
+                type: object
+                properties:
+                  total: number
+                  layouts: LayoutResponse[]
+          400:
+            description: BAD REQUEST
+            body:
+              application/json:
+                type: Error
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
       post:
         description: Create a new Graph Layout.
-                
+        body:
+          application/json:
+            type: Layout
+        responses:
+          201:
+            description: SUCCESS
+            body:
+              application/json:
+                type: LayoutResponse
+          400:
+            description: BAD REQUEST
+            body:
+              application/json:
+                type: Error
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      /{layout_id}:
+        description: APIs to access a specific layout on GraphSpace.
+        displayName: Graph Layout
+        get:
+          description: Get a Layout by id
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: LayoutResponse
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+        put:
+          description: Update a Layout by id
+          body:
+            application/json:
+              type: Layout
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: LayoutResponse
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+        delete:
+          description: Delete a Layout by id
+          responses:
+            200:
+              body:
+                application/json:
+                  type: object
+                  properties:
+                    message: string
+                  example: |
+                    {
+                      "message": "Successfully deleted layout with id=1068"
+                    }
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+
 /groups:
   description: APIs to access groups on GraphSpace.
   displayName: Groups
@@ -452,14 +821,14 @@ types:
       description?:
         description: Search for groups with given description. In order to search for groups with given description as a substring, wrap the description with percentage symbol. For example, %xyz% will search for all groups with xyz in their description.
         type: string
-      limit?: 
-        description: Number of entities to return. 
+      limit?:
+        description: Number of entities to return.
         default: 20
-        type: integer
-      offset?: 
+        type: number
+      offset?:
         description: Offset the list of returned entities by this number.
         default: 0
-        type: integer
+        type: number
       order?:
         description: Defines the column sort order, can only be 'asc' or 'desc'.
         type: string
@@ -469,6 +838,234 @@ types:
         example: "name"
     responses:
       200:
+        description: SUCCESS
         body:
           application/json:
-            type: Group[]
+            type: object
+            properties:
+              total: number
+              groups: GroupResponse[]
+      400:
+        description: BAD REQUEST
+        body:
+          application/json:
+            type: Error
+  post:
+    description: Create a new Group.
+    body:
+      application/x-www-form-urlencoded:
+        type: Group
+    responses:
+      201:
+        description: SUCCESS
+        body:
+          application/json:
+            type: GroupResponse
+      400:
+        description: BAD REQUEST
+        body:
+          application/json:
+            type: Error
+  /{id}:
+    description: APIs to access a specific group on GraphSpace.
+    displayName: Group
+    get:
+      description: Get a Group by id
+      responses:
+        200:
+          description: SUCCESS
+          body:
+            application/json:
+              type: GroupResponse
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
+    put:
+      description: Update a Group by id
+      body:
+        application/x-www-form-urlencoded:
+          type: Group
+      responses:
+        200:
+          description: SUCCESS
+          body:
+            application/json:
+              type: GroupResponse
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
+    delete:
+      description: Delete a Group by id
+      responses:
+        200:
+          description: SUCCESS
+          body:
+            application/json:
+              type: object
+              properties:
+                message: string
+              example: |
+                {
+                  "message": "Successfully deleted group with id=101"
+                }
+        403:
+          description: FORBIDDEN
+          body:
+            application/json:
+              type: Error
+    /graphs:
+      description: APIs to access graphs of a specific group on GraphSpace.
+      displayName: Group Graphs
+      get:
+        description: List all Graphs of a Group.
+        responses:
+          200:
+            description: SUCCESS
+            body:
+              application/json:
+                type: object
+                properties:
+                  total: number
+                  graphs: GraphResponse[]
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      post:
+        description: Add a Graph to a Group.
+        body:
+          application/x-www-form-urlencoded:
+            type: object
+            properties:
+              graph_id: number
+            example: |
+              {
+                "graph_id":21743
+              }
+        responses:
+          201:
+            description: SUCCESS
+            body:
+              application/json:
+                type: object
+                properties:
+                  group_id: string
+                  graph_id: number
+                  created_at: string
+                  updated_at: string
+                example: |
+                  {
+                    "created_at": "2017-07-04T11:08:23.598393",
+                    "group_id": "38",
+                    "graph_id": 21753,
+                    "updated_at": "2017-07-04T11:08:23.598393"
+                  }
+          400:
+            description: BAD REQUEST
+            body:
+              application/json:
+                type: Error
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      /{graph_id}:
+        delete:
+          description: Delete a Graph from a Group by graph_id.
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: object
+                  properties:
+                    message: string
+                  example: |
+                    {
+                        "message": "Successfully deleted graph with id=21753 from group with id=38"
+                    }
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+    /members:
+      description: APIs to access members of a specific group on GraphSpace.
+      displayName: Group Members
+      get:
+        description: List all Members of a Group.
+        responses:
+          200:
+            description: SUCCESS
+            body:
+              application/json:
+                type: object
+                properties:
+                  total: number
+                  members: Member[]
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      post:
+        description: Add a Member to a Group.
+        body:
+          application/x-www-form-urlencoded:
+            type: object
+            properties:
+              member_email: string
+            example: |
+              {
+                "member_email": "user3@example.com"
+              }
+        responses:
+          201:
+            description: SUCCESS
+            body:
+              application/json:
+                type: object
+                properties:
+                  group_id: string
+                  user_id: number
+                example: |
+                  {
+                      "group_id": "38",
+                      "user_id": 47
+                  }
+          400:
+            description: BAD REQUEST
+            body:
+              application/json:
+                type: Error
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      /{member_id}:
+        delete:
+          description: Delete a Member from a Group by member_id.
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: object
+                  properties:
+                    message: string
+                  example: |
+                    {
+                        "message": "Successfully deleted member with id=47 from group with id=38"
+                    }
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
