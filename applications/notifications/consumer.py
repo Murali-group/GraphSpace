@@ -26,8 +26,8 @@ class Consumer(threading.Thread):
     def run(self):
         running = True
         while running:
-            message = settings.KAFKA_CONSUMER[self.type].poll()
-            print message
+            message = settings.KAFKA_CONSUMER[self.type].poll(0)
+            #print message
             # timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT
             if message is not None and message.value():
                 print message.value()

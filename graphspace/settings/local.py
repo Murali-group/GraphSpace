@@ -53,9 +53,17 @@ DATABASES = {
 # Kafka Configuration
 KAFKA_URL = 'localhost:9092'
 
-KAFKA_CONFIG = {
+KAFKA_CONSUMER_OWNER = {
     'bootstrap.servers': KAFKA_URL,
-    'group.id': 'graphspace',
+    'group.id': 'graphspace_owner',
+    'default.topic.config': {
+        'auto.offset.reset': 'smallest'
+    }
+}
+
+KAFKA_CONSUMER_GROUP = {
+    'bootstrap.servers': KAFKA_URL,
+    'group.id': 'graphspace_owner',
     'default.topic.config': {
         'auto.offset.reset': 'smallest'
     }
@@ -63,8 +71,8 @@ KAFKA_CONFIG = {
 
 # Consumer for owner notification
 KAFKA_CONSUMER = {
-    "owner": Consumer(KAFKA_CONFIG),
-    "group": Consumer(KAFKA_CONFIG)
+    "owner": Consumer(KAFKA_CONSUMER_OWNER),
+    "group": Consumer(KAFKA_CONSUMER_GROUP)
 }
 
 KAFKA_CONSUMER["owner"].subscribe(['owner'])
