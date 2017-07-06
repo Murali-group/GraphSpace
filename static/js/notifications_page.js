@@ -59,7 +59,7 @@ var notificationsPage = {
                     // This method is called when notifications are successfully fetched.
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
                     $('#all-owner-notification-table').bootstrapTable('refresh')
-                    $.notify({message: response.message}, {type: 'success'});
+                    //$.notify({message: response.message}, {type: 'success'});
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while updating reads.
@@ -68,10 +68,10 @@ var notificationsPage = {
             );
         })
 
-        $('#group-mark-all-read').click(function(){
+        $('#mark-all-read').click(function(){
             data = {
                 owner_email: $('#UserEmail').val(),
-                type: 'group'
+                type: 'all'
             }
             apis.notifications.read(
                 id = null,
@@ -83,7 +83,8 @@ var notificationsPage = {
                         total_val_id = '#unread-group-notification-total', 
                         table_div_id = '#unread-group-notification-tables', 
                         refresh_tabs = true)
-                    $.notify({message: response.message}, {type: 'success'});
+                    $('#unread-owner-notification-table').bootstrapTable('refresh')
+                    //$.notify({message: response.message}, {type: 'success'});
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while updating reads.
@@ -92,20 +93,25 @@ var notificationsPage = {
             );
         })
 
-        // Get group notification on click
-        $('#all-group-notification').click(function(){
+        
+        $('#all-notification').click(function(){
+            // Get group notification on click
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
                 is_read = null, 
                 total_val_id = '#all-group-notification-total', 
                 table_div_id = '#all-group-notification-tables', 
                 refresh_tabs = true)
+            // Get owner notification on click
+            $('#all-owner-notification-table').bootstrapTable('refresh')
+
         })
-        $('#unread-group-notification').click(function(){
+        $('#unread-notification').click(function(){
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
                 is_read = false, 
                 total_val_id = '#unread-group-notification-total', 
                 table_div_id = '#unread-group-notification-tables', 
-                refresh_tabs = true)    
+                refresh_tabs = true)
+            $('#unread-owner-notification-table').bootstrapTable('refresh')    
         })
         notificationsPage.groupNotificationsTable.notificationsGroupCount(
             is_read = false, 
@@ -144,7 +150,7 @@ var notificationsPage = {
                     successCallback = function (response) {
                         // This method is called when notifications are successfully fetched.
                         $('#all-owner-notification-table').bootstrapTable('refresh')
-                        $.notify({message: response.message}, {type: 'success'});
+                        //$.notify({message: response.message}, {type: 'success'});
                         $('#unread-owner-notification-table').bootstrapTable('remove', {
                             field: 'id',
                             values: [row['id']]
@@ -167,7 +173,6 @@ var notificationsPage = {
             return {
                 options: {
                     type: 'owner',
-                    totalIdName: '#unread-owner-notification-total',
                     tableIdName: '#unread-owner-notification-table',
                     is_read: false
                 }
@@ -183,7 +188,6 @@ var notificationsPage = {
             return {
                 options: {
                     type: 'owner',
-                    totalIdName: '#all-owner-notification-total',
                     tableIdName: '#all-owner-notification-table'
                 }
             }
@@ -196,7 +200,7 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             $(params.options["tableIdName"]).bootstrapTable('showLoading');
-            $(params.options["totalIdName"]).html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
+            $("#owner-notification-total").html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
 
             params.data["owner_email"] = $('#UserEmail').val();
             params.data["type"] = params.options["type"]
@@ -208,7 +212,7 @@ var notificationsPage = {
                     // This method is called when notifications are successfully fetched.
                     $(params.options["tableIdName"]).bootstrapTable('hideLoading');
                     params.success(response);
-                    $(params.options["totalIdName"]).text(response.total);
+                    $("#owner-notification-total").text(response.total);
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while fetching notifications.
@@ -238,7 +242,7 @@ var notificationsPage = {
                             total_val_id = '#unread-group-notification-total', 
                             table_div_id = '#unread-group-notification-tables', 
                             refresh_tabs = false)
-                        $.notify({message: response.message}, {type: 'success'});
+                        //$.notify({message: response.message}, {type: 'success'});
                         $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
                             field: 'id',
                             values: [row['id']]
@@ -303,12 +307,10 @@ var notificationsPage = {
                     if(refresh_tabs){
                         gtable.empty()
                     }
+                    
+                    notificationsPage.notificationsTable.unreadTotal = notificationsPage.notificationsTable.unreadTotal + response.total
                     $(total_val_id).text(response.total);
-                    if(response.groups.length == 0){
-                        $('<center/>')
-                        .text("No new notifications")
-                        .appendTo(gtable)
-                    }
+                    
                     $.each(response.groups, function(i){
                         var li = $('<li/>')
                                 .appendTo(glist)
@@ -399,7 +401,7 @@ var notificationsPage = {
                                                 total_val_id = '#unread-group-notification-total', 
                                                 table_div_id = '#unread-group-notification-tables', 
                                                 refresh_tabs = true)
-                                            $.notify({message: response.message}, {type: 'success'});
+                                            //$.notify({message: response.message}, {type: 'success'});
                                         },
                                         errorCallback = function () {
                                             // This method is called when  error occurs while updating reads.

@@ -300,25 +300,39 @@ def _update_notifications_read(request, notification_id=None, query={}):
     type = query.get('type', None)
 
     if type == 'owner':
-        message, notify = notification_controllers.read_owner_notifications(request,
+        total, notify = notification_controllers.read_owner_notifications(request,
                                                                             owner_email=query.get(
                                                                                 'owner_email', None),
                                                                             notification_id=notification_id
                                                                             )
     elif type == 'group':
-        message, notify = notification_controllers.read_group_notifications(request,
+        total, notify = notification_controllers.read_group_notifications(request,
                                                                             member_email=query.get(
                                                                                 'owner_email', None),
                                                                             group_id=query.get(
                                                                                 'group_id', None),
                                                                             notification_id=notification_id
                                                                             )
+    elif type == 'all':
+        total_owner, notify = notification_controllers.read_owner_notifications(request,
+                                                                            owner_email=query.get(
+                                                                                'owner_email', None),
+                                                                            notification_id=notification_id
+                                                                            )
+        total_group, notify = notification_controllers.read_group_notifications(request,
+                                                                            member_email=query.get(
+                                                                                'owner_email', None),
+                                                                            group_id=query.get(
+                                                                                'group_id', None),
+                                                                            notification_id=notification_id
+                                                                            )
+        total = total_owner + total_group
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
 
     return {
-        'message': message
+        'message': "{total} notifications marked as read".format(total=total)
     }
 
 

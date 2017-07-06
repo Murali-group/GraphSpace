@@ -1,0 +1,34 @@
+<div class="tab-pane active" id="unread-tab">
+  <br>
+  <div id="owner-toolbar">
+      <button id="mark-all-read" type="submit" class="btn btn-default">Mark all as read</button>
+  </div>
+  <br>
+  <div id="my-resources">
+    <table id="unread-owner-notification-table" class="table-no-bordered"
+           data-toggle="table"
+           data-show-refresh="false"
+           data-show-columns="false"
+           data-show-toggle="false"
+           data-ajax="notificationsPage.ownerNotificationsTable.getNotifications"
+           data-search="false"
+           data-side-pagination="server"
+           data-data-field="notifications"
+           data-pagination="true"
+           data-sort-name="created_at"
+           data-id-field="id"
+           data-sort-order="desc"
+           data-ajax-options="notificationsPage.ownerNotificationsTable.unreadNotificationQuery">
+        <thead>
+        <tr>
+            <th data-field="message" data-valign="center" data-formatter="notificationsPage.ownerNotificationsTable.messageFormatter">My resources</th>
+            <th data-field="created_at" data-valign="center" data-align="center" data-formatter="utils.dateFormatter"></th>
+            <th data-field="operations" data-valign="center" data-align="right" data-formatter="notificationsPage.notificationsTable.operationsFormatter" data-events="notificationsPage.ownerNotificationsTable.operationEvents"><a class="owner-mark-all-read" id="owner-mark-all-read" href="javascript:void(0)" title="Mark as read"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a></th>
+        </tr>
+        </thead>
+    </table>
+  </div>
+  <br>
+  <div id="unread-group-notification-tables">
+  </div>
+</div>

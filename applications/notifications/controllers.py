@@ -70,7 +70,7 @@ def read_owner_notifications(request, owner_email, notification_id=None):
                                                 owner_email=owner_email,
                                                 notification_id=notification_id)
 
-    return "{total} notifications marked as read.".format(total=total), notify
+    return total, notify
 
 
 def read_group_notifications(request, member_email, group_id=None, notification_id=None):
@@ -80,7 +80,7 @@ def read_group_notifications(request, member_email, group_id=None, notification_
                                                 group_id=group_id,
                                                 notification_id=notification_id)
 
-    return "{total} notifications marked as read.".format(total=total), notify
+    return total, notify
 
 
 # Get notification count per group for all groups
