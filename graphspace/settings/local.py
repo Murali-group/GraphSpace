@@ -63,7 +63,7 @@ KAFKA_CONSUMER_OWNER = {
 
 KAFKA_CONSUMER_GROUP = {
     'bootstrap.servers': KAFKA_URL,
-    'group.id': 'graphspace_owner',
+    'group.id': 'graphspace_group',
     'default.topic.config': {
         'auto.offset.reset': 'smallest'
     }
