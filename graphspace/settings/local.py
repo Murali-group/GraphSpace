@@ -1,5 +1,5 @@
 from graphspace.settings.base import *
-from confluent_kafka import Consumer, Producer
+from kafka import KafkaConsumer, KafkaProducer
 
 # variables for setting up account through which GraphSpace emails
 EMAIL_HOST = 'NONE'
@@ -52,34 +52,23 @@ DATABASES = {
 
 # Kafka Configuration
 KAFKA_URL = 'localhost:9092'
-
+    
 KAFKA_CONSUMER_OWNER = {
-    'bootstrap.servers': KAFKA_URL,
-    'group.id': 'graphspace_owner',
-    'default.topic.config': {
-        'auto.offset.reset': 'smallest'
-    }
+    'bootstrap_servers': KAFKA_URL,
+    'group_id': 'graphspace_owner'
 }
 
 KAFKA_CONSUMER_GROUP = {
-    'bootstrap.servers': KAFKA_URL,
-    'group.id': 'graphspace_group',
-    'default.topic.config': {
-        'auto.offset.reset': 'smallest'
-    }
+    'bootstrap_servers': KAFKA_URL,
+    'group_id': 'graphspace_group'
 }
 
 # Consumer for owner notification
 KAFKA_CONSUMER = {
-    "owner": Consumer(KAFKA_CONSUMER_OWNER),
-    "group": Consumer(KAFKA_CONSUMER_GROUP)
+    "owner": KafkaConsumer('owner', **KAFKA_CONSUMER_OWNER),
+    "group": KafkaConsumer('group', **KAFKA_CONSUMER_GROUP)
 }
-
-KAFKA_CONSUMER["owner"].subscribe(['owner'])
-KAFKA_CONSUMER["group"].subscribe(['group'])
 
 KAFKA_CONSUMER_POLL_TIMEOUT = 2
 
-KAFKA_PRODUCER = Producer({
-    'bootstrap.servers': KAFKA_URL
-})
+KAFKA_PRODUCER = KafkaProducer(bootstrap_servers=KAFKA_URL)

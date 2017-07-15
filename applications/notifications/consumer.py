@@ -22,7 +22,7 @@ class Consumer(threading.Thread):
     def __init__(self, type):
         super(Consumer, self).__init__()
         self.type = type
-
+    """
     def run(self):
         running = True
         consumer_exit = settings.KAFKA_CONSUMER[self.type]
@@ -35,15 +35,20 @@ class Consumer(threading.Thread):
                     print message.value()
                     notify = loads(message.value())
                     self.notification_func[self.type](**notify)
-                """
                 elif message is not None and message.error().code() != KafkaError._PARTITION_EOF:
                     # Message ended
                     running = False
-            
-                """
         except KeyboardInterrupt:
             consumer_exit.close()
         finally:
             consumer_exit.close()
 
         return consumer_exit.close()
+
+    """
+    def run(self):
+        for message in settings.KAFKA_CONSUMER[self.type]:
+            print message
+            if message is not None:
+                notify = loads(message.value)
+                self.notification_func[self.type](**notify)
