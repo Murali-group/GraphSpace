@@ -43,12 +43,17 @@ class Consumer(threading.Thread):
         finally:
             consumer_exit.close()
 
-        return consumer_exit.close()
+        return consumer_exit.close()    
 
     """
     def run(self):
-        for message in settings.KAFKA_CONSUMER[self.type]:
-            print message
-            if message is not None:
-                notify = loads(message.value)
-                self.notification_func[self.type](**notify)
+        consumer_exit = settings.KAFKA_CONSUMER[self.type]
+        try:
+            for message in settings.KAFKA_CONSUMER[self.type]:
+                if message is not None:
+                    notify = loads(message.value)
+                    self.notification_func[self.type](**notify)
+        except KeyboardInterrupt:
+            consumer_exit.close()
+        finally:
+            consumer_exit.close()
