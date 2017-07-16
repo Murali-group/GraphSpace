@@ -11,6 +11,7 @@ from json import loads
 import traceback
 
 
+# Kafka consumers
 class Consumer(threading.Thread):
     daemon = True
     type = "owner"  # defaults to 'owner' type notification
@@ -29,7 +30,7 @@ class Consumer(threading.Thread):
         try:
             while running:
                 message = settings.KAFKA_CONSUMER[self.type].poll(0)
-                #print message
+                # print message
                 # timeout=settings.KAFKA_CONSUMER_POLL_TIMEOUT
                 if message is not None and message.value():
                     print message.value()

@@ -52,7 +52,8 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
     for mem in group_members:
         notify.append(GroupNotification(message=message, type=type, resource=resource, resource_id=resource_id,
                                         member_email=mem.email, group_id=group_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent))
-    db_session.bulk_save_objects(notify)
+    #db_session.bulk_save_objects(notify)
+    db_session.add_all(notify)
     return notify
 
 
