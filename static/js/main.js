@@ -116,3 +116,24 @@ var header = {
             });
     }
 };
+
+var userSocket = {
+    init: function(){
+        var socket = new WebSocket('ws://' + window.location.host);
+
+        socket.onopen = userSocket.onopen
+
+        socket.onmessage = userSocket.onmessage
+
+        if (socket.readyState == WebSocket.OPEN) {
+          socket.onopen();
+        }
+    },
+    onopen: function(){
+        console.log('Websockets connected')
+    },
+    onmessage: function(message){
+         alert(message.data);
+    }
+
+}
