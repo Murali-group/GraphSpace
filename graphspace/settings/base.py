@@ -34,7 +34,8 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 	'applications.users',
 	'applications.graphs',
-	'applications.notifications'
+	'applications.notifications',
+	'channels'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -184,4 +185,15 @@ NOTIFICATION_MESSAGE = {
 		'add_member': 'New group member {name} added.',
 		'remove_member': 'Group member {name} removed.'
 	}
+}
+
+# Channel settings and routing
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+        'ROUTING': 'graphspace.routing.channel_routing',
+    }
 }
