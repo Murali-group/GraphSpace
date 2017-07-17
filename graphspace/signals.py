@@ -12,10 +12,13 @@ def send_notification(group_name, notification):
 def send_owner_notification(notification):
     notification = utils.serializer(notification)
     notification["topic"] = "owner"
-    send_notification(group_name=notification['owner_email'], notification=notification)
+    send_notification(group_name=notification[
+                      'owner_email'], notification=notification)
+
 
 def send_group_notification(notification):
-	for notify in notification:
-		serialized_notify = utils.serializer(notify)
-		serialized_notify["topic"] = "group"
-		send_notification(group_name=serialized_notify['member_email'], notification=serialized_notify)
+    for notify in notification:
+        serialized_notify = utils.serializer(notify)
+        serialized_notify["topic"] = "group"
+        send_notification(group_name=serialized_notify[
+                          'member_email'], notification=serialized_notify)

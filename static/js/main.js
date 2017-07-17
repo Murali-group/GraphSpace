@@ -133,7 +133,40 @@ var userSocket = {
         console.log('Websockets connected')
     },
     onmessage: function(message){
-         alert(message.data);
+        data = JSON.parse(message.data)
+        $.notify({message: data.message}, {type: 'info'})
+        //alert(message.data);
+        userSocket.notification(data)
+        
+    },
+    notification: function(data){
+        switch(data.topic){
+            case "owner":
+                $('#unread-owner-notification-table').bootstrapTable('insertRow', {
+                    index: 1,
+                    row: data
+                });
+                $("#owner-notification-total").text(parseInt($("#owner-notification-total").text()) + 1)
+                break;
+            case "group":
+                table_name = '#group-table-false-' + data['group_id']
+                if($(table_name).length > 0) {
+                    refresh_tabs = false;
+                    $(table_name).bootstrapTable('insertRow', {
+                        index: 1,
+                        row: data
+                    });
+                }
+                if(typeof notificationsPage !== 'undefined'){
+                    notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                        is_read = false, 
+                        total_val_id = '#unread-group-notification-total', 
+                        table_div_id = '#unread-group-notification-tables', 
+                        refresh_tabs = refresh_tabs)
+                }
+                break;
+        }
+
     }
 
 }

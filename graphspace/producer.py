@@ -5,5 +5,5 @@ from json import dumps
 
 
 def send_message(topic, message):
-	settings.KAFKA_PRODUCER.send(topic, dumps(message))
-	settings.KAFKA_PRODUCER.flush()
+    settings.KAFKA_PRODUCER.send(topic, dumps(message))
+    settings.KAFKA_PRODUCER.flush()
