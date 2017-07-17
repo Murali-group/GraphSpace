@@ -4,7 +4,7 @@ import threading
 
 from applications.notifications import controllers as notifications
 from django.conf import settings
-from confluent_kafka import Consumer, KafkaError
+#from confluent_kafka import Consumer, KafkaError
 
 from json import loads
 
