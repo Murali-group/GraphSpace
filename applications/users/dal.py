@@ -259,6 +259,20 @@ def get_groups_by_member_id(db_session, member_id):
 	"""
 	return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == member_id).all()]
 
+@with_session
+def get_groups_by_member_email(db_session, member_email):
+	"""
+	Returns all groups where user with given user_email is a member.
+	:param db_session: Database session.
+	:param member_email: email of a user who is a member of one or many groups.
+	:return: list of Groups
+	"""
+	user = db_session.query(User).filter(User.email == member_email).one_or_none()
+	if user is not None:
+		return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == user.id).all()]
+	else:
+		return []
+
 
 @with_session
 def get_groups_by_owner_id(db_session, owner_id):

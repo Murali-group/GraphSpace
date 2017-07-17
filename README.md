@@ -50,6 +50,8 @@ WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace
 WSGIProcessGroup GraphSpace
 WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 
+WSGIApplicationGroup %{GLOBAL}
+
   <Directory /path_to_GraphSpace/graphspace/>
      <Files wsgi.py>
          Order deny,allow
@@ -57,9 +59,9 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
      </Files>
   </Directory>
   
-  Alias /static/ /path_to_GraphSpace/graphs/static/
+  Alias /static/ /path_to_GraphSpace/static/
   
-  <Directory /path_to_GraphSpace/graphs/static/>
+  <Directory /path_to_GraphSpace/static/>
       Require all granted
   </Directory>
   
@@ -74,7 +76,15 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 9. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
 10. Create a directory for python-eggs. `mkdir /path_to_python_eggs`
 11. Give permission to access static files through apache2. `chmod 777 /path_to_python_eggs`
-12. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
+12. Run the following cmd: ``` a2enmod rewrite ```, ``` a2enmod proxy ``` and ``` a2enmod proxy_wstunnel ```
+13. Inside the 000-default.conf, copy and paste following lines inside ``` <VirtualHost *:80> </VirtualHost> ```
+ ```
+  RewriteEngine on
+  RewriteCond %{HTTP:UPGRADE} ^WebSocket$ [NC,OR]
+  RewriteCond %{HTTP:CONNECTION} ^Upgrade$ [NC]
+  RewriteRule .* ws://127.0.0.1:9099%{REQUEST_URI} [P,QSA,L]
+ ```
+14. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
