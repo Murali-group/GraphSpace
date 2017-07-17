@@ -15,6 +15,6 @@ from applications.notifications.consumer import *
 ocon = Consumer("owner")
 ocon.start()
 
-#Start group notification consumer
+# Start group notification consumer
 gcon = Consumer("group")
 gcon.start()

@@ -16,7 +16,7 @@ application = get_wsgi_application()
 from graphspace.database import *
 from django.conf import settings
 settings.db = Database()
-
+"""
 from applications.notifications.consumer import *
 
 # Start owner notification consumer
@@ -26,3 +26,4 @@ ocon.start()
 #Start group notification consumer
 gcon = Consumer("group")
 gcon.start()
+"""
