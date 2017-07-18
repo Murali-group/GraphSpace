@@ -1,0 +1,9 @@
+#!/bin/bash
+
+NAME="GraphSpace daphne workers"
+GRAPHSPACE="/home/melvin/Documents/GSoC/GraphSpace"
+
+set -e  # exit on error
+cd $GRAPHSPACE
+. venv/bin/activate
+exec daphne --fd 5 -b localhost -p 9099 graphspace.asgi:channel_layer
