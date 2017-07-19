@@ -439,3 +439,26 @@ p.lead {
         margin-left: 0;
     }
 }
+
+/* Notification indicator */
+.notification-indicator .mail-status.unread{
+    /*display: inline-block;*/
+    display: none;
+}
+
+.notification-indicator .mail-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    display: none;
+    width: 14px;
+    height: 14px;
+    color: #fff;
+    text-align: center;
+    background-image: -webkit-linear-gradient(#54a3ff, #006eed);
+    background-image: linear-gradient(#54a3ff, #006eed);
+    background-clip: padding-box;
+    border: 2px solid #24292e;
+    border-radius: 50%;
+}

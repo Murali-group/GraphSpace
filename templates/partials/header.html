@@ -32,8 +32,12 @@
                     <li><a href="#signup" data-toggle="modal" data-target="#signupModal">Create Account</a></li>
                 {% else %}
                     {% if uid != None %}
-                    <li><a href="{% url 'notifications' %}"><i class="fa fa-bell" aria-hidden="true"></i>
-</a></li>
+                    <li>
+                        <a href="{% url 'notifications' %}" class="notification-indicator">
+                            <span class="mail-status unread"></span>
+                            <i class="fa fa-bell" aria-hidden="true"></i>
+                        </a>
+                    </li>
                     {% endif %}
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"

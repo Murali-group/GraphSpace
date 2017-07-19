@@ -134,12 +134,13 @@ var userSocket = {
     },
     onmessage: function(message){
         data = JSON.parse(message.data)
-        $.notify({message: data.message}, {type: 'info'})
+        //$.notify({message: data.message}, {type: 'info'})
         //alert(message.data);
         userSocket.notification(data)
         
     },
     notification: function(data){
+        $(".notification-indicator .mail-status.unread").css({"display": "inline-block"})
         switch(data.topic){
             case "owner":
                 $('#unread-owner-notification-table').bootstrapTable('insertRow', {
