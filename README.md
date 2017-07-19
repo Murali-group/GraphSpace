@@ -43,7 +43,7 @@ This section describes the steps required to launch GraphSpace on a server that 
 4. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
 5. Navigate to the `sites-enabled` directory: `cd sites-enabled`
 6. Create a file called `graphspace.conf` and access this file using admin privileges: `sudo vim graphspace.conf'
-7. Inside this file, copy and paste following lines, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace:
+7. Inside this file, copy and paste following lines, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace and `path_to_python_eggs` with the name of the directory where you wish to put the python files:
 
  ```
 WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace/venv/lib/python2.7/site-packages/ python-eggs=/path_to_python_eggs
