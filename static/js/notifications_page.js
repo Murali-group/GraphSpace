@@ -92,8 +92,7 @@ var notificationsPage = {
                 }
             );
         })
-
-        
+     
         $('#all-notification').click(function(){
             // Get group notification on click
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
@@ -105,6 +104,7 @@ var notificationsPage = {
             $('#all-owner-notification-table').bootstrapTable('refresh')
 
         })
+
         $('#unread-notification').click(function(){
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
                 is_read = false, 
@@ -113,6 +113,7 @@ var notificationsPage = {
                 refresh_tabs = true)
             $('#unread-owner-notification-table').bootstrapTable('refresh')    
         })
+
         notificationsPage.groupNotificationsTable.notificationsGroupCount(
             is_read = false, 
             total_val_id = '#unread-group-notification-total', 
