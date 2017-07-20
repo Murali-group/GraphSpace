@@ -10,16 +10,12 @@ def send_message(group_name, type, message):
     Group(group_name).send({'text': dumps({"type": type, "message": message})})
 
 
-def send_owner_notification(notification):
+def send_notification(notification, topic):
     notification = utils.serializer(notification)
-    notification["topic"] = "owner"
-    send_message(group_name=notification[
-                 'owner_email'], type="notification", message=notification)
-
-
-def send_group_notification(notification):
-    for notify in notification:
-        serialized_notify = utils.serializer(notify)
-        serialized_notify["topic"] = "group"
-        send_message(group_name=serialized_notify[
-                     'member_email'], type="notification", message=serialized_notify)
+    group_name_attr = {
+        "owner": "owner_email",
+        "group": "member_email"
+    }
+    notification["topic"] = topic
+    send_message(group_name=notification[group_name_attr[
+                 topic]], type="notification", message=notification)

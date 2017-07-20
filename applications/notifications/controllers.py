@@ -4,11 +4,10 @@ from applications.notifications.models import *
 import applications.notifications.dal as db
 from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace.database import *
-import graphspace.signals as socket
 
 from django.conf import settings
 
-
+    
 # Function to add owner notification to database
 def add_owner_notification(message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
     sess = Database().session()
@@ -16,7 +15,6 @@ def add_owner_notification(message, type, resource, resource_id, owner_email=Non
                                        resource=resource, resource_id=resource_id, is_read=is_read, is_email_sent=is_email_sent)
     # Apply changes to DB as the Middleware is not called
     sess.commit()
-    socket.send_owner_notification(notification=notify)
     return notify
 
 
@@ -27,16 +25,11 @@ def add_group_notification(message, type, resource, resource_id, group_id=None, 
         for gid in group_ids:
             notify = db.add_group_notification(sess, message=message, type=type, group_id=gid, resource=resource,
                                                resource_id=resource_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent)
-            # Apply changes to DB as the Middleware is not called
-            sess.commit()
-            socket.send_group_notification(notify)
     else:
         notify = db.add_group_notification(sess, message=message, type=type, group_id=group_id, resource=resource,
                                            resource_id=resource_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent)
-        # Apply changes to DB as the Middleware is not called
-        sess.commit()
-        socket.send_group_notification(notify)
-    
+    # Apply changes to DB as the Middleware is not called
+    sess.commit()
     return notify
 
 

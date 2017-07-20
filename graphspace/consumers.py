@@ -32,6 +32,6 @@ def websocket_disconnect(message):
     message.reply_channel.send({
         'close': True
     })
-    if message.channel_session['owner_notification_group_name'] is not None:
+    if message.channel_session.get('owner_notification_group_name', None) is not None:
         Group(message.channel_session['owner_notification_group_name']).discard(
             message.reply_channel)
