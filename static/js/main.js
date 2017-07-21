@@ -156,9 +156,14 @@ var userSocket = {
         data = JSON.parse(message.data)
         //$.notify({message: data.message}, {type: 'info'})
         //alert(message.data);
-        userSocket.notification(data)
-        
+        // Different types of communication over sockets
+        switch(data.type){
+            case "notification":
+                userSocket.notification(data.message);
+                break;  
+        }
     },
+    // Socket communication for notifications
     notification: function(data){
         $(".notification-indicator .mail-status.unread").css({"display": "inline-block"})
         switch(data.topic){
@@ -187,7 +192,5 @@ var userSocket = {
                 }
                 break;
         }
-
-    }
-
+    },
 }

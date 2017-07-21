@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 from applications.users.models import *
 from django.conf import settings
 from graphspace.mixins import *
-from sqlalchemy import ForeignKeyConstraint, text, Enum, Boolean
+from sqlalchemy import ForeignKeyConstraint, text, Enum, Boolean, event
+import graphspace.signals as socket
 
 Base = settings.BASE
 
@@ -97,3 +98,13 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
             'created_at': cls.created_at.isoformat(),
             'updated_at': cls.updated_at.isoformat()
         }
+
+
+@event.listens_for(OwnerNotification, 'after_insert')
+def send_owner_notification(mapper, connection, notify):
+    socket.send_notification(notification=notify, topic="owner")
+
+
+@event.listens_for(GroupNotification, 'after_insert')
+def send_group_notification(mapper, connection, notify):
+    socket.send_notification(notification=notify, topic="group")
