@@ -7,7 +7,13 @@ from graphspace.database import *
 
 from django.conf import settings
 
-    
+
+# Function to get notification count
+def get_notification_count(request, owner_email=None, is_read=None):
+    count = db.get_notification_count(
+        request.db_session, owner_email=owner_email, is_read=is_read)
+    return count
+
 # Function to add owner notification to database
 def add_owner_notification(message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
     sess = Database().session()

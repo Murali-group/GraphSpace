@@ -27,7 +27,7 @@ def notifications_page(request):
             Returns
             -------
             response : HTML Page Response
-                    Rendered graphs list page in HTML.
+                    Rendered notifications list page in HTML.
 
             Raises
             ------
@@ -47,13 +47,52 @@ def notifications_page(request):
 
 
 @is_authenticated(redirect_url='/')
+def notifications_count(request):
+    """
+            Wrapper view function for the following pages:
+            /notifications/count
+
+            Parameters
+            ----------
+            request : HTTP Request
+
+            Returns
+            -------
+            response : JSON response
+
+            Raises
+            ------
+            MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+            Notes
+            ------
+    """
+    query = request.GET
+    is_read = query.get('is_read', None)
+
+    if is_read == 'true':
+        is_read = True
+    elif is_read == 'false':
+        is_read = False
+    else:
+        is_read = None
+
+    return HttpResponse(json.dumps({"count": notification_controllers.get_notification_count(request,
+                                                                                   owner_email=query.get(
+                                                                                       'owner_email', None),
+                                                                                   is_read=is_read)}),
+                        content_type="application/json",
+                        status=200)
+
+
+@is_authenticated(redirect_url='/')
 def notifications_ajax_api(request, notification_id=None):
     """
     Handles any request sent to following urls:
             /ajax/notifications
 
     Parameters
-    ----------
+    ----------  
     request - HTTP Request
 
     Returns
@@ -132,7 +171,8 @@ def notification_redirect(request, notification_id):
             if return_value.get('is_deleted', False):
                 url = '/graphs/{graph_id}'.format(**return_value)
             else:
-                url = '/graphs/{graph_id}?user_layout={id}'.format(**return_value)
+                url = '/graphs/{graph_id}?user_layout={id}'.format(
+                    **return_value)
     elif resource == 'graph':
         return_value = graph_controllers.get_graph_by_id(request, resource_id)
     elif resource == 'group':
@@ -301,31 +341,31 @@ def _update_notifications_read(request, notification_id=None, query={}):
 
     if type == 'owner':
         total, notify = notification_controllers.read_owner_notifications(request,
-                                                                            owner_email=query.get(
-                                                                                'owner_email', None),
-                                                                            notification_id=notification_id
-                                                                            )
+                                                                          owner_email=query.get(
+                                                                              'owner_email', None),
+                                                                          notification_id=notification_id
+                                                                          )
     elif type == 'group':
         total, notify = notification_controllers.read_group_notifications(request,
-                                                                            member_email=query.get(
-                                                                                'owner_email', None),
-                                                                            group_id=query.get(
-                                                                                'group_id', None),
-                                                                            notification_id=notification_id
-                                                                            )
+                                                                          member_email=query.get(
+                                                                              'owner_email', None),
+                                                                          group_id=query.get(
+                                                                              'group_id', None),
+                                                                          notification_id=notification_id
+                                                                          )
     elif type == 'all':
         total_owner, notify = notification_controllers.read_owner_notifications(request,
-                                                                            owner_email=query.get(
-                                                                                'owner_email', None),
-                                                                            notification_id=notification_id
-                                                                            )
+                                                                                owner_email=query.get(
+                                                                                    'owner_email', None),
+                                                                                notification_id=notification_id
+                                                                                )
         total_group, notify = notification_controllers.read_group_notifications(request,
-                                                                            member_email=query.get(
-                                                                                'owner_email', None),
-                                                                            group_id=query.get(
-                                                                                'group_id', None),
-                                                                            notification_id=notification_id
-                                                                            )
+                                                                                member_email=query.get(
+                                                                                    'owner_email', None),
+                                                                                group_id=query.get(
+                                                                                    'group_id', None),
+                                                                                notification_id=notification_id
+                                                                                )
         total = total_owner + total_group
     else:
         raise BadRequest(

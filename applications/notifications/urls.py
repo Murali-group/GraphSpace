@@ -7,6 +7,8 @@ urlpatterns = [
 
     # Show notification page
     url(r'^notifications/$', views.notifications_page, name='notifications'),
+    # Get notification count
+    url(r'^notifications/count$', views.notifications_count, name='notifications_count'),
     # Mark as read when clicked on notification and redirect
     url(r'^notification/(?P<notification_id>[^/]+)/redirect/$',
         views.notification_redirect, name='notification_redirect'),

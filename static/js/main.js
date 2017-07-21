@@ -15,6 +15,8 @@ var header = {
         $("#registerBtn").click(function (e) {
             header.onRegister(e);
         });
+
+        header.checkNotification()
     },
     onSignIn: function (e) {
         e.preventDefault();
@@ -113,6 +115,24 @@ var header = {
                 }, {
                     type: 'danger'
                 });
+            });
+    },
+    checkNotification: function(){
+        var user_id = $('#UserEmail').val();
+        //GET Request to get number of unread notifications
+        jsonRequest('GET', "/notifications/count", {
+                "owner_email": user_id,
+                "is_read": false
+            },
+            successCallback = function (response) {
+                if(parseInt(response.count) > 0){
+                    $(".notification-indicator .mail-status.unread").css({"display": "inline-block"})
+                } else {
+                    $(".notification-indicator .mail-status.unread").css({"display": "none"})
+                }
+            },
+            errorCallback = function (response) {
+                $(".notification-indicator .mail-status.unread").css({"display": "none"})
             });
     }
 };

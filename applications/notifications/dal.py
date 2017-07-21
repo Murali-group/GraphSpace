@@ -52,9 +52,25 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
     for mem in group_members:
         notify.append(GroupNotification(message=message, type=type, resource=resource, resource_id=resource_id,
                                         member_email=mem.email, group_id=group_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent))
-    #db_session.bulk_save_objects(notify)
+    # db_session.bulk_save_objects(notify)
     db_session.add_all(notify)
     return notify
+
+
+@with_session
+def get_notification_count(db_session, owner_email, is_read=None):
+    owner_query = db_session.query(OwnerNotification).filter(
+        OwnerNotification.owner_email.ilike(owner_email))
+    group_query = db_session.query(GroupNotification).filter(
+        GroupNotification.member_email.ilike(owner_email))
+
+    if is_read is not None:
+        owner_query = owner_query.filter(
+            OwnerNotification.is_read.is_(is_read))
+        group_query = group_query.filter(
+            GroupNotification.is_read.is_(is_read))
+        
+    return owner_query.count() + group_query.count()
 
 
 @with_session
