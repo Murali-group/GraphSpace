@@ -47,7 +47,7 @@ var notificationsPage = {
          */
         console.log('Loading Notifications Page....');
 
-        $('#owner-mark-all-read').click(function(){
+        $('.owner-mark-all-read').click(function(){
             data = {
                 owner_email: $('#UserEmail').val(),
                 type: 'owner'
@@ -60,6 +60,7 @@ var notificationsPage = {
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
                     $('#all-owner-notification-table').bootstrapTable('refresh')
                     //$.notify({message: response.message}, {type: 'success'});
+                    header.checkNotification()
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while updating reads.
@@ -84,6 +85,7 @@ var notificationsPage = {
                         table_div_id = '#unread-group-notification-tables', 
                         refresh_tabs = true)
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
+                    $(".notification-indicator .mail-status.unread").css({"display": "none"})
                     //$.notify({message: response.message}, {type: 'success'});
                 },
                 errorCallback = function () {
@@ -402,6 +404,7 @@ var notificationsPage = {
                                                 total_val_id = '#unread-group-notification-total', 
                                                 table_div_id = '#unread-group-notification-tables', 
                                                 refresh_tabs = true)
+                                            header.checkNotification()
                                             //$.notify({message: response.message}, {type: 'success'});
                                         },
                                         errorCallback = function () {
