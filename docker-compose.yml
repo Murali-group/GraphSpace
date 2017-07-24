@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2191:2191"
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_ADVERTISED_PORT: "9093"
+      KAFKA_ADVERTISED_HOST_NAME: 172.18.0.1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper
+    depends_on:
+      - zookeeper
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: "987654321"
+    ports:
+      - "5431:5431"
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.0
+    container_name: elasticsearch_1
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    ports:
+      - 9201:9201
+  redis:
+    image: redis:latest
+    ports:
+      - "6370:6370"
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.docker
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - kafka
+      - db
+      - elasticsearch
+      - redis
+    restart: unless-stopped
