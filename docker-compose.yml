@@ -17,12 +17,12 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper
     depends_on:
       - zookeeper
-  db:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: "987654321"
-    ports:
-      - "5431:5431"
+  #db:
+    #image: postgres
+    #environment:
+      #POSTGRES_PASSWORD: "987654321"
+    #ports:
+      #- "5431:5431"
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.5.0
     container_name: elasticsearch_1
@@ -50,7 +50,6 @@ services:
       - "8000:8000"
     depends_on:
       - kafka
-      - db
       - elasticsearch
       - redis
     restart: unless-stopped
