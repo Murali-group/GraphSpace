@@ -1,22 +1,14 @@
 version: '2'  
 services:  
-  nginx:
-    image: nginx:latest
-    container_name: NGINXDOCKERNAME
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./GraphSpace:/GraphSpace
-      - ./GraphSpace/docker_config/nginx:/etc/nginx/conf.d
-      - ./GraphSpace/static:/static
-    depends_on:
-      - web
   web:
     image: melvin15may/graphspace-test:latest
     container_name: DJANGOXDOCKERNAME
-    command: bash -c "./docker_command.sh"
+    command: bash -c "./GraphSpace/docker_command.sh"
+    restart: unless-stopped
     volumes:
-      - ./
-      - ./GraphSpace/static:/static 
+      - /GraphSpace
+      - /static:/static 
     expose:
-      - 8000
+      - "8000"
+    ports:
+      - "8000:8000"
