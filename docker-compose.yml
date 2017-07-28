@@ -3,7 +3,7 @@ services:
   web:
     image: melvin15may/graphspace-test:latest
     container_name: GRAPHSPACEXDOCKER
-    #command: bash -c "./GraphSpace/docker_command.sh"
+    #command: bash -c "./docker_command.sh <github username> <git repo URL> <git branch>"
     command: bash -c "./docker_command.sh melvin15may https://github.com/melvin15may/GraphSpace.git e#264-docker-diff"
     restart: unless-stopped
     volumes:

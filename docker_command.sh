@@ -31,8 +31,4 @@ echo "Migrate"
 python manage.py migrate --settings=graphspace.settings.production
 
 echo "Start supervisor ... "
-service supervisor start
-supervisorctl reread
-supervisorctl update
-supervisorctl restart all
-python manage.py runworker
+supervisord -n -c '/GraphSpace/docker_config/supervisord/graphspace.conf'
