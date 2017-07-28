@@ -12,7 +12,7 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 
 # URL through which to access graphspace
-URL_PATH = "http://localhost/"
+URL_PATH = "http://localhost:8000/"
 
 # If tracking is enabled for GraphSpace in Google Analytics
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
@@ -23,7 +23,7 @@ AWSACCESSKEYID = 'None'
 SECRETKEY = 'None'
 
 # Path to GraphSPace
-PATH = "/home/melvin/Documents/GSoC/GraphSpace"
+PATH = "/Path_to_GraphSpace"
 
 # SHOULD NEVER CHANGE THIS VALUE
 SECRET_KEY = 'this-is-a-secret-key-for-local-settings-only'
@@ -44,15 +44,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'test',
         'USER': 'postgres',
-        'PASSWORD': '',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432'
     }
 }
 
 # Kafka Configuration
-KAFKA_URL = 'kafka'
-
+KAFKA_URL = 'localhost:9092'
+    
 KAFKA_CONSUMER_OWNER = {
     'bootstrap_servers': KAFKA_URL,
     'group_id': 'graphspace_owner'
