@@ -13,7 +13,7 @@ nohup ~/kafka/bin/kafka-server-start.sh ~/kafka/config/server.properties > ~/kaf
 
 echo "Sleeping for 2 seconds"
 sleep 2
-cat ~/kafka/kafka.log
+#cat ~/kafka/kafka.log
 
 echo "Starting redis"
 redis-server /etc/redis/redis.conf
@@ -31,7 +31,9 @@ echo "Migrate"
 #python manage.py collectstatic --noinput --settings=graphspace.settings.local
 python manage.py migrate --settings=graphspace.settings.local
 
-
-echo "Start GraphSpace ... "
-python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.local
-
+echo "Start supervisor ... "
+service supervisor start
+supervisorctl reread
+supervisorctl update
+supervisorctl restart all
+python manage.py runworker
