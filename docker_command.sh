@@ -28,8 +28,7 @@ echo "Activate virtual env"
 cd ./GraphSpace && source venv/bin/activate 
 
 echo "Migrate"
-#python manage.py collectstatic --noinput --settings=graphspace.settings.local
-python manage.py migrate --settings=graphspace.settings.local
+python manage.py migrate --settings=graphspace.settings.production
 
 echo "Start supervisor ... "
 service supervisor start
