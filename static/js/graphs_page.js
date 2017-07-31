@@ -2073,6 +2073,7 @@ var graphPage = {
                 avoidOverlap: cola_avoid_overlap,
                 fit: cola_fit,
                 flow: cola_flow,
+                infinite: cola_infinite,
                 maxSimulationTime: 1500
             }
 
@@ -2091,6 +2092,7 @@ var graphPage = {
                 avoidOverlap: cola_avoid_overlap,
                 fit: cola_fit,
                 flow:cola_flow,
+                infinite: cola_infinite,
                 maxSimulationTime: 1500
             }
 
@@ -2110,6 +2112,7 @@ var graphPage = {
                 avoidOverlap: cola_avoid_overlap,
                 fit: cola_fit,
                 flow: cola_flow,
+                infinite: cola_infinite,
                 maxSimulationTime: 1500
             }
 
@@ -2117,6 +2120,27 @@ var graphPage = {
             console.log("after applying layout");
 //        window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
 //        graphPage.defaultLayoutWidget.init(0);
+        },
+        infiniteChanged : function(checked) {
+
+
+            cola_infinite = checked;
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLengthVal: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
         },
         fitChanged : function (checked) {
             cola_fit = checked;
@@ -2130,6 +2154,7 @@ var graphPage = {
                 avoidOverlap: cola_avoid_overlap,
                 fit: cola_fit,
                 flow: cola_flow,
+                infinite: cola_infinite,
                 maxSimulationTime: 1500
             }
 
@@ -2150,6 +2175,7 @@ var graphPage = {
                 avoidOverlap: cola_avoid_overlap,
                 fit: cola_fit,
                 flow: cola_flow,
+                infinite: cola_infinite,
                 maxSimulationTime: 1500
             }
 
@@ -2174,6 +2200,7 @@ var graphPage = {
                     avoidOverlap: cola_avoid_overlap,
                     fit: cola_fit,
                     flow: cola_flow,
+                    infinite: cola_infinite,
                     maxSimulationTime: 4000
                 }
 
@@ -2190,6 +2217,7 @@ var graphPage = {
                     avoidOverlap: cola_avoid_overlap,
                     fit: cola_fit,
                     flow: cola_flow,
+                    infinite: cola_infinite,
                     maxSimulationTime: 4000
                 }
             }
@@ -2215,6 +2243,7 @@ var graphPage = {
                     avoidOverlap: cola_avoid_overlap,
                     fit: cola_fit,
                     flow: cola_flow,
+                    infinite: cola_infinite,
                     maxSimulationTime: 4000
                 }
 
@@ -2232,6 +2261,7 @@ var graphPage = {
                     avoidOverlap: cola_avoid_overlap,
                     fit: cola_fit,
                     flow: cola_flow,
+                    infinite: cola_infinite,
                     maxSimulationTime: 4000
                 }
             }
@@ -2610,6 +2640,7 @@ var cytoscapeGraph = {
             avoidOverlap: cola_avoid_overlap,
             fit: cola_avoid_overlap,
             flow: cola_flow,
+            infinite: cola_infinite,
             maxSimulationTime: 1500
             }
         }
@@ -2974,3 +3005,4 @@ var cola_fit = true;
 var cola_randomize = false;
 var cola_avoid_overlap = true;
 var cola_flow = undefined;
+var cola_infinite = false;
