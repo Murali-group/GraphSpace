@@ -206,6 +206,7 @@
                         {% include 'graph/change_layout_sidebar.html' %}
                         {% include 'graph/node_editor.html' %}
                         {% include 'graph/edge_editor.html' %}
+                        {% include 'graph/cola_option.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
 
@@ -249,10 +250,16 @@
 
     </div>
 
-
+    <script type="text/javascript" src="{% static 'components/bootstrap-slider/dist/bootstrap-slider.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'components/cytoscape-panzoom/cytoscape.js-panzoom.css' %}"/>
     <script type="text/javascript" src="{% static 'components/cytoscape-panzoom/cytoscape-panzoom.js' %}"></script>
+
+
+
+  <script src="https://bioinformatics.cs.vt.edu/~jeffl/cola.min.js"></script>
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cytoscape-cola.js"></script>
+
 
     <link rel="stylesheet" type="text/css"
           href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
@@ -269,6 +276,7 @@
           href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
     <script type="text/javascript" charset="utf-8"
             src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
+
 
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
