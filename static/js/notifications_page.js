@@ -152,7 +152,7 @@ var notificationsPage = {
                     resource: row['resource']
                 }
                 apis.notifications.read(
-                    id = row['id'],
+                    id = row['is_bulk'] ? null:row['id'],
                     data = data,
                     successCallback = function (response) {
                         // This method is called when notifications are successfully fetched.

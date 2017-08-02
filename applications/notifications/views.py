@@ -280,13 +280,14 @@ def _get_notifications(request, query={}):
                                                                                        'limit', 20),
                                                                                    offset=query.get('offset', 0))
         notifications = [{
-            'message': notify[0],
-            'is_bulk': notify[1],
-            'type': notify[2],
-            'resource': notify[3],
-            'owner_email': notify[4],
-            'created_at': notify[5].isoformat(),
-            'first_created_at': notify[6].isoformat(),
+            'id': notify[0],
+            'message': notify[1],
+            'is_bulk': notify[2],
+            'type': notify[3],
+            'resource': notify[4],
+            'owner_email': notify[5],
+            'created_at': notify[6].isoformat(),
+            'first_created_at': notify[7].isoformat(),
         } for notify in notifications]
 
     elif type == 'group':

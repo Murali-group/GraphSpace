@@ -77,7 +77,8 @@ def get_notification_count(db_session, owner_email, is_read=None):
 @with_session
 def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
 
-    cte_query = db_session.query(OwnerNotification.message,
+    cte_query = db_session.query(OwnerNotification.id,
+                                 OwnerNotification.message,
                                  OwnerNotification.type,
                                  OwnerNotification.resource,
                                  OwnerNotification.is_read,
@@ -94,7 +95,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
 
     cte_query = cte_query.cte('owner_notification_cte')
 
-    query = db_session.query(case([(func.count(cte_query.c.owner_email) > 1,
+    query = db_session.query(func.max(cte_query.c.id).label('id'),
+                             case([(func.count(cte_query.c.owner_email) > 1,
                                     cast(func.count(cte_query.c.owner_email), String) + ' ' + cte_query.c.resource +
                                     's ' + cte_query.c.type + 'd.')], else_=func.max(cte_query.c.message)).label('message'),
                              case([(func.count(cte_query.c.owner_email) > 1, True)],
@@ -102,11 +104,10 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
                              cte_query.c.type.label('type'),
                              cte_query.c.resource.label('resource'),
                              func.max(cte_query.c.owner_email).label(
-        'owner_email'),
-        func.max(cte_query.c.created_at).label(
-        'created_at'),
-        func.min(cte_query.c.created_at).label(
-        'first_created_at')) \
+                                 'owner_email'),
+                             func.max(cte_query.c.created_at).label(
+                                 'created_at'),
+                             func.min(cte_query.c.created_at).label('first_created_at')) \
         .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource) \
         .order_by(desc(func.max(cte_query.c.created_at)))
 
@@ -149,21 +150,23 @@ def read_owner_notifications(db_session, owner_email, resource=None, type=None, 
     query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
     notify = None
 
-    if resource is not None:
-        query = query.filter(OwnerNotification.resource == resource)
-
-    if type is not None:
-        query = query.filter(OwnerNotification.type == type)
-
-    if created_at is not None:
-        query = query.filter(OwnerNotification.created_at <= datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f"))
-
-    if first_created_at is not None:
-        query = query.filter(OwnerNotification.created_at >= datetime.strptime(first_created_at,"%Y-%m-%dT%H:%M:%S.%f"))
-
     if notification_id is not None:
         query = query.filter(OwnerNotification.id == notification_id)
         notify = query.one_or_none()
+    else:
+        if resource is not None:
+            query = query.filter(OwnerNotification.resource == resource)
+
+        if type is not None:
+            query = query.filter(OwnerNotification.type == type)
+
+        if created_at is not None:
+            query = query.filter(OwnerNotification.created_at <= datetime.strptime(
+                created_at, "%Y-%m-%dT%H:%M:%S.%f"))
+
+        if first_created_at is not None:
+            query = query.filter(OwnerNotification.created_at >= datetime.strptime(
+                first_created_at, "%Y-%m-%dT%H:%M:%S.%f"))
 
     query = query.filter(OwnerNotification.is_read.is_(False))
     total = query.count()
