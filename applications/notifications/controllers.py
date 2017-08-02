@@ -15,6 +15,8 @@ def get_notification_count(request, owner_email=None, is_read=None):
     return count
 
 # Function to add owner notification to database
+
+
 def add_owner_notification(message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
     sess = Database().session()
     notify = db.add_owner_notification(sess, message=message, type=type, owner_email=owner_email,
@@ -48,9 +50,8 @@ def search_owner_notifications(request, owner_email=None, is_read=None, limit=20
                                                        owner_email=owner_email,
                                                        is_read=is_read,
                                                        limit=limit,
-                                                       offset=offset,
-                                                       order_by=orber_by)
-
+                                                       offset=offset)
+    
     return total, notifications
 
 
@@ -64,8 +65,7 @@ def search_group_notifications(request, member_email, group_id=None, is_read=Non
                                                        group_id=group_id,
                                                        is_read=is_read,
                                                        limit=limit,
-                                                       offset=offset,
-                                                       order_by=orber_by)
+                                                       offset=offset)
 
     return total, notifications
 

@@ -279,6 +279,15 @@ def _get_notifications(request, query={}):
                                                                                    limit=query.get(
                                                                                        'limit', 20),
                                                                                    offset=query.get('offset', 0))
+        notifications = [ {
+            'message': notify[0],
+            'is_bulk': notify[1],
+            'type': notify[2],
+            'resource': notify[3],
+            'owner_email': notify[4],
+            'created_at': notify[5].isoformat(),
+            'first_created_at': notify[6].isoformat(),
+        } for notify in notifications]
     elif type == 'group':
         total, notifications = notification_controllers.search_group_notifications(request,
                                                                                    member_email=query.get(
@@ -295,7 +304,7 @@ def _get_notifications(request, query={}):
 
     return {
         'total': total,
-        'notifications': [utils.serializer(notification) for notification in notifications]
+        'notifications': notifications
     }
 
 
