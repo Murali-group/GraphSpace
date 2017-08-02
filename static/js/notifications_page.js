@@ -72,7 +72,7 @@ var notificationsPage = {
         $('#mark-all-read').click(function(){
             data = {
                 owner_email: $('#UserEmail').val(),
-                type: 'all'
+                topic: 'all'
             }
             apis.notifications.read(
                 id = null,
@@ -145,19 +145,24 @@ var notificationsPage = {
                 // Mark as read
                 data = {
                     owner_email: $('#UserEmail').val(),
-                    type: 'owner'
+                    topic: 'owner',
+                    type: row['type'],
+                    created_at: row['created_at'],
+                    first_created_at: row['first_created_at'],
+                    resource: row['resource']
                 }
                 apis.notifications.read(
                     id = row['id'],
                     data = data,
                     successCallback = function (response) {
                         // This method is called when notifications are successfully fetched.
-                        $('#all-owner-notification-table').bootstrapTable('refresh')
+                        //$('#all-owner-notification-table').bootstrapTable('refresh')
                         //$.notify({message: response.message}, {type: 'success'});
                         $('#unread-owner-notification-table').bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
+                            field: 'created_at',
+                            values: [row['created_at']]
                         });
+                        $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
                     },
                     errorCallback = function () {
                         // This method is called when  error occurs while updating reads.

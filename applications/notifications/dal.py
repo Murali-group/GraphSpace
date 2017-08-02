@@ -1,5 +1,6 @@
 from sqlalchemy import and_, or_, desc, asc, func, case, cast
 from sqlalchemy.orm import joinedload, subqueryload
+from datetime import datetime
 
 from applications.notifications.models import *
 from applications.users.models import *
@@ -84,11 +85,6 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
                                  OwnerNotification.created_at,
                                  (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
 
-    #row_number = (func.row_number().over(order_by=desc(order_by)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(order_by))).label('row_number')
-
-    # if order_by is not None:
-    #    query = query.order_by(order_by)
-
     if owner_email is not None:
         cte_query = cte_query.filter(
             OwnerNotification.owner_email.ilike(owner_email))
@@ -148,10 +144,23 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
 
 
 @with_session
-def read_owner_notifications(db_session, owner_email, notification_id=None):
+def read_owner_notifications(db_session, owner_email, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
     query = db_session.query(OwnerNotification)
     query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
     notify = None
+
+    if resource is not None:
+        query = query.filter(OwnerNotification.resource == resource)
+
+    if type is not None:
+        query = query.filter(OwnerNotification.type == type)
+
+    if created_at is not None:
+        query = query.filter(OwnerNotification.created_at <= datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f"))
+
+    if first_created_at is not None:
+        query = query.filter(OwnerNotification.created_at >= datetime.strptime(first_created_at,"%Y-%m-%dT%H:%M:%S.%f"))
+
     if notification_id is not None:
         query = query.filter(OwnerNotification.id == notification_id)
         notify = query.one_or_none()

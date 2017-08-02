@@ -78,9 +78,9 @@ def notifications_count(request):
         is_read = None
 
     return HttpResponse(json.dumps({"count": notification_controllers.get_notification_count(request,
-                                                                                   owner_email=query.get(
-                                                                                       'owner_email', None),
-                                                                                   is_read=is_read)}),
+                                                                                             owner_email=query.get(
+                                                                                                 'owner_email', None),
+                                                                                             is_read=is_read)}),
                         content_type="application/json",
                         status=200)
 
@@ -279,7 +279,7 @@ def _get_notifications(request, query={}):
                                                                                    limit=query.get(
                                                                                        'limit', 20),
                                                                                    offset=query.get('offset', 0))
-        notifications = [ {
+        notifications = [{
             'message': notify[0],
             'is_bulk': notify[1],
             'type': notify[2],
@@ -288,6 +288,7 @@ def _get_notifications(request, query={}):
             'created_at': notify[5].isoformat(),
             'first_created_at': notify[6].isoformat(),
         } for notify in notifications]
+
     elif type == 'group':
         total, notifications = notification_controllers.search_group_notifications(request,
                                                                                    member_email=query.get(
@@ -315,8 +316,16 @@ def _update_notifications_read(request, notification_id=None, query={}):
     ----------
     owner_email : string
             Email of the Owner of the notification.
-    type : string
+    topic : string
             Type of the notification [owner, group, watching].
+    type : string
+            Type of the notification [create, update, delete]
+    created_at : ISO format datetime string
+            Datetime when latest notification created of the bulk
+    first_created_at : ISO format datetime string
+            Datetime when first notification created of the bulk
+    resource : string
+            Type of resource [group, layout, graph]
 
     Parameters
     ----------
@@ -346,15 +355,23 @@ def _update_notifications_read(request, notification_id=None, query={}):
             raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
                              args=get_request_user(request))
 
-    type = query.get('type', None)
+    topic = query.get('topic', None)
 
-    if type == 'owner':
+    if topic == 'owner':
         total, notify = notification_controllers.read_owner_notifications(request,
                                                                           owner_email=query.get(
                                                                               'owner_email', None),
+                                                                          resource=query.get(
+                                                                              'resource', None),
+                                                                          created_at=query.get(
+                                                                              'created_at', None),
+                                                                          first_created_at=query.get(
+                                                                              'first_created_at', None),
+                                                                          type=query.get(
+                                                                              'type', None),
                                                                           notification_id=notification_id
                                                                           )
-    elif type == 'group':
+    elif topic == 'group':
         total, notify = notification_controllers.read_group_notifications(request,
                                                                           member_email=query.get(
                                                                               'owner_email', None),
@@ -362,7 +379,7 @@ def _update_notifications_read(request, notification_id=None, query={}):
                                                                               'group_id', None),
                                                                           notification_id=notification_id
                                                                           )
-    elif type == 'all':
+    elif topic == 'all':
         total_owner, notify = notification_controllers.read_owner_notifications(request,
                                                                                 owner_email=query.get(
                                                                                     'owner_email', None),

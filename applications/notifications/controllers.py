@@ -51,7 +51,7 @@ def search_owner_notifications(request, owner_email=None, is_read=None, limit=20
                                                        is_read=is_read,
                                                        limit=limit,
                                                        offset=offset)
-    
+
     return total, notifications
 
 
@@ -70,10 +70,14 @@ def search_group_notifications(request, member_email, group_id=None, is_read=Non
     return total, notifications
 
 
-def read_owner_notifications(request, owner_email, notification_id=None):
+def read_owner_notifications(request, owner_email, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
 
     total, notify = db.read_owner_notifications(request.db_session,
                                                 owner_email=owner_email,
+                                                resource=resource,
+                                                type=type,
+                                                created_at=created_at,
+                                                first_created_at=first_created_at,
                                                 notification_id=notification_id)
 
     return total, notify
