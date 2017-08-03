@@ -296,8 +296,7 @@ def _get_notifications(request, query={}):
                                                                                        'resource', None),
                                                                                    type=query.get(
                                                                                        'type', None),
-                                                                                   is_bulk=is_bulk,
-                                                                                   )
+                                                                                   is_bulk=is_bulk)
 
         if is_bulk:
             notifications = [utils.serializer(notify)
@@ -323,7 +322,35 @@ def _get_notifications(request, query={}):
                                                                                    is_read=is_read,
                                                                                    limit=query.get(
                                                                                        'limit', 20),
-                                                                                   offset=query.get('offset', 0))
+                                                                                   offset=query.get(
+                                                                                       'offset', 0),
+                                                                                   created_at=query.get(
+                                                                                       'created_at', None),
+                                                                                   first_created_at=query.get(
+                                                                                       'first_created_at', None),
+                                                                                   resource=query.get(
+                                                                                       'resource', None),
+                                                                                   type=query.get(
+                                                                                       'type', None),
+                                                                                   is_bulk=is_bulk)
+
+        if is_bulk:
+            notifications = [utils.serializer(notify)
+                             for notify in notifications]
+        else:
+            notifications = [{
+                'id': notify[0],
+                'message': notify[1],
+                'is_bulk': notify[2],
+                'type': notify[3],
+                'resource': notify[4],
+                'owner_email': notify[5],
+                'member_email': notify[6],
+                'group_id': notify[7],
+                'created_at': notify[8].isoformat(),
+                'first_created_at': notify[9].isoformat(),
+            } for notify in notifications]
+
     else:
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))

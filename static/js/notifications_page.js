@@ -134,6 +134,28 @@ var notificationsPage = {
                 ].join('');
             }
             return '' 
+        },
+        createSubNotificationTable: function(ajax, ajaxOptions, columns){
+            $('#sub-notification-modal').modal('toggle')
+            var dtable = $('#sub-notification-table-modal')
+            dtable.empty()
+            var table = $('<table/>')
+                        .attr('data-toggle','table')
+                        .attr('id','sub-notification-table')
+                        .addClass('table-no-bordered')
+                        .appendTo(dtable)
+            table.bootstrapTable({
+                ajax: ajax,
+                ajaxOptions: {
+                    options: ajaxOptions
+                },
+                sidePagination: 'server',
+                pagination: true,
+                dataField: 'notifications',
+                sortName: 'created_at',
+                sortOrder: 'desc',
+                columns: columns
+            })
         }
     },
     ownerNotificationsTable:{
@@ -144,46 +166,17 @@ var notificationsPage = {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if(row["is_bulk"]){
-                    /*
-                    apis.notifications.get(
-                        data = data,
-                        uri = null,
-                        successCallback = function(response){
-                            
-
-                        },
-                        errorCallback = function(){
-
-                        })
-                        */
-                    $('#sub-notification-modal').modal('toggle')
-                    var dtable = $('#sub-notification-table-modal')
-                    dtable.empty()
-                    var table = $('<table/>')
-                                .attr('data-toggle','table')
-                                .attr('id','sub-notification-table')
-                                .addClass('table-no-bordered')
-                                .appendTo(dtable)
-                    table.bootstrapTable({
-                        ajax: notificationsPage.ownerNotificationsTable.getNotifications,
-                        ajaxOptions: {
-                            options: {
-                                owner_email: $('#UserEmail').val(),
-                                topic: 'owner',
-                                type: row['type'],
-                                created_at: row['created_at'],
-                                first_created_at: row['first_created_at'],
-                                resource: row['resource'],
-                                is_bulk: row['is_bulk'],
-                                sub_table: true
-                            }
-                        },
-                        sidePagination: 'server',
-                        pagination: true,
-                        dataField: 'notifications',
-                        sortName: 'created_at',
-                        sortOrder: 'desc',
-                        columns:[
+                    notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.ownerNotificationsTable.getNotifications,
+                        {
+                            owner_email: $('#UserEmail').val(),
+                            topic: 'owner',
+                            type: row['type'],
+                            created_at: row['created_at'],
+                            first_created_at: row['first_created_at'],
+                            resource: row['resource'],
+                            is_bulk: row['is_bulk'],
+                            sub_table: true
+                        }, [
                             {
                                 field: 'message',
                                 title: 'Sub-notifications', 
@@ -204,9 +197,7 @@ var notificationsPage = {
                                 formatter: notificationsPage.notificationsTable.operationsFormatter,
                                 events: notificationsPage.ownerNotificationsTable.operationEvents
                             }
-                        ]
-                    })
-
+                    ])
                 } else {
                     window.location.href = '/notification/' + row["id"] + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=owner'
                 }
@@ -318,17 +309,62 @@ var notificationsPage = {
     },
     groupNotificationsTable:{
         messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=group').text(row.message)[0].outerHTML;
+            return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
         },
         operationEvents: {
+            'click .click-message': function(e, value, row, index) {
+                // On clicking on the notification
+                if(row["is_bulk"]){
+                    
+                    notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.groupNotificationsTable.getNotifications,
+                        {
+                            owner_email: $('#UserEmail').val(),
+                            topic: 'group',
+                            type: row['type'],
+                            group_id: row['group_id'],
+                            created_at: row['created_at'],
+                            first_created_at: row['first_created_at'],
+                            resource: row['resource'],
+                            is_bulk: row['is_bulk']
+                        }, [
+                            {
+                                field: 'message',
+                                title: 'Sub-notifications', 
+                                valign: 'center',
+                                formatter: notificationsPage.groupNotificationsTable.messageFormatter,
+                                events: notificationsPage.groupNotificationsTable.operationEvents
+                            },
+                            {
+                                field: 'created_at',
+                                valign: 'center',
+                                align: 'center',
+                                formatter: utils.dateFormatter,
+                            },
+                            {
+                                field: 'operations',
+                                valign: 'center',
+                                align: 'right',
+                                formatter: notificationsPage.notificationsTable.operationsFormatter,
+                                events: notificationsPage.groupNotificationsTable.operationEvents
+                            }
+                        ])
+                } else {
+                    window.location.href = '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=group'
+                }
+            },
             'click .mark-as-read': function (e, value, row, index) {
                 // Mark as read
                 data = {
                     owner_email: $('#UserEmail').val(),
-                    topic: 'group'
+                    topic: 'group',
+                    type: row['type'],
+                    group_id: row['group_id'],
+                    created_at: row['created_at'],
+                    first_created_at: row['first_created_at'],
+                    resource: row['resource']
                 }
                 apis.notifications.read(
-                    id = row['id'],
+                    id = row['is_bulk'] ? null:row['id'],
                     data = data,
                     successCallback = function (response) {
                         // This method is called when notifications are successfully fetched.
@@ -342,7 +378,15 @@ var notificationsPage = {
                             field: 'id',
                             values: [row['id']]
                         });
-
+                        $("#sub-notification-table").bootstrapTable('remove', {
+                            field: 'id',
+                            values: [row['id']]
+                        })
+                        row['is_read'] = true
+                        $("#sub-notification-table").bootstrapTable('insertRow', {
+                            index: index,
+                            row: row
+                        })
                     },
                     errorCallback = function () {
                         // This method is called when  error occurs while updating reads.
@@ -365,6 +409,13 @@ var notificationsPage = {
             params.data["group_id"] = params.options["group_id"]
             params.data["topic"] = params.options["topic"]
             params.data["is_read"] = params.options["is_read"]
+            params.data["type"] = params.options["type"]
+            params.data["created_at"] = params.options["created_at"]
+            params.data["first_created_at"] = params.options["first_created_at"]
+            params.data["resource"] = params.options["resource"]
+            params.data["is_bulk"] = params.options["is_bulk"]
+
+            console.log(params.data)
 
             apis.notifications.get(params.data,
                 uri = null,
@@ -457,7 +508,13 @@ var notificationsPage = {
                                         field: 'message',
                                         title: response.groups[i]['group']['name'], 
                                         valign: 'center',
-                                        formatter: notificationsPage.groupNotificationsTable.messageFormatter
+                                        formatter: notificationsPage.groupNotificationsTable.messageFormatter,
+                                        events: notificationsPage.groupNotificationsTable.operationEvents
+                                    },
+                                    {
+                                        field: 'owner_email',
+                                        align: 'right', 
+                                        valign: 'center',
                                     },
                                     {
                                         field: 'created_at',
