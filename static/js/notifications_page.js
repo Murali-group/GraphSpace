@@ -50,7 +50,7 @@ var notificationsPage = {
         $('.owner-mark-all-read').click(function(){
             data = {
                 owner_email: $('#UserEmail').val(),
-                type: 'owner'
+                topic: 'owner'
             }
             apis.notifications.read(
                 id = null,
@@ -138,9 +138,79 @@ var notificationsPage = {
     },
     ownerNotificationsTable:{
         messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=owner').text(row.message)[0].outerHTML;
+            return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
         },
         operationEvents: {
+            'click .click-message': function(e, value, row, index) {
+                // On clicking on the notification
+                if(row["is_bulk"]){
+                    /*
+                    apis.notifications.get(
+                        data = data,
+                        uri = null,
+                        successCallback = function(response){
+                            
+
+                        },
+                        errorCallback = function(){
+
+                        })
+                        */
+                    $('#sub-notification-modal').modal('toggle')
+                    var dtable = $('#sub-notification-table-modal')
+                    dtable.empty()
+                    var table = $('<table/>')
+                                .attr('data-toggle','table')
+                                .attr('id','sub-notification-table')
+                                .addClass('table-no-bordered')
+                                .appendTo(dtable)
+                    table.bootstrapTable({
+                        ajax: notificationsPage.ownerNotificationsTable.getNotifications,
+                        ajaxOptions: {
+                            options: {
+                                owner_email: $('#UserEmail').val(),
+                                topic: 'owner',
+                                type: row['type'],
+                                created_at: row['created_at'],
+                                first_created_at: row['first_created_at'],
+                                resource: row['resource'],
+                                is_bulk: row['is_bulk'],
+                                sub_table: true
+                            }
+                        },
+                        sidePagination: 'server',
+                        pagination: true,
+                        dataField: 'notifications',
+                        sortName: 'created_at',
+                        sortOrder: 'desc',
+                        columns:[
+                            {
+                                field: 'message',
+                                title: 'Sub-notifications', 
+                                valign: 'center',
+                                formatter: notificationsPage.ownerNotificationsTable.messageFormatter,
+                                events: notificationsPage.ownerNotificationsTable.operationEvents
+                            },
+                            {
+                                field: 'created_at',
+                                valign: 'center',
+                                align: 'center',
+                                formatter: utils.dateFormatter,
+                            },
+                            {
+                                field: 'operations',
+                                valign: 'center',
+                                align: 'right',
+                                formatter: notificationsPage.notificationsTable.operationsFormatter,
+                                events: notificationsPage.ownerNotificationsTable.operationEvents
+                            }
+                        ]
+                    })
+
+                } else {
+                    window.location.href = '/notification/' + row["id"] + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=owner'
+                }
+            },
             'click .mark-as-read': function (e, value, row, index) {
                 // Mark as read
                 data = {
@@ -162,6 +232,15 @@ var notificationsPage = {
                             field: 'created_at',
                             values: [row['created_at']]
                         });
+                        $("#sub-notification-table").bootstrapTable('remove', {
+                            field: 'id',
+                            values: [row['id']]
+                        })
+                        row['is_read'] = true
+                        $("#sub-notification-table").bootstrapTable('insertRow', {
+                            index: index,
+                            row: row
+                        })
                         $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
                     },
                     errorCallback = function () {
@@ -180,7 +259,7 @@ var notificationsPage = {
              */
             return {
                 options: {
-                    type: 'owner',
+                    topic: 'owner',
                     tableIdName: '#unread-owner-notification-table',
                     is_read: false
                 }
@@ -195,7 +274,7 @@ var notificationsPage = {
              */
             return {
                 options: {
-                    type: 'owner',
+                    topic: 'owner',
                     tableIdName: '#all-owner-notification-table'
                 }
             }
@@ -208,11 +287,17 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             $(params.options["tableIdName"]).bootstrapTable('showLoading');
-            $("#owner-notification-total").html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
-
+            if(!params.options['sub_table']){
+                $("#owner-notification-total").html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
+            }
             params.data["owner_email"] = $('#UserEmail').val();
-            params.data["type"] = params.options["type"]
+            params.data["topic"] = params.options["topic"]
             params.data["is_read"] = params.options["is_read"]
+            params.data["type"] = params.options["type"]
+            params.data["created_at"] = params.options["created_at"]
+            params.data["first_created_at"] = params.options["first_created_at"]
+            params.data["resource"] = params.options["resource"]
+            params.data["is_bulk"] = params.options["is_bulk"]
 
             apis.notifications.get(params.data,
                 uri = null,
@@ -220,7 +305,9 @@ var notificationsPage = {
                     // This method is called when notifications are successfully fetched.
                     $(params.options["tableIdName"]).bootstrapTable('hideLoading');
                     params.success(response);
-                    $("#owner-notification-total").text(response.total);
+                    if(!params.options['sub_table']){
+                        $("#owner-notification-total").text(response.total);
+                    }
                 },
                 errorCallback = function () {
                     // This method is called when  error occurs while fetching notifications.
@@ -231,14 +318,14 @@ var notificationsPage = {
     },
     groupNotificationsTable:{
         messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=group').text(row.message)[0].outerHTML;
+            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=group').text(row.message)[0].outerHTML;
         },
         operationEvents: {
             'click .mark-as-read': function (e, value, row, index) {
                 // Mark as read
                 data = {
                     owner_email: $('#UserEmail').val(),
-                    type: 'group'
+                    topic: 'group'
                 }
                 apis.notifications.read(
                     id = row['id'],
@@ -276,7 +363,7 @@ var notificationsPage = {
 
             params.data["owner_email"] = $('#UserEmail').val();
             params.data["group_id"] = params.options["group_id"]
-            params.data["type"] = params.options["type"]
+            params.data["topic"] = params.options["topic"]
             params.data["is_read"] = params.options["is_read"]
 
             apis.notifications.get(params.data,
@@ -298,7 +385,7 @@ var notificationsPage = {
                 'member_email': $('#UserEmail').val()
             }
             options = {
-                type: 'group'
+                topic: 'group'
             }
             if(is_read != null){
                 data["is_read"] = is_read
@@ -393,7 +480,7 @@ var notificationsPage = {
                             $('.mark-' + response.groups[i]['group']['name'] + '-' + response.groups[i]['group']['id'] + '-as-read').click(function(){
                                 data = {
                                     owner_email: $('#UserEmail').val(),
-                                    type: 'group',
+                                    topic: 'group',
                                     group_id: response.groups[i]['group']['id']
                                 }
                                 apis.notifications.read(

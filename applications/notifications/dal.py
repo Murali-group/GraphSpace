@@ -1,4 +1,4 @@
-from sqlalchemy import and_, or_, desc, asc, func, case, cast
+from sqlalchemy import and_, desc, asc, func, case, cast
 from sqlalchemy.orm import joinedload, subqueryload
 from datetime import datetime
 
@@ -75,16 +75,28 @@ def get_notification_count(db_session, owner_email, is_read=None):
 
 
 @with_session
-def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
+def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
 
-    cte_query = db_session.query(OwnerNotification.id,
-                                 OwnerNotification.message,
-                                 OwnerNotification.type,
-                                 OwnerNotification.resource,
-                                 OwnerNotification.is_read,
-                                 OwnerNotification.owner_email,
-                                 OwnerNotification.created_at,
-                                 (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
+    if is_bulk:
+        # Get all notification without merging similar notifications into 1
+        cte_query = db_session.query(OwnerNotification)
+
+        if created_at is not None and first_created_at is not None and resource is not None and type is not None:
+            cte_query = cte_query.filter(OwnerNotification.created_at <= datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f"),
+                                         OwnerNotification.created_at >= datetime.strptime(
+                                             first_created_at, "%Y-%m-%dT%H:%M:%S.%f"),
+                                         OwnerNotification.resource == resource,
+                                         OwnerNotification.type == type)
+    else:
+        # Get notifications by merging similar ones
+        cte_query = db_session.query(OwnerNotification.id,
+                                     OwnerNotification.message,
+                                     OwnerNotification.type,
+                                     OwnerNotification.resource,
+                                     OwnerNotification.is_read,
+                                     OwnerNotification.owner_email,
+                                     OwnerNotification.created_at,
+                                     (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
 
     if owner_email is not None:
         cte_query = cte_query.filter(
@@ -93,23 +105,26 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset):
     if is_read is not None:
         cte_query = cte_query.filter(OwnerNotification.is_read.is_(is_read))
 
-    cte_query = cte_query.cte('owner_notification_cte')
+    if is_bulk:
+        query = cte_query.order_by(desc(OwnerNotification.created_at))
+    else:
+        cte_query = cte_query.cte('owner_notification_cte')
 
-    query = db_session.query(func.max(cte_query.c.id).label('id'),
-                             case([(func.count(cte_query.c.owner_email) > 1,
-                                    cast(func.count(cte_query.c.owner_email), String) + ' ' + cte_query.c.resource +
-                                    's ' + cte_query.c.type + 'd.')], else_=func.max(cte_query.c.message)).label('message'),
-                             case([(func.count(cte_query.c.owner_email) > 1, True)],
-                                  else_=False).label('is_bulk'),
-                             cte_query.c.type.label('type'),
-                             cte_query.c.resource.label('resource'),
-                             func.max(cte_query.c.owner_email).label(
-                                 'owner_email'),
-                             func.max(cte_query.c.created_at).label(
-                                 'created_at'),
-                             func.min(cte_query.c.created_at).label('first_created_at')) \
-        .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource) \
-        .order_by(desc(func.max(cte_query.c.created_at)))
+        query = db_session.query(func.max(cte_query.c.id).label('id'),
+                                 case([(func.count(cte_query.c.owner_email) > 1,
+                                        cast(func.count(cte_query.c.owner_email), String) + ' ' + cte_query.c.resource +
+                                        's ' + cte_query.c.type + 'd.')], else_=func.max(cte_query.c.message)).label('message'),
+                                 case([(func.count(cte_query.c.owner_email) > 1, True)],
+                                      else_=False).label('is_bulk'),
+                                 cte_query.c.type.label('type'),
+                                 cte_query.c.resource.label('resource'),
+                                 func.max(cte_query.c.owner_email).label(
+                                     'owner_email'),
+                                 func.max(cte_query.c.created_at).label(
+                                     'created_at'),
+                                 func.min(cte_query.c.created_at).label('first_created_at')) \
+            .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource) \
+            .order_by(desc(func.max(cte_query.c.created_at)))
 
     total = query.count()
 

@@ -42,7 +42,7 @@ def add_group_notification(message, type, resource, resource_id, group_id=None, 
 
 
 # Search for owner notification
-def search_owner_notifications(request, owner_email=None, is_read=None, limit=20, offset=0):
+def search_owner_notifications(request, owner_email=None, is_read=None, limit=20, offset=0, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
     sort_attr = db.OwnerNotification.created_at
     orber_by = db.desc(sort_attr)
 
@@ -50,7 +50,12 @@ def search_owner_notifications(request, owner_email=None, is_read=None, limit=20
                                                        owner_email=owner_email,
                                                        is_read=is_read,
                                                        limit=limit,
-                                                       offset=offset)
+                                                       offset=offset,
+                                                       is_bulk=is_bulk,
+                                                       created_at=created_at,
+                                                       first_created_at=first_created_at,
+                                                       resource=resource,
+                                                       type=type)
 
     return total, notifications
 

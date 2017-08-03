@@ -138,7 +138,7 @@ def notification_redirect(request, notification_id):
 
     """
     query = request.GET
-    type = query.get('type', None)
+    topic = query.get('topic', None)
     owner_email = query.get('owner_email', None)
     # Validate get notifications API request
     user_role = authorization.user_role(request)
@@ -146,13 +146,13 @@ def notification_redirect(request, notification_id):
         if get_request_user(request) != owner_email:
             raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
                              args=get_request_user(request))
-    if type == 'owner':
+    if topic == 'owner':
         message, notify = notification_controllers.read_owner_notifications(request,
                                                                             owner_email=owner_email,
                                                                             notification_id=notification_id
                                                                             )
         notify = utils.serializer(notify)
-    elif type == 'group':
+    elif topic == 'group':
         message, notify = notification_controllers.read_group_notifications(request,
                                                                             member_email=owner_email,
                                                                             notification_id=notification_id)
@@ -227,7 +227,7 @@ def _get_notifications(request, query={}):
             Number of entities to return. Default value is 20.
     offset : integer
             Offset the list of returned entities by this number. Default value is 0.
-    type : string
+    topic : string
             Type of the notification [owner, group, watching].
 
     Parameters
@@ -261,8 +261,11 @@ def _get_notifications(request, query={}):
             raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedNotificationAccess,
                              args=get_request_user(request))
 
-    type = query.get('type', None)
+    topic = query.get('topic', None)
     is_read = query.get('is_read', None)
+
+    # this will be true if we need all notifications without combining it
+    is_bulk = query.get('is_bulk', None)
 
     if is_read == 'true':
         is_read = True
@@ -271,26 +274,47 @@ def _get_notifications(request, query={}):
     else:
         is_read = None
 
-    if type == 'owner':
+    if is_bulk == 'true':
+        is_bulk = True
+    else:
+        is_bulk = False
+
+    if topic == 'owner':
         total, notifications = notification_controllers.search_owner_notifications(request,
                                                                                    owner_email=query.get(
                                                                                        'owner_email', None),
                                                                                    is_read=is_read,
                                                                                    limit=query.get(
                                                                                        'limit', 20),
-                                                                                   offset=query.get('offset', 0))
-        notifications = [{
-            'id': notify[0],
-            'message': notify[1],
-            'is_bulk': notify[2],
-            'type': notify[3],
-            'resource': notify[4],
-            'owner_email': notify[5],
-            'created_at': notify[6].isoformat(),
-            'first_created_at': notify[7].isoformat(),
-        } for notify in notifications]
+                                                                                   offset=query.get(
+                                                                                       'offset', 0),
+                                                                                   created_at=query.get(
+                                                                                       'created_at', None),
+                                                                                   first_created_at=query.get(
+                                                                                       'first_created_at', None),
+                                                                                   resource=query.get(
+                                                                                       'resource', None),
+                                                                                   type=query.get(
+                                                                                       'type', None),
+                                                                                   is_bulk=is_bulk,
+                                                                                   )
 
-    elif type == 'group':
+        if is_bulk:
+            notifications = [utils.serializer(notify)
+                             for notify in notifications]
+        else:
+            notifications = [{
+                'id': notify[0],
+                'message': notify[1],
+                'is_bulk': notify[2],
+                'type': notify[3],
+                'resource': notify[4],
+                'owner_email': notify[5],
+                'created_at': notify[6].isoformat(),
+                'first_created_at': notify[7].isoformat(),
+            } for notify in notifications]
+
+    elif topic == 'group':
         total, notifications = notification_controllers.search_group_notifications(request,
                                                                                    member_email=query.get(
                                                                                        'owner_email', None),
