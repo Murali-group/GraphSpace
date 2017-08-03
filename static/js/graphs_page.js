@@ -796,10 +796,13 @@ var graphPage = {
                 if (nodes.length > 0) {
                     graphPage.cyGraph.nodes().forEach(function (ele, i, eles) {
                         _.each(nodes, function (node) {
+                            //Check if the node component is not null and include the node string
                             if (node.indexOf(':') === -1 && node.indexOf('>') === -1 && node.indexOf('<') === -1 && node.indexOf('=') === -1) {
-                                if (ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                    ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                    ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1) {
+                                if ((ele.data('name') && ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1) ||
+                                    (ele.data('label') && ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1) ||
+                                    (ele.data('aliases') && (ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1))
+                                    ) {
+
                                     ele.select();
                                 }
                             } else if (node.indexOf('>') !== -1 || node.indexOf('<') !== -1 || node.indexOf('=') !== -1) {
