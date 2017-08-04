@@ -62,9 +62,9 @@ var header = {
         var password = $("#password").val();
         var verify_password = $("#verify_password").val();
 
-        if (!$("#user_id") || user_id.length == 0) {
+        if (!$("#user_id") || user_id.length == 0 || !validateEmail(user_id)) {
             $.notify({
-                message: 'Please enter your email!'
+                message: 'Please enter a valid email address!'
             }, {
                 type: 'warning'
             });
@@ -116,3 +116,15 @@ var header = {
             });
     }
 };
+
+
+/**
+ * Code from: https://stackoverflow.com/questions/46155/how-to-validate-email-address-in-javascript
+ *
+ * Checks the validity of the email format
+ * Validating the actual address will be needed
+ */
+function validateEmail(email) {
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}
