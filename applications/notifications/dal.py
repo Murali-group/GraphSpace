@@ -6,6 +6,7 @@ from applications.notifications.models import *
 from applications.users.models import *
 import applications.users.dal as db_users
 from graphspace.wrappers import with_session
+from graphspace import utils
 
 
 @with_session
@@ -53,6 +54,12 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
     for mem in group_members:
         notify.append(GroupNotification(message=message, type=type, resource=resource, resource_id=resource_id,
                                         member_email=mem.email, group_id=group_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent))
+
+    if resource == 'group_member' and type == 'remove':
+        group_member = utils.serializer(db_users.get_user_by_id(db_session, resource_id))
+        notify.append(GroupNotification(message="You were removed from this group.", type=type, resource=resource, resource_id=resource_id, group_id=group_id,
+                                        owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent, member_email=group_member.get('email', None)))
+
     # db_session.bulk_save_objects(notify)
     db_session.add_all(notify)
     return notify

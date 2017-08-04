@@ -166,6 +166,7 @@ var userSocket = {
     // Socket communication for notifications
     notification: function(data) {
         $(".notification-indicator .mail-status.unread").css({ "display": "inline-block" })
+        data['is_bulk'] = false
         switch (data.topic) {
             case "owner":
                 $('#unread-owner-notification-table').bootstrapTable('insertRow', {
