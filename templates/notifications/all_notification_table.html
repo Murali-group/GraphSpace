@@ -1,30 +1,17 @@
 <div class="tab-pane" id="all-tab">
-  <br>
-  <div id="my-resources">
-    <table id="all-owner-notification-table" class="table-no-bordered"
-           data-toggle="table"
-           data-show-refresh="false"
-           data-show-columns="false"
-           data-show-toggle="false"
-           data-ajax="notificationsPage.ownerNotificationsTable.getNotifications"
-           data-search="false"
-           data-side-pagination="server"
-           data-data-field="notifications"
-           data-pagination="true"
-           data-sort-name="created_at"
-           data-id-field="id"
-           data-sort-order="desc"
-           data-ajax-options="notificationsPage.ownerNotificationsTable.allNotificationQuery">
-        <thead>
-        <tr>
-            <th data-field="message" data-valign="center" data-formatter="notificationsPage.ownerNotificationsTable.messageFormatter" data-events="notificationsPage.ownerNotificationsTable.operationEvents">My resources</th>
-            <th data-field="created_at" data-valign="center" data-align="center" data-formatter="utils.dateFormatter"></th>
-            <th data-field="operations" data-valign="center" data-align="right" data-formatter="notificationsPage.notificationsTable.operationsFormatter" data-events="notificationsPage.ownerNotificationsTable.operationEvents"><a class="owner-mark-all-read" id="owner-mark-all-read" href="javascript:void(0)" title="Mark as read"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a></th>
-        </tr>
-        </thead>
-    </table>
-  </div>
-  <br>
-  <div id="all-group-notification-tables">
-  </div>
+    <br>
+    <div id="my-resources">
+        <table id="all-owner-notification-table" class="table-no-bordered" data-toggle="table" data-show-refresh="false" data-show-columns="false" data-show-toggle="false" data-ajax="notificationsPage.ownerNotificationsTable.getNotifications" data-search="false" data-side-pagination="server" data-data-field="notifications" data-pagination="true" data-sort-name="created_at" data-id-field="id" data-sort-order="desc" data-ajax-options="notificationsPage.ownerNotificationsTable.allNotificationQuery">
+            <thead>
+                <tr>
+                    <th data-field="message" data-valign="center" data-formatter="notificationsPage.ownerNotificationsTable.messageFormatter" data-events="notificationsPage.ownerNotificationsTable.operationEvents">My resources</th>
+                    <th data-field="created_at" data-valign="center" data-align="center" data-formatter="utils.dateFormatter"></th>
+                    <th data-field="operations" data-valign="center" data-align="right" data-formatter="notificationsPage.notificationsTable.operationsFormatter" data-events="notificationsPage.ownerNotificationsTable.operationEvents"><a class="owner-mark-all-read" id="owner-mark-all-read" href="javascript:void(0)" title="Mark as read"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <br>
+    <div id="all-group-notification-tables">
+    </div>
 </div>
