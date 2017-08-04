@@ -31,7 +31,7 @@ def home_page(request):
 	------
 
 	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  
 
 	if 'GET' == request.method:
 		return render(request, 'home/index.html', context)  # Handle GET request to index page.
@@ -61,8 +61,7 @@ def features_page(request):
 	------
 
 	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
-
+	context = RequestContext(request)  
 	if 'GET' == request.method:
 		return render(request, 'features/index.html', context)  # Handle GET request to index page.
 	else:
@@ -91,7 +90,7 @@ def help_page(request):
 	------
 
 	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  
 
 	if 'GET' == request.method:
 		return render(request, 'help/index.html', context)  # Handle GET request to index page.
@@ -121,7 +120,7 @@ def about_us_page(request):
 	------
 
 	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  
 
 	if 'GET' == request.method:
 		return render(request, 'about_us/index.html', context)  # Handle GET request to index page.
@@ -130,42 +129,49 @@ def about_us_page(request):
 
 
 def forgot_password_page(request):
-	"""
-	Wrapper view function for the following pages:
-		/forgot_password
+    """
+    Wrapper view function for the following pages:
+        /forgot_password
 
-	Parameters
-	----------
-	request : HTTP Request
+    Parameters
+    ----------
+    request : HTTP Request
 
-	Returns
-	-------
-	response : HTML Page Response
-		Rendered forgot password page in HTML.
+    Returns
+    -------
+    response : HTML Page Response
+        Rendered forgot password page in HTML.
 
-	Raises
-	------
-	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+    Raises
+    ------
+    MethodNotAllowed: If a user tries to send requests other than 
+    GET or POST, i.e., PUT or UPDATE.
 
-	Notes
-	------
+    Notes
+    ------
 
-	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+    """
 
-	if 'GET' == request.method:
-		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
-	elif 'POST' == request.method:
-		password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
+    context = RequestContext(request)  
 
-		if password_reset_code is not None:
-			users.send_password_reset_email(request, password_reset_code)
-			context["success_message"] = "Email has been sent!"
-		else:
-			context["error_message"] = "Email does not exist!"
-		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
-	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
+    if 'GET' == request.method:
+        # Handle GET request to forgot password page.
+        return render(request, 'forgot_password/index.html')  
+
+    elif 'POST' == request.method:
+        # Handle POST request to forgot password page.
+
+        password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
+
+        if password_reset_code is not None:
+            users.send_password_reset_email(request, password_reset_code)
+            context["success_message"] = "Email has been sent!"
+        else:
+            context["error_message"] = "Email does not exist!"
+        return render(request, 'forgot_password/index.html', context) 
+    else:
+        # Handle other type of request methods like PUT, UPDATE.
+        raise MethodNotAllowed(request)  
 
 
 def reset_password_page(request):
@@ -184,13 +190,15 @@ def reset_password_page(request):
 
 	Raises
 	------
-	MethodNotAllowed: If a user tries to send requests other than GET and POST i.e. PUT or UPDATE.
+	MethodNotAllowed: If a user tries to send requests other than GET and 
+        POST i.e. PUT or UPDATE.
 
 	Notes
 	------
 
 	"""
-	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	context = RequestContext(request)  
 
 	if 'GET' == request.method:
 		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))

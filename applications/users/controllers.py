@@ -296,14 +296,14 @@ def delete_password_reset_code(request, id):
 
 
 def add_user_to_password_reset(request, email):
-	password_reset_code = db.get_password_reset_by_email(request.db_session, email)
-	if password_reset_code is not None:
-		password_reset_code.code = generate_uid()
-		password_reset_code = db.update_password_reset(request.db_session, password_reset_code.id, password_reset_code.serialize())
-	else:
-		password_reset_code = db.add_password_reset(request.db_session, email)
-	return password_reset_code
+    password_reset_code = db.get_password_reset_by_email(request.db_session, email)
+    if password_reset_code is not None:
+        password_reset_code.code = generate_uid()
+        password_reset_code = db.update_password_reset(request.db_session, password_reset_code.id, password_reset_code.serialize())
+    else:
+        password_reset_code = None
 
+    return password_reset_code
 
 def send_password_reset_email(request, password_reset_code):
 	# Construct email message
