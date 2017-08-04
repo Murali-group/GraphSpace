@@ -36,7 +36,7 @@ def upload_graph_page(request):
                 # user
                 producer.send_message('owner', {
                     'owner_email': graph.get('owner_email', None),
-                    'message': settings.NOTIFICATION_MESSAGE['owner']['upload_graph'].format(name=graph.get('name', '')),
+                    'message': settings.NOTIFICATION_MESSAGE['owner']['upload']['graph'].format(name=graph.get('name', '')),
                     'resource': 'graph',
                     'resource_id': graph['id'],
                     'type': 'upload'
@@ -555,7 +555,7 @@ def _update_graph(request, graph_id, graph={}):
     if graph.get('owner_email', None) is not None:
         producer.send_message('owner', {
             'owner_email': graph.get('owner_email', None),
-            'message': settings.NOTIFICATION_MESSAGE['owner']['update_graph'].format(name=graph.get('name', None)),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['update']['graph'].format(name=graph.get('name', None)),
             'resource': 'graph',
             'resource_id': graph_id,
             'type': 'update'
@@ -594,7 +594,7 @@ def _delete_graph(request, graph_id):
     # Notification
     producer.send_message('owner', {
         'owner_email': get_request_user(request),
-        'message': settings.NOTIFICATION_MESSAGE['owner']['delete_graph'].format(name=return_value.get('name', None)),
+        'message': settings.NOTIFICATION_MESSAGE['owner']['delete']['graph'].format(name=return_value.get('name', None)),
         'resource': 'graph',
         'resource_id': graph_id,
         'type': 'delete'
@@ -727,7 +727,7 @@ def _add_graph_group(request, graph_id, group={}):
     # Notification
     producer.send_message('group', {
         'group_id': group_graph['group_id'],   
-        'message': settings.NOTIFICATION_MESSAGE['group']['share_graph'].format(name=graph.get('name','')),
+        'message': settings.NOTIFICATION_MESSAGE['group']['share']['graph'].format(name=graph.get('name','')),
         'resource': 'graph',
         'resource_id': graph_id,
         'type': 'share',
@@ -773,7 +773,7 @@ def _delete_graph_group(request, graph_id, group_id):
     # Notification
     producer.send_message('group', {
         'group_id': group_id,   
-        'message': settings.NOTIFICATION_MESSAGE['group']['unshare_graph'].format(name=graph.get('name','')),
+        'message': settings.NOTIFICATION_MESSAGE['group']['unshare']['graph'].format(name=graph.get('name','')),
         'resource': 'graph',
         'resource_id': graph_id,
         'type': 'unshare',
@@ -1103,7 +1103,7 @@ def _add_layout(request, graph_id, layout={}):
         # user
         producer.send_message('owner', {
             'owner_email': layout.get('owner_email', None),
-            'message': settings.NOTIFICATION_MESSAGE['owner']['create_layout'].format(name=layout.get('name', '')),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['create']['layout'].format(name=layout.get('name', '')),
             'resource': 'layout',
             'resource_id': return_value['id'],
             'type': 'create'
@@ -1171,7 +1171,7 @@ def _update_layout(request, graph_id, layout_id, layout={}):
         group_ids = [utils.serializer(group)['id'] for group in users.get_groups_by_graph_id(request, graph_id=graph_id)]
         producer.send_message('group', {
             'group_ids': group_ids,   
-            'message': settings.NOTIFICATION_MESSAGE['group']['share_layout'].format(name=return_value.get('name','')),
+            'message': settings.NOTIFICATION_MESSAGE['group']['share']['layout'].format(name=return_value.get('name','')),
             'resource': 'layout',
             'resource_id': layout_id,
             'type': 'share',
@@ -1181,7 +1181,7 @@ def _update_layout(request, graph_id, layout_id, layout={}):
         group_ids = [utils.serializer(group)['id'] for group in users.get_groups_by_graph_id(request, graph_id=graph_id)]
         producer.send_message('group', {
             'group_ids': group_ids,   
-            'message': settings.NOTIFICATION_MESSAGE['group']['unshare_layout'].format(name=return_value.get('name','')),
+            'message': settings.NOTIFICATION_MESSAGE['group']['unshare']['layout'].format(name=return_value.get('name','')),
             'resource': 'layout',
             'resource_id': layout_id,
             'type': 'unshare',
@@ -1190,7 +1190,7 @@ def _update_layout(request, graph_id, layout_id, layout={}):
     else:
         producer.send_message('owner', {
             'owner_email': layout.get('owner_email', None),
-            'message': settings.NOTIFICATION_MESSAGE['owner']['update_layout'].format(name=layout.get('name', None)),
+            'message': settings.NOTIFICATION_MESSAGE['owner']['update']['layout'].format(name=layout.get('name', None)),
             'resource': 'layout',
             'resource_id': layout_id,
             'type': 'update'
@@ -1230,7 +1230,7 @@ def _delete_layout(request, graph_id, layout_id):
     # Notification
     producer.send_message('owner', {
         'owner_email': get_request_user(request),
-        'message': settings.NOTIFICATION_MESSAGE['owner']['delete_layout'].format(name=return_value.get('name', None)),
+        'message': settings.NOTIFICATION_MESSAGE['owner']['delete']['layout'].format(name=return_value.get('name', None)),
         'resource': 'layout',
         'resource_id': layout_id,
         'type': 'delete'

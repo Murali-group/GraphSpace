@@ -304,7 +304,7 @@ def _get_notifications(request, query={}):
         else:
             notifications = [{
                 'id': notify[0],
-                'message': notify[1],
+                'message': (notify[1] + ' ' + notify[4] + ' ' + settings.NOTIFICATION_MESSAGE['owner'][notify[3]]['bulk'] + '.') if notify[2] else notify[1],
                 'is_bulk': notify[2],
                 'type': notify[3],
                 'resource': notify[4],
@@ -340,7 +340,7 @@ def _get_notifications(request, query={}):
         else:
             notifications = [{
                 'id': notify[0],
-                'message': notify[1],
+                'message': (notify[1] + ' ' + notify[4] + ' ' + settings.NOTIFICATION_MESSAGE['group'][notify[3]]['bulk'] + '.') if notify[2] else notify[1],
                 'is_bulk': notify[2],
                 'type': notify[3],
                 'resource': notify[4],

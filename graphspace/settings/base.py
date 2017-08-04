@@ -167,23 +167,47 @@ LOGGING = {
 # Notification messages
 NOTIFICATION_MESSAGE = {
 	'owner': {
-		'upload_graph': 'New graph {name} uploaded.',
-		'create_layout': 'New layout {name} created.',
-		'create_group': 'New group {name} created.',
-		'delete_graph': 'Graph {name} deleted.',
-		'update_graph': 'Graph {name} updated.',
-		'delete_layout': 'Layout {name} deleted.',
-		'update_layout': 'Layout {name} updated.',
-		'delete_group': 'Group {name} deleted.',
-		'update_group': 'Group {name} updated.',
+		'upload': {
+			'graph': 'New graph {name} uploaded.',
+			'bulk': 'uploads'
+		},
+		'create': {
+			'layout': 'New layout {name} created.',
+			'group': 'New group {name} created.',
+			'bulk': 'additions'
+		},
+		'delete': {
+			'graph': 'Graph {name} deleted.',
+			'layout': 'Layout {name} deleted.',
+			'group': 'Group {name} deleted.',
+			'bulk': 'removed'
+		},
+		'update': {
+			'graph': 'Graph {name} updated.', 
+			'layout': 'Layout {name} updated.',
+			'group': 'Group {name} updated.',
+			'bulk': 'updated'
+		}
 	},
 	'group':{
-		'share_graph': 'Graph {name} shared.',
-		'unshare_graph': 'Graph {name} removed.',
-		'share_layout': 'Layout {name} shared.',
-		'unshare_layout': 'Layout {name} removed.',
-		'add_member': 'New group member {name} added.',
-		'remove_member': 'Group member {name} removed.'
+		'share': {
+			'graph': 'Graph {name} shared.',
+			'layout': 'Layout {name} shared.',
+			'bulk': 'shared'
+		},
+		'unshare': {
+			'graph': 'Graph {name} removed.',
+			'layout': 'Layout {name} removed.',
+			'bulk': 'removed'
+		},
+		'add': {
+			'member': 'New group member {name} added.',
+			'bulk': 'additions'
+		},
+		'remove': {
+			'member': 'Group member {name} removed.',
+			'bulk': 'removed'
+		}
 	}
 }
 

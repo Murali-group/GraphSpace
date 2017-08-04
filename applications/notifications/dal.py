@@ -112,8 +112,7 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
 
         query = db_session.query(func.max(cte_query.c.id).label('id'),
                                  case([(func.count(cte_query.c.owner_email) > 1,
-                                        cast(func.count(cte_query.c.owner_email), String) + ' ' + cte_query.c.resource +
-                                        's ' + cte_query.c.type + 'd.')], else_=func.max(cte_query.c.message)).label('message'),
+                                        cast(func.count(cte_query.c.owner_email), String))], else_=func.max(cte_query.c.message)).label('message'),
                                  case([(func.count(cte_query.c.owner_email) > 1, True)],
                                       else_=False).label('is_bulk'),
                                  cte_query.c.type.label('type'),
@@ -175,8 +174,7 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
 
         query = db_session.query(func.max(cte_query.c.id).label('id'),
                                  case([(func.count(cte_query.c.member_email) > 1,
-                                        cast(func.count(cte_query.c.member_email), String) + ' ' + cte_query.c.resource +
-                                        's ' + cte_query.c.type + 'd.')], else_=func.max(cte_query.c.message)).label('message'),
+                                        cast(func.count(cte_query.c.member_email), String))], else_=func.max(cte_query.c.message)).label('message'),
                                  case([(func.count(cte_query.c.member_email) > 1, True)],
                                       else_=False).label('is_bulk'),
                                  cte_query.c.type.label('type'),
@@ -286,13 +284,13 @@ def get_notification_count_per_group(db_session, member_email, is_read=None):
         cte_query = cte_query.filter(GroupNotification.is_read.is_(is_read))
 
     cte_query = cte_query.cte('group_notification_sub_count_cte')
-    
+
     query = db_session.query(cte_query.c.type.label('type'),
                              cte_query.c.resource.label('resource'),
                              cte_query.c.group_id.label('group_id')) \
         .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource, cte_query.c.group_id) \
         .order_by(desc(func.max(cte_query.c.created_at)))
-    
+
     total = query.count()
     query = query.cte('group_notification_count_cte')
 
@@ -303,7 +301,7 @@ def get_notification_count_per_group(db_session, member_email, is_read=None):
 
     new_query = db_session.query(Group, subquery.c.count).join(
         subquery, subquery.c.group_id == Group.id).order_by(subquery.c.count.desc())
-    
+
     return total, new_query.all()
 
     """
