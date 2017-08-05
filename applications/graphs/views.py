@@ -107,7 +107,7 @@ def graph_page(request, graph_id):
 	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
 		                                                                                            'default_layout_id'] is not None else None
 
-	if default_layout is not None and default_layout.is_shared == 1 and request.GET.get(
+	if default_layout is not None and (default_layout.is_shared == 1 or default_layout.owner_email == uid) and request.GET.get(
 			'user_layout') is None and request.GET.get('auto_layout') is None:
 		if '?' in request.get_full_path():
 			return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
