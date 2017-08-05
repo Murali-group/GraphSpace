@@ -247,6 +247,7 @@ def get_graph_by_name(request, owner_email, name):
 
 
 def delete_graph_by_id(request, graph_id):
+	db.update_graph(request.db_session, id=graph_id, updated_graph={'default_layout_id': None})
 	db.delete_graph(request.db_session, id=graph_id)
 	settings.ELASTIC_CLIENT.delete(index="graphs", doc_type='json', id=graph_id, refresh=True)
 	return
