@@ -205,7 +205,9 @@ var notificationsPage = {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
-                    notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
+                    if (!row["is_read"]){
+                        notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
+                    }
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.ownerNotificationsTable.getNotifications, {
                         owner_email: $('#UserEmail').val(),
                         topic: 'owner',
@@ -364,7 +366,9 @@ var notificationsPage = {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
-                    notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
+                    if (!row["is_read"]){
+                        notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
+                    }
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.groupNotificationsTable.getNotifications, {
                         owner_email: $('#UserEmail').val(),
                         topic: 'group',

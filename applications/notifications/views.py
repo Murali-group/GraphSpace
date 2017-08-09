@@ -311,6 +311,7 @@ def _get_notifications(request, query={}):
                 'owner_email': notify[5],
                 'created_at': notify[6].isoformat(),
                 'first_created_at': notify[7].isoformat(),
+                'is_read': True if notify[8] == 1 else False
             } for notify in notifications]
 
     elif topic == 'group':
@@ -349,6 +350,7 @@ def _get_notifications(request, query={}):
                 'group_id': notify[7],
                 'created_at': notify[8].isoformat(),
                 'first_created_at': notify[9].isoformat(),
+                'is_read': True if notify[10] == 1 else False
             } for notify in notifications]
 
     else:
