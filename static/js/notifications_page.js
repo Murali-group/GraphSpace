@@ -182,17 +182,15 @@ var notificationsPage = {
                         field: 'created_at',
                         values: [row['created_at']]
                     });
-                    /*
-                    $("#sub-notification-table").bootstrapTable('remove', {
+                    $("#all-owner-notification-table").bootstrapTable('remove', {
                         field: 'id',
                         values: [row['id']]
                     })
                     row['is_read'] = true
-                    $("#sub-notification-table").bootstrapTable('insertRow', {
+                    $("#all-owner-notification-table").bootstrapTable('insertRow', {
                         index: index,
                         row: row
                     })
-                    */
                     $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
                 },
                 errorCallback = function() {
@@ -205,7 +203,7 @@ var notificationsPage = {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
-                    if (!row["is_read"]){
+                    if (!row["is_read"]) {
                         notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
                     }
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.ownerNotificationsTable.getNotifications, {
@@ -344,17 +342,15 @@ var notificationsPage = {
                         field: 'id',
                         values: [row['id']]
                     });
-                    /*
-                    $("#sub-notification-table").bootstrapTable('remove', {
+                    $('#group-table-null-' + row["group_id"]).bootstrapTable('remove', {
                         field: 'id',
                         values: [row['id']]
                     })
                     row['is_read'] = true
-                    $("#sub-notification-table").bootstrapTable('insertRow', {
+                    $('#group-table-null-' + row["group_id"]).bootstrapTable('insertRow', {
                         index: index,
                         row: row
                     })
-                    */
                 },
                 errorCallback = function() {
                     // This method is called when  error occurs while updating reads.
@@ -366,7 +362,7 @@ var notificationsPage = {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
-                    if (!row["is_read"]){
+                    if (!row["is_read"]) {
                         notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
                     }
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.groupNotificationsTable.getNotifications, {
