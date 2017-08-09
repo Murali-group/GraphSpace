@@ -163,6 +163,8 @@ LOGGING = {
     },
 }
 
+# Notification grouping interval in seconds
+NOTIFICATION_GROUP_INTERVAL = 24 * 60 * 60 # 24 hours
 
 # Notification messages
 NOTIFICATION_MESSAGE = {

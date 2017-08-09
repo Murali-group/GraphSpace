@@ -105,6 +105,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                           else_=0).label('is_read'),
                                      OwnerNotification.owner_email,
                                      OwnerNotification.created_at,
+                                     (func.to_timestamp(func.floor((func.extract('epoch', OwnerNotification.created_at) /
+                                                                    settings.NOTIFICATION_GROUP_INTERVAL)) / settings.NOTIFICATION_GROUP_INTERVAL)).label('time_interval'),
                                      (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
 
     if owner_email is not None:
@@ -133,7 +135,7 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                  func.min(cte_query.c.created_at).label(
                                      'first_created_at'),
                                  func.max(cte_query.c.is_read)) \
-            .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource) \
+            .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource, cte_query.c.time_interval) \
             .order_by(desc(func.max(cte_query.c.created_at)))
 
     total = query.count()
@@ -169,11 +171,13 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                                      GroupNotification.member_email,
                                      GroupNotification.created_at,
                                      GroupNotification.group_id,
+                                     (func.to_timestamp(func.floor((func.extract('epoch', OwnerNotification.created_at) /
+                                                                    settings.NOTIFICATION_GROUP_INTERVAL)) / settings.NOTIFICATION_GROUP_INTERVAL)).label('time_interval'),
                                      (func.row_number().over(order_by=desc(GroupNotification.created_at)) - func.row_number().over(partition_by=GroupNotification.type, order_by=desc(GroupNotification.created_at))).label('row_number'))
 
     cte_query = cte_query.filter(GroupNotification.member_email.ilike(member_email),
                                  GroupNotification.group_id == group_id)
-    
+
     if is_read is not None:
         cte_query = cte_query.filter(GroupNotification.is_read.is_(is_read))
 
@@ -200,7 +204,7 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                                  func.min(cte_query.c.created_at).label(
                                      'first_created_at'),
                                  func.max(cte_query.c.is_read))\
-            .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource, cte_query.c.owner_email)\
+            .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource, cte_query.c.owner_email, cte_query.c.time_interval)\
             .order_by(desc(func.max(cte_query.c.created_at)))
 
     total = query.count()
