@@ -56,7 +56,8 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
                                         member_email=mem.email, group_id=group_id, owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent))
 
     if resource == 'group_member' and type == 'remove':
-        group_member = utils.serializer(db_users.get_user_by_id(db_session, resource_id))
+        group_member = utils.serializer(
+            db_users.get_user_by_id(db_session, resource_id))
         notify.append(GroupNotification(message="You were removed from this group.", type=type, resource=resource, resource_id=resource_id, group_id=group_id,
                                         owner_email=owner_email, is_read=is_read, is_email_sent=is_email_sent, member_email=group_member.get('email', None)))
 
@@ -150,9 +151,9 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
         if created_at is not None and first_created_at is not None and resource is not None and type is not None:
             cte_query = cte_query.filter(GroupNotification.created_at <= datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f"),
                                          GroupNotification.created_at >= datetime.strptime(
-                                             first_created_at, "%Y-%m-%dT%H:%M:%S.%f"),
-                                         GroupNotification.resource == resource,
-                                         GroupNotification.type == type)
+                first_created_at, "%Y-%m-%dT%H:%M:%S.%f"),
+                GroupNotification.resource == resource,
+                GroupNotification.type == type)
     else:
         # Get notifications by merging similar ones
         cte_query = db_session.query(GroupNotification.id,
@@ -187,14 +188,14 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                                  cte_query.c.type.label('type'),
                                  cte_query.c.resource.label('resource'),
                                  func.max(cte_query.c.owner_email).label(
-                                     'owner_email'),
-                                 func.max(cte_query.c.member_email).label(
-                                     'member_email'),
-                                 func.max(cte_query.c.group_id).label(
-                                     'group_id'),
-                                 func.max(cte_query.c.created_at).label(
-                                     'created_at'),
-                                 func.min(cte_query.c.created_at).label('first_created_at')) \
+            'owner_email'),
+            func.max(cte_query.c.member_email).label(
+            'member_email'),
+            func.max(cte_query.c.group_id).label(
+            'group_id'),
+            func.max(cte_query.c.created_at).label(
+            'created_at'),
+            func.min(cte_query.c.created_at).label('first_created_at')) \
             .group_by(cte_query.c.type, cte_query.c.row_number, cte_query.c.resource, cte_query.c.owner_email) \
             .order_by(desc(func.max(cte_query.c.created_at)))
 

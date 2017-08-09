@@ -162,10 +162,50 @@ var notificationsPage = {
         messageFormatter: function(value, row, index) {
             return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
         },
+        markAsRead: function(e, value, row, index) {
+            data = {
+                owner_email: $('#UserEmail').val(),
+                topic: 'owner',
+                type: row['type'],
+                created_at: row['created_at'],
+                first_created_at: row['first_created_at'],
+                resource: row['resource']
+            }
+            apis.notifications.read(
+                id = row['is_bulk'] ? null : row['id'],
+                data = data,
+                successCallback = function(response) {
+                    // This method is called when notifications are successfully fetched.
+                    //$('#all-owner-notification-table').bootstrapTable('refresh')
+                    //$.notify({message: response.message}, {type: 'success'});
+                    $('#unread-owner-notification-table').bootstrapTable('remove', {
+                        field: 'created_at',
+                        values: [row['created_at']]
+                    });
+                    /*
+                    $("#sub-notification-table").bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    })
+                    row['is_read'] = true
+                    $("#sub-notification-table").bootstrapTable('insertRow', {
+                        index: index,
+                        row: row
+                    })
+                    */
+                    $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
+                },
+                errorCallback = function() {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({ message: 'Error' }, { type: 'danger' });
+                }
+            );
+        },
         operationEvents: {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
+                    notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.ownerNotificationsTable.getNotifications, {
                         owner_email: $('#UserEmail').val(),
                         topic: 'owner',
@@ -187,14 +227,16 @@ var notificationsPage = {
                             valign: 'center',
                             align: 'center',
                             formatter: utils.dateFormatter,
-                        },
-                        {
-                            field: 'operations',
-                            valign: 'center',
-                            align: 'right',
-                            formatter: notificationsPage.notificationsTable.operationsFormatter,
-                            events: notificationsPage.ownerNotificationsTable.operationEvents
                         }
+                        /*,
+                            {
+                                field: 'operations',
+                                valign: 'center',
+                                align: 'right',
+                                formatter: notificationsPage.notificationsTable.operationsFormatter,
+                                events: notificationsPage.ownerNotificationsTable.operationEvents
+                            }
+                        */
                     ])
                 } else {
                     window.location.href = '/notification/' + row["id"] + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=owner'
@@ -202,41 +244,7 @@ var notificationsPage = {
             },
             'click .mark-as-read': function(e, value, row, index) {
                 // Mark as read
-                data = {
-                    owner_email: $('#UserEmail').val(),
-                    topic: 'owner',
-                    type: row['type'],
-                    created_at: row['created_at'],
-                    first_created_at: row['first_created_at'],
-                    resource: row['resource']
-                }
-                apis.notifications.read(
-                    id = row['is_bulk'] ? null : row['id'],
-                    data = data,
-                    successCallback = function(response) {
-                        // This method is called when notifications are successfully fetched.
-                        //$('#all-owner-notification-table').bootstrapTable('refresh')
-                        //$.notify({message: response.message}, {type: 'success'});
-                        $('#unread-owner-notification-table').bootstrapTable('remove', {
-                            field: 'created_at',
-                            values: [row['created_at']]
-                        });
-                        $("#sub-notification-table").bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
-                        })
-                        row['is_read'] = true
-                        $("#sub-notification-table").bootstrapTable('insertRow', {
-                            index: index,
-                            row: row
-                        })
-                        $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
-                    },
-                    errorCallback = function() {
-                        // This method is called when  error occurs while updating reads.
-                        $.notify({ message: 'Error' }, { type: 'danger' });
-                    }
-                );
+                notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
             }
         },
         unreadNotificationQuery: function() {
@@ -309,11 +317,54 @@ var notificationsPage = {
         messageFormatter: function(value, row, index) {
             return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
         },
+        markAsRead: function(e, value, row, index) {
+            data = {
+                owner_email: $('#UserEmail').val(),
+                topic: 'group',
+                type: row['type'],
+                group_id: row['group_id'],
+                created_at: row['created_at'],
+                first_created_at: row['first_created_at'],
+                resource: row['resource']
+            }
+            apis.notifications.read(
+                id = row['is_bulk'] ? null : row['id'],
+                data = data,
+                successCallback = function(response) {
+                    // This method is called when notifications are successfully fetched.
+                    notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                        is_read = false,
+                        total_val_id = '#unread-group-notification-total',
+                        table_div_id = '#unread-group-notification-tables',
+                        refresh_tabs = false)
+                    //$.notify({message: response.message}, {type: 'success'});
+                    $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    });
+                    /*
+                    $("#sub-notification-table").bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    })
+                    row['is_read'] = true
+                    $("#sub-notification-table").bootstrapTable('insertRow', {
+                        index: index,
+                        row: row
+                    })
+                    */
+                },
+                errorCallback = function() {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({ message: 'Error' }, { type: 'danger' });
+                }
+            );
+        },
         operationEvents: {
             'click .click-message': function(e, value, row, index) {
                 // On clicking on the notification
                 if (row["is_bulk"]) {
-
+                    notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
                     notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.groupNotificationsTable.getNotifications, {
                         owner_email: $('#UserEmail').val(),
                         topic: 'group',
@@ -335,7 +386,8 @@ var notificationsPage = {
                             valign: 'center',
                             align: 'center',
                             formatter: utils.dateFormatter,
-                        },
+                        }
+                        /*,
                         {
                             field: 'operations',
                             valign: 'center',
@@ -343,6 +395,7 @@ var notificationsPage = {
                             formatter: notificationsPage.notificationsTable.operationsFormatter,
                             events: notificationsPage.groupNotificationsTable.operationEvents
                         }
+                        */
                     ])
                 } else {
                     window.location.href = '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=group'
@@ -350,45 +403,7 @@ var notificationsPage = {
             },
             'click .mark-as-read': function(e, value, row, index) {
                 // Mark as read
-                data = {
-                    owner_email: $('#UserEmail').val(),
-                    topic: 'group',
-                    type: row['type'],
-                    group_id: row['group_id'],
-                    created_at: row['created_at'],
-                    first_created_at: row['first_created_at'],
-                    resource: row['resource']
-                }
-                apis.notifications.read(
-                    id = row['is_bulk'] ? null : row['id'],
-                    data = data,
-                    successCallback = function(response) {
-                        // This method is called when notifications are successfully fetched.
-                        notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                            is_read = false,
-                            total_val_id = '#unread-group-notification-total',
-                            table_div_id = '#unread-group-notification-tables',
-                            refresh_tabs = false)
-                        //$.notify({message: response.message}, {type: 'success'});
-                        $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
-                        });
-                        $("#sub-notification-table").bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
-                        })
-                        row['is_read'] = true
-                        $("#sub-notification-table").bootstrapTable('insertRow', {
-                            index: index,
-                            row: row
-                        })
-                    },
-                    errorCallback = function() {
-                        // This method is called when  error occurs while updating reads.
-                        $.notify({ message: 'Error' }, { type: 'danger' });
-                    }
-                );
+                notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
             }
         },
         getNotifications: function(params) {
