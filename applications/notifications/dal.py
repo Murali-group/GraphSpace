@@ -89,6 +89,7 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
         # Get all notification without merging similar notifications into 1
         cte_query = db_session.query(OwnerNotification)
 
+        # Get all notification with created_at > first_created_at and created_at < created_at
         if created_at is not None and first_created_at is not None and resource is not None and type is not None:
             cte_query = cte_query.filter(OwnerNotification.created_at <= datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f"),
                                          OwnerNotification.created_at >= datetime.strptime(
@@ -97,6 +98,7 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                          OwnerNotification.type == type)
     else:
         # Get notifications by merging similar ones
+        # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
         cte_query = db_session.query(OwnerNotification.id,
                                      OwnerNotification.message,
                                      OwnerNotification.type,
@@ -105,6 +107,7 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                           else_=0).label('is_read'),
                                      OwnerNotification.owner_email,
                                      OwnerNotification.created_at,
+                                     # Added this to later group notifications using time intervals
                                      (func.to_timestamp(func.floor((func.extract('epoch', OwnerNotification.created_at) /
                                                                     settings.NOTIFICATION_GROUP_INTERVAL)) / settings.NOTIFICATION_GROUP_INTERVAL)).label('time_interval'),
                                      (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
@@ -171,7 +174,7 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                                      GroupNotification.member_email,
                                      GroupNotification.created_at,
                                      GroupNotification.group_id,
-                                     (func.to_timestamp(func.floor((func.extract('epoch', OwnerNotification.created_at) /
+                                     (func.to_timestamp(func.floor((func.extract('epoch', GroupNotification.created_at) /
                                                                     settings.NOTIFICATION_GROUP_INTERVAL)) / settings.NOTIFICATION_GROUP_INTERVAL)).label('time_interval'),
                                      (func.row_number().over(order_by=desc(GroupNotification.created_at)) - func.row_number().over(partition_by=GroupNotification.type, order_by=desc(GroupNotification.created_at))).label('row_number'))
 

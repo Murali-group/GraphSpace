@@ -229,6 +229,16 @@ def _get_notifications(request, query={}):
             Offset the list of returned entities by this number. Default value is 0.
     topic : string
             Type of the notification [owner, group, watching].
+    is_bulk: string
+            Identify if notifications should be grouped
+    created_at: string
+            Timestamp of the latest notification in a group
+    first_created_at: string
+            Timestamp of the oldest notification in a group
+    resource: string
+            Type of resource [group, layout, graph]
+    type: string
+            Type of the notification [create, update, delete]
 
     Parameters
     ----------
@@ -298,6 +308,7 @@ def _get_notifications(request, query={}):
                                                                                        'type', None),
                                                                                    is_bulk=is_bulk)
 
+        # There are two data types returned depending on is_bulk condition
         if is_bulk:
             notifications = [utils.serializer(notify)
                              for notify in notifications]
@@ -374,10 +385,10 @@ def _update_notifications_read(request, notification_id=None, query={}):
             Type of the notification [owner, group, watching].
     type : string
             Type of the notification [create, update, delete]
-    created_at : ISO format datetime string
-            Datetime when latest notification created of the bulk
-    first_created_at : ISO format datetime string
-            Datetime when first notification created of the bulk
+    created_at: string
+            Timestamp of the latest notification in a group
+    first_created_at: string
+            Timestamp of the oldest notification in a group
     resource : string
             Type of resource [group, layout, graph]
 
