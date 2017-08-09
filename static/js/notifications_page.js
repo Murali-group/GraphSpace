@@ -6,25 +6,25 @@
 var apis = {
     notifications: {
         ENDPOINT: '/ajax/notifications/',
-        get: function (data, uri, successCallback, errorCallback) {
+        get: function(data, uri, successCallback, errorCallback) {
             url = apis.notifications.ENDPOINT
-            if(uri != null){
+            if (uri != null) {
                 url = url + uri
             }
             apis.jsonRequest('GET', url, data, successCallback, errorCallback)
         },
-        update: function (id, data, successCallback, errorCallback) {
+        update: function(id, data, successCallback, errorCallback) {
             apis.jsonRequest('PUT', apis.notifications.ENDPOINT + id, data, successCallback, errorCallback)
         },
-        read: function(id, data, successCallback, errorCallback){
+        read: function(id, data, successCallback, errorCallback) {
             url = apis.notifications.ENDPOINT + 'read/'
-            if(id != null){
+            if (id != null) {
                 url = url + id
             }
             apis.jsonRequest('PUT', url, data, successCallback, errorCallback)
         }
     },
-    jsonRequest: function (method, url, data, successCallback, errorCallback) {
+    jsonRequest: function(method, url, data, successCallback, errorCallback) {
         $.ajax({
             headers: {
                 'Accept': 'application/json'
@@ -40,133 +40,214 @@ var apis = {
 };
 
 var notificationsPage = {
-    init: function () {
+    init: function() {
         /**
          * This function is called to setup the notifications page.
          * It will initialize all the event listeners.
          */
         console.log('Loading Notifications Page....');
 
-        $('.owner-mark-all-read').click(function(){
+        $('.owner-mark-all-read').click(function() {
             data = {
                 owner_email: $('#UserEmail').val(),
-                type: 'owner'
+                topic: 'owner'
             }
             apis.notifications.read(
                 id = null,
                 data = data,
-                successCallback = function (response) {
+                successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
                     $('#all-owner-notification-table').bootstrapTable('refresh')
                     //$.notify({message: response.message}, {type: 'success'});
                     header.checkNotification()
                 },
-                errorCallback = function () {
+                errorCallback = function() {
                     // This method is called when  error occurs while updating reads.
-                    $.notify({message: 'Error'}, {type: 'danger'});
+                    $.notify({ message: 'Error' }, { type: 'danger' });
                 }
             );
         })
 
-        $('#mark-all-read').click(function(){
+        $('#mark-all-read').click(function() {
             data = {
                 owner_email: $('#UserEmail').val(),
-                type: 'all'
+                topic: 'all'
             }
             apis.notifications.read(
                 id = null,
                 data = data,
-                successCallback = function (response) {
+                successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
                     notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                        is_read = false, 
-                        total_val_id = '#unread-group-notification-total', 
-                        table_div_id = '#unread-group-notification-tables', 
+                        is_read = false,
+                        total_val_id = '#unread-group-notification-total',
+                        table_div_id = '#unread-group-notification-tables',
                         refresh_tabs = true)
                     $('#unread-owner-notification-table').bootstrapTable('refresh')
-                    $(".notification-indicator .mail-status.unread").css({"display": "none"})
+                    $(".notification-indicator .mail-status.unread").css({ "display": "none" })
                     //$.notify({message: response.message}, {type: 'success'});
                 },
-                errorCallback = function () {
+                errorCallback = function() {
                     // This method is called when  error occurs while updating reads.
-                    $.notify({message: 'Error'}, {type: 'danger'});
+                    $.notify({ message: 'Error' }, { type: 'danger' });
                 }
             );
         })
-     
-        $('#all-notification').click(function(){
+
+        $('#all-notification').click(function() {
             // Get group notification on click
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                is_read = null, 
-                total_val_id = '#all-group-notification-total', 
-                table_div_id = '#all-group-notification-tables', 
+                is_read = null,
+                total_val_id = '#all-group-notification-total',
+                table_div_id = '#all-group-notification-tables',
                 refresh_tabs = true)
             // Get owner notification on click
             $('#all-owner-notification-table').bootstrapTable('refresh')
 
         })
 
-        $('#unread-notification').click(function(){
+        $('#unread-notification').click(function() {
             notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                is_read = false, 
-                total_val_id = '#unread-group-notification-total', 
-                table_div_id = '#unread-group-notification-tables', 
+                is_read = false,
+                total_val_id = '#unread-group-notification-total',
+                table_div_id = '#unread-group-notification-tables',
                 refresh_tabs = true)
-            $('#unread-owner-notification-table').bootstrapTable('refresh')    
+            $('#unread-owner-notification-table').bootstrapTable('refresh')
         })
 
         notificationsPage.groupNotificationsTable.notificationsGroupCount(
-            is_read = false, 
-            total_val_id = '#unread-group-notification-total', 
-            table_div_id = '#unread-group-notification-tables', 
+            is_read = false,
+            total_val_id = '#unread-group-notification-total',
+            table_div_id = '#unread-group-notification-tables',
             refresh_tabs = true)
 
         utils.initializeTabs();
     },
     notificationsTable: {
-        operationsFormatter: function (value, row, index) {
-            if (!row.is_read){
+        operationsFormatter: function(value, row, index) {
+            if (!row.is_read) {
                 return [
                     '<a class="mark-as-read" href="javascript:void(0)" title="Mark as read">',
                     '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
                     '</a>'
                 ].join('');
             }
-            return '' 
+            return ''
+        },
+        createSubNotificationTable: function(ajax, ajaxOptions, columns) {
+            $('#sub-notification-modal').modal('toggle')
+            var dtable = $('#sub-notification-table-modal')
+            dtable.empty()
+            var table = $('<table/>')
+                .attr('data-toggle', 'table')
+                .attr('id', 'sub-notification-table')
+                .addClass('table-no-bordered')
+                .appendTo(dtable)
+            table.bootstrapTable({
+                ajax: ajax,
+                ajaxOptions: {
+                    options: ajaxOptions
+                },
+                sidePagination: 'server',
+                pagination: true,
+                dataField: 'notifications',
+                sortName: 'created_at',
+                sortOrder: 'desc',
+                columns: columns
+            })
         }
     },
-    ownerNotificationsTable:{
-        messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=owner').text(row.message)[0].outerHTML;
+    ownerNotificationsTable: {
+        messageFormatter: function(value, row, index) {
+            return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
+        },
+        markAsRead: function(e, value, row, index) {
+            data = {
+                owner_email: $('#UserEmail').val(),
+                topic: 'owner',
+                type: row['type'],
+                created_at: row['created_at'],
+                first_created_at: row['first_created_at'],
+                resource: row['resource']
+            }
+            apis.notifications.read(
+                id = row['is_bulk'] ? null : row['id'],
+                data = data,
+                successCallback = function(response) {
+                    // This method is called when notifications are successfully fetched.
+                    //$('#all-owner-notification-table').bootstrapTable('refresh')
+                    //$.notify({message: response.message}, {type: 'success'});
+                    $('#unread-owner-notification-table').bootstrapTable('remove', {
+                        field: 'created_at',
+                        values: [row['created_at']]
+                    });
+                    $("#all-owner-notification-table").bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    })
+                    row['is_read'] = true
+                    $("#all-owner-notification-table").bootstrapTable('insertRow', {
+                        index: index,
+                        row: row
+                    })
+                    $("#owner-notification-total").text((parseInt($("#owner-notification-total").text()) - 1));
+                },
+                errorCallback = function() {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({ message: 'Error' }, { type: 'danger' });
+                }
+            );
         },
         operationEvents: {
-            'click .mark-as-read': function (e, value, row, index) {
-                // Mark as read
-                data = {
-                    owner_email: $('#UserEmail').val(),
-                    type: 'owner'
-                }
-                apis.notifications.read(
-                    id = row['id'],
-                    data = data,
-                    successCallback = function (response) {
-                        // This method is called when notifications are successfully fetched.
-                        $('#all-owner-notification-table').bootstrapTable('refresh')
-                        //$.notify({message: response.message}, {type: 'success'});
-                        $('#unread-owner-notification-table').bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
-                        });
-                    },
-                    errorCallback = function () {
-                        // This method is called when  error occurs while updating reads.
-                        $.notify({message: 'Error'}, {type: 'danger'});
+            'click .click-message': function(e, value, row, index) {
+                // On clicking on the notification
+                if (row["is_bulk"]) {
+                    if (!row["is_read"]) {
+                        notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
                     }
-                );
+                    notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.ownerNotificationsTable.getNotifications, {
+                        owner_email: $('#UserEmail').val(),
+                        topic: 'owner',
+                        type: row['type'],
+                        created_at: row['created_at'],
+                        first_created_at: row['first_created_at'],
+                        resource: row['resource'],
+                        is_bulk: row['is_bulk'],
+                        sub_table: true
+                    }, [{
+                            field: 'message',
+                            title: 'Sub-notifications',
+                            valign: 'center',
+                            formatter: notificationsPage.ownerNotificationsTable.messageFormatter,
+                            events: notificationsPage.ownerNotificationsTable.operationEvents
+                        },
+                        {
+                            field: 'created_at',
+                            valign: 'center',
+                            align: 'center',
+                            formatter: utils.dateFormatter,
+                        }
+                        /*,
+                            {
+                                field: 'operations',
+                                valign: 'center',
+                                align: 'right',
+                                formatter: notificationsPage.notificationsTable.operationsFormatter,
+                                events: notificationsPage.ownerNotificationsTable.operationEvents
+                            }
+                        */
+                    ])
+                } else {
+                    window.location.href = '/notification/' + row["id"] + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=owner'
+                }
+            },
+            'click .mark-as-read': function(e, value, row, index) {
+                // Mark as read
+                notificationsPage.ownerNotificationsTable.markAsRead(e, value, row, index)
             }
         },
-        unreadNotificationQuery: function(){
+        unreadNotificationQuery: function() {
             /**
              * This is the custom ajaxOptions function used to load parameters for unread notification ajax request.
              *
@@ -175,13 +256,13 @@ var notificationsPage = {
              */
             return {
                 options: {
-                    type: 'owner',
+                    topic: 'owner',
                     tableIdName: '#unread-owner-notification-table',
                     is_read: false
                 }
             }
         },
-        allNotificationQuery: function(params){
+        allNotificationQuery: function(params) {
             /**
              * This is the custom ajaxOptions function used to load parameters for all notification ajax requests.
              *
@@ -190,12 +271,12 @@ var notificationsPage = {
              */
             return {
                 options: {
-                    type: 'owner',
+                    topic: 'owner',
                     tableIdName: '#all-owner-notification-table'
                 }
             }
         },
-        getNotifications: function (params) {
+        getNotifications: function(params) {
             /**
              * This is the custom ajax request used to load notifications.
              *
@@ -203,63 +284,129 @@ var notificationsPage = {
              *          It contains parameters like limit, offset, search.
              */
             $(params.options["tableIdName"]).bootstrapTable('showLoading');
-            $("#owner-notification-total").html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
-
+            if (!params.options['sub_table']) {
+                $("#owner-notification-total").html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
+            }
             params.data["owner_email"] = $('#UserEmail').val();
-            params.data["type"] = params.options["type"]
+            params.data["topic"] = params.options["topic"]
             params.data["is_read"] = params.options["is_read"]
+            params.data["type"] = params.options["type"]
+            params.data["created_at"] = params.options["created_at"]
+            params.data["first_created_at"] = params.options["first_created_at"]
+            params.data["resource"] = params.options["resource"]
+            params.data["is_bulk"] = params.options["is_bulk"]
 
             apis.notifications.get(params.data,
                 uri = null,
-                successCallback = function (response) {
+                successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
                     $(params.options["tableIdName"]).bootstrapTable('hideLoading');
                     params.success(response);
-                    $("#owner-notification-total").text(response.total);
+                    if (!params.options['sub_table']) {
+                        $("#owner-notification-total").text(response.total);
+                    }
                 },
-                errorCallback = function () {
+                errorCallback = function() {
                     // This method is called when  error occurs while fetching notifications.
                     params.error('Error');
                 }
             );
         }
     },
-    groupNotificationsTable:{
-        messageFormatter: function (value, row, index) {
-            return $('<a>').attr('href', '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&type=group').text(row.message)[0].outerHTML;
+    groupNotificationsTable: {
+        messageFormatter: function(value, row, index) {
+            return $('<a>').attr('class', 'click-message').text(row.message)[0].outerHTML;
+        },
+        markAsRead: function(e, value, row, index) {
+            data = {
+                owner_email: $('#UserEmail').val(),
+                topic: 'group',
+                type: row['type'],
+                group_id: row['group_id'],
+                created_at: row['created_at'],
+                first_created_at: row['first_created_at'],
+                resource: row['resource']
+            }
+            apis.notifications.read(
+                id = row['is_bulk'] ? null : row['id'],
+                data = data,
+                successCallback = function(response) {
+                    // This method is called when notifications are successfully fetched.
+                    notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                        is_read = false,
+                        total_val_id = '#unread-group-notification-total',
+                        table_div_id = '#unread-group-notification-tables',
+                        refresh_tabs = false)
+                    //$.notify({message: response.message}, {type: 'success'});
+                    $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    });
+                    $('#group-table-null-' + row["group_id"]).bootstrapTable('remove', {
+                        field: 'id',
+                        values: [row['id']]
+                    })
+                    row['is_read'] = true
+                    $('#group-table-null-' + row["group_id"]).bootstrapTable('insertRow', {
+                        index: index,
+                        row: row
+                    })
+                },
+                errorCallback = function() {
+                    // This method is called when  error occurs while updating reads.
+                    $.notify({ message: 'Error' }, { type: 'danger' });
+                }
+            );
         },
         operationEvents: {
-            'click .mark-as-read': function (e, value, row, index) {
-                // Mark as read
-                data = {
-                    owner_email: $('#UserEmail').val(),
-                    type: 'group'
-                }
-                apis.notifications.read(
-                    id = row['id'],
-                    data = data,
-                    successCallback = function (response) {
-                        // This method is called when notifications are successfully fetched.
-                        notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                            is_read = false, 
-                            total_val_id = '#unread-group-notification-total', 
-                            table_div_id = '#unread-group-notification-tables', 
-                            refresh_tabs = false)
-                        //$.notify({message: response.message}, {type: 'success'});
-                        $('#group-table-false-' + row["group_id"]).bootstrapTable('remove', {
-                            field: 'id',
-                            values: [row['id']]
-                        });
-
-                    },
-                    errorCallback = function () {
-                        // This method is called when  error occurs while updating reads.
-                        $.notify({message: 'Error'}, {type: 'danger'});
+            'click .click-message': function(e, value, row, index) {
+                // On clicking on the notification
+                if (row["is_bulk"]) {
+                    if (!row["is_read"]) {
+                        notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
                     }
-                );
+                    notificationsPage.notificationsTable.createSubNotificationTable(notificationsPage.groupNotificationsTable.getNotifications, {
+                        owner_email: $('#UserEmail').val(),
+                        topic: 'group',
+                        type: row['type'],
+                        group_id: row['group_id'],
+                        created_at: row['created_at'],
+                        first_created_at: row['first_created_at'],
+                        resource: row['resource'],
+                        is_bulk: row['is_bulk']
+                    }, [{
+                            field: 'message',
+                            title: 'Sub-notifications',
+                            valign: 'center',
+                            formatter: notificationsPage.groupNotificationsTable.messageFormatter,
+                            events: notificationsPage.groupNotificationsTable.operationEvents
+                        },
+                        {
+                            field: 'created_at',
+                            valign: 'center',
+                            align: 'center',
+                            formatter: utils.dateFormatter,
+                        }
+                        /*,
+                        {
+                            field: 'operations',
+                            valign: 'center',
+                            align: 'right',
+                            formatter: notificationsPage.notificationsTable.operationsFormatter,
+                            events: notificationsPage.groupNotificationsTable.operationEvents
+                        }
+                        */
+                    ])
+                } else {
+                    window.location.href = '/notification/' + row.id + '/redirect/?owner_email=' + $('#UserEmail').val() + '&topic=group'
+                }
+            },
+            'click .mark-as-read': function(e, value, row, index) {
+                // Mark as read
+                notificationsPage.groupNotificationsTable.markAsRead(e, value, row, index)
             }
         },
-        getNotifications: function (params) {
+        getNotifications: function(params) {
             /**
              * This is the custom ajax request used to load group notifications.
              *
@@ -271,84 +418,91 @@ var notificationsPage = {
 
             params.data["owner_email"] = $('#UserEmail').val();
             params.data["group_id"] = params.options["group_id"]
-            params.data["type"] = params.options["type"]
+            params.data["topic"] = params.options["topic"]
             params.data["is_read"] = params.options["is_read"]
+            params.data["type"] = params.options["type"]
+            params.data["created_at"] = params.options["created_at"]
+            params.data["first_created_at"] = params.options["first_created_at"]
+            params.data["resource"] = params.options["resource"]
+            params.data["is_bulk"] = params.options["is_bulk"]
+
+            console.log(params.data)
 
             apis.notifications.get(params.data,
                 uri = null,
-                successCallback = function (response) {
+                successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
                     $(params.options["tableIdName"]).bootstrapTable('hideLoading');
                     params.success(response);
                 },
-                errorCallback = function () {
+                errorCallback = function() {
                     // This method is called when  error occurs while fetching notifications.
                     params.error('Error');
                 }
             );
         },
-        notificationsGroupCount: function(is_read, total_val_id, table_div_id, refresh_tabs=true){
+        notificationsGroupCount: function(is_read, total_val_id, table_div_id, refresh_tabs = true) {
             // Get list of groups in group notification
             data = {
                 'member_email': $('#UserEmail').val()
             }
             options = {
-                type: 'group'
+                topic: 'group'
             }
-            if(is_read != null){
+            if (is_read != null) {
                 data["is_read"] = is_read
                 options["is_read"] = is_read
             }
             apis.notifications.get(
                 data = data,
                 uri = 'group-count',
-                successCallback = function (response) {
+                successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
                     var glist = $('ul.group-tabs')
                     var gtable = $(table_div_id)
                     glist.empty()
-                    if(refresh_tabs){
+                    if (refresh_tabs) {
                         gtable.empty()
                     }
-                    
+
                     notificationsPage.notificationsTable.unreadTotal = notificationsPage.notificationsTable.unreadTotal + response.total
                     $(total_val_id).text(response.total);
-                    
-                    $.each(response.groups, function(i){
+
+                    $.each(response.groups, function(i) {
                         var li = $('<li/>')
-                                .appendTo(glist)
+                            .appendTo(glist)
                         var a = $('<a/>')
-                                .attr('href','#group-table-' + is_read + '-' + response.groups[i]['group']['id'])
-                                .text(response.groups[i]['group']['name'])
-                                .appendTo(li)
+                            .attr('href', '#group-table-' + is_read + '-' + response.groups[i]['group']['id'])
+                            .text(response.groups[i]['group']['name'])
+                            .appendTo(li)
                         var span = $('<span/>')
-                                .addClass('badge')
-                                .text(response.groups[i]['count'])
-                                .appendTo(a)
+                            .addClass('badge')
+                            .text(response.groups[i]['count'])
+                            .appendTo(a)
 
                         // Refresh the tables in a tab only when complete table update needed
-                        if(refresh_tabs){
+                        if (refresh_tabs) {
                             var table = $('<table/>')
-                                        .attr('id','group-table-' + is_read + '-' + response.groups[i]['group']['id'])
-                                        .attr('data-toggle','table')
-                                        .addClass('table-no-bordered')
-                                        .appendTo(gtable)
+                                .attr('id', 'group-table-' + is_read + '-' + response.groups[i]['group']['id'])
+                                .attr('data-toggle', 'table')
+                                .addClass('table-no-bordered')
+                                .appendTo(gtable)
 
                             var br = $('<br/>')
-                                    .appendTo(gtable)
+                                .appendTo(gtable)
 
                             options["group_id"] = response.groups[i]['group']['id']
                             options["tableIdName"] = '#group-table-' + response.groups[i]['group']['id']
 
                             markAllReadTitle = [
-                                            '<a class="mark-',
-                                            response.groups[i]['group']['name'],
-                                            '-',
-                                            response.groups[i]['group']['id'],
-                                            '-as-read" title="Mark all as read">',
-                                            '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
-                                            '</a>'
-                                        ]
+                                '<a class="mark-',
+                                response.groups[i]['group']['name'],
+                                '-',
+                                response.groups[i]['group']['id'],
+                                '-as-read" title="Mark all as read">',
+                                '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>',
+                                '</a>'
+                            ]
 
                             table.bootstrapTable({
                                 ajax: notificationsPage.groupNotificationsTable.getNotifications,
@@ -360,12 +514,17 @@ var notificationsPage = {
                                 dataField: 'notifications',
                                 sortName: 'created_at',
                                 sortOrder: 'desc',
-                                columns:[
-                                    {
+                                columns: [{
                                         field: 'message',
-                                        title: response.groups[i]['group']['name'], 
+                                        title: response.groups[i]['group']['name'],
                                         valign: 'center',
-                                        formatter: notificationsPage.groupNotificationsTable.messageFormatter
+                                        formatter: notificationsPage.groupNotificationsTable.messageFormatter,
+                                        events: notificationsPage.groupNotificationsTable.operationEvents
+                                    },
+                                    {
+                                        field: 'owner_email',
+                                        align: 'right',
+                                        valign: 'center',
                                     },
                                     {
                                         field: 'created_at',
@@ -385,10 +544,10 @@ var notificationsPage = {
                             })
 
                             // Handling click event for Mark as read for specific groups
-                            $('.mark-' + response.groups[i]['group']['name'] + '-' + response.groups[i]['group']['id'] + '-as-read').click(function(){
+                            $('.mark-' + response.groups[i]['group']['name'] + '-' + response.groups[i]['group']['id'] + '-as-read').click(function() {
                                 data = {
                                     owner_email: $('#UserEmail').val(),
-                                    type: 'group',
+                                    topic: 'group',
                                     group_id: response.groups[i]['group']['id']
                                 }
                                 apis.notifications.read(
@@ -397,29 +556,29 @@ var notificationsPage = {
                                     apis.notifications.read(
                                         id = null,
                                         data = data,
-                                        successCallback = function (response) {
+                                        successCallback = function(response) {
                                             // This method is called when notifications are successfully fetched.
                                             notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                                                is_read = false, 
-                                                total_val_id = '#unread-group-notification-total', 
-                                                table_div_id = '#unread-group-notification-tables', 
+                                                is_read = false,
+                                                total_val_id = '#unread-group-notification-total',
+                                                table_div_id = '#unread-group-notification-tables',
                                                 refresh_tabs = true)
                                             header.checkNotification()
                                             //$.notify({message: response.message}, {type: 'success'});
                                         },
-                                        errorCallback = function () {
+                                        errorCallback = function() {
                                             // This method is called when  error occurs while updating reads.
-                                            $.notify({message: 'Error'}, {type: 'danger'});
+                                            $.notify({ message: 'Error' }, { type: 'danger' });
                                         }
                                     )
                                 );
                             })
-                        } 
+                        }
                     })
                 },
-                errorCallback = function () {
+                errorCallback = function() {
                     // This method is called when  error occurs while updating reads.
-                    $.notify({message: 'Error'}, {type: 'danger'});
+                    $.notify({ message: 'Error' }, { type: 'danger' });
                 }
             );
         }

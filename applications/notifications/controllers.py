@@ -15,6 +15,8 @@ def get_notification_count(request, owner_email=None, is_read=None):
     return count
 
 # Function to add owner notification to database
+
+
 def add_owner_notification(message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
     sess = Database().session()
     notify = db.add_owner_notification(sess, message=message, type=type, owner_email=owner_email,
@@ -40,7 +42,7 @@ def add_group_notification(message, type, resource, resource_id, group_id=None, 
 
 
 # Search for owner notification
-def search_owner_notifications(request, owner_email=None, is_read=None, limit=20, offset=0):
+def search_owner_notifications(request, owner_email=None, is_read=None, limit=20, offset=0, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
     sort_attr = db.OwnerNotification.created_at
     orber_by = db.desc(sort_attr)
 
@@ -49,13 +51,17 @@ def search_owner_notifications(request, owner_email=None, is_read=None, limit=20
                                                        is_read=is_read,
                                                        limit=limit,
                                                        offset=offset,
-                                                       order_by=orber_by)
+                                                       is_bulk=is_bulk,
+                                                       created_at=created_at,
+                                                       first_created_at=first_created_at,
+                                                       resource=resource,
+                                                       type=type)
 
     return total, notifications
 
 
 # Search for group notification
-def search_group_notifications(request, member_email, group_id=None, is_read=None, limit=20, offset=0):
+def search_group_notifications(request, member_email, group_id=None, is_read=None, limit=20, offset=0, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
     sort_attr = db.GroupNotification.created_at
     orber_by = db.desc(sort_attr)
 
@@ -65,15 +71,23 @@ def search_group_notifications(request, member_email, group_id=None, is_read=Non
                                                        is_read=is_read,
                                                        limit=limit,
                                                        offset=offset,
-                                                       order_by=orber_by)
+                                                       is_bulk=is_bulk,
+                                                       created_at=created_at,
+                                                       first_created_at=first_created_at,
+                                                       resource=resource,
+                                                       type=type)
 
     return total, notifications
 
 
-def read_owner_notifications(request, owner_email, notification_id=None):
+def read_owner_notifications(request, owner_email, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
 
     total, notify = db.read_owner_notifications(request.db_session,
                                                 owner_email=owner_email,
+                                                resource=resource,
+                                                type=type,
+                                                created_at=created_at,
+                                                first_created_at=first_created_at,
                                                 notification_id=notification_id)
 
     return total, notify
@@ -95,5 +109,5 @@ def get_notification_count_per_group(request, member_email, is_read=None):
     total, count_per_group = db.get_notification_count_per_group(request.db_session,
                                                                  member_email=member_email,
                                                                  is_read=is_read)
-
+    
     return total, count_per_group

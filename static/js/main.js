@@ -3,22 +3,22 @@
  */
 
 var header = {
-    init: function () {
+    init: function() {
         /**
          * Upon clicking, the user makes a
          * POST request to sign-in to GS.
          */
-        $("#signinBtn").click(function (e) {
+        $("#signinBtn").click(function(e) {
             header.onSignIn(e);
         });
 
-        $("#registerBtn").click(function (e) {
+        $("#registerBtn").click(function(e) {
             header.onRegister(e);
         });
 
         header.checkNotification()
     },
-    onSignIn: function (e) {
+    onSignIn: function(e) {
         e.preventDefault();
         var email = $("#email").val();
         var pw = $("#pw").val();
@@ -46,10 +46,10 @@ var header = {
                 "user_id": email,
                 "pw": pw
             },
-            successCallback = function (response) {
+            successCallback = function(response) {
                 window.location.reload();
             },
-            errorCallback = function (response) {
+            errorCallback = function(response) {
                 $.notify({
                     message: response.responseJSON.error_message
                 }, {
@@ -57,7 +57,7 @@ var header = {
                 });
             });
     },
-    onRegister: function (e) {
+    onRegister: function(e) {
         e.preventDefault();
         e.preventDefault();
         var user_id = $("#user_id").val();
@@ -106,10 +106,10 @@ var header = {
                 "user_id": user_id,
                 "password": password
             },
-            successCallback = function (response) {
+            successCallback = function(response) {
                 window.location.reload();
             },
-            errorCallback = function (response) {
+            errorCallback = function(response) {
                 $.notify({
                     message: response.responseJSON.error_message
                 }, {
@@ -117,28 +117,28 @@ var header = {
                 });
             });
     },
-    checkNotification: function(){
+    checkNotification: function() {
         var user_id = $('#UserEmail').val();
         //GET Request to get number of unread notifications
         jsonRequest('GET', "/notifications/count", {
                 "owner_email": user_id,
                 "is_read": false
             },
-            successCallback = function (response) {
-                if(parseInt(response.count) > 0){
-                    $(".notification-indicator .mail-status.unread").css({"display": "inline-block"})
+            successCallback = function(response) {
+                if (parseInt(response.count) > 0) {
+                    $(".notification-indicator .mail-status.unread").css({ "display": "inline-block" })
                 } else {
-                    $(".notification-indicator .mail-status.unread").css({"display": "none"})
+                    $(".notification-indicator .mail-status.unread").css({ "display": "none" })
                 }
             },
-            errorCallback = function (response) {
-                $(".notification-indicator .mail-status.unread").css({"display": "none"})
+            errorCallback = function(response) {
+                $(".notification-indicator .mail-status.unread").css({ "display": "none" })
             });
     }
 };
 
 var userSocket = {
-    init: function(){
+    init: function() {
         var socket = new WebSocket('ws://' + window.location.host);
 
         socket.onopen = userSocket.onopen
@@ -146,27 +146,28 @@ var userSocket = {
         socket.onmessage = userSocket.onmessage
 
         if (socket.readyState == WebSocket.OPEN) {
-          socket.onopen();
+            socket.onopen();
         }
     },
-    onopen: function(){
+    onopen: function() {
         console.log('Websockets connected')
     },
-    onmessage: function(message){
+    onmessage: function(message) {
         data = JSON.parse(message.data)
         //$.notify({message: data.message}, {type: 'info'})
         //alert(message.data);
         // Different types of communication over sockets
-        switch(data.type){
+        switch (data.type) {
             case "notification":
                 userSocket.notification(data.message);
-                break;  
+                break;
         }
     },
     // Socket communication for notifications
-    notification: function(data){
-        $(".notification-indicator .mail-status.unread").css({"display": "inline-block"})
-        switch(data.topic){
+    notification: function(data) {
+        $(".notification-indicator .mail-status.unread").css({ "display": "inline-block" })
+        data['is_bulk'] = false
+        switch (data.topic) {
             case "owner":
                 $('#unread-owner-notification-table').bootstrapTable('insertRow', {
                     index: 1,
@@ -176,18 +177,18 @@ var userSocket = {
                 break;
             case "group":
                 table_name = '#group-table-false-' + data['group_id']
-                if($(table_name).length > 0) {
+                if ($(table_name).length > 0) {
                     refresh_tabs = false;
                     $(table_name).bootstrapTable('insertRow', {
                         index: 1,
                         row: data
                     });
                 }
-                if(typeof notificationsPage !== 'undefined'){
+                if (typeof notificationsPage !== 'undefined') {
                     notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                        is_read = false, 
-                        total_val_id = '#unread-group-notification-total', 
-                        table_div_id = '#unread-group-notification-tables', 
+                        is_read = false,
+                        total_val_id = '#unread-group-notification-total',
+                        table_div_id = '#unread-group-notification-tables',
                         refresh_tabs = refresh_tabs)
                 }
                 break;
