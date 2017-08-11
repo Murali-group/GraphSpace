@@ -11,11 +11,14 @@ GraphSpace has three dummy users:
 
 Requirements
 ===================================
-1. Python v2.7.10
+1. [Python](https://askubuntu.com/a/101595) v2.7.10
 2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
-3. virtualenv
-4. [bower](https://bower.io/)
-5. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
+3. [virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
+4. [bower](https://bower.io/) _dependant on [Node.js](https://github.com/Murali-group/GraphSpace/wiki/Install-Node.js)_
+5. [Apache Kafka](https://github.com/Murali-group/GraphSpace/wiki/Install-Apache-Kafka)
+6. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
+7. [Redis](https://github.com/Murali-group/GraphSpace/wiki/Install-Redis)
+8. [Supervisor](http://supervisord.org/installing.html#installing-via-pip)
 
 Running GraphSpace locally
 ===================================
@@ -27,6 +30,10 @@ In order to run GraphSpace, please install sqlite3 and both the Python runtime a
 3. Create a virtual environment for the project: `virtualenv venv`
 4. Start using the virtual environment: `source venv/bin/activate`
 5. Install graphspace: `sh install.sh`
+   
+   _Note : While installing psycopg2, you might encounter 
+   [```Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.```](https://stackoverflow.com/q/28253681/4646197)
+   To fix it follow the solution given [here](https://stackoverflow.com/a/28254860/4646197)._
 6. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
 7. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
@@ -75,9 +82,9 @@ WSGIApplicationGroup %{GLOBAL}
 8. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi`
 9. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
 10. Create a directory for python-eggs. `mkdir /path_to_python_eggs`
-11. Give permission to access static files through apache2. `chmod 777 /path_to_python_eggs`
+11. Give permission to access python-egg files through apache2. `chmod 777 /path_to_python_eggs`
 12. Run the following cmd: ``` a2enmod rewrite ```, ``` a2enmod proxy ``` and ``` a2enmod proxy_wstunnel ```
-13. Inside the 000-default.conf, copy and paste following lines inside ``` <VirtualHost *:80> </VirtualHost> ```
+13. Inside the `/path_to/apache2/sites-enabled/000-default.conf`, copy and paste following lines inside ``` <VirtualHost *:80> </VirtualHost> ```
  ```
   RewriteEngine on
   RewriteCond %{HTTP:UPGRADE} ^WebSocket$ [NC,OR]
