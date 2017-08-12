@@ -51,7 +51,9 @@ RUN aptitude update && \
 
 RUN pip install supervisor && \
 	rm -r /var/cache/
-		
+
+RUN cd && git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git		
+
 USER postgres
 
 RUN	/etc/init.d/postgresql start && \
@@ -61,7 +63,3 @@ RUN	/etc/init.d/postgresql start && \
 USER root
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
-
-CMD ["git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git"]
-
-CMD ["~/GraphSpace/docker_command.sh"]

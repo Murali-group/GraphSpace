@@ -1,5 +1,10 @@
 #!/bin/bash
 echo "Copy configurations"
+echo "$USER"
+
+cd /GraphSpace
+git pull 
+
 yes | cp -rf ~/GraphSpace/docker_config/elasticsearch/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
 yes | cp -rf ~/GraphSpace/docker_config/redis/redis.conf ~/redis/redis.conf
 yes | cp -rf ~/GraphSpace/docker_config/kafka/server.properties ~/kafka/config/server.properties
@@ -25,8 +30,6 @@ redis-server ~/redis/redis.conf
 
 echo "Starting elasticsearch"
 su - elasticsearch -c '/elasticsearch/bin/elasticsearch -d'
-
-cd /GraphSpace
 
 echo "Creating logs directory"
 mkdir logs
