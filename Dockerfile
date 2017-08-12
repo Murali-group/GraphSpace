@@ -39,20 +39,18 @@ RUN	wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.
 	cd redis-stable && \
 	make && \
 	make install && \
-	mkdir ~/redis && \
-	cp redis.conf ~/redis/
+	mkdir /redis && \
+	cp redis.conf /redis/
 
 RUN aptitude update && \
 	aptitude install -y zookeeperd && \
 	cd && \
 	wget "http://ftp.cixug.es/apache/kafka/0.10.2.1/kafka_2.12-0.10.2.1.tgz" -O ~/Downloads/kafka.tgz && \
-	mkdir -p ~/kafka && cd ~/kafka && \
+	mkdir -p /kafka && cd /kafka && \
 	tar -xvzf ~/Downloads/kafka.tgz --strip 1
 
 RUN pip install supervisor && \
 	rm -r /var/cache/
-
-RUN cd && git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git		
 
 USER postgres
 
@@ -62,4 +60,11 @@ RUN	/etc/init.d/postgresql start && \
 
 USER root
 
+RUN cd / && \
+	git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git && \
+	chmod -R 777 /GraphSpace
+
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+CMD bash -c "/GraphSpace/docker_command.sh"
+EXPOSE 8000
