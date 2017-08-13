@@ -9,7 +9,7 @@ git pull
 yes | cp -rf /GraphSpace/docker_config/elasticsearch/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
 yes | cp -rf /GraphSpace/docker_config/redis/redis.conf /redis/redis.conf
 yes | cp -rf /GraphSpace/docker_config/kafka/server.properties /kafka/config/server.properties
-yes | cp /GraphSpace/docker_config/supervisord/conf.d/ /etc/supervisor/conf.d/
+yes | cp /GraphSpace/docker_config/supervisord/graphspace.conf /etc/supervisor/conf.d/
 
 echo "Starting postgres"
 service postgresql start
@@ -21,13 +21,13 @@ echo "Sleeping for 5 seconds"
 sleep 5
 
 echo "Starting kafka"
-nohup ~/kafka/bin/kafka-server-start.sh ~/kafka/config/server.properties > ~/kafka/kafka.log 2>&1 &
+nohup /kafka/bin/kafka-server-start.sh /kafka/config/server.properties > /kafka/kafka.log 2>&1 &
 
 echo "Sleeping for 2 seconds"
 sleep 2
 
 echo "Starting redis"
-redis-server ~/redis/redis.conf
+redis-server /redis/redis.conf
 
 echo "Starting elasticsearch"
 su - elasticsearch -c '/elasticsearch/bin/elasticsearch -d'
