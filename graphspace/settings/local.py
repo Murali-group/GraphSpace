@@ -42,9 +42,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'test_database',
-        'USER': 'adb',
-        'PASSWORD': '',
+        'NAME': 'test',
+        'USER': 'postgres',
+        'PASSWORD': '987654321',
         'HOST': 'localhost',
         'PORT': '5432'
     }
