@@ -28,6 +28,7 @@ echo "Sleeping for 2 seconds"
 sleep 2
 
 echo "Starting redis"
+mkdir /GraphSpace/redis
 redis-server /redis/redis.conf
 
 echo "Starting elasticsearch"
