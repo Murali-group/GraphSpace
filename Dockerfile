@@ -14,7 +14,7 @@ RUN apt-get update -y && \
 	make && \
 	make install && \
 	aptitude install -y nodejs nodejs-legacy npm && \
-	npm install bower && \
+	npm install -g bower && \
 	cd && \
 	git config --global user.email "melvin15may@gmail.com" && \
 	git config --global user.name "Melvin Mathew" && \
@@ -27,9 +27,8 @@ RUN apt-get update -y && \
 	add-apt-repository -y ppa:webupd8team/java && \
 	aptitude update && \
 	aptitude install -y oracle-java8-installer && \
-	cd ~/Downloads
-
-RUN	wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.1.tar.gz && \
+	cd ~/Downloads && \
+	wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.1.tar.gz && \
 	tar xvzf elasticsearch-5.5.1.tar.gz && \
 	rm -f elasticsearch-5.5.1.tar.gz && \
 	mv elasticsearch-5.5.1 /elasticsearch && \
@@ -40,31 +39,27 @@ RUN	wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.
 	make && \
 	make install && \
 	mkdir /redis && \
-	cp redis.conf /redis/
-
-RUN aptitude update && \
+	cp redis.conf /redis/ && \
+	aptitude update && \
 	aptitude install -y zookeeperd && \
 	cd && \
 	wget "http://ftp.cixug.es/apache/kafka/0.10.2.1/kafka_2.12-0.10.2.1.tgz" -O ~/Downloads/kafka.tgz && \
 	mkdir -p /kafka && cd /kafka && \
-	tar -xvzf ~/Downloads/kafka.tgz --strip 1
-
-RUN pip install supervisor && \
+	tar -xvzf ~/Downloads/kafka.tgz --strip 1 && \
+	pip install supervisor && \
+	cd / && \ 
+	git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git && \
+	aptitude install -y python-psycopg2 libpq-dev && \
+	chmod -R 777 /GraphSpace && \
 	rm -r /var/cache/
 
 USER postgres
 
 RUN	/etc/init.d/postgresql start && \
 	psql -c "CREATE DATABASE test" && \
-	psql -c "ALTER USER postgres with PASSWORD '987654321'"
+	psql -c "ALTER USER postgres with PASSWORD '987654321'" && \
+	psql -c "CREATE EXTENSION pg_trgm"
 
 USER root
 
-RUN cd / && \
-	git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git && \
-	chmod -R 777 /GraphSpace
-
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
-
-CMD bash -c "/GraphSpace/docker_command.sh"
-EXPOSE 8000
