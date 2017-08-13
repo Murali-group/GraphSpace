@@ -3,7 +3,8 @@ echo "Copy configurations"
 echo "$USER"
 
 cd /GraphSpace
-git pull 
+git stash 
+git pull
 
 yes | cp -rf /GraphSpace/docker_config/elasticsearch/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
 yes | cp -rf /GraphSpace/docker_config/redis/redis.conf /redis/redis.conf
