@@ -21,6 +21,7 @@ echo "Sleeping for 5 seconds"
 sleep 5
 
 echo "Starting kafka"
+> /kafka/kafka.log
 nohup /kafka/bin/kafka-server-start.sh /kafka/config/server.properties > /kafka/kafka.log 2>&1 &
 
 echo "Sleeping for 2 seconds"
