@@ -8,8 +8,8 @@ services:
     #command: bash -c "./docker_command.sh melvin15may https://github.com/melvin15may/GraphSpace.git e#264-docker-diff"
     restart: unless-stopped
     #user: root
-    #volumes:
-    #  - ~/GraphSpace
+    volumes:
+      - /GraphSpace
     #  - /static:/static 
     expose:
       - "8000"

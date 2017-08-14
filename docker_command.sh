@@ -31,12 +31,13 @@ echo "Starting redis"
 mkdir /GraphSpace/redis
 redis-server /redis/redis.conf
 
-echo "Starting elasticsearch"
-su - elasticsearch -c '/elasticsearch/bin/elasticsearch -d'
-
 echo "Creating logs directory"
 mkdir logs
+mkdir data
 > debug.log
+
+echo "Starting elasticsearch"
+su - elasticsearch -c '/elasticsearch/bin/elasticsearch -d'
 
 echo "Create virtual env"
 virtualenv venv
