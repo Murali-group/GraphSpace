@@ -30,11 +30,11 @@ node.name: graphspace-docker-node
 #
 # Path to directory where to store the data (separate multiple locations by comma):
 #
-path.data: /GraphSpace/data
+#path.data: /GraphSpace/data
 #
 # Path to log files:
 #
-path.logs: /GraphSpace/logs
+#path.logs: /GraphSpace/logs
 #
 # ----------------------------------- Memory -----------------------------------
 #
@@ -52,11 +52,11 @@ path.logs: /GraphSpace/logs
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
 #
-network.host: 127.0.0.1
+#network.host: 127.0.0.1
 #
 # Set a custom port for HTTP:
 #
-http.port: 9200
+#http.port: 9200
 #
 # For more information, consult the network module documentation.
 #
