@@ -247,6 +247,7 @@ def get_graph_by_name(request, owner_email, name):
 
 
 def delete_graph_by_id(request, graph_id):
+	db.update_graph(request.db_session, id=graph_id, updated_graph={'default_layout_id': None})
 	graph = db.delete_graph(request.db_session, id=graph_id)
 	settings.ELASTIC_CLIENT.delete(index="graphs", doc_type='json', id=graph_id, refresh=True)
 	return graph
@@ -255,11 +256,11 @@ def delete_graph_by_id(request, graph_id):
 def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 	edge_name_to_id_map = dict()
 	for edge in edges:
-		is_directed = 0 if 'is_directed' not in edge[2]['data'] or not edge[2]['data']['is_directed'] else 1
+		is_directed = 0 if 'is_directed' not in edge[2] or not edge[2]['is_directed'] else 1
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),
-		                       tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['data']['name']),
+		                       tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['name']),
 		                       is_directed=is_directed)
 		edge_name_to_id_map[(edge[0], edge[1])] = new_edge.id
 	return edge_name_to_id_map
@@ -269,7 +270,7 @@ def add_graph_nodes(request, graph_id, nodes):
 	node_name_to_id_map = dict()
 	for node in nodes:
 		# Add node to table
-		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['data']['label'], graph_id=graph_id)
+		new_node = db.add_node(request.db_session, name=node[0], label=node[1]['label'], graph_id=graph_id)
 		node_name_to_id_map[new_node.name] = new_node.id
 	return node_name_to_id_map
 

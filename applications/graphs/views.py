@@ -101,65 +101,63 @@ def graph_page_by_name(request, email, graph_name):
 
 
 def graph_page(request, graph_id):
-    """
-            Wrapper view for the group page. /graphs/<graph_id>
+	"""
+		Wrapper view for the group page. /graphs/<graph_id>
 
-            :param request: HTTP GET Request.
+		:param request: HTTP GET Request.
 
-    Parameters
-    ----------
-    graph_id : string
-            Unique ID of the graph. Required
-    """
-    context = RequestContext(request, {})
-    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph. Required
+	"""
+	context = RequestContext(request, {})
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-    uid = request.session['uid'] if 'uid' in request.session else None
+	uid = request.session['uid'] if 'uid' in request.session else None
 
-    context.push({"graph": _get_graph(request, graph_id)})
-    context.push({"is_posted_by_public_user": 'public_user' in context[
-                 "graph"]["owner_email"]})
-    context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
-        'default_layout_id'] else None})
+	context.push({"graph": _get_graph(request, graph_id)})
+	context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
+	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
+		'default_layout_id'] else None})
 
-    default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
-        'default_layout_id'] is not None else None
+	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
+		                                                                                            'default_layout_id'] is not None else None
 
-    if default_layout is not None and default_layout.is_shared == 1 and request.GET.get(
-            'user_layout') is None and request.GET.get('auto_layout') is None:
-        if '?' in request.get_full_path():
-            return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
-        else:
-            return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
+	if default_layout is not None and (default_layout.is_shared == 1 or default_layout.owner_email == uid) and request.GET.get(
+			'user_layout') is None and request.GET.get('auto_layout') is None:
+		if '?' in request.get_full_path():
+			return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
+		else:
+			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
 
-    context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
-    context['data'] = {k: json.dumps(v, encoding='ascii') for k, v in context[
-        'graph']['graph_json']['data'].items()}
-    context['style_json_string'] = json.dumps(context['graph']['style_json'])
-    context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
-        'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
+	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
+	context['data'] = {k: json.dumps(v, encoding='ascii') for k,v in context['graph']['graph_json']['data'].items()}
+	context['style_json_string'] = json.dumps(context['graph']['style_json'])
+	context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
+		'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
 
-    if 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
-        context['title'] = context['graph']['graph_json']['data']['title']
-    elif 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
-        context['title'] = context['graph']['graph_json']['data']['name']
-    else:
-        context['title'] = ''
+	if 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
+		context['title'] = context['graph']['graph_json']['data']['title']
+	elif 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
+		context['title'] = context['graph']['graph_json']['data']['name']
+	else:
+		context['title'] = ''
 
-    if uid is not None:
-        context.push({
-            "groups": [utils.serializer(group) for group in
-                       users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
-            "shared_groups":
-            _get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
-                'groups']
-        })
+	if uid is not None:
+		context.push({
+			"groups": [utils.serializer(group) for group in
+			           users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
+			"shared_groups":
+				_get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
+					'groups']
+		})
 
-        shared_group_ids = [group['id'] for group in context["shared_groups"]]
-        for group in context['groups']:
-            group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
+		shared_group_ids = [group['id'] for group in context["shared_groups"]]
+		for group in context['groups']:
+			group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
 
-    return render(request, 'graph/index.html', context)
+	return render(request, 'graph/index.html', context)
 
 
 '''
