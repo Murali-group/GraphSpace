@@ -12,7 +12,7 @@ GraphSpace has three dummy users:
 Requirements
 ===================================
 1. Python v2.7.10
-2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
+2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation) with pg_trgm extension
 3. virtualenv
 4. [bower](https://bower.io/)
 5. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
@@ -20,7 +20,7 @@ Requirements
 Running GraphSpace locally
 ===================================
 
-In order to run GraphSpace, please install sqlite3 and both the Python runtime and development environments. We have tested GraphSpace with Python v2.7.10 and sqlite3 v3.8.10. GraphSpace does not support Python v3. GraphSpace performs best on either Mozilla Firefox or Google Chrome browsers. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
+In order to run GraphSpace, please install postgreSQL and both the Python runtime and development environments. We have tested GraphSpace with Python v2.7.10 and postgreSQL v9.6.2. GraphSpace does not support Python v3. GraphSpace performs best on either Mozilla Firefox or Google Chrome browsers. The following steps describe how to install Python packages required by GraphSpace, download the GraphSpace code, and set up and start the server.  The following instructions should apply to computers running a version of the Linux or OS X operating systems.
 
 1. Download the GraphSpace code by running `git clone https://github.com/Murali-group/GraphSpace.git` or by downloading the latest release: https://github.com/Murali-group/GraphSpace/releases.
 2. Visit the GraphSpace directory: `cd GraphSpace`
