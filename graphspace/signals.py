@@ -6,7 +6,6 @@ import graphspace.utils as utils
 
 def send_message(group_name, type, message):
     group_name = utils.websocket_group_name(group_name)
-    print dumps({"type": type, "message": message})
     Group(group_name).send({'text': dumps({"type": type, "message": message})})
 
 
