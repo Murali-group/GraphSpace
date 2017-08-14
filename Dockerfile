@@ -56,10 +56,13 @@ RUN apt-get update -y && \
 USER postgres
 
 RUN	/etc/init.d/postgresql start && \
-	psql -c "CREATE DATABASE test" && \
-	psql -c "ALTER USER postgres with PASSWORD '987654321'" && \
-	psql -c "CREATE EXTENSION pg_trgm"
+	psql -c "CREATE DATABASE test;" && \
+	psql -c "ALTER USER postgres with PASSWORD '987654321';" && \
+	psql -d test -c "CREATE EXTENSION pg_trgm;"
 
 USER root
+
+RUN useradd -ms /bin/bash elasticsearch && \
+	chmod -R 777 /elasticsearch
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
