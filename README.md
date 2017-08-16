@@ -12,7 +12,7 @@ GraphSpace has three dummy users:
 Requirements
 ===================================
 1. Python v2.7.10
-2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
+2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation) with pg_trgm extension
 3. virtualenv
 4. [bower](https://bower.io/)
 5. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)

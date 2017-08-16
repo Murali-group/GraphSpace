@@ -22,7 +22,7 @@ six==1.10.0
 snowballstemmer==1.2.1
 Sphinx==1.4.4
 SQLAlchemy==1.0.14
-graphspace_python>=0.01
+graphspace_python==0.8.2
 enum34
 elasticsearch>=5.0.0,<6.0.0
 elasticsearch-dsl>=5.0.0,<6.0.0

@@ -1035,7 +1035,7 @@ var graphPage = {
     },
     defaultLayoutWidget: {
         init: function (is_shared) {
-            if (utils.getURLParameter('auto_layout') || _.isNil(is_shared) || is_shared == 0) {
+            if (utils.getURLParameter('auto_layout') || _.isNil(is_shared)) {
                 $('#setDefaultLayoutBtn').hide();
                 $('#removeDefaultLayoutBtn').hide();
             } else if (utils.getURLParameter('user_layout') && utils.getURLParameter('user_layout') == default_layout_id) {
