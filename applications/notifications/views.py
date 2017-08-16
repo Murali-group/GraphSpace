@@ -284,10 +284,13 @@ def _get_notifications(request, query={}):
     else:
         is_read = None
 
+    # There are two data types returned depending on is_bulk condition
     if is_bulk == 'true':
         is_bulk = True
+        serializer = utils.serializer
     else:
         is_bulk = False
+        serializer = utils.owner_notification_bulk_serializer if topic == 'owner' else utils.group_notification_bulk_serializer
 
     if topic == 'owner':
         total, notifications = notification_controllers.search_owner_notifications(request,
@@ -308,22 +311,7 @@ def _get_notifications(request, query={}):
                                                                                        'type', None),
                                                                                    is_bulk=is_bulk)
 
-        # There are two data types returned depending on is_bulk condition
-        if is_bulk:
-            notifications = [utils.serializer(notify)
-                             for notify in notifications]
-        else:
-            notifications = [{
-                'id': notify[0],
-                'message': (notify[1] + ' ' + notify[4] + ' ' + settings.NOTIFICATION_MESSAGE['owner'][notify[3]]['bulk'] + '.') if notify[2] else notify[1],
-                'is_bulk': notify[2],
-                'type': notify[3],
-                'resource': notify[4],
-                'owner_email': notify[5],
-                'created_at': notify[6].isoformat(),
-                'first_created_at': notify[7].isoformat(),
-                'is_read': True if notify[8] == 1 else False
-            } for notify in notifications]
+        notifications = [serializer(notify) for notify in notifications]
 
     elif topic == 'group':
         total, notifications = notification_controllers.search_group_notifications(request,
@@ -345,24 +333,7 @@ def _get_notifications(request, query={}):
                                                                                    type=query.get(
                                                                                        'type', None),
                                                                                    is_bulk=is_bulk)
-
-        if is_bulk:
-            notifications = [utils.serializer(notify)
-                             for notify in notifications]
-        else:
-            notifications = [{
-                'id': notify[0],
-                'message': (notify[1] + ' ' + notify[4] + ' ' + settings.NOTIFICATION_MESSAGE['group'][notify[3]]['bulk'] + '.') if notify[2] else notify[1],
-                'is_bulk': notify[2],
-                'type': notify[3],
-                'resource': notify[4],
-                'owner_email': notify[5],
-                'member_email': notify[6],
-                'group_id': notify[7],
-                'created_at': notify[8].isoformat(),
-                'first_created_at': notify[9].isoformat(),
-                'is_read': True if notify[10] == 1 else False
-            } for notify in notifications]
+        notifications = [serializer(notify) for notify in notifications]
 
     else:
         raise BadRequest(
