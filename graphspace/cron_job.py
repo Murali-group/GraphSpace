@@ -46,8 +46,6 @@ def send_notification_emails():
             total = group_total + owner_total
 
             if total > 0:
-            	print owner_notifications
-            	print group_notifications
                 html_content = render_to_string('email/notifications.html', {'host': settings.URL_PATH,
                                                                              'owner_notifications': owner_notifications,
                                                                              'group_notifications': group_notifications})
