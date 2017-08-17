@@ -64,9 +64,14 @@ var apis = {
         }
     },
     logging: {
-        ENDPOINT: 'http://localhost:9200/layouts/action',
+        ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
-            apis.jsonRequest('POST', apis.logging.ENDPOINT, data, successCallback, errorCallback)
+            if (_.endsWith(window.location.hostname, 'graphspace.org')) {
+                var hostname = 'graphcrowd:graphcrowd@' + window.location.hostname;
+            } else {
+                var hostname = window.location.hostname;
+            }
+            apis.jsonRequest('POST', apis.logging.ENDPOINT({'hostname': hostname}), data, successCallback, errorCallback)
         }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -441,11 +446,8 @@ var graphPage = {
         });
 
         $('#saveLayoutBtn').click(function () {
-            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
-            // display node data as a popup
-            graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
 
             graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
@@ -604,31 +606,31 @@ var graphPage = {
                 type: 'warning'
             });
         } else {
-            //if (graphPage.layoutEditor.undoRedoManager) {
-            //    _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
-            //        if (action['action_type'] === 'select') {
-            //            if (action['data']['elements'].length > 0) {
-            //                action['data']['elements'] = action['data']['elements'].jsons();
-            //            }
-            //        }
-            //        // Uncomment the code after setting up the elastic server.
-            //
-            //        //apis.logging.add({
-            //        //        'layout_name': layoutName,
-            //        //        'graph_id': $('#GraphID').val(),
-            //        //        'user_id': $('#UserEmail').val(),
-            //        //        'action': action,
-            //        //        'step': i
-            //        //    },
-            //        //    successCallback = function (response) {
-            //        //        console.log(response);
-            //        //    },
-            //        //    errorCallback = function (xhr, status, errorThrown) {
-            //        //        // This method is called when  error occurs while deleting group_to_graph relationship.
-            //        //        $.notify({                             message: xhr.responseJSON.error_message                         }, {                             type: 'danger'                         });
-            //        //    })
-            //    });
-            //}
+            if (graphPage.layoutEditor.undoRedoManager) {
+                _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
+                    if (!_.isArray(action['data']['elements'])) {
+                        action['data']['elements'] = action['data']['elements'].jsons();
+                    }
+                    // Uncomment the code after setting up the elastic server.
+                    console.debug(action['data']['elements']);
+
+                    apis.logging.add({
+                            'layout_name': layoutName,
+                            'graph_id': $('#GraphID').val(),
+                            'graph_name': $('#GraphName').val(),
+                            'user_email': $('#UserEmail').val(),
+                            'action': action,
+                            'step': i
+                        },
+                        successCallback = function (response) {
+                            console.log(response);
+                        },
+                        errorCallback = function (xhr, status, errorThrown) {
+                            // This method is called when  error occurs while deleting group_to_graph relationship.
+                            console.log(xhr.responseJSON.error_message);
+                        })
+                });
+            }
 
             positions_json = cytoscapeGraph.getNodePositions(graphPage.cyGraph);
             style_json = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
@@ -1424,7 +1426,7 @@ var graphPage = {
                 );
 
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'arrange_node',
+                    'action_type': 'arrange_nodes_' + $(this).data('layout'),
                     'data': {
                         'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                         'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
@@ -1499,7 +1501,7 @@ var graphPage = {
 
                     if (cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj)) {
                         graphPage.layoutEditor.undoRedoManager.update({
-                            'action_type': 'style',
+                            'action_type': 'upload_style',
                             'data': {
                                 'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                                 'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
@@ -1583,7 +1585,7 @@ var graphPage = {
                     });
 
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'select',
+                        'action_type': 'select_widget_' + _.join(_.sortBy(_.concat(selectedColors, selectedShapes)), '_'),
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
@@ -1695,7 +1697,7 @@ var graphPage = {
             close: function (save) {
                 if (save) {
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'style',
+                        'action_type': 'edit_node_style',
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
@@ -1777,7 +1779,7 @@ var graphPage = {
             close: function (save) {
                 if (save) {
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'style',
+                        'action_type': 'edit_edge_style',
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
