@@ -36,7 +36,7 @@ def authenticate_user(request, username=None, password=None):
 		return None
 
 
-def update_user(request, user_id, email=None, password=None, is_admin=None):
+def update_user(request, user_id, email=None, password=None, is_admin=None, receive_notification_email=None):
 	user = {}
 	if email is not None:
 		user['email'] = email
@@ -44,6 +44,8 @@ def update_user(request, user_id, email=None, password=None, is_admin=None):
 		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
 	if is_admin is not None:
 		user['is_admin'] = is_admin
+	if receive_notification_email is not None:
+		user['receive_notification_email'] = receive_notification_email
 
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
 

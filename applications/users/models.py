@@ -56,7 +56,8 @@ class User(IDMixin, TimeStampMixin, Base):
             'id': cls.id,
             'email': cls.email,
             'created_at': cls.created_at.isoformat(),
-            'updated_at': cls.updated_at.isoformat()
+            'updated_at': cls.updated_at.isoformat(),
+            'receive_notification_email': cls.receive_notification_email
         }
 
 

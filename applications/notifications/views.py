@@ -482,3 +482,109 @@ def notification_count_per_group(request):
     }),
         content_type="application/json",
         status=200)
+
+
+@is_authenticated(redirect_url="/")
+def notifications_send_email_api(request):
+    """
+    Handles any request sent to following urls:
+            /ajax/notification/email-status
+
+    Parameters
+    ----------
+    request - HTTP Request
+
+    Returns
+    -------
+    response : JSON Response
+
+    """
+    owner_email = request.GET.get("owner_email", QueryDict(
+        request.body).get("owner_email", None))
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET":
+            return HttpResponse(json.dumps(_get_notifications_send_email_status(request, owner_email=owner_email, query=request.GET)), content_type="application/json")
+        elif request.method == "PUT":
+            return HttpResponse(json.dumps(_update_notifications_send_email_status(
+                request,
+                owner_email=owner_email,
+                query=QueryDict(request.body))
+            ),
+                content_type="application/json",
+                status=200)
+        else:
+            # Handle other type of request methods like OPTIONS etc.
+            raise MethodNotAllowed(request)
+    else:
+        raise BadRequest(request)
+
+
+def _get_notifications_send_email_status(request, owner_email, query):
+    """
+
+    Query Parameters
+    ----------
+    owner_email : string
+            Email of the Owner of the notification.
+
+    Parameters
+    ----------
+    query : dict
+            Dictionary of query parameters.
+    request : object
+            HTTP GET Request.
+
+    Returns
+    -------
+    receive_notification_email : Status on whether to send notification email
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+    user = utils.serializer(
+        user_controllers.get_user(request, email=owner_email))
+    return {
+        "receive_notification_email": user.get("receive_notification_email", False)
+    }
+
+
+def _update_notifications_send_email_status(request, owner_email, query):
+    """
+
+    Query Parameters
+    ----------
+    owner_email : string
+            Email of the Owner of the notification.
+
+    Parameters
+    ----------
+    query : dict
+            Dictionary of query parameters.
+    request : object
+            HTTP GET Request.
+
+    Returns
+    -------
+    receive_notification_email : Updated status on whether to send notification email
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+    user = utils.serializer(
+        user_controllers.get_user(request, email=owner_email))
+    receive_notification_email = not user.get(
+        "receive_notification_email", False)
+    updated_user = utils.serializer(user_controllers.update_user(
+        request, user_id=user["id"], receive_notification_email=receive_notification_email))
+
+    return {
+        "receive_notification_email": updated_user.get("receive_notification_email", False)
+    }
