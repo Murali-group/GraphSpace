@@ -1,6 +1,7 @@
 import json
 
 import applications.users.controllers as users
+import applications.graphs.controllers as graphs
 import graphspace.producer as producer
 from django.conf import settings
 from django.http import HttpResponse, QueryDict
@@ -945,9 +946,23 @@ def _add_group_graph(request, group_id):
     authorization.validate(
         request, permission='GROUP_SHARE', group_id=group_id)
 
-    return utils.serializer(users.add_group_graph(request,
+    group_graph = utils.serializer(users.add_group_graph(request,
                                                   group_id=group_id,
                                                   graph_id=request.POST.get('graph_id', None)))
+
+    graph = utils.serializer(graphs.get_graph_by_id(request, graph_id=graph_id))
+
+    # Notification
+    producer.send_message('group', {
+        'group_id': group_graph['group_id'],   
+        'message': settings.NOTIFICATION_MESSAGE['group']['share']['graph'].format(name=graph.get('name','')),
+        'resource': 'graph',
+        'resource_id': graph_id,
+        'type': 'share',
+        'owner_email': request.session.get('uid', None)
+        })
+
+    return group_graph
 
 
 @is_authenticated()
@@ -981,3 +996,15 @@ def _delete_group_graph(request, group_id, graph_id):
     users.delete_group_graph(request,
                              group_id=group_id,
                              graph_id=graph_id)
+
+    graph = utils.serializer(graphs.get_graph_by_id(request, graph_id=graph_id))
+
+    # Notification
+    producer.send_message('group', {
+        'group_id': group_id,   
+        'message': settings.NOTIFICATION_MESSAGE['group']['unshare']['graph'].format(name=graph.get('name','')),
+        'resource': 'graph',
+        'resource_id': graph_id,
+        'type': 'unshare',
+        'owner_email': request.session.get('uid', None)
+        })
