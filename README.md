@@ -46,7 +46,7 @@ This section describes the steps required to launch GraphSpace on a server that 
 1. Follow instructions 1-5 in `Running GraphSpace locally`
 2. Add settings file `production.py` by copying local settings file. `cp graphspace/settings/local.py graphspace/settings/`
 3. Update your `production.py` settings file.
-   1. InSet `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
+   1. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
    2. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
 4. Update location of graphspace directory (`GRAPHSPACE`) in `runworker` and `daphne` file.
 5. When Supervisor is installed you can give it programs to start and watch by creating configuration files in the `/etc/supervisor/conf.d` directory. For Daphne and workers we’ll create a file named `/etc/supervisor/conf.d/graphspace.conf` with the following content, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace, `path_to_kafka` with the name of the directory where you downloaded Kafka and `user_name` with the name of the current user:
