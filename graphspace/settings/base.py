@@ -224,3 +224,8 @@ CHANNEL_LAYERS = {
         'ROUTING': 'graphspace.routing.channel_routing',
     }
 }
+
+CRONJOBS = [
+    ('0 0 * * *', 'graphspace.cron_job.send_notification_emails')
+]
+CRONTAB_LOCK_JOBS = True

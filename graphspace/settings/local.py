@@ -70,8 +70,3 @@ KAFKA_CONSUMER = {
 KAFKA_CONSUMER_POLL_TIMEOUT = 2
 
 KAFKA_PRODUCER = KafkaProducer(bootstrap_servers=KAFKA_URL)
-
-CRONJOBS = [
-    ('0 0 * * *', 'graphspace.cron_job.send_notification_emails','>> /absolute/path/to/log/file')
-]
-CRONTAB_LOCK_JOBS = True
