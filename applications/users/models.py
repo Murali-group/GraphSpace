@@ -39,7 +39,7 @@ class User(IDMixin, TimeStampMixin, Base):
 		args = tuple() + cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'email': cls.email,
@@ -63,7 +63,7 @@ class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'email': cls.email,
@@ -93,7 +93,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'name': cls.name,
@@ -125,7 +125,7 @@ class GroupToUser(TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'user_id': cls.user_id,
 			'group_id': cls.group_id

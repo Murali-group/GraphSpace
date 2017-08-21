@@ -3,6 +3,7 @@ from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.users.models import *
 from graphspace.wrappers import with_session
+from sqlalchemy.orm import defer, undefer
 
 
 @with_session
@@ -129,6 +130,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
+	query = query.options(defer("graph_json")).options(defer("style_json"))
 
 	graph_filter_group = []
 	if is_public is not None:

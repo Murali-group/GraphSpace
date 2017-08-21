@@ -21,12 +21,14 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	style_json = Column(String, nullable=False)
 	is_public = Column(Integer, nullable=False, default=0)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
-							   nullable=True)
+	                           nullable=True)
 
 	owner = relationship("User", back_populates="owned_graphs", uselist=False)
-	default_layout = relationship("Layout", foreign_keys=[default_layout_id], back_populates="default_layout_graph", uselist=False)
+	default_layout = relationship("Layout", foreign_keys=[default_layout_id], back_populates="default_layout_graph",
+	                              uselist=False)
 
-	layouts = relationship("Layout", foreign_keys="Layout.graph_id", back_populates="graph", cascade="all, delete-orphan")
+	layouts = relationship("Layout", foreign_keys="Layout.graph_id", back_populates="graph",
+	                       cascade="all, delete-orphan")
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
 
@@ -45,19 +47,31 @@ class Graph(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
-		return {
-			'id': cls.id,
-			'owner_email': cls.owner_email,
-			'name': cls.name,
-			'graph_json': json.loads(cls.graph_json),
-			'style_json': json.loads(cls.style_json),
-			'is_public': cls.is_public,
-			'tags': [tag.name for tag in cls.tags],
-			'default_layout_id': cls.default_layout_id,
-			'created_at': cls.created_at.isoformat(),
-			'updated_at': cls.updated_at.isoformat()
-		}
+	def serialize(cls, **kwargs):
+		if 'summary' in kwargs and kwargs['summary']:
+			return {
+				'id': cls.id,
+				'owner_email': cls.owner_email,
+				'name': cls.name,
+				'is_public': cls.is_public,
+				'tags': [tag.name for tag in cls.tags],
+				'default_layout_id': cls.default_layout_id,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}
+		else:
+			return {
+				'id': cls.id,
+				'owner_email': cls.owner_email,
+				'name': cls.name,
+				'graph_json': json.loads(cls.graph_json),
+				'style_json': json.loads(cls.style_json),
+				'is_public': cls.is_public,
+				'tags': [tag.name for tag in cls.tags],
+				'default_layout_id': cls.default_layout_id,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}
 
 
 class Edge(IDMixin, TimeStampMixin, Base):
@@ -79,17 +93,23 @@ class Edge(IDMixin, TimeStampMixin, Base):
 
 	constraints = (
 		UniqueConstraint('graph_id', 'head_node_id', 'tail_node_id',
-						 name='_edge_uc_graph_id_head_node_id_tail_node_id'),
+		                 name='_edge_uc_graph_id_head_node_id_tail_node_id'),
 		UniqueConstraint('graph_id', 'name', name='_edge_uc_graph_id_name'),
-		ForeignKeyConstraint(['head_node_id', 'head_node_name'],  ['node.id', 'node.name'], ondelete="CASCADE", onupdate="CASCADE"),
-		ForeignKeyConstraint(['head_node_id', 'head_node_label'], ['node.id', 'node.label'], ondelete="CASCADE", onupdate="CASCADE"),
-		ForeignKeyConstraint(['tail_node_id', 'tail_node_name'],  ['node.id', 'node.name'], ondelete="CASCADE", onupdate="CASCADE"),
-		ForeignKeyConstraint(['tail_node_id', 'tail_node_label'], ['node.id', 'node.label'], ondelete="CASCADE", onupdate="CASCADE"),
+		ForeignKeyConstraint(['head_node_id', 'head_node_name'], ['node.id', 'node.name'], ondelete="CASCADE",
+		                     onupdate="CASCADE"),
+		ForeignKeyConstraint(['head_node_id', 'head_node_label'], ['node.id', 'node.label'], ondelete="CASCADE",
+		                     onupdate="CASCADE"),
+		ForeignKeyConstraint(['tail_node_id', 'tail_node_name'], ['node.id', 'node.name'], ondelete="CASCADE",
+		                     onupdate="CASCADE"),
+		ForeignKeyConstraint(['tail_node_id', 'tail_node_label'], ['node.id', 'node.label'], ondelete="CASCADE",
+		                     onupdate="CASCADE"),
 	)
 
 	indices = (
-		Index('edge_idx_head_label_tail_label', text("head_node_label, tail_node_label gin_trgm_ops"), postgresql_using="gin"),
-		Index('edge_idx_head_name_tail_name', text("head_node_name, tail_node_name gin_trgm_ops"), postgresql_using="gin"),
+		Index('edge_idx_head_label_tail_label', text("head_node_label, tail_node_label gin_trgm_ops"),
+		      postgresql_using="gin"),
+		Index('edge_idx_head_name_tail_name', text("head_node_name, tail_node_name gin_trgm_ops"),
+		      postgresql_using="gin"),
 		Index('edge_idx_head_id_tail_id', "head_node_id", "tail_node_label"),
 	)
 
@@ -98,7 +118,7 @@ class Edge(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'name': cls.name,
@@ -110,6 +130,7 @@ class Edge(IDMixin, TimeStampMixin, Base):
 			'updated_at': cls.updated_at.isoformat()
 		}
 
+
 class Node(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'node'
 
@@ -118,13 +139,15 @@ class Node(IDMixin, TimeStampMixin, Base):
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 
 	graph = relationship("Graph", back_populates="nodes", uselist=False)
-	source_edges = relationship("Edge", foreign_keys="Edge.head_node_id", back_populates="head_node", cascade="all, delete-orphan")
-	target_edges = relationship("Edge", foreign_keys="Edge.tail_node_id", back_populates="tail_node", cascade="all, delete-orphan")
+	source_edges = relationship("Edge", foreign_keys="Edge.head_node_id", back_populates="head_node",
+	                            cascade="all, delete-orphan")
+	target_edges = relationship("Edge", foreign_keys="Edge.tail_node_id", back_populates="tail_node",
+	                            cascade="all, delete-orphan")
 
 	constraints = (
 		UniqueConstraint('graph_id', 'name', name='_node_uc_graph_id_name'),
-		UniqueConstraint('id','name', name='_node_uc_id_name'),
-		UniqueConstraint('id','label', name='_node_uc_id_label'),
+		UniqueConstraint('id', 'name', name='_node_uc_id_name'),
+		UniqueConstraint('id', 'label', name='_node_uc_id_label'),
 	)
 
 	indices = (
@@ -137,7 +160,7 @@ class Node(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'name': cls.name,
@@ -165,7 +188,7 @@ class GroupToGraph(TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'group_id': cls.group_id,
 			'graph_id': cls.graph_id,
@@ -188,8 +211,9 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
 	owner = relationship("User", back_populates="owned_layouts", uselist=False)
 
-	default_layout_graph = relationship("Graph", foreign_keys="Graph.default_layout_id", back_populates="default_layout", cascade="all, delete-orphan",
-										uselist=False)
+	default_layout_graph = relationship("Graph", foreign_keys="Graph.default_layout_id",
+	                                    back_populates="default_layout", cascade="all, delete-orphan",
+	                                    uselist=False)
 
 	constraints = (
 		UniqueConstraint('name', 'graph_id', 'owner_email', name='_layout_uc_name_graph_id_owner_email'),)
@@ -200,7 +224,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'name': cls.name,
@@ -230,7 +254,7 @@ class GraphTag(IDMixin, TimeStampMixin, Base):
 
 	graphs = association_proxy('tagged_graphs', 'graph')
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
 			'name': cls.name,

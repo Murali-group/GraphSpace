@@ -287,6 +287,31 @@ var utils = {
 
         var blob = new Blob(byteArrays, {type: contentType});
         return blob;
+    },
+    timer: function (lap) {
+        //If you want to measure the time between multiple things that aren't nested you could use this:
+        /*
+         Reference: https://stackoverflow.com/questions/313893/how-to-measure-time-taken-by-a-function-to-execute
+
+         Usage: timer()    // set the start
+         //...
+         timer()
+         //...
+         timer()
+         //...
+         timer()
+
+         Output would look like this:
+         591.815ms
+         0.065ms
+         36.41ms
+         */
+        if(timer.prev && lap)
+            var lap_time = (performance.now() - timer.prev).toFixed(3);
+        else
+            var lap_time = 0;
+        timer.prev = performance.now();
+        return lap_time;
     }
 };
 

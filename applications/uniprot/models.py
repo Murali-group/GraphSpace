@@ -32,7 +32,7 @@ class UniprotAlias(IDMixin, TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
-	def serialize(cls):
+	def serialize(cls, **kwargs):
 		return {
 			# 'id': cls.id,
 			'id': cls.accession_number,

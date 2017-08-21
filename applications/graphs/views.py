@@ -236,7 +236,7 @@ def graphs_advanced_search_ajax_api(request):
 
 			return HttpResponse(json.dumps({
 				'total': total,
-				'graphs': [utils.serializer(graph) for graph in graphs_list]
+				'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
 			}), content_type="application/json", status=200)
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
@@ -375,7 +375,7 @@ def _get_graphs(request, query=dict()):
 
 	return {
 		'total': total,
-		'graphs': [utils.serializer(graph) for graph in graphs_list]
+		'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
 	}
 
 
