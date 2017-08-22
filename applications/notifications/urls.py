@@ -20,6 +20,9 @@ urlpatterns = [
     # Get number of notifications in each group
     url(r'^ajax/notifications/group-count/$', views.notification_count_per_group,
         name='notification_count_per_group'),
+    # Mark/get send email status
+    url(r'^ajax/notifications/email-status/$', views.notifications_send_email_api,
+        name='notifications_send_email_api'),
     # Show notifications
     url(r'^ajax/notifications/$', views.notifications_ajax_api,
         name='notifications_ajax_api'),

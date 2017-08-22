@@ -347,3 +347,9 @@ def find_groups(db_session, owner_email, member_email, name, description, graph_
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+# Get all users who have receive_notification_email = True
+@with_session
+def get_users_email_notification(db_session, limit, offset):
+	query = db_session.query(User).filter(User.receive_notification_email.is_(True)).limit(limit).offset(offset)
+	return query.all()

@@ -35,6 +35,7 @@ class User(IDMixin, TimeStampMixin, Base):
         "Layout", back_populates="owner", cascade="all, delete-orphan")
 
     # Notification relationships
+    receive_notification_email = Column(Boolean, default=False)
     owned_notifications = relationship(
         "OwnerNotification", back_populates="owner", cascade="all, delete-orphan")
     group_notifications = relationship(
@@ -55,7 +56,8 @@ class User(IDMixin, TimeStampMixin, Base):
             'id': cls.id,
             'email': cls.email,
             'created_at': cls.created_at.isoformat(),
-            'updated_at': cls.updated_at.isoformat()
+            'updated_at': cls.updated_at.isoformat(),
+            'receive_notification_email': cls.receive_notification_email
         }
 
 

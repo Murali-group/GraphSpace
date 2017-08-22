@@ -35,7 +35,8 @@ INSTALLED_APPS = (
 	'applications.users',
 	'applications.graphs',
 	'applications.notifications',
-	'channels'
+	'channels',
+	'django_crontab'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -223,3 +224,8 @@ CHANNEL_LAYERS = {
         'ROUTING': 'graphspace.routing.channel_routing',
     }
 }
+
+CRONJOBS = [
+    ('0 0 * * *', 'graphspace.cron_job.send_notification_emails')
+]
+CRONTAB_LOCK_JOBS = True

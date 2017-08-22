@@ -13,8 +13,15 @@ var apis = {
             }
             apis.jsonRequest('GET', url, data, successCallback, errorCallback)
         },
-        update: function(id, data, successCallback, errorCallback) {
-            apis.jsonRequest('PUT', apis.notifications.ENDPOINT + id, data, successCallback, errorCallback)
+        update: function(id, data, uri, successCallback, errorCallback) {
+            url = apis.notifications.ENDPOINT
+            if (uri != null) {
+                url = url + uri
+            }
+            if (id != null) {
+                url = url + id
+            }
+            apis.jsonRequest('PUT', url, data, successCallback, errorCallback)
         },
         read: function(id, data, successCallback, errorCallback) {
             url = apis.notifications.ENDPOINT + 'read/'
@@ -40,6 +47,7 @@ var apis = {
 };
 
 var notificationsPage = {
+    current_tab_is_unread: true,
     init: function() {
         /**
          * This function is called to setup the notifications page.
@@ -79,12 +87,21 @@ var notificationsPage = {
                 data = data,
                 successCallback = function(response) {
                     // This method is called when notifications are successfully fetched.
-                    notificationsPage.groupNotificationsTable.notificationsGroupCount(
-                        is_read = false,
-                        total_val_id = '#unread-group-notification-total',
-                        table_div_id = '#unread-group-notification-tables',
-                        refresh_tabs = true)
-                    $('#unread-owner-notification-table').bootstrapTable('refresh')
+                    if (notificationsPage.current_tab_is_unread) {
+                        notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                            is_read = false,
+                            total_val_id = '#unread-group-notification-total',
+                            table_div_id = '#unread-group-notification-tables',
+                            refresh_tabs = true)
+                        $('#unread-owner-notification-table').bootstrapTable('refresh')
+                    } else {
+                        notificationsPage.groupNotificationsTable.notificationsGroupCount(
+                            is_read = null,
+                            total_val_id = '#all-group-notification-total',
+                            table_div_id = '#all-group-notification-tables',
+                            refresh_tabs = true)
+                        $('#all-owner-notification-table').bootstrapTable('refresh')
+                    }
                     $(".notification-indicator .mail-status.unread").css({ "display": "none" })
                     //$.notify({message: response.message}, {type: 'success'});
                 },
@@ -104,6 +121,7 @@ var notificationsPage = {
                 refresh_tabs = true)
             // Get owner notification on click
             $('#all-owner-notification-table').bootstrapTable('refresh')
+            notificationsPage.current_tab_is_unread = false
 
         })
 
@@ -114,7 +132,12 @@ var notificationsPage = {
                 table_div_id = '#unread-group-notification-tables',
                 refresh_tabs = true)
             $('#unread-owner-notification-table').bootstrapTable('refresh')
+            notificationsPage.current_tab_is_unread = true
         })
+
+        $('#send-email-checkbox').change(function() {
+            notificationsPage.updateSendEmailStatus()
+        });
 
         notificationsPage.groupNotificationsTable.notificationsGroupCount(
             is_read = false,
@@ -122,7 +145,39 @@ var notificationsPage = {
             table_div_id = '#unread-group-notification-tables',
             refresh_tabs = true)
 
+        notificationsPage.checkSendEmailStatus()
+
         utils.initializeTabs();
+    },
+    checkSendEmailStatus: function() {
+        apis.notifications.get({
+                'owner_email': $('#UserEmail').val()
+            },
+            uri = "email-status/",
+            successCallback = function(response) {
+                //params.success(response);
+                $('#send-email-checkbox').attr("checked", response.receive_notification_email)
+            },
+            errorCallback = function() {
+                // Fail silently
+            }
+        );
+    },
+    updateSendEmailStatus: function() {
+        apis.notifications.update(
+            id = null,
+            data = {
+                'owner_email': $('#UserEmail').val()
+            },
+            uri = "email-status/",
+            successCallback = function(response) {
+                //params.success(response);
+                $('#send-email-checkbox').attr("checked", response.receive_notification_email)
+            },
+            errorCallback = function() {
+                // Fail silently
+            }
+        );
     },
     notificationsTable: {
         operationsFormatter: function(value, row, index) {
@@ -425,8 +480,6 @@ var notificationsPage = {
             params.data["first_created_at"] = params.options["first_created_at"]
             params.data["resource"] = params.options["resource"]
             params.data["is_bulk"] = params.options["is_bulk"]
-
-            console.log(params.data)
 
             apis.notifications.get(params.data,
                 uri = null,

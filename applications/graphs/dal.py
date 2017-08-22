@@ -406,7 +406,6 @@ def delete_layout(db_session, id):
 	"""
 	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
 	setattr(layout, "is_deleted", True)
-	#db_session.delete(layout)
 	return layout
 
 
