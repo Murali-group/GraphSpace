@@ -1,7 +1,7 @@
 version: '2'  
 services:  
   web:
-    image: testing:latest
+    build: .
     container_name: GRAPHSPACEXDOCKER
     command: bash -c "/GraphSpace/docker_config/docker_command.sh"
     restart: unless-stopped
