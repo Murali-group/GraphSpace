@@ -44,8 +44,21 @@ In order to run GraphSpace, please install postgreSQL and both the Python runtim
    sudo apt-get install libpq-dev python-dev
    pip install psycopg2
    ```
-6. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
-7. Visit `http://localhost:8080` and enjoy using GraphSpace!
+6. In `/graphspace/settings/local.py` file, change the postgres user credentials:
+   ```
+   DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.postgresql_psycopg2',
+          'NAME': <database name>,
+          'USER': <user name>,
+          'PASSWORD': <password (if any)>,
+          'HOST': 'localhost',
+          'PORT': '5432'
+      }
+   }
+   ```
+7. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
+8. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
 Running GraphSpace on Apache
 ===================================

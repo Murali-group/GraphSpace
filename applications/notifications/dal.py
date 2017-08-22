@@ -164,6 +164,7 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                 GroupNotification.type == type)
     else:
         # Get notifications by merging similar ones
+        # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
         cte_query = db_session.query(GroupNotification.id,
                                      GroupNotification.message,
                                      GroupNotification.type,
@@ -288,6 +289,7 @@ def read_group_notifications(db_session, member_email, group_id=None, resource=N
 def get_notification_count_per_group(db_session, member_email, is_read=None):
 
     # Get notifications by merging similar ones
+    # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
     cte_query = db_session.query(GroupNotification.type,
                                  GroupNotification.resource,
                                  GroupNotification.is_read,
