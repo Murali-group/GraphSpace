@@ -306,11 +306,11 @@ var utils = {
          0.065ms
          36.41ms
          */
-        if(timer.prev && lap)
-            var lap_time = (performance.now() - timer.prev).toFixed(3);
+        if(utils.timer.prev && lap)
+            var lap_time = parseFloat((performance.now() - utils.timer.prev).toFixed(3));
         else
             var lap_time = 0;
-        timer.prev = performance.now();
+        utils.timer.prev = performance.now();
         return lap_time;
     }
 };

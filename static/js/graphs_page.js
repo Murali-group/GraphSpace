@@ -74,7 +74,7 @@ var apis = {
                 data: JSON.stringify(data),
                 url: apis.logging.ENDPOINT({'hostname': 'graphspace.org'}),
                 headers: {
-                    'Authorization': 'Basic ' + btoa('graphcrowd:graphcrowd')
+                    'Authorization': 'Basic Z3JhcGhjcm93ZDpncmFwaGNyb3dk'
                 },
                 success: successCallback,
                 error: errorCallback
