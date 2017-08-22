@@ -38,8 +38,12 @@ In order to run GraphSpace, please install postgreSQL and both the Python runtim
 5. Install graphspace: `sh install.sh`
    
    _Note : While installing psycopg2, you might encounter 
-   [```Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.```](https://stackoverflow.com/q/28253681/4646197)
-   To fix it follow the solution given [here](https://stackoverflow.com/a/28254860/4646197)._
+   ```Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.```
+   To fix it run the following commands ([More](https://stackoverflow.com/a/28254860/4646197)):_
+   ```
+   sudo apt-get install libpq-dev python-dev
+   pip install psycopg2
+   ```
 6. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
 7. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
