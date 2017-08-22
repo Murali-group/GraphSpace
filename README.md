@@ -21,6 +21,11 @@ Requirements
 7. [Redis](https://github.com/Murali-group/GraphSpace/wiki/Install-Redis)
 8. [Supervisor](http://supervisord.org/installing.html#installing-via-pip)
 
+
+Running GraphSpace using Docker
+===================================
+This is the easiest way to run GraphSpace, if you are do not want or are not interested in making code changes. Follow the steps given [here](https://github.com/Murali-group/GraphSpace/wiki/GraphSpace-and-Docker) to setup and run GraphSpace using docker.
+
 Running GraphSpace locally
 ===================================
 
@@ -130,7 +135,6 @@ This section describes the steps required to launch GraphSpace on a server that 
 17. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
-
 
 Contributing
 =================

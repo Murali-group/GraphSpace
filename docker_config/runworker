@@ -1,0 +1,9 @@
+#!/bin/bash
+
+NAME="GraphSpace daphne workers"
+GRAPHSPACE="/GraphSpace"
+
+set -e  # exit on error
+cd $GRAPHSPACE
+. venv/bin/activate
+exec python manage.py runworker 
