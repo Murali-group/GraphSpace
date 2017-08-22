@@ -251,7 +251,7 @@ var utils = {
         }
     },
     dateFormatter: function (value, row, index) {
-        return moment(value).fromNow();
+        return moment.utc(value).fromNow();
     },
     getURLParameter: function (name) {
         var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
