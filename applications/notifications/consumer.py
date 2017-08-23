@@ -11,7 +11,7 @@ class Consumer(threading.Thread):
     """
     Kafka consumer class
 
-    Class object are used to send notification message to Kafka.
+    Class object are used to consume notification message to Kafka.
     Currently there can be 2 types of consumer class objects:
     - Owner (for owner notification)
     - Group (for group notification)
