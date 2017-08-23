@@ -7,8 +7,16 @@ from django.conf import settings
 from json import loads
 
 
-# Kafka consumers
 class Consumer(threading.Thread):
+    """
+    Kafka consumer class
+
+    Class object are used to send notification message to Kafka.
+    Currently there can be 2 types of consumer class objects:
+    - Owner (for owner notification)
+    - Group (for group notification)
+    """
+
     daemon = True
     type = "owner"  # defaults to 'owner' type notification
     notification_func = {
