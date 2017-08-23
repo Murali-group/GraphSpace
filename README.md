@@ -58,6 +58,20 @@ In order to run GraphSpace, please install postgreSQL and both the Python runtim
    }
    ```
 7. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
+   _Note_: This will not activate websocket. To run GraphSpace with websockets follow these steps:
+   
+   1. Add settings file `production.py` by copying local settings file.
+      ```
+      cp graphspace/settings/local.py graphspace/settings/production.py
+      ```
+   2. Run Daphne interface server.
+      ```
+      daphne -b localhost -p 8000 graphspace.asgi:channel_layer
+      ```
+   3. Open another terminal, and run workers which would serve the requests.
+      ```
+      python manage.py runworker
+      ```
 8. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
 Running GraphSpace on Apache
@@ -66,7 +80,10 @@ Running GraphSpace on Apache
 This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  First, please follow the steps in **Running GraphSpace locally**.  Next, execute the instructions below. 
 
 1. Follow instructions 1-5 in `Running GraphSpace locally`
-2. Add settings file `production.py` by copying local settings file. `cp graphspace/settings/local.py graphspace/settings/`
+2. Add settings file `production.py` by copying local settings file. 
+   ```
+   cp graphspace/settings/local.py graphspace/settings/production.py
+   ```
 3. Update your `production.py` settings file.
    1. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
    2. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
