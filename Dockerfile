@@ -48,7 +48,7 @@ RUN apt-get update -y && \
 	tar -xvzf ~/Downloads/kafka.tgz --strip 1 && \
 	pip install supervisor && \
 	cd / && \ 
-	git clone -b e#264-docker-file https://github.com/melvin15may/GraphSpace.git && \
+	git clone -b master https://github.com/Murali-group/GraphSpace.git && \
 	aptitude install -y python-psycopg2 libpq-dev && \
 	chmod -R 777 /GraphSpace && \
 	rm -r /var/cache/
