@@ -150,7 +150,10 @@ def read_owner_notifications(request, owner_email, resource=None, type=None, cre
 
     :param request: HTTP request.
     :param owner_email: Email of user who created the notification.
-    :param group_id: ID of the notification's group.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
     :param notification_id: ID of notification
     :return: list of OwnerNotification
     """
@@ -172,6 +175,10 @@ def read_group_notifications(request, member_email, group_id=None, resource=None
     :param request: HTTP request.
     :param member_email: Email of user who created the notification.
     :param group_id: ID of the notification's group.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
     :param notification_id: ID of notification
     :return: list of GroupNotification
     """

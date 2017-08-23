@@ -413,6 +413,14 @@ def _update_notifications_read(request, notification_id=None, query={}):
                                                                               'owner_email', None),
                                                                           group_id=query.get(
                                                                               'group_id', None),
+                                                                          resource=query.get(
+                                                                              'resource', None),
+                                                                          created_at=query.get(
+                                                                              'created_at', None),
+                                                                          first_created_at=query.get(
+                                                                              'first_created_at', None),
+                                                                          type=query.get(
+                                                                              'type', None),
                                                                           notification_id=notification_id
                                                                           )
     elif topic == 'all':

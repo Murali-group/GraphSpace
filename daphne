@@ -8,4 +8,5 @@ GRAPHSPACE="/home/melvin/Documents/GSoC/GraphSpace"
 set -e  # exit on error
 cd $GRAPHSPACE
 . venv/bin/activate
+python manage.py crontab add
 exec daphne --fd 5 -b localhost -p 9099 graphspace.asgi:channel_layer

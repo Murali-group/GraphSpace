@@ -8,6 +8,7 @@ import applications.users.dal as db_users
 from graphspace.wrappers import with_session
 from graphspace import utils
 
+from django.conf import settings
 
 @with_session
 def add_owner_notification(db_session, message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
@@ -68,6 +69,14 @@ def add_group_notification(db_session, message, type, resource, resource_id, gro
 
 @with_session
 def get_notification_count(db_session, owner_email, is_read=None):
+    """
+    Get total/count notification
+
+    :param db_session: Database session.
+    :param owner_email: Email of user who created the notification.
+    :param is_email_sent: Check if email has been sent for the notification or not.
+    :return: count/total
+    """
     owner_query = db_session.query(OwnerNotification).filter(
         OwnerNotification.owner_email.ilike(owner_email))
     group_query = db_session.query(GroupNotification).filter(
@@ -83,8 +92,23 @@ def get_notification_count(db_session, owner_email, is_read=None):
 
 
 @with_session
-def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
+def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is_email_sent=None, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
+    """
+    Get list of owner notifications.
 
+    :param request: HTTP request.
+    :param message: Message of the notification.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param owner_email: Email of user who created the notification.
+    :param is_read: Check if notification is read or not.
+    :param limit: Number of notifications.
+    :param offset: Offset from 1st notification.
+    :param is_bulk: Indicator to show when to fetch as a bulk.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :return: list of OwnerNotification
+    """
     if is_bulk:
         # Get all notification without merging similar notifications into 1
         cte_query = db_session.query(OwnerNotification)
@@ -105,6 +129,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                      OwnerNotification.resource,
                                      case([(OwnerNotification.is_read, 1)],
                                           else_=0).label('is_read'),
+                                     case([(OwnerNotification.is_email_sent, 1)],
+                                          else_=0).label('is_email_sent'),
                                      OwnerNotification.owner_email,
                                      OwnerNotification.created_at,
                                      # Added this to later group notifications using time intervals
@@ -118,6 +144,9 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
 
     if is_read is not None:
         cte_query = cte_query.filter(OwnerNotification.is_read.is_(is_read))
+
+    if is_email_sent is not None:
+        cte_query = cte_query.filter(OwnerNotification.is_email_sent.is_(is_email_sent))
 
     if is_bulk:
         query = cte_query.order_by(desc(OwnerNotification.created_at))
@@ -151,6 +180,23 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
 
 @with_session
 def find_group_notifications(db_session, member_email, group_id, is_read, limit, offset, is_bulk=False, created_at=None, first_created_at=None, resource=None, type=None):
+    """
+    Get list of group notifications.
+
+    :param request: HTTP request.
+    :param message: Message of the notification.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param owner_email: Email of user who created the notification.
+    :param is_read: Check if notification is read or not.
+    :param group_id: ID of the notification's group.
+    :param limit: Number of notifications.
+    :param offset: Offset from 1st notification.
+    :param is_bulk: Indicator to show when to fetch as a bulk.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :return: list of GroupNotification
+    """
 
     if is_bulk:
         # Get all notification without merging similar notifications into 1
@@ -221,6 +267,19 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
 
 @with_session
 def read_owner_notifications(db_session, owner_email, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
+    """
+    Mark owner notification as read
+
+    :param request: HTTP request.
+    :param owner_email: Email of user who created the notification.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :param notification_id: ID of notification
+    :return: list of OwnerNotification
+    """
+
     query = db_session.query(OwnerNotification)
     query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
     notify = None
@@ -252,6 +311,20 @@ def read_owner_notifications(db_session, owner_email, resource=None, type=None, 
 
 @with_session
 def read_group_notifications(db_session, member_email, group_id=None, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
+    """
+    Mark group notification as read
+
+    :param request: HTTP request.
+    :param member_email: Email of user who created the notification.
+    :param group_id: ID of the notification's group.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :param notification_id: ID of notification
+    :return: list of GroupNotification
+    """
+
     query = db_session.query(GroupNotification)
     query = query.filter(GroupNotification.member_email.ilike(member_email))
     notify = None
@@ -284,15 +357,23 @@ def read_group_notifications(db_session, member_email, group_id=None, resource=N
     return total, notify
 
 
-# Get notification count per group for all groups
 @with_session
-def get_notification_count_per_group(db_session, member_email, is_read=None):
+def get_notification_count_per_group(db_session, member_email, is_read=None, is_email_sent=None):
+    """
+    Get notification count per group for all groups
+
+    :param request: HTTP request.
+    :param member_email: Email of user who created the notification.
+    :param is_read: Check if notification is read or not.
+    :return: list of Groups and count per group
+    """
 
     # Get notifications by merging similar ones
     # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
     cte_query = db_session.query(GroupNotification.type,
                                  GroupNotification.resource,
                                  GroupNotification.is_read,
+                                 GroupNotification.is_email_sent,
                                  GroupNotification.member_email,
                                  GroupNotification.created_at,
                                  GroupNotification.group_id,
@@ -303,6 +384,9 @@ def get_notification_count_per_group(db_session, member_email, is_read=None):
 
     if is_read is not None:
         cte_query = cte_query.filter(GroupNotification.is_read.is_(is_read))
+
+    if is_email_sent is not None:
+        cte_query = cte_query.filter(GroupNotification.is_email_sent.is_(is_email_sent))
 
     cte_query = cte_query.cte('group_notification_sub_count_cte')
 
@@ -325,24 +409,94 @@ def get_notification_count_per_group(db_session, member_email, is_read=None):
 
     return total, new_query.all()
 
+
+@with_session
+def email_owner_notifications(db_session, owner_email, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
     """
-    subquery = db_session.query(GroupNotification.group_id, func.count(
-        GroupNotification.group_id).label('count'))
-    subquery = subquery.filter(GroupNotification.member_email.ilike(
-        member_email))
-    total_query = db_session.query(GroupNotification).filter(
-        GroupNotification.member_email.ilike(member_email))
+    Mark owner notification as email sent
 
-    if is_read is not None:
-        subquery = subquery.filter(GroupNotification.is_read.is_(is_read))
-        total_query = total_query.filter(
-            GroupNotification.is_read.is_(is_read))
-
-    subquery = subquery.group_by(GroupNotification.group_id).subquery()
-
-    query = db_session.query(Group, subquery.c.count).join(
-        subquery, subquery.c.group_id == Group.id).order_by(subquery.c.count.desc())
-
-    total = total_query.count()
-    return total, query.all()
+    :param request: HTTP request.
+    :param owner_email: Email of user who created the notification.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :param notification_id: ID of notification
+    :return: list of OwnerNotification
     """
+
+    query = db_session.query(OwnerNotification)
+    query = query.filter(OwnerNotification.owner_email.ilike(owner_email))
+    notify = None
+
+    if notification_id is not None:
+        query = query.filter(OwnerNotification.id == notification_id)
+        notify = query.one_or_none()
+    else:
+        if resource is not None:
+            query = query.filter(OwnerNotification.resource == resource)
+
+        if type is not None:
+            query = query.filter(OwnerNotification.type == type)
+
+        if created_at is not None:
+            query = query.filter(OwnerNotification.created_at <= datetime.strptime(
+                created_at, "%Y-%m-%dT%H:%M:%S.%f"))
+
+        if first_created_at is not None:
+            query = query.filter(OwnerNotification.created_at >= datetime.strptime(
+                first_created_at, "%Y-%m-%dT%H:%M:%S.%f"))
+
+    query = query.filter(OwnerNotification.is_email_sent.is_(False))
+    total = query.count()
+    query = query.update({'is_email_sent': True}, synchronize_session=False)
+
+    return total, notify
+
+
+@with_session
+def email_group_notifications(db_session, member_email, group_id=None, resource=None, type=None, created_at=None, first_created_at=None, notification_id=None):
+    """
+    Mark group notification as email sent
+
+    :param request: HTTP request.
+    :param member_email: Email of user who created the notification.
+    :param group_id: ID of the notification's group.
+    :param type: Type of the notification.
+    :param resource: Resource type (graph,layout,group) of this notification.
+    :param created_at: Notification created_at datetime.
+    :param first_created_at: First notification created at datetime in a group/cluster.
+    :param notification_id: ID of notification
+    :return: list of GroupNotification
+    """
+    query = db_session.query(GroupNotification)
+    query = query.filter(GroupNotification.member_email.ilike(member_email))
+    notify = None
+
+    if notification_id is not None:
+        query = query.filter(GroupNotification.id == notification_id)
+        notify = query.one_or_none()
+    else:
+        if group_id is not None:
+            query = query.filter(GroupNotification.group_id == group_id)
+
+        if resource is not None:
+            query = query.filter(GroupNotification.resource == resource)
+
+        if type is not None:
+            query = query.filter(GroupNotification.type == type)
+
+        if created_at is not None:
+            query = query.filter(GroupNotification.created_at <= datetime.strptime(
+                created_at, "%Y-%m-%dT%H:%M:%S.%f"))
+
+        if first_created_at is not None:
+            query = query.filter(GroupNotification.created_at >= datetime.strptime(
+                first_created_at, "%Y-%m-%dT%H:%M:%S.%f"))
+
+    query = query.filter(GroupNotification.is_email_sent.is_(False))
+    total = query.count()
+    query = query.update({'is_email_sent': True}, synchronize_session=False)
+
+    return total, notify
+
