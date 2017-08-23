@@ -28,8 +28,8 @@ def get_request_user(request):
 	return request.session['uid'] if 'uid' in request.session else None
 
 
-def serializer(obj):
-	return obj.serialize() if obj is not None else None
+def serializer(obj, summary=False):
+	return obj.serialize(summary=summary) if obj is not None else None
 
 
 def json_success_response(status_code=200, message=""):

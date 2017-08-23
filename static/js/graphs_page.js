@@ -64,9 +64,22 @@ var apis = {
         }
     },
     logging: {
-        ENDPOINT: 'http://localhost:9200/layouts/action',
+        ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
-            apis.jsonRequest('POST', apis.logging.ENDPOINT, data, successCallback, errorCallback)
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json'
+                },
+                method: 'POST',
+                data: JSON.stringify(data),
+                url: apis.logging.ENDPOINT({'hostname': 'graphspace.org'}),
+                headers: {
+                    'Authorization': 'Basic Z3JhcGhjcm93ZDpncmFwaGNyb3dk'
+                },
+                success: successCallback,
+                error: errorCallback
+            });
+
         }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -205,11 +218,9 @@ var graphsPage = {
         },
         tagsFormatter: function (value, row) {
             links = [];
-            if ('data' in row.graph_json && 'tags' in row.graph_json.data) {
-                links = _.map(row.graph_json.data.tags, function(tag){
-                    return $('<a>').attr('href', '#').html($('<span>').attr('class', 'label label-info tag-btn').attr('onclick', 'graphsPage.graphsTable.searchTag(this);').text(tag)[0])[0].outerHTML + '&nbsp;';
-                });
-            }
+            links = _.map(row.tags, function (tag) {
+                return $('<a>').attr('href', '#').html($('<span>').attr('class', 'label label-info tag-btn').attr('onclick', 'graphsPage.graphsTable.searchTag(this);').text(tag)[0])[0].outerHTML + '&nbsp;';
+            });
             return links.join('');
         },
         ownerEmailFormatter: function (value, row) {
@@ -431,6 +442,7 @@ var graphPage = {
         utils.initializeTabs();
 
         $('#saveOnExitLayoutBtn').click(function () {
+
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
@@ -441,11 +453,8 @@ var graphPage = {
         });
 
         $('#saveLayoutBtn').click(function () {
-            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
-            // display node data as a popup
-            graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
 
             graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
@@ -594,7 +603,7 @@ var graphPage = {
         graphPage.cyGraph.layout(layout);
 
     },
-    saveLayout: function (layoutName, elementName) {
+    saveLayout: function (layoutName, modalNameId) {
         graphPage.cyGraph.elements().unselect();
 
         if (_.trim(layoutName).length === 0) {
@@ -604,31 +613,31 @@ var graphPage = {
                 type: 'warning'
             });
         } else {
-            //if (graphPage.layoutEditor.undoRedoManager) {
-            //    _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
-            //        if (action['action_type'] === 'select') {
-            //            if (action['data']['elements'].length > 0) {
-            //                action['data']['elements'] = action['data']['elements'].jsons();
-            //            }
-            //        }
-            //        // Uncomment the code after setting up the elastic server.
-            //
-            //        //apis.logging.add({
-            //        //        'layout_name': layoutName,
-            //        //        'graph_id': $('#GraphID').val(),
-            //        //        'user_id': $('#UserEmail').val(),
-            //        //        'action': action,
-            //        //        'step': i
-            //        //    },
-            //        //    successCallback = function (response) {
-            //        //        console.log(response);
-            //        //    },
-            //        //    errorCallback = function (xhr, status, errorThrown) {
-            //        //        // This method is called when  error occurs while deleting group_to_graph relationship.
-            //        //        $.notify({                             message: xhr.responseJSON.error_message                         }, {                             type: 'danger'                         });
-            //        //    })
-            //    });
-            //}
+            if (graphPage.layoutEditor.undoRedoManager) {
+                _.each(graphPage.layoutEditor.undoRedoManager.state, function (action, i) {
+                    if (!_.isArray(action['data']['selected_elements'])) {
+                        action['data']['selected_elements'] = action['data']['selected_elements'].jsons();
+                    }
+                    // Uncomment the code after setting up the elastic server.
+                    console.debug(action['data']['selected_elements']);
+
+                    apis.logging.add({
+                            'layout_name': layoutName,
+                            'graph_id': $('#GraphID').val(),
+                            'graph_name': $('#GraphName').val(),
+                            'user_email': $('#UserEmail').val(),
+                            'action': action,
+                            'step': i
+                        },
+                        successCallback = function (response) {
+                            console.log(response);
+                        },
+                        errorCallback = function (xhr, status, errorThrown) {
+                            // This method is called when  error occurs while deleting group_to_graph relationship.
+                            console.log(xhr.responseJSON.error_message);
+                        })
+                });
+            }
 
             positions_json = cytoscapeGraph.getNodePositions(graphPage.cyGraph);
             style_json = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
@@ -646,7 +655,8 @@ var graphPage = {
                     }
                 },
                 successCallback = function (response) {
-                    $(elementName).modal('toggle');
+
+                    $(modalNameId).modal('toggle');
                     $('#PrivateLayoutsTable').bootstrapTable('refresh');
                     $('#SharedLayoutsTable').bootstrapTable('refresh');
                 },
@@ -1324,7 +1334,7 @@ var graphPage = {
                     if (item) {
 
                         graphPage.cyGraph.elements('*').unselect();
-                        graphPage.cyGraph.collection(item['data']['elements']).select();
+                        graphPage.cyGraph.collection(item['data']['selected_elements']).select();
 
                         cytoscapeGraph.applyStylesheet(graphPage.cyGraph, {
                             'style': item['data']['style']
@@ -1339,7 +1349,7 @@ var graphPage = {
                 onRedo = function (item) {
                     if (item) {
                         graphPage.cyGraph.elements('*').unselect();
-                        graphPage.cyGraph.collection(item['data']['elements']).select();
+                        graphPage.cyGraph.collection(item['data']['selected_elements']).select();
 
                         cytoscapeGraph.applyStylesheet(graphPage.cyGraph, {
                             'style': item['data']['style']
@@ -1361,17 +1371,21 @@ var graphPage = {
                 'data': {
                     'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                     'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                    'elements': graphPage.cyGraph.elements(':selected')
+                    'selected_elements': graphPage.cyGraph.elements(':selected'),
+                    'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                 }
             });
 
             graphPage.cyGraph.on('free', function (e) {
+
+                var selected_elements = e.cyTarget.length > 1 ? graphPage.cyGraph.elements(':selected') : e.cyTarget;
                 graphPage.layoutEditor.undoRedoManager.update({
                     'action_type': 'move_node',
                     'data': {
                         'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                         'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                        'elements': graphPage.cyGraph.elements(':selected')
+                        'selected_elements': selected_elements,
+                        'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                     }
                 });
             });
@@ -1383,7 +1397,8 @@ var graphPage = {
                     'data': {
                         'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                         'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                        'elements': graphPage.cyGraph.elements(':selected')
+                        'selected_elements': graphPage.cyGraph.elements(':selected'),
+                        'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                     }
                 });
             });
@@ -1408,7 +1423,8 @@ var graphPage = {
                     'data': {
                         'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                         'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                        'elements': graphPage.cyGraph.elements(':selected')
+                        'selected_elements': graphPage.cyGraph.elements(':selected'),
+                        'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                     }
                 });
             });
@@ -1424,11 +1440,12 @@ var graphPage = {
                 );
 
                 graphPage.layoutEditor.undoRedoManager.update({
-                    'action_type': 'arrange_node',
+                    'action_type': 'arrange_nodes_' + $(this).data('layout'),
                     'data': {
                         'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                         'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                        'elements': graphPage.cyGraph.elements(':selected')
+                        'selected_elements': graphPage.cyGraph.elements(':selected'),
+                        'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                     }
                 });
             });
@@ -1499,11 +1516,12 @@ var graphPage = {
 
                     if (cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj)) {
                         graphPage.layoutEditor.undoRedoManager.update({
-                            'action_type': 'style',
+                            'action_type': 'upload_style',
                             'data': {
                                 'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                                 'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                                'elements': graphPage.cyGraph.elements(':selected')
+                                'selected_elements': graphPage.cyGraph.elements(':selected'),
+                                'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                             }
                         });
                     } else {
@@ -1583,11 +1601,12 @@ var graphPage = {
                     });
 
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'select',
+                        'action_type': 'select_widget_' + _.join(_.sortBy(_.concat(selectedColors, selectedShapes)), '_'),
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                            'elements': graphPage.cyGraph.elements(':selected')
+                            'selected_elements': graphPage.cyGraph.elements(':selected'),
+                            'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                         }
                     });
                 });
@@ -1695,11 +1714,12 @@ var graphPage = {
             close: function (save) {
                 if (save) {
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'style',
+                        'action_type': 'edit_node_style',
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                            'elements': graphPage.cyGraph.elements(':selected')
+                            'selected_elements': graphPage.cyGraph.elements(':selected'),
+                            'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                         }
                     });
                     graphPage.layoutEditor.nodeEditor.styleBeforeEdit = null;
@@ -1777,11 +1797,12 @@ var graphPage = {
             close: function (save) {
                 if (save) {
                     graphPage.layoutEditor.undoRedoManager.update({
-                        'action_type': 'style',
+                        'action_type': 'edit_edge_style',
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
-                            'elements': graphPage.cyGraph.elements(':selected')
+                            'selected_elements': graphPage.cyGraph.elements(':selected'),
+                            'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                         }
                     });
                     graphPage.layoutEditor.edgeEditor.styleBeforeEdit = null;
@@ -2004,6 +2025,17 @@ var graphPage = {
 
 };
 
+var layoutLearner = {
+    computeLayoutMetadata: function (cy) {
+        return {
+            'order': cy.nodes().length,
+            'size': cy.edges().length,
+            'timeTaken': utils.timer('lap'),
+            'totalEdgeLenth': cytoscapeGraph.getTotalEdgeLength(cy),
+        }
+    }
+};
+
 var cytoscapeGraph = {
     contextMenu: {
         init: function (cy) {
@@ -2075,6 +2107,13 @@ var cytoscapeGraph = {
                 ]
             });
         }
+    },
+    getTotalEdgeLength: function (cy) {
+        var edgeLength = 0;
+        cy.edges().forEach(function (ele, i, eles) {
+            edgeLength += Math.sqrt(Math.pow(ele._private.rstyle.srcX - ele[0]._private.rstyle.tgtX, 2) + Math.pow(ele[0]._private.rstyle.srcY - ele[0]._private.rstyle.tgtY, 2));
+        });
+        return edgeLength;
     },
     getNodePositions: function (cy) {
         /*

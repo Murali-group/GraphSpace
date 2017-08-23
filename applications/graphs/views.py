@@ -205,73 +205,60 @@ def graphs_ajax_api(request, graph_id=None):
 
 @csrf_exempt
 def graphs_advanced_search_ajax_api(request):
-    """
-    Handles any request sent to following urls:
-            /ajax/graphs
+	"""
+	Handles any request sent to following urls:
+		/ajax/graphs
 
-    Parameters
-    ----------
-    request - HTTP Request
+	Parameters
+	----------
+	request - HTTP Request
 
-    Returns
-    -------
-    response : JSON Response
+	Returns
+	-------
+	response : JSON Response
 
-    """
-    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-        if request.method == "POST":
-            querydict = QueryDict('', mutable=True)
-            querydict.update(request.GET)
-            queryparams = querydict
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "POST":
+			querydict = QueryDict('', mutable=True)
+			querydict.update(request.GET)
+			queryparams = querydict
 
-            # Validate search graphs API request
-            user_role = authorization.user_role(request)
-            if user_role == authorization.UserRole.LOGGED_IN:
-                if queryparams.get('owner_email', None) is None \
-                        and queryparams.get('member_email', None) is None \
-                        and queryparams.get('is_public', None) != '1':
-                    raise BadRequest(
-                        request, error_code=ErrorCodes.Validation.IsPublicNotSet)
-                if queryparams.get('is_public', None) != '1':
-                    if get_request_user(request) != queryparams.get('member_email', None) \
-                            and get_request_user(request) != queryparams.get('owner_email', None):
-                        raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
-                                         args=queryparams.get('owner_email', None))
+			# Validate search graphs API request
+			user_role = authorization.user_role(request)
+			if user_role == authorization.UserRole.LOGGED_IN:
+				if queryparams.get('owner_email', None) is None \
+						and queryparams.get('member_email', None) is None \
+						and queryparams.get('is_public', None) != '1':
+					raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
+				if queryparams.get('is_public', None) != '1':
+					if get_request_user(request) != queryparams.get('member_email', None) \
+							and get_request_user(request) != queryparams.get('owner_email', None):
+						raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+						                 args=queryparams.get('owner_email', None))
 
-            total, graphs_list = graphs.search_graphs1(request,
-                                                       owner_email=queryparams.get(
-                                                           'owner_email', None),
-                                                       member_email=queryparams.get(
-                                                           'member_email', None),
-                                                       names=list(
-                                                           filter(None, queryparams.getlist('names[]', []))),
-                                                       is_public=queryparams.get(
-                                                           'is_public', None),
-                                                       nodes=list(
-                                                           filter(None, queryparams.getlist('nodes[]', []))),
-                                                       edges=list(
-                                                           filter(None, queryparams.getlist('edges[]', []))),
-                                                       tags=list(
-                                                           filter(None, queryparams.getlist('tags[]', []))),
-                                                       limit=queryparams.get(
-                                                           'limit', 20),
-                                                       offset=queryparams.get(
-                                                           'offset', 0),
-                                                       order=queryparams.get(
-                                                           'order', 'desc'),
-                                                       sort=queryparams.get(
-                                                           'sort', 'name'),
-                                                       query=json.loads(request.body))
+			total, graphs_list = graphs.search_graphs1(request,
+			                                           owner_email=queryparams.get('owner_email', None),
+			                                           member_email=queryparams.get('member_email', None),
+			                                           names=list(filter(None, queryparams.getlist('names[]', []))),
+			                                           is_public=queryparams.get('is_public', None),
+			                                           nodes=list(filter(None, queryparams.getlist('nodes[]', []))),
+			                                           edges=list(filter(None, queryparams.getlist('edges[]', []))),
+			                                           tags=list(filter(None, queryparams.getlist('tags[]', []))),
+			                                           limit=queryparams.get('limit', 20),
+			                                           offset=queryparams.get('offset', 0),
+			                                           order=queryparams.get('order', 'desc'),
+			                                           sort=queryparams.get('sort', 'name'),
+			                                           query=json.loads(request.body))
 
-            return HttpResponse(json.dumps({
-                'total': total,
-                'graphs': [utils.serializer(graph) for graph in graphs_list]
-            }), content_type="application/json", status=200)
-        else:
-            # Handle other type of request methods like GET, OPTIONS etc.
-            raise MethodNotAllowed(request)
-    else:
-        raise BadRequest(request)
+			return HttpResponse(json.dumps({
+				'total': total,
+				'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
+	else:
+		raise BadRequest(request)
 
 
 def _graphs_api(request, graph_id=None):
@@ -320,102 +307,94 @@ def _graphs_api(request, graph_id=None):
 
 
 def _get_graphs(request, query=dict()):
-    """
-    Query Parameters
-    ----------
-    owner_email : string
-            Email of the Owner of the graphs. Required if member_email is not provided, user is not admin and is_public is not set to True.
-    member_email : string
-            Email of the User with which the graphs are shared. Required if owner_email is not provided, user is not admin and is_public is not set to True.
-    limit : integer
-            Number of entities to return. Default value is 20.
-    offset : integer
-            Offset the list of returned entities by this number. Default value is 0.
-    is_public: integer
-            Search for graphs with given visibility. In order to search for public graphs set is_public to 1. Required if member_email & owner_email are not provided.
-            In order to search for private graphs set is_public to 0. In order to search for all graphs set is_public to None.
-    names : list of strings
-            Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
-    nodes : list of strings
-            Search for graphs with given given list of node names. In order to search for graphs with given node name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node name.
-    edges : list of strings
-            Search for graphs with the edge between given given list of node names separated by colon. In order to search for graphs with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edge between nodes with 'xyz' and 'abc' in their node names.
-    tags : list of strings
-            Search for graphs with the given given list of tag names. In order to search for graphs with given tag as a substring, wrap the name of the tag with percentage symbol. For example, %xyz% will search for all graphs with 'xyz' in their tag names.
-    order : string
-            Defines the column sort order, can only be 'asc' or 'desc'.
-    sort : string
-            Defines which column will be sorted.
+	"""
+	Query Parameters
+	----------
+	owner_email : string
+		Email of the Owner of the graphs. Required if member_email is not provided, user is not admin and is_public is not set to True.
+	member_email : string
+		Email of the User with which the graphs are shared. Required if owner_email is not provided, user is not admin and is_public is not set to True.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	is_public: integer
+		Search for graphs with given visibility. In order to search for public graphs set is_public to 1. Required if member_email & owner_email are not provided.
+		In order to search for private graphs set is_public to 0. In order to search for all graphs set is_public to None.
+	names : list of strings
+		Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+	nodes : list of strings
+		Search for graphs with given given list of node names. In order to search for graphs with given node name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node name.
+	edges : list of strings
+		Search for graphs with the edge between given given list of node names separated by colon. In order to search for graphs with given edge as a substring, wrap the name of the nodes with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edge between nodes with 'xyz' and 'abc' in their node names.
+	tags : list of strings
+		Search for graphs with the given given list of tag names. In order to search for graphs with given tag as a substring, wrap the name of the tag with percentage symbol. For example, %xyz% will search for all graphs with 'xyz' in their tag names.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
 
-    Parameters
-    ----------
-    query : dict
-            Dictionary of query parameters.
-    request : object
-            HTTP GET Request.
-    owner_email : string
-            Email of the Owner of the groups.
+	Parameters
+	----------
+	query : dict
+		Dictionary of query parameters.
+	request : object
+		HTTP GET Request.
+	owner_email : string
+		Email of the Owner of the groups.
 
-    Returns
-    -------
-    total : integer
-            Number of groups matching the request.
-    groups : List of Groups.
-            List of Group Objects with given limit and offset.
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	groups : List of Groups.
+		List of Group Objects with given limit and offset.
 
-    Raises
-    ------
-    BadRequest - `is_public` is required to be set to True when `owner_email` and `member_email` are not provided.
+	Raises
+	------
+	BadRequest - `is_public` is required to be set to True when `owner_email` and `member_email` are not provided.
 
-    BadRequest - `User is not authorized to access private graphs created by given owner. This means either the graph belongs to a different owner
-    or graph is not shared with the user.
+	BadRequest - `User is not authorized to access private graphs created by given owner. This means either the graph belongs to a different owner
+	or graph is not shared with the user.
 
-    Notes
-    ------
-    """
+	Notes
+	------
+	"""
 
-    querydict = QueryDict('', mutable=True)
-    querydict.update(query)
-    query = querydict
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
 
-    # Validate search graphs API request
-    user_role = authorization.user_role(request)
-    if user_role == authorization.UserRole.LOGGED_IN:
-        if query.get('owner_email', None) is None \
-                and query.get('member_email', None) is None \
-                and query.get('is_public', None) != '1':
-            raise BadRequest(
-                request, error_code=ErrorCodes.Validation.IsPublicNotSet)
-        if query.get('is_public', None) != '1':
-            if get_request_user(request) != query.get('member_email', None) \
-                    and get_request_user(request) != query.get('owner_email', None):
-                raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
-                                 args=query.get('owner_email', None))
+	# Validate search graphs API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if query.get('owner_email', None) is None \
+				and query.get('member_email', None) is None \
+				and query.get('is_public', None) != '1':
+			raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
+		if query.get('is_public', None) != '1':
+			if get_request_user(request) != query.get('member_email', None) \
+					and get_request_user(request) != query.get('owner_email', None):
+				raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+				                 args=query.get('owner_email', None))
 
-    total, graphs_list = graphs.search_graphs(request,
-                                              owner_email=query.get(
-                                                  'owner_email', None),
-                                              member_email=query.get(
-                                                  'member_email', None),
-                                              names=list(
-                                                  filter(None, query.getlist('names[]', []))),
-                                              is_public=query.get(
-                                                  'is_public', None),
-                                              nodes=list(
-                                                  filter(None, query.getlist('nodes[]', []))),
-                                              edges=list(
-                                                  filter(None, query.getlist('edges[]', []))),
-                                              tags=list(
-                                                  filter(None, query.getlist('tags[]', []))),
-                                              limit=query.get('limit', 20),
-                                              offset=query.get('offset', 0),
-                                              order=query.get('order', 'desc'),
-                                              sort=query.get('sort', 'name'))
+	total, graphs_list = graphs.search_graphs(request,
+	                                          owner_email=query.get('owner_email', None),
+	                                          member_email=query.get('member_email', None),
+	                                          names=list(filter(None, query.getlist('names[]', []))),
+	                                          is_public=query.get('is_public', None),
+	                                          nodes=list(filter(None, query.getlist('nodes[]', []))),
+	                                          edges=list(filter(None, query.getlist('edges[]', []))),
+	                                          tags=list(filter(None, query.getlist('tags[]', []))),
+	                                          limit=query.get('limit', 20),
+	                                          offset=query.get('offset', 0),
+	                                          order=query.get('order', 'desc'),
+	                                          sort=query.get('sort', 'name'))
 
-    return {
-        'total': total,
-        'graphs': [utils.serializer(graph) for graph in graphs_list]
-    }
+	return {
+		'total': total,
+		'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
+	}
 
 
 def _get_graph(request, graph_id):
