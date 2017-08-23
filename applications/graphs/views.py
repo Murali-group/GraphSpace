@@ -1186,6 +1186,7 @@ def _update_layout(request, graph_id, layout_id, layout={}):
             'owner_email': request.session.get('uid', None)
             })
     else:
+        # This code is a placeholder as GraphSpace does not have an update for layout (other than share/un-share)
         producer.send_message('owner', {
             'owner_email': layout.get('owner_email', None),
             'message': settings.NOTIFICATION_MESSAGE['owner']['update']['layout'].format(name=layout.get('name', None)),
