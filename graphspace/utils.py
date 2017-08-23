@@ -4,6 +4,7 @@ import base64
 import re
 
 from django.utils.crypto import random
+from django.conf import settings
 
 
 def generate_uid(size=20, chars=string.ascii_uppercase + string.digits):
