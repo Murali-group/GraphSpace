@@ -8,7 +8,6 @@ echo "Copy configurations"
 yes | cp -rf /GraphSpace/docker_config/elasticsearch/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
 yes | cp -rf /GraphSpace/docker_config/redis/redis.conf /redis/redis.conf
 yes | cp -rf /GraphSpace/docker_config/kafka/server.properties /kafka/config/server.properties
-#yes | cp /GraphSpace/docker_config/supervisord/graphspace.conf /etc/supervisor/conf.d/
 
 echo "Starting postgres"
 service postgresql start
