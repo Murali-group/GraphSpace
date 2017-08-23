@@ -161,7 +161,7 @@ def notification_redirect(request, notification_id):
         raise BadRequest(
             request, error_code=ErrorCodes.Validation.BadRequest, args=get_request_user(request))
 
-    url = '/{resource}/{resource_id}'.format(**notify)
+    url = '/notifications'
     resource = notify.get('resource', None)
     resource_id = notify.get('resource_id', None)
     if resource == 'layout':
@@ -174,8 +174,10 @@ def notification_redirect(request, notification_id):
                 url = '/graphs/{graph_id}?user_layout={id}'.format(
                     **return_value)
     elif resource == 'graph':
+        url = '/graphs/' + str(resource_id)
         return_value = graph_controllers.get_graph_by_id(request, resource_id)
     elif resource == 'group':
+        url = '/groups/' + str(resource_id)
         return_value = user_controllers.get_group_by_id(request, resource_id)
     else:
         return_value = None
