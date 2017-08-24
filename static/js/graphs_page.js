@@ -2025,11 +2025,18 @@ var graphPage = {
 
 var layoutLearner = {
     computeLayoutMetadata: function (cy) {
+        var edgeLengths = cytoscapeGraph.getEdgeLengths(cy);
+        var totalEdgeLength = _.sum(edgeLengths);
+        var avgEdgeLength = totalEdgeLength/cy.edges().length;
         return {
             'order': cy.nodes().length,
             'size': cy.edges().length,
             'timeTaken': utils.timer('lap'),
-            'totalEdgeLenth': cytoscapeGraph.getTotalEdgeLength(cy),
+            'edgeLengths': edgeLengths,
+            'totalEdgeLength': totalEdgeLength,
+            'averageEdgeLength': avgEdgeLength,
+            'timestamp': moment().format("YYYY-MM-DD HH:mm:ss"),
+            'edgeOverlapCount': cytoscapeGraph.computeNumEdgeOverlap(cy)
         }
     }
 };
@@ -2106,12 +2113,28 @@ var cytoscapeGraph = {
             });
         }
     },
-    getTotalEdgeLength: function (cy) {
-        var edgeLength = 0;
+    getEdgeLengths: function (cy) {
+        var edgeLengths = [];
         cy.edges().forEach(function (ele, i, eles) {
-            edgeLength += Math.sqrt(Math.pow(ele._private.rstyle.srcX - ele[0]._private.rstyle.tgtX, 2) + Math.pow(ele[0]._private.rstyle.srcY - ele[0]._private.rstyle.tgtY, 2));
+            edgeLengths.push(Math.sqrt(Math.pow(ele._private.rstyle.srcX - ele[0]._private.rstyle.tgtX, 2) + Math.pow(ele[0]._private.rstyle.srcY - ele[0]._private.rstyle.tgtY, 2)));
         });
-        return edgeLength;
+        return edgeLengths;
+    },
+    computeNumEdgeOverlap: function(cy) {
+        var count = 0;
+        var edges = cy.edges();
+        for (var i = 0; i < edges.length; i++) {
+            for (var j = i+1; j < edges.length; j++) {
+                if (cytoscapeGraph.hasEdgeOverlap(edges[i], edges[j])) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    },
+    hasEdgeOverlap: function(edge1, edge2) {
+        result = utils.checkLineIntersection(edge1._private.rstyle.srcX, edge1._private.rstyle.srcY, edge1._private.rstyle.tgtX, edge1._private.rstyle.tgtY, edge2._private.rstyle.srcX, edge2._private.rstyle.srcY, edge2._private.rstyle.tgtX, edge2._private.rstyle.tgtY)
+        return !!(result && result.x && result.y && result.onLine1 && result.onLine2);
     },
     getNodePositions: function (cy) {
         /*
