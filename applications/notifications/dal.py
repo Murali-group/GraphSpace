@@ -10,6 +10,7 @@ from graphspace import utils
 
 from django.conf import settings
 
+
 @with_session
 def add_owner_notification(db_session, message, type, resource, resource_id, owner_email=None, is_read=False, is_email_sent=False):
     """
@@ -113,7 +114,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
         # Get all notification without merging similar notifications into 1
         cte_query = db_session.query(OwnerNotification)
 
-        # Get all notification with created_at > first_created_at and created_at < created_at
+        # Get all notification with created_at > first_created_at and
+        # created_at < created_at
         if created_at is not None and first_created_at is not None and resource is not None and type is not None:
             cte_query = cte_query.filter(OwnerNotification.created_at <= datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f"),
                                          OwnerNotification.created_at >= datetime.strptime(
@@ -122,7 +124,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                          OwnerNotification.type == type)
     else:
         # Get notifications by merging similar ones
-        # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
+        # this logic is summerized here:
+        # https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence
         cte_query = db_session.query(OwnerNotification.id,
                                      OwnerNotification.message,
                                      OwnerNotification.type,
@@ -133,7 +136,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
                                           else_=0).label('is_email_sent'),
                                      OwnerNotification.owner_email,
                                      OwnerNotification.created_at,
-                                     # Added this to later group notifications using time intervals
+                                     # Added this to later group notifications
+                                     # using time intervals
                                      (func.to_timestamp(func.floor((func.extract('epoch', OwnerNotification.created_at) /
                                                                     settings.NOTIFICATION_GROUP_INTERVAL)) / settings.NOTIFICATION_GROUP_INTERVAL)).label('time_interval'),
                                      (func.row_number().over(order_by=desc(OwnerNotification.created_at)) - func.row_number().over(partition_by=OwnerNotification.type, order_by=desc(OwnerNotification.created_at))).label('row_number'))
@@ -146,7 +150,8 @@ def find_owner_notifications(db_session, owner_email, is_read, limit, offset, is
         cte_query = cte_query.filter(OwnerNotification.is_read.is_(is_read))
 
     if is_email_sent is not None:
-        cte_query = cte_query.filter(OwnerNotification.is_email_sent.is_(is_email_sent))
+        cte_query = cte_query.filter(
+            OwnerNotification.is_email_sent.is_(is_email_sent))
 
     if is_bulk:
         query = cte_query.order_by(desc(OwnerNotification.created_at))
@@ -210,7 +215,8 @@ def find_group_notifications(db_session, member_email, group_id, is_read, limit,
                 GroupNotification.type == type)
     else:
         # Get notifications by merging similar ones
-        # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
+        # this logic is summerized here:
+        # https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence
         cte_query = db_session.query(GroupNotification.id,
                                      GroupNotification.message,
                                      GroupNotification.type,
@@ -369,7 +375,8 @@ def get_notification_count_per_group(db_session, member_email, is_read=None, is_
     """
 
     # Get notifications by merging similar ones
-    # this logic is summerized here: https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence 
+    # this logic is summerized here:
+    # https://stackoverflow.com/questions/45425383/sql-groupby-for-values-in-sorted-time-sequence
     cte_query = db_session.query(GroupNotification.type,
                                  GroupNotification.resource,
                                  GroupNotification.is_read,
@@ -386,7 +393,8 @@ def get_notification_count_per_group(db_session, member_email, is_read=None, is_
         cte_query = cte_query.filter(GroupNotification.is_read.is_(is_read))
 
     if is_email_sent is not None:
-        cte_query = cte_query.filter(GroupNotification.is_email_sent.is_(is_email_sent))
+        cte_query = cte_query.filter(
+            GroupNotification.is_email_sent.is_(is_email_sent))
 
     cte_query = cte_query.cte('group_notification_sub_count_cte')
 
@@ -449,7 +457,10 @@ def email_owner_notifications(db_session, owner_email, resource=None, type=None,
 
     query = query.filter(OwnerNotification.is_email_sent.is_(False))
     total = query.count()
-    query = query.update({'is_email_sent': True}, synchronize_session=False)
+    query = query.update({
+        'is_email_sent': True,
+        'emailed_at': datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+    }, synchronize_session=False)
 
     return total, notify
 
@@ -496,7 +507,9 @@ def email_group_notifications(db_session, member_email, group_id=None, resource=
 
     query = query.filter(GroupNotification.is_email_sent.is_(False))
     total = query.count()
-    query = query.update({'is_email_sent': True}, synchronize_session=False)
+    query = query.update({
+        'is_email_sent': True,
+        'emailed_at': datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+    }, synchronize_session=False)
 
     return total, notify
-
