@@ -1305,6 +1305,7 @@ var graphPage = {
         }
     },
     layoutEditor: {
+        original_opacity: {},
         undoRedoManager: null,
         init: function () {
             cytoscapeGraph.contextMenu.init(graphPage.cyGraph);
@@ -2270,7 +2271,7 @@ var cytoscapeGraph = {
         cy.style()
             .selector('node').style({
                 'text-opacity': function( ele ){
-                original_opacity[ele.data().id] = ele.style()['text-opacity'];
+                graphPage.layoutEditor.original_opacity[ele.data().id] = ele.style()['text-opacity'];
 
                 return 0; }
             })
@@ -2284,7 +2285,7 @@ var cytoscapeGraph = {
         cy.style()
             .selector('node').style({
                 'text-opacity': function( ele ){
-                    return  original_opacity[ele.data().id];
+                    return  graphPage.layoutEditor.original_opacity[ele.data().id];
                 }
             })
             .update();
@@ -2615,5 +2616,3 @@ var cytoscapeGraph = {
     }
 
 };
-
-var original_opacity = {};
