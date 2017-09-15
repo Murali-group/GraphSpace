@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>10. Editing Layouts &mdash; graphspace-manual 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="graphspace-manual 1.0 documentation" href="index.html"/>
+        <link rel="next" title="11. Organizing Graphs Using Tags" href="Organizing_Graphs_Using_Tags.html"/>
+        <link rel="prev" title="9. Sharing Graphs" href="Sharing_Graphs.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> graphspace-manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Quick_Tour_of_GraphSpace.html">2. Quick Tour of Cytoscape</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminology.html">3. Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GraphSpace_Network_Model.html">4. GraphSpace Network Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Uploading_Graphs.html">5. Uploading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Viewing_Graphs.html">6. Viewing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Interacting_with_Graphs.html">7. Interacting with Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Searching_Graphs.html">8. Searching Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sharing_Graphs.html">9. Sharing Graphs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">10. Editing Layouts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#start-tour">10.1. Start Tour</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#show-node-labels">10.2. Show node labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#select-by-shape">10.3. Select by shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#select-by-color">10.4. Select by color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unselect-all-nodes">10.5. Unselect All Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#undo-and-redo">10.6. Undo and Redo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arrange-nodes">10.7. Arrange nodes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Organizing_Graphs_Using_Tags.html">11. Organizing Graphs Using Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Programmers_Guide.html">12. Programmers Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">graphspace-manual</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>10. Editing Layouts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Editing_Layouts.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="editing-layouts">
+<span id="editing-layouts"></span><h1>10. Editing Layouts<a class="headerlink" href="#editing-layouts" title="Permalink to this headline">¶</a></h1>
+<p>GraphSpace provides powerful tools for the selection, movement, and organization of multiple nodes in a graph. The user can activate this functionality by clicking the <code class="docutils literal"><span class="pre">Use</span> <span class="pre">Layout</span> <span class="pre">Editor</span></code> button.</p>
+<div class="section" id="start-tour">
+<span id="start-tour"></span><h2>10.1. Start Tour<a class="headerlink" href="#start-tour" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">Start</span> <span class="pre">Tour</span></code> button walks the user through all the features provided in the tool pallette. The Exit layout editor button gives a user the option to save the current layout and/or go back to the original view of the current graph. In the layout editor, the user may wield the tool pallette on the right hand side to quickly re-arrange the structure of the graph.</p>
+</div>
+<div class="section" id="show-node-labels">
+<span id="show-node-labels"></span><h2>10.2. Show node labels<a class="headerlink" href="#show-node-labels" title="Permalink to this headline">¶</a></h2>
+<p>Unchecking the <code class="docutils literal"><span class="pre">Show</span> <span class="pre">node</span> <span class="pre">labels</span></code> checkbox takes a user of GraphSpace to a simplified view of the graph that hides node names.</p>
+<p><img alt="toggle node labels" src="_images/gs-screenshot-user1-wnt-pathway-reconstruction-toggle-node-labels-with-caption.gif" /></p>
+</div>
+<div class="section" id="select-by-shape">
+<span id="select-by-shape"></span><h2>10.3. Select by shape<a class="headerlink" href="#select-by-shape" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">Select</span> <span class="pre">by</span> <span class="pre">shape</span></code> section allows the user to choose nodes in the graph based on nodes <code class="docutils literal"><span class="pre">shape</span></code> style property. For example, if a user wishes to select all nodes that are rectangles or ellipses, he/she will select both &#8220;Ellipse&#8221; and &#8220;Rectangle&#8221; in the tool pallete.</p>
+<p><img alt="select nodes by shape" src="_images/gs-screenshot-user1-wnt-pathway-reconstruction-select-nodes-by-shape-with-caption.gif" /></p>
+</div>
+<div class="section" id="select-by-color">
+<span id="select-by-color"></span><h2>10.4. Select by color<a class="headerlink" href="#select-by-color" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">Select</span> <span class="pre">by</span> <span class="pre">color</span></code> section allows the user to choose nodes in the graph based on nodes <code class="docutils literal"><span class="pre">background-color</span></code> style property. For example, if a user wishes to select all nodes that are yellow or green, he/she will select both yellow and green.</p>
+<p><img alt="select nodes by color" src="_images/gs-screenshot-user1-wnt-pathway-reconstruction-select-nodes-by-color-with-caption.gif" /></p>
+</div>
+<div class="section" id="unselect-all-nodes">
+<span id="unselect-all-nodes"></span><h2>10.5. Unselect All Nodes<a class="headerlink" href="#unselect-all-nodes" title="Permalink to this headline">¶</a></h2>
+<p>A user may click on the <code class="docutils literal"><span class="pre">Unselect</span> <span class="pre">All</span> <span class="pre">Nodes</span></code> button to reset all selections.</p>
+</div>
+<div class="section" id="undo-and-redo">
+<span id="undo-and-redo"></span><h2>10.6. Undo and Redo<a class="headerlink" href="#undo-and-redo" title="Permalink to this headline">¶</a></h2>
+<p>The Undo and Redo buttons allow the user to undo or repeat all actions, including selection, editing and the arrange functions described below.</p>
+<p><img alt="undo redo changes" src="_images/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-undo-redo-with-caption.gif" /></p>
+</div>
+<div class="section" id="arrange-nodes">
+<span id="arrange-nodes"></span><h2>10.7. Arrange nodes<a class="headerlink" href="#arrange-nodes" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">Arrange</span> <span class="pre">nodes</span></code> section allows a user to arrange all selected nodes into regions of different shapes. The following animation shows the arrangements of selected nodes that users may construct by clicking different buttons in this section.</p>
+<table cellspacing="0">
+<tr> 
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-open-circle-with-caption.gif" alt="Open Circle"/>
+   </td>               
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-closed-circle-with-caption.gif" alt="Closed Circle"/>
+   </td> 
+</tr>
+<tr> 
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-open-rectangle-with-caption.gif" alt="Open Rectangle"/>
+   </td>               
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-closed-rectangle-with-caption.gif" alt="Closed Rectangle"/>
+   </td> 
+</tr>
+<tr> 
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-vertical-with-caption.gif" alt="Vertical line"/>
+   </td>               
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-horizontal-with-caption.gif" alt="Horizontal line"/>
+   </td> 
+</tr>
+<tr> 
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-pinch-with-caption.gif" alt="Pinch"/>
+   </td>               
+   <td class="">
+      <img src="_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-arrange-nodes-expand-with-caption.gif" alt="Expand"/>
+   </td> 
+</tr>
+</table></div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Organizing_Graphs_Using_Tags.html" class="btn btn-neutral float-right" title="11. Organizing Graphs Using Tags" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Sharing_Graphs.html" class="btn btn-neutral" title="9. Sharing Graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Murali`s Research Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
