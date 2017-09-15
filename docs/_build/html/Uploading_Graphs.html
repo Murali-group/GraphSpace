@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>5. Uploading Graphs &mdash; graphspace-manual 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="graphspace-manual 1.0 documentation" href="index.html"/>
+        <link rel="next" title="6. Viewing Graphs" href="Viewing_Graphs.html"/>
+        <link rel="prev" title="4. GraphSpace Network Model" href="GraphSpace_Network_Model.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> graphspace-manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Quick_Tour_of_GraphSpace.html">2. Quick Tour of Cytoscape</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminology.html">3. Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GraphSpace_Network_Model.html">4. GraphSpace Network Model</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. Uploading Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#via-the-rest-api">5.1. Via the REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#via-the-web-interface">5.2. Via the Web Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#upload-graph-form">5.2.1. Upload Graph Form</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#graph-name">Graph Name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#network-file">Network File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#style-file">Style File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Viewing_Graphs.html">6. Viewing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Interacting_with_Graphs.html">7. Interacting with Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Searching_Graphs.html">8. Searching Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sharing_Graphs.html">9. Sharing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Editing_Layouts.html">10. Editing Layouts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Organizing_Graphs_Using_Tags.html">11. Organizing Graphs Using Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Programmers_Guide.html">12. Programmers Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">graphspace-manual</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>5. Uploading Graphs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Uploading_Graphs.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="uploading-graphs">
+<span id="uploading-graphs"></span><h1>5. Uploading Graphs<a class="headerlink" href="#uploading-graphs" title="Permalink to this headline">¶</a></h1>
+<p>GraphSpace provides 2 different ways to upload graphs:</p>
+<ul class="simple">
+<li>Via the REST API</li>
+<li>Via the Web Interface</li>
+</ul>
+<div class="section" id="via-the-rest-api">
+<span id="via-the-rest-api"></span><h2>5.1. Via the REST API<a class="headerlink" href="#via-the-rest-api" title="Permalink to this headline">¶</a></h2>
+<p>GraphSpace users can also upload graphs using GraphSpace&#8217;s REST API. Please refer to the Programmer&#8217;s Guide for more information.</p>
+</div>
+<div class="section" id="via-the-web-interface">
+<span id="via-the-web-interface"></span><h2>5.2. Via the Web Interface<a class="headerlink" href="#via-the-web-interface" title="Permalink to this headline">¶</a></h2>
+<p>As an alternative to the REST API for uploading a graph, we provide a <a class="reference external" href="#upload-graph-form">simple web interface</a> for uploading individual graphs. Once the graph has been uploaded, GraphSpace will provide a unique URL through which the user may interact with the graph represented by the uploaded graph files.</p>
+<p>If a user has an account and is logged in, <a class="reference external" href="#upload-graph-form">this interface</a> will upload the graph directly into the user&#8217;s account, much like using the REST API. If a user does not have an account or is not logged in, this upload functionality will provide a unique URL through which the user may interact with the graph represented by the uploaded file. <strong>Note: After 30 days, we will delete all graphs that are uploaded for unregistered users of GraphSpace.</strong></p>
+<div class="section" id="upload-graph-form">
+<span id="upload-graph-form"></span><h3>5.2.1. Upload Graph Form<a class="headerlink" href="#upload-graph-form" title="Permalink to this headline">¶</a></h3>
+<p><img alt="Upload Graph" src="_images/gs-screenshot-upload-graph-form.png" /></p>
+<p>The upload graph form has three input fields:</p>
+<div class="section" id="graph-name">
+<span id="graph-name"></span><h4>Graph Name<a class="headerlink" href="#graph-name" title="Permalink to this headline">¶</a></h4>
+<p>The name of the graph. GraphSpace allows users to search graphs by their name. It is a required field.</p>
+</div>
+<div class="section" id="network-file">
+<span id="network-file"></span><h4>Network File<a class="headerlink" href="#network-file" title="Permalink to this headline">¶</a></h4>
+<p>The network file containing the graphs structure and data information in <a class="reference external" href="GraphSpace_Network_Model.html#cyjs-format">CYJS Format</a>. It is a required field.</p>
+</div>
+<div class="section" id="style-file">
+<span id="style-file"></span><h4>Style File<a class="headerlink" href="#style-file" title="Permalink to this headline">¶</a></h4>
+<p>The network file containing the graphs style information in <a class="reference external" href="GraphSpace_Network_Model.html#stylesheet-json-format">Stylesheet JSON Format</a>. It is a optional field. If left empty, GraphSpace will use <a class="reference external" href="#default-graph-style">default style</a> for displaying the graphs.</p>
+<div class="section" id="default-graph-style">
+<span id="default-graph-style"></span><h5>Default Graph Style<a class="headerlink" href="#default-graph-style" title="Permalink to this headline">¶</a></h5>
+<p>GraphSpace uses following default style for all graphs. The default style values are used when:</p>
+<ul class="simple">
+<li>The user does not upload a <a class="reference external" href="#style-file">style file</a> for the graph.
+OR</li>
+<li>The user uploads the style file which doesn&#8217;t overrides the default style values.</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;selector&#39;</span><span class="p">:</span> <span class="s1">&#39;edge&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;style&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;curve-style&#39;</span><span class="p">:</span> <span class="s1">&#39;bezier&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;line-style&#39;</span><span class="p">:</span> <span class="s1">&#39;solid&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;line-color&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;selector&#39;</span><span class="p">:</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;style&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s1">&#39;data(label)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;ellipse&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;background-color&#39;</span><span class="p">:</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;border-color&#39;</span><span class="p">:</span> <span class="s1">&#39;#888&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text-halign&#39;</span><span class="p">:</span> <span class="s1">&#39;center&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text-valign&#39;</span><span class="p">:</span> <span class="s1">&#39;center&#39;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Viewing_Graphs.html" class="btn btn-neutral float-right" title="6. Viewing Graphs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="GraphSpace_Network_Model.html" class="btn btn-neutral" title="4. GraphSpace Network Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Murali`s Research Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

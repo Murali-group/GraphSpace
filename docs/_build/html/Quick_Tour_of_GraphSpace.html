@@ -1,0 +1,398 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2. Quick Tour of Cytoscape &mdash; graphspace-manual 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="graphspace-manual 1.0 documentation" href="index.html"/>
+        <link rel="next" title="3. Terminology" href="Terminology.html"/>
+        <link rel="prev" title="1. Introduction" href="Introduction.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> graphspace-manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Quick Tour of Cytoscape</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#welcome-screen">2.1. Welcome Screen</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#log-in">2.1.1. Log In</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-account">2.1.2. Create Account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upload-a-graph">2.1.3. Upload a graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#list-of-uploaded-graphs">2.1.4. List of uploaded graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#searching-within-multiple-graphs">2.2. Searching within Multiple Graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#searching-within-a-single-graph">2.3. Searching within a Single Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interacting-with-a-graph">2.4. Interacting with a Graph</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#graph-information">2.4.1. Graph Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge-and-node-information">2.4.2. Edge and Node Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#export-graph">2.4.3. Export Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#change-layout">2.4.4. Change Layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#share-layout">2.4.5. Share Layout</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Terminology.html">3. Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GraphSpace_Network_Model.html">4. GraphSpace Network Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Uploading_Graphs.html">5. Uploading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Viewing_Graphs.html">6. Viewing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Interacting_with_Graphs.html">7. Interacting with Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Searching_Graphs.html">8. Searching Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sharing_Graphs.html">9. Sharing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Editing_Layouts.html">10. Editing Layouts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Organizing_Graphs_Using_Tags.html">11. Organizing Graphs Using Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Programmers_Guide.html">12. Programmers Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">graphspace-manual</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>2. Quick Tour of Cytoscape</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Quick_Tour_of_GraphSpace.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quick-tour-of-cytoscape">
+<span id="quick-tour-of-cytoscape"></span><h1>2. Quick Tour of Cytoscape<a class="headerlink" href="#quick-tour-of-cytoscape" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="welcome-screen">
+<span id="welcome-screen"></span><h2>2.1. Welcome Screen<a class="headerlink" href="#welcome-screen" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://graphspace.org">welcome page</a> greets a user when the user visits GraphSpace. The Welcome Screen is designed to access commonly used features of GraphSpace like:</p>
+<ul class="simple">
+<li>Log In</li>
+<li>Create Account</li>
+<li>Upload a graph</li>
+<li>List of uploaded graphs.</li>
+</ul>
+<div class="section" id="log-in">
+<span id="log-in"></span><h3>2.1.1. Log In<a class="headerlink" href="#log-in" title="Permalink to this headline">¶</a></h3>
+<p>The user can log-in to <a class="reference external" href="http://www.graphspace.org">GraphSpace</a> by following the given steps:</p>
+<ol class="simple">
+<li>Click on the <code class="docutils literal"><span class="pre">Log</span> <span class="pre">In</span></code> button on the top navigation bar. This will trigger a log-in window/pop-up to be displayed.</li>
+<li>Enter your email address.</li>
+<li>Enter you password.</li>
+<li>Click on <code class="docutils literal"><span class="pre">Submit</span></code> button to log in with the given email address.</li>
+<li>If you have forgotten you password, click on the <code class="docutils literal"><span class="pre">Forgot</span> <span class="pre">Password</span></code> link.</li>
+</ol>
+<p><img alt="Log In" src="_images/gs-screenshot-user1-logging-in-with-caption.gif" /></p>
+</div>
+<div class="section" id="create-account">
+<span id="create-account"></span><h3>2.1.2. Create Account<a class="headerlink" href="#create-account" title="Permalink to this headline">¶</a></h3>
+<p>The user can create an account on <a class="reference external" href="http://www.graphspace.org">GraphSpace</a> by following the given steps:</p>
+<ol class="simple">
+<li>Click on the <code class="docutils literal"><span class="pre">Create</span> <span class="pre">Account</span></code> button on the top navigation bar. This will trigger a create account window/pop-up to be displayed.</li>
+<li>Enter the your email address.</li>
+<li>Enter a password for your account.</li>
+<li>Verify your password by entering the same password again.</li>
+<li>Click on <code class="docutils literal"><span class="pre">Submit</span></code> button to create the account with the given email address and password.</li>
+</ol>
+<p><img alt="Create Account" src="_images/gs-screenshot-user5-creating-account-with-caption.gif" /></p>
+</div>
+<div class="section" id="upload-a-graph">
+<span id="upload-a-graph"></span><h3>2.1.3. Upload a graph<a class="headerlink" href="#upload-a-graph" title="Permalink to this headline">¶</a></h3>
+<p>The user can upload a graph on <a class="reference external" href="http://www.graphspace.org">GraphSpace</a> by following the given steps:</p>
+<ol class="simple">
+<li>Go to the <a class="reference external" href="http://www.graphspace.org/upload">Upload Graph Page</a> by clicking on the <code class="docutils literal"><span class="pre">Upload</span> <span class="pre">Graph</span></code> button on <a class="reference external" href="http://www.graphspace.org/">Home Page</a>.</li>
+<li>Enter a unique name for the new graph.</li>
+<li>Select a CYJS file which contains the graph information.</li>
+<li>Select a JSON file which contains the style information for the graph. (Optional Step)</li>
+<li>Click on <code class="docutils literal"><span class="pre">Submit</span></code> button to upload the graph using the selected files.</li>
+<li>Once the graph has been uploaded, <a class="reference external" href="http://www.graphspace.org">GraphSpace</a> will provide a unique URL through which the user may interact with the graph represented by the uploaded files.</li>
+</ol>
+<p><img alt="Upload a graph" src="_images/gs-screenshot-user1-upload-graph-with-caption.gif" /></p>
+</div>
+<div class="section" id="list-of-uploaded-graphs">
+<span id="list-of-uploaded-graphs"></span><h3>2.1.4. List of uploaded graphs<a class="headerlink" href="#list-of-uploaded-graphs" title="Permalink to this headline">¶</a></h3>
+<p>The user can go to <a class="reference external" href="http://www.graphspace.org/graphs/">a page that lists the graphs</a> accessible by the user on <a class="reference external" href="http://www.graphspace.org">GraphSpace</a> by following the given steps:</p>
+<ul>
+<li><p class="first">Click on the button titled <code class="docutils literal"><span class="pre">Graphs</span></code> on the top navigation bar.</p>
+<p>OR</p>
+</li>
+<li><p class="first">Click on the <code class="docutils literal"><span class="pre">My</span> <span class="pre">Graphs</span></code> button on the <a class="reference external" href="http://www.graphspace.org/">Home Page</a>.</p>
+</li>
+</ul>
+<p>In this example, the user owns 33 graphs, can access 64 public graphs and 33 graphs are shared with this user.
+<img alt="List of uploaded graphs" src="_images/gs-screenshot-user1-go-graphs-list-page-with-caption.gif" /></p>
+</div>
+</div>
+<div class="section" id="searching-within-multiple-graphs">
+<span id="searching-within-multiple-graphs"></span><h2>2.2. Searching within Multiple Graphs<a class="headerlink" href="#searching-within-multiple-graphs" title="Permalink to this headline">¶</a></h2>
+<p>The user can search for graph with a given name or node or an edge on <a class="reference external" href="http://www.graphspace.org/graphs/">Graphs Page</a> by following the given steps:</p>
+<ol class="simple">
+<li>Enter the name of the graph, node or an edge you are searching for in the search bar.</li>
+<li>Press <code class="docutils literal"><span class="pre">Enter</span></code> key or click on the <code class="docutils literal"><span class="pre">Search</span></code> button.</li>
+</ol>
+<p>In this example, the user searches for the list for graphs that contain the protein (node) <code class="docutils literal"><span class="pre">CTNNB1</span></code> (the symbol for β-catenin, a transcriptional regulator in the Wnt signaling pathway). The reduced list of graphs are the graphs where proteins names/labels (nodes) contain <code class="docutils literal"><span class="pre">CTNNB1</span></code> as a substring. In the following example, There are six graphs owned by the user and thirty-two public graphs that contain this protein. Each link in the <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Name</span></code> column will take the user to a specific graph with the search term highlighted. In this example, the user clicks on the graph with the name <code class="docutils literal"><span class="pre">KEGG-Wnt-signaling-pathway</span></code> and reaches the graph for the Wnt pathway with the searched node highlighted.</p>
+<p><img alt="Searching within Multiple Graphs" src="_images/gs-screenshot-user1-searching-withing-multiple-graphs-with-caption.gif" /></p>
+</div>
+<div class="section" id="searching-within-a-single-graph">
+<span id="searching-within-a-single-graph"></span><h2>2.3. Searching within a Single Graph<a class="headerlink" href="#searching-within-a-single-graph" title="Permalink to this headline">¶</a></h2>
+<p>The user can search for node or edges within a given graph on <a class="reference external" href="http://www.graphspace.org/">GraphSpace</a> by following the given steps:</p>
+<ol class="simple">
+<li>Enter the name of the node or an edge you are searching for in the search bar.</li>
+<li>The nodes or edges are highlighted automatically as you type in the name of the node or edge in the search bar.</li>
+</ol>
+<p>In the following example, the user searches for the graph for two proteins (nodes) <code class="docutils literal"><span class="pre">CTNNB1</span></code> and <code class="docutils literal"><span class="pre">WNT</span></code> using the query <code class="docutils literal"><span class="pre">ctnnb1,</span> <span class="pre">wnt</span></code>. This search query highlights the proteins where protein (node) name/label contains <code class="docutils literal"><span class="pre">CTNNB1</span></code> or <code class="docutils literal"><span class="pre">WNT</span></code> as a substring (case-insensitive). In the following example, the graph contains four nodes which match the given query.</p>
+<p><img alt="Searching nodes within a Single Graph" src="_images/gs-screenshot-user1-searching-nodes-within-a-single-graphs-with-caption.gif" /></p>
+<p>In the following example, the user searches for the graph for edges from <code class="docutils literal"><span class="pre">Wnt</span></code> to <code class="docutils literal"><span class="pre">Fzd</span></code> using the query <code class="docutils literal"><span class="pre">Wnt:Fzd</span></code>. This search query highlights any protein-protien interaction (edge) where tail node name or label contains <code class="docutils literal"><span class="pre">Wnt</span></code> as a substring and head node name or label contains <code class="docutils literal"><span class="pre">Fzd</span></code> as a substring. In the following example, the graph contains three edges which match the given query.</p>
+<p><img alt="Searching edges within a Single Graph" src="_images/gs-screenshot-user1-searching-edges-within-a-single-graphs-with-caption.gif" /></p>
+</div>
+<div class="section" id="interacting-with-a-graph">
+<span id="interacting-with-a-graph"></span><h2>2.4. Interacting with a Graph<a class="headerlink" href="#interacting-with-a-graph" title="Permalink to this headline">¶</a></h2>
+<p>The Graph Page is designed to access features like:</p>
+<ul class="simple">
+<li>Graph Information</li>
+<li>Edge and Node Information</li>
+<li>Export Graph</li>
+<li>Change Layout</li>
+<li>Share Layout</li>
+</ul>
+<div class="section" id="graph-information">
+<span id="graph-information"></span><h3>2.4.1. Graph Information<a class="headerlink" href="#graph-information" title="Permalink to this headline">¶</a></h3>
+<p>As its name suggests, the <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Information</span></code> panel displays information about the entire graph, e.g., a legend of node and edge shapes and colors. The user can go to <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Information</span></code> panel by clicking on the <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Information</span></code> link above the graph. The information that appears in <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Information</span></code> panel must be included in the JSON for the graph uploaded by the user using the RESTful API.</p>
+<p><img alt="Graph Details" src="_images/gs-screenshot-user1-graph-information-with-caption.gif" /></p>
+</div>
+<div class="section" id="edge-and-node-information">
+<span id="edge-and-node-information"></span><h3>2.4.2. Edge and Node Information<a class="headerlink" href="#edge-and-node-information" title="Permalink to this headline">¶</a></h3>
+<p>Clicking on a node or edge pops up a panel with information on that node or edge. The information that appears in the pop-up panels must be included in the JSON for the graph uploaded by the user using the RESTful API.</p>
+<p><img alt="Edge and Node Information" src="_images/gs-screenshot-user1-node-edge-pop-up-with-caption.gif" /></p>
+</div>
+<div class="section" id="export-graph">
+<span id="export-graph"></span><h3>2.4.3. Export Graph<a class="headerlink" href="#export-graph" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://www.graphspace.org">GraphSpace</a> allows users to export a graph as an image file or a JSON file. GraphSpace does not support any other export formats since it relies on <a class="reference external" href="http://js.cytoscape.org">Cytoscape.js</a> for this functionality, which implements only export to PNG, JPG and JSON format.</p>
+<p>In the following example, the user is exporting the graph as an image in PNG format.</p>
+<p><img alt="Export Graph" src="_images/gs-screenshot-user1-export-graph-png-with-caption.gif" /></p>
+</div>
+<div class="section" id="change-layout">
+<span id="change-layout"></span><h3>2.4.4. Change Layout<a class="headerlink" href="#change-layout" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://www.graphspace.org">GraphSpace</a> allows users to change layout using the following steps:</p>
+<ol class="simple">
+<li>Click on the <code class="docutils literal"><span class="pre">Change</span> <span class="pre">Layout</span></code> button to view available layout options.</li>
+<li>The <code class="docutils literal"><span class="pre">Change</span> <span class="pre">Layout</span></code> panel provides two alternatives:
+&nbsp; &nbsp;- <strong>Select Layout Algorithm</strong> - List of layout algorithms supported by GraphSpace through its use of <a class="reference external" href="http://js.cytoscape.org">Cytoscape.js</a>.
+&nbsp; &nbsp;- <strong>Select Saved Layout</strong> - List of layout saved by the user using GraphSpace. The user has created them in earlier sessions by manually modifying the positions of nodes and edges created by some automatic layout algorithm and saving the layout.</li>
+<li>Click on a layout option to change the current layout.</li>
+</ol>
+<p>In the following example, the user selects to view the layout titled &#8220;manual-top-to-bottom&#8221;.</p>
+<p><img alt="Change Layout" src="_images/gs-screenshot-user1-change-layout-with-caption.gif" /></p>
+</div>
+<div class="section" id="share-layout">
+<span id="share-layout"></span><h3>2.4.5. Share Layout<a class="headerlink" href="#share-layout" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://www.graphspace.org">GraphSpace</a> allows users to share a layout using the following steps:</p>
+<ol class="simple">
+<li>Click on the <code class="docutils literal"><span class="pre">Layouts</span></code> link above the graph.</li>
+<li>The layouts panel shows two types of layouts:<ul>
+<li><strong>Private Layouts</strong> - The user has created them in earlier sessions by manually modifying the positions of nodes and edges. But the user has not shared them with any other user.</li>
+<li><strong>Shared Layouts</strong> - These layouts were created by the user who has access to this graph and shared the layout with other users who have access to this graph.</li>
+</ul>
+</li>
+<li>Click on the <code class="docutils literal"><span class="pre">Share</span></code> link next to the layout name of a private layout you want to share with other users who have access to this graph.</li>
+</ol>
+<p>Note: The icons next to each layout name allow the user to (i) change its name, (ii) share it with other users who have access to this graph, (iii) delete this layout.</p>
+<p><img alt="Share Layout" src="_images/gs-screenshot-user1-share-layout-with-caption.gif" /></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Terminology.html" class="btn btn-neutral float-right" title="3. Terminology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Introduction.html" class="btn btn-neutral" title="1. Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Murali`s Research Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

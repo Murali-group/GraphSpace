@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>7. Interacting with Graphs &mdash; graphspace-manual 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="graphspace-manual 1.0 documentation" href="index.html"/>
+        <link rel="next" title="8. Searching Graphs" href="Searching_Graphs.html"/>
+        <link rel="prev" title="6. Viewing Graphs" href="Viewing_Graphs.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> graphspace-manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Quick_Tour_of_GraphSpace.html">2. Quick Tour of Cytoscape</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminology.html">3. Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GraphSpace_Network_Model.html">4. GraphSpace Network Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Uploading_Graphs.html">5. Uploading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Viewing_Graphs.html">6. Viewing Graphs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Interacting with Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#search">7.1. Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export">7.2. Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#change-layout">7.3. Change Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filter-nodes-and-edges">7.4. Filter nodes and edges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#default-layout">7.5. Default Layout</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Searching_Graphs.html">8. Searching Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sharing_Graphs.html">9. Sharing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Editing_Layouts.html">10. Editing Layouts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Organizing_Graphs_Using_Tags.html">11. Organizing Graphs Using Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Programmers_Guide.html">12. Programmers Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">graphspace-manual</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>7. Interacting with Graphs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Interacting_with_Graphs.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="interacting-with-graphs">
+<span id="interacting-with-graphs"></span><h1>7. Interacting with Graphs<a class="headerlink" href="#interacting-with-graphs" title="Permalink to this headline">¶</a></h1>
+<p>GraphSpace is designed to provide access to following commonly used features:</p>
+<ul class="simple">
+<li><a class="reference external" href="#search">Searching within a graph</a></li>
+<li><a class="reference external" href="#export">Exporting a graph</a></li>
+<li><a class="reference external" href="#change-layout">Changing the graph layout</a></li>
+<li><a class="reference external" href="#filter-nodes-and-edges">Filtering nodes and edges</a></li>
+<li><a class="reference external" href="#default-layout">Setting default layout</a></li>
+</ul>
+<div class="section" id="search">
+<span id="search"></span><h2>7.1. Search<a class="headerlink" href="#search" title="Permalink to this headline">¶</a></h2>
+<p>This feature provides a search bar that allows the user to find nodes/edges that match search terms. See <a class="reference external" href="Searching_Graphs.html#query-semantics">Search Query Semantics</a> section for more information on query semantics. The matching nodes or edges are <a class="reference external" href="Viewing_Graphs.html#highlighted-graph-elements">highlighted</a> automatically as you type in the query in the search bar.</p>
+<p><img alt="Search Bar" src="_images/gs-screenshot-graph-page-search-bar.png" /></p>
+</div>
+<div class="section" id="export">
+<span id="export"></span><h2>7.2. Export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.graphspace.org">GraphSpace</a> allows users to export a graph in the following formats:</p>
+<ol class="simple">
+<li><strong>Network Graphics (.png)</strong> - Export the current graph view as a PNG image.</li>
+<li><strong>Network Graphics (.jpg)</strong> - Export the current graph view as a JPEG image.</li>
+<li><strong>Network Data (.png)</strong> - Export the graph in <a class="reference external" href="Uploading_Graphs.html#cyjs-format">CYJS format</a>.</li>
+<li><strong>Network Graphics (.png)</strong> - Export the graph stylesheet in <a class="reference external" href="Uploading_Graphs.html#stylesheet-json">Stylesheet JSON format</a>.</li>
+</ol>
+<p>GraphSpace does not support any other export formats since it relies on <a class="reference external" href="http://js.cytoscape.org">Cytoscape.js</a> for this functionality, which implements only export to PNG, JPG and JSON format.</p>
+<p><img alt="Search Bar" src="_images/gs-screenshot-graph-page-export-menu.png" /></p>
+</div>
+<div class="section" id="change-layout">
+<span id="change-layout"></span><h2>7.3. Change Layout<a class="headerlink" href="#change-layout" title="Permalink to this headline">¶</a></h2>
+<p>GraphSpace](http://www.graphspace.org) allows users to change layout using the following steps:</p>
+<ol class="simple">
+<li>Click on the <code class="docutils literal"><span class="pre">Change</span> <span class="pre">Layout</span></code> button to view available layout options.</li>
+<li>The <code class="docutils literal"><span class="pre">Change</span> <span class="pre">Layout</span></code> panel provides two alternatives:
+&nbsp; &nbsp;- <strong>Select Layout Algorithm</strong> - List of layout algorithms supported by GraphSpace through its use of <a class="reference external" href="http://js.cytoscape.org">Cytoscape.js</a>.
+&nbsp; &nbsp;- <strong>Select Saved Layout</strong> - List of layout saved by the user using GraphSpace. The user has created them in earlier sessions by manually modifying the positions of nodes and edges created by some automatic layout algorithm and saving the layout.</li>
+<li>Click on a layout option to change the current layout.</li>
+</ol>
+<p><img alt="Change layout screenshot" src="_images/gs-screenshot-user1-lovastatin-change-layout-panel.png" /></p>
+</div>
+<div class="section" id="filter-nodes-and-edges">
+<span id="filter-nodes-and-edges"></span><h2>7.4. Filter nodes and edges<a class="headerlink" href="#filter-nodes-and-edges" title="Permalink to this headline">¶</a></h2>
+<p>Graph algorithms may output networks where nodes and edges can be ranked, e.g., by path index or by weight/score. GraphSpace allows each node and edge to have an integer-valued data-attribute called <code class="docutils literal"><span class="pre">k</span></code> that specifies the rank of the node or the edge. For any network that contains this attribute (and only for such networks), GraphSpace displays the &#8220;Filter nodes and edges&#8221; panel with a <code class="docutils literal"><span class="pre">Current</span> <span class="pre">rank</span></code> slider. Changing the value in the <code class="docutils literal"><span class="pre">Current</span> <span class="pre">rank</span></code> slider hides all nodes and edges whose k values are less than or equal to the value in the slider. The possible values in this slider range from 1 to the maximum value of <code class="docutils literal"><span class="pre">k</span></code> in the graph. This interface element allows the user to unveil the network gradually in real time and gain intuition about how the network expands or contracts as this threshold changes.</p>
+<p>The images below shows a user stepping through a graph using this slider. For example in the following graph, changing the value from 3 to 4 revealed the green node and the edges connecting it to the blue node and yellow node.</p>
+<p>Current Rank is 3            |  Current Rank is 4
+:&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-:|:&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-:
+<img alt="Filter nodes and edges before" src="_images/gs-screenshot-graph-page-filter-nodes-edges-k-equal-3.png" />  |  <img alt="Filter nodes and edges after" src="_images/gs-screenshot-graph-page-filter-nodes-edges-k-equal-4.png" /></p>
+</div>
+<div class="section" id="default-layout">
+<span id="default-layout"></span><h2>7.5. Default Layout<a class="headerlink" href="#default-layout" title="Permalink to this headline">¶</a></h2>
+<p><strong>Default layout</strong> is the layout which is used by default, whenever a user visits the page for a graph. A layout can be set as a default layout for a graph only if it is shared with other users who have access to the graph. Default layout for a graph can only be set by the owner of the graph.</p>
+<p>If a layout is shared with other users who have access to the graph, user can click on the <code class="docutils literal"><span class="pre">Set</span> <span class="pre">as</span> <span class="pre">Default</span> <span class="pre">Layout</span></code> button to set the layout as the default layout for the graph.</p>
+<p>If a layout is set as default layout, user can click on the <code class="docutils literal"><span class="pre">Remove</span> <span class="pre">as</span> <span class="pre">Default</span> <span class="pre">Layout</span></code> button to unset the layout as the default layout for the graph.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Searching_Graphs.html" class="btn btn-neutral float-right" title="8. Searching Graphs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Viewing_Graphs.html" class="btn btn-neutral" title="6. Viewing Graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Murali`s Research Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
