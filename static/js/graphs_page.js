@@ -1326,6 +1326,7 @@ var graphPage = {
         }
     },
     layoutEditor: {
+        original_opacity: {},
         undoRedoManager: null,
         init: function () {
             cytoscapeGraph.contextMenu.init(graphPage.cyGraph);
@@ -2342,18 +2343,23 @@ var cytoscapeGraph = {
          */
         cy.style()
             .selector('node').style({
-                'font-size': "0px"
+                'text-opacity': function( ele ){
+                graphPage.layoutEditor.original_opacity[ele.data().id] = ele.style()['text-opacity'];
+
+                return 0; }
             })
             .update(); // update the elements in the graph with the new style
 
     },
     showGraphInformation: function (cy) {
-        /*
+         /*
          Function to Show information about the graph that the layout editor hid from the users.
          */
         cy.style()
             .selector('node').style({
-                'font-size': "16px"
+                'text-opacity': function( ele ){
+                    return  graphPage.layoutEditor.original_opacity[ele.data().id];
+                }
             })
             .update();
         console.log('done');
