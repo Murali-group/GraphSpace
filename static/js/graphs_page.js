@@ -1022,6 +1022,7 @@ var graphPage = {
             container: document.getElementById('cyGraphContainer'),
             boxSelectionEnabled: true,
             autounselectify: false,
+            wheelSensitivity: 0.2,
             minZoom: 1e-2,
             maxZoom: 1e2,
             elements: graph_json['elements'],
