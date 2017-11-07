@@ -1,0 +1,116 @@
+<ul id="colaOption" class="sidebar-nav gs-sidebar-nav">
+    <li></li>
+    <li>
+        <a class="btn sidebar-nav-pills" href="#" data-target="#changeLayoutSidebar">
+            <i class="fa fa-chevron-left"></i> Back
+        </a>
+    </li>
+    <li></li>
+
+
+         <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+
+            <input class="form-control center"
+                   onclick="graphPage.colaLayoutWidget.randomizeChanged()" id="input_random" type="button" name="option1" value="Randomize">  <br>
+        </div>
+    </li>
+
+    <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="EdgeLengthInput" class="pull-left margin-top-6"> Edge Length:</label>
+            <input class="form-control pull-right" id="EdgeLengthInput" style="width: 4em;" value="150" size="4" maxlength="" oninput="graphPage.colaLayoutWidget.setInputEdgeLength()">
+        </div>
+    </li>
+    <li>
+        <br>
+        <div id="EdgeLengthSlider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"
+             aria-disabled="false" style="margin: 0 10px;">
+            <a class="ui-slider-handle ui-state-default ui-corner-all" href="#"
+                                      style="left: 100%;"></a>
+        </div>
+    </li>
+
+    <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="NodeSpaceInput" class="pull-left margin-top-6"> Node Space:</label>
+            <input class="form-control pull-right" id="NodeSpaceInput" style="width: 4em;" value="5" size="4" maxlength="" oninput="graphPage.colaLayoutWidget.setInputNodeSpace()">
+        </div>
+    </li>
+    <li>
+        <br>
+        <div id="NodeSpaceSlider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"
+             aria-disabled="false" style="margin: 0 10px;">
+            <a class="ui-slider-handle ui-state-default ui-corner-all" href="#"
+                                      style="left: 100%;"></a>
+        </div>
+    </li>
+
+
+
+     <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="input_fit" class="pull-left margin-top-6"> Fit:</label>
+            <input class="pull-right"
+                   onclick="graphPage.colaLayoutWidget.fitChanged(this.checked)" id="input_fit" type="checkbox" name="option2" value="fit" checked> <br>
+        </div>
+    </li>
+
+     <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="input_overlap" class="pull-left margin-top-6"> Avoid overlap:</label>
+            <input class="pull-right"
+                   onclick="graphPage.colaLayoutWidget.overlapChanged(this.checked)"
+                   id="input_overlap" type="checkbox" name="option3" value="overlap" checked> <br>
+        </div>
+    </li>
+
+     <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="input_infinite" class="pull-left margin-top-6"> Infinite:</label>
+            <input class="pull-right"
+                   onclick="graphPage.colaLayoutWidget.infiniteChanged(this.checked)"
+                   id="input_infinite" type="checkbox" name="option6" value="infinite" > <br>
+        </div>
+    </li>
+
+    <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label class="pull-left margin-top-6"> Flow:</label>
+        </div>
+    </li>
+    <li>
+
+    </li>
+    <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="input_flow_x" class="pull-left margin-top-6">x-axis:</label>
+            <input class="pull-right"
+                   onclick="graphPage.colaLayoutWidget.flowXChanged(this.checked)"
+                   id="input_flow_x" type="checkbox" name="option4" value="flow" > <br>
+        </div>
+    </li>
+
+    <li>
+        <div class="form-group form-inline" style="margin: 0 10px;">
+            <label for="input_flow_y" class="pull-left margin-top-6">y-axis:</label>
+            <input class="pull-right"
+                   onclick="graphPage.colaLayoutWidget.flowYChanged(this.checked)"
+                   id="input_flow_y" type="checkbox" name="option4" value="flow" > <br>
+        </div>
+    </li>
+
+
+
+
+
+
+
+
+    <li></li>
+    <li></li>
+    <li>
+        <input id="input_max" type="number" value="0" style="width: 4em;" size="4" maxlength="4" hidden>
+    </li>
+
+</ul>
