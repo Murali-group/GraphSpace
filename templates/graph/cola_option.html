@@ -18,8 +18,8 @@
 
     <li>
         <div class="form-group form-inline" style="margin: 0 10px;">
-            <label for="input_edge" class="pull-left margin-top-6"> Edge Length:</label>
-            <input class="form-control pull-right" id="input_edge" style="width: 4em;" value="45" size="4" maxlength="">
+            <label for="EdgeLengthInput" class="pull-left margin-top-6"> Edge Length:</label>
+            <input class="form-control pull-right" id="EdgeLengthInput" style="width: 4em;" value="150" size="4" maxlength="" oninput="graphPage.colaLayoutWidget.setInputEdgeLength()">
         </div>
     </li>
     <li>
@@ -33,8 +33,8 @@
 
     <li>
         <div class="form-group form-inline" style="margin: 0 10px;">
-            <label for="input_node" class="pull-left margin-top-6"> Node Space:</label>
-            <input class="form-control pull-right" id="input_node" style="width: 4em;" value="5" size="4" maxlength="">
+            <label for="NodeSpaceInput" class="pull-left margin-top-6"> Node Space:</label>
+            <input class="form-control pull-right" id="NodeSpaceInput" style="width: 4em;" value="5" size="4" maxlength="" oninput="graphPage.colaLayoutWidget.setInputNodeSpace()">
         </div>
     </li>
     <li>

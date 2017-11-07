@@ -2032,26 +2032,26 @@ var graphPage = {
             /*
              * When input_k bar is changed, update the nodes shown in the graph.
              */
-            $("#input_edge").bind("change", function () {
+            $("#EdgeLengthInput").bind("change", function () {
                 graphPage.colaLayoutWidget.setInputK();
             });
-             $("#input_node").bind("change", function () {
+             $("#NodeSpaceInput").bind("change", function () {
                 graphPage.colaLayoutWidget.setInputK();
             });
 
             //Shows up to maximum k values
-            $("#input_max").val(200);
+            $("#input_max").val(400);
 
 
             //When user slides, it changes value of slider as well
             //as updates graph to reflect max k values allowed in subgraph
             $("#EdgeLengthSlider").slider({
                 value: 45, //initial 45
-                max: 200,
+                max: 400,
                 min: 1,
                 step: 1,
                 slide: function (event, ui) {
-                    $("#input_edge").val(ui.value);
+                    $("#EdgeLengthInput").val(ui.value);
                     m_val = ui.value;
                     if (m_val < 1) {
                         m_val = 1;
@@ -2062,7 +2062,7 @@ var graphPage = {
                 },
                 change: function (event, ui) {
                     if (event.originalEvent) {
-                        graphPage.colaLayoutWidget.edgeLengthChanged($("#input_node").val());
+                        graphPage.colaLayoutWidget.edgeLengthChanged($("#EdgeLengthInput").val());
                     }
                 }
             });
@@ -2073,7 +2073,7 @@ var graphPage = {
                 min: 1,
                 step: 1,
                 slide: function (event, ui) {
-                    $("#input_node").val(ui.value);
+                    $("#NodeSpaceInput").val(ui.value);
                     m_val = ui.value;
                     if (m_val < 1) {
                         m_val = 1;
@@ -2084,7 +2084,7 @@ var graphPage = {
                 },
                 change: function (event, ui) {
                     if (event.originalEvent) {
-                        graphPage.colaLayoutWidget.nodeSpaceChanged($("#input_node").val());
+                        graphPage.colaLayoutWidget.nodeSpaceChanged($("#NodeSpaceInput").val());
                     }
                 }
             });
@@ -2097,7 +2097,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: cola_edge_length,
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2116,7 +2116,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: parseInt(cola_edge_length),
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2124,7 +2124,7 @@ var graphPage = {
                 flow:cola_flow,
                 infinite: cola_infinite,
                 maxSimulationTime: 1500
-            }
+            };
 
             graphPage.applyLayout(newGraphLayout);
             console.log("after applying layout");
@@ -2136,7 +2136,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: cola_edge_length,
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2158,7 +2158,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: cola_edge_length,
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2178,7 +2178,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: cola_edge_length,
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2199,7 +2199,7 @@ var graphPage = {
             newGraphLayout = {
                 name: 'cola',
                 nodeSpacing: cola_node_space,
-                edgeLengthVal: cola_edge_length,
+                edgeLength: cola_edge_length,
                 animate: true,
                 randomize: cola_randomize,
                 avoidOverlap: cola_avoid_overlap,
@@ -2224,7 +2224,7 @@ var graphPage = {
                 newGraphLayout = {
                     name: 'cola',
                     nodeSpacing: cola_node_space,
-                    edgeLengthVal: cola_edge_length,
+                    edgeLength: cola_edge_length,
                     animate: true,
                     randomize: cola_randomize,
                     avoidOverlap: cola_avoid_overlap,
@@ -2241,7 +2241,7 @@ var graphPage = {
                 newGraphLayout = {
                     name: 'cola',
                     nodeSpacing: cola_node_space,
-                    edgeLengthVal: cola_edge_length,
+                    edgeLength: cola_edge_length,
                     animate: true,
                     randomize: cola_randomize,
                     avoidOverlap: cola_avoid_overlap,
@@ -2267,7 +2267,7 @@ var graphPage = {
                 newGraphLayout = {
                     name: 'cola',
                     nodeSpacing: cola_node_space,
-                    edgeLengthVal: cola_edge_length,
+                    edgeLength: cola_edge_length,
                     animate: true,
                     randomize: cola_randomize,
                     avoidOverlap: cola_avoid_overlap,
@@ -2285,7 +2285,7 @@ var graphPage = {
                 newGraphLayout = {
                     name: 'cola',
                     nodeSpacing: cola_node_space,
-                    edgeLengthVal: cola_edge_length,
+                    edgeLength: cola_edge_length,
                     animate: true,
                     randomize: cola_randomize,
                     avoidOverlap: cola_avoid_overlap,
@@ -2304,33 +2304,33 @@ var graphPage = {
             /*
              * Updates the text box when the user slides the bar.
              */
-            if ($("#input_edge").val() < 1) {
-                $("#input_edge").val(1);
+            if ($("#EdgeLengthInput").val() < 1) {
+                $("#EdgeLengthInput").val(1);
             }
-            if (parseInt($("#input_edge").val()) > 200) {
-                $("#input_edge").val(200);
+            if (parseInt($("#EdgeLengthInput").val()) > 400) {
+                $("#EdgeLengthInput").val(400);
 
             }
-            graphPage.colaLayoutWidget.setBarToValueEdgeLength($("#input_edge"), "EdgeLengthSlider");
+            graphPage.colaLayoutWidget.setBarToValueEdgeLength($("#EdgeLengthInput"), "EdgeLengthSlider");
             $("#EdgeLengthSlider").slider({
-                value: $("#input_edge").val(),
-                max: 200
+                value: $("#EdgeLengthInput").val(),
+                max: 400
             });
         },
         setInputNodeSpace: function () {
             /*
              * Updates the text box when the user slides the bar.
              */
-            if ($("#input_node").val() < 1) {
-                $("#input_node").val(1);
+            if ($("#NodeSpaceInput").val() < 1) {
+                $("#NodeSpaceInput").val(1);
             }
-            if (parseInt($("#input_node").val()) > 50) {
-                $("#input_node").val(50);
+            if (parseInt($("#NodeSpaceInput").val()) > 50) {
+                $("#NodeSpaceInput").val(50);
 
             }
-            graphPage.colaLayoutWidget.setBarToValueNodeSpace($("#input_node"), "NodeSpaceSlider");
+            graphPage.colaLayoutWidget.setBarToValueNodeSpace($("#NodeSpaceInput"), "NodeSpaceSlider");
             $("#NodeSpaceSlider").slider({
-                value: $("#input_node").val(),
+                value: $("#NodeSpaceInput").val(),
                 max: 50
             });
         },
@@ -2377,8 +2377,8 @@ var graphPage = {
              * inputId the id of the input bar
              * barId  the id of the max paths shown bar.
              */
-            if ($(inputId).val() > 200) {
-                $(inputId).val(200);
+            if ($(inputId).val() > 400) {
+                $(inputId).val(400);
             }
 
         },
@@ -2705,7 +2705,7 @@ var cytoscapeGraph = {
             graph_layout = {
             name: 'cola',
             nodeSpacing: cola_node_space,
-            edgeLengthVal: cola_edge_length,
+            edgeLength: cola_edge_length,
             animate: true,
             randomize: cola_randomize,
             avoidOverlap: cola_avoid_overlap,
@@ -3072,8 +3072,8 @@ var cytoscapeGraph = {
 
 //variables for cola
 //Different from other layout options, cola can choose options for other variables
-//Initial edge length set up to 45 in range of 1 to 200
-var cola_edge_length = 45;
+//Initial edge length set up to 45 in range of 1 to 400
+var cola_edge_length = 150;
 //Initial node space set up for 5 in range of 1 to 50
 var cola_node_space = 5;
 
