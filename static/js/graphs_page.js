@@ -1331,6 +1331,9 @@ var graphPage = {
         original_opacity: {},
         undoRedoManager: null,
         init: function () {
+            cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+
             cytoscapeGraph.contextMenu.init(graphPage.cyGraph);
 
             graphPage.layoutEditor.undoRedoManager = new UndoManager(
@@ -2735,6 +2738,7 @@ var cytoscapeGraph = {
          /*
          Function to Show information about the graph that the layout editor hid from the users.
          */
+        console.log(cy.style().selector('node'));
         cy.style()
             .selector('node').style({
                 'text-opacity': function( ele ){
