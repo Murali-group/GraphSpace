@@ -203,7 +203,12 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
-	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=map_attributes(json.loads(new_graph.graph_json)), refresh=True)
+	# Create json body to add into elasticsearch
+	body_data = map_attributes(json.loads(new_graph.graph_json))
+	body_data["string_owner_email"] = owner_email
+	body_data["long_is_public"] = is_public
+	body_data["datetime_updated_at"] = new_graph.updated_at
+	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=body_data, refresh=True)
 
 	return new_graph
 
