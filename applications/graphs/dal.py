@@ -129,6 +129,12 @@ def get_graph_by_id(db_session, id):
 def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
+
+	# This function is no longer being called by 'My Graphs' or 'Public Graphs'.
+	# It was last used in commit aea7096882d2ad0e0ec3b7ab9c0fdfa11bb4659e
+	# This is because the logic for retrieving Graphs owned by owner_email and those that are public
+	# is done solely inside elasticsearch. We no longer access the Postgres database.
+
 	query = db_session.query(Graph)
 	query = query.options(defer("graph_json")).options(defer("style_json"))
 

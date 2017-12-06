@@ -8,6 +8,8 @@ from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace_python.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
 from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
+import graphspace.utils as utils
+from applications.users.models import Graph
 
 import json
 from json import dumps, loads
@@ -350,29 +352,85 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 	if edges is not None:
 		edges = [tuple(edge.split(':')) for edge in edges]
 
+	# Shared Graphs case. Get all ids from elasticsearch that match search parameter and then send
+	# into postgres through an IN-clause
+	if owner_email == None and (is_public == None or is_public == 0):
+		if 'query' in query:
+			s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
+			s.update_from_dict(query)
+			s.source(False)
+			graph_ids = [int(hit.meta.id) for hit in s.scan()]
+		else:
+			graph_ids = None
+
+		total, graphs_list = db.find_graphs(request.db_session,
+											owner_email=owner_email,
+											graph_ids=graph_ids,
+											is_public=is_public,
+											group_ids=group_ids,
+											names=names,
+											nodes=nodes,
+											edges=edges,
+											tags=tags,
+											limit=limit,
+											offset=offset,
+											order_by=orber_by)
+
+		return total, [utils.serializer(graph, summary=True) for graph in graphs_list]
+
+	# My Graphs and Public Graphs.
+	# Querying only elasticsearch. No need to go to postgres since ES has all required data
+
+	postgres_to_elasticsearch_mapping = {
+		"name":""
+	}
+
+	query["size"] = limit
+	query["from"] = offset
+	query["_source"] = [	# Select fields to get from Elasticsearch
+		"string_owner_email", "long_is_public", "object_data.string_name",
+		"object_data.string_tags", "datetime_updated_at"
+	]
+	added_query = {}
+
+	if owner_email != None:  # My Graphs
+		added_query["query"] = "(string_owner_email:\"" + owner_email + "\")"
+	elif is_public != None:  # Public Graphs
+		added_query["query"] = "(long_is_public:" + str(is_public) + ")"
+
 	if 'query' in query:
-		s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
-		s.update_from_dict(query)
-		s.source(False)
-		graph_ids = [int(hit.meta.id) for hit in s.scan()]
+		query["query"]["bool"]["must"].append({
+			"query_string": added_query
+		})
+		query["query"]["bool"]["minimum_should_match"] = 1
+
 	else:
-		graph_ids = None
+		query["query"] = {}
+		query["query"]["bool"] = {}
+		query["query"]["bool"]["must"] = []
+		query["query"]["bool"]["must"].append({
+			"query_string": added_query
+		})
+		query["query"]["bool"]["minimum_should_match"] = 0
 
-	total, graphs_list = db.find_graphs(request.db_session,
-	                                    owner_email=owner_email,
-	                                    graph_ids=graph_ids,
-	                                    is_public=is_public,
-	                                    group_ids=group_ids,
-	                                    names=names,
-	                                    nodes=nodes,
-	                                    edges=edges,
-	                                    tags=tags,
-	                                    limit=limit,
-	                                    offset=offset,
-	                                    order_by=orber_by)
+	s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
+	s.update_from_dict(query)
+	response = s.execute()
 
-	return total, graphs_list
+	graphs_list = []
+	for hit in s:
+		if 'string_tags' not in hit.object_data:
+			hit.object_data.string_tags = []
+		graphs_list.append({
+			"name": hit.object_data.string_name,
+			"tags": [tag for tag in hit.object_data.string_tags],
+			"is_public": hit.long_is_public,
+			"owner_email": hit.string_owner_email,
+			"id": hit.meta.id,
+			"updated_at": hit.datetime_updated_at
+		})
 
+	return response.hits.total, graphs_list
 
 def search_graphs(request, owner_email=None, member_email=None, names=None, is_public=None, nodes=None, edges=None,
                   tags=None, limit=20, offset=0, order='desc', sort='name'):
