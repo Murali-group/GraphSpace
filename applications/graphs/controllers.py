@@ -381,16 +381,26 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 	# My Graphs and Public Graphs.
 	# Querying only elasticsearch. No need to go to postgres since ES has all required data
 
+	# This maps the field names from postgres to the field names in Elasticsearch.
+	# Needed for the 'sort' paramter in the query that goes into ES
 	postgres_to_elasticsearch_mapping = {
-		"name":""
+		"name":"object_data.string_name.keyword",
+		"owner_email": "string_owner_email.keyword",
+		"is_public": "long_is_public",
+		"updated_at": "datetime_updated_at"
 	}
 
+	# Creating the query to send to Elasticsearch. Note that we no longer query
+	# postgres. All required data is stored in Elasticearch
 	query["size"] = limit
 	query["from"] = offset
 	query["_source"] = [	# Select fields to get from Elasticsearch
 		"string_owner_email", "long_is_public", "object_data.string_name",
 		"object_data.string_tags", "datetime_updated_at"
 	]
+	query["sort"] = [{	# Results need to be sorted
+		postgres_to_elasticsearch_mapping[sort] : {"order": order}
+	}]
 	added_query = {}
 
 	if owner_email != None:  # My Graphs
@@ -399,28 +409,32 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 		added_query["query"] = "(long_is_public:" + str(is_public) + ")"
 
 	if 'query' in query:
+		# Search parameter has been provided
 		query["query"]["bool"]["must"].append({
-			"query_string": added_query
+			"query_string": added_query		# filter by owner_email or is_public
 		})
 		query["query"]["bool"]["minimum_should_match"] = 1
 
 	else:
+		# No search paramter. Must list all graphs
 		query["query"] = {}
 		query["query"]["bool"] = {}
 		query["query"]["bool"]["must"] = []
 		query["query"]["bool"]["must"].append({
-			"query_string": added_query
+			"query_string": added_query		# filter by owner_email or is_public
 		})
 		query["query"]["bool"]["minimum_should_match"] = 0
 
+	# Query elasticsearch once
 	s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
 	s.update_from_dict(query)
 	response = s.execute()
 
+	#Creating an array of graphs as JSON objects
 	graphs_list = []
 	for hit in s:
 		if 'string_tags' not in hit.object_data:
-			hit.object_data.string_tags = []
+			hit.object_data.string_tags = [] # tags may be empty!
 		graphs_list.append({
 			"name": hit.object_data.string_name,
 			"tags": [tag for tag in hit.object_data.string_tags],
