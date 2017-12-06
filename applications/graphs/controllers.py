@@ -175,6 +175,7 @@ def uploadJSONFile(request, username, graphJSON, title):
 @atomic_transaction
 def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
               default_layout_id=None):
+
 	# If graph already exists for user, alert them
 	if db.get_graph(request.db_session, owner_email, name) is not None:
 		raise Exception('Graph ' + name + ' already exists for ' + owner_email + '!')
@@ -217,12 +218,15 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
                  default_layout_id=None):
 	graph = {}
+	body_data = {} # JSON body that will be ued to update graph inElasticsearch
 	if name is not None:
 		graph['name'] = name
 	if owner_email is not None:
 		graph['owner_email'] = owner_email
+		body_data['string_owner_email'] = owner_email
 	if is_public is not None:
 		graph['is_public'] = is_public
+		body_data['long_is_public'] = is_public
 	if default_layout_id is not None:
 		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
 
@@ -244,9 +248,15 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
-		settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=graph_id, body=map_attributes(G.get_graph_json()), refresh=True)
+		body_data.update(map_attributes(G.get_graph_json))
 
-	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
+	updated_graph = db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
+	# If any information in Elasticsearch was changed
+	if bool(body_data):
+		body_data['datetime_updated_at'] = updated_graph.updated_at
+		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
+
+	return updated_graph
 
 
 def get_graph_by_name(request, owner_email, name):

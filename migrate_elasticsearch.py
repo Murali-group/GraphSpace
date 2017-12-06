@@ -17,7 +17,6 @@ graphhelper = sa.Table(
 )
 
 template = '{\"template\": \"graphs\",\"order\": 0,\"settings\": {\"index\": {\"refresh_interval\": \"30s\",\"analysis\": {\"analyzer\": {\"my_analyzer\": {\"type\": \"custom\",\"tokenizer\": \"my_ngram_tokenizer\",\"filter\": [\"lowercase\",\"my_ngram_filter\"]}},\"filter\": {\"my_ngram_filter\": {\"type\": \"nGram\",\"max_gram\": 15,\"min_gram\": 2}},\"tokenizer\": {\"my_ngram_tokenizer\": {\"type\": \"nGram\",\"min_gram\": 2,\"max_gram\": 15,\"token_chars\": [\"letter\",\"digit\",\"punctuation\"]}}}}},\"mappings\": {\"json\": {\"date_detection\": true,\"_all\": {\"enabled\": false},\"dynamic_templates\": [{\"default_string_mapping\": {\"match\": \"*\",\"match_mapping_type\": \"string\",\"mapping\": {\"type\": \"string\"}}},{\"geopoint_mapping\": {\"mapping\": {\"geohash_precision\": \"1km\",\"type\": \"geo_point\",\"doc_values\": true,\"geohash_prefix\": true,\"lat_lon\": true,\"fielddata\": {\"precision\": \"10m\",\"format\": \"compressed\"}},\"match\": \"geopoint_*\"}},{\"string_mapping\": {\"match\": \"string_*\",\"mapping\": {\"type\": \"string\",\"analyzer\": \"my_analyzer\",\"fields\": {\"raw\": {\"type\": \"string\",\"index\": \"not_analyzed\"}}}}},{\"bool_mapping\": {\"match\": \"bool_*\",\"mapping\": {\"type\": \"boolean\"}}},{\"datetime_mapping\": {\"match\": \"datetime_*\",\"mapping\": {\"type\": \"date\"}}},{\"long_mapping\": {\"match\": \"long_*\",\"mapping\": {\"type\": \"long\"}}},{\"double_mapping\": {\"match\": \"double_*\",\"mapping\": {\"type\": \"double\"}}}],\"properties\": {\"string_owner_email\": {\"type\": \"text\",\"fields\": {\"keyword\": {\"type\": \"keyword\"}}},\"object_data\": {\"properties\": {\"string_name\": {\"type\": \"text\",\"fields\": {\"keyword\": {\"type\": \"keyword\"}}}}}}}}}'
-#template = "{\"template\":\"graphs1\",\"order\":0,\"settings\":{\"index\":{\"refresh_interval\":\"30s\",\"analysis\":{\"analyzer\":{\"my_analyzer\":{\"type\":\"custom\",\"tokenizer\":\"my_ngram_tokenizer\",\"filter\":[\"lowercase\",\"my_ngram_filter\"]}},\"filter\":{\"my_ngram_filter\":{\"type\":\"nGram\",\"max_gram\":15,\"min_gram\":2}},\"tokenizer\":{\"my_ngram_tokenizer\":{\"type\":\"nGram\",\"min_gram\":2,\"max_gram\":15,\"token_chars\":[\"letter\",\"digit\",\"punctuation\"]}}}}},\"mappings\":{\"json\":{\"include_in_all\": false, \"properties\": {\"object_elements\": {\"properties\":{\"object_nodes\":{\"properties\":{\"object_data\":{\"properties\":{\"string_name\":{\"type\": \"text\", \"include_in_all\": true}, \"string_label\":{\"type\": \"text\", \"include_in_all\": true}, \"string_aliases\":{\"type\": \"text\", \"include_in_all\": true}}}}}}}}, \"date_detection\":false,\"_all\":{\"enabled\":true},\"dynamic_templates\":[{\"default_string_mapping\":{\"match\":\"*\",\"match_mapping_type\":\"string\",\"mapping\":{\"type\":\"string\"}}},{\"geopoint_mapping\":{\"mapping\":{\"geohash_precision\":\"1km\",\"type\":\"geo_point\",\"doc_values\":true,\"geohash_prefix\":true,\"lat_lon\":true,\"fielddata\":{\"precision\":\"10m\",\"format\":\"compressed\"}},\"match\":\"geopoint_*\"}},{\"string_mapping\":{\"match\":\"string_*\",\"mapping\":{\"type\":\"string\",\"analyzer\":\"my_analyzer\",\"fields\":{\"raw\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}},{\"bool_mapping\":{\"match\":\"bool_*\",\"mapping\":{\"type\":\"boolean\"}}},{\"datetime_mapping\":{\"match\":\"datetime_*\",\"mapping\":{\"type\":\"date\"}}},{\"long_mapping\":{\"match\":\"long_*\",\"mapping\":{\"type\":\"long\"}}},{\"double_mapping\":{\"match\":\"double_*\",\"mapping\":{\"type\":\"double\"}}}]}}}"
 
 def map_attributes(attributes):
 
@@ -63,7 +62,7 @@ def migrate():
 	es.indices.create(index='graphs', ignore=400)
 	es.indices.put_template(name='template_common', body=json.loads(template))
 	
-	total = 22118
+	total = 22118 # todo change this number
 
 	offset = 0
 	while offset < total:
@@ -77,7 +76,6 @@ def migrate():
 		offset += 30
 	connection.close()
 	pass
-
 
 migrate()
 
