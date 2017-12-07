@@ -352,48 +352,19 @@ def delete_graph_to_group(request, group_id, graph_id):
 def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None, tags=None, member_email=None,
                    is_public=None, query=None, limit=20, offset=0, order='desc', sort='name'):
 	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
-	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 	is_public = int(is_public) if is_public is not None else None
 
 	if member_email is not None:
 		member_user = users.controllers.get_user(request, member_email)
-		if member_user is not None:
-			group_ids = [group.id for group in users.controllers.get_groups_by_member_id(request, member_user.id)]
-		else:
+		if member_user is None:
 			raise Exception("User with given member_email doesnt exist.")
 	else:
-		group_ids = None
+		member_user = None
 
+	# Edge searching currently not enabled
 	if edges is not None:
 		edges = [tuple(edge.split(':')) for edge in edges]
 
-	# Shared Graphs case. Get all ids from elasticsearch that match search parameter and then send
-	# into postgres through an IN-clause
-	if owner_email == None and (is_public == None or is_public == 0):
-		if 'query' in query:
-			s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
-			s.update_from_dict(query)
-			s.source(False)
-			graph_ids = [int(hit.meta.id) for hit in s.scan()]
-		else:
-			graph_ids = None
-
-		total, graphs_list = db.find_graphs(request.db_session,
-											owner_email=owner_email,
-											graph_ids=graph_ids,
-											is_public=is_public,
-											group_ids=group_ids,
-											names=names,
-											nodes=nodes,
-											edges=edges,
-											tags=tags,
-											limit=limit,
-											offset=offset,
-											order_by=orber_by)
-
-		return total, [utils.serializer(graph, summary=True) for graph in graphs_list]
-
-	# My Graphs and Public Graphs.
 	# Querying only elasticsearch. No need to go to postgres since ES has all required data
 
 	# This maps the field names from postgres to the field names in Elasticsearch.
@@ -420,6 +391,8 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 
 	if owner_email != None:  # My Graphs
 		added_query["query"] = "(string_owner_email:\"" + owner_email + "\")"
+	elif member_email != None: # Shared Graphs
+		added_query["query"] = "(long_shared_users: " + str(member_user.id) + ")"
 	elif is_public != None:  # Public Graphs
 		added_query["query"] = "(long_is_public:" + str(is_public) + ")"
 
