@@ -124,6 +124,10 @@ def delete_graph(db_session, id):
 def get_graph_by_id(db_session, id):
 	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
 
+@with_session
+def get_graphs_by_group(db_session, group_id):
+	return db_session.query(GroupToGraph.graph_id).filter(and_(GroupToGraph.group_id == group_id)).all()
+
 
 @with_session
 def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
@@ -302,6 +306,11 @@ def get_layout(db_session, owner_email, name, graph_id):
 	return db_session.query(Layout).filter(
 		and_(Layout.owner_email == owner_email, Layout.name == name, Layout.graph_id == graph_id)).one_or_none()
 
+import graphspace.utils as utils
+@with_session
+def get_graphs_to_users(db_session, graph_id):
+	return db_session.query(GroupToUser.user_id).filter(
+		and_(GroupToGraph.graph_id == graph_id, GroupToGraph.group_id == GroupToUser.group_id)).all()
 
 @with_session
 def add_graph_to_group(db_session, group_id, graph_id):
