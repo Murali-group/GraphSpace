@@ -7,10 +7,10 @@ from graphspace.data_type import DataType
 
 
 # Graph to Group -> Group to User
-# User shares Graph with a group
-# User unshares Graph with a group
+# User shares Graph with a group - add_graph_to_group
+# User unshares Graph with a group - delete_graph_to_group
 # User added to a group
-# User removed from a group
+# User removed from a group - doesn work
 # Group is deleted
 # Group is added
 
@@ -18,6 +18,26 @@ from graphspace.data_type import DataType
 	#Update postgres
 	#Get List of Users for Graph
 	#Update ES
+
+# User added to Group
+	# Get a list of Graphs that this group can access - GroupsToGraphs
+	# For every Graph get a list of users
+		# Append this user id to list
+		# Update ES
+
+
+'''
+id -> 23790
+"long_shared_users": [
+            38,
+            84,
+            114,
+            2,
+            144,
+            59,
+            58
+        ],
+'''
 
 graphhelper = sa.Table(
 	'graph',
