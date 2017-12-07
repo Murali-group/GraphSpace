@@ -239,6 +239,12 @@ def get_group_members(request, group_id):
 	members = db.get_users_by_group(request.db_session, group_id)
 	return members
 
+def update_shared_users_elasticsearch(request, group_id):
+	graphs_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
+	for graph_id in graphs_ids:
+		shared_users = [user.user_id for user in graphs.controllers.get_graphs_to_users(request.db_session, graph_id)]
+		body_data = { 'long_shared_users': shared_users }
+		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
 
 def add_group_member(request, group_id, member_id=None, member_email=None):
 	if member_id is not None:
@@ -251,7 +257,9 @@ def add_group_member(request, group_id, member_id=None, member_email=None):
 		if db.get_group_to_user(request.db_session, group_id, user.id):
 			raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=user.email)
 
-		return db.add_group_to_user(request.db_session, group_id=group_id, user_id=user.id)
+		result = db.add_group_to_user(request.db_session, group_id=group_id, user_id=user.id)
+		update_shared_users_elasticsearch(request, group_id)
+		return result
 	else:
 		raise Exception("User does not exit.")
 
@@ -264,6 +272,7 @@ def delete_group_member(request, group_id, member_id):
 		raise Exception("Cannot remove group owner from the group!")
 
 	db.delete_group_to_user(request.db_session, group_id=group_id, user_id=member_id)
+	update_shared_users_elasticsearch(request, group_id)
 	return
 
 

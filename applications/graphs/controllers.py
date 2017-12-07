@@ -8,8 +8,7 @@ from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace_python.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
 from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
-import graphspace.utils as utils
-from applications.users.models import Graph
+
 
 import json
 from json import dumps, loads
@@ -40,6 +39,12 @@ def map_attributes(attributes):
 
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
+
+def get_graphs_by_group(db_session, group_id):
+	return db.get_graphs_by_group(db_session, group_id)
+
+def get_graphs_to_users(db_session, graph_id):
+	return db.get_graphs_to_users(db_session, graph_id)
 
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
@@ -262,7 +267,6 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 def get_graph_by_name(request, owner_email, name):
 	return db.get_graph(request.db_session, owner_email=owner_email, name=name)
 
-
 def delete_graph_by_id(request, graph_id):
 	db.update_graph(request.db_session, id=graph_id, updated_graph={'default_layout_id': None})
 	db.delete_graph(request.db_session, id=graph_id)
@@ -332,6 +336,10 @@ def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
 	                      edges=edges, tags=tags, limit=limit, offset=offset)
 
+def update_shared_users_elasticsearch(request, graph_id):
+	shared_users = [user.user_id for user in db.get_graphs_to_users(request.db_session, graph_id)]
+	body_data = { 'long_shared_users': shared_users }
+	settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
 
 def add_graph_to_group(request, group_id, graph_id):
 	if graph_id is not None:
@@ -339,19 +347,19 @@ def add_graph_to_group(request, group_id, graph_id):
 	else:
 		raise Exception("Required Parameter is missing!")
 	if graph is not None:
-		return db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
+		result = db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
+		update_shared_users_elasticsearch(request, graph_id)
+		return result
 	else:
 		raise Exception("Graph does not exit.")
 
-
 def delete_graph_to_group(request, group_id, graph_id):
 	db.delete_graph_to_group(request.db_session, group_id=int(group_id), graph_id=int(graph_id))
+	update_shared_users_elasticsearch(request, graph_id)
 	return
-
 
 def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None, tags=None, member_email=None,
                    is_public=None, query=None, limit=20, offset=0, order='desc', sort='name'):
-	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
 	is_public = int(is_public) if is_public is not None else None
 
 	if member_email is not None:
