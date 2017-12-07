@@ -219,7 +219,9 @@ def get_group_by_id(request, group_id):
 
 
 def delete_group_by_id(request, group_id):
+	graph_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
 	db.delete_group(request.db_session, id=group_id)
+	update_shared_users_elasticsearch(request, group_id, graph_ids)
 	return
 
 
@@ -239,9 +241,10 @@ def get_group_members(request, group_id):
 	members = db.get_users_by_group(request.db_session, group_id)
 	return members
 
-def update_shared_users_elasticsearch(request, group_id):
-	graphs_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
-	for graph_id in graphs_ids:
+def update_shared_users_elasticsearch(request, group_id, graph_ids=None):
+	if graph_ids is None:
+		graph_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
+	for graph_id in graph_ids:
 		shared_users = [user.user_id for user in graphs.controllers.get_graphs_to_users(request.db_session, graph_id)]
 		body_data = { 'long_shared_users': shared_users }
 		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
@@ -272,6 +275,7 @@ def delete_group_member(request, group_id, member_id):
 		raise Exception("Cannot remove group owner from the group!")
 
 	db.delete_group_to_user(request.db_session, group_id=group_id, user_id=member_id)
+	# todo - Should we be deleting GroupToGraph too? Since the user has been removed from a group, even the graphs he shared should be removed logically
 	update_shared_users_elasticsearch(request, group_id)
 	return
 
