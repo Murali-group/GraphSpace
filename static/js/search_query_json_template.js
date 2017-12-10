@@ -43,7 +43,7 @@ var searchQueryTemplateJSON = {
             "must": [],
             "should": [],
             "must_not": [],
-            "minimum_should_match": 1
+            "minimum_should_match": 0
         }
     }
 }
