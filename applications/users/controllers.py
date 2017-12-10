@@ -217,11 +217,13 @@ def search_groups(request, owner_email=None, member_email=None, name=None, descr
 def get_group_by_id(request, group_id):
 	return db.get_group(request.db_session, id=group_id)
 
-
+# After a group has been deleted, every graph that was shared with the group needs to remove access to
+# every user who was in the group. This is done by storing the list of graph ids before postgres gets
+# updated and then modifying elasticsearch.
 def delete_group_by_id(request, group_id):
 	graph_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
-	db.delete_group(request.db_session, id=group_id)
-	update_shared_users_elasticsearch(request, group_id, graph_ids)
+	db.delete_group(request.db_session, id=group_id) # Delete group in postgres
+	update_shared_users_elasticsearch(request, group_id, graph_ids) # Update list of shared users for every graph in ES
 	return
 
 
@@ -241,6 +243,10 @@ def get_group_members(request, group_id):
 	members = db.get_users_by_group(request.db_session, group_id)
 	return members
 
+# This will retrieve the new list of users every graph in graph_ids is shared with
+# and then update elasticsearch.
+# graph_ids is None if a new member is added. ids are obtained from group_id
+# graphs_ids is not None if a group has been deleted. Calling function passes in a list of ids.
 def update_shared_users_elasticsearch(request, group_id, graph_ids=None):
 	if graph_ids is None:
 		graph_ids = [graph.graph_id for graph in graphs.controllers.get_graphs_by_group(request.db_session, group_id)]
@@ -261,7 +267,7 @@ def add_group_member(request, group_id, member_id=None, member_email=None):
 			raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=user.email)
 
 		result = db.add_group_to_user(request.db_session, group_id=group_id, user_id=user.id)
-		update_shared_users_elasticsearch(request, group_id)
+		update_shared_users_elasticsearch(request, group_id) # Adds this user_id to every shared graph in ES
 		return result
 	else:
 		raise Exception("User does not exit.")
@@ -275,7 +281,6 @@ def delete_group_member(request, group_id, member_id):
 		raise Exception("Cannot remove group owner from the group!")
 
 	db.delete_group_to_user(request.db_session, group_id=group_id, user_id=member_id)
-	# todo - Should we be deleting GroupToGraph too? Since the user has been removed from a group, even the graphs he shared should be removed logically
 	update_shared_users_elasticsearch(request, group_id)
 	return
 

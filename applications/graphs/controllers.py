@@ -40,9 +40,11 @@ def map_attributes(attributes):
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
+# Get the list of all graphs that is shared with a group
 def get_graphs_by_group(db_session, group_id):
 	return db.get_graphs_by_group(db_session, group_id)
 
+# Get a list of all users a specific graph is shared with
 def get_graphs_to_users(db_session, graph_id):
 	return db.get_graphs_to_users(db_session, graph_id)
 
@@ -336,6 +338,10 @@ def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
 	                      edges=edges, tags=tags, limit=limit, offset=offset)
 
+# This function call will update the long_shared_users field in elasticsearch
+# whenever a user's access to a shared graph changes.
+# All we do is create a join of GroupsToGraphs and GroupsToUsers, and retrieve the new list of
+# users from postgres after it is updated. That is then used to update elasticsearch
 def update_shared_users_elasticsearch(request, graph_id):
 	shared_users = [user.user_id for user in db.get_graphs_to_users(request.db_session, graph_id)]
 	body_data = { 'long_shared_users': shared_users }
@@ -348,14 +354,14 @@ def add_graph_to_group(request, group_id, graph_id):
 		raise Exception("Required Parameter is missing!")
 	if graph is not None:
 		result = db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
-		update_shared_users_elasticsearch(request, graph_id)
+		update_shared_users_elasticsearch(request, graph_id) # Update elasticsearch also before returning
 		return result
 	else:
 		raise Exception("Graph does not exit.")
 
 def delete_graph_to_group(request, group_id, graph_id):
 	db.delete_graph_to_group(request.db_session, group_id=int(group_id), graph_id=int(graph_id))
-	update_shared_users_elasticsearch(request, graph_id)
+	update_shared_users_elasticsearch(request, graph_id) # Update elasticsearch also before returning
 	return
 
 def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None, tags=None, member_email=None,
