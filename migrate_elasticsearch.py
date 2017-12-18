@@ -5,6 +5,34 @@ from sqlalchemy import create_engine, ForeignKey
 from elasticsearch import Elasticsearch
 from graphspace.data_type import DataType
 
+
+
+"""
+	This migration scripts modifies the data that is put into elasticsearch.
+	The following is the JSON structure of the _source object in Elasticsearch - 
+
+	"_source": {
+		"string_owner_email": "jeffl@vt.edu",
+        "long_shared_users": [
+            38,
+            84,
+            114,
+        ],
+        "datetime_updated_at": "2017-10-24T19:48:28.839888",
+        "long_is_public": 1
+	}
+
+	Note: The new fields added are
+		string_owner_email from owner_email field in postgres
+		datetime_updated_at from updated_at field in postgres
+		long_is_public from is_public field in postgres
+		long_shared_users comes from the intersection of GroupToGraph and GroupToUser
+
+	The graph_id and group_id are retrieved from group_to_graph_helper
+	The group_id and user_id are retrieved from group_to_user_helper
+	Using this we get a list of users each graph is shared with and then store it in an array called long_shared_users.
+"""
+
 graphhelper = sa.Table(
 	'graph',
 	sa.MetaData(),
