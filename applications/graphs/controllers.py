@@ -40,11 +40,15 @@ def map_attributes(attributes):
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
-# Get the list of all graphs that is shared with a group
+"""
+Get the list of all graphs that is shared with a group
+"""
 def get_graphs_by_group(db_session, group_id):
 	return db.get_graphs_by_group(db_session, group_id)
 
-# Get a list of all users a specific graph is shared with
+"""
+Get a list of all users a specific graph is shared with
+"""
 def get_graphs_to_users(db_session, graph_id):
 	return db.get_graphs_to_users(db_session, graph_id)
 
@@ -54,10 +58,10 @@ def is_user_authorized_to_view_graph(request, username, graph_id):
 
 	graph = db.get_graph_by_id(request.db_session, graph_id)
 
-	if graph is not None:  # Graph doesnt exists
+	if graph is not None:  # Graph doesnt exist
 		if graph.owner_email == username:
 			is_authorized = True
-		elif graph.is_public == 1:  # graph is public
+		elif graph.is_public == 1:  # graph is publi"""c
 			is_authorized = True
 		else:  # graph is not public
 			for group in graph.groups:
@@ -338,10 +342,12 @@ def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
 	                      edges=edges, tags=tags, limit=limit, offset=offset)
 
-# This function call will update the long_shared_users field in elasticsearch
-# whenever a user's access to a shared graph changes.
-# All we do is create a join of GroupsToGraphs and GroupsToUsers, and retrieve the new list of
-# users from postgres after it is updated. That is then used to update elasticsearch
+"""
+This function call will update the long_shared_users field in elasticsearch
+whenever a user's access to a shared graph changes.
+All we do is create a join of GroupsToGraphs and GroupsToUsers, and retrieve the new list of
+users from postgres after it is updated. That is then used to update elasticsearch
+"""
 def update_shared_users_elasticsearch(request, graph_id):
 	shared_users = [user.user_id for user in db.get_graphs_to_users(request.db_session, graph_id)]
 	body_data = { 'long_shared_users': shared_users }
