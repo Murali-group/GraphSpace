@@ -307,8 +307,10 @@ def get_layout(db_session, owner_email, name, graph_id):
 	return db_session.query(Layout).filter(
 		and_(Layout.owner_email == owner_email, Layout.name == name, Layout.graph_id == graph_id)).one_or_none()
 
-# Returns a list of users that a graph has been shared with by
-# creating a join between GroupToGraph and GroupToUser
+"""
+Returns a list of users that a graph has been shared with by
+creating a join between GroupToGraph and GroupToUser
+"""
 @with_session
 def get_graphs_to_users(db_session, graph_id):
 	return db_session.query(GroupToUser.user_id).filter(
