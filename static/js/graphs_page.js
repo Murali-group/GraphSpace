@@ -1061,7 +1061,7 @@ var graphPage = {
         graphPage.cyGraph.layout(layoutID);
 
     },
-    saveLayout: function (layoutName, modalNameId) {
+    saveLayout: function (layoutName, modalNameId, callback) {
         graphPage.cyGraph.elements().unselect();
 
         if (_.trim(layoutName).length === 0) {
@@ -1116,6 +1116,11 @@ var graphPage = {
                     $(modalNameId).modal('toggle');
                     $('#PrivateLayoutsTable').bootstrapTable('refresh');
                     $('#SharedLayoutsTable').bootstrapTable('refresh');
+                    $('table').bootstrapTable('refresh');
+                    if(typeof callback === 'function'){
+                        callback(response.id);
+                    };
+
                 },
                 errorCallback = function (response) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
@@ -1506,10 +1511,13 @@ var graphPage = {
     },
     defaultLayoutWidget: {
         init: function (is_shared) {
-            if (utils.getURLParameter('auto_layout') || _.isNil(is_shared)) {
+            if (_.isNil(is_shared)) {
                 $('#setDefaultLayoutBtn').hide();
                 $('#removeDefaultLayoutBtn').hide();
-            } else if (utils.getURLParameter('user_layout') && utils.getURLParameter('user_layout') == default_layout_id) {
+            }else if (utils.getURLParameter('auto_layout')) {
+                $('#setDefaultLayoutBtn').show();
+                $('#removeDefaultLayoutBtn').hide();
+            }else if (utils.getURLParameter('user_layout') && utils.getURLParameter('user_layout') == default_layout_id) {
                 $('#setDefaultLayoutBtn').hide();
                 $('#removeDefaultLayoutBtn').show();
             } else {
@@ -1517,8 +1525,31 @@ var graphPage = {
                 $('#removeDefaultLayoutBtn').hide();
             }
         },
-        onSetDefaultLayoutBtn: function (e) {
+        setDefaultAutoLayoutBtn: function (layout_id) {
             apis.graphs.update($('#GraphID').val(), {
+                'default_layout_id': layout_id
+                },
+                successCallback = function (response) {
+                    default_layout_id = layout_id;
+                    graphPage.defaultLayoutWidget.init(1);
+                    $('#setDefaultLayoutBtn').hide();
+                    $('#removeDefaultLayoutBtn').show();
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+            });
+        },
+        onSetDefaultLayoutBtn: function (e) {
+            if (utils.getURLParameter('auto_layout')) {
+                graphPage.saveLayout(utils.getURLParameter('auto_layout'), utils.getURLParameter('auto_layout'),
+                                     graphPage.defaultLayoutWidget.setDefaultAutoLayoutBtn);
+
+            } else {
+                apis.graphs.update($('#GraphID').val(), {
                     'default_layout_id': utils.getURLParameter('user_layout')
                 },
                 successCallback = function (response) {
@@ -1533,6 +1564,7 @@ var graphPage = {
                         type: 'danger'
                     });
                 });
+            }
         },
         onRemoveDefaultLayoutBtn: function (e) {
             apis.graphs.update($('#GraphID').val(), {
