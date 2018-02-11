@@ -72,6 +72,8 @@ var groupsPage = {
         submit: function (e) {
             e.preventDefault();
 
+             $('#CreateGroupBtn').attr('disabled', true);
+
             var group = {
                 "name": $("#GroupNameInput").val() == "" ? undefined : $("#GroupNameInput").val(),
                 "description": $("#GroupDescriptionInput").val() == "" ? undefined : $("#GroupDescriptionInput").val(),
@@ -79,7 +81,13 @@ var groupsPage = {
             };
 
             if (!group['name']) {
-                return alert("Please enter in a valid group name!");
+                $('#CreateGroupBtn').attr('disabled', false);
+                $.notify({
+                    message: 'Please enter in a valid group name!'
+                }, {
+                    type: 'warning'
+                });
+                return;
             }
 
             apis.groups.add(group,
@@ -89,7 +97,21 @@ var groupsPage = {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while adding group.
-                    alert(xhr.responseText);
+                    if(xhr.responseJSON.error_message.includes('duplicate key')) {
+                        $.notify({
+                            message: 'Group name ' + group['name'] + ' already exists!'
+                        }, {
+                            type: 'danger'
+                        });
+                    }
+                    else {
+                        $.notify({
+                            message: xhr.responseText
+                        }, {
+                            type: 'danger'
+                        });
+                    }
+                    $('#CreateGroupBtn').attr('disabled', false);
                 });
         }
     },
@@ -282,13 +304,21 @@ var groupPage = {
         submit: function (e) {
             e.preventDefault();
 
+            $('#UpdateGroupBtn').attr('disabled', true);
+
             var group = {
                 "name": $("#GroupNameInput").val() == "" ? undefined : $("#GroupNameInput").val(),
                 "description": $("#GroupDescriptionInput").val() == "" ? undefined : $("#GroupDescriptionInput").val()
             };
 
             if (!group['name']) {
-                return alert("Please enter in a valid group name!");
+                $('#UpdateGroupBtn').attr('disabled', false);
+                $.notify({
+                    message: 'Please enter in a valid group name!'
+                }, {
+                    type: 'warning'
+                });
+                return
             }
 
             apis.groups.update($('#GroupID').val(), group,
@@ -298,7 +328,21 @@ var groupPage = {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while updating group.
-                    alert(xhr.responseText);
+                    if(xhr.responseJSON.error_message.includes('duplicate key')) {
+                        $.notify({
+                            message: 'Group name ' + group['name'] + ' already exists!'
+                        }, {
+                            type: 'danger'
+                        });
+                    }
+                    else {
+                        $.notify({
+                            message: xhr.responseText
+                        }, {
+                            type: 'danger'
+                        });
+                    }
+                    $('#UpdateGroupBtn').attr('disabled', false);
                 });
         }
     },
