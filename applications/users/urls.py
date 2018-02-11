@@ -3,6 +3,7 @@ from django.conf.urls import url
 
 urlpatterns = [
 
+	url(r'^profile/$', views.user_page, name='user_profile'),
 	url(r'^groups/$', views.groups_page, name='groups'),
 	url(r'^groups/(?P<group_id>[^/]+)$', views.group_page, name='group'),
 
