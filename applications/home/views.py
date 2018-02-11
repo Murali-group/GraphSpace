@@ -160,9 +160,9 @@ def forgot_password_page(request):
 
 		if password_reset_code is not None:
 			users.send_password_reset_email(request, password_reset_code)
-			context["success_message"] = "Email has been sent!"
+			context["success_message"] = "You will receive an email with link to update the password!"
 		else:
-			context["error_message"] = "Email does not exist!"
+			context["error_message"] = "You will receive an email with link to update the password!"
 		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
