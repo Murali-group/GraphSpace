@@ -28,6 +28,23 @@
                     {% endfor %}
 
                 </table>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Shared with groups</th>
+                    </tr>
+
+                    {% if shared_groups %}
+                        {% for k in shared_groups %}
+                            <tr>
+                                <td><a href="{% url 'group' group_id=k.id %}">{{k.name|safe}}</a></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td>'The graph is not shared with any groups'</td>
+                        </tr>
+                    {% endif %}
+                </table>
             </div>
         </div>
     </div>
