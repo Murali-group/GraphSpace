@@ -34,6 +34,22 @@ def upload_graph_page(request):
 	else:
 		return render(request, 'upload_graph/index.html', context)
 
+@csrf_exempt
+def fork_graph(request):
+    response=''
+    if request.method == 'POST':
+        try:
+            graph = _add_graph(request, graph={
+                'name': request.POST.get('name', None),
+                'owner_email': request.POST.get('owner_email', None),
+                'is_public': request.POST.get('is_public', None),
+                'graph_json': json.loads(request.POST.get('graph_json', None)),
+                'style_json': json.loads(request.POST.get('style_json', None))
+            })
+            response = 'Success'
+        except Exception as e:
+            response = str(e)
+        return HttpResponse(json.dumps({'result':response}), content_type="application/json")
 
 def graphs_page(request):
 	"""
