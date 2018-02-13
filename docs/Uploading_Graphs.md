@@ -23,7 +23,7 @@ The upload graph form has three input fields:
 
 #### Graph Name 
 
-The name of the graph. [GraphSpace](http://graphspace.org) allows users to search graphs by their name. It is a required field. 
+The name of the graph. [GraphSpace](http://graphspace.org) allows users to search graphs by their name. It is a required field. The maximum allowed length of the Graph Name is 256 character long (The reason is to avoid very long graph names which can hamper the search page look and feel).
 
 #### Network File 
 

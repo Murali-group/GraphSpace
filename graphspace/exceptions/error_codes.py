@@ -27,3 +27,5 @@ class ErrorCodes(object):
 		NotAllowedLayoutAccess = (1012, "User is not authorized to access layouts which are not shared. Set `owner_email` to {0} or `is_shared` to 1.")
 		CannotCreateLayoutForOtherUser = (1013, "Cannot create layout with owner email = `{0}`.")
 		LayoutNameAlreadyExists = (1014, "Layout with name `{0}` already exists.")
+
+		GraphNameSize = (1015, "Graph Name cannot be more than 256 characters long.")
