@@ -8,6 +8,7 @@ urlpatterns = [
 	url(r'^graphs/(?P<graph_id>[^/]+)$', views.graph_page, name='graph'),
 	url(r'^graphs/(?P<email>[^/]+)/(?P<graph_name>[^/]+)$', views.graph_page_by_name, name='graph_by_name'),
 	url(r'^upload$', views.upload_graph_page, name='upload_graph'),
+    url(r'^fork_graph$', views.fork_graph, name='fork_graph'),
 
 	# AJAX APIs Endpoints
 
