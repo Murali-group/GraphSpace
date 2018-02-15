@@ -92,6 +92,12 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
 
 
+Documentation
+=================
+
+GraphSpace has extensive documentation on the [user interface](http://docs.graphspace.org/en/latest/Quick_Tour_of_GraphSpace.html#welcome-screen), the [REST API](http://docs.graphspace.org/en/latest/Programmers_Guide.html#graphspace-rest-api) and a [Python package for programmatic interaction](http://manual.graphspace.org/projects/graphspace-python/en/latest/tutorial/index.html).
+
+
 Contributing
 =================
 
