@@ -98,6 +98,6 @@ A collection lets you group individual requests together. These requests can be 
 For quick use of the GraphSpace REST APIs or if you are stuck somewhere and you want reference, you can [download the collection of the APIs here](https://gist.github.com/sandeepm96/a824a6d0e643811389a6bf212e30a381). The collection has details regarding the API endpoints like params and body properties. Importing steps:
 - Click Import button in the top menu.
 - Choose the Import File in the pop up window.
-![post man collection](_static/images/rest-api/postman_collection.jpg)
+![post man collection](_static/images/rest-api/post_man_collection.jpg)
 - Provide the Authorization details for the imported requests (as Authorization details have been removed for security concern)
 
