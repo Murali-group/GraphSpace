@@ -54,6 +54,9 @@ Please refer to ``graphspace_python`` package's [documentation](http://manual.gr
 
 ## GraphSpace REST APIs using the Postman app
 
+### This documentation is based on [Sandeep Mahapatra's blog post](https://summerofcode17.wordpress.com/2017/05/30/using-the-graphspace-restful-api/) in the 2017 GSoc.
+
+
 ```
     Note: In order to fully utilize the features of GraphSpace REST API, you must have an account on GraphSpace.
 ```
