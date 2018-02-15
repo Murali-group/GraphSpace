@@ -76,3 +76,28 @@ The GraphSpace REST APIs have the base URL http://www.graphspace.org/api/v1/. Th
 ### GET /graphs
 - The URL is the first thing that we would be setting for a request. We will set the URL to http://www.graphspace.org/api/v1/graphs.
 ![Rest API get](_static/images/rest-api/gs_rest_get_1.jpg)
+- Provide Authorization: Select ‘Basic Auth’ from Authorization type drop-down. Enter the username and password and click on ‘Update Request’.
+![Rest API get 2](_static/images/rest-api/gs_rest_get_2.jpg)
+- Set Header: Add the following key value pairs, ```Content-Type:application/json and Accept:application/json.```
+![REST API get 3](_static/images/rest-api/gs_rest_get_3.jpg)
+- Select Method: Changing the method is straightforward. Just select the method from the select control. We will use GET method here.
+- Add URL Params:  Clicking on the URL Params button will open up the key-value editor for entering URL parameters. The details of the URL Params for /graphs endpoint can be found in the [documentation](http://manual.graphspace.org/en/latest/Programmers_Guide.html#api-reference).
+- Click on the Send button to the send the request. A list of graphs matching the query parameters will be received in the response.
+
+### POST /graphs
+- The initial steps of setting URL, Authorization and Header are performed.
+- Change Method to POST.
+- Set Request Body: Click on Body to open the request body editor. Select raw request from the choices and JSON(application/json) from the drop-down. Enter the json data for the graph to be created in the editor. The details regarding the properties of the json graph body can be found in the [documentation](http://manual.graphspace.org/en/latest/Programmers_Guide.html#api-reference).
+![REST API post 1](_static/images/rest-api/gs_rest_post_1.jpg)
+- Click on the Send button to the send the request. A new graph object will be created and returned in the response.
+
+### Postman Collection
+
+A collection lets you group individual requests together. These requests can be further organized into folders to accurately mirror our API. Requests can also store sample responses when saved in a collection. You can add metadata like name and description too so that all the information that a developer needs to use your API is available easily. Collections can be exported as JSON files. Exporting a collection also saves the Authorization details. Hence, it is advised to remove the Authorization details from the Header before exporting.
+
+For quick use of the GraphSpace REST APIs or if you are stuck somewhere and you want reference, you can [download the collection of the APIs here](https://gist.github.com/sandeepm96/a824a6d0e643811389a6bf212e30a381). The collection has details regarding the API endpoints like params and body properties. Importing steps:
+- Click Import button in the top menu.
+- Choose the Import File in the pop up window.
+![post man collection](_static/images/rest-api/postman_collection.jpg)
+- Provide the Authorization details for the imported requests (as Authorization details have been removed for security concern)
+
