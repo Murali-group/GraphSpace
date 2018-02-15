@@ -75,4 +75,4 @@ The GraphSpace REST APIs have the base URL http://www.graphspace.org/api/v1/. Th
 
 ### GET /graphs
 - The URL is the first thing that we would be setting for a request. We will set the URL to http://www.graphspace.org/api/v1/graphs.
-!(_static/image/rest-api/gs_rest_get1.jpg)
+![Rest API get](_static/images/rest-api/gs_rest_get_1.jpg)
