@@ -50,3 +50,29 @@ Install graphspace_python from PyPI using:
 ### Usage
 
 Please refer to ``graphspace_python`` package's [documentation](http://manual.graphspace.org/projects/graphspace-python/) to learn how to use it. 
+
+
+## GraphSpace REST APIs using the Postman app
+
+```
+    Note: In order to fully utilize the features of GraphSpace REST API, you must have an account on GraphSpace.
+```
+
+Postman is a Google Chrome app for interacting with HTTP APIs. It provides a friendly GUI for constructing requests and reading responses. Postman makes it easy to test, develop and document APIs by allowing users to quickly put together both simple and complex HTTP requests.
+
+### Postman Installation
+
+Postman is available as a [native app](https://www.getpostman.com/docs/install_native) (recommended) for Mac / Windows / Linux, and as a Chrome App. The Postman Chrome app can only run on the Chrome browser. To use the Postman Chrome app, you need to:
+- Install Google Chrome: [Install Chrome](https://www.google.com/chrome/).
+- If you already have Chrome installed, head over to Postman’s page on the [Chrome Webstore](https://chrome.google.com/webstore/detail/postman-rest-client-packa/fhbjgbiflinjbdggehcddcbncdddomop?hl=en), and click ‘Add to Chrome’.
+- After the download is complete, launch the app.
+
+### Using Postman for GraphSpace REST API
+
+The GraphSpace REST APIs have the base URL http://www.graphspace.org/api/v1/. There are many endpoints defined under this base URL (the documentation of which can be found here), but to learn and understand the usage of GraphSpace REST APIs through Postman, we would be considering only the /graphs endpoint for GET and POST request.
+- The GET /graphs request fetches a list of graphs from GraphSpace matching the query parameters.
+- The POST /graphs request creates a graph in GraphSpace.
+
+### GET /graphs
+- The URL is the first thing that we would be setting for a request. We will set the URL to http://www.graphspace.org/api/v1/graphs.
+!(_static/image/rest-api/gs_rest_get1.jpg)
