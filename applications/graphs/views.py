@@ -489,10 +489,26 @@ def _update_graph(request, graph_id, graph={}):
 	------
 
 	It will update the owner_email only if user has admin access otherwise user cannot update the owner email.
+	Fetching graph_json from old graph if the updated graph does not contain 'graph_json' as it's attribute.
+	Updating title, description, tags in the graph_json if present accordingly.
 
 	"""
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 	user_role = authorization.user_role(request)
+	old_graph = _get_graph(request, graph_id)
+
+	if ('title' in graph) or ('description' in graph) or ('tags' in graph):
+		if not ('graph_json' in graph):
+			graph['graph_json'] = old_graph['graph_json']
+
+	if 'title' in graph:
+		graph['graph_json']['data']['title'] = graph['title']
+
+	if 'description' in graph:
+		graph['graph_json']['data']['description'] = graph['description']
+
+	if 'tags' in graph:
+		graph['graph_json']['data']['tags'] = graph['tags']
 
 	return utils.serializer(graphs.update_graph(request,
 	                                            graph_id=graph_id,
