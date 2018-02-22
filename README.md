@@ -102,3 +102,18 @@ Contributing
 =================
 
 Feel free to fork and send us pull requests. Here are the [guidelines for contribution](https://github.com/Murali-group/GraphSpace/blob/master/CONTRIBUTING.md) in GraphSpace.
+
+
+Contact
+=================
+
+If you have questions or suggestions about GraphSpace, please contact
+
+- **T.M. Murali ([@tmmurali](https://github.com/tmmurali))**
+- **Aditya Bharadwaj ([@adbharadwaj](https://github.com/adbharadwaj))**
+
+
+License
+=================
+
+GraphSpace is available under the GNU General Public License v2.0 license. See [LICENSE.md](https://github.com/Murali-group/GraphSpace/blob/master/LICENSE.md) for more information.
