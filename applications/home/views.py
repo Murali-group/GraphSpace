@@ -6,6 +6,7 @@ import applications.users.controllers as users
 from django.template import RequestContext
 from graphspace.utils import *
 from graphspace.exceptions import *
+from graphspace.utils import generate_uid
 
 
 def home_page(request):
@@ -225,12 +226,14 @@ def login(request):
 		request_body = json.loads(request.body)
 		user = users.authenticate_user(request, username=request_body['user_id'], password=request_body['pw'])
 
-		if user is not None:
+		if user is not None and user['user_account_status'] == 1:
 			request.session['uid'] = user['user_id']
 			request.session['admin'] = user['admin']
 			return HttpResponse(
 				json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])),
 				content_type="application/json")
+		elif user is not None and user['user_account_status'] is not 1:
+			raise ValidationError(request, ErrorCodes.Validation.UserUnVerified)
 		else:
 			raise ValidationError(request, ErrorCodes.Validation.UserPasswordMisMatch)
 	else:
@@ -252,16 +255,38 @@ def register(request):
 			# RegisterForm is bound to POST data
 			register_form = RegisterForm(request_body)
 			if register_form.is_valid():
+				token = generate_uid()
 				user = users.register(request, username=register_form.cleaned_data['user_id'],
-				                      password=register_form.cleaned_data['password'])
-				if user is not None:
-					request.session['uid'] = user.email
-					request.session['admin'] = user.is_admin
+									  password=register_form.cleaned_data['password'], user_account_status=0, email_confirmation_code=token)
 
-			return HttpResponse(json.dumps(json_success_response(200, message='Registered!')),
-			                    content_type="application/json")
+				users.send_confirmation_email(request, request_body['user_id'], token)
+				return HttpResponse(json.dumps(json_success_response(200, message='A verification link has been sent to your email account.'+
+																				  'Please click on the link to verify your email and continue '+
+																				  'the registration process.')),
+																	 content_type="application/json")
 		else:
 			raise BadRequest(request)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
+
+
+def activate_account_page(request):
+	"""
+		Activate a user account
+
+		:param request: HTTP GET Request containing:
+
+		{"activation_code": <activation_code>}
+	"""
+
+	if 'GET' == request.method:
+		user = users.get_email_confirmation_code(request, request.GET.get('activation_code', None))
+		users.update_user(request, user.id, user_account_status=1)
+		if user is not None:
+			request.session['uid'] = user.email
+			request.session['admin'] = user.is_admin
+		return HttpResponseRedirect('/')
+
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 

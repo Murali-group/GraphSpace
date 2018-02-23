@@ -105,7 +105,12 @@ var header = {
                 "password": password
             },
             successCallback = function (response) {
-                window.location.reload();
+                $('#signupModal').modal('hide');
+                $.notify({
+                    message: response.Message
+                }, {
+                    type: 'success'
+                });
             },
             errorCallback = function (response) {
                 $.notify({

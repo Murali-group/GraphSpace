@@ -12,6 +12,7 @@ class ErrorCodes(object):
 		UserPasswordMisMatch = (1003, "User/Password not recognized")
 		UserNotAuthorized = (1004, "You are not authorized to access this resource, create an account and contact resource's owner for permission to access this resource.")
 		UserNotAuthenticated = (1005, "User authentication failed")
+		UserUnVerified = (10015, "User not verified")
 
 		# Graphs API
 		IsPublicNotSet = (1006, "`is_public` is required to be set to True when `owner_email` and `member_email` are not provided.")
