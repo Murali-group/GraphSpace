@@ -14,13 +14,13 @@
 #
 # Use a descriptive name for your cluster:
 #
-cluster.name: graphspace-docker-cluster
+cluster.name: graphspaceDockerCluster
 #
 # ------------------------------------ Node ------------------------------------
 #
 # Use a descriptive name for the node:
 #
-node.name: graphspace-docker-node
+node.name: "graphspace-docker-node"
 #
 # Add custom attributes to the node:
 #
