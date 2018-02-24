@@ -37,7 +37,7 @@ class OwnerNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
         args = cls.constraints + cls.indices
         return args
 
-    def serialize(cls):
+    def serialize(cls, **kwargs):
         return {
             'id': cls.id,
             'message': cls.message,
@@ -83,7 +83,7 @@ class GroupNotification(IDMixin, TimeStampMixin, EmailMixin, Base):
         args = cls.constraints + cls.indices
         return args
 
-    def serialize(cls):
+    def serialize(cls, **kwargs):
         return {
             'id': cls.id,
             'message': cls.message,
