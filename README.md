@@ -26,6 +26,7 @@ Running GraphSpace using Docker
 ===================================
 This is the easiest way to run GraphSpace, if you are do not want or are not interested in making code changes. Follow the steps given [here](https://github.com/Murali-group/GraphSpace/wiki/GraphSpace-and-Docker) to setup and run GraphSpace using docker.
 
+
 Running GraphSpace locally
 ===================================
 

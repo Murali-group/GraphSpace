@@ -94,7 +94,7 @@ var apis = {
             error: errorCallback
         });
     }
-};
+}; //var api ends
 
 var graphsPage = {
     init: function () {
@@ -382,7 +382,7 @@ var graphsPage = {
             );
         }
     },
-};
+}; //var graph ends
 
 var uploadGraphPage = {
     init: function () {
@@ -485,6 +485,7 @@ var graphPage = {
         $('#ConfirmUpdateLayoutBtn').click(graphPage.layoutsTable.onConfirmUpdateGraph);
 
         this.filterNodesEdges.init();
+        this.colaLayoutWidget.init();
 
         if (window.location.hash == '#editor') {
             $('#layoutEditorBtn').trigger('click');
@@ -521,6 +522,7 @@ var graphPage = {
     },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
+        console.log("after applying layout");
         window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
         graphPage.defaultLayoutWidget.init(0);
     },
@@ -564,7 +566,7 @@ var graphPage = {
         });
         graphPage.cyGraph.style().fromJson(_.concat(defaultStylesheet, layoutStyle, selectedElementsStylesheet)).update();
     },
-    applyLayout: function (layout) {
+    applyLayout: function (layoutID) {
         // TODO: Convert the old layout format to new layout format.
         /*
 
@@ -593,14 +595,14 @@ var graphPage = {
          ]
          };
          */
-        if (isArray(layout.positions)) {
+        if (isArray(layoutID.positions)) {
             var corrected_positions = {};
-            _.forEach(layout.positions, function (node) {
+            _.forEach(layoutID.positions, function (node) {
                 corrected_positions[node.id] = node;
             });
-            layout.positions = corrected_positions;
+            layoutID.positions = corrected_positions;
         }
-        graphPage.cyGraph.layout(layout);
+        graphPage.cyGraph.layout(layoutID);
 
     },
     saveLayout: function (layoutName, modalNameId) {
@@ -816,10 +818,13 @@ var graphPage = {
                 if (nodes.length > 0) {
                     graphPage.cyGraph.nodes().forEach(function (ele, i, eles) {
                         _.each(nodes, function (node) {
+                            //Check if the node component is not null and include the node string
                             if (node.indexOf(':') === -1 && node.indexOf('>') === -1 && node.indexOf('<') === -1 && node.indexOf('=') === -1) {
-                                if (ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                    ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1 ||
-                                    ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1) {
+                                if ((ele.data('name') && ele.data('name').toLowerCase().indexOf(node.toLowerCase()) != -1) ||
+                                    (ele.data('label') && ele.data('label').toLowerCase().indexOf(node.toLowerCase()) != -1) ||
+                                    (ele.data('aliases') && (ele.data('aliases').join(' ').toLowerCase().indexOf(node.toLowerCase()) != -1))
+                                    ) {
+
                                     ele.select();
                                 }
                             } else if (node.indexOf('>') !== -1 || node.indexOf('<') !== -1 || node.indexOf('=') !== -1) {
@@ -1019,6 +1024,7 @@ var graphPage = {
             container: document.getElementById('cyGraphContainer'),
             boxSelectionEnabled: true,
             autounselectify: false,
+            wheelSensitivity: 0.2,
             minZoom: 1e-2,
             maxZoom: 1e2,
             elements: graph_json['elements'],
@@ -1325,8 +1331,12 @@ var graphPage = {
         }
     },
     layoutEditor: {
+        original_opacity: {},
         undoRedoManager: null,
         init: function () {
+            cytoscapeGraph.hideGraphInformation(graphPage.cyGraph);
+            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
+
             cytoscapeGraph.contextMenu.init(graphPage.cyGraph);
 
             graphPage.layoutEditor.undoRedoManager = new UndoManager(
@@ -2021,17 +2031,388 @@ var graphPage = {
             }
             graphPage.filterNodesEdges.showOnlyK();
         }
-    }
+    },
+    colaLayoutWidget: {
+        init: function () {
+
+            /*
+             * When input_k bar is changed, update the nodes shown in the graph.
+             */
+            $("#EdgeLengthInput").bind("change", function () {
+                graphPage.colaLayoutWidget.setInputK();
+            });
+             $("#NodeSpaceInput").bind("change", function () {
+                graphPage.colaLayoutWidget.setInputK();
+            });
+
+            //Shows up to maximum k values
+            $("#input_max").val(400);
+
+
+            //When user slides, it changes value of slider as well
+            //as updates graph to reflect max k values allowed in subgraph
+            $("#EdgeLengthSlider").slider({
+                value: 45, //initial 45
+                max: 400,
+                min: 1,
+                step: 1,
+                slide: function (event, ui) {
+                    $("#EdgeLengthInput").val(ui.value);
+                    m_val = ui.value;
+                    if (m_val < 1) {
+                        m_val = 1;
+                        $(this).slider({
+                            value: 1
+                        });
+                    }
+                },
+                change: function (event, ui) {
+                    if (event.originalEvent) {
+                        graphPage.colaLayoutWidget.edgeLengthChanged($("#EdgeLengthInput").val());
+                    }
+                }
+            });
+
+            $("#NodeSpaceSlider").slider({
+                value: 5,
+                max: 50,
+                min: 1,
+                step: 1,
+                slide: function (event, ui) {
+                    $("#NodeSpaceInput").val(ui.value);
+                    m_val = ui.value;
+                    if (m_val < 1) {
+                        m_val = 1;
+                        $(this).slider({
+                            value: 1
+                        });
+                    }
+                },
+                change: function (event, ui) {
+                    if (event.originalEvent) {
+                        graphPage.colaLayoutWidget.nodeSpaceChanged($("#NodeSpaceInput").val());
+                    }
+                }
+            });
+
+
+
+        },
+        nodeSpaceChanged: function(newNodeSpace) {
+            cola_node_space = newNodeSpace;
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        edgeLengthChanged: function(newEdgeLength) {
+            cola_edge_length = newEdgeLength;
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: parseInt(cola_edge_length),
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow:cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            };
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        overlapChanged : function (checked) {
+            cola_avoid_overlap = checked;
+
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+//        window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
+//        graphPage.defaultLayoutWidget.init(0);
+        },
+        infiniteChanged : function(checked) {
+
+
+            cola_infinite = checked;
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        fitChanged : function (checked) {
+            cola_fit = checked;
+
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+        },
+        randomizeChanged : function () {
+
+            cola_randomize = true;
+
+
+            newGraphLayout = {
+                name: 'cola',
+                nodeSpacing: cola_node_space,
+                edgeLength: cola_edge_length,
+                animate: true,
+                randomize: cola_randomize,
+                avoidOverlap: cola_avoid_overlap,
+                fit: cola_fit,
+                flow: cola_flow,
+                infinite: cola_infinite,
+                maxSimulationTime: 1500
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        flowXChanged : function (checked) {
+            var newGraphLayout;
+            //When flow checkbox is checked
+            if (checked)
+            {
+
+                 cola_flow = { axis: "x", minSeparation: 10};
+                 $("#input_flow_y").prop("checked", false);
+                newGraphLayout = {
+                    name: 'cola',
+                    nodeSpacing: cola_node_space,
+                    edgeLength: cola_edge_length,
+                    animate: true,
+                    randomize: cola_randomize,
+                    avoidOverlap: cola_avoid_overlap,
+                    fit: cola_fit,
+                    flow: cola_flow,
+                    infinite: cola_infinite,
+                    maxSimulationTime: 4000
+                }
+
+            }
+            else
+            {
+                cola_flow = undefined;
+                newGraphLayout = {
+                    name: 'cola',
+                    nodeSpacing: cola_node_space,
+                    edgeLength: cola_edge_length,
+                    animate: true,
+                    randomize: cola_randomize,
+                    avoidOverlap: cola_avoid_overlap,
+                    fit: cola_fit,
+                    flow: cola_flow,
+                    infinite: cola_infinite,
+                    maxSimulationTime: 4000
+                }
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        flowYChanged : function (checked) {
+            var newGraphLayout;
+
+            //When flow checkbox is checked
+            if (checked)
+            {
+                cola_flow = { axis: "y", minSeparation: 10};
+                $("#input_flow_x").prop("checked", false);
+                newGraphLayout = {
+                    name: 'cola',
+                    nodeSpacing: cola_node_space,
+                    edgeLength: cola_edge_length,
+                    animate: true,
+                    randomize: cola_randomize,
+                    avoidOverlap: cola_avoid_overlap,
+                    fit: cola_fit,
+                    flow: cola_flow,
+                    infinite: cola_infinite,
+                    maxSimulationTime: 4000
+                }
+
+            }
+            //Both x and y are unchecked
+            else
+            {
+                cola_flow = undefined;
+                newGraphLayout = {
+                    name: 'cola',
+                    nodeSpacing: cola_node_space,
+                    edgeLength: cola_edge_length,
+                    animate: true,
+                    randomize: cola_randomize,
+                    avoidOverlap: cola_avoid_overlap,
+                    fit: cola_fit,
+                    flow: cola_flow,
+                    infinite: cola_infinite,
+                    maxSimulationTime: 4000
+                }
+            }
+
+            graphPage.applyLayout(newGraphLayout);
+            console.log("after applying layout");
+
+        },
+        setInputEdgeLength: function () {
+            /*
+             * Updates the text box when the user slides the bar.
+             */
+            if ($("#EdgeLengthInput").val() < 1) {
+                $("#EdgeLengthInput").val(1);
+            }
+            if (parseInt($("#EdgeLengthInput").val()) > 400) {
+                $("#EdgeLengthInput").val(400);
+
+            }
+            graphPage.colaLayoutWidget.setBarToValueEdgeLength($("#EdgeLengthInput"), "EdgeLengthSlider");
+            $("#EdgeLengthSlider").slider({
+                value: $("#EdgeLengthInput").val(),
+                max: 400
+            });
+        },
+        setInputNodeSpace: function () {
+            /*
+             * Updates the text box when the user slides the bar.
+             */
+            if ($("#NodeSpaceInput").val() < 1) {
+                $("#NodeSpaceInput").val(1);
+            }
+            if (parseInt($("#NodeSpaceInput").val()) > 50) {
+                $("#NodeSpaceInput").val(50);
+
+            }
+            graphPage.colaLayoutWidget.setBarToValueNodeSpace($("#NodeSpaceInput"), "NodeSpaceSlider");
+            $("#NodeSpaceSlider").slider({
+                value: $("#NodeSpaceInput").val(),
+                max: 50
+            });
+        },
+        applyMax: function (graph_layout) {
+            //Gets all nodes and edges up do the max value set
+            //and only renders them
+            var maxVal = parseInt($("#input_max").val());
+
+            if (!maxVal) {
+                return;
+            }
+            var newJSON = {
+                "nodes": new Array(),
+                "edges": new Array()
+            };
+
+            // List of node ids that should remain in the graph
+            var nodeNames = Array();
+
+            //Get all edges that meet the max quantifier
+            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
+                var edge_data = graph_json.elements['edges'][i];
+                if (edge_data['data']['k'] <= maxVal) {
+                    newJSON['edges'].push(edge_data);
+                    nodeNames.push(edge_data['data']['source']);
+                    nodeNames.push(edge_data['data']['target']);
+                }
+            }
+
+            //Get all nodes that meet the max quantifier
+            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
+                var node_data = graph_json.elements['nodes'][i];
+                if (nodeNames.indexOf(node_data['data']['id']) > -1) {
+                    newJSON['nodes'].push(node_data);
+                }
+            }
+
+            graphPage.cyGraph.load(newJSON);
+            graphPage.filterNodesEdges.showOnlyK();
+        },
+        setBarToValueEdgeLength: function (inputId, barId) {
+            /**
+             * If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
+             * inputId the id of the input bar
+             * barId  the id of the max paths shown bar.
+             */
+            if ($(inputId).val() > 400) {
+                $(inputId).val(400);
+            }
+
+        },
+        setBarToValueNodeSpace: function (inputID, barId) {
+            if ($(inputId).val() > 50) {
+                $(inputId).val(50);
+            }
+        }
+    },
+
+
 
 };
 
 var layoutLearner = {
     computeLayoutMetadata: function (cy) {
+        var edgeLengths = cytoscapeGraph.getEdgeLengths(cy);
+        var totalEdgeLength = _.sum(edgeLengths);
+        var avgEdgeLength = totalEdgeLength/cy.edges().length;
         return {
             'order': cy.nodes().length,
             'size': cy.edges().length,
             'timeTaken': utils.timer('lap'),
-            'totalEdgeLenth': cytoscapeGraph.getTotalEdgeLength(cy),
+            'edgeLengths': edgeLengths,
+            'totalEdgeLength': totalEdgeLength,
+            'averageEdgeLength': avgEdgeLength,
+            'timestamp': moment().format("YYYY-MM-DD HH:mm:ss"),
+            'edgeOverlapCount': cytoscapeGraph.computeNumEdgeOverlap(cy)
         }
     }
 };
@@ -2108,12 +2489,28 @@ var cytoscapeGraph = {
             });
         }
     },
-    getTotalEdgeLength: function (cy) {
-        var edgeLength = 0;
+    getEdgeLengths: function (cy) {
+        var edgeLengths = [];
         cy.edges().forEach(function (ele, i, eles) {
-            edgeLength += Math.sqrt(Math.pow(ele._private.rstyle.srcX - ele[0]._private.rstyle.tgtX, 2) + Math.pow(ele[0]._private.rstyle.srcY - ele[0]._private.rstyle.tgtY, 2));
+            edgeLengths.push(Math.sqrt(Math.pow(ele._private.rstyle.srcX - ele[0]._private.rstyle.tgtX, 2) + Math.pow(ele[0]._private.rstyle.srcY - ele[0]._private.rstyle.tgtY, 2)));
         });
-        return edgeLength;
+        return edgeLengths;
+    },
+    computeNumEdgeOverlap: function(cy) {
+        var count = 0;
+        var edges = cy.edges();
+        for (var i = 0; i < edges.length; i++) {
+            for (var j = i+1; j < edges.length; j++) {
+                if (cytoscapeGraph.hasEdgeOverlap(edges[i], edges[j])) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    },
+    hasEdgeOverlap: function(edge1, edge2) {
+        result = utils.checkLineIntersection(edge1._private.rstyle.srcX, edge1._private.rstyle.srcY, edge1._private.rstyle.tgtX, edge1._private.rstyle.tgtY, edge2._private.rstyle.srcX, edge2._private.rstyle.srcY, edge2._private.rstyle.tgtX, edge2._private.rstyle.tgtY)
+        return !!(result && result.x && result.y && result.onLine1 && result.onLine2);
     },
     getNodePositions: function (cy) {
         /*
@@ -2309,6 +2706,20 @@ var cytoscapeGraph = {
             graph_layout = {
                 name: "grid"
             }
+        } else if (layout_name == "cola") {
+            //console.log("here");
+            graph_layout = {
+            name: 'cola',
+            nodeSpacing: cola_node_space,
+            edgeLength: cola_edge_length,
+            animate: true,
+            randomize: cola_randomize,
+            avoidOverlap: cola_avoid_overlap,
+            fit: cola_avoid_overlap,
+            flow: cola_flow,
+            infinite: cola_infinite,
+            maxSimulationTime: 1500
+            }
         }
         return graph_layout;
     },
@@ -2318,18 +2729,24 @@ var cytoscapeGraph = {
          */
         cy.style()
             .selector('node').style({
-                'font-size': "0px"
+                'text-opacity': function( ele ){
+                graphPage.layoutEditor.original_opacity[ele.data().id] = ele.style()['text-opacity'];
+
+                return 0; }
             })
             .update(); // update the elements in the graph with the new style
 
     },
     showGraphInformation: function (cy) {
-        /*
+         /*
          Function to Show information about the graph that the layout editor hid from the users.
          */
+        console.log(cy.style().selector('node'));
         cy.style()
             .selector('node').style({
-                'font-size': "16px"
+                'text-opacity': function( ele ){
+                    return  graphPage.layoutEditor.original_opacity[ele.data().id];
+                }
             })
             .update();
         console.log('done');
@@ -2659,3 +3076,16 @@ var cytoscapeGraph = {
     }
 
 };
+
+//variables for cola
+//Different from other layout options, cola can choose options for other variables
+//Initial edge length set up to 45 in range of 1 to 400
+var cola_edge_length = 150;
+//Initial node space set up for 5 in range of 1 to 50
+var cola_node_space = 5;
+
+var cola_fit = true;
+var cola_randomize = false;
+var cola_avoid_overlap = true;
+var cola_flow = undefined;
+var cola_infinite = false;

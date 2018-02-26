@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>4. GraphSpace Network Model &mdash; graphspace-manual 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="graphspace-manual 1.0 documentation" href="index.html"/>
+        <link rel="next" title="5. Uploading Graphs" href="Uploading_Graphs.html"/>
+        <link rel="prev" title="3. Terminology" href="Terminology.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> graphspace-manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Quick_Tour_of_GraphSpace.html">2. Quick Tour of Cytoscape</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Terminology.html">3. Terminology</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. GraphSpace Network Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cyjs-format">4.1. CYJS Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#elements-json">4.1.1. Elements JSON</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph-data-attributes">4.1.2. Graph Data Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#node-object">4.1.3. Node Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge-object">4.1.4. Edge Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph-data-attributes-attributes-treated-specially-by-graphspace">4.1.5. Graph Data Attributes Attributes Treated Specially by GraphSpace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#node-data-attributes-attributes-treated-specially-by-graphspace">4.1.6. Node Data Attributes Attributes Treated Specially by GraphSpace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge-data-attributes-attributes-treated-specially-by-graphspace">4.1.7. Edge Data Attributes Attributes Treated Specially by GraphSpace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sample-json">4.1.8. Sample JSON</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#stylesheet-json-format">4.2. Stylesheet JSON Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#style-properties">4.2.1. Style Properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sample-json">4.2.2. Sample JSON</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Uploading_Graphs.html">5. Uploading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Viewing_Graphs.html">6. Viewing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Interacting_with_Graphs.html">7. Interacting with Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Searching_Graphs.html">8. Searching Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sharing_Graphs.html">9. Sharing Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Editing_Layouts.html">10. Editing Layouts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Organizing_Graphs_Using_Tags.html">11. Organizing Graphs Using Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Programmers_Guide.html">12. Programmers Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">graphspace-manual</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>4. GraphSpace Network Model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/GraphSpace_Network_Model.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="graphspace-network-model">
+<span id="graphspace-network-model"></span><h1>4. GraphSpace Network Model<a class="headerlink" href="#graphspace-network-model" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="cyjs-format">
+<span id="cyjs-format"></span><h2>4.1. CYJS Format<a class="headerlink" href="#cyjs-format" title="Permalink to this headline">¶</a></h2>
+<p>GraphSpace only supports one of the <a class="reference external" href="http://js.cytoscape.org/#notation/elements-json">Cytoscape.js supported</a> JSON formats, which is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;elements&quot;</span><span class="p">:{</span>  <span class="o">//</span> <span class="n">Elements</span> <span class="n">JSON</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:[</span> <span class="o">//</span> <span class="n">List</span> <span class="n">of</span> <span class="n">Node</span> <span class="n">Objects</span>
+            <span class="p">{</span>  
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="o">//</span> <span class="n">Node</span> <span class="n">Data</span> <span class="n">Attributes</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="o">...</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="o">//</span> <span class="n">Node</span> <span class="n">Position</span> <span class="n">Attributes</span>
+                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="o">...</span>
+                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="o">...</span>
+                <span class="p">}</span>
+            <span class="p">},</span> 
+            <span class="o">.</span>
+            <span class="o">.</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;edges&quot;</span><span class="p">:[</span> <span class="o">//</span> <span class="n">List</span> <span class="n">of</span> <span class="n">Edge</span> <span class="n">Objects</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="o">//</span> <span class="n">Edge</span> <span class="n">Data</span> <span class="n">Attributes</span>
+                    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> 
+                    <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="o">...</span>
+                <span class="p">}</span>
+            <span class="p">},</span> 
+            <span class="o">.</span>
+            <span class="o">.</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>   <span class="o">//</span> <span class="n">Graph</span> <span class="n">Data</span> <span class="n">Attributes</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span>       
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">..</span><span class="p">],</span>       
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="o">...</span> 
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This <a class="reference external" href="http://www.json.org/">JSON (JavaScript Object Notation)</a> format is defined by Cytoscape for storing network structure and data information. A Cytoscape (v3.1 or later) user can easily <a class="reference external" href="http://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html#export-network-and-table-to-cytoscape-js">export their graph</a> in above mentioned JSON format. We call the format as <code class="docutils literal"><span class="pre">CYJS</span> <span class="pre">format</span></code> because the extension of the exportable JSON file from Cytoscape App is <code class="docutils literal"><span class="pre">.cyjs</span></code>.</p>
+<p><strong>Note:</strong> Any deviation from this format may result in GraphSpace rejecting the graph or problems in rendering the graph.</p>
+<div class="section" id="elements-json">
+<span id="elements-json"></span><h3>4.1.1. Elements JSON<a class="headerlink" href="#elements-json" title="Permalink to this headline">¶</a></h3>
+<p>The elements JSON object contains two types of lists:</p>
+<ol class="simple">
+<li><a class="reference external" href="#node-object">Nodes</a>: An array of <a class="reference external" href="#node-object">node objects</a> describing the nodes in the graph.</li>
+<li><a class="reference external" href="#edge-object">Edges</a>: An array of <a class="reference external" href="#edge-object">edge objects</a> describing the edges in the graph.</li>
+</ol>
+</div>
+<div class="section" id="graph-data-attributes">
+<span id="graph-data-attributes"></span><h3>4.1.2. Graph Data Attributes<a class="headerlink" href="#graph-data-attributes" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Data</span> <span class="pre">Attributes</span></code> object specifies name-value pair describing the graph. The <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Data</span> <span class="pre">Attributes</span></code> are mapped to the Cytoscape network table for a network on import. Cytoscape supports <code class="docutils literal"><span class="pre">Graph</span> <span class="pre">Data</span> <span class="pre">Attributes</span></code> for both import and export. Please refer to <a class="reference external" href="#graph-data-attributes-attributes-treated-specially-by-graphspace">list of graph data attributes treated specially by GraphSpace</a> to make the best use of GraphSpace&#8217;s features.</p>
+</div>
+<div class="section" id="node-object">
+<span id="node-object"></span><h3>4.1.3. Node Object<a class="headerlink" href="#node-object" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>     <span class="o">//</span> <span class="n">Node</span> <span class="n">Data</span> <span class="n">Attributes</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="o">...</span> <span class="o">//</span> <span class="n">unique</span> <span class="n">identifier</span> <span class="k">for</span> <span class="n">the</span> <span class="n">node</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="o">//</span> <span class="n">Position</span> <span class="n">Attributes</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="o">...</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>           
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">Node</span> <span class="pre">Object</span></code> describes a node in the graph. A <code class="docutils literal"><span class="pre">Node</span> <span class="pre">Object</span></code> typically contains two types of attributes:</p>
+<ol>
+<li><p class="first"><strong>Node Data Attributes</strong>:</p>
+<p>Node Data Attributes specify name-value pairs describing the node. Cytoscape requires that each Node Object should have an  <code class="docutils literal"><span class="pre">id</span></code> data attribute which can uniquely identify the element in the graph. The users can define more data-attributes to describe the node. But, if the attributes are not specially treated by GraphSpace, they will be treated as &#8220;opaque&#8221;. This means that GraphSpace will store or transmit the data without any processing. Please refer to <a class="reference external" href="#node-data-attributes-attributes-treated-specially-by-graphspace">list of node data attributes treated specially by GraphSpace</a> to make the best use of GraphSpace&#8217;s features.</p>
+</li>
+<li><p class="first"><strong>Position Attributes</strong>:</p>
+<p>Position Attributes specify the <a class="reference external" href="http://js.cytoscape.org/#notation/position">model position</a> of the node in the graph layout. For example, <code class="docutils literal"><span class="pre">{</span> <span class="pre">x:</span> <span class="pre">100,</span> <span class="pre">y:</span> <span class="pre">100</span> <span class="pre">}</span></code> specifies a point 100 pixels to the right and 100 pixels down from the top-left corner of the viewport at zoom 1 and pan (0,0).</p>
+</li>
+</ol>
+</div>
+<div class="section" id="edge-object">
+<span id="edge-object"></span><h3>4.1.4. Edge Object<a class="headerlink" href="#edge-object" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>     <span class="o">//</span> <span class="n">Node</span> <span class="n">Data</span> <span class="n">Attributes</span>
+        <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="o">//</span> <span class="n">identifier</span> <span class="k">for</span> <span class="n">the</span> <span class="n">source</span> <span class="n">node</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="o">...</span>  <span class="o">//</span> <span class="n">identifier</span> <span class="k">for</span> <span class="n">the</span> <span class="n">target</span> <span class="n">node</span>
+    <span class="p">}</span>
+<span class="p">}</span>           
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">Edge</span> <span class="pre">Object</span></code> describes a node in the graph. An <code class="docutils literal"><span class="pre">Edge</span> <span class="pre">Object</span></code> typically contains a data object which is defined as following:</p>
+<ul>
+<li><p class="first"><strong>Edge Data Attributes</strong>:</p>
+<p>Edge Data Attributes specify name-value pairs describing the edge. Cytoscape requires that each Edge Object should have  <code class="docutils literal"><span class="pre">source</span></code> and <code class="docutils literal"><span class="pre">target</span></code> data attributes which can respectively identify the source and target nodes for the edge in the graph. The users can define more data-attributes to describe the edge. But, if the attributes are not specially treated by GraphSpace, they will be treated as &#8220;opaque&#8221;. This means that GraphSpace will store or transmit the data attributes without any processing. Please refer to <a class="reference external" href="#edge-data-attributes-attributes-treated-specially-by-graphspace">list of edge data attributes treated specially by GraphSpace</a> to make the best use of GraphSpace&#8217;s features.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="graph-data-attributes-attributes-treated-specially-by-graphspace">
+<span id="graph-data-attributes-attributes-treated-specially-by-graphspace"></span><h3>4.1.5. Graph Data Attributes Attributes Treated Specially by GraphSpace<a class="headerlink" href="#graph-data-attributes-attributes-treated-specially-by-graphspace" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>required:<ul>
+<li><code class="docutils literal"><span class="pre">name</span></code> – text – Name of the graph. It is later used for searching the graph in GraphSpace.</li>
+<li><code class="docutils literal"><span class="pre">tags</span></code> – list of strings – Used to categorize graphs. See Tags for more information.</li>
+<li><code class="docutils literal"><span class="pre">description</span></code> – text – May be HTML formatted string. May be link to image hosted elsewhere. May simly be a string which contains information such as a legend or significance of the graph.</li>
+</ul>
+</li>
+<li>optional:<ul>
+<li><code class="docutils literal"><span class="pre">title</span></code> – text – Name that is displayed on top of graph while viewing it.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note:</strong> The user can use add more data attributes to embed information about the graph. If the attributes are not specially treated by GraphSpace, they will be treated as &#8220;opaque&#8221;. This means that GraphSpace will store or transmit the data without any processing.</p>
+</div>
+<div class="section" id="node-data-attributes-attributes-treated-specially-by-graphspace">
+<span id="node-data-attributes-attributes-treated-specially-by-graphspace"></span><h3>4.1.6. Node Data Attributes Attributes Treated Specially by GraphSpace<a class="headerlink" href="#node-data-attributes-attributes-treated-specially-by-graphspace" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>required:<ul>
+<li><code class="docutils literal"><span class="pre">id</span></code> – text – A unique id representing the node.</li>
+</ul>
+</li>
+<li>optional:<ul>
+<li><code class="docutils literal"><span class="pre">label</span></code> – text – The text that is displayed inside of the node unless it is overidden by the <code class="docutils literal"><span class="pre">content</span></code> style-attribute in the <a class="reference external" href="#stylesheet-json-format">stylesheet JSON</a>.</li>
+<li><code class="docutils literal"><span class="pre">popup</span></code> - text - A string that will be displayed in a popup window when the user clicks the node. This string can be HTML-formatted.</li>
+<li><code class="docutils literal"><span class="pre">k</span></code> - integer -An integer index for this node. GraphSpace uses this attribute when the user seeks to step through the nodes and edges of the graph.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note:</strong> The user can use add more data attributes to embed information about the node. But, if the attributes are not specially treated by GraphSpace, they will be treated as &#8220;opaque&#8221;. This means that GraphSpace will store or transmit the data without any processing.</p>
+</div>
+<div class="section" id="edge-data-attributes-attributes-treated-specially-by-graphspace">
+<span id="edge-data-attributes-attributes-treated-specially-by-graphspace"></span><h3>4.1.7. Edge Data Attributes Attributes Treated Specially by GraphSpace<a class="headerlink" href="#edge-data-attributes-attributes-treated-specially-by-graphspace" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>required:<ul>
+<li><code class="docutils literal"><span class="pre">source</span></code> – text – The id of the node where the edge is coming from.</li>
+<li><code class="docutils literal"><span class="pre">target</span></code> – text – The id of the node where edge is going to.</li>
+</ul>
+</li>
+<li>optional:<ul>
+<li><code class="docutils literal"><span class="pre">popup</span></code> - text - A string that will be displayed in a popup window when the user clicks the edge. This string can be HTML-formatted.</li>
+<li><code class="docutils literal"><span class="pre">k</span></code> - integer - An integer index for this node. GraphSpace uses this attribute when the user seeks to step through the nodes and edges of the graph.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note:</strong> The user can use add more data attributes to embed information about the edge. But, if the attributes are not specially treated by GraphSpace, they will be treated as &#8220;opaque&#8221;. This means that GraphSpace will store or transmit the data without any processing.</p>
+</div>
+<div class="section" id="sample-json">
+<span id="sample-json"></span><h3>4.2.2. Sample JSON<a class="headerlink" href="#sample-json" title="Permalink to this headline">¶</a></h3>
+<p>The following example is a CYJS formatted JSON for GraphSpace.</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;elements&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;nodes&quot;</span><span class="p">:</span> <span class="p">[</span> 
+            <span class="p">{</span>
+                <span class="nt">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;P4314611&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;DCC&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;k&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                <span class="p">}</span>
+            <span class="p">},</span> 
+            <span class="p">{</span>
+                <span class="nt">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;P0810711&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;This is an example\n of how to use new lines for the content of\n a node.&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;k&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;edges&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="nt">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;P4314611&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;P0810711&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;k&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+
+    <span class="p">},</span>
+    <span class="nt">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Graph Name&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Description of graph.. can also point to an image hosted elsewhere&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;tutorial&quot;</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="stylesheet-json-format">
+<span id="stylesheet-json-format"></span><h2>4.2. Stylesheet JSON Format<a class="headerlink" href="#stylesheet-json-format" title="Permalink to this headline">¶</a></h2>
+<p>Cytoscape and Cytoscape.js are sharing a concept called <a class="reference external" href="http://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html#export-styles-to-cytoscape-js">Style</a>. This is a collection of mappings from data point to network property. Cytoscape can export its Styles into CSS-based Cytoscape.js JSON.</p>
+<p><a class="reference external" href="http://js.cytoscape.org/#style">Style in Cytoscape.js</a> follows CSS conventions as closely as possible. In most cases, a property has the same name and behaviour as its corresponding CSS namesake. However, the properties in CSS are not sufficient to specify the style of some parts of the graph. In that case, additional properties are introduced that are unique to Cytoscape.js. For simplicity and ease of use, <a class="reference external" href="http://www.w3.org/TR/css3-selectors/#specificity">specificity rules</a> are completely ignored in stylesheets by Cytoscape.js. For a given style property for a given element, the last matching selector wins.</p>
+<p>A Cytoscape (v3.1 or later) user can export all Styles into one JSON file from <strong>File | Export | Style</strong> and select Cytoscape.js JSON as its format.</p>
+<p><strong>Note:</strong> Cytoscape.js <a class="reference external" href="http://manual.cytoscape.org/en/stable/Cytoscape.js_and_Cytoscape.html#limitations">does not support all of Cytoscape Network Properties</a>. Those properties will be ignored or simplified when you export to JSON Style file.</p>
+<div class="section" id="style-properties">
+<span id="style-properties"></span><h3>4.2.1. Style Properties<a class="headerlink" href="#style-properties" title="Permalink to this headline">¶</a></h3>
+<p>Please refer to CytoscapeJS documentation for <a class="reference external" href="http://js.cytoscape.org/#style/node-body">list of style properties</a> supported by Cytoscape.js. We thank them for the excellent documentation of their framework.</p>
+</div>
+<div class="section" id="sample-json">
+<span id="id1"></span><h3>4.2.2. Sample JSON<a class="headerlink" href="#sample-json" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;node[name=&#39;P4314611&#39;]&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;border-color&quot;</span><span class="p">:</span> <span class="s2">&quot;#888&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-halign&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-valign&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;border-width&quot;</span><span class="p">:</span> <span class="s2">&quot;2px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="s2">&quot;50px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="s2">&quot;50px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;ellipse&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;background-blacken&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;background-color&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;node[name=&#39;P0810711&#39;]&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;text-halign&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-valign&quot;</span><span class="p">:</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-outline-color&quot;</span><span class="p">:</span> <span class="s2">&quot;#888&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-outline-width&quot;</span><span class="p">:</span> <span class="s2">&quot;2px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;border-color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;border-width&quot;</span><span class="p">:</span> <span class="s2">&quot;5px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="s2">&quot;150px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;ellipse&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;border-style&quot;</span><span class="p">:</span> <span class="s2">&quot;double&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;text-wrap&quot;</span><span class="p">:</span> <span class="s2">&quot;wrap&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;background-blacken&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="s2">&quot;150px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;background-color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;edge[name=&#39;P4314611-P0810711&#39;]&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;curve-style&quot;</span><span class="p">:</span> <span class="s2">&quot;bezier&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;line-style&quot;</span><span class="p">:</span> <span class="s2">&quot;dotted&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="s2">&quot;12px&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;line-color&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;source-arrow-color&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;target-arrow-shape&quot;</span><span class="p">:</span> <span class="s2">&quot;triangle&quot;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Uploading_Graphs.html" class="btn btn-neutral float-right" title="5. Uploading Graphs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Terminology.html" class="btn btn-neutral" title="3. Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Murali`s Research Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

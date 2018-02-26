@@ -1,0 +1,57 @@
+{
+    "format_version": "1.0",
+    "generated_by": "graphspace-2.0.0",
+    "target_cytoscapejs_version": "~2.7",
+    "elements": {
+        "nodes": [
+            {
+                "data": {
+                    "id": "P4314611",
+                    "k": 0,
+                    "name": "P4314611",
+                    "label": "Sample Node 1",
+                    "aliases": [],
+                    "popup": "<b>Popup for node 1</b> <hr/> A string that will be displayed in a popup window when the user clicks the node/edge. <br/> This string can be HTML-formatted information, e.g., Gene Ontology annotations and database links for a protein; or types, mechanism, and database sources for an interaction."
+                },
+                "position": {
+                    "x": 297.5,
+                    "y": 277.5
+                }
+            },
+            {
+                "data": {
+                    "id": "P0810711",
+                    "k": 0,
+                    "name": "P0810711",
+                    "label": "Sample Node 2",
+                    "aliases": [],
+                    "popup": "<b>Popup for node 2</b> <hr/> A string that will be displayed in a popup window when the user clicks the node/edge. <br/> This string can be HTML-formatted information, e.g., Gene Ontology annotations and database links for a protein; or types, mechanism, and database sources for an interaction."
+                },
+                "position": {
+                    "x": 892.5,
+                    "y": 277.5
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "target": "P0810711",
+                    "k": 0,
+                    "source": "P4314611",
+                    "is_directed": 1,
+                    "id": "P4314611-P0810711",
+                    "name": "Sample Edge",
+                    "popup": "<b>Popup for edge</b> <hr/> A string that will be displayed in a popup window when the user clicks the node/edge. <br/> This string can be HTML-formatted information, e.g., Gene Ontology annotations and database links for a protein; or types, mechanism, and database sources for an interaction."
+                }
+            }
+        ]
+    },
+    "data": {
+        "description": "Description of graph.. can also point to an image hosted elsewhere",
+        "name": "Graph Name",
+        "tags": [
+            "tutorial"
+        ]
+    }
+}
