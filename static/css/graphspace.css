@@ -35,6 +35,10 @@ div.container-fluid {
     width: 100%;
 }
 
+.gs-features{
+    margin-bottom:150px;
+}
+
 .zero-margin {
     margin: 0 !important;
 }
