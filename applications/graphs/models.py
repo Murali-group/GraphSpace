@@ -32,6 +32,8 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
 
+	forked_graphs = relationship("GraphFork", foreign_keys="GraphFork.graph_id", back_populates="graph", cascade="all, delete-orphan")
+
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
 
@@ -273,6 +275,24 @@ class GraphToTag(TimeStampMixin, Base):
 	tag = relationship("GraphTag", backref=backref("tagged_graphs", cascade="all, delete-orphan"), uselist=False)
 
 	indices = (Index('graph2tag_idx_graph_id_tag_id', 'graph_id', 'tag_id'),)
+	constraints = ()
+
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args
+
+
+class GraphFork(IDMixin, TimeStampMixin, Base):
+	__tablename__ = 'graph_fork'
+	#name = Column(String, nullable=False)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	parent_graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+
+	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="forked_graphs", uselist=False)
+
+	indices = (Index('graph2fork_idx_graph_id_parent_id', 'graph_id', 'parent_graph_id'),)
 	constraints = ()
 
 	@declared_attr

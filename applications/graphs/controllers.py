@@ -333,10 +333,11 @@ def delete_graph_to_group(request, group_id, graph_id):
 
 
 def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None, tags=None, member_email=None,
-                   is_public=None, query=None, limit=20, offset=0, order='desc', sort='name'):
+                   is_public=None, is_forked=None, query=None, limit=20, offset=0, order='desc', sort='name'):
 	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
 	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 	is_public = int(is_public) if is_public is not None else None
+	is_forked = int(is_forked) if is_forked is not None else None
 
 	if member_email is not None:
 		member_user = users.controllers.get_user(request, member_email)
@@ -362,6 +363,7 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 	                                    owner_email=owner_email,
 	                                    graph_ids=graph_ids,
 	                                    is_public=is_public,
+										is_forked=is_forked,
 	                                    group_ids=group_ids,
 	                                    names=names,
 	                                    nodes=nodes,
@@ -586,3 +588,9 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
+
+def add_graph_to_fork(request, forked_graph_id, parent_graph_id, owner_email):
+	if forked_graph_id is not None and parent_graph_id is not None:
+		db.add_fork(request.db_session, forked_graph_id, parent_graph_id, owner_email)
+	else:
+		raise Exception("Required Parameter is missing!")

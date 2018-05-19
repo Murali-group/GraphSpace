@@ -27,6 +27,8 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	# Graph Fork
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/fork/$', views.graph_fork_ajax_api, name='graph_fork_ajax_api'),
 
 	# REST APIs Endpoints
 
@@ -45,5 +47,7 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_rest_api, name='graph_layouts_rest_api'),
 	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_rest_api, name='graph_layouts_rest_api'),
+	# Graph Fork
+	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/fork/$', views.graph_fork_rest_api, name='graph_fork_rest_api'),
 
 ]
