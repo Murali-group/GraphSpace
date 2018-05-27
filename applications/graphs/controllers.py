@@ -39,6 +39,23 @@ def map_attributes(attributes):
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
+def get_fork_by_id(request, graph_id):
+	return db.get_fork_by_id(request.db_session, graph_id)
+
+def find_forks(request, parent_graph_id=None, forked_graph_id=None):
+	if parent_graph_id is None:
+		raise Exception("The Parent graph ID is required.")
+	return db.get_fork(request.db_session, parent_graph_id, forked_graph_id)
+
+def get_forked_graph_data(request, forked_graph, graph_fork):
+	'''Set information of parent graph into Graph object. The modified graph object is send in the HTTP Response'''
+	if graph_fork:
+		parent_graph = get_graph_by_id(request, graph_fork.parent_graph_id)
+		forked_graph['parent_email'] = parent_graph.owner_email
+		forked_graph['parent_graph_name'] = parent_graph.name
+		forked_graph['is_fork'] = 1
+		forked_graph['parent_id'] = parent_graph.id
+	return forked_graph
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
 	is_authorized = False

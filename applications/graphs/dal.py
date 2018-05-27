@@ -124,6 +124,8 @@ def delete_graph(db_session, id):
 def get_graph_by_id(db_session, id):
 	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
 
+def get_fork_by_id(db_session, id):
+	return db_session.query(GraphFork).filter(GraphFork.graph_id == id).one_or_none()
 
 @with_session
 def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, is_forked=None, names=None, nodes=None,
@@ -469,3 +471,13 @@ def add_fork(db_session, forked_graph_id, parent_graph_id, owner_email):
 	fork = GraphFork( graph_id=forked_graph_id, parent_graph_id=parent_graph_id, owner_email=owner_email)
 	db_session.add(fork)
 	return 1
+
+@with_session
+def get_fork(db_session, parent_graph_id=None, forked_graph_id=None):
+	query = db_session.query(GraphFork)
+	if parent_graph_id is not None:
+		query = query.filter(GraphFork.parent_graph_id == parent_graph_id)
+	if forked_graph_id is not None:
+		query = query.filter(GraphFork.graph_id == forked_graph_id)
+	total = query.count()
+	return total, query.all()

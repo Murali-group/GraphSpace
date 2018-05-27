@@ -299,3 +299,12 @@ class GraphFork(IDMixin, TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+	def serialize(cls, **kwargs):
+		return {
+			'graph_id': cls.graph_id,
+			'parent_graph_id': cls.parent_graph_id,
+			'owner_email': cls.owner_email,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}

@@ -43,6 +43,12 @@ var apis = {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/fork/'),
         add: function(graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('POST', apis.fork.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.fork.ENDPOINT({'graph_id': graph_id}), undefined, successCallback, errorCallback)
+        },
+        get: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.fork.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         }
     },
     edges: {
@@ -420,38 +426,7 @@ var graphsPage = {
             );
         },
         },
-    forkGraphs: {
-        forkGraph: function (params) {
-            /**
-             * This is the custom ajax request used to fork graphs.
-             *
-             * params - query parameters for the ajax request.
-             *          It contains parameters like graph_id, graph_json, style_json and other few parameters.
-             */
-            graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
-            graph_meta_data.data['parent_id'] = params.graph_id;
-            graph_meta_data.data['parent_email'] = params.owner_email;
 
-            var graphData = {
-                'name':data.graph_name,
-                'is_public':0,
-                'owner_email':data.uid,
-                'graph_json':JSON.stringify(graph_meta_data, null, 4),
-                'style_json':JSON.stringify(cytoscapeGraph.getStyleJSON(graphPage.cyGraph), null, 4)
-            }
-
-            apis.fork.add(params.graph_id, graphData,
-                successCallback = function (response) {
-                    alert('Graph Forked Successfully');
-                    $("#ForkGraph").addClass('disabled');
-                },
-                errorCallback = function (response) {
-                    alert('Could not fork the Graph due to the following error : ' + data.result);
-                    params.error('Error');
-                }
-            );
-        }
-    }
 
 }; //var graph ends
 
@@ -515,7 +490,7 @@ var graphPage = {
         $("#ForkGraph").click(function (e) {
             e.preventDefault();
             if (!$(this).hasClass('disabled')){
-                graphPage.fork($(this).data()); // Passing data about parent graph to fork() as argument
+                $('#forkGraphModal').data('data', $(this).data()).modal('show');//graphPage.fork($(this).data()); // Passing data about parent graph to fork() as argument
             }
         });
 
@@ -560,7 +535,7 @@ var graphPage = {
 
         $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
         $('#ConfirmUpdateLayoutBtn').click(graphPage.layoutsTable.onConfirmUpdateGraph);
-
+        $('#ConfirmForkGraphBtn').click(graphPage.fork);
         this.filterNodesEdges.init();
         this.colaLayoutWidget.init();
 
@@ -594,11 +569,14 @@ var graphPage = {
 
         graphPage.defaultLayoutWidget.init();
     },
-    fork: function (data) {
+    fork: function () {
         //Read the meta_data object and add 'parent_id' & 'parent_email' to the data field.
+        data = $('#forkGraphModal').data('data')
+        graph_name = $('#forkGraphName').val()
+        if (graph_name!=null) data.graph_name = graph_name;
+        $('#forkGraphModal').modal('hide');
+        $.notify({message: 'Request to fork the graph has been submitted'}, {type: 'info'});
         graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
-        //graph_meta_data.data['parent_id'] = data.graph_id;
-        //graph_meta_data.data['parent_email'] = data.owner_email;
         var graphData = {
             'name':data.graph_name,
             'is_public':0,
@@ -607,14 +585,22 @@ var graphPage = {
             'graph_json':graph_meta_data,//JSON.stringify(graph_meta_data, null, 4),
             'style_json':cytoscapeGraph.getStyleJSON(graphPage.cyGraph)//JSON.stringify(cytoscapeGraph.getStyleJSON(graphPage.cyGraph), null, 4)
         }
-        apis.fork.add(data.graph_id, graphData,
-                successCallback = function (response) {
-                    alert('Graph Forked Successfully');
+        apis.fork.get(data.graph_id,{'parent_graph_id':data.graph_id},
+            successCallback = function (response) {
+                    $.notify({message: 'The Graph has been forked successfully'}, {type: 'success'});
                     $("#ForkGraph").addClass('disabled');
                 },
                 errorCallback = function (response) {
-                    alert('Could not fork the Graph due to the following error : ' + data.result);
-                    params.error('Error');
+                    $.notify({message: 'Could not fork the Graph due to the following error : <strong>' + response.responseJSON.error_message.split("'")[1] + '</strong>'}, {type: 'danger'});
+                }
+            );
+        apis.fork.add(data.graph_id, graphData,
+                successCallback = function (response) {
+                    $.notify({message: 'The Graph has been forked successfully'}, {type: 'success'});
+                    $("#ForkGraph").addClass('disabled');
+                },
+                errorCallback = function (response) {
+                    $.notify({message: 'Could not fork the Graph due to the following error : <strong>' + response.responseJSON.error_message.split("'")[1] + '</strong>'}, {type: 'danger'});
                 }
             );
     },

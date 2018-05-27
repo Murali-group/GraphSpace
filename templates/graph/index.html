@@ -139,7 +139,7 @@
                 </div>
             </div>
         </div>
-
+        {% include 'graphs/fork_graph_modal.html' %}
     </div>
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
@@ -175,26 +175,23 @@
                             href="{% url 'graphs' %}{{ graph.graph_json.data.parent_id }} "> {{ graph.name }} </a> </small>
                     </p>
                 {% endif %}
+                {% if graph.is_fork %}
+                <h4 class="zero-margin">
+                    <small>Forked from {{ graph.parent_email }}/ <a class="text-center"
+                            href="{% url 'graphs' %}{{ graph.parent_id }} "> {{ graph.parent_graph_name }} </a> </small>
+                </h4>
+                {% endif %}
             </div>
 
             <div class="col-md-3">
-                {% if isForked %}
-                <div class="btn-group" style=": 1em !important; z-index: 20000">
-                    <button type="button" class="btn btn-sm btn-default disabled"
-                            aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-code-fork" aria-hidden="true"></i> Forked Successfully
-                    </button>
-
-                </div>
-
-                {% elif uid != graph.owner_email %}
+                {% if uid != graph.owner_email %}
                 <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
                     <button type="button" id='ForkGraph' class="btn btn-sm btn-default"
                             aria-haspopup="true" aria-expanded="false" data-uid={{ uid }} data-graph_name="{{ title }}"
                             data-graph_id={{ graph.id }} data-owner_email={{ graph.owner_email }}>
                         <i class="fa fa-code-fork" aria-hidden="true"></i> <span>Fork</span>
                     </button>
-
+                    <b class="btn btn-sm btn-default">00</b>
                 </div>
                 {% endif %}
                 {% if uid and uid == graph.owner_email %}
