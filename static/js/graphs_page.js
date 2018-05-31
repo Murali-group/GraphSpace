@@ -573,7 +573,7 @@ var graphPage = {
         //Read the meta_data object and add 'parent_id' & 'parent_email' to the data field.
         data = $('#forkGraphModal').data('data')
         graph_name = $('#forkGraphName').val()
-        if (graph_name!=null) data.graph_name = graph_name;
+        if (graph_name!="") data.graph_name = graph_name;
         $('#forkGraphModal').modal('hide');
         $.notify({message: 'Request to fork the graph has been submitted'}, {type: 'info'});
         graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
@@ -585,15 +585,7 @@ var graphPage = {
             'graph_json':graph_meta_data,//JSON.stringify(graph_meta_data, null, 4),
             'style_json':cytoscapeGraph.getStyleJSON(graphPage.cyGraph)//JSON.stringify(cytoscapeGraph.getStyleJSON(graphPage.cyGraph), null, 4)
         }
-        apis.fork.get(data.graph_id,{'parent_graph_id':data.graph_id},
-            successCallback = function (response) {
-                    $.notify({message: 'The Graph has been forked successfully'}, {type: 'success'});
-                    $("#ForkGraph").addClass('disabled');
-                },
-                errorCallback = function (response) {
-                    $.notify({message: 'Could not fork the Graph due to the following error : <strong>' + response.responseJSON.error_message.split("'")[1] + '</strong>'}, {type: 'danger'});
-                }
-            );
+
         apis.fork.add(data.graph_id, graphData,
                 successCallback = function (response) {
                     $.notify({message: 'The Graph has been forked successfully'}, {type: 'success'});

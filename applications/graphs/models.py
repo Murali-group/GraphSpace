@@ -286,7 +286,7 @@ class GraphToTag(TimeStampMixin, Base):
 class GraphFork(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'graph_fork'
 	#name = Column(String, nullable=False)
-	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	#owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	parent_graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 
@@ -304,7 +304,6 @@ class GraphFork(IDMixin, TimeStampMixin, Base):
 		return {
 			'graph_id': cls.graph_id,
 			'parent_graph_id': cls.parent_graph_id,
-			'owner_email': cls.owner_email,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}

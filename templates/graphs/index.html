@@ -22,11 +22,12 @@
                 <a href="#public_graphs" data-toggle="tab">Public Graphs <span id="publicGraphsTotal"
                                                                                class="badge">{{ public_graphs.total }}</span></a>
             </li>
-
+            {% if uid %}
             <li class="text-center {% if not uid %} active {% endif %}">
                 <a href="#forked_graphs" data-toggle="tab">Forked Graphs <span id="forkedGraphsTotal"
                                                                                class="badge">{{ forked_graphs.total }}</span></a>
             </li>
+            {% endif %}
 
             <li class="text-center">
                 <a href="{% url 'upload_graph' %}">Upload New Graph</a>
