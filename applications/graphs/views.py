@@ -1522,3 +1522,165 @@ def _delete_edge(request, graph_id, edge_id):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	graphs.delete_edge_by_id(request, edge_id)
+
+
+'''
+Graph Version APIs
+'''
+
+@csrf_exempt
+@is_authenticated()
+def graph_versions_rest_api(request, graph_id, version_id=None):
+	"""
+	Handles any request sent to following urls:
+		/api/v1/graphs/<graph_id>/version
+		/api/v1/graphs/<graph_id>/version/<version_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _graph_versions_api(request, graph_id, version_id=version_id)
+
+
+def graph_versions_ajax_api(request, graph_id, version_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/graphs/<graph_id>/version
+		/javascript/graphs/<graph_id>/version/<version_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _graph_versions_api(request, graph_id, version_id=version_id)
+
+
+def _graph_versions_api(request, graph_id, version_id=None):
+	"""
+	Handles any request (GET/POST) sent to version/ or version/<version_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	graph_id : string
+		Unique ID of the graph.
+	version_id : string
+		Unique ID of the version.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "GET" and version_id is None:
+			return HttpResponse(json.dumps(_get_graph_versions(request, graph_id, query=request.GET)),
+			                    content_type="application/json")
+		elif request.method == "GET" and version_id is not None:
+			return HttpResponse(json.dumps(_get_graph_version(request, graph_id, version_id)),
+			                    content_type="application/json")
+		elif request.method == "POST" and version_id is None:
+			return HttpResponse(json.dumps(_add_node(request, graph_id, node=json.loads(request.body))),
+			                    content_type="application/json",
+			                    status=201)
+		elif request.method == "DELETE" and version_id is not None:
+			_delete_node(request, graph_id, version_id)
+			return HttpResponse(json.dumps({
+				"message": "Successfully deleted node with id=%s" % (version_id)
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+def _get_graph_versions(request, graph_id, query={}):
+	"""
+
+	Query Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	names : list of strings
+		Search for versions with given names. In order to search for versions with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all versions with xyz in their name.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	total : integer
+		Number of graph versions matching the request.
+	versions : List of versions.
+		List of Version Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	total, versions_list = graphs.search_graph_versions(request,
+	                                        graph_id=graph_id,
+	                                        names=query.getlist('names[]', None),
+	                                        limit=query.get('limit', 20),
+	                                        offset=query.get('offset', 0),
+	                                        order=query.get('order', 'desc'),
+	                                        sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'versions': [utils.serializer(version) for version in versions_list]
+	}
+
+def _get_graph_version(request, graph_id, version_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	version_id : string
+		Unique ID of the version.
+
+	Returns
+	-------
+	version: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	return utils.serializer(graphs.get_graph_version_by_id(request, version_id))

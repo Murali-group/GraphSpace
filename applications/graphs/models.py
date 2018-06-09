@@ -32,6 +32,9 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
 
+	graph_version = relationship("GraphVersion", foreign_keys="GraphVersion.graph_id", back_populates="graph",
+	                             cascade="all, delete-orphan")
+
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
 
@@ -279,3 +282,25 @@ class GraphToTag(TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+class GraphVersion(IDMixin, TimeStampMixin, Base):
+	__tablename__ = 'graph_version'
+
+	name = Column(String, nullable=False, unique=True)
+	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	graph_json = Column(String, nullable=False)
+	description = Column(String, nullable=True)
+
+	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="graph_version", uselist=False)
+
+	def serialize(cls, **kwargs):
+		return {
+			'id': cls.id,
+			'name': cls.name,
+			'description': cls.description,
+			'graph_json' : cls.graph_json,
+			'creator': cls.owner_email,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}

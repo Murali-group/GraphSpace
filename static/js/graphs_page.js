@@ -39,6 +39,12 @@ var apis = {
             apis.jsonRequest('GET', apis.nodes.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
+    version: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/version/'),
+        get: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+    },
     edges: {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
         get: function (graph_id, data, successCallback, errorCallback) {
@@ -1116,6 +1122,38 @@ var graphPage = {
             params.data["graph_id"] = $('#GraphID').val();
 
             apis.nodes.get($('#GraphID').val(), params.data,
+                successCallback = function (response) {
+                    // This method is called when nodes are successfully fetched.
+                    params.success(response);
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching nodes.
+                    params.error('Error');
+                }
+            );
+        }
+    },
+    graphVersionTable: {
+        getVersionByGraphID: function (params) {
+            /**
+             * This is the custom ajax request used to load version in graphVersionTable.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search, sort, order.
+             */
+
+            if (params.data["search"]) {
+                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
+                    return s.indexOf(':') === -1;
+                }), function (str) {
+                    return '%' + str + '%';
+                });
+                params.data["labels"] = params.data["names"];
+            }
+
+            params.data["graph_id"] = $('#GraphID').val();
+
+            apis.version.get($('#GraphID').val(), params.data,
                 successCallback = function (response) {
                     // This method is called when nodes are successfully fetched.
                     params.success(response);

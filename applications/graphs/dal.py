@@ -458,3 +458,30 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+@with_session
+def find_graph_versions(db_session, names=None, graph_id=None, limit=None, offset=None,
+               order_by=desc(GraphVersion.updated_at)):
+	query = db_session.query(GraphVersion)
+
+	if graph_id is not None:
+		query = query.filter(GraphVersion.graph_id == graph_id)
+
+	names = [] if names is None else names
+	if len(names) > 0:
+		query = query.filter(
+			or_(*([GraphVersion.name.ilike(name) for name in names])))
+
+	total = query.count()
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()
+
+@with_session
+def get_graph_version_by_id(db_session, id):
+	return db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()

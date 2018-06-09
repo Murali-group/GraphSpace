@@ -586,3 +586,30 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
+
+def search_graph_versions(request, graph_id=None, names=None, limit=20, offset=0, order='desc', sort='name'):
+	if sort == 'name':
+		sort_attr = db.GraphVersion.name
+	elif sort == 'update_at':
+		sort_attr = db.GraphVersion.updated_at
+	else:
+		sort_attr = db.GraphVersion.name
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
+
+	total, graph_versions = db.find_graph_versions(request.db_session,
+	                             names=names,
+	                             graph_id=graph_id,
+	                             limit=limit,
+	                             offset=offset,
+	                             order_by=orber_by)
+
+	return total, graph_versions
+
+def get_graph_version_by_id(request, version_id):
+	return db.get_graph_version_by_id(request.db_session, version_id)

@@ -1,0 +1,36 @@
+
+<div class="margin-top-4">
+    <b>Currently Viewing :</b>
+    <br>
+    <b>Default Version :</b>
+</div>
+
+<table id="GraphVersionTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="graphPage.graphVersionTable.getVersionByGraphID"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="nodes"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-sortable="True">Version Name</th>
+        <th data-field="label">Description</th>
+        {#        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last#}
+        {#            Modified#}
+        {#        </th>#}
+        <th data-field="label">Created on</th>
+        {% if uid %}
+            <th data-field="operations" data-visible="false">
+                Operations
+            </th>
+        {% endif %}
+    </tr>
+    </thead>
+</table>
