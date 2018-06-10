@@ -439,3 +439,12 @@ p.lead {
         margin-left: 0;
     }
 }
+.graph_version_span {
+    cursor:pointer;
+    color:#337ab7;
+
+}
+
+.graph_version_span:hover {
+    text-decoration:underline;
+}

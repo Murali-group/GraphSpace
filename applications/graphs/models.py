@@ -295,12 +295,22 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="graph_version", uselist=False)
 
 	def serialize(cls, **kwargs):
-		return {
-			'id': cls.id,
-			'name': cls.name,
-			'description': cls.description,
-			'graph_json' : cls.graph_json,
-			'creator': cls.owner_email,
-			'created_at': cls.created_at.isoformat(),
-			'updated_at': cls.updated_at.isoformat()
-		}
+		if 'summary' in kwargs and kwargs['summary']:
+			return {
+				'id': cls.id,
+				'name': cls.name,
+				'description': cls.description,
+				'creator': cls.owner_email,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}
+		else :
+			return {
+				'id': cls.id,
+				'name': cls.name,
+				'description': cls.description,
+				'graph_json': cls.graph_json,
+				'creator': cls.owner_email,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}

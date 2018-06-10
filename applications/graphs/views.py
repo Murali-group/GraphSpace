@@ -1658,7 +1658,7 @@ def _get_graph_versions(request, graph_id, query={}):
 
 	return {
 		'total': total,
-		'versions': [utils.serializer(version) for version in versions_list]
+		'versions': [utils.serializer(version, summary=True) for version in versions_list]
 	}
 
 def _get_graph_version(request, graph_id, version_id):

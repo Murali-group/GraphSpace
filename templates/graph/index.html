@@ -225,6 +225,14 @@
                     <a class="link-reset" href="#graph_version_tab" data-toggle="tab">Graph Version</a>
                 </li>
             {% endif %}
+            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" id="version_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i> Branch :</i> <bold style="font-weight: bold" >Version</bold> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="version_selector_dropdown">
+                    </ul>
+                </div>
         </ul>
 
         <div id="myTabContent" class="tab-content gs-full-height bg-white">

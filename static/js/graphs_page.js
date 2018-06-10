@@ -44,6 +44,9 @@ var apis = {
         get: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
+        getByID: function (graph_id, version_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}) + version_id, undefined, successCallback, errorCallback)
+        },
     },
     edges: {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
@@ -524,6 +527,22 @@ var graphPage = {
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
+    },
+    selectGraphVersion: function (row) {
+        label = $("#version_selector_dropdown").find('a[row_id=' + row + ']').attr('data')
+
+        apis.version.getByID($('#GraphID').val(), row,
+            successCallback = function (response) {
+                graph_json = JSON.parse(response.graph_json);
+                graphPage.contructCytoscapeGraph();
+                console.log("Success");
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access this Version."}, {type: 'danger'});
+            });
+        $('#version_selector > bold').text(label);
+        console.log("abc");
     },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
@@ -1163,7 +1182,11 @@ var graphPage = {
                     params.error('Error');
                 }
             );
-        }
+        },
+        versionFormatter: function (value, row, index) {
+            $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            return ('<span class="graph_version_span"  >'+ value +'</span>')
+    }
     },
     layoutsTable: {
         getPrivateLayoutsByGraphID: function (params) {
