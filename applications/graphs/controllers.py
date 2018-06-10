@@ -618,3 +618,7 @@ def add_graph_version(request, name=None, description=None, owner_email=None, gr
 	if name is None or graph_id is None or graph_json is None:
 		raise Exception("Required Parameter is missing!")
 	return db.add_graph_version(request.db_session, name=name, description=description, owner_email=owner_email, graph_json=graph_json, graph_id=graph_id)
+
+def delete_graph_version_by_id(request, graph_version_id):
+	db.delete_graph_version(request.db_session, id=graph_version_id)
+	return

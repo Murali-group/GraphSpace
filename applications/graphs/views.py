@@ -1594,9 +1594,9 @@ def _graph_versions_api(request, graph_id, version_id=None):
 			                    content_type="application/json",
 			                    status=201)
 		elif request.method == "DELETE" and version_id is not None:
-			_delete_node(request, graph_id, version_id)
+			_delete_graph_version(request, graph_id, version_id)
 			return HttpResponse(json.dumps({
-				"message": "Successfully deleted node with id=%s" % (version_id)
+				"message": "Successfully deleted Graph Version with id=%s" % (version_id)
 			}), content_type="application/json", status=200)
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
@@ -1725,3 +1725,29 @@ def _add_graph_version(request, graph_id, graph_version={}):
 	                                        owner_email=graph_version.get('owner_email', None),
 	                                        graph_json=graph_version.get('graph_json', None),
 	                                        graph_id=graph_id))
+
+@is_authenticated()
+def _delete_graph_version(request, graph_id, graph_version_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_version_id : string
+		Unique ID of the Graph Version.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	#authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+
+	graphs.delete_graph_version_by_id(request, graph_version_id)

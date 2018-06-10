@@ -491,3 +491,9 @@ def add_graph_version(db_session, graph_id, name, graph_json, owner_email, descr
 	graph_version = GraphVersion(name=name, graph_id=graph_id, graph_json=graph_json, owner_email=owner_email, description=description)
 	db_session.add(graph_version)
 	return graph_version
+
+@with_session
+def delete_graph_version(db_session, id):
+    graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
+    db_session.delete(graph_version)
+    return graph_version
