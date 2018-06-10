@@ -64,6 +64,22 @@ def graphs_page(request):
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
+def upload_comment(request, graph_id):
+	context = RequestContext(request, {})
+	if 'POST' == request.method:
+		try:
+			comment = _add_comment(request, comment={
+				'message': request.POST.get('message', None),
+				'owner_email': request.POST.get('owner_email', None),
+				'nodes': [469, 470, 471],
+				'edges': [595, 596, 597],
+				'graph_id': graph_id
+			})
+			context['Success'] = 'Comment successfully added with comment id=' + str(comment['id']) 
+		except Exception as e:
+			context['Error'] = str(e)
+
+	return render(request, 'graphs/comments.html', context)
 
 def graph_page_by_name(request, email, graph_name):
 	"""
@@ -1522,3 +1538,26 @@ def _delete_edge(request, graph_id, edge_id):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	graphs.delete_edge_by_id(request, edge_id)
+
+
+@is_authenticated()
+def _add_comment(request, comment={}):
+	# Validate add comment API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if get_request_user(request) != comment.get('owner_email', None):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateCommentForOtherUser,
+			                 args=comment.get('owner_email', None))
+	elif user_role == authorization.UserRole.LOGGED_OFF and comment.get('owner_email', None) is not None:
+		raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateCommentForOtherUser,
+		                 args=comment.get('owner_email', None))
+
+	return utils.serializer(graphs.add_comment(request,
+		                                         message=comment.get('message', None),
+		                                         graph_id=comment.get('graph_id', None),
+		                                         is_resolved=comment.get('is_resolved', None),
+		                                         edges=comment.get('edges', None),
+		                                         nodes=comment.get('nodes', None),
+		                                         layout_id=comment.get('layout', None),
+		                                         parent_comment_id=comment.get('parent_comment_id', None),
+		                                         owner_email=comment.get('owner_email', None)))
