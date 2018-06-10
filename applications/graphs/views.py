@@ -1590,7 +1590,7 @@ def _graph_versions_api(request, graph_id, version_id=None):
 			return HttpResponse(json.dumps(_get_graph_version(request, graph_id, version_id)),
 			                    content_type="application/json")
 		elif request.method == "POST" and version_id is None:
-			return HttpResponse(json.dumps(_add_node(request, graph_id, node=json.loads(request.body))),
+			return HttpResponse(json.dumps(_add_graph_version(request, graph_id, graph_version=json.loads(request.body))),
 			                    content_type="application/json",
 			                    status=201)
 		elif request.method == "DELETE" and version_id is not None:
@@ -1684,3 +1684,44 @@ def _get_graph_version(request, graph_id, version_id):
 	"""
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 	return utils.serializer(graphs.get_graph_version_by_id(request, version_id))
+
+@is_authenticated()
+def _add_graph_version(request, graph_id, graph_version={}):
+	"""
+	Node Parameters
+	----------
+	name : string
+		Name of the node. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	graph_id : string
+		Unique ID of the graph. Required
+
+
+	Parameters
+	----------
+	graph_json : dict
+		Dictionary containing the graph_json data of the graph being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	graph_version : object
+		Newly created graph_version object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	#
+
+	return utils.serializer(graphs.add_graph_version(request,
+	                                        name=graph_version.get('name', None),
+	                                        description=graph_version.get('description', None),
+	                                        owner_email=graph_version.get('owner_email', None),
+	                                        graph_json=graph_version.get('graph_json', None),
+	                                        graph_id=graph_id))

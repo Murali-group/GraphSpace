@@ -485,3 +485,9 @@ def find_graph_versions(db_session, names=None, graph_id=None, limit=None, offse
 @with_session
 def get_graph_version_by_id(db_session, id):
 	return db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
+
+@with_session
+def add_graph_version(db_session, graph_id, name, graph_json, owner_email, description=None):
+	graph_version = GraphVersion(name=name, graph_id=graph_id, graph_json=graph_json, owner_email=owner_email, description=description)
+	db_session.add(graph_version)
+	return graph_version
