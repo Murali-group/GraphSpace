@@ -575,7 +575,7 @@ var graphPage = {
         graph_name = $('#forkGraphName').val()
         if (graph_name!="") data.graph_name = graph_name;
         $('#forkGraphModal').modal('hide');
-        $.notify({message: 'Request to fork the graph has been submitted'}, {type: 'info'});
+        //$.notify({message: 'Request to fork the graph has been submitted'}, {type: 'info'});
         graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
         var graphData = {
             'name':data.graph_name,
