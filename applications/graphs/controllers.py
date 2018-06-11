@@ -17,10 +17,10 @@ from elasticsearch_dsl import Search, Q
 from graphspace.data_type import DataType
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
-							   'default_grid']
-
+                               'default_grid']
 
 def map_attributes(attributes):
+
 	mapped_attributes = {}
 	if attributes and isinstance(attributes, dict) and DataType.forValue(attributes) == DataType.DICT:
 		for key, value in attributes.items():
@@ -36,20 +36,16 @@ def map_attributes(attributes):
 
 	return mapped_attributes
 
-
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
-
 def get_fork_by_id(request, graph_id):
 	return db.get_fork_by_id(request.db_session, graph_id)
-
 
 def find_forks(request, parent_graph_id=None, forked_graph_id=None):
 	if parent_graph_id is None:
 		raise Exception("The Parent graph ID is required.")
 	return db.get_fork(request.db_session, parent_graph_id, forked_graph_id)
-
 
 def get_forked_graph_data(request, forked_graph, graph_fork):
 	'''Set information of parent graph into Graph object. The modified graph object is send in the HTTP Response'''
@@ -60,7 +56,6 @@ def get_forked_graph_data(request, forked_graph, graph_fork):
 		forked_graph['is_fork'] = 1
 		forked_graph['parent_id'] = parent_graph.id
 	return forked_graph
-
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
 	is_authorized = False
@@ -194,7 +189,7 @@ def uploadJSONFile(request, username, graphJSON, title):
 
 @atomic_transaction
 def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
-			  default_layout_id=None):
+              default_layout_id=None):
 	# If graph already exists for user, alert them
 	if db.get_graph(request.db_session, owner_email, name) is not None:
 		raise Exception('Graph ' + name + ' already exists for ' + owner_email + '!')
@@ -213,8 +208,8 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 
 	# Construct new graph to add to database
 	new_graph = db.add_graph(request.db_session, name=name, owner_email=owner_email,
-							 graph_json=json.dumps(G.get_graph_json()), style_json=json.dumps(G.get_style_json()),
-							 is_public=is_public, default_layout_id=default_layout_id)
+	                         graph_json=json.dumps(G.get_graph_json()), style_json=json.dumps(G.get_style_json()),
+	                         is_public=is_public, default_layout_id=default_layout_id)
 	# Add graph tags
 	for tag in G.get_tags():
 		add_graph_tag(request, new_graph.id, tag)
@@ -223,15 +218,14 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
-	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id,
-								  body=map_attributes(json.loads(new_graph.graph_json)), refresh=True)
+	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=map_attributes(json.loads(new_graph.graph_json)), refresh=True)
 
 	return new_graph
 
 
 @atomic_transaction
 def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
-				 default_layout_id=None):
+                 default_layout_id=None):
 	graph = {}
 	if name is not None:
 		graph['name'] = name
@@ -260,8 +254,7 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
-		settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=graph_id,
-									  body=map_attributes(G.get_graph_json()), refresh=True)
+		settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=graph_id, body=map_attributes(G.get_graph_json()), refresh=True)
 
 	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 
@@ -284,8 +277,8 @@ def add_graph_edges(request, graph_id, edges, node_name_to_id_map):
 
 		# To make sure int and floats are also accepted as source and target nodes of an edge
 		new_edge = db.add_edge(request.db_session, graph_id=graph_id, head_node_id=str(node_name_to_id_map[edge[1]]),
-							   tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['name']),
-							   is_directed=is_directed)
+		                       tail_node_id=str(node_name_to_id_map[edge[0]]), name=str(edge[2]['name']),
+		                       is_directed=is_directed)
 		edge_name_to_id_map[(edge[0], edge[1])] = new_edge.id
 	return edge_name_to_id_map
 
@@ -333,11 +326,11 @@ def _convert_order_query_term_to_database_order_object(order_query):
 
 
 def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=None, nodes=None, edges=None, tags=None,
-							   limit=None, offset=None):
+                               limit=None, offset=None):
 	if group_ids is None:
 		raise Exception("Atleast one group id is required.")
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
-						  edges=edges, tags=tags, limit=limit, offset=offset)
+	                      edges=edges, tags=tags, limit=limit, offset=offset)
 
 
 def add_graph_to_group(request, group_id, graph_id):
@@ -384,24 +377,24 @@ def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None
 		graph_ids = None
 
 	total, graphs_list = db.find_graphs(request.db_session,
-										owner_email=owner_email,
-										graph_ids=graph_ids,
-										is_public=is_public,
+	                                    owner_email=owner_email,
+	                                    graph_ids=graph_ids,
+	                                    is_public=is_public,
 										is_forked=is_forked,
-										group_ids=group_ids,
-										names=names,
-										nodes=nodes,
-										edges=edges,
-										tags=tags,
-										limit=limit,
-										offset=offset,
-										order_by=orber_by)
+	                                    group_ids=group_ids,
+	                                    names=names,
+	                                    nodes=nodes,
+	                                    edges=edges,
+	                                    tags=tags,
+	                                    limit=limit,
+	                                    offset=offset,
+	                                    order_by=orber_by)
 
 	return total, graphs_list
 
 
 def search_graphs(request, owner_email=None, member_email=None, names=None, is_public=None, nodes=None, edges=None,
-				  tags=None, limit=20, offset=0, order='desc', sort='name'):
+                  tags=None, limit=20, offset=0, order='desc', sort='name'):
 	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
 	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 	is_public = int(is_public) if is_public is not None else None
@@ -440,22 +433,22 @@ def search_graphs(request, owner_email=None, member_email=None, names=None, is_p
 	# 	graph_ids=None
 
 	total, graphs_list = db.find_graphs(request.db_session,
-										owner_email=owner_email,
-										names=names,
-										is_public=is_public,
-										group_ids=group_ids,
-										nodes=nodes,
-										edges=edges,
-										tags=tags,
-										limit=limit,
-										offset=offset,
-										order_by=orber_by)
+	                                    owner_email=owner_email,
+	                                    names=names,
+	                                    is_public=is_public,
+	                                    group_ids=group_ids,
+	                                    nodes=nodes,
+	                                    edges=edges,
+	                                    tags=tags,
+	                                    limit=limit,
+	                                    offset=offset,
+	                                    order_by=orber_by)
 
 	return total, graphs_list
 
 
 def search_layouts(request, owner_email=None, is_shared=None, name=None, graph_id=None, limit=20, offset=0,
-				   order='desc', sort='name'):
+                   order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Layout.name
 	elif sort == 'update_at':
@@ -471,13 +464,13 @@ def search_layouts(request, owner_email=None, is_shared=None, name=None, graph_i
 		orber_by = db.asc(sort_attr)
 
 	total, layouts = db.find_layouts(request.db_session,
-									 owner_email=owner_email,
-									 is_shared=is_shared,
-									 name=name,
-									 graph_id=graph_id,
-									 limit=limit,
-									 offset=offset,
-									 order_by=orber_by)
+	                                 owner_email=owner_email,
+	                                 is_shared=is_shared,
+	                                 name=name,
+	                                 graph_id=graph_id,
+	                                 limit=limit,
+	                                 offset=offset,
+	                                 order_by=orber_by)
 
 	return total, layouts
 
@@ -487,18 +480,18 @@ def get_layout_by_id(request, layout_id):
 
 
 def add_layout(request, owner_email=None, name=None, graph_id=None, is_shared=None, style_json=None,
-			   positions_json=None):
+               positions_json=None):
 	if name is None or owner_email is None or graph_id is None:
 		raise Exception("Required Parameter is missing!")
 	try:
 		return db.add_layout(request.db_session, owner_email=owner_email, name=name, graph_id=graph_id,
-							 is_shared=is_shared, style_json=dumps(style_json), positions_json=dumps(positions_json))
+		                     is_shared=is_shared, style_json=dumps(style_json), positions_json=dumps(positions_json))
 	except IntegrityError as e:
 		raise BadRequest(request, error_code=ErrorCodes.Validation.LayoutNameAlreadyExists, args=name)
 
 
 def update_layout(request, layout_id, owner_email=None, name=None, graph_id=None, is_shared=None, style_json=None,
-				  positions_json=None):
+                  positions_json=None):
 	if layout_id is None:
 		raise Exception("Required Parameter is missing!")
 
@@ -542,12 +535,12 @@ def search_nodes(request, graph_id=None, names=None, labels=None, limit=20, offs
 	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
 
 	total, nodes = db.find_nodes(request.db_session,
-								 names=names,
-								 labels=labels,
-								 graph_id=graph_id,
-								 limit=limit,
-								 offset=offset,
-								 order_by=orber_by)
+	                             names=names,
+	                             labels=labels,
+	                             graph_id=graph_id,
+	                             limit=limit,
+	                             offset=offset,
+	                             order_by=orber_by)
 
 	return total, nodes
 
@@ -568,7 +561,7 @@ def delete_node_by_id(request, node_id):
 
 
 def search_edges(request, is_directed=None, names=None, edges=None, graph_id=None, limit=20, offset=0, order='desc',
-				 sort='name'):
+                 sort='name'):
 	if sort == 'name':
 		sort_attr = db.Edge.name
 	elif sort == 'update_at':
@@ -587,13 +580,13 @@ def search_edges(request, is_directed=None, names=None, edges=None, graph_id=Non
 	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
 
 	total, edges = db.find_edges(request.db_session,
-								 names=names,
-								 edges=edges,
-								 is_directed=is_directed,
-								 graph_id=graph_id,
-								 limit=limit,
-								 offset=offset,
-								 order_by=orber_by)
+	                             names=names,
+	                             edges=edges,
+	                             is_directed=is_directed,
+	                             graph_id=graph_id,
+	                             limit=limit,
+	                             offset=offset,
+	                             order_by=orber_by)
 
 	return total, edges
 
@@ -606,16 +599,16 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 	if name is None or graph_id is None or head_node_id is None or tail_node_id is None:
 		raise Exception("Required Parameter is missing!")
 	return db.add_edge(request.db_session, name=name, head_node_id=head_node_id, tail_node_id=tail_node_id,
-					   is_directed=is_directed, graph_id=graph_id)
+	                   is_directed=is_directed, graph_id=graph_id)
 
 
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
 
-
 def add_graph_to_fork(request, forked_graph_id, parent_graph_id, owner_email):
 	if forked_graph_id is not None and parent_graph_id is not None:
-		db.add_fork(request.db_session, forked_graph_id, parent_graph_id, owner_email)
+		new_fork = db.add_fork(request.db_session, forked_graph_id, parent_graph_id, owner_email)
 	else:
 		raise Exception("Required Parameter is missing!")
+	return new_fork

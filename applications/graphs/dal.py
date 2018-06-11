@@ -470,7 +470,7 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 def add_fork(db_session, forked_graph_id, parent_graph_id, owner_email):
 	fork = GraphFork( graph_id=forked_graph_id, parent_graph_id=parent_graph_id)
 	db_session.add(fork)
-	return 1
+	return fork
 
 @with_session
 def get_fork(db_session, parent_graph_id=None, forked_graph_id=None):
