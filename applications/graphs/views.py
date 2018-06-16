@@ -2,6 +2,7 @@ import json
 
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
+import applications.comments.controllers as comments
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -64,22 +65,6 @@ def graphs_page(request):
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
-def upload_comment(request, graph_id):
-	context = RequestContext(request, {})
-	if 'POST' == request.method:
-		try:
-			comment = _add_comment(request, comment={
-				'message': request.POST.get('message', None),
-				'owner_email': request.POST.get('owner_email', None),
-				'nodes': [469, 470, 471],
-				'edges': [595, 596, 597],
-				'graph_id': graph_id
-			})
-			context['Success'] = 'Comment successfully added with comment id=' + str(comment['id']) 
-		except Exception as e:
-			context['Error'] = str(e)
-
-	return render(request, 'graphs/comments.html', context)
 
 def graph_page_by_name(request, email, graph_name):
 	"""
@@ -112,7 +97,6 @@ def graph_page(request, graph_id):
 	"""
 	context = RequestContext(request, {})
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-
 	uid = request.session['uid'] if 'uid' in request.session else None
 
 	context.push({"graph": _get_graph(request, graph_id)})
@@ -1540,19 +1524,50 @@ def _delete_edge(request, graph_id, edge_id):
 	graphs.delete_edge_by_id(request, edge_id)
 
 
-@is_authenticated()
-def _add_comment(request, comment={}):
-	# Validate add comment API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != comment.get('owner_email', None):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateCommentForOtherUser,
-			                 args=comment.get('owner_email', None))
-	elif user_role == authorization.UserRole.LOGGED_OFF and comment.get('owner_email', None) is not None:
-		raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateCommentForOtherUser,
-		                 args=comment.get('owner_email', None))
+def upload_comment(request, graph_id):
+	context = RequestContext(request, {})
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	if 'POST' == request.method:
+		try:
+			comment = _add_comment(request, comment={
+				'message': request.POST.get('message', None),
+				'owner_email': request.POST.get('owner_email', None),
+				'nodes': [1, 2, 3],
+				'edges': [1, 2, 3],
+				'graph_id': graph_id
+			})
+			context['Success'] = 'Comment successfully added with comment id=' + str(comment['id']) 
+		except Exception as e:
+			context['Error'] = str(e)
 
-	return utils.serializer(graphs.add_comment(request,
+	return render(request, 'comments/upload_comment.html', context)
+
+
+def view_comments(request, graph_id):
+	context = RequestContext(request, {})
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	if 'GET' == request.method:
+		try:
+			comments_list = _get_comments_by_graph_id(request, graph_id)
+			context['Success'] = 'Displaying the list of comments under this graph'
+			comments_array = []
+			for comment in comments_list['comments']:
+				comments_array.append({
+					'id': comment['id'],
+					'owner_email': comment['owner_email'] if comment['owner_email'] != None else 'Anonymous',
+					'message': comment['message']
+					})
+			context['comments'] = comments_array
+			context['graph_id'] = graph_id
+		except Exception as e:
+			context['Error'] = str(e)
+		return render(request, 'comments/index.html', context)
+	else:
+		raise MethodNotAllowed(request)
+
+
+def _add_comment(request, comment={}):
+	return utils.serializer(comments.add_comment(request,
 		                                         message=comment.get('message', None),
 		                                         graph_id=comment.get('graph_id', None),
 		                                         is_resolved=comment.get('is_resolved', None),
@@ -1561,3 +1576,11 @@ def _add_comment(request, comment={}):
 		                                         layout_id=comment.get('layout', None),
 		                                         parent_comment_id=comment.get('parent_comment_id', None),
 		                                         owner_email=comment.get('owner_email', None)))
+
+
+def _get_comments_by_graph_id(request, graph_id):
+	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
+	return {
+		'total': total,
+		'comments': [utils.serializer(comment) for comment in comments_list]
+	}
