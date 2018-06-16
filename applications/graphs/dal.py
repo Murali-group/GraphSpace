@@ -456,22 +456,3 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
-
-@with_session
-def add_comment(db_session, message, owner_email, graph_id, is_resolved=0, layout_id=None, parent_comment_id=None):
-	comment = Comment(owner_email=owner_email, graph_id=graph_id, layout_id=layout_id,
-				  is_resolved=is_resolved, parent_comment_id=parent_comment_id, message=message)
-	db_session.add(comment)
-	return comment
-
-@with_session
-def add_comment_to_edge(db_session, comment_id, edge_id):
-	comment_to_edge = CommentToEdge(comment_id=comment_id, edge_id=edge_id)
-	db_session.add(comment_to_edge)
-	return comment_to_edge
-
-@with_session
-def add_comment_to_node(db_session, comment_id, node_id):
-	comment_to_node = CommentToNode(comment_id=comment_id, node_id=node_id)
-	db_session.add(comment_to_node)
-	return comment_to_node
