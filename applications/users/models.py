@@ -5,6 +5,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 
 from applications.graphs.models import *
+from applications.comments.models import *
 
 
 Base = settings.BASE
