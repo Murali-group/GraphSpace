@@ -17,8 +17,10 @@ class Graph(IDMixin, TimeStampMixin, Base):
 
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	graph_json = Column(String, nullable=False)
-	style_json = Column(String, nullable=False)
+	#graph_json = Column(String, nullable=False)
+	#style_json = Column(String, nullable=False)
+	default_version_id = Column(Integer, ForeignKey('graph_version.id', ondelete="CASCADE", onupdate="CASCADE"),
+	                           nullable=True)
 	is_public = Column(Integer, nullable=False, default=0)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
 	                           nullable=True)
@@ -290,6 +292,7 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_json = Column(String, nullable=False)
+	style_json = Column(String, nullable=False)
 	description = Column(String, nullable=True)
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="graph_version", uselist=False)
