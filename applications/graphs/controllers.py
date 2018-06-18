@@ -191,8 +191,20 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 
 	# Construct new graph to add to database
 	new_graph = db.add_graph(request.db_session, name=name, owner_email=owner_email,
-	                         graph_json=json.dumps(G.get_graph_json()), style_json=json.dumps(G.get_style_json()),
 	                         is_public=is_public, default_layout_id=default_layout_id)
+	default_version =  db.add_graph_version(request.db_session, name=name, description='Default Version',
+	                                        owner_email=owner_email, graph_json=json.dumps(G.get_graph_json()),
+	                                        style_json=json.dumps(G.get_style_json()), graph_id=new_graph.id)
+
+	# Add graph_json to new_graph
+	new_graph.__setattr__('graph_json', default_version.graph_json)
+
+	# Add style_json to new_graph
+	new_graph.__setattr__('style_json', default_version.style_json)
+	# Store the index of default version in the graph table (new_graph entry)
+	new_graph.__setattr__('default_version_id',default_version.id)
+	db.set_default_version(request.db_session, new_graph.id, default_version.id)
+
 	# Add graph tags
 	for tag in G.get_tags():
 		add_graph_tag(request, new_graph.id, tag)

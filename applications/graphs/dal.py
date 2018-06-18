@@ -80,8 +80,8 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None, names=No
 
 
 @with_session
-def add_graph(db_session, name, owner_email, graph_json, style_json, is_public=0, default_layout_id=None):
-	graph = Graph(name=name, owner_email=owner_email, graph_json=graph_json, style_json=style_json, is_public=is_public,
+def add_graph(db_session, name, owner_email, is_public=0, default_layout_id=None):
+	graph = Graph(name=name, owner_email=owner_email,  is_public=is_public,
 	              default_layout_id=default_layout_id)
 	db_session.add(graph)
 	return graph
@@ -487,8 +487,8 @@ def get_graph_version_by_id(db_session, id):
 	return db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
 
 @with_session
-def add_graph_version(db_session, graph_id, name, graph_json, owner_email, description=None):
-	graph_version = GraphVersion(name=name, graph_id=graph_id, graph_json=graph_json, owner_email=owner_email, description=description)
+def add_graph_version(db_session, graph_id, name, graph_json, owner_email, style_json=None, description=None, is_default=0):
+	graph_version = GraphVersion(name=name, graph_id=graph_id, graph_json=graph_json, style_json=style_json, owner_email=owner_email, description=description)
 	db_session.add(graph_version)
 	return graph_version
 
@@ -497,3 +497,9 @@ def delete_graph_version(db_session, id):
     graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
     db_session.delete(graph_version)
     return graph_version
+
+@with_session
+def set_default_version(db_session, graph_id, default_version_id):
+	graph = db_session.query(Graph).filter(Graph.id == graph_id).one_or_none()
+	setattr(graph, 'default_version_id', default_version_id)
+	return graph
