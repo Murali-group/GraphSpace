@@ -1567,15 +1567,49 @@ def view_comments(request, graph_id):
 
 
 def _add_comment(request, comment={}):
+
+	edge_names = comment.get('edge_names', None)
+	node_names = comment.get('node_names', None)
+	graph_id   = comment.get('graph_id', None)
+	owner_email = comment.get('owner_email', None)
+	edges, nodes = [], []
+
+	# Validate if user has permission to create a comment on this graph.
+	if graph_id != None:
+		authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	if len(edge_names) == 0:
+		edge_names = None
+	if len(node_names) == 0:
+		node_names = None
+
+	if edge_names != None and graph_id != None:
+		for edge_name in edge_names:
+			edge_id = utils.serializer(graphs.get_edge_by_name(request, graph_id, edge_name))['id']
+			if edge_id != None:
+				edges.append(edge_id)
+
+	if node_names != None and graph_id != None:
+		for node_name in node_names:
+			node_id = utils.serializer(graphs.get_node_by_name(request, graph_id, node_name))['id']
+			if node_id != None:
+				nodes.append(node_id)
+
+	if len(edges) == 0:
+		edges = None
+
+	if len(nodes) == 0:
+		nodes = None
+
 	return utils.serializer(comments.add_comment(request,
 		                                         message=comment.get('message', None),
 		                                         graph_id=comment.get('graph_id', None),
 		                                         is_resolved=comment.get('is_resolved', None),
-		                                         edges=comment.get('edges', None),
-		                                         nodes=comment.get('nodes', None),
+		                                         edges=edges,
+		                                         nodes=nodes,
 		                                         layout_id=comment.get('layout', None),
 		                                         parent_comment_id=comment.get('parent_comment_id', None),
-		                                         owner_email=comment.get('owner_email', None)))
+		                                         owner_email=owner_email))
 
 
 def _get_comments_by_graph_id(request, graph_id):
@@ -1584,3 +1618,17 @@ def _get_comments_by_graph_id(request, graph_id):
 		'total': total,
 		'comments': [utils.serializer(comment) for comment in comments_list]
 	}
+
+def graph_comments_ajax_api(request, graph_id=None):
+	return _comments_api(request, graph_id=graph_id)
+
+def _comments_api(request, graph_id=None):
+
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "POST":
+			return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)

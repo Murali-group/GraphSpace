@@ -69,6 +69,12 @@ var apis = {
             apis.jsonRequest('POST', apis.logging.ENDPOINT, data, successCallback, errorCallback)
         }
     },
+    comments: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/comments/'),
+        add: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        }
+    },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
             headers: {
@@ -496,6 +502,42 @@ var graphPage = {
 
 
         graphPage.defaultLayoutWidget.init();
+    },
+    createComment: function() {
+        var nodes = graphPage.cyGraph.$(':selected').nodes();
+        var edges = graphPage.cyGraph.$(':selected').edges();
+        var message = "Hello my first message";
+        var node_names = [], edge_names = [];
+        nodes.each(function(idx) {
+            node_names.push(nodes[idx]._private.data.id);
+        });
+        edges.each(function(idx) {
+            edge_names.push(edges[idx]._private.data.id);
+        });
+        var owner_email = ($('#UserEmail').val())? $('#UserEmail').val() : null;
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        // var message  = ($('#message_comment').val())? $('#message_comment').val() : null; 
+        apis.comments.add(graph_id, {
+                    "owner_email": owner_email,
+                    "graph_id": graph_id,
+                    "node_names": node_names,
+                    "edge_names": edge_names,
+                    "message": message
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully created a comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());

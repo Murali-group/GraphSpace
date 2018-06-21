@@ -29,6 +29,8 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	# Graph Comments
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/comments/$', views.graph_comments_ajax_api, name='graph_comments_ajax_api'),
 
 	# REST APIs Endpoints
 
