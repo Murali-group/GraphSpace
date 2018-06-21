@@ -586,3 +586,9 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
+
+def get_edge_by_name(request, graph_id, name):
+	return db.get_edge_by_name(request.db_session, graph_id=graph_id, name=name)
+
+def get_node_by_name(request, graph_id, name):
+	return db.get_node_by_name(request.db_session, graph_id=graph_id, name=name)
