@@ -203,7 +203,7 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	new_graph.__setattr__('style_json', default_version.style_json)
 	# Store the index of default version in the graph table (new_graph entry)
 	new_graph.__setattr__('default_version_id',default_version.id)
-	db.set_default_version(request.db_session, new_graph.id, default_version.id)
+	#db.set_default_version(request.db_session, new_graph.id, default_version.id)
 
 	# Add graph tags
 	for tag in G.get_tags():
