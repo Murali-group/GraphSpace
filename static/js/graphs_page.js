@@ -529,20 +529,23 @@ var graphPage = {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
     },
     selectGraphVersion: function (row) {
-        label = $("#version_selector_dropdown").find('a[row_id=' + row + ']').attr('data')
+        label = $("#version_selector_dropdown").find('a[row_id=' + row + ']').attr('data');
+        $("#GraphVersionTable").find('tr').removeClass('success');
 
         apis.version.getByID($('#GraphID').val(), row,
             successCallback = function (response) {
                 graph_json = JSON.parse(response.graph_json);
-                graphPage.contructCytoscapeGraph();
-                console.log("Success");
+                //graphPage.contructCytoscapeGraph();
+                graphPage.init();
+                $("#version_selector_dropdown").attr('current_version_id', row);
+                $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
+                //console.log("Success");
             },
             errorCallback = function (xhr, status, errorThrown) {
                 // This method is called when  error occurs while deleting group_to_graph relationship.
                 $.notify({message: "You are not authorized to access this Version."}, {type: 'danger'});
             });
         $('#version_selector > bold').text(label);
-        console.log("abc");
     },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
@@ -714,7 +717,9 @@ var graphPage = {
     onShareGraphWithPublicBtn: function (e, graph_id) {
 
         apis.graphs.update(graph_id, {
-                'is_public': 1
+                'is_public': 1,
+                'version_id': parseInt( $("#version_selector_dropdown").attr('current_version_id')),
+                'style_json': style_json //JSON.stringify(style_json)
             },
             successCallback = function (response) {
                 // This method is called when group_to_graph relationship is successfully deleted.
@@ -1176,6 +1181,9 @@ var graphPage = {
                 successCallback = function (response) {
                     // This method is called when nodes are successfully fetched.
                     params.success(response);
+                    default_version = response.versions.find(x => x.id === default_version_id);
+                    default_version ? $('#current_version_label').text(default_version.name) : $('#current_version_label').text('Default');
+                    $("#GraphVersionTable").find('span[row_id=' + default_version_id + ']').parent().parent().addClass('success');
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching nodes.
@@ -1185,7 +1193,7 @@ var graphPage = {
         },
         versionFormatter: function (value, row, index) {
             $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
-            return ('<span class="graph_version_span"  >'+ value +'</span>')
+            return ('<span class="graph_version_span" onclick="graphPage.selectGraphVersion(' + row.id + ');" row_id="'+row.id+'">'+ value +'</span>')
     }
     },
     layoutsTable: {

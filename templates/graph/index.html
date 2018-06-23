@@ -6,6 +6,7 @@
             var graph_json = {{ graph_json_string|safe }};
             var style_json = {{ style_json_string|safe }};
             var default_layout_id = {% if default_layout_id %}{{ default_layout_id|safe }}{% else %}null{% endif %};
+            var default_version_id = {% if default_version_id %}{{ default_version_id|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>
 
@@ -228,9 +229,9 @@
             <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
                     <button type="button" id="version_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
-                        <i> Branch :</i> <bold style="font-weight: bold" >Version</bold> <span class="caret"></span>
+                        <i> Version :</i> <bold style="font-weight: bold" id="current_version_label">--------</bold> <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" id="version_selector_dropdown">
+                    <ul class="dropdown-menu" id="version_selector_dropdown" current_version_id="">
                     </ul>
                 </div>
         </ul>
