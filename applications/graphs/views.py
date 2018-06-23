@@ -114,6 +114,7 @@ def graph_page(request, graph_id):
 		else:
 			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
 
+	context['default_version_id'] = context['graph']['default_version_id']
 	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
 	context['data'] = {k: json.dumps(v, encoding='ascii') for k,v in context['graph']['graph_json']['data'].items()}
 	context['style_json_string'] = json.dumps(context['graph']['style_json'])
