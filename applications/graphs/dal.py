@@ -97,7 +97,12 @@ def update_graph(db_session, id, updated_graph):
 	:return: Graph if id exists else None
 	"""
 	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	version_id = update_graph if 'version_id' in updated_graph else graph.default_version_id
+	graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == version_id)
+
 	for (key, value) in updated_graph.items():
+		if key == 'graph_json' or key == 'style_json':
+			setattr(graph_version, key, value)
 		setattr(graph, key, value)
 	return graph
 
@@ -122,7 +127,8 @@ def delete_graph(db_session, id):
 
 @with_session
 def get_graph_by_id(db_session, id):
-	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	query = db_session.query(Graph).filter(Graph.id == id)
+	return query.one_or_none()
 
 
 @with_session
@@ -130,7 +136,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
-	query = query.options(defer("graph_json")).options(defer("style_json"))
+	#query = query.options(defer("graph_json")).options(defer("style_json"))
 
 	graph_filter_group = []
 	if is_public is not None:
@@ -145,6 +151,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 		query = query.filter(Graph.id.in_(graph_ids))
 
 	options_group = []
+	options_group.append(joinedload('graph_versions'))
 	if tags is not None and len(tags) > 0:
 		options_group.append(joinedload('graph_tags'))
 	if nodes is not None and len(nodes) > 0:
@@ -158,6 +165,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 
 	if group_ids is not None:
 		query = query.filter(Graph.groups.any(Group.id.in_(group_ids)))
+	query = query.filter(GraphVersion.id==Graph.default_version_id)
 
 	edges = [] if edges is None else edges
 	nodes = [] if nodes is None else nodes
