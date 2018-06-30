@@ -194,16 +194,14 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	                         is_public=is_public, default_layout_id=default_layout_id)
 	default_version =  db.add_graph_version(request.db_session, name=name, description='Default Version',
 	                                        owner_email=owner_email, graph_json=json.dumps(G.get_graph_json()),
-	                                        style_json=json.dumps(G.get_style_json()), graph_id=new_graph.id)
+	                                        style_json=json.dumps(G.get_style_json()), graph_id=new_graph.id, is_default = True)
 
+	# Add default_version to new_graph
+	new_graph.__setattr__('default_version', default_version)
 	# Add graph_json to new_graph
 	new_graph.__setattr__('graph_json', default_version.graph_json)
-
 	# Add style_json to new_graph
 	new_graph.__setattr__('style_json', default_version.style_json)
-	# Store the index of default version in the graph table (new_graph entry)
-	new_graph.__setattr__('default_version_id',default_version.id)
-	#db.set_default_version(request.db_session, new_graph.id, default_version.id)
 
 	# Add graph tags
 	for tag in G.get_tags():
@@ -600,6 +598,37 @@ def delete_edge_by_id(request, edge_id):
 	return
 
 def search_graph_versions(request, graph_id=None, names=None, limit=20, offset=0, order='desc', sort='name'):
+	"""
+		Parameters
+		----------
+		request : object
+			HTTP GET Request.
+		graph_id : string
+			Unique ID of the graph.
+		names : list of strings
+			Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+		limit : integer
+			Number of entities to return. Default value is 20.
+		offset : integer
+			Offset the list of returned entities by this number. Default value is 0.
+		order : string
+			Defines the column sort order, can only be 'asc' or 'desc'.
+		sort : string
+			Defines which column will be sorted.
+
+		Returns
+		-------
+		total : integer
+			Number of groups matching the request.
+		graph_versions : List of Graph Versions.
+			List of Graph Version Objects with given limit and offset.
+
+		Raises
+		------
+
+		Notes
+		------
+		"""
 	if sort == 'name':
 		sort_attr = db.GraphVersion.name
 	elif sort == 'update_at':
@@ -611,8 +640,6 @@ def search_graph_versions(request, graph_id=None, names=None, limit=20, offset=0
 		orber_by = db.desc(sort_attr)
 	else:
 		orber_by = db.asc(sort_attr)
-
-	## TODO: create a util function to relpace the code parse sort and order parameters. This code is repeated again and again.
 
 	total, graph_versions = db.find_graph_versions(request.db_session,
 	                             names=names,
