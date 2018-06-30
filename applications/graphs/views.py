@@ -1604,7 +1604,7 @@ def _graph_versions_api(request, graph_id, version_id=None):
 	else:
 		raise BadRequest(request)
 
-def _get_graph_versions(request, graph_id, query={}):
+def _get_graph_versions(request, graph_id, query=dict()):
 	"""
 
 	Query Parameters
@@ -1627,6 +1627,8 @@ def _get_graph_versions(request, graph_id, query={}):
 	----------
 	request : object
 		HTTP GET Request.
+	graph_id : string
+			Unique ID of the graph.
 
 	Returns
 	-------
@@ -1637,6 +1639,8 @@ def _get_graph_versions(request, graph_id, query={}):
 
 	Raises
 	------
+	BadRequest - `User is not authorized to access private graphs created by given owner. This means either the graph belongs to a different owner
+	or graph is not shared with the user.
 
 	Notes
 	------
@@ -1648,6 +1652,15 @@ def _get_graph_versions(request, graph_id, query={}):
 	querydict = QueryDict('', mutable=True)
 	querydict.update(query)
 	query = querydict
+
+	# Validate search graphs API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if query.get('is_public', None) != '1':
+			if get_request_user(request) != query.get('member_email', None) \
+					and get_request_user(request) != query.get('owner_email', None):
+				raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+				                 args=query.get('owner_email', None))
 
 	total, versions_list = graphs.search_graph_versions(request,
 	                                        graph_id=graph_id,
@@ -1718,7 +1731,7 @@ def _add_graph_version(request, graph_id, graph_version={}):
 	------
 
 	"""
-	#
+
 
 	return utils.serializer(graphs.add_graph_version(request,
 	                                        name=graph_version.get('name', None),
@@ -1749,6 +1762,5 @@ def _delete_graph_version(request, graph_id, graph_version_id):
 	------
 
 	"""
-	#authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
-
+	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 	graphs.delete_graph_version_by_id(request, graph_version_id)

@@ -300,8 +300,8 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 	description = Column(String, nullable=True)
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="graph_versions", uselist=False)
 	default_version_graph = relationship("Graph", foreign_keys="Graph.default_version_id",
-										back_populates="default_version", cascade="all,  delete-orphan",
-										uselist=False)
+	                                     back_populates="default_version", cascade="all,  delete-orphan",
+	                                     uselist=False)
 	constraints = (
 		UniqueConstraint('graph_id', 'name', name='_graph_version_uc_graph_id_name'),
 		UniqueConstraint('id', 'name', name='_graph_version_uc_id_name'),
