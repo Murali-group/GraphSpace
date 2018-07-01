@@ -18,8 +18,8 @@ def get_edges(db_session, edges, order=desc(Edge.updated_at), page=0, page_size=
 
 @with_session
 def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None, names=None, nodes=None, edges=None, tags=None,
-											order=desc(Graph.updated_at), page=0, page_size=10, partial_matching=False,
-											owner_email=None, is_public=None):
+	                                   order=desc(Graph.updated_at), page=0, page_size=10, partial_matching=False,
+	                                   owner_email=None, is_public=None):
 	query = db_session.query(Graph)
 
 	edges = [] if edges is None else edges
