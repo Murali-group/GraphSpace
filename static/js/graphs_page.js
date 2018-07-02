@@ -536,6 +536,8 @@ var graphPage = {
             successCallback = function (response) {
                 graph_json = JSON.parse(response.graph_json);
                 //graphPage.contructCytoscapeGraph();
+                $("#graphVisualizationTabBtn.link-reset").click();
+                $(location).attr('href', '#graph_visualization_tab');
                 graphPage.init();
                 $("#version_selector_dropdown").attr('current_version_id', row);
                 $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
@@ -1176,7 +1178,7 @@ var graphPage = {
             }
 
             params.data["graph_id"] = $('#GraphID').val();
-
+            params.data["owner_email"] = $('#UserEmail').val();
             apis.version.get($('#GraphID').val(), params.data,
                 successCallback = function (response) {
                     // This method is called when nodes are successfully fetched.
