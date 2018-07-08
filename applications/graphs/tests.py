@@ -1519,11 +1519,69 @@ class GraphVersionModelTestCase(TestCase):
 		self.assertEqual(graphversion1.graph.id, graph1.id)
 
 
+class LayoutToGraphVersionModelTestCase(TestCase):
+	def setUp(self):
+		db = Database()
+		# connect to the database
+		self.connection = db.engine.connect()
+		# begin a non-ORM transaction
+		self.trans = self.connection.begin()
+		# bind an individual Session to the connection
+		self.session = Session(bind=self.connection)
+
+	def tearDown(self):
+		self.session.close()
+
+		# rollback - everything that happened with the
+		# Session above (including calls to commit())
+		# is rolled back.
+		self.trans.rollback()
+
+		# return connection to the Engine
+		self.connection.close()
+
+	def test_crud_operation(self):
+		"""
+		Basic CRUD (Create, Retrieve, Update, Delete) operation should work properly.
+		"""
+
+		# Create
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.assertEqual(graph1.name, 'graph1')
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+		                             graph_json='{}', style_json='{}', description='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
+		self.session.commit()
+		layout1 = self.session.query(Layout).filter(Layout.owner_email == 'owner@example.com').one_or_none()
+		graphversion1 = self.session.query(GraphVersion).filter(GraphVersion.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(LayoutToGraphVersion(layout_id=layout1.id, graph_version_id=graphversion1.id, status='True'))
+		self.session.commit()
+		layouttographversion1 = self.session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.layout_id == layout1.id).one_or_none()
+		self.assertEqual(graphversion1.id, layouttographversion1.graph_version_id)
+		self.assertEqual(layout1.id, layouttographversion1.layout_id)
+		#
+		# Update
+		layouttographversion1.status = 'False'
+		self.session.commit()
+		layouttographversion1 = self.session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.layout_id == layout1.id).one_or_none()
+		self.assertEqual(layouttographversion1.status, 'False')
+		#
+		# Delete
+		self.session.delete(layouttographversion1)
+		self.session.commit()
+		layouttographversion1 = self.session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.layout_id == layout1.id).one_or_none()
+		self.assertIsNone(layouttographversion1)
+
+		# Retrieve
+		num_layout_to_graph_versions = self.session.query(LayoutToGraphVersion).count()
+		self.assertEqual(num_layout_to_graph_versions, 0)
 
 
+	def test_fkey_constraint(self):
 
-
-
-
-
-
+		with self.assertRaises(IntegrityError):
+			self.session.add(GraphVersion(graph_version_id=0, status = 'Null'))
+			self.session.commit()
