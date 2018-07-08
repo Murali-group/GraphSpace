@@ -30,6 +30,8 @@ urlpatterns = [
 	# Graph Versions
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/$', views.graph_versions_ajax_api, name='graph_versions_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)$', views.graph_versions_ajax_api, name='graph_versions_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)/compatibility$', views.graph_versions_to_layout_ajax_api, name='graph_versions_to_layout_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)/compatibility/(?P<layout_id>[^/]+)$', views.graph_versions_to_layout_ajax_api, name='graph_versions_to_layout_ajax_api'),
 
 	# REST APIs Endpoints
 
