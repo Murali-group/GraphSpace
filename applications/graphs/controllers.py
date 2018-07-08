@@ -650,14 +650,36 @@ def search_graph_versions(request, graph_id=None, names=None, limit=20, offset=0
 
 	return total, graph_versions
 
+
 def get_graph_version_by_id(request, version_id):
 	return db.get_graph_version_by_id(request.db_session, version_id)
+
 
 def add_graph_version(request, name=None, description=None, owner_email=None, graph_json=None, graph_id=None):
 	if name is None or graph_id is None or graph_json is None:
 		raise Exception("Required Parameter is missing!")
 	return db.add_graph_version(request.db_session, name=name, description=description, owner_email=owner_email, graph_json=graph_json, graph_id=graph_id)
 
+
 def delete_graph_version_by_id(request, graph_version_id):
 	db.delete_graph_version(request.db_session, id=graph_version_id)
+	return
+
+
+def get_graph_version_to_layout_status(request, graph_version_id, layout_id):
+	return db.get_graph_version_to_layout_status(request.db_session, graph_version_id, layout_id)
+
+
+def add_graph_version_to_layout_status(request, graph_version_id, layout_id, status=None):
+	if graph_version_id is None or layout_id is None:
+		raise Exception("Required Parameter(s) are missing!")
+	return db.add_graph_version_to_layout_status(request.db_session, graph_version_id=graph_version_id, layout_id=layout_id, status=status)
+
+
+def update_graph_version_to_layout_status(request, graph_version_id, layout_id=None, status=None):
+	return db.update_graph_version_to_layout_status(request.db_session, graph_version_id, layout_id, status)
+
+
+def delete_graph_version_to_layout_status(request, graph_version_id, layout_id):
+	db.delete_graph_version_to_layout_status(request.db_session, graph_version_id=graph_version_id, layout_id=layout_id)
 	return

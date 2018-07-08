@@ -396,6 +396,9 @@ def update_layout(db_session, id, updated_layout):
 	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
 	for (key, value) in updated_layout.items():
 		setattr(layout, key, value)
+	layout_to_graph_versions = db_session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.layout_id == 7).all()
+	for obj in layout_to_graph_versions:
+		obj.status = "Null"
 	return layout
 
 
@@ -556,3 +559,68 @@ def set_default_version(db_session, graph_id, default_version_id):
 	graph = db_session.query(Graph).filter(Graph.id == graph_id).one_or_none()
 	setattr(graph, 'default_version_id', default_version_id)
 	return
+
+
+@with_session
+def get_graph_version_to_layout_status(db_session, graph_version_id, layout_id):
+	"""
+	GET graph version to layout compatibility status.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id: Unique ID of the layout
+	:return: Graph Version to Layout compatibility status if it exists else None
+	"""
+	return db_session.query(LayoutToGraphVersion).filter(and_(LayoutToGraphVersion.graph_version_id == graph_version_id, LayoutToGraphVersion.layout_id == layout_id)).one_or_none()
+
+
+@with_session
+def add_graph_version_to_layout_status(db_session, graph_version_id, layout_id, status=None):
+	"""
+	ADD graph version to layout compatibility.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id - Unique ID of the layout.
+	:param status - Compatibility status. [Default = None].
+	:return: Graph Version to Layout compatibility status if it exists else None
+	"""
+	graph_version_to_layout = LayoutToGraphVersion(graph_version_id=graph_version_id, layout_id=layout_id, status=status)
+	db_session.add(graph_version_to_layout)
+	return graph_version_to_layout
+
+
+@with_session
+def delete_graph_version_to_layout_status(db_session, graph_version_id, layout_id):
+	"""
+	DELETE graph version.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph version
+	:return: None
+	"""
+	graph_version_to_layout = db_session.query(LayoutToGraphVersion).filter(and_(LayoutToGraphVersion.graph_version_id == graph_version_id,
+																		 LayoutToGraphVersion.layout_id == layout_id)).one_or_none()
+	db_session.delete(graph_version_to_layout)
+	return
+
+
+@with_session
+def update_graph_version_to_layout_status(db_session, graph_version_id, layout_id=None, status=None):
+	"""
+	UPDATE graph version to layout compatibility.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id - Unique ID of the layout.
+	:param status - Compatibility status. [Default = None].
+	:return: Graph Version to Layout compatibility status if layout_id is passed and row exists else None
+	"""
+
+	query = db_session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.graph_version_id == graph_version_id)
+	if layout_id:
+		query = query.filter(LayoutToGraphVersion.layout_id == layout_id)
+
+	graph_version_to_layout = query.all()
+
+	for item in graph_version_to_layout:
+		item.status = status
+	# if len(graph_version_to_layout) >1:
+	#	return {"message": "Updated status of %d Layouts" % (len(graph_version_to_layout))}
+	return graph_version_to_layout[0]
