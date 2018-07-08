@@ -289,6 +289,7 @@ class GraphToTag(TimeStampMixin, Base):
 		args = cls.constraints + cls.indices
 		return args
 
+
 class GraphVersion(IDMixin, TimeStampMixin, Base):
 	__tablename__ = 'graph_version'
 
@@ -326,7 +327,7 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 				'created_at': cls.created_at.isoformat(),
 				'updated_at': cls.updated_at.isoformat()
 			}
-		else :
+		else:
 			return {
 				'id': cls.id,
 				'name': cls.name,
@@ -336,3 +337,24 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 				'created_at': cls.created_at.isoformat(),
 				'updated_at': cls.updated_at.isoformat()
 			}
+
+
+class LayoutToGraphVersion(IDMixin, TimeStampMixin, Base):
+	__tablename__ = 'layout_to_graph_version'
+
+	layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	graph_version_id = Column(Integer, ForeignKey('graph_version.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	status = Column(String, nullable=True)
+
+	constraints = (
+		UniqueConstraint('layout_id', 'graph_version_id', 'compatibility_status', name='layout_uc_layout_id_graph_version_id_compatibility_status')
+	)
+
+	def serialize(cls, **kwargs):
+		return {
+			'graph_version_id': cls.graph_version_id,
+			'layout_id': cls.layout_id,
+			'status': cls.status,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
