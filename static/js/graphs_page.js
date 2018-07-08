@@ -72,6 +72,24 @@ var apis = {
             apis.jsonRequest('DELETE', apis.layouts.ENDPOINT({'graph_id': graph_id}) + layout_id, undefined, successCallback, errorCallback)
         }
     },
+    compatibility: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/version/<%= graph_version_id %>/compatibility/'),
+        get: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        add: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, graph_version_id, layout_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, undefined, successCallback, errorCallback)
+        },
+        update: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        delete: function (graph_id, graph_version_id, layout_id, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, undefined, successCallback, errorCallback)
+        }
+    },
     logging: {
         ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
@@ -439,6 +457,8 @@ var uploadGraphPage = {
 var graphPage = {
     cyGraph: undefined,
     timeout: null,
+    currentVersionID: null,
+    conflictingElements: [],
     init: function () {
         /**
          * This function is called to setup the graph page.
@@ -538,6 +558,7 @@ var graphPage = {
                 //graphPage.contructCytoscapeGraph();
                 $("#graphVisualizationTabBtn.link-reset").click();
                 $(location).attr('href', '#graph_visualization_tab');
+                graphPage.currentVersionID = row;
                 graphPage.init();
                 $("#version_selector_dropdown").attr('current_version_id', row);
                 $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
@@ -548,6 +569,19 @@ var graphPage = {
                 $.notify({message: "You are not authorized to access this Version."}, {type: 'danger'});
             });
         $('#version_selector > bold').text(label);
+    },
+    onSelectLayoutCompBtnClick: function (selector) {
+        elementType = selector.split('[')[0];
+        graphPage.cyGraph.elements(selector).select();
+        graphPage.layoutEditor.init();
+        if (elementType == 'node') {
+            graphPage.layoutEditor.nodeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.nodes(':selected')));//$('#editSelectedNodesBtn').click();
+        }
+        else {
+            graphPage.layoutEditor.edgeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.edges(':selected')));//$('#editSelectedEdgesBtn').click();
+        }
+        $("#graphVisualizationTabBtn.link-reset").click();
+        $(location).attr('href', '#graph_visualization_tab');
     },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
@@ -575,8 +609,125 @@ var graphPage = {
         if ($(e).hasClass('auto-layout')) {
             graphPage.applyAutoLayout($(e).data('layout-id'));
         } else {
-            graphPage.applyUserLayout($(e).data('layout-id'));
+            //graphPage.applyUserLayout($(e).data('layout-id'));
+            graphPage.getLayoutCompatibilityStatus($(e).data('layout-id'));
         }
+    },
+    getLayoutCompatibilityStatus: function (layout_id) {
+        //graphPage.applyUserLayout($(e).data('layout-id'));
+        var params = {data:''};
+        params.data["owner_email"] = $('#UserEmail').val();
+        apis.compatibility.get($('#GraphID').val(), graphPage.currentVersionID, layout_id, params.data,
+                successCallback = function (response) {
+                    // This method is called when layouts are successfully fetched.
+
+                    if(response==null){
+                        graphPage.checkLayoutCompatibility(layout_id);
+                    }
+                    else if(response.status=="False"){
+                        $.notify({
+                        message: "The selected layout is not compatible with the current version of Graph"
+                    }, {
+                        type: 'danger'
+                    });
+
+                    }
+                    else if(response.status=="True" || response.status=="true"){
+                        graphPage.applyUserLayout(layout_id);
+                        $("#layout_compatibility_navtab").addClass('invisible');
+                    }
+                    else {
+                        graphPage.checkLayoutCompatibility(layout_id);
+                    }
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching layouts.
+                    params.error('Error');
+                }
+            );
+    },
+    checkLayoutCompatibility: function (layout_id) {
+
+        var layout ={'style_json':'', 'position_json':''};
+        var res = null;
+        var style_json_dict = {};
+        var matchedElements = 0;
+        var compatibility_status = "False";
+        var style_json1 = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
+        graphPage.conflictingElements = [];
+        $.each(style_json1, function( index, value ) {
+            style_json_dict[value.selector] = false;
+        });
+        apis.layouts.getByID($('#GraphID').val(), layout_id,
+            successCallback = function (response) {
+                layout['style_json'] = JSON.parse(response['style_json']);
+                layout['positions_json'] = JSON.parse(response['positions_json']);
+                $.each(layout["style_json"].style, function( index, value ) {
+                    res = graphPage.cyGraph.filter(value.selector);
+                    if (res.length){
+                        style_json_dict[value.selector]= true;
+                        matchedElements += 1;
+                    }
+                    console.log( index + ": " + value.selector );
+                });
+                if (Object.keys(style_json_dict).length <= matchedElements) {
+                    compatibility_status = "True";
+                    graphPage.applyUserLayout(layout_id);
+                    $("#layout_compatibility_navtab").addClass('invisible');
+                }
+                else {
+                    $("#layout_compatibility_navtab").removeClass('invisible');
+                    $.notify({
+                        /*message: "Cannot apply <b>" + $('li').find('button[data-layout-id=1] b')[0].textContent +
+                                  "</b> for the current version of Graph. </br> Could not find style for " +
+                                  (Object.keys(style_json_dict).length - matchedElements) + " elements"*/
+                        message: "<b>" +(Object.keys(style_json_dict).length - matchedElements) + "</b> elements are incompatible with <b>" +
+                                $('li').find('button[data-layout-id=1] b')[0].textContent + "</b> for this Version of the Graph." +
+                                "</br> Check <b>Layout Compatibility Tab</b> for details"
+                    }, {
+                        type: 'danger'
+                    });
+                }
+                $.each(style_json1, function( index, value ) {
+                        if (style_json_dict[value.selector] == false){
+                            graphPage.conflictingElements.push({'name' : value.selector, 'style' : value.style});;
+                        }
+                    });
+                //Test
+                graphPage.applyUserLayout(layout_id);
+                $('#LayoutCompatibilityTable').bootstrapTable('refresh');
+
+                apis.compatibility.add($('#GraphID').val(), graphPage.currentVersionID, layout_id,
+                         {
+                            "owner_email": $('#UserEmail').val(),
+                            "graph_id": $('#GraphID').val(),
+                            "compatibility_status": compatibility_status
+                        },
+                        successCallback = function (response) {
+                        if (Object.keys(style_json_dict).length <= matchedElements){
+                            /*$.notify({
+                                message: "Compatibility status of Layout with ID : " + layout_id + " has been updated successfully"
+                            }, {
+                                type: 'success'
+                            });*/
+                        }
+                },
+                        errorCallback = function (response) {
+                        // This method is called when  error occurs while deleting group_to_graph relationship.
+                        /*$.notify({
+                            message: "Error storing Compatibility status"
+                        }, {
+                            type: 'danger'
+                        });*/
+                });
+
+                console.log("Applied Layout on " + matchedElements + " matching elements of "+ Object.keys(style_json_dict).length)
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access this layout, create an account and contact resource's owner for permission to access this layout."}, {type: 'danger'});
+            });
+
     },
     applyLayoutStyle: function (layoutStyle) {
         layoutStyle = _.map(cytoscapeGraph.parseStylesheet(layoutStyle), function (elemStyle) {
@@ -586,13 +737,14 @@ var graphPage = {
                     'selector': elemStyle['selector'],
                     'style': graphPage.getGraphSpaceNodeStyle(elemStyle['style'], elem.data())
                 }
-            } else {
+            } else if(elem.isEdge()){
                 return {
                     'selector': elemStyle['selector'],
                     'style': graphPage.getGraphSpaceEdgeStyle(elemStyle['style'], elem.data())
                 }
             }
         });
+        layoutStyle = layoutStyle.filter(function(n){ return n != undefined });
         graphPage.cyGraph.style().fromJson(_.concat(defaultStylesheet, layoutStyle, selectedElementsStylesheet)).update();
     },
     applyLayout: function (layoutID) {
@@ -1183,6 +1335,7 @@ var graphPage = {
                 successCallback = function (response) {
                     // This method is called when nodes are successfully fetched.
                     params.success(response);
+                    graphPage.currentVersionID = default_version_id;
                     default_version = response.versions.find(x => x.id === default_version_id);
                     default_version ? $('#current_version_label').text(default_version.name) : $('#current_version_label').text('Default');
                     $("#GraphVersionTable").find('span[row_id=' + default_version_id + ']').parent().parent().addClass('success');
@@ -1196,7 +1349,27 @@ var graphPage = {
         versionFormatter: function (value, row, index) {
             $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
             return ('<span class="graph_version_span" onclick="graphPage.selectGraphVersion(' + row.id + ');" row_id="'+row.id+'">'+ value +'</span>')
-    }
+    },
+    },
+    layoutCompatibilityTable: {
+        getConflictingLayoutElements: function (param) {
+            data = {data : [{'name':'Sample', 'description':'StyleSheet'}]};
+            param.success({'data': graphPage.conflictingElements});
+            return [];
+        },
+        elementsFormatter: function (value, row, index) {
+            //$("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            value = value.split('\'')[1];
+            return ('<span onclick="graphPage.selectGraphVersion(' + row.name + ');" row_name="'+row.name+'">'+ value +'</span>')
+    },
+        selectorFormatter: function (value, row, index) {
+            //$("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            return ('<span class="graph_version_span" onclick="graphPage.onSelectLayoutCompBtnClick(&quot;' + (row.name) + '&quot;);" row_name="'+row.name+'">'+ value +'</span>')
+    },
+        styleFormatter: function (value, row, index) {
+            //$("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            return ('<span  >'+ JSON.stringify(value) +'</span>')
+    },
     },
     layoutsTable: {
         getPrivateLayoutsByGraphID: function (params) {
