@@ -1604,6 +1604,7 @@ def _graph_versions_api(request, graph_id, version_id=None):
 	else:
 		raise BadRequest(request)
 
+
 def _get_graph_versions(request, graph_id, query=dict()):
 	"""
 
@@ -1675,6 +1676,7 @@ def _get_graph_versions(request, graph_id, query=dict()):
 		'versions': [utils.serializer(version, summary=True) for version in versions_list]
 	}
 
+
 def _get_graph_version(request, graph_id, version_id):
 	"""
 
@@ -1698,6 +1700,7 @@ def _get_graph_version(request, graph_id, version_id):
 	"""
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 	return utils.serializer(graphs.get_graph_version_by_id(request, version_id))
+
 
 @is_authenticated()
 def _add_graph_version(request, graph_id, graph_version={}):
@@ -1740,6 +1743,7 @@ def _add_graph_version(request, graph_id, graph_version={}):
 	                                        graph_json=graph_version.get('graph_json', None),
 	                                        graph_id=graph_id))
 
+
 @is_authenticated()
 def _delete_graph_version(request, graph_id, graph_version_id):
 	"""
@@ -1764,3 +1768,197 @@ def _delete_graph_version(request, graph_id, graph_version_id):
 	"""
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 	graphs.delete_graph_version_by_id(request, graph_version_id)
+
+
+@csrf_exempt
+@is_authenticated()
+def graph_versions_to_layout_ajax_api(request, graph_id, version_id, layout_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/graphs/<graph_id>/version/<version_id>/layouts/<layout_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _graph_versions_to_layout_api(request, graph_id=graph_id, graph_version_id=version_id, layout_id=layout_id)
+
+
+def _graph_versions_to_layout_api(request, graph_id, graph_version_id, layout_id=None):
+	"""
+	Handles any request (GET/POST) sent to version/<version_id>/layout/<layout_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+	graph_id : string
+		Unique ID of the graph.
+	version_id : string
+		Unique ID of the version.
+	layout_id : string
+		Unique ID of the layout.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "GET" and graph_version_id is not None and layout_id is not None:
+			return HttpResponse(json.dumps(_get_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id)),
+			                    content_type="application/json")
+		elif request.method == "POST" and graph_version_id is not None and layout_id is not None:
+			return HttpResponse(json.dumps(_add_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id, status=json.loads(request.body)['compatibility_status'])),
+			                    content_type="application/json",
+			                    status=201)
+		elif request.method == "PUT" and graph_version_id is not None:
+			return HttpResponse(json.dumps(_update_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id, status=json.loads(request.body)['compatibility_status'])),
+			                    content_type="application/json",
+			                    status=200)
+		elif request.method == "DELETE" and graph_version_id is not None and layout_id is not None:
+			_delete_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id)
+			return HttpResponse(json.dumps({
+				"message": "Successfully deleted Graph Version with id=%s's compatibility status with Layout with id =%s" % (graph_version_id, layout_id)
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id, status=None):
+	"""
+	Parameters
+	----------
+	request : object
+		HTTP POST Request.
+	graph_id : string
+		Unique ID of the graph. Required
+	graph_version_id : string
+		Unique ID of the graph version. Required
+	layout_id : string
+		Unique ID of the layout. Required
+
+
+	Returns
+	-------
+	layout_to_graph_version : object
+		Newly created layout_to_graph_version object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	return utils.serializer(graphs.add_graph_version_to_layout_status(request,
+	                                                                  graph_version_id=graph_version_id,
+	                                                                  layout_id=layout_id,
+	                                                                  status=status))
+
+
+def _get_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request
+	graph_id : string
+		Unique ID of the graph. Required.
+	graph_version_id : string
+		Unique ID of the Graph Version
+	layout_id : string
+		Unique ID of the Layout.
+
+	Returns
+	-------
+	version: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	return utils.serializer(graphs.get_graph_version_to_layout_status(request,
+	                                                                  graph_version_id=graph_version_id,
+	                                                                  layout_id=layout_id))
+
+
+@is_authenticated()
+def _update_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id=None, status=None):
+	"""
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph. Required
+	graph_version_id : string
+		Unique ID of the Graph Version
+	layout_id : string
+		Unique ID of the Layout.
+	status : Boolean
+		Compatibility Status. [Default : None]
+
+	Returns
+	-------
+	layout_to_graph_version : object
+		Updated LayoutToGraphVersion object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	If no layout_id is passed then all the Layouts associated with the Graph Version is updated.
+	If no status is passed then status is set to None by default.
+
+	"""
+	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+
+	return utils.serializer(graphs.update_graph_version_to_layout_status(request,
+	                                                                     graph_version_id=graph_version_id,
+	                                                                     layout_id=layout_id,
+	                                                                     status=status))
+
+
+@is_authenticated()
+def _delete_graph_version_to_layout_status(request, graph_id, graph_version_id, layout_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph. Required
+	graph_version_id : string
+		Unique ID of the Graph Version
+	layout_id : string
+		Unique ID of the Layout.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+	graphs.delete_graph_version_to_layout_status(request, graph_version_id, layout_id)
