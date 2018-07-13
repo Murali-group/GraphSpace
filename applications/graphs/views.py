@@ -1572,6 +1572,7 @@ def _add_comment(request, comment={}):
 	node_names = comment.get('node_names', None)
 	graph_id   = comment.get('graph_id', None)
 	owner_email = comment.get('owner_email', None)
+	parent_comment_id = comment.get('parent_comment_id', None)
 	edges, nodes = [], []
 
 	# Validate if user has permission to create a comment on this graph.
@@ -1608,7 +1609,7 @@ def _add_comment(request, comment={}):
 		                                         edges=edges,
 		                                         nodes=nodes,
 		                                         layout_id=comment.get('layout', None),
-		                                         parent_comment_id=comment.get('parent_comment_id', None),
+		                                         parent_comment_id=parent_comment_id,
 		                                         owner_email=owner_email))
 
 
@@ -1619,6 +1620,22 @@ def _get_comments_by_graph_id(request, graph_id):
 		'comments': [utils.serializer(comment) for comment in comments_list]
 	}
 
+def _edit_comment(request, graph_id, comment = {}):
+
+	#Validate if user has permission to edit comment 
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	return utils.serializer(comments.edit_comment(request,
+												  message=comment.get('message', None),
+												  is_resolved=comment.get('is_resolved',None),
+												  comment_id=comment.get('id', None)))
+
+def _delete_comment(request, graph_id, comment = {}):
+	#Validate if user has permission to edit comment 
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	return utils.serializer(comments.delete_comment(request,
+													id=comment.get('id',None)))
+
+
 def graph_comments_ajax_api(request, graph_id=None):
 	return _comments_api(request, graph_id=graph_id)
 
@@ -1627,6 +1644,15 @@ def _comments_api(request, graph_id=None):
 	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
 		if request.method == "POST":
 			return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "GET" and graph_id != None:
+			return HttpResponse(json.dumps(_get_comments_by_graph_id(request, graph_id=graph_id)),
+			                    content_type="application/json", status=201)
+		elif request.method == "PUT" and graph_id != None:
+			return HttpResponse(json.dumps(_edit_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "DELETE" and graph_id != None:
+			return HttpResponse(json.dumps(_delete_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
 			                    content_type="application/json", status=201)
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
