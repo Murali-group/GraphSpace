@@ -28,7 +28,6 @@ class Comment(IDMixin, TimeStampMixin, Base):
 	layout = relationship("Layout", foreign_keys=[layout_id], back_populates="comments", uselist=False)
 
 	parent_comment_id = Column(Integer, ForeignKey('comment.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
-	parent_comment = relationship("Comment", foreign_keys=[parent_comment_id], uselist=False, cascade="all, delete-orphan")
 
 	nodes = association_proxy('associated_nodes', 'node')
 	edges = association_proxy('associated_edges', 'edge')

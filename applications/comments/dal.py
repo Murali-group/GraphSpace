@@ -8,7 +8,8 @@ import graphspace.signals as socket
 from graphspace.database import *
 
 @with_session
-def add_comment(db_session, message, graph_id, owner_email=None, is_resolved=0, layout_id=None, parent_comment_id=None):
+def add_comment(db_session, message, graph_id, owner_email=None, is_resolved=0, layout_id=None,
+			 parent_comment_id=None):
 	comment = Comment(owner_email=owner_email, graph_id=graph_id, layout_id=layout_id,
 				  is_resolved=is_resolved, parent_comment_id=parent_comment_id, message=message)
 	graph = get_graph_by_id(db_session, graph_id)
@@ -34,18 +35,58 @@ def get_comment_by_graph_id(db_session, graph_id):
 	return query.count(), query.all()
 
 @with_session
+def get_comment_by_id(db_session, id):
+	comment = db_session.query(Comment).filter(Comment.id== id).one_or_none()
+	return comment
+
+@with_session
 def get_user_emails_by_graph_id(db_session, graph_id):
-	query = db_session.query(Comment, User, GroupToGraph, GroupToUser)
-	query = query.filter(Comment.graph_id == graph_id)
+	query = db_session.query(User, GroupToGraph, GroupToUser)
 	query = query.filter(GroupToGraph.graph_id == graph_id)
 	query = query.filter(GroupToUser.group_id == GroupToGraph.group_id)
 	query = query.filter(User.id == GroupToUser.user_id)
 	return query.all()
 
+@with_session
+def get_owner_email_by_graph_id(db_session, graph_id):
+	query = db_session.query(User, Graph)
+	query = query.filter(User.email == Graph.owner_email)
+	return query.all()
+
+@with_session
+def update_comment(db_session, id, updated_comment):
+	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
+	for (key, value) in updated_comment.items():
+		setattr(comment, key, value)
+	return comment
+
+@with_session
+def delete_comment(db_session, id):
+	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
+	query   = db_session.query(Comment).filter(Comment.parent_comment_id == id).all()
+	db_session.delete(comment)
+	for ele in query:
+		db_session.delete(ele)
+	return comment
+
 @event.listens_for(Comment, 'after_insert')
-def send_comment(mapper, connection, comment):
+def insert_listener(mapper, connection, comment):
+	send_comment(comment, event="insert")
+
+@event.listens_for(Comment, 'after_update')
+def update_listener(mapper, connection, comment):
+	send_comment(comment, event="update")
+
+@event.listens_for(Comment, 'after_delete')
+def delete_listener(mapper, connection, comment):
+	send_comment(comment, event="delete")
+
+def send_comment(comment, event):
 	users_list = get_user_emails_by_graph_id(Database().session(), comment.serialize()['graph_id'])
+	users_list = [ele[0] for ele in users_list]
+	owner_list = get_owner_email_by_graph_id(Database().session(), comment.serialize()['graph_id'])
+	owner_list = [ele[0] for ele in owner_list]
 	if comment.graph.is_public == 0:
-		socket.send_comment(comment=comment, type="private", users=users_list)
+		socket.send_comment(comment=comment, type="private", users=owner_list + users_list, event=event)
 	else:
-		socket.send_comment(comment=comment, type="public")
+		socket.send_comment(comment=comment, type="public", event=event)

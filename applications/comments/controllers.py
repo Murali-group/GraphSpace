@@ -25,3 +25,25 @@ def add_comment(request, message=None, graph_id=None, edges=None, nodes=None, is
 
 def get_comment_by_graph_id(request, graph_id):
 	return db.get_comment_by_graph_id(request.db_session, graph_id=graph_id)
+
+@atomic_transaction
+def edit_comment(request, comment_id=None, message=None, is_resolved=None):
+
+	updated_comment = {}
+	
+	# Check if field is present or not.
+	if is_resolved != None:
+		updated_comment['is_resolved'] = is_resolved
+	if message != None:
+		updated_comment['message'] = message
+
+	# Only top comment in a comment thread can be resolved.
+	comment = db.get_comment_by_id(request.db_session, id=comment_id)
+	if comment.serialize()['is_resolved'] == 0 and is_resolved == 1 and comment.serialize()['parent_comment_id'] != None:
+		raise Exception('Reply comments can not be resolved')
+
+	return db.update_comment(request.db_session, id=comment_id, updated_comment=updated_comment)
+
+@atomic_transaction
+def delete_comment(request, id=None):
+	return db.delete_comment(request.db_session, id=id)
