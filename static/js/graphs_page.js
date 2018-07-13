@@ -73,6 +73,15 @@ var apis = {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/comments/'),
         add: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('POST', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        get: function (graph_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.comments.ENDPOINT({'graph_id': graph_id}), undefined, successCallback, errorCallback)
+        },
+        update: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        delete: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -455,6 +464,28 @@ var graphPage = {
             $('#saveLayoutModal').modal('show');
         });
 
+        $('#commentAddBtn').click(function () {
+            $('#defaultSideBar').removeClass('active');
+            $('#AddCommentSideBar').addClass('active');
+            graphPage.expandTextarea($('#commentMessage'));
+        });
+
+        $('#createCommentBtn').click(function () {
+            graphPage.createComment($('#commentMessage').val(), null);
+        });
+
+        $('#cancelCommentBtn').click(function () {
+            $('#commentMessage').val("");
+            $('#AddCommentSideBar').removeClass('active');
+            $('#defaultSideBar').addClass('active');
+        });
+
+        $('#viewCommentsBtn').click(function () {
+            $('#defaultSideBar').removeClass('active');
+            $('#ViewCommentSideBar').addClass('active');
+            graphPage.getComments();
+        });
+
         $('#exitLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
@@ -503,10 +534,10 @@ var graphPage = {
 
         graphPage.defaultLayoutWidget.init();
     },
-    createComment: function() {
+    createComment: function(message, parent_comment_id) {
+        console.log('creating comment');
         var nodes = graphPage.cyGraph.$(':selected').nodes();
         var edges = graphPage.cyGraph.$(':selected').edges();
-        var message = "Hello my first message";
         var node_names = [], edge_names = [];
         nodes.each(function(idx) {
             node_names.push(nodes[idx]._private.data.id);
@@ -514,17 +545,26 @@ var graphPage = {
         edges.each(function(idx) {
             edge_names.push(edges[idx]._private.data.id);
         });
-        var owner_email = ($('#UserEmail').val())? $('#UserEmail').val() : null;
+        var owner_email = ($('#UserEmail').val() && $('#UserEmail').val() != "None")? $('#UserEmail').val() : null;
         var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
-        // var message  = ($('#message_comment').val())? $('#message_comment').val() : null; 
+        if(message == "") {
+            $.notify({
+                message: 'Please enter a valid message'
+            }, {
+                type: 'danger'
+            });
+            return;
+        }
         apis.comments.add(graph_id, {
                     "owner_email": owner_email,
                     "graph_id": graph_id,
                     "node_names": node_names,
                     "edge_names": edge_names,
-                    "message": message
+                    "message": message,
+                    "parent_comment_id": parent_comment_id
                 },
                 successCallback = function (response) {
+                    $('#commentMessage').val("");
                     $.notify({
                         message: 'Successfully created a comment'
                     }, {
@@ -538,6 +578,240 @@ var graphPage = {
                         type: 'danger'
                     });
                 });
+    },
+    getComments: function() {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.get(graph_id,
+                successCallback = function (response) {
+                    graphPage.commentsFormatter(response.total, response.comments);
+                    $.notify({
+                        message: 'Successfully fetched comments of this graph'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    editComment: function(comment_id, message, is_resolved) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.update(graph_id, {
+                    'id': comment_id,
+                    'message': message,
+                    'is_resolved': is_resolved
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully edited the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    deleteComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.delete(graph_id, {
+                    'id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully deleted the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    commentsFormatter: function (total, comments) {
+        var ele = $('#ViewCommentSideBar');
+        ele.html("");
+        var str = '<li><a id="cancelViewCommentsBtn" class="btn btn-xs d-inline-block" href="#">Back</a></li>';
+        ele.append(str);
+        var comment_threads = [];
+        var visited = {};
+        var comment_obj = {};
+        comments.forEach(function (comment) {
+            if(comment.parent_comment_id == null) {
+                if(comment_obj[comment.id] == null) {
+                    comment_obj[comment.id] = [];
+                }
+                comment_obj[comment.id].push(comment);
+            }
+            else {
+                if(comment_obj[comment.parent_comment_id] == null) {
+                    comment_obj[comment.parent_comment_id] = [];
+                }
+                comment_obj[comment.parent_comment_id].push(comment);
+            }
+        });
+        $.each(comment_obj, function( key, value ) {
+            comment_threads.push(value);
+        });
+        graphsPage = comment_threads;
+        comment_threads.forEach(function (comment_thread) {
+            comment_thread.sort(function(a, b) {
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+            var p_comment = comment_thread[0];
+            str = '<div class="list-group comment-box"><a class="list-group-item comment-highlight" style="padding:7px;">';
+            for(var comment of comment_thread) {
+                str += graphPage.generateCommentTemplate(comment);
+            };
+            str += graphPage.generateReplyTemplate(p_comment);   
+            str += '</a></div><br/>';
+            ele.append(str);
+
+            //Do not display resolved comments
+            if(p_comment != null && p_comment.is_resolved == 1 && p_comment.parent_comment_id == null) {
+                $('#messageTable' + p_comment.id).parent().parent().addClass('passive');
+            }
+        });
+        comments.forEach(function (comment) {
+            graphPage.addCommentHandlers(comment);
+        });
+        $('#cancelViewCommentsBtn').click(function () {
+            $('#ViewCommentSideBar').removeClass('active');
+            $('#defaultSideBar').addClass('active');
+        });
+    },
+    addCommentHandlers: function(comment) {
+        if(comment.parent_comment_id === null) {
+            graphPage.expandTextarea($('#replyMessage' + comment.id));
+            $('#replyMessage' + comment.id).unbind('click').click(function (e) {
+                e.preventDefault();
+                $('#replyTable' + comment.id).removeClass('passive');
+            });
+            $('#cancelReplyBtn' + comment.id).unbind('click').click(function (e) {
+                e.preventDefault();
+                $('#replyTable' + comment.id).addClass('passive');
+            });
+            $('#createReplyBtn' + comment.id).unbind('click').click(function (e) {
+                e.preventDefault();
+                var comment_id = parseInt(this.id.split("createReplyBtn")[1]);
+                graphPage.createComment($('#replyMessage' + comment_id).val(), comment_id);
+                $('#replyMessage' + comment_id).val("");
+                $('#replyTable' + comment_id).addClass('passive');
+            });
+        };
+        $('#editComment' + comment.id).unbind('click').click(function (e) {
+            e.preventDefault();
+            var ele = $('#messageTable' + comment.id);
+            var msg = ele.find('p'); msg.addClass('passive');
+            var inp = ele.find('textarea'); inp.val(msg.text()); inp.removeClass('passive');
+            var btn = $('#editTable' + comment.id); btn.removeClass('passive');
+            graphPage.expandTextarea(inp);
+        });
+        $('#resolveComment' + comment.id).unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(this.id.split("resolveComment")[1]);
+            graphPage.editComment(comment_id, undefined, 1);
+        });
+        $('#deleteComment' + comment.id).unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(this.id.split("deleteComment")[1]);
+            graphPage.deleteComment(comment_id);
+        });
+        $('#editCommentBtn' + comment.id).unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(this.id.split("editCommentBtn")[1]);
+            var msg = $('#messageTable' + comment.id).find('textarea').val();
+            graphPage.editComment(comment_id, msg, undefined);
+        });
+        $('#cancelEditBtn' + comment.id).unbind('click').click(function (e) {
+            e.preventDefault();
+            var btn = $('#editTable' + comment.id); btn.addClass('passive');
+            var ele = $('#messageTable' + comment.id);
+            var inp = ele.find('textarea'); inp.addClass('passive');
+            var msg = ele.find('p'); msg.removeClass('passive');
+        });
+    },
+    generateCommentTemplate: function(comment) {
+        if (comment.owner_email == null || comment.owner_email == "None") {
+                    comment.owner_email = "Anonymous";
+        }
+        var str = "";
+        var date = comment.created_at.split(/:|T/);
+        var date = date[1] + ':' + date[2] + ' ' + date[0];
+        str += '<table style="width:100%" id="infoTable' + comment.id + '" ><tr>';
+        str += '<td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>';
+        str += '<td class="comment-email">' + comment.owner_email + '<div class="comment-date">' + date + '</div></td>';
+        str += '<td style="vertical-align:top;">' + graphPage.generateCommentOptions(comment) + '</td></tr></table>';
+        str += '<table style="width:100%" id="messageTable' + comment.id + '"><tr><td><p class="comment-message">';
+        str +=  comment.message + '</p><textarea class="form-control passive" style="height:32px;"';
+        str += ' placeholder="Edit.."></textarea></td></tr></table>';
+        str += '<table id="editTable' + comment.id + '" class="passive" style="width: 100%;"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a id="editCommentBtn' + comment.id + '" class="btn btn-primary" href="#">Edit</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a id="cancelEditBtn' + comment.id;
+        str += '" class="btn btn-primary" href="#">Cancel</a></td></tr></table>';
+        str += '<hr id="commentSeparator' + comment.id + '" style="width:205px;margin-left:-7px;">';
+        return str;
+    },
+    generateCommentOptions: function(comment) {
+        var str = "";
+        str += '<div class="dropdown">';
+        str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
+        str += '<i class="fa comment-symbol">&#xf142;</i>';
+        str += '</button><div class="dropdown-menu">';
+        str += '<a class="dropdown-item" id="editComment' + comment.id + '" >Edit</a>';
+        if(comment.parent_comment_id === null) {
+            str += '<a class="dropdown-item" id="resolveComment' + comment.id + '">Resolve</a>';
+        };
+        str += '<a class="dropdown-item" id="deleteComment' + comment.id + '" >Delete</a>';
+        str += '</div></div>';
+        return str;
+    },
+    generateReplyTemplate: function(comment) {
+        var str = "";
+        str += '<textarea class="form-control" style="height:32px;" id="replyMessage' + comment.id;
+        str += '" placeholder="Reply.."></textarea><table id="replyTable' + comment.id +'" class="passive" style="width: 100%"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a id="createReplyBtn' + comment.id + '" class="btn btn-primary" href="#">Reply</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a id="cancelReplyBtn' + comment.id + '" class="btn btn-primary" href="#">Cancel</a></td>';
+        str += '</tr></table>';
+        return str;
+    },
+    // commentsBfs: function (comment_obj, comment, visited) {
+    //     var comments = [];
+    //     var queue = [];
+    //     visited[comment.id] = true;
+    //     queue.push(comment);
+    //     while(queue.length != 0) {
+    //         var node = queue.shift();
+    //         comments.push(node);
+    //         if(node.parent_comment_id != null && visited[node.parent_comment_id] == undefined) {
+    //             visited[node.parent_comment_id] = true;
+    //             queue.push(comment_obj[node.parent_comment_id]);
+    //         }
+    //         if(node.child_comment_id != null && visited[node.child_comment_id] == undefined) {
+    //             visited[node.child_comment_id] = true;
+    //             queue.push(comment_obj[node.child_comment_id]);
+    //         }
+    //     }
+    //     return comments;
+    // },
+    expandTextarea: function (element) {
+        element.keyup(function() {
+            this.style.overflow = 'hidden';
+            this.style.height = 0;
+            this.style.height = this.scrollHeight + 'px';
+        });
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
@@ -1547,7 +1821,6 @@ var graphPage = {
 
             $("#nodeBackgroundColorPicker").colorpicker();
             $("#edgeLineColorPicker").colorpicker();
-
         },
         nodeSelector: {
             init: function () {

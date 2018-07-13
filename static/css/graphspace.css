@@ -439,3 +439,51 @@ p.lead {
         margin-left: 0;
     }
 }
+
+.comment-box {
+    margin: auto;
+    width: 85%;
+    padding: 0px;
+}
+
+.comment-highlight {
+    background-color: #F7F7F7;
+}
+
+.comment-image {
+    width: 100%;
+}
+
+.comment-email {
+    padding: 5px;
+}
+
+.comment-message {
+    width: 169px;
+    overflow-wrap: break-word;
+}
+
+.passive {
+    display: none;
+}
+
+.comment-date {
+    color: grey;
+    font-size: 13px;
+}
+
+.comment-options {
+    background-color: #F7F7F7;
+    width: 1em !important;
+}
+
+.comment-symbol {
+    font-size: 17px;
+    color: grey;
+}
+
+.comment-options:hover {
+    border-style: solid;
+    border-width: 1px;
+    border-color: silver;
+}
