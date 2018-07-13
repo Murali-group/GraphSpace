@@ -24,6 +24,7 @@
 
     <!-- Custom styles for this base template -->
     <script src="{% static 'components/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'components/jquery/dist/popper.min.js' %}"></script>
 
     <script type="text/javascript">
     $(function() {
@@ -115,20 +116,58 @@
             // Different types of communication over sockets
             switch (data.type) {
                 case "comment":
-                    userSocket.comments(data.message);
+                    userSocket.comments(data);
                     break;
             }
         },
         // Socket communication for comments
         comments: function(data) {
-            container = $('.comment-list');
-            if(container.length != 0) {
-                string  = '<ul class="list-group"><li class="list-group-item"><b>Email: </b>';
-                string += (data.owner_email) + '<br/><b> Message: </b>';
-                string += (data.message) + '</li></ul><br/>';
-                container.append(string);
+            // alert(data.event);
+            if(data.event === "insert") {
+                userSocket.addcomment(data.message);
+            }
+            else if(data.event === "update") {
+                userSocket.updatecomment(data.message);
+            }
+            else if(data.event === "delete") {
+                userSocket.deletecomment(data.message);
             }
         },
+        addcomment: function(comment) {
+            var str = "";
+            if(comment.parent_comment_id != null) {
+                str += graphPage.generateCommentTemplate(comment);
+                $(str).insertBefore($("#replyMessage" + comment.parent_comment_id));
+            }
+            if(comment.parent_comment_id == null) {
+                var ele = $('#ViewCommentSideBar');
+                var str = "";
+                str += '<div class="list-group comment-box">';
+                str += '<a class="list-group-item list-group-item-action" style="padding:7px;">';
+                str += graphPage.generateCommentTemplate(comment);
+                str += graphPage.generateReplyTemplate(comment);
+                str += '</a></div><br/>';
+                ele.append(str);
+            }
+            graphPage.addCommentHandlers(comment);
+        },
+        updatecomment: function(comment) {
+            ele = $('#messageTable' + comment.id);
+            msg = ele.find('p'); msg.text(comment.message);
+            $('#cancelEditBtn' + comment.id).click();
+            if(comment.parent_comment_id == null && comment.is_resolved == 1) {
+                $('#messageTable' + comment.id).parent().parent().addClass('passive');
+            }
+        },
+        deletecomment: function(comment) {
+            if(comment.parent_comment_id == null) {
+                graphsPage = $('#messageTable' + comment.id).parent().parent().remove();
+            }
+            ($('#infoTable' + comment.id))? $('#infoTable' + comment.id).remove() : null;
+            ($('#editTable' + comment.id))? $('#editTable' + comment.id).remove() : null;
+            ($('#messageTable' + comment.id))? $('#messageTable' + comment.id).remove() : null;
+            ($('#commentSeparator' + comment.id))? $('#commentSeparator' + comment.id).remove() : null;
+        }
     }
 
     // Connect to socket.
