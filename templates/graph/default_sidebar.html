@@ -41,7 +41,16 @@
             </a>
         </li>
     {% endif %}
-
+    <li>
+        <a id="commentAddBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#AddCommentSideBar">
+            <i class="fa fa-pencil-square-o fa-lg"></i> Add <br>Comment
+        </a>
+    </li>
+    <li>
+        <a id="viewCommentsBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#ViewCommentSideBar">
+            <i class="fa fa-pencil-square-o fa-lg"></i> View <br>Comments
+        </a>
+    </li>
     {% if uid and uid == graph.owner_email %}
         <li>
             <a id="setDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onSetDefaultLayoutBtn()">
