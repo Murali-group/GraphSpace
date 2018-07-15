@@ -179,7 +179,7 @@
                         <i class="fa fa-share-alt fa-lg"></i> Share
                     </a>
                 {% endif %}
-                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 1002">
                     <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-download fa-lg"></i> Export <span class="caret"></span>
@@ -226,12 +226,13 @@
                     <a class="link-reset" href="#graph_version_tab" data-toggle="tab">Graph Version</a>
                 </li>
             {% endif %}
-            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 1001">
                     <button type="button" id="version_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
-                        <i> Version :</i> <bold style="font-weight: bold" id="current_version_label">--------</bold> <span class="caret"></span>
+                        <bold style="font-weight: bold" id="current_version_label">--------</bold> <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" id="version_selector_dropdown" current_version_id="">
+                        <li class="dropdown-header">Select Graph Version</li>
                     </ul>
                 </div>
         </ul>
