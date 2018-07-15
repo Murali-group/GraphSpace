@@ -535,12 +535,17 @@ var graphPage = {
         apis.version.getByID($('#GraphID').val(), row,
             successCallback = function (response) {
                 graph_json = JSON.parse(response.graph_json);
-                //graphPage.contructCytoscapeGraph();
+
+                window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname);
                 $("#graphVisualizationTabBtn.link-reset").click();
                 $(location).attr('href', '#graph_visualization_tab');
                 graphPage.init();
                 $("#version_selector_dropdown").attr('current_version_id', row);
                 $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
+                /* Pan and zooms the graph to fit to a collection. */
+                window.setTimeout(function () {
+                    graphPage.cyGraph.fit();
+                }, 300);
                 //console.log("Success");
             },
             errorCallback = function (xhr, status, errorThrown) {
