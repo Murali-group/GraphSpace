@@ -748,7 +748,7 @@ var graphPage = {
                     comment.owner_email = "Anonymous";
         }
         var str = "";
-        var date = comment.created_at.split(/:|T/);
+        var date = comment.updated_at.split(/:|T/);
         var date = date[1] + ':' + date[2] + ' ' + date[0];
         str += '<table style="width:100%" id="infoTable' + comment.id + '" ><tr>';
         str += '<td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>';

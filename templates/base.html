@@ -143,7 +143,7 @@
                 var ele = $('#ViewCommentSideBar');
                 var str = "";
                 str += '<div class="list-group comment-box">';
-                str += '<a class="list-group-item list-group-item-action" style="padding:7px;">';
+                str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
                 str += graphPage.generateCommentTemplate(comment);
                 str += graphPage.generateReplyTemplate(comment);
                 str += '</a></div><br/>';
@@ -152,8 +152,12 @@
             graphPage.addCommentHandlers(comment);
         },
         updatecomment: function(comment) {
-            ele = $('#messageTable' + comment.id);
+            ele  = $('#messageTable' + comment.id);
+            inf  = $('#infoTable' + comment.id);
+            date = comment.updated_at.split(/:|T/);
+            date = date[1] + ':' + date[2] + ' ' + date[0];
             msg = ele.find('p'); msg.text(comment.message);
+            dt  = inf.find('.comment-date'); dt.text(date);
             $('#cancelEditBtn' + comment.id).click();
             if(comment.parent_comment_id == null && comment.is_resolved == 1) {
                 $('#messageTable' + comment.id).parent().parent().addClass('passive');
