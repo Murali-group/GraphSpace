@@ -1614,10 +1614,22 @@ def _add_comment(request, comment={}):
 
 
 def _get_comments_by_graph_id(request, graph_id):
+
+	#Validate if user has permission to read the comments.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
 	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
+	comments_array = []
+	for comment in comments_list:
+		comment = utils.serializer(comment)
+		nodes_list = comments.get_nodes_by_comment_id(request, comment_id=comment['id'])
+		edges_list = comments.get_edges_by_comment_id(request, comment_id=comment['id'])
+		comment['nodes'] = [node[2].serialize() for node in nodes_list]
+		comment['edges'] = [edge[2].serialize() for edge in edges_list]
+		comments_array.append(comment)
 	return {
 		'total': total,
-		'comments': [utils.serializer(comment) for comment in comments_list]
+		'comments': comments_array
 	}
 
 def _edit_comment(request, graph_id, comment = {}):

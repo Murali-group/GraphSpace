@@ -565,6 +565,8 @@ var graphPage = {
                 },
                 successCallback = function (response) {
                     $('#commentMessage').val("");
+                    graphPage.cyGraph.edges().unselect();
+                    graphPage.cyGraph.nodes().unselect();
                     $.notify({
                         message: 'Successfully created a comment'
                     }, {
@@ -671,7 +673,8 @@ var graphPage = {
                 return new Date(a.created_at) - new Date(b.created_at);
             });
             var p_comment = comment_thread[0];
-            str = '<div class="list-group comment-box"><a class="list-group-item comment-highlight" style="padding:7px;">';
+            str =  '<div class="list-group comment-box" id="commentContainer' + p_comment.id + '">';
+            str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
             for(var comment of comment_thread) {
                 str += graphPage.generateCommentTemplate(comment);
             };
@@ -687,6 +690,7 @@ var graphPage = {
         comments.forEach(function (comment) {
             graphPage.addCommentHandlers(comment);
         });
+
         $('#cancelViewCommentsBtn').click(function () {
             $('#ViewCommentSideBar').removeClass('active');
             $('#defaultSideBar').addClass('active');
@@ -710,6 +714,25 @@ var graphPage = {
                 $('#replyMessage' + comment_id).val("");
                 $('#replyTable' + comment_id).addClass('passive');
             });
+            $('#commentContainer' + comment.id).data("nodes", comment.nodes);
+            $('#commentContainer' + comment.id).data("edges", comment.edges);
+            $('#commentContainer' + comment.id).hover(
+                function () {
+                    $(this).data("nodes").forEach(function (node) {
+                        graphPage.cyGraph.nodes("[name = '" + node.name + "']").select();
+                    });
+                    $(this).data("edges").forEach(function (edge) {
+                        graphPage.cyGraph.edges("[name = '" + edge.name + "']").select();
+                    });
+                }, function() {
+                    $(this).data("nodes").forEach(function (node) {
+                        graphPage.cyGraph.nodes("[name = '" + node.name + "']").unselect();
+                    });
+                    $(this).data("edges").forEach(function (edge) {
+                        graphPage.cyGraph.edges("[name = '" + edge.name + "']").unselect();
+                    });
+                }
+            );
         };
         $('#editComment' + comment.id).unbind('click').click(function (e) {
             e.preventDefault();

@@ -48,6 +48,20 @@ def get_user_emails_by_graph_id(db_session, graph_id):
 	return query.all()
 
 @with_session
+def get_nodes_by_comment_id(db_session, comment_id):
+	query = db_session.query(Comment, CommentToNode, Node)
+	query = query.filter(comment_id == CommentToNode.comment_id)
+	query = query.filter(CommentToNode.node_id == Node.id)
+	return query.all()
+
+@with_session
+def get_edges_by_comment_id(db_session, comment_id):
+	query = db_session.query(Comment, CommentToEdge, Edge)
+	query = query.filter(comment_id == CommentToEdge.comment_id)
+	query = query.filter(CommentToEdge.edge_id == Edge.id)
+	return query.all()
+
+@with_session
 def get_owner_email_by_graph_id(db_session, graph_id):
 	query = db_session.query(User, Graph)
 	query = query.filter(User.email == Graph.owner_email)
