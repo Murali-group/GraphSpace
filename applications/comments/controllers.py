@@ -21,6 +21,7 @@ def add_comment(request, message=None, graph_id=None, edges=None, nodes=None, is
 		for node_id in nodes:
 			db.add_comment_to_node(request.db_session, comment_id=comment.id, node_id=node_id)
 
+	db.send_comment(comment, event="insert")
 	return comment
 
 def get_comment_by_graph_id(request, graph_id):
@@ -53,3 +54,24 @@ def edit_comment(request, comment_id=None, message=None, is_resolved=None):
 @atomic_transaction
 def delete_comment(request, id=None):
 	return db.delete_comment(request.db_session, id=id)
+
+def is_user_authorized_to_update_comment(request, username, comment_id):
+	is_authorized = False
+	comment = db.get_comment_by_id(request.db_session, comment_id)
+
+	if comment is not None:  # Comment exists
+		if comment.owner_email == username:
+			is_authorized = True
+
+	return is_authorized
+
+def is_user_authorized_to_delete_comment(request, username, comment_id):
+	is_authorized = False
+
+	comment = db.get_comment_by_id(request.db_session, comment_id)
+
+	if comment is not None:  # Comment exists
+		if comment.owner_email == username:
+			is_authorized = True
+
+	return is_authorized

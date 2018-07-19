@@ -83,9 +83,9 @@ def delete_comment(db_session, id):
 		db_session.delete(ele)
 	return comment
 
-@event.listens_for(Comment, 'after_insert')
-def insert_listener(mapper, connection, comment):
-	send_comment(comment, event="insert")
+# @event.listens_for(Comment, 'after_insert')
+# def insert_listener(mapper, connection, comment):
+	# send_comment(comment, event="insert")
 
 @event.listens_for(Comment, 'after_update')
 def update_listener(mapper, connection, comment):
@@ -96,9 +96,9 @@ def delete_listener(mapper, connection, comment):
 	send_comment(comment, event="delete")
 
 def send_comment(comment, event):
-	users_list = get_user_emails_by_graph_id(Database().session(), comment.serialize()['graph_id'])
+	users_list = get_user_emails_by_graph_id(Database().session(), comment.graph_id)
 	users_list = [ele[0] for ele in users_list]
-	owner_list = get_owner_email_by_graph_id(Database().session(), comment.serialize()['graph_id'])
+	owner_list = get_owner_email_by_graph_id(Database().session(), comment.graph_id)
 	owner_list = [ele[0] for ele in owner_list]
 	if comment.graph.is_public == 0:
 		socket.send_comment(comment=comment, type="private", users=owner_list + users_list, event=event)
