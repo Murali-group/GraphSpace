@@ -142,7 +142,7 @@
             if(comment.parent_comment_id == null) {
                 var ele = $('#ViewCommentSideBar');
                 var str = "";
-                str += '<div class="list-group comment-box">';
+                str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
                 str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
                 str += graphPage.generateCommentTemplate(comment);
                 str += graphPage.generateReplyTemplate(comment);

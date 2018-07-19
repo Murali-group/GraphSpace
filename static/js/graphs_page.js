@@ -667,7 +667,6 @@ var graphPage = {
         $.each(comment_obj, function( key, value ) {
             comment_threads.push(value);
         });
-        graphsPage = comment_threads;
         comment_threads.forEach(function (comment_thread) {
             comment_thread.sort(function(a, b) {
                 return new Date(a.created_at) - new Date(b.created_at);
@@ -718,18 +717,20 @@ var graphPage = {
             $('#commentContainer' + comment.id).data("edges", comment.edges);
             $('#commentContainer' + comment.id).hover(
                 function () {
+                    graphPage.cyGraph.nodes().unselect();
+                    graphPage.cyGraph.edges().unselect();
                     $(this).data("nodes").forEach(function (node) {
-                        graphPage.cyGraph.nodes("[name = '" + node.name + "']").select();
+                        graphPage.cyGraph.nodes("[name = '" + node + "']").select();
                     });
                     $(this).data("edges").forEach(function (edge) {
-                        graphPage.cyGraph.edges("[name = '" + edge.name + "']").select();
+                        graphPage.cyGraph.edges("[name = '" + edge + "']").select();
                     });
                 }, function() {
                     $(this).data("nodes").forEach(function (node) {
-                        graphPage.cyGraph.nodes("[name = '" + node.name + "']").unselect();
+                        graphPage.cyGraph.nodes("[name = '" + node + "']").unselect();
                     });
                     $(this).data("edges").forEach(function (edge) {
-                        graphPage.cyGraph.edges("[name = '" + edge.name + "']").unselect();
+                        graphPage.cyGraph.edges("[name = '" + edge + "']").unselect();
                     });
                 }
             );
@@ -793,11 +794,14 @@ var graphPage = {
         str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
         str += '<i class="fa comment-symbol">&#xf142;</i>';
         str += '</button><div class="dropdown-menu">';
-        str += '<a class="dropdown-item" id="editComment' + comment.id + '" >Edit</a>';
-        if(comment.parent_comment_id === null) {
-            str += '<a class="dropdown-item" id="resolveComment' + comment.id + '">Resolve</a>';
-        };
-        str += '<a class="dropdown-item" id="deleteComment' + comment.id + '" >Delete</a>';
+        if($('#UserEmail').val() === comment.owner_email) {
+            str += '<a class="dropdown-item" id="editComment' + comment.id + '" >Edit</a>';
+            if(comment.parent_comment_id === null) {
+                str += '<a class="dropdown-item" id="resolveComment' + comment.id + '">Resolve</a>';
+            };
+            str += '<a class="dropdown-item" id="deleteComment' + comment.id + '" >Delete</a>';
+        }
+        str += '<a class="dropdown-item" id="pinComment' + comment.id + '" >Pin</a>';
         str += '</div></div>';
         return str;
     },
