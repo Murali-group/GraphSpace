@@ -29,5 +29,6 @@ class ErrorCodes(object):
 		LayoutNameAlreadyExists = (1014, "Layout with name `{0}` already exists.")
 
 		# Comments API
-		CannotCreateCommentForOtherUser = (1015, "Cannot create comment with owner email = `{0}`.")
-
+		UserNotAuthorizedToCreateComment = (1015, "Please create an account or login to create a comment on this graph.")
+		UserNotAuthorizedToUpdateComment = (1016, "You do not have permission to update this comment.")
+		UserNotAuthorizedToDeleteComment = (1017, "You do not have permission to delete this comment.")

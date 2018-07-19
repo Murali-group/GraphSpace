@@ -1577,6 +1577,9 @@ def _add_comment(request, comment={}):
 
 	# Validate if user has permission to create a comment on this graph.
 	if graph_id != None:
+		uid = request.session['uid'] if 'uid' in request.session else None
+		if uid == None:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToCreateComment)
 		authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
 	if len(edge_names) == 0:
@@ -1619,23 +1622,15 @@ def _get_comments_by_graph_id(request, graph_id):
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
 	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
-	comments_array = []
-	for comment in comments_list:
-		comment = utils.serializer(comment)
-		nodes_list = comments.get_nodes_by_comment_id(request, comment_id=comment['id'])
-		edges_list = comments.get_edges_by_comment_id(request, comment_id=comment['id'])
-		comment['nodes'] = [node[2].serialize() for node in nodes_list]
-		comment['edges'] = [edge[2].serialize() for edge in edges_list]
-		comments_array.append(comment)
 	return {
 		'total': total,
-		'comments': comments_array
+		'comments': [utils.serializer(comment) for comment in comments_list]
 	}
 
 def _edit_comment(request, graph_id, comment = {}):
 
 	#Validate if user has permission to edit comment 
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
 	return utils.serializer(comments.edit_comment(request,
 												  message=comment.get('message', None),
 												  is_resolved=comment.get('is_resolved',None),
@@ -1643,7 +1638,7 @@ def _edit_comment(request, graph_id, comment = {}):
 
 def _delete_comment(request, graph_id, comment = {}):
 	#Validate if user has permission to edit comment 
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	authorization.validate(request, permission='COMMENT_DELETE', comment_id=comment.get('id',None))
 	return utils.serializer(comments.delete_comment(request,
 													id=comment.get('id',None)))
 
