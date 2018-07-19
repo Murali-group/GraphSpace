@@ -123,6 +123,11 @@
         // Socket communication for comments
         comments: function(data) {
             // alert(data.event);
+            var graph_id = ($('#GraphID').val())? parseInt($('#GraphID').val()) : null;
+            if(graph_id === null || graph_id !== data.message.graph_id) {
+                //the user did not open the graph page of the required graph.
+                return;
+            }
             if(data.event === "insert") {
                 userSocket.addcomment(data.message);
             }
