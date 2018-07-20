@@ -1,3 +1,27 @@
 <!-- Sidebar -->
 <ul id="ViewCommentSideBar" class="sidebar-nav gs-sidebar-nav">
+	<li><a id="cancelViewCommentsBtn" class="btn btn-xs d-inline-block" href="#">Back</a></li>
+	<li class="text-center" data-intro='You can filter comments based on the graph element selected'>
+        <div id="selectFilters" style="text-align: left">
+        	<div class="form-check">
+      			<label class="form-check-label" for="allComments">
+        			<input type="radio" class="form-check-input" id="allComments" name="optradio" checked>
+        			<h7>View all comments</h7>
+      			</label>
+    		</div>
+    		<div class="form-check">
+      			<label class="form-check-label" for="filterComments">
+        			<input type="radio" class="form-check-input" id="filterComments" name="optradio">
+        			<h7>View comments related to selected graph.</h7>
+      			</label>
+    		</div>
+		    <div class="form-check">
+		      	<label class="form-check-label" for="pinnedComments">
+		        	<input type="radio" class="form-check-input" id="pinnedComments" name="optradio">
+		        	<h7>View pinned comments</h7>
+		      	</label>
+		    </div>
+        </div>
+    </li>
+    <div id="commentsList" style="align-content: center"></div>
 </ul>

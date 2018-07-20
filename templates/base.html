@@ -145,7 +145,7 @@
                 $(str).insertBefore($("#replyMessage" + comment.parent_comment_id));
             }
             if(comment.parent_comment_id == null) {
-                var ele = $('#ViewCommentSideBar');
+                var ele = $('#commentsList');
                 var str = "";
                 str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
                 str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
@@ -154,6 +154,7 @@
                 str += '</a></div><br/>';
                 ele.append(str);
             }
+            $('#cyGraphContainer').click();
             graphPage.addCommentHandlers(comment);
         },
         updatecomment: function(comment) {

@@ -643,9 +643,9 @@ var graphPage = {
                 });
     },
     commentsFormatter: function (total, comments) {
-        var ele = $('#ViewCommentSideBar');
+        var ele = $('#commentsList');
         ele.html("");
-        var str = '<li><a id="cancelViewCommentsBtn" class="btn btn-xs d-inline-block" href="#">Back</a></li>';
+        var str = "";
         ele.append(str);
         var comment_threads = [];
         var visited = {};
@@ -690,6 +690,24 @@ var graphPage = {
             graphPage.addCommentHandlers(comment);
         });
 
+        $('#cyGraphContainer').click(function () {
+            if($("#filterComments").is(':checked')) {
+                graphPage.filterCommentsBasedOnGraph();
+            }
+        });
+
+        $('#filterComments').click(function () {
+            graphPage.filterCommentsBasedOnGraph();
+        });
+
+        $('#allComments').click(function () {
+            $('#commentsList').children("div").removeClass("passive");
+        });
+
+        $('#pinnedComments').click(function () {
+            $('#commentsList').children("div").removeClass("passive");
+        });
+
         $('#cancelViewCommentsBtn').click(function () {
             $('#ViewCommentSideBar').removeClass('active');
             $('#defaultSideBar').addClass('active');
@@ -717,6 +735,8 @@ var graphPage = {
             $('#commentContainer' + comment.id).data("edges", comment.edges);
             $('#commentContainer' + comment.id).hover(
                 function () {
+                    graphPage.cacheNodes = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedNodes(graphPage.cyGraph));
+                    graphPage.cacheEdges = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedEdges(graphPage.cyGraph));
                     graphPage.cyGraph.nodes().unselect();
                     graphPage.cyGraph.edges().unselect();
                     $(this).data("nodes").forEach(function (node) {
@@ -726,12 +746,10 @@ var graphPage = {
                         graphPage.cyGraph.edges("[name = '" + edge + "']").select();
                     });
                 }, function() {
-                    $(this).data("nodes").forEach(function (node) {
-                        graphPage.cyGraph.nodes("[name = '" + node + "']").unselect();
-                    });
-                    $(this).data("edges").forEach(function (edge) {
-                        graphPage.cyGraph.edges("[name = '" + edge + "']").unselect();
-                    });
+                    graphPage.cyGraph.nodes().unselect();
+                    graphPage.cyGraph.edges().unselect();
+                    graphPage.cacheNodes.select();
+                    graphPage.cacheEdges.select();
                 }
             );
         };
@@ -814,31 +832,47 @@ var graphPage = {
         str += '</tr></table>';
         return str;
     },
-    // commentsBfs: function (comment_obj, comment, visited) {
-    //     var comments = [];
-    //     var queue = [];
-    //     visited[comment.id] = true;
-    //     queue.push(comment);
-    //     while(queue.length != 0) {
-    //         var node = queue.shift();
-    //         comments.push(node);
-    //         if(node.parent_comment_id != null && visited[node.parent_comment_id] == undefined) {
-    //             visited[node.parent_comment_id] = true;
-    //             queue.push(comment_obj[node.parent_comment_id]);
-    //         }
-    //         if(node.child_comment_id != null && visited[node.child_comment_id] == undefined) {
-    //             visited[node.child_comment_id] = true;
-    //             queue.push(comment_obj[node.child_comment_id]);
-    //         }
-    //     }
-    //     return comments;
-    // },
+    filterCommentsBasedOnGraph: function () {
+        var nodes = graphPage.cyGraph.$(':selected').nodes();
+        var edges = graphPage.cyGraph.$(':selected').edges();
+        var node_names = [], edge_names = [];
+        nodes.each(function(idx) {
+            node_names.push(nodes[idx]._private.data.id);
+        });
+        edges.each(function(idx) {
+            edge_names.push(edges[idx]._private.data.id);
+        });
+        var ele = $('#commentsList');
+        $.each(ele.children("div"), function(key, comment) {
+            if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
+                $(comment).removeClass('passive');
+            }
+            else if(graphPage.hasCommonElement($(comment).data("edges"), edge_names)) {
+                $(comment).removeClass('passive');
+            }
+            else {
+                $(comment).addClass('passive');
+            }
+        });
+    },
     expandTextarea: function (element) {
         element.keyup(function() {
             this.style.overflow = 'hidden';
             this.style.height = 0;
             this.style.height = this.scrollHeight + 'px';
         });
+    },
+    hasCommonElement: function (arr1, arr2) {
+        var bExists = false;
+        $.each(arr2, function(index, value) {
+            if($.inArray(value,arr1)!=-1) {
+                bExists = true;
+            }
+            if(bExists) {
+                return false;  //break
+            }
+        });
+        return bExists;
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
@@ -2652,6 +2686,11 @@ var cytoscapeGraph = {
     getAllSelectedNodes: function (cy) {
         return _.filter(cy.nodes(), function (node) {
             return node.selected();
+        });
+    },
+    getAllSelectedEdges: function (cy) {
+        return _.filter(cy.edges(), function (edge) {
+            return edge.selected();
         });
     },
     applyLayoutToCollection: function (cy, collection, layout_name) {
