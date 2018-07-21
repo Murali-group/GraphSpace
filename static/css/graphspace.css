@@ -487,3 +487,9 @@ p.lead {
     border-width: 1px;
     border-color: silver;
 }
+
+.collapse-comments {
+    color: #4588FD;
+    text-decoration: underline;
+    padding-bottom: 7px;
+}

@@ -674,16 +674,22 @@ var graphPage = {
             var p_comment = comment_thread[0];
             str =  '<div class="list-group comment-box" id="commentContainer' + p_comment.id + '">';
             str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
-            for(var comment of comment_thread) {
-                str += graphPage.generateCommentTemplate(comment);
-            };
-            str += graphPage.generateReplyTemplate(p_comment);   
-            str += '</a></div><br/>';
+            str += graphPage.generateCommentTemplate(p_comment);
+            comment_thread.shift();
+            if(comment_thread.length > 0) {
+                str += '<div class="collapse-comments">View ' + comment_thread.length + ' replies</div>';
+                str += '<div class="collapse">';
+                for(var comment of comment_thread) {
+                    str += graphPage.generateCommentTemplate(comment);
+                };
+                str += '</div>';
+            }
+            str += graphPage.generateReplyTemplate(p_comment) + '</a></div><br/>';
             ele.append(str);
 
             //Do not display resolved comments
             if(p_comment != null && p_comment.is_resolved == 1 && p_comment.parent_comment_id == null) {
-                $('#messageTable' + p_comment.id).parent().parent().addClass('passive');
+                $('#commentContainer' + p_comment.id).addClass('passive');
             }
         });
         comments.forEach(function (comment) {
@@ -705,7 +711,7 @@ var graphPage = {
         });
 
         $('#pinnedComments').click(function () {
-            $('#commentsList').children("div").removeClass("passive");
+            $('#commentsList').children("div").addClass("passive");
         });
 
         $('#cancelViewCommentsBtn').click(function () {
@@ -730,6 +736,16 @@ var graphPage = {
                 graphPage.createComment($('#replyMessage' + comment_id).val(), comment_id);
                 $('#replyMessage' + comment_id).val("");
                 $('#replyTable' + comment_id).addClass('passive');
+            });
+            $('#commentContainer' + comment.id).find('.collapse-comments').click(function () {
+                $('#commentContainer' + comment.id).find(".collapse").slideToggle('slow');
+                var text = $(this).text().split(' ');
+                if(text[0] === 'View') {
+                    text[0] = 'Hide'; $(this).text(text.join(' '));
+                }
+                else {
+                    text[0] = 'View'; $(this).text(text.join(' '));
+                }
             });
             $('#commentContainer' + comment.id).data("nodes", comment.nodes);
             $('#commentContainer' + comment.id).data("edges", comment.edges);
@@ -803,7 +819,7 @@ var graphPage = {
         str += '<td style="text-align: center; padding-top: 12px;"><a id="editCommentBtn' + comment.id + '" class="btn btn-primary" href="#">Edit</a></td>';
         str += '<td style="text-align: center; padding-top: 12px;"><a id="cancelEditBtn' + comment.id;
         str += '" class="btn btn-primary" href="#">Cancel</a></td></tr></table>';
-        str += '<hr id="commentSeparator' + comment.id + '" style="width:205px;margin-left:-7px;">';
+        str += '<hr style="width:205px;margin-left:-7px;">';
         return str;
     },
     generateCommentOptions: function(comment) {
