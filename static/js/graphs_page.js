@@ -690,6 +690,10 @@ var graphPage = {
             //Do not display resolved comments
             if(p_comment != null && p_comment.is_resolved == 1 && p_comment.parent_comment_id == null) {
                 $('#commentContainer' + p_comment.id).addClass('passive');
+                $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+            }
+            else if(p_comment != null) {
+                $('#commentContainer').data("is_resolved", 0);
             }
         });
         comments.forEach(function (comment) {
@@ -707,7 +711,11 @@ var graphPage = {
         });
 
         $('#allComments').click(function () {
-            $('#commentsList').children("div").removeClass("passive");
+            $('#commentsList').children("div").forEach(function (child) {
+                if(!child.data("is_resolved")) {
+                    child.addClass("active");
+                }
+            });
         });
 
         $('#pinnedComments').click(function () {
@@ -860,6 +868,9 @@ var graphPage = {
         });
         var ele = $('#commentsList');
         $.each(ele.children("div"), function(key, comment) {
+            if($(comment).data("is_resolved")) {
+                return;
+            }
             if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
                 $(comment).removeClass('passive');
             }
