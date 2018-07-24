@@ -484,6 +484,7 @@ var graphPage = {
             $('#defaultSideBar').removeClass('active');
             $('#ViewCommentSideBar').addClass('active');
             graphPage.getComments();
+            $('#allComments').click();
         });
 
         $('#exitLayoutBtn').click(function () {
@@ -643,13 +644,9 @@ var graphPage = {
                 });
     },
     commentsFormatter: function (total, comments) {
-        var ele = $('#commentsList');
-        ele.html("");
-        var str = "";
-        ele.append(str);
-        var comment_threads = [];
-        var visited = {};
-        var comment_obj = {};
+        var ele = $('#commentsList'); ele.html(""); ele.append(str); 
+        var comment_threads = [], comment_obj = {};
+        var visited = {}, str = "";
         comments.forEach(function (comment) {
             if(comment.parent_comment_id == null) {
                 if(comment_obj[comment.id] == null) {
@@ -677,7 +674,7 @@ var graphPage = {
             str += graphPage.generateCommentTemplate(p_comment);
             comment_thread.shift();
             if(comment_thread.length > 0) {
-                str += '<div class="collapse-comments">View ' + comment_thread.length + ' replies</div>';
+                str += '<div class="collapse-comments">View ' + comment_thread.length + 'more replies</div>';
                 str += '<div class="collapse">';
                 for(var comment of comment_thread) {
                     str += graphPage.generateCommentTemplate(comment);
@@ -687,13 +684,12 @@ var graphPage = {
             str += graphPage.generateReplyTemplate(p_comment) + '</a></div><br/>';
             ele.append(str);
 
-            //Do not display resolved comments
-            if(p_comment != null && p_comment.is_resolved == 1 && p_comment.parent_comment_id == null) {
-                $('#commentContainer' + p_comment.id).addClass('passive');
+            //Do setting is_resolved field if the comment is resolved.
+            if(p_comment != null && p_comment.is_resolved == 1) {
                 $('#commentContainer' + p_comment.id).data("is_resolved", 1);
             }
             else if(p_comment != null) {
-                $('#commentContainer').data("is_resolved", 0);
+                $('#commentContainer' + p_comment.id).data("is_resolved", 0);
             }
         });
         comments.forEach(function (comment) {
@@ -711,10 +707,8 @@ var graphPage = {
         });
 
         $('#allComments').click(function () {
-            $('#commentsList').children("div").forEach(function (child) {
-                if(!child.data("is_resolved")) {
-                    child.addClass("active");
-                }
+            $.each($('#commentsList').children("div"), function (key, child) {
+                $(child).removeClass('passive');
             });
         });
 
@@ -868,9 +862,6 @@ var graphPage = {
         });
         var ele = $('#commentsList');
         $.each(ele.children("div"), function(key, comment) {
-            if($(comment).data("is_resolved")) {
-                return;
-            }
             if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
                 $(comment).removeClass('passive');
             }
