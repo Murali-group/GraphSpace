@@ -1582,6 +1582,14 @@ def _add_comment(request, comment={}):
 			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToCreateComment)
 		authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
+	# Reply comments cannot be added to already resolved comment.
+	if parent_comment_id != None:
+		parent_comment = comments.get_comment_by_id(request, parent_comment_id)
+		if parent_comment == None:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.ParentCommentDoesNotExist)
+		elif utils.serializer(parent_comment)['is_resolved'] == 1:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotReplyToResolvedComment)
+
 	if len(edge_names) == 0:
 		edge_names = None
 	if len(node_names) == 0:

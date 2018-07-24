@@ -33,6 +33,9 @@ def get_nodes_by_comment_id(request, comment_id):
 def get_edges_by_comment_id(request, comment_id):
 	return db.get_edges_by_comment_id(request.db_session, comment_id=comment_id)
 
+def get_comment_by_id(request, comment_id):
+	return db.get_comment_by_id(request.db_session, id=comment_id)
+
 @atomic_transaction
 def edit_comment(request, comment_id=None, message=None, is_resolved=None):
 

@@ -36,7 +36,7 @@ def get_comment_by_graph_id(db_session, graph_id):
 
 @with_session
 def get_comment_by_id(db_session, id):
-	comment = db_session.query(Comment).filter(Comment.id== id).one_or_none()
+	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
 	return comment
 
 @with_session
