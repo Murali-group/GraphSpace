@@ -669,12 +669,12 @@ var graphPage = {
                 return new Date(a.created_at) - new Date(b.created_at);
             });
             var p_comment = comment_thread[0];
-            str =  '<div class="list-group comment-box" id="commentContainer' + p_comment.id + '">';
-            str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
+            str = '<div class="list-group comment-box" id="commentContainer' + p_comment.id + '">';
+            str += '<a class="list-group-item comment-highlight">';
             str += graphPage.generateCommentTemplate(p_comment);
             comment_thread.shift();
             if(comment_thread.length > 0) {
-                str += '<div class="collapse-comments">View ' + comment_thread.length + 'more replies</div>';
+                str += '<div class="collapse-comments">View all hidden replies</div>';
                 str += '<div class="collapse">';
                 for(var comment of comment_thread) {
                     str += graphPage.generateCommentTemplate(comment);
@@ -687,6 +687,7 @@ var graphPage = {
             //Do setting is_resolved field if the comment is resolved.
             if(p_comment != null && p_comment.is_resolved == 1) {
                 $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+                $('#commentContainer' + p_comment.id).find('.comment-message').css("background-color","yellow");
             }
             else if(p_comment != null) {
                 $('#commentContainer' + p_comment.id).data("is_resolved", 0);
@@ -722,36 +723,37 @@ var graphPage = {
         });
     },
     addCommentHandlers: function(comment) {
+        var comment_box = $('#commentBox' + comment.id);
         if(comment.parent_comment_id === null) {
-            graphPage.expandTextarea($('#replyMessage' + comment.id));
-            $('#replyMessage' + comment.id).unbind('click').click(function (e) {
+            var container = $('#commentContainer' + comment.id);
+            graphPage.expandTextarea(container.find('.reply-message'));
+            container.find('.reply-message').unbind('click').click(function (e) {
                 e.preventDefault();
-                $('#replyTable' + comment.id).removeClass('passive');
+                container.find('.reply-table').removeClass('passive');
             });
-            $('#cancelReplyBtn' + comment.id).unbind('click').click(function (e) {
+            container.find('.cancel-reply-btn').unbind('click').click(function (e) {
                 e.preventDefault();
-                $('#replyTable' + comment.id).addClass('passive');
+                container.find('.reply-table').addClass('passive');
             });
-            $('#createReplyBtn' + comment.id).unbind('click').click(function (e) {
+            container.find('.create-reply-btn').unbind('click').click(function (e) {
                 e.preventDefault();
-                var comment_id = parseInt(this.id.split("createReplyBtn")[1]);
-                graphPage.createComment($('#replyMessage' + comment_id).val(), comment_id);
-                $('#replyMessage' + comment_id).val("");
-                $('#replyTable' + comment_id).addClass('passive');
+                var comment_id = parseInt(container.attr('id').split("commentContainer")[1]);
+                graphPage.createComment($('#commentContainer' + comment_id).find('.reply-message').val(), comment_id);
+                $('#commentContainer' + comment_id).find('.reply-message').val("");
             });
-            $('#commentContainer' + comment.id).find('.collapse-comments').click(function () {
-                $('#commentContainer' + comment.id).find(".collapse").slideToggle('slow');
+            container.find('.collapse-comments').click(function () {
+                container.find(".collapse").slideToggle('slow');
                 var text = $(this).text().split(' ');
                 if(text[0] === 'View') {
-                    text[0] = 'Hide'; $(this).text(text.join(' '));
+                    $(this).text('Hide replies');
                 }
                 else {
-                    text[0] = 'View'; $(this).text(text.join(' '));
+                    $(this).text('View all hidden replies');   
                 }
             });
-            $('#commentContainer' + comment.id).data("nodes", comment.nodes);
-            $('#commentContainer' + comment.id).data("edges", comment.edges);
-            $('#commentContainer' + comment.id).hover(
+            container.data("nodes", comment.nodes);
+            container.data("edges", comment.edges);
+            container.hover(
                 function () {
                     graphPage.cacheNodes = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedNodes(graphPage.cyGraph));
                     graphPage.cacheEdges = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedEdges(graphPage.cyGraph));
@@ -771,57 +773,59 @@ var graphPage = {
                 }
             );
         };
-        $('#editComment' + comment.id).unbind('click').click(function (e) {
+        comment_box.find('.edit-comment').unbind('click').click(function (e) {
             e.preventDefault();
-            var ele = $('#messageTable' + comment.id);
+            var ele = $('#commentBox' + comment.id);
             var msg = ele.find('p'); msg.addClass('passive');
             var inp = ele.find('textarea'); inp.val(msg.text()); inp.removeClass('passive');
-            var btn = $('#editTable' + comment.id); btn.removeClass('passive');
+            var btn = ele.find('.edit-table'); btn.removeClass('passive');
             graphPage.expandTextarea(inp);
         });
-        $('#resolveComment' + comment.id).unbind('click').click(function (e) {
+        comment_box.find('.resolve-comment').unbind('click').click(function (e) {
             e.preventDefault();
-            var comment_id = parseInt(this.id.split("resolveComment")[1]);
+            var ele = $('#commentBox' + comment.id);
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
             graphPage.editComment(comment_id, undefined, 1);
         });
-        $('#deleteComment' + comment.id).unbind('click').click(function (e) {
+        comment_box.find('.delete-comment').unbind('click').click(function (e) {
             e.preventDefault();
-            var comment_id = parseInt(this.id.split("deleteComment")[1]);
+            var ele = $('#commentBox' + comment.id);
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
             graphPage.deleteComment(comment_id);
         });
-        $('#editCommentBtn' + comment.id).unbind('click').click(function (e) {
+        comment_box.find('.edit-comment-btn').unbind('click').click(function (e) {
             e.preventDefault();
-            var comment_id = parseInt(this.id.split("editCommentBtn")[1]);
-            var msg = $('#messageTable' + comment.id).find('textarea').val();
+            var ele = $('#commentBox' + comment.id);
+            var comment_id = parseInt(ele.attr('id').split('commentBox')[1]);
+            var msg = ele.find('textarea').val();
             graphPage.editComment(comment_id, msg, undefined);
         });
-        $('#cancelEditBtn' + comment.id).unbind('click').click(function (e) {
+        comment_box.find('.cancel-edit-btn').unbind('click').click(function (e) {
             e.preventDefault();
-            var btn = $('#editTable' + comment.id); btn.addClass('passive');
-            var ele = $('#messageTable' + comment.id);
+            var ele = $('#commentBox' + comment.id);
+            var btn = ele.find('.edit-table'); btn.addClass('passive');
             var inp = ele.find('textarea'); inp.addClass('passive');
-            var msg = ele.find('p'); msg.removeClass('passive');
+            var msg = ele.find('.comment-message'); msg.removeClass('passive');
         });
     },
     generateCommentTemplate: function(comment) {
         if (comment.owner_email == null || comment.owner_email == "None") {
                     comment.owner_email = "Anonymous";
         }
-        var str = "";
+        var str = '<div id="commentBox' + comment.id + '">';
         var date = comment.updated_at.split(/:|T/);
         var date = date[1] + ':' + date[2] + ' ' + date[0];
-        str += '<table style="width:100%" id="infoTable' + comment.id + '" ><tr>';
+        str += '<table style="width:100%"><tr>';
         str += '<td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>';
         str += '<td class="comment-email">' + comment.owner_email + '<div class="comment-date">' + date + '</div></td>';
         str += '<td style="vertical-align:top;">' + graphPage.generateCommentOptions(comment) + '</td></tr></table>';
-        str += '<table style="width:100%" id="messageTable' + comment.id + '"><tr><td><p class="comment-message">';
-        str +=  comment.message + '</p><textarea class="form-control passive" style="height:32px;"';
-        str += ' placeholder="Edit.."></textarea></td></tr></table>';
-        str += '<table id="editTable' + comment.id + '" class="passive" style="width: 100%;"><tr>';
-        str += '<td style="text-align: center; padding-top: 12px;"><a id="editCommentBtn' + comment.id + '" class="btn btn-primary" href="#">Edit</a></td>';
-        str += '<td style="text-align: center; padding-top: 12px;"><a id="cancelEditBtn' + comment.id;
-        str += '" class="btn btn-primary" href="#">Cancel</a></td></tr></table>';
-        str += '<hr style="width:205px;margin-left:-7px;">';
+        str += '<table style="width:100%"><tr><td><p class="comment-message">' + comment.message + '</p>';
+        str += '<textarea class="form-control passive" style="height:32px;" placeholder="Edit.."></textarea>';
+        str += '</td></tr></table>';
+        str += '<table class="passive edit-table" style="width: 100%;"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary edit-comment-btn" href="#">Edit</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-edit-btn" href="#">Cancel</a></td>';
+        str += '</tr></table><hr style="width:205px;margin-left:-7px;"></div>';
         return str;
     },
     generateCommentOptions: function(comment) {
@@ -831,22 +835,22 @@ var graphPage = {
         str += '<i class="fa comment-symbol">&#xf142;</i>';
         str += '</button><div class="dropdown-menu">';
         if($('#UserEmail').val() === comment.owner_email) {
-            str += '<a class="dropdown-item" id="editComment' + comment.id + '" >Edit</a>';
+            str += '<a class="dropdown-item edit-comment">Edit</a>';
             if(comment.parent_comment_id === null) {
-                str += '<a class="dropdown-item" id="resolveComment' + comment.id + '">Resolve</a>';
+                str += '<a class="dropdown-item resolve-comment">Resolve</a>';
             };
-            str += '<a class="dropdown-item" id="deleteComment' + comment.id + '" >Delete</a>';
+            str += '<a class="dropdown-item delete-comment">Delete</a>';
         }
-        str += '<a class="dropdown-item" id="pinComment' + comment.id + '" >Pin</a>';
+        str += '<a class="dropdown-item pin-comment">Pin</a>';
         str += '</div></div>';
         return str;
     },
     generateReplyTemplate: function(comment) {
         var str = "";
-        str += '<textarea class="form-control" style="height:32px;" id="replyMessage' + comment.id;
-        str += '" placeholder="Reply.."></textarea><table id="replyTable' + comment.id +'" class="passive" style="width: 100%"><tr>';
-        str += '<td style="text-align: center; padding-top: 12px;"><a id="createReplyBtn' + comment.id + '" class="btn btn-primary" href="#">Reply</a></td>';
-        str += '<td style="text-align: center; padding-top: 12px;"><a id="cancelReplyBtn' + comment.id + '" class="btn btn-primary" href="#">Cancel</a></td>';
+        str += '<textarea class="form-control reply-message" style="height:32px;"';
+        str += '" placeholder="Reply.."></textarea><table class="passive reply-table" style="width: 100%"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary create-reply-btn" href="#">Reply</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-reply-btn" href="#">Cancel</a></td>';
         str += '</tr></table>';
         return str;
     },

@@ -141,41 +141,46 @@
             var str = "";
             if(comment.parent_comment_id != null) {
                 str += graphPage.generateCommentTemplate(comment);
-                $(str).insertBefore($("#replyMessage" + comment.parent_comment_id));
+                $(str).insertBefore($("#commentContainer" + comment.parent_comment_id).find('.reply-message'));
+                $('#commentContainer' + comment.parent_comment_id).find('.reply-table').addClass('passive');
             }
             if(comment.parent_comment_id == null) {
                 var ele = $('#commentsList');
                 var str = "";
                 str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
-                str += '<a class="list-group-item comment-highlight" style="padding:7px;">';
+                str += '<a class="list-group-item comment-highlight">';
                 str += graphPage.generateCommentTemplate(comment);
-                str += graphPage.generateReplyTemplate(comment);
-                str += '</a></div><br/>';
+                str += graphPage.generateReplyTemplate(comment) + '</a></div><br/>';
                 ele.append(str);
             }
             $('#cyGraphContainer').click();
             graphPage.addCommentHandlers(comment);
         },
         updatecomment: function(comment) {
-            ele  = $('#messageTable' + comment.id);
-            inf  = $('#infoTable' + comment.id);
+            ele  = $('#commentBox' + comment.id);
             date = comment.updated_at.split(/:|T/);
             date = date[1] + ':' + date[2] + ' ' + date[0];
-            msg = ele.find('p'); msg.text(comment.message);
-            dt  = inf.find('.comment-date'); dt.text(date);
-            $('#cancelEditBtn' + comment.id).click();
+            ele.find('.comment-message').text(comment.message);
+            ele.find('.comment-date').text(date);
+            ele.find('.cancel-edit-btn').click();
             if(comment.parent_comment_id == null && comment.is_resolved == 1) {
                 // do nothing for now.
+                ele.find('.comment-message').css("background-color","yellow");
             }
         },
         deletecomment: function(comment) {
             if(comment.parent_comment_id == null) {
-                graphsPage = $('#messageTable' + comment.id).parent().parent().remove();
+                $('#commentContainer' + comment.id).remove();
             }
-            ($('#infoTable' + comment.id))? $('#infoTable' + comment.id).remove() : null;
-            ($('#editTable' + comment.id))? $('#editTable' + comment.id).remove() : null;
-            ($('#messageTable' + comment.id))? $('#messageTable' + comment.id).remove() : null;
-            ($('#commentSeparator' + comment.id))? $('#commentSeparator' + comment.id).remove() : null;
+            if(comment.parent_comment_id != null) {
+                if($('#commentContainer' + comment.parent_comment_id).find('.collapse').children().length == 1) {
+                    $('#commentContainer' + comment.parent_comment_id).find('.collapse').remove();
+                    $('#commentContainer' + comment.parent_comment_id).find('.collapse-comments').remove();
+                }
+                else {
+                    ($('#commentBox' + comment.id))? $('#commentBox' + comment.id).remove() : null;
+                }
+            }
         }
     }
 
