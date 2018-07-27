@@ -34,3 +34,5 @@ class ErrorCodes(object):
 		UserNotAuthorizedToDeleteComment = (1017, "You do not have permission to delete this comment.")
 		ParentCommentDoesNotExist = (1018, "You cannot reply to comments which do not exist")
 		CannotReplyToResolvedComment = (1019, "You cannot reply to resolved comment")
+		UserCannotPinThisComment = (1020, "You cannot pin this comment")
+		UserCannotUnpinThisComment = (1021, "You cannot unpin this comment")

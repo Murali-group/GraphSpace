@@ -4,7 +4,6 @@ from json import dumps
 import re
 import graphspace.utils as utils
 
-
 def send_message(group_name, type, message, event):
     group_name = utils.websocket_group_name(group_name)
     Group(group_name).send({'text': dumps({"type": type, "message": message, "event": event})})
@@ -23,6 +22,4 @@ def send_comment(comment, type, users=None, event=None):
         for email in email_list:
             send_message(group_name=email, type="comment", message=comment, event=event)
     elif type == 'public':
-        if comment['owner_email'] == None:
-            comment['owner_email'] = 'Anonymous'
         send_message(group_name='anonymous@anonymous.com', type="comment", message=comment, event=event)
