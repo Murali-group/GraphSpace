@@ -1,7 +1,6 @@
 /**
  * Created by adb on 25/11/16.
  */
-
 var apis = {
     graphs: {
         ENDPOINT: '/ajax/graphs/',
@@ -82,6 +81,12 @@ var apis = {
         },
         delete: function (graph_id, data, successCallback, errorCallback) {
             apis.jsonRequest('DELETE', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        pin: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        unpin: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('UNPIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         }
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -434,6 +439,7 @@ var uploadGraphPage = {
 var graphPage = {
     cyGraph: undefined,
     timeout: null,
+    presentComments: null,
     init: function () {
         /**
          * This function is called to setup the graph page.
@@ -587,6 +593,7 @@ var graphPage = {
         apis.comments.get(graph_id,
                 successCallback = function (response) {
                     graphPage.commentsFormatter(response.total, response.comments);
+                    $('#allComments').click();
                     $.notify({
                         message: 'Successfully fetched comments of this graph'
                     }, {
@@ -643,8 +650,48 @@ var graphPage = {
                     });
                 });
     },
+    pinComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.pin(graph_id, {
+                    'comment_id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully pinned the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    unpinComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.unpin(graph_id, {
+                    'comment_id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully unpinned the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
     commentsFormatter: function (total, comments) {
-        var ele = $('#commentsList'); ele.html(""); ele.append(str); 
+        var ele = $('#commentsList'); ele.html(""); 
         var comment_threads = [], comment_obj = {};
         var visited = {}, str = "";
         comments.forEach(function (comment) {
@@ -681,16 +728,24 @@ var graphPage = {
                 };
                 str += '</div>';
             }
-            str += graphPage.generateReplyTemplate(p_comment) + '</a></div><br/>';
+            str += graphPage.generateReplyTemplate(p_comment) + '</a></div>';
             ele.append(str);
 
             //Do setting is_resolved field if the comment is resolved.
-            if(p_comment != null && p_comment.is_resolved == 1) {
-                $('#commentContainer' + p_comment.id).data("is_resolved", 1);
-                $('#commentContainer' + p_comment.id).find('.comment-message').css("background-color","yellow");
-            }
-            else if(p_comment != null) {
-                $('#commentContainer' + p_comment.id).data("is_resolved", 0);
+            if(p_comment != null) {
+                if(p_comment.is_resolved == 1) {
+                    $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+                    $('#commentContainer' + p_comment.id).find('.comment-message').css("background-color","yellow");
+                }
+                else {
+                    $('#commentContainer' + p_comment.id).data("is_resolved", 0);
+                }
+                if(p_comment.is_pinned == 1) {
+                    $('#commentContainer' + p_comment.id).data("is_pinned", 1);
+                }
+                else {
+                    $('#commentContainer' + p_comment.id).data("is_pinned", 0);
+                }
             }
         });
         comments.forEach(function (comment) {
@@ -699,22 +754,38 @@ var graphPage = {
 
         $('#cyGraphContainer').click(function () {
             if($("#filterComments").is(':checked')) {
-                graphPage.filterCommentsBasedOnGraph();
+                $('#filterComments').click();
             }
         });
 
         $('#filterComments').click(function () {
+            graphPage.presentComments = [];
             graphPage.filterCommentsBasedOnGraph();
+            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
         });
 
         $('#allComments').click(function () {
+            graphPage.presentComments = [];
             $.each($('#commentsList').children("div"), function (key, child) {
                 $(child).removeClass('passive');
+                graphPage.presentComments.push(child);
             });
+            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
         });
 
         $('#pinnedComments').click(function () {
             $('#commentsList').children("div").addClass("passive");
+            graphPage.presentComments = [];
+            $.each($('#commentsList').children("div"), function(key, child) {
+                if($(child).data("is_pinned") === 1) {
+                    graphPage.presentComments.push(child);
+                    $(child).removeClass('passive');
+                }
+                else {
+                    $(child).addClass('passive');
+                }
+            });
+            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
         });
 
         $('#cancelViewCommentsBtn').click(function () {
@@ -783,20 +854,33 @@ var graphPage = {
         });
         comment_box.find('.resolve-comment').unbind('click').click(function (e) {
             e.preventDefault();
-            var ele = $('#commentBox' + comment.id);
             var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
             graphPage.editComment(comment_id, undefined, 1);
         });
+        comment_box.find('.reopen-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.editComment(comment_id, undefined, 0);
+        });
         comment_box.find('.delete-comment').unbind('click').click(function (e) {
             e.preventDefault();
-            var ele = $('#commentBox' + comment.id);
             var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
             graphPage.deleteComment(comment_id);
+        });
+        comment_box.find('.pin-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.pinComment(comment_id);
+        });
+        comment_box.find('.unpin-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.unpinComment(comment_id);
         });
         comment_box.find('.edit-comment-btn').unbind('click').click(function (e) {
             e.preventDefault();
             var ele = $('#commentBox' + comment.id);
-            var comment_id = parseInt(ele.attr('id').split('commentBox')[1]);
+            var comment_id = parseInt(comment_box.attr('id').split('commentBox')[1]);
             var msg = ele.find('textarea').val();
             graphPage.editComment(comment_id, msg, undefined);
         });
@@ -836,12 +920,22 @@ var graphPage = {
         str += '</button><div class="dropdown-menu">';
         if($('#UserEmail').val() === comment.owner_email) {
             str += '<a class="dropdown-item edit-comment">Edit</a>';
-            if(comment.parent_comment_id === null) {
+            if(comment.parent_comment_id === null && comment.is_resolved === 0) {
                 str += '<a class="dropdown-item resolve-comment">Resolve</a>';
-            };
+            }
+            else if(comment.parent_comment_id === null && comment.is_resolved === 1) {
+                str += '<a class="dropdown-item reopen-comment">Reopen</a>';   
+            }
             str += '<a class="dropdown-item delete-comment">Delete</a>';
         }
-        str += '<a class="dropdown-item pin-comment">Pin</a>';
+        if(comment.parent_comment_id === null) {
+            if(comment.is_pinned === 0) {
+                str += '<a class="dropdown-item pin-comment">Pin</a>';
+            }
+            else {
+                str += '<a class="dropdown-item unpin-comment">Unpin</a>';
+            }
+        }
         str += '</div></div>';
         return str;
     },
@@ -867,9 +961,22 @@ var graphPage = {
         var ele = $('#commentsList');
         $.each(ele.children("div"), function(key, comment) {
             if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
+                graphPage.presentComments.push(comment);
                 $(comment).removeClass('passive');
             }
             else if(graphPage.hasCommonElement($(comment).data("edges"), edge_names)) {
+                graphPage.presentComments.push(comment);
+                $(comment).removeClass('passive');
+            }
+            else {
+                $(comment).addClass('passive');
+            }
+        });
+    },
+    filterCommentsBasedOnPageNumber: function (number) {
+        var pg_size = pagination.perPage;
+        $.each(graphPage.presentComments, function(key, comment) {
+            if(key >= pg_size*(number - 1) && key < pg_size*number) {
                 $(comment).removeClass('passive');
             }
             else {
@@ -3012,4 +3119,103 @@ var cytoscapeGraph = {
         });
     }
 
+};
+var pagination = {
+    code: '',
+    add: function(s, f) {
+        for (var i = s; i < f; i++) {
+            pagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
+        }
+    },
+    last: function() {
+        pagination.code += '<li class="page-item"><i>...</i></li><li class="page-item"><a class="page-link">' + pagination.size + '</a></li>';
+    },
+    first: function() {
+        pagination.code += '<li class="page-item"><a class="page-link">1</a></li><li class="page-item"><i>...</i></li>';
+    },
+    click: function() {
+        pagination.page = parseInt($(this).html());
+        pagination.start();
+    },
+    prev: function() {
+        pagination.page--;
+        if (pagination.page < 1) {
+            pagination.page = 1;
+        }
+        pagination.start();
+    },
+    next: function() {
+        pagination.page++;
+        if (pagination.page > pagination.size) {
+            pagination.page = pagination.size;
+        }
+        pagination.start();
+    },
+    bind: function() {
+        var a = pagination.e.find('a');
+        $.each(a, function (key, link) {
+            if(parseInt($(link).html()) === pagination.page) {
+                // a[i].style.color = 'red';
+                $(link).css('color', 'red');
+                graphPage.filterCommentsBasedOnPageNumber(pagination.page);  
+            }
+            $(link).click(pagination.click);
+        });
+    },
+    finish: function() {
+        pagination.e.html(pagination.code);
+        pagination.code = '';
+        pagination.bind();
+    },
+    start: function() {
+        if (pagination.size < pagination.step * 2 + 6) {
+            pagination.add(1, pagination.size + 1);
+        }
+        else if (pagination.page < pagination.step * 2 + 1) {
+            pagination.add(1, pagination.step * 2 + 4);
+            pagination.last();
+        }
+        else if (pagination.page > pagination.size - pagination.step * 2) {
+            pagination.first();
+            pagination.add(pagination.size - pagination.step * 2 - 2, pagination.size + 1);
+        }
+        else {
+            pagination.first();
+            pagination.add(pagination.page - pagination.step, pagination.page + pagination.step + 1);
+            pagination.last();
+        }
+        pagination.finish();
+    },
+    buttons: function(e) {
+        $.each(e.find('a'), function(key, link) {
+            if($(link).html() === "Previous") {
+                $(link).click(pagination.prev);
+            }
+            else {
+                $(link).click(pagination.next);
+            }
+        });
+    },
+    create: function(e) {
+        var html = [
+            '<li class="page-item"><a class="page-link">Previous</a></li>',
+            '<span></span>',
+            '<li class="page-item"><a class="page-link">Next</a></li>'
+        ];
+
+        e.html(html.join(''));
+        pagination.e = $(e.find('span')[0]);
+        pagination.buttons(e);
+    },
+    init: function(e, length, page) {
+        pagination.perPage = 3;
+        pagination.size = Math.ceil(length / pagination.perPage);
+        pagination.page = page;
+        if(pagination.page > pagination.size) {
+            pagination.page = pagination.size;
+        }
+        pagination.step = 3;
+        pagination.create(e);
+        pagination.start();
+    }
 };

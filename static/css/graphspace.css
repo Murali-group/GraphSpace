@@ -443,7 +443,8 @@ p.lead {
 .comment-box {
     margin: auto;
     width: 85%;
-    padding: 0px;
+    padding-top: 13px;
+    padding-bottom: 13px;
 }
 
 .comment-highlight {
