@@ -18,7 +18,7 @@ class Comment(IDMixin, TimeStampMixin, Base):
 	message = Column(String, nullable=False)
 	is_resolved = Column(Integer, nullable=False, default=0)
 
-	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	owner = relationship("User", back_populates="owned_comments", uselist=False)
 
 	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
@@ -101,6 +101,28 @@ class CommentToEdge(TimeStampMixin, Base):
 		return {
 			'comment_id': cls.comment_id,
 			'edge_id': cls.edge_id,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
+
+class PinComment(TimeStampMixin, Base):
+	__tablename__ = 'pin_comment'
+
+	comment_id = Column(Integer, ForeignKey('comment.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True, nullable=False)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True, nullable=False)
+
+	indices = (Index('pincomment_idx_comment_id_owner_email', 'comment_id', 'owner_email'),)
+	constraints = ()
+
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args
+
+	def serialize(cls):
+		return {
+			'comment_id': cls.comment_id,
+			'owner_email': cls.owner_email,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}

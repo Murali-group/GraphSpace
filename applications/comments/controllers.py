@@ -24,8 +24,29 @@ def add_comment(request, message=None, graph_id=None, edges=None, nodes=None, is
 	db.send_comment(comment, event="insert")
 	return comment
 
+@atomic_transaction
+def pin_comment(request, comment_id=None, owner_email=None):
+	# Pin comment
+	comment = get_comment_by_id(request, comment_id=comment_id)
+	if comment.parent_comment_id != None:
+		raise BadRequest(request, error_code=ErrorCodes.Validation.UserCannotPinThisComment)
+	pin_comment = db.pin_comment(request.db_session, comment_id=comment_id, owner_email=owner_email)
+	return pin_comment
+
+@atomic_transaction
+def unpin_comment(request, comment_id=None, owner_email=None):
+	# Pin comment
+	comment = get_comment_by_id(request, comment_id=comment_id)
+	if comment.parent_comment_id != None:
+		raise BadRequest(request, error_code=ErrorCodes.Validation.UserCannotUnpinThisComment)
+	unpin_comment = db.unpin_comment(request.db_session, comment_id=comment_id, owner_email=owner_email)
+	return unpin_comment
+
 def get_comment_by_graph_id(request, graph_id):
 	return db.get_comment_by_graph_id(request.db_session, graph_id=graph_id)
+
+def get_pinned_comments(request, comment_id, owner_email):
+	return db.get_pinned_comments(request.db_session, comment_id=comment_id, owner_email=owner_email)
 
 def get_nodes_by_comment_id(request, comment_id):
 	return db.get_nodes_by_comment_id(request.db_session, comment_id=comment_id)

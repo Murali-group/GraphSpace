@@ -1630,9 +1630,20 @@ def _get_comments_by_graph_id(request, graph_id):
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
 	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
+	comments_array = []
+	for comment in comments_list:
+		comment = utils.serializer(comment)
+		count, pinned_list = comments.get_pinned_comments(request,
+														  comment_id=comment['id'],
+														  owner_email=utils.get_request_user(request))
+		if count > 0:
+			comment['is_pinned'] = 1
+		else:
+			comment['is_pinned'] = 0
+		comments_array.append(comment)
 	return {
-		'total': total,
-		'comments': [utils.serializer(comment) for comment in comments_list]
+		'total': len(comments_array),
+		'comments': comments_array
 	}
 
 def _edit_comment(request, graph_id, comment = {}):
@@ -1650,6 +1661,17 @@ def _delete_comment(request, graph_id, comment = {}):
 	return utils.serializer(comments.delete_comment(request,
 													id=comment.get('id',None)))
 
+def _pin_comment(request, graph_id, data = {}):
+	# Validate if user has permission to pin comment.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	pin_comment = comments.pin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
+	return pin_comment.serialize()
+
+def _unpin_comment(request, graph_id, data = {}):
+	# Validate if user has permission to unpin comment.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	unpin_comment = comments.unpin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
+	return unpin_comment.serialize()
 
 def graph_comments_ajax_api(request, graph_id=None):
 	return _comments_api(request, graph_id=graph_id)
@@ -1668,6 +1690,12 @@ def _comments_api(request, graph_id=None):
 			                    content_type="application/json", status=201)
 		elif request.method == "DELETE" and graph_id != None:
 			return HttpResponse(json.dumps(_delete_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "PIN" and graph_id != None:
+			return HttpResponse(json.dumps(_pin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "UNPIN" and graph_id != None:
+			return HttpResponse(json.dumps(_unpin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
 			                    content_type="application/json", status=201)
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.

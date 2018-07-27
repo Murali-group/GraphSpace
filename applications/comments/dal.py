@@ -3,6 +3,7 @@ from sqlalchemy.orm import joinedload, subqueryload
 from graphspace.wrappers import with_session
 from applications.comments.models import *
 from applications.graphs.dal import *
+from applications.users.dal import *
 from applications.users.models import *
 import graphspace.signals as socket
 from graphspace.database import *
@@ -16,6 +17,19 @@ def add_comment(db_session, message, graph_id, owner_email=None, is_resolved=0, 
 	graph.comments.append(comment)
 	db_session.add(comment)
 	return comment
+
+@with_session
+def pin_comment(db_session, owner_email, comment_id):
+	pin_comment = PinComment(owner_email=owner_email, comment_id=comment_id)
+	db_session.add(pin_comment)
+	return pin_comment
+
+@with_session
+def unpin_comment(db_session, owner_email, comment_id):
+	query = db_session.query(PinComment).filter(PinComment.owner_email == owner_email)
+	query = query.filter(PinComment.comment_id == comment_id).one_or_none()
+	db_session.delete(query)
+	return query
 
 @with_session
 def add_comment_to_edge(db_session, comment_id, edge_id):
@@ -83,6 +97,12 @@ def delete_comment(db_session, id):
 		db_session.delete(ele)
 	return comment
 
+@with_session
+def get_pinned_comments(db_session, comment_id, owner_email):
+	query = db_session.query(PinComment).filter(PinComment.comment_id == comment_id)
+	query = query.filter(PinComment.owner_email == owner_email)
+	return query.count(), query.all()
+
 # @event.listens_for(Comment, 'after_insert')
 # def insert_listener(mapper, connection, comment):
 	# send_comment(comment, event="insert")
@@ -104,3 +124,15 @@ def send_comment(comment, event):
 		socket.send_comment(comment=comment, type="private", users=owner_list + users_list, event=event)
 	else:
 		socket.send_comment(comment=comment, type="public", event=event)
+
+@event.listens_for(PinComment, 'after_insert')
+def insert_pinned_comment(mapper, connection, pin_comment):
+	comment = get_comment_by_id(Database().session(), id=pin_comment.comment_id)
+	comment = comment.serialize()
+	socket.send_message(group_name=pin_comment.owner_email, type="comment", message=comment, event="pinned")
+
+@event.listens_for(PinComment, 'after_delete')
+def delete_pinned_comment(mapper, connection, pin_comment):
+	comment = get_comment_by_id(Database().session(), id=pin_comment.comment_id)
+	comment = comment.serialize()
+	socket.send_message(group_name=pin_comment.owner_email, type="comment", message=comment, event="unpinned")
