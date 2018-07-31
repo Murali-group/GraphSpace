@@ -495,3 +495,10 @@ p.lead {
     text-decoration: underline;
     padding-bottom: 7px;
 }
+
+.res-comment-desc {
+    padding-top: 2px;
+    color: grey;
+    font-size: 14px;
+    font-style: italic;
+}

@@ -735,7 +735,8 @@ var graphPage = {
             if(p_comment != null) {
                 if(p_comment.is_resolved == 1) {
                     $('#commentContainer' + p_comment.id).data("is_resolved", 1);
-                    $('#commentContainer' + p_comment.id).find('.comment-message').css("background-color","yellow");
+                    $('#commentContainer' + p_comment.id).find('.reply-message').addClass('passive');
+                    $('#commentContainer' + p_comment.id).find('.res-comment-desc').removeClass('passive');
                 }
                 else {
                     $('#commentContainer' + p_comment.id).data("is_resolved", 0);
@@ -924,7 +925,7 @@ var graphPage = {
                 str += '<a class="dropdown-item resolve-comment">Resolve</a>';
             }
             else if(comment.parent_comment_id === null && comment.is_resolved === 1) {
-                str += '<a class="dropdown-item reopen-comment">Reopen</a>';   
+                str += '<a class="dropdown-item reopen-comment">Re-open</a>';   
             }
             str += '<a class="dropdown-item delete-comment">Delete</a>';
         }
@@ -946,6 +947,7 @@ var graphPage = {
         str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary create-reply-btn" href="#">Reply</a></td>';
         str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-reply-btn" href="#">Cancel</a></td>';
         str += '</tr></table>';
+        str += '<div class="passive res-comment-desc">Comment has been resolved</div>';
         return str;
     },
     filterCommentsBasedOnGraph: function () {

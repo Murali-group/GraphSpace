@@ -180,10 +180,11 @@
             if(comment.parent_comment_id == null && comment.is_resolved == 1) {
                 $('#commentContainer' + comment.id).data("is_resolved", 1);
                 //styling for resolved comments
-                ele.find('.comment-message').css("background-color","yellow");
+                $('#commentContainer' + comment.id).find('.reply-message').addClass('passive');
+                $('#commentContainer' + comment.id).find('.res-comment-desc').removeClass('passive');
                 //ended styling
                 var box = $('#commentBox' + comment.id).find('.resolve-comment');
-                box.removeClass('resolve-comment').addClass('reopen-comment'); box.html("Reopen");
+                box.removeClass('resolve-comment').addClass('reopen-comment'); box.html("Re-open");
                 box.unbind('click').click(function (e) {
                     e.preventDefault();
                     var ele = $('#commentBox' + comment.id);
@@ -194,7 +195,8 @@
             if(comment.parent_comment_id == null && comment.is_resolved == 0) {
                 $('#commentContainer' + comment.id).data("is_resolved", 0);
                 //styling for reopened comments
-                ele.find('.comment-message').css("background-color","");
+                $('#commentContainer' + comment.id).find('.reply-message').removeClass('passive');
+                $('#commentContainer' + comment.id).find('.res-comment-desc').addClass('passive');
                 //ended styling
                 var box = $('#commentBox' + comment.id).find('.reopen-comment');
                 box.removeClass('reopen-comment').addClass('resolve-comment'); box.html("Resolve");
