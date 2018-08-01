@@ -248,7 +248,8 @@
             if($("#filterComments").is(':checked')) {
                 graphPage.presentComments = [];
                 graphPage.filterCommentsBasedOnGraph();
-                pagination.init($('#commentsPagination'), graphPage.presentComments.length, pagination.page);
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
             }
             if($("#allComments").is(':checked')) {
                 graphPage.presentComments = [];
@@ -256,7 +257,8 @@
                     $(child).removeClass('passive');
                     graphPage.presentComments.push(child);
                 });
-                pagination.init($('#commentsPagination'), graphPage.presentComments.length, pagination.page);
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
             }
             if($("#pinnedComments").is(':checked')) {
                 graphPage.presentComments = [];
@@ -269,7 +271,8 @@
                         $(child).addClass('passive');
                     }
                 });
-                pagination.init($('#commentsPagination'), graphPage.presentComments.length, pagination.page);
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
             }
         }
     }
