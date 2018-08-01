@@ -440,9 +440,20 @@ p.lead {
     }
 }
 
+#ViewCommentSideBar {
+    height: 100%;
+    width: 100%;
+}
+
+#AddCommentSideBar {
+    height: 100%;
+    width: 100%;
+}
+
 .comment-box {
     margin: auto;
-    width: 85%;
+    width: 100%;
+    padding-left: 13px;
     padding-top: 13px;
     padding-bottom: 13px;
 }
@@ -501,4 +512,10 @@ p.lead {
     color: grey;
     font-size: 14px;
     font-style: italic;
+}
+
+#commentsPagination li {
+    padding: 0px;
+    display: inline-block;
+    font-size: 9px;
 }

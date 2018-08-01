@@ -741,7 +741,7 @@ var graphPage = {
                 else {
                     $('#commentContainer' + p_comment.id).data("is_resolved", 0);
                 }
-                if(p_comment.is_pinned == 1) {
+                if(p_comment.is_pinned !== undefined && p_comment.is_pinned == 1) {
                     $('#commentContainer' + p_comment.id).data("is_pinned", 1);
                 }
                 else {
@@ -762,7 +762,7 @@ var graphPage = {
         $('#filterComments').click(function () {
             graphPage.presentComments = [];
             graphPage.filterCommentsBasedOnGraph();
-            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
         });
 
         $('#allComments').click(function () {
@@ -771,7 +771,7 @@ var graphPage = {
                 $(child).removeClass('passive');
                 graphPage.presentComments.push(child);
             });
-            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
         });
 
         $('#pinnedComments').click(function () {
@@ -786,7 +786,12 @@ var graphPage = {
                     $(child).addClass('passive');
                 }
             });
-            pagination.init($('#commentsPagination'), graphPage.presentComments.length, 1);
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
+        });
+
+        $('#filterResolvedComments').click(function () {
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length,
+                                    commentsPagination.page);
         });
 
         $('#cancelViewCommentsBtn').click(function () {
@@ -910,7 +915,7 @@ var graphPage = {
         str += '<table class="passive edit-table" style="width: 100%;"><tr>';
         str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary edit-comment-btn" href="#">Edit</a></td>';
         str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-edit-btn" href="#">Cancel</a></td>';
-        str += '</tr></table><hr style="width:205px;margin-left:-7px;"></div>';
+        str += '</tr></table><hr style="width:213px;margin-left:-7px;"></div>';
         return str;
     },
     generateCommentOptions: function(comment) {
@@ -930,7 +935,7 @@ var graphPage = {
             str += '<a class="dropdown-item delete-comment">Delete</a>';
         }
         if(comment.parent_comment_id === null) {
-            if(comment.is_pinned === 0) {
+            if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
                 str += '<a class="dropdown-item pin-comment">Pin</a>';
             }
             else {
@@ -975,10 +980,13 @@ var graphPage = {
             }
         });
     },
-    filterCommentsBasedOnPageNumber: function (number) {
-        var pg_size = pagination.perPage;
+    filterCommentsBasedOnPageNumber: function (number, resolved) {
+        var pg_size = commentsPagination.perPage;
         $.each(graphPage.presentComments, function(key, comment) {
-            if(key >= pg_size*(number - 1) && key < pg_size*number) {
+            if($(comment).data("is_resolved") && !resolved) {
+                $(comment).addClass('passive');
+            }
+            else if(key >= pg_size*(number - 1) && key < pg_size*number) {
                 $(comment).removeClass('passive');
             }
             else {
@@ -3122,102 +3130,111 @@ var cytoscapeGraph = {
     }
 
 };
-var pagination = {
+var commentsPagination = {
     code: '',
     add: function(s, f) {
         for (var i = s; i < f; i++) {
-            pagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
+            commentsPagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
         }
     },
     last: function() {
-        pagination.code += '<li class="page-item"><i>...</i></li><li class="page-item"><a class="page-link">' + pagination.size + '</a></li>';
+        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
+        commentsPagination.code += '<li class="page-item"><a class="page-link">' + commentsPagination.size + '</a></li>';
     },
     first: function() {
-        pagination.code += '<li class="page-item"><a class="page-link">1</a></li><li class="page-item"><i>...</i></li>';
+        commentsPagination.code += '<li class="page-item"><a class="page-link">1</a></li>';
+        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
     },
     click: function() {
-        pagination.page = parseInt($(this).html());
-        pagination.start();
+        commentsPagination.page = parseInt($(this).html());
+        commentsPagination.start();
     },
     prev: function() {
-        pagination.page--;
-        if (pagination.page < 1) {
-            pagination.page = 1;
+        commentsPagination.page--;
+        if (commentsPagination.page < 1) {
+            commentsPagination.page = 1;
         }
-        pagination.start();
+        commentsPagination.start();
     },
     next: function() {
-        pagination.page++;
-        if (pagination.page > pagination.size) {
-            pagination.page = pagination.size;
+        commentsPagination.page++;
+        if (commentsPagination.page > commentsPagination.size) {
+            commentsPagination.page = commentsPagination.size;
         }
-        pagination.start();
+        commentsPagination.start();
     },
     bind: function() {
-        var a = pagination.e.find('a');
+        var a = commentsPagination.e.find('a');
         $.each(a, function (key, link) {
-            if(parseInt($(link).html()) === pagination.page) {
-                // a[i].style.color = 'red';
-                $(link).css('color', 'red');
-                graphPage.filterCommentsBasedOnPageNumber(pagination.page);  
+            if(parseInt($(link).html()) === commentsPagination.page) {
+                $(link).parent().addClass('active');
+                graphPage.filterCommentsBasedOnPageNumber(commentsPagination.page,
+                                                          $('#filterResolvedComments').prop("checked"));  
             }
-            $(link).click(pagination.click);
+            $(link).click(commentsPagination.click);
         });
     },
     finish: function() {
-        pagination.e.html(pagination.code);
-        pagination.code = '';
-        pagination.bind();
+        commentsPagination.e.html(commentsPagination.code);
+        commentsPagination.code = '';
+        commentsPagination.bind();
     },
     start: function() {
-        if (pagination.size < pagination.step * 2 + 6) {
-            pagination.add(1, pagination.size + 1);
+        if (commentsPagination.size < 5) {
+            commentsPagination.add(1, commentsPagination.size + 1);
         }
-        else if (pagination.page < pagination.step * 2 + 1) {
-            pagination.add(1, pagination.step * 2 + 4);
-            pagination.last();
+        else if (commentsPagination.page == 1) {
+            commentsPagination.first();
+            commentsPagination.add(2, 3);
+            commentsPagination.last();
         }
-        else if (pagination.page > pagination.size - pagination.step * 2) {
-            pagination.first();
-            pagination.add(pagination.size - pagination.step * 2 - 2, pagination.size + 1);
+        else if (commentsPagination.page == commentsPagination.size) {
+            commentsPagination.first();
+            commentsPagination.add(commentsPagination.size - 1, commentsPagination.size);
+            commentsPagination.last();
         }
         else {
-            pagination.first();
-            pagination.add(pagination.page - pagination.step, pagination.page + pagination.step + 1);
-            pagination.last();
+            commentsPagination.first();
+            if(commentsPagination.page > 2) {
+                commentsPagination.add(commentsPagination.page - 1, commentsPagination.page);
+            }
+            commentsPagination.add(commentsPagination.page, commentsPagination.page + 1);
+            if(commentsPagination.page < commentsPagination.size - 1) {
+                commentsPagination.add(commentsPagination.page + 1, commentsPagination.page + 2);
+            }
+            commentsPagination.last();
         }
-        pagination.finish();
+        commentsPagination.finish();
     },
     buttons: function(e) {
         $.each(e.find('a'), function(key, link) {
-            if($(link).html() === "Previous") {
-                $(link).click(pagination.prev);
+            if($(link).html() === "&lt;&lt;") {
+                $(link).click(commentsPagination.prev);
             }
             else {
-                $(link).click(pagination.next);
+                $(link).click(commentsPagination.next);
             }
         });
     },
     create: function(e) {
         var html = [
-            '<li class="page-item"><a class="page-link">Previous</a></li>',
-            '<span></span>',
-            '<li class="page-item"><a class="page-link">Next</a></li>'
+            '<li class="page-item"><a class="page-link">&lt;&lt;</a></li>',
+            '<span style="white-space: nowrap;"></span>',
+            '<li class="page-item"><a class="page-link">&gt;&gt;</a></li>'
         ];
 
         e.html(html.join(''));
-        pagination.e = $(e.find('span')[0]);
-        pagination.buttons(e);
+        commentsPagination.e = $(e.find('span')[0]);
+        commentsPagination.buttons(e);
     },
     init: function(e, length, page) {
-        pagination.perPage = 3;
-        pagination.size = Math.ceil(length / pagination.perPage);
-        pagination.page = page;
-        if(pagination.page > pagination.size) {
-            pagination.page = pagination.size;
+        commentsPagination.perPage = 3;
+        commentsPagination.size = Math.ceil(length / commentsPagination.perPage);
+        commentsPagination.page = page;
+        if(commentsPagination.page > commentsPagination.size) {
+            commentsPagination.page = commentsPagination.size;
         }
-        pagination.step = 3;
-        pagination.create(e);
-        pagination.start();
+        commentsPagination.create(e);
+        commentsPagination.start();
     }
 };
