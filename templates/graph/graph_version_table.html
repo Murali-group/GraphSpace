@@ -18,12 +18,12 @@
         {#        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last#}
         {#            Modified#}
         {#        </th>#}
-        <th data-field="created_at">Created on</th>
-        {% if uid %}
-            <th data-field="operations" data-visible="false">
+        <th data-field="created_at">Created at</th>
+
+            <th data-field="operations" data-formatter="graphPage.graphVersionTable.operationsFormatter" data-visible="true">
                 Operations
             </th>
-        {% endif %}
+
     </tr>
     </thead>
 </table>

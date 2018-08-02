@@ -1,21 +1,238 @@
-<table id="LayoutCompatibilityTable"
-       data-toggle="table"
-       data-show-refresh="true"
-       data-show-columns="false"
-       data-show-toggle="true"
-       data-ajax="graphPage.layoutCompatibilityTable.getConflictingLayoutElements"
-       data-search="true"
-       data-side-pagination="data"
-       data-data-field="data"
-       data-pagination="true"
-       data-sort-name="name"
-       data-id-field="id"
-       data-sort-order="asc">
-    <thead>
-    <tr>
-        <th data-field="name"  data-formatter="graphPage.layoutCompatibilityTable.elementsFormatter" data-sortable="True">Element Name</th>
-        <th data-field="name"  data-formatter="graphPage.layoutCompatibilityTable.selectorFormatter" data-sortable="True">Selector</th>
-        <!-- <th data-field="style" data-formatter="graphPage.layoutCompatibilityTable.styleFormatter">Style</th> -->
-    </tr>
-    </thead>
-</table>
+<div class="modal fade" id="layoutCompatibilityModal" tabindex="-1" role="dialog" aria-labelledby="layoutCompatibilityModal"
+     aria-hidden="true" style="z-index: 20010">
+    <div class="modal-dialog  modal-lg" >
+        <div class="modal-content" style="box-shadow: 0 0 0 2500px rgba(0,0,0,0.55)">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="layoutCompModal">Layout Compatibility Information</h4>
+
+            </div>
+            <div class="modal-body">
+
+
+                <div class="row padding-top-4">
+    <div class="col-md-offset-1 col-md-5">
+        <table id="LayoutCompatibilityTable"
+               data-toggle="table"
+               data-page-size="10"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="graphPage.layoutCompatibilityTable.getConflictingLayoutElements"
+               data-search="false"
+               data-side-pagination="data"
+               data-data-field="data"
+               data-pagination="true"
+               data-sort-name="name"
+               data-id-field="id"
+               data-sort-order="desc">
+            <thead>
+            <tr>
+                <th data-field="name" data-formatter="graphPage.layoutCompatibilityTable.elementsFormatter"
+                    data-events="graphPage.layoutCompatibilityTable.operationEvents">
+                    Nodes/Edges without Style information
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="col-md-5">
+        <table id="UnknownElementsTable"
+               data-toggle="table"
+               data-page-size="10"
+               data-show-refresh="false"
+               data-show-columns="false"
+               data-show-toggle="false"
+               data-ajax="graphPage.layoutCompatibilityTable.getUnidentifiedLayoutElements"
+               data-search="false"
+               data-side-pagination="data"
+               data-data-field="data"
+               data-pagination="true"
+               data-sort-name="name"
+               data-id-field="id"
+               data-sort-order="desc">
+            <thead>
+            <tr>
+                <th data-field="name" data-formatter="graphPage.layoutCompatibilityTable.unknownElementsFormatter">
+                    Unknown Nodes & Edges
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+                           </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editLayoutCompatibilityModal" tabindex="-1" role="dialog" aria-labelledby="editLayoutCompatibilityModal"
+     aria-hidden="true" style="z-index: 20020">
+    <div class="modal-dialog " >
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editLayoutCompModal">Add Element to Layout</h4>
+
+            </div>
+            <div class="modal-body" style="height: 500px">
+<div class="col-md-offset-3 col-md-4">
+
+
+
+<ul id="nodeEditorSideBar1" class="sidebar-nav gs-sidebar-nav">
+    <li><p class="lead text-center">Edit Selected Nodes</p></li>
+    <li>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="nodeWidth" class="col-sm-4 control-label">Color</label>
+                <div class="col-sm-8">
+                    <div id="nodeBackgroundColorPicker1" class="input-group colorpicker-component">
+                        <input id="nodeBackgroundColor1" type="text" value="#00AABB" class="form-control"/>
+                        <span class="input-group-addon"><i></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="nodeWidth" class="col-sm-4 control-label">Width (px)</label>
+                <div class="col-sm-8">
+                    <input type="number" class="form-control" id="nodeWidth1" placeholder="width"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="nodeHeight" class="col-sm-4 control-label">Height (px)</label>
+                <div class="col-sm-8">
+                    <input type="number" class="form-control" id="nodeHeight1" placeholder="height"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="nodeShape" class="col-sm-4 control-label">Shape</label>
+                <div class="col-sm-8">
+                    <select id="nodeShape1" class="form-control">
+                        <option value="rectangle">rectangle</option>
+                        <option value="roundrectangle">roundrectangle</option>
+                        <option value="ellipse">ellipse</option>
+                        <option value="triangle">triangle</option>
+                        <option value="pentagon">pentagon</option>
+                        <option value="hexagon">hexagon</option>
+                        <option value="heptagon">heptagon</option>
+                        <option value="octagon">octagon</option>
+                        <option value="star">star</option>
+                        <option value="diamond">diamond</option>
+                        <option value="vee">vee</option>
+                        <option value="rhomboid">rhomboid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="nodeLabel" class="col-sm-4 control-label">Label</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" id="nodeLabel1" placeholder="label"/>
+                </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.layoutEditor.nodeEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.layoutEditor.nodeEditor.close(save=true);">
+                    Ok
+                </button>
+            </div>
+        </div>
+    </li>
+</ul>
+
+<ul id="edgeEditorSideBar1" class="sidebar-nav gs-sidebar-nav">
+    <li><p class="lead text-center">Edit Selected Edges</p></li>
+    <li>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="edgeLineColorPicker" class="col-sm-4 control-label">Line Color</label>
+                <div class="col-sm-8">
+                    <div id="edgeLineColorPicker1" class="input-group colorpicker-component">
+                        <input id="edgeLineColor1" type="text" value="#00AABB" class="form-control"/>
+                        <span class="input-group-addon"><i></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeWidth" class="col-sm-4 control-label">Width (px)</label>
+                <div class="col-sm-8">
+                    <input type="number" class="form-control" id="edgeWidth1" placeholder="width"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeStyle" class="col-sm-4 control-label">Line Style</label>
+                <div class="col-sm-8">
+                    <select id="edgeStyle1" class="form-control">
+                        <option value="solid">solid</option>
+                        <option value="dotted">dotted</option>
+                        <option value="dashed">dashed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeSourceArrowShape" class="col-sm-4 control-label">Source Arrow Shape</label>
+                <div class="col-sm-8">
+                    <select id="edgeSourceArrowShape1" class="form-control">
+                        <option value="none">none</option>
+                        <option value="triangle">triangle</option>
+                        <option value="tee">tee</option>
+                        <option value="triangle-tee">triangle-tee</option>
+                        <option value="triangle-backcurve">triangle-backcurve</option>
+                        <option value="square">square</option>
+                        <option value="circle">circle</option>
+                        <option value="diamond">diamond</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeTargetArrowShape" class="col-sm-4 control-label">Target Arrow Shape</label>
+                <div class="col-sm-8">
+                    <select id="edgeTargetArrowShape1" class="form-control">
+                        <option value="none">none</option>
+                        <option value="triangle">triangle</option>
+                        <option value="tee">tee</option>
+                        <option value="triangle-tee">triangle-tee</option>
+                        <option value="triangle-backcurve">triangle-backcurve</option>
+                        <option value="square">square</option>
+                        <option value="circle">circle</option>
+                        <option value="diamond">diamond</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.layoutEditor.edgeEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.layoutEditor.edgeEditor.close(save=true);">
+                    Ok
+                </button>
+            </div>
+        </div>
+    </li>
+</ul>
+
+</div>
+                           </div>
+        </div>
+    </div>
+</div>
