@@ -24,6 +24,7 @@
 
     <!-- Custom styles for this base template -->
     <script src="{% static 'components/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'components/jquery/dist/popper.min.js' %}"></script>
 
     <script type="text/javascript">
     $(function() {
@@ -93,6 +94,191 @@
         }
     }
     header.init();
+
+    //socket for comments
+    var userSocket = {
+        init: function() {
+            var socket = new WebSocket('ws://' + window.location.host);
+
+            socket.onopen = userSocket.onopen;
+
+            socket.onmessage = userSocket.onmessage;
+
+            if (socket.readyState == WebSocket.OPEN) {
+                socket.onopen();
+            }
+        },
+        onopen: function() {
+            console.log('Websockets connected');
+        },
+        onmessage: function(message) {
+            data = JSON.parse(message.data);
+            // Different types of communication over sockets
+            switch (data.type) {
+                case "comment":
+                    userSocket.comments(data);
+                    break;
+            }
+        },
+        // Socket communication for comments
+        comments: function(data) {
+            var graph_id = ($('#GraphID').val())? parseInt($('#GraphID').val()) : null;
+            var is_event = false;
+            if(graph_id === null || graph_id !== data.message.graph_id) {
+                //the user did not open the graph page of the required graph.
+                return;
+            }
+            if(data.event === "insert") {
+                userSocket.addcomment(data.message);
+                is_event = true;
+            }
+            else if(data.event === "update") {
+                userSocket.updatecomment(data.message);
+                is_event = true;
+            }
+            else if(data.event === "delete") {
+                userSocket.deletecomment(data.message);
+                is_event = true;
+            }
+            else if(data.event === "pinned") {
+                userSocket.pincomment(data.message);
+                is_event = true;
+            }
+            else if(data.event === "unpinned") {
+                userSocket.unpincomment(data.message);
+                is_event = true;
+            }
+            if(is_event) {
+                userSocket.resetCommentsPage();
+            }
+        },
+        addcomment: function(comment) {
+            var str = "";
+            if(comment.parent_comment_id != null) {
+                str += graphPage.generateCommentTemplate(comment);
+                $(str).insertBefore($("#commentContainer" + comment.parent_comment_id).find('.reply-message'));
+                $('#commentContainer' + comment.parent_comment_id).find('.reply-table').addClass('passive');
+            }
+            if(comment.parent_comment_id == null) {
+                var ele = $('#commentsList');
+                var str = "";
+                str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
+                str += '<a class="list-group-item comment-highlight">';
+                str += graphPage.generateCommentTemplate(comment);
+                str += graphPage.generateReplyTemplate(comment) + '</a></div>';
+                ele.append(str);
+            }
+            graphPage.addCommentHandlers(comment);
+        },
+        updatecomment: function(comment) {
+            ele  = $('#commentBox' + comment.id);
+            date = comment.updated_at.split(/:|T/);
+            date = date[1] + ':' + date[2] + ' ' + date[0];
+            ele.find('.comment-message').text(comment.message);
+            ele.find('.comment-date').text(date);
+            ele.find('.cancel-edit-btn').click();
+            if(comment.parent_comment_id == null && comment.is_resolved == 1) {
+                $('#commentContainer' + comment.id).data("is_resolved", 1);
+                //styling for resolved comments
+                $('#commentContainer' + comment.id).find('.reply-message').addClass('passive');
+                $('#commentContainer' + comment.id).find('.res-comment-desc').removeClass('passive');
+                //ended styling
+                var box = $('#commentBox' + comment.id).find('.resolve-comment');
+                box.removeClass('resolve-comment').addClass('reopen-comment'); box.html("Re-open");
+                box.unbind('click').click(function (e) {
+                    e.preventDefault();
+                    var ele = $('#commentBox' + comment.id);
+                    var comment_id = parseInt(ele.attr('id').split("commentBox")[1]);
+                    graphPage.editComment(comment_id, undefined, 0);
+                });
+            }
+            if(comment.parent_comment_id == null && comment.is_resolved == 0) {
+                $('#commentContainer' + comment.id).data("is_resolved", 0);
+                //styling for reopened comments
+                $('#commentContainer' + comment.id).find('.reply-message').removeClass('passive');
+                $('#commentContainer' + comment.id).find('.res-comment-desc').addClass('passive');
+                //ended styling
+                var box = $('#commentBox' + comment.id).find('.reopen-comment');
+                box.removeClass('reopen-comment').addClass('resolve-comment'); box.html("Resolve");
+                box.unbind('click').click(function (e) {
+                    e.preventDefault();
+                    var ele = $('#commentBox' + comment.id);
+                    var comment_id = parseInt(ele.attr('id').split("commentBox")[1]);
+                    graphPage.editComment(comment_id, undefined, 1);
+                });
+            }
+        },
+        deletecomment: function(comment) {
+            if(comment.parent_comment_id == null) {
+                $('#commentContainer' + comment.id).remove();
+            }
+            if(comment.parent_comment_id != null) {
+                if($('#commentContainer' + comment.parent_comment_id).find('.collapse').children().length == 1) {
+                    $('#commentContainer' + comment.parent_comment_id).find('.collapse').remove();
+                    $('#commentContainer' + comment.parent_comment_id).find('.collapse-comments').remove();
+                }
+                else {
+                    ($('#commentBox' + comment.id))? $('#commentBox' + comment.id).remove() : null;
+                }
+            }
+        },
+        pincomment: function(comment) {
+            $('#commentContainer' + comment.id).data("is_pinned", 1);
+            var ele = $('#commentBox' + comment.id).find('.pin-comment');
+            ele.removeClass('pin-comment').addClass('unpin-comment'); ele.html("Unpin");
+            ele.unbind('click').click(function (e) {
+                e.preventDefault();
+                var ele = $('#commentBox' + comment.id);
+                var comment_id = parseInt(ele.attr('id').split("commentBox")[1]);
+                graphPage.unpinComment(comment_id);
+            });
+        },
+        unpincomment: function(comment) {
+            $('#commentContainer' + comment.id).data("is_pinned", 0);
+            var ele = $('#commentBox' + comment.id).find('.unpin-comment');
+            ele.removeClass('unpin-comment').addClass('pin-comment'); ele.html("Pin");
+            ele.unbind('click').click(function (e) {
+                e.preventDefault();
+                var ele = $('#commentBox' + comment.id);
+                var comment_id = parseInt(ele.attr('id').split("commentBox")[1]);
+                graphPage.pinComment(comment_id);
+            });
+        },
+        resetCommentsPage: function() {
+            if($("#filterComments").is(':checked')) {
+                graphPage.presentComments = [];
+                graphPage.filterCommentsBasedOnGraph();
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
+            }
+            if($("#allComments").is(':checked')) {
+                graphPage.presentComments = [];
+                $.each($('#commentsList').children("div"), function (key, child) {
+                    $(child).removeClass('passive');
+                    graphPage.presentComments.push(child);
+                });
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
+            }
+            if($("#pinnedComments").is(':checked')) {
+                graphPage.presentComments = [];
+                $.each($('#commentsList').children("div"), function(key, child) {
+                    if($(child).data("is_pinned") == 1) {
+                        graphPage.presentComments.push(child);
+                        $(child).removeClass('passive');
+                    }
+                    else {
+                        $(child).addClass('passive');
+                    }
+                });
+                commentsPagination.init($('#commentsPagination').find('.pagination'),
+                                         graphPage.presentComments.length, commentsPagination.page);
+            }
+        }
+    }
+
+    // Connect to socket.
+    userSocket.init();
 
     // This will capture hash changes while on the page
     window.addEventListener("hashchange", offsetAnchor);

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from applications.users.models import *
+from applications.comments.models import *
 from django.conf import settings
 from graphspace.mixins import *
 import json
@@ -29,6 +30,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	layouts = relationship("Layout", foreign_keys="Layout.graph_id", back_populates="graph", cascade="all, delete-orphan")
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
+	comments = relationship("Comment", back_populates="graph", cascade="all, delete-orphan")
 
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
@@ -76,6 +78,7 @@ class Edge(IDMixin, TimeStampMixin, Base):
 	graph = relationship("Graph", back_populates="edges", uselist=False)
 	head_node = relationship("Node", foreign_keys=[head_node_id], back_populates="source_edges", uselist=False)
 	tail_node = relationship("Node", foreign_keys=[tail_node_id], back_populates="target_edges", uselist=False)
+	comments = association_proxy('associated_comments', 'comment')
 
 	constraints = (
 		UniqueConstraint('graph_id', 'head_node_id', 'tail_node_id',
@@ -120,6 +123,7 @@ class Node(IDMixin, TimeStampMixin, Base):
 	graph = relationship("Graph", back_populates="nodes", uselist=False)
 	source_edges = relationship("Edge", foreign_keys="Edge.head_node_id", back_populates="head_node", cascade="all, delete-orphan")
 	target_edges = relationship("Edge", foreign_keys="Edge.tail_node_id", back_populates="tail_node", cascade="all, delete-orphan")
+	comments = association_proxy('associated_comments', 'comment')
 
 	constraints = (
 		UniqueConstraint('graph_id', 'name', name='_node_uc_graph_id_name'),
@@ -187,6 +191,8 @@ class Layout(IDMixin, TimeStampMixin, Base):
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
 	owner = relationship("User", back_populates="owned_layouts", uselist=False)
+	comments = relationship("Comment", back_populates="layout", cascade="all, delete-orphan")
+
 
 	default_layout_graph = relationship("Graph", foreign_keys="Graph.default_layout_id", back_populates="default_layout", cascade="all, delete-orphan",
 										uselist=False)

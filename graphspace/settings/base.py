@@ -33,7 +33,9 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 	'applications.users',
-	'applications.graphs'
+	'applications.graphs',
+	'applications.comments',
+	'channels'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -157,4 +159,15 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+# Channel settings and routing
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6382)],
+        },
+        'ROUTING': 'graphspace.routing.channel_routing',
+    }
 }

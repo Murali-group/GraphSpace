@@ -1,6 +1,7 @@
 import applications.users as users
 import applications.graphs as graphs
-from graphspace.exceptions import UserNotAuthorized
+import applications.comments as comments
+from graphspace.exceptions import UserNotAuthorized, BadRequest, ErrorCodes
 from graphspace.utils import get_request_user
 
 
@@ -32,7 +33,7 @@ def user_role(request):
 		return UserRole.LOGGED_IN
 
 
-def validate(request, permission, graph_id=None, group_id=None, layout_id=None):
+def validate(request, permission, graph_id=None, group_id=None, layout_id=None, comment_id=None):
 	"""
 	Validates if the user has the given permissions based on information like graph id, group id or layout id.
 
@@ -74,4 +75,9 @@ def validate(request, permission, graph_id=None, group_id=None, layout_id=None):
 			raise UserNotAuthorized(request)
 		if permission == 'LAYOUT_DELETE' and not graphs.controllers.is_user_authorized_to_delete_layout(request, username=get_request_user(request), layout_id = layout_id):
 			raise UserNotAuthorized(request)
+	if comment_id is not None:
+		if permission == 'COMMENT_UPDATE' and not comments.controllers.is_user_authorized_to_update_comment(request, username=get_request_user(request), comment_id = comment_id):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToUpdateComment)
+		if permission == 'COMMENT_DELETE' and not comments.controllers.is_user_authorized_to_delete_comment(request, username=get_request_user(request), comment_id = comment_id):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToDeleteComment)
 	return

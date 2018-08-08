@@ -2,6 +2,7 @@ import json
 
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
+import applications.comments.controllers as comments
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -96,7 +97,6 @@ def graph_page(request, graph_id):
 	"""
 	context = RequestContext(request, {})
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-
 	uid = request.session['uid'] if 'uid' in request.session else None
 
 	context.push({"graph": _get_graph(request, graph_id)})
@@ -1522,3 +1522,186 @@ def _delete_edge(request, graph_id, edge_id):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	graphs.delete_edge_by_id(request, edge_id)
+
+
+def upload_comment(request, graph_id):
+	context = RequestContext(request, {})
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	if 'POST' == request.method:
+		try:
+			comment = _add_comment(request, comment={
+				'message': request.POST.get('message', None),
+				'owner_email': request.POST.get('owner_email', None),
+				'nodes': [1, 2, 3],
+				'edges': [1, 2, 3],
+				'graph_id': graph_id
+			})
+			context['Success'] = 'Comment successfully added with comment id=' + str(comment['id']) 
+		except Exception as e:
+			context['Error'] = str(e)
+
+	return render(request, 'comments/upload_comment.html', context)
+
+
+def view_comments(request, graph_id):
+	context = RequestContext(request, {})
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	if 'GET' == request.method:
+		try:
+			comments_list = _get_comments_by_graph_id(request, graph_id)
+			context['Success'] = 'Displaying the list of comments under this graph'
+			comments_array = []
+			for comment in comments_list['comments']:
+				comments_array.append({
+					'id': comment['id'],
+					'owner_email': comment['owner_email'] if comment['owner_email'] != None else 'Anonymous',
+					'message': comment['message']
+					})
+			context['comments'] = comments_array
+			context['graph_id'] = graph_id
+		except Exception as e:
+			context['Error'] = str(e)
+		return render(request, 'comments/index.html', context)
+	else:
+		raise MethodNotAllowed(request)
+
+
+def _add_comment(request, comment={}):
+
+	edge_names = comment.get('edge_names', None)
+	node_names = comment.get('node_names', None)
+	graph_id   = comment.get('graph_id', None)
+	owner_email = comment.get('owner_email', None)
+	parent_comment_id = comment.get('parent_comment_id', None)
+	edges, nodes = [], []
+
+	# Validate if user has permission to create a comment on this graph.
+	if graph_id != None:
+		uid = request.session['uid'] if 'uid' in request.session else None
+		if uid == None:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToCreateComment)
+		authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	# Reply comments cannot be added to already resolved comment.
+	if parent_comment_id != None:
+		parent_comment = comments.get_comment_by_id(request, parent_comment_id)
+		if parent_comment == None:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.ParentCommentDoesNotExist)
+		elif utils.serializer(parent_comment)['is_resolved'] == 1:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotReplyToResolvedComment)
+
+	if len(edge_names) == 0:
+		edge_names = None
+	if len(node_names) == 0:
+		node_names = None
+
+	if edge_names != None and graph_id != None:
+		for edge_name in edge_names:
+			edge_id = utils.serializer(graphs.get_edge_by_name(request, graph_id, edge_name))['id']
+			if edge_id != None:
+				edges.append(edge_id)
+
+	if node_names != None and graph_id != None:
+		for node_name in node_names:
+			node_id = utils.serializer(graphs.get_node_by_name(request, graph_id, node_name))['id']
+			if node_id != None:
+				nodes.append(node_id)
+
+	if len(edges) == 0:
+		edges = None
+
+	if len(nodes) == 0:
+		nodes = None
+
+	return utils.serializer(comments.add_comment(request,
+		                                         message=comment.get('message', None),
+		                                         graph_id=comment.get('graph_id', None),
+		                                         is_resolved=comment.get('is_resolved', None),
+		                                         edges=edges,
+		                                         nodes=nodes,
+		                                         layout_id=comment.get('layout', None),
+		                                         parent_comment_id=parent_comment_id,
+		                                         owner_email=owner_email))
+
+
+def _get_comments_by_graph_id(request, graph_id):
+
+	#Validate if user has permission to read the comments.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
+	comments_array = []
+	for comment in comments_list:
+		comment = utils.serializer(comment)
+		count, pinned_list = comments.get_pinned_comments(request,
+														  comment_id=comment['id'],
+														  owner_email=utils.get_request_user(request))
+		if count > 0:
+			comment['is_pinned'] = 1
+		else:
+			comment['is_pinned'] = 0
+		comments_array.append(comment)
+	return {
+		'total': len(comments_array),
+		'comments': comments_array
+	}
+
+def _edit_comment(request, graph_id, comment = {}):
+
+	#Validate if user has permission to edit comment
+	if comment.get('message', None) != None or comment.get('is_resolved', None) == 1: 
+		authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
+	elif comment.get('is_resolved', None) == 0:
+		authorization.validate(request, permission='COMMENT_READ', comment_id=comment.get('id',None))
+
+	return utils.serializer(comments.edit_comment(request,
+												  message=comment.get('message', None),
+												  is_resolved=comment.get('is_resolved',None),
+												  comment_id=comment.get('id', None)))
+
+def _delete_comment(request, graph_id, comment = {}):
+	#Validate if user has permission to edit comment 
+	authorization.validate(request, permission='COMMENT_DELETE', comment_id=comment.get('id',None))
+	return utils.serializer(comments.delete_comment(request,
+													id=comment.get('id',None)))
+
+def _pin_comment(request, graph_id, data = {}):
+	# Validate if user has permission to pin comment.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	pin_comment = comments.pin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
+	return pin_comment.serialize()
+
+def _unpin_comment(request, graph_id, data = {}):
+	# Validate if user has permission to unpin comment.
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	unpin_comment = comments.unpin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
+	return unpin_comment.serialize()
+
+def graph_comments_ajax_api(request, graph_id=None):
+	return _comments_api(request, graph_id=graph_id)
+
+def _comments_api(request, graph_id=None):
+
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "POST":
+			return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "GET" and graph_id != None:
+			return HttpResponse(json.dumps(_get_comments_by_graph_id(request, graph_id=graph_id)),
+			                    content_type="application/json", status=201)
+		elif request.method == "PUT" and graph_id != None:
+			return HttpResponse(json.dumps(_edit_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "DELETE" and graph_id != None:
+			return HttpResponse(json.dumps(_delete_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "PIN" and graph_id != None:
+			return HttpResponse(json.dumps(_pin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		elif request.method == "UNPIN" and graph_id != None:
+			return HttpResponse(json.dumps(_unpin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)

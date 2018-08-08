@@ -1,0 +1,32 @@
+<!-- Sidebar -->
+
+<ul id="AddCommentSideBar" class="sidebar-nav gs-sidebar-nav">
+    <br/><br/>
+    <div class="list-group comment-box">
+        <a href="#" class="list-group-item list-group-item-action">
+            <table style="width:100%">
+                <tr>
+                    <td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>
+                    {% if uid %}
+                        <td class="comment-email">{{uid}}</td>
+                    {% else %}
+                        <td class="comment-email">Anonymous</td>
+                    {% endif %}
+                </tr>
+            </table><br/>
+            <table style="width: 100%">
+                <tr>
+                    <td style="text-align: center">
+                        <textarea class="form-control" id="commentMessage" placeholder="Enter your comment here.."></textarea>
+                    </td>
+                </tr>
+            </table><br/>
+            <table style="width: 100%">
+                <tr>
+                    <td style="text-align: center"><a id="createCommentBtn" class="btn btn-primary" href="#">Create</a></td>
+                    <td style="text-align: center"><a id="cancelCommentBtn" class="btn btn-primary" href="#">Cancel</a></td>
+                </tr>
+            </table>
+        </a>
+    </div>
+</ul>
