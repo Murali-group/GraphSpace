@@ -49,6 +49,7 @@ class Comment(IDMixin, TimeStampMixin, Base):
 			'graph_id': cls.graph_id,
 			'layout_id': cls.layout_id,
 			'parent_comment_id': cls.parent_comment_id,
+			'graph_owner_email': cls.graph.owner_email,
 			'nodes': [node.name for node in cls.nodes],
 			'edges': [edge.name for edge in cls.edges],
 			'created_at': cls.created_at.isoformat(),

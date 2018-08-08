@@ -929,12 +929,15 @@ var graphPage = {
             if(comment.parent_comment_id === null && comment.is_resolved === 0) {
                 str += '<a class="dropdown-item resolve-comment">Resolve</a>';
             }
-            else if(comment.parent_comment_id === null && comment.is_resolved === 1) {
-                str += '<a class="dropdown-item reopen-comment">Re-open</a>';   
-            }
+            str += '<a class="dropdown-item delete-comment">Delete</a>';
+        }
+        else if($('#UserEmail').val() === comment.graph_owner_email) {
             str += '<a class="dropdown-item delete-comment">Delete</a>';
         }
         if(comment.parent_comment_id === null) {
+            if(comment.is_resolved === 1) {
+                str += '<a class="dropdown-item reopen-comment">Re-open</a>';
+            }
             if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
                 str += '<a class="dropdown-item pin-comment">Pin</a>';
             }

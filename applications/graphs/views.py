@@ -1648,8 +1648,12 @@ def _get_comments_by_graph_id(request, graph_id):
 
 def _edit_comment(request, graph_id, comment = {}):
 
-	#Validate if user has permission to edit comment 
-	authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
+	#Validate if user has permission to edit comment
+	if comment.get('message', None) != None or comment.get('is_resolved', None) == 1: 
+		authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
+	elif comment.get('is_resolved', None) == 0:
+		authorization.validate(request, permission='COMMENT_READ', comment_id=comment.get('id',None))
+
 	return utils.serializer(comments.edit_comment(request,
 												  message=comment.get('message', None),
 												  is_resolved=comment.get('is_resolved',None),

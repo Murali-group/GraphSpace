@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 import applications.comments.dal as db
+import applications.graphs.dal as graphs_db
 from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace.wrappers import atomic_transaction
 
@@ -93,9 +94,13 @@ def is_user_authorized_to_delete_comment(request, username, comment_id):
 	is_authorized = False
 
 	comment = db.get_comment_by_id(request.db_session, comment_id)
+	if comment is not None:
+		graph = graphs_db.get_graph_by_id(request.db_session, comment.graph_id)
 
 	if comment is not None:  # Comment exists
 		if comment.owner_email == username:
+			is_authorized = True
+		elif graph.owner_email == username:
 			is_authorized = True
 
 	return is_authorized
