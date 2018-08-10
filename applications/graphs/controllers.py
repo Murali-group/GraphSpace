@@ -218,7 +218,7 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 
 @atomic_transaction
 def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
-                 default_layout_id=None):
+                 default_layout_id=None, default_version_id=None):
 	graph = {}
 	if name is not None:
 		graph['name'] = name
@@ -228,6 +228,9 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 		graph['is_public'] = is_public
 	if default_layout_id is not None:
 		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
+
+	if default_version_id is not None:
+		graph['default_version_id'] = default_version_id if default_version_id != 0 else None
 
 	if style_json is not None:
 		GSGraph.validate_style_json(style_json)
@@ -655,10 +658,10 @@ def get_graph_version_by_id(request, version_id):
 	return db.get_graph_version_by_id(request.db_session, version_id)
 
 
-def add_graph_version(request, name=None, description=None, owner_email=None, graph_json=None, graph_id=None):
+def add_graph_version(request, name=None, description=None, owner_email=None, graph_json=None, graph_id=None, style_json=None):
 	if name is None or graph_id is None or graph_json is None:
 		raise Exception("Required Parameter is missing!")
-	return db.add_graph_version(request.db_session, name=name, description=description, owner_email=owner_email, graph_json=graph_json, graph_id=graph_id)
+	return db.add_graph_version(request.db_session, name=name, description=description, owner_email=owner_email, graph_json=json.dumps(graph_json), style_json=json.dumps(style_json), graph_id=graph_id)
 
 
 def delete_graph_version_by_id(request, graph_version_id):

@@ -557,7 +557,6 @@ var graphPage = {
         } else if (!_.isEmpty(utils.getURLParameter('user_layout'))) {
             //graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
             graphPage.getLayoutCompatibilityStatus(utils.getURLParameter('user_layout'));
-
         }
 
         $('#graphVisualizationTabBtn').click(function (e) {
@@ -590,13 +589,16 @@ var graphPage = {
         apis.version.getByID($('#GraphID').val(), row,
             successCallback = function (response) {
                 graph_json = JSON.parse(response.graph_json);
-                //graphPage.contructCytoscapeGraph();
+                style_json = JSON.parse(response.style_json);
+                if(style_json==null) style_json={}
+                //graphPage.cyGraph = graphPage.contructCytoscapeGraph();
                 $("#graphVisualizationTabBtn.link-reset").click();
                 $(location).attr('href', '#graph_visualization_tab');
                 graphPage.currentVersionID = row;
                 graphPage.init();
                 $("#version_selector_dropdown").attr('current_version_id', row);
                 $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
+                window.history.pushState('graph_version', 'Graph Page', window.location.origin + window.location.pathname + '?graph_version=' + row);
                 //console.log("Success");
             },
             errorCallback = function (xhr, status, errorThrown) {
@@ -1358,6 +1360,7 @@ var graphPage = {
                     });
                 });
         },
+
         onRemoveDefaultLayoutBtn: function (e) {
             apis.graphs.update($('#GraphID').val(), {
                     'default_layout_id': 0
@@ -1437,6 +1440,9 @@ var graphPage = {
                     default_version = response.versions.find(x => x.id === default_version_id);
                     default_version ? $('#current_version_label').text(default_version.name) : $('#current_version_label').text('Default');
                     $("#GraphVersionTable").find('span[row_id=' + default_version_id + ']').parent().parent().addClass('success');
+                    if (!_.isEmpty(utils.getURLParameter('graph_version'))) {
+                    graphPage.selectGraphVersion(utils.getURLParameter('graph_version'));
+                }
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching nodes.
@@ -1445,24 +1451,52 @@ var graphPage = {
             );
         },
         versionFormatter: function (value, row, index) {
-            $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            dropdown_value = value
+            if (dropdown_value.length >15){
+                dropdown_value = dropdown_value.slice(0,15) + '...';
+            }
+            $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + dropdown_value + '</a></li>')
             return ('<span class="graph_version_span" onclick="graphPage.selectGraphVersion(' + row.id + ');" row_id="'+row.id+'">'+ value +'</span>')
     },
         operationsFormatter: function (value, row, index) {
             if (row.id == default_version_id){
                 return [
-                    '<a class="remove btn btn-default btn-sm disabled" href="javascript:void(0)" title="Remove">',
+                    '<button class="btn btn-default btn-sm disabled" onclick="graphPage.graphVersionTable.setDefaultVersion(' +  row.id + ')" href="javascript:void(0)" version_id="' + row.id +  '" name="setGraphVersion">',
                     'Default Version ',
-                    '</a>'
+                    '</button>'
                 ].join('');
             }
             else
                 return [
-                    '<a class="remove btn btn-default btn-sm" href="javascript:void(0)" title="Remove">',
+                    '<button class="btn btn-default btn-sm" onclick="graphPage.graphVersionTable.setDefaultVersion(' +  row.id + ')" href="javascript:void(0)" version_id="' + row.id +  '" name="setGraphVersion">',
                     'Set as Default ',
-                    '</a>'
+                    '</button>'
                 ].join('');
         },
+        setDefaultVersion: function (version_id) {
+            console.log(version_id);
+            apis.graphs.update($('#GraphID').val(), {
+                    'default_version_id': version_id
+                },
+                successCallback = function (response) {
+                    default_version_id = response.default_version_id;
+                    $("button[name='setGraphVersion']").removeClass('disabled');
+                    $("button[name='setGraphVersion']").text('Set as default');
+                    $("button[version_id=" + version_id + "]").addClass('disabled');
+                    $("button[version_id=" + version_id + "]").text('Default Version');
+                    //$("#GraphVersionTable").find('tr').removeClass('success');
+                    //$("#GraphVersionTable").find('span[row_id=' + version_id + ']').parent().parent().addClass('success');
+
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting group_to_graph relationship.
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+        }
     },
     layoutCompatibilityTable: {
         getConflictingLayoutElements: function (param) {
@@ -1537,18 +1571,24 @@ var graphPage = {
 
                     if (response.total > 0) {
                         $('#selectSavedLayoutHeading').show();
-                    }
-                    $('#userPrivateLayoutBtns').html('');
-                    $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Private Layout'));
-                    _.each(response.layouts, function (layout) {
+                        $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Private Layout'));
+                        _.each(response.layouts, function (layout) {
                         graphPage.addLayoutBtns(layout, 'userPrivateLayoutBtns');
+                        dropdown_value = layout.name
+                        if (dropdown_value.length >15){
+                            dropdown_value = dropdown_value.slice(0,15) + '...';
+                        }
                         $("#layout_selector_dropdown").append($('<li>').append($('<a>', {
                                 'row_id' : layout.id,
                                 'data-layout-id' : layout.id,
                                 'onclick' :"graphPage.onSelectLayoutBtnClick(this)"
-                            }).html(layout.name)));
+                            }).html(dropdown_value)));
 
-                    });
+                        });
+                    }
+                    $('#userPrivateLayoutBtns').html('');
+
+
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.
@@ -1577,17 +1617,23 @@ var graphPage = {
 
                     if (response.total > 0) {
                         $('#selectSavedLayoutHeading').show();
-                    }
-                    $('#userSharedLayoutBtns').html('');
-                    $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Shared Layout'));
-                    _.each(response.layouts, function (layout) {
+                        $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Shared Layout'));
+                        _.each(response.layouts, function (layout) {
                         graphPage.addLayoutBtns(layout, 'userSharedLayoutBtns');
+                        dropdown_value = layout.name
+                        if (dropdown_value.length >15){
+                            dropdown_value = dropdown_value.slice(0,15) + '...';
+                        }
                         $("#layout_selector_dropdown").append($('<li>').append($('<a>', {
                                 'row_id' : layout.id,
                                 'data-layout-id' : layout.id,
                                 'onclick' :"graphPage.onSelectLayoutBtnClick(this)"
-                            }).html(layout.name)));
-                    });
+                            }).html(dropdown_value)));
+                        });
+                    }
+                    $('#userSharedLayoutBtns').html('');
+
+
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.

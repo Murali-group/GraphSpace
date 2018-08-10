@@ -113,7 +113,8 @@ def graph_page(request, graph_id):
 			return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
 		else:
 			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
-
+	if context['graph']['style_json'] is None:
+		context['graph']['style_json'] = {}
 	context['default_version_id'] = context['graph']['default_version_id']
 	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
 	context['data'] = {k: json.dumps(v, encoding='ascii') for k,v in context['graph']['graph_json']['data'].items()}
@@ -503,6 +504,7 @@ def _update_graph(request, graph_id, graph={}):
 	                                            style_json=graph.get('style_json', None),
 	                                            owner_email=graph.get('owner_email',
 	                                                                  None) if user_role == authorization.UserRole.ADMIN else None,
+	                                            default_version_id=graph.get('default_version_id', None),
 	                                            default_layout_id=graph.get('default_layout_id', None)))
 
 
@@ -1741,6 +1743,7 @@ def _add_graph_version(request, graph_id, graph_version={}):
 	                                        description=graph_version.get('description', None),
 	                                        owner_email=graph_version.get('owner_email', None),
 	                                        graph_json=graph_version.get('graph_json', None),
+	                                        style_json=graph_version.get('style_json', None),
 	                                        graph_id=graph_id))
 
 

@@ -73,7 +73,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 				'owner_email': cls.owner_email,
 				'name': cls.name,
 				'graph_json': json.loads(cls.default_version.graph_json),
-				'style_json': json.loads(cls.default_version.style_json),
+				'style_json': json.loads(cls.default_version.style_json) if cls.default_version.style_json else {},
 				'is_public': cls.is_public,
 				'tags': [tag.name for tag in cls.tags],
 				'default_layout_id': cls.default_layout_id,
@@ -333,6 +333,7 @@ class GraphVersion(IDMixin, TimeStampMixin, Base):
 				'name': cls.name,
 				'description': cls.description,
 				'graph_json': cls.graph_json,
+				'style_json': cls.style_json,
 				'creator': cls.owner_email,
 				'created_at': cls.created_at.isoformat(),
 				'updated_at': cls.updated_at.isoformat()

@@ -97,7 +97,7 @@ def update_graph(db_session, id, updated_graph):
 	:return: Graph if id exists else None
 	"""
 	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
-	version_id = update_graph if 'version_id' in updated_graph else graph.default_version_id
+	version_id = update_graph if 'default_version_id' in updated_graph else graph.default_version_id
 	graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == version_id)
 
 	for (key, value) in updated_graph.items():
