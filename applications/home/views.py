@@ -27,7 +27,7 @@ def home_page(request):
 	Raises
 	------
 	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
-:
+
 	Notes
 	------
 
@@ -251,7 +251,6 @@ def register(request):
 
 	if 'POST' == request.method:
 		request_body = json.loads(request.body)
-		#test_form = request_body
 		if 'user_id' in request_body and 'password' in request_body:
 			# RegisterForm is bound to POST data
 			register_form = RegisterForm(request_body)
@@ -260,13 +259,11 @@ def register(request):
 				token = generate_uid()
 				email_list_announcement = request_body['email_list_announcement']
 				email_list_user = request_body['email_list_user']
-				#test_form = email_list_user
 				user = users.register(request, username=register_form.cleaned_data['user_id'],
 									  password=register_form.cleaned_data['password'], user_account_status=0, email_confirmation_code=token,
 									  email_list_announcement=email_list_announcement, email_list_user=email_list_user)
 
 				users.send_confirmation_email(request, request_body['user_id'], token, email_list_announcement, email_list_user)
-				#return HttpResponse('register click link', content_type="application/json") #pop green undefined
 				return HttpResponse(json.dumps(json_success_response(200, message='A verification link has been sent to your email account. '+
 					   														  'Please click on the link to verify your email and continue '+
 																				  'the registration process.')),
