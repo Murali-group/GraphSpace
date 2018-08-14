@@ -39,6 +39,7 @@ AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 # http://stackoverflow.com/questions/4642011/test-sending-email-without-email-server
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
