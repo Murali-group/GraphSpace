@@ -12,6 +12,10 @@ TEMPLATE_DEBUG = True
 # URL through which to access graphspace
 URL_PATH = "http://localhost:8000/"
 
+# Email lists of graphspace
+ANNOUNCEMENTS_LIST = 'graphspace-announcements@graphspace.org'
+USERS_LIST = 'graphspace-users@graphspace.org' 	
+
 # If tracking is enabled for GraphSpace in Google Analytics
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 
@@ -39,9 +43,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'test_database',
-        'USER': 'adb',
-        'PASSWORD': '',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'Cjing_1185426',
         'HOST': 'localhost',
         'PORT': '5432'
     }
