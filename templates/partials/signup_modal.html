@@ -7,7 +7,7 @@
             <div class="modal-body">
 
                 <form method="post" id="register_form" class="register_form" role="form">
-                    {% csrf_token %}
+                    <!--{% csrf_token %}-->
                     <div class="register_fields">
                         {% for field in register_form %}
                             <div class="form-group">
@@ -15,6 +15,15 @@
                                 {{ field }}
                             </div>
                         {% endfor %}
+
+                        <div>
+                            <label><input type="checkbox"  id="email_list_announcement" name="email_list" value="email_list_announcement" checked>
+                                <span style="font-weight:normal">Please add me to the announcements email list for GraphSpace</span></label>
+                        </div>
+                        <div>
+                            <label><input type="checkbox"  id="email_list_user" name="email_list" value="email_list_user" checked>
+                                <span style="font-weight:normal">Please add me to the users email list for GraphSpace</span></label>
+                        </div>
                         <button name="register" id="registerBtn" class="btn btn-success">Register</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     </div>
