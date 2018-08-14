@@ -230,7 +230,7 @@ def login(request):
 			request.session['uid'] = user['user_id']
 			request.session['admin'] = user['admin']
 			return HttpResponse(
-				json.dumps(json_success_response(200, message='%s, welcome to GraphSpace!' % user['user_id'])),
+				json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])),
 				content_type="application/json")
 		elif user is not None and user['user_account_status'] is not 1:
 			raise ValidationError(request, ErrorCodes.Validation.UserUnVerified)
