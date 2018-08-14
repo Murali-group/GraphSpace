@@ -11,9 +11,9 @@ Invoke GNU Mailman3 REST API.
 - [ ] Update the database.
 
 ## Learning
-[Mailman 3 suite documents](http://docs.mailman3.org/en/latest/)
+- [Mailman 3 suite documents](http://docs.mailman3.org/en/latest/)
 
-[Install and Configure Mailman3 Suite for GraphSpace](https://github.com/Murali-group/GraphSpace/wiki/Install-and-Configure-Mailman3-Suite-for-GraphSpace-(Ubuntu-16.04,-PostgreSQL,-Apache2,-Postfix))
+- [Install and Configure Mailman3 Suite for GraphSpace](https://github.com/Murali-group/GraphSpace/wiki/Install-and-Configure-Mailman3-Suite-for-GraphSpace-(Ubuntu-16.04,-PostgreSQL,-Apache2,-Postfix))
 
 
 #### Blog Posts
