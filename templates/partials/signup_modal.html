@@ -7,7 +7,7 @@
             <div class="modal-body">
 
                 <form method="post" id="register_form" class="register_form" role="form">
-                    <!--{% csrf_token %}-->
+                    {% csrf_token %}
                     <div class="register_fields">
                         {% for field in register_form %}
                             <div class="form-group">
