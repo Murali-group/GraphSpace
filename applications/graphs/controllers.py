@@ -309,11 +309,11 @@ def _convert_order_query_term_to_database_order_object(order_query):
 
 
 def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=None, nodes=None, edges=None, tags=None,
-                               limit=None, offset=None):
+                               limit=None, offset=None, order_by=None):
 	if group_ids is None:
 		raise Exception("Atleast one group id is required.")
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
-	                      edges=edges, tags=tags, limit=limit, offset=offset)
+	                      edges=edges, tags=tags, limit=limit, offset=offset, order_by=order_by)
 
 
 def add_graph_to_group(request, group_id, graph_id):
