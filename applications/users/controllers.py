@@ -8,11 +8,6 @@ import applications.users.dal as db
 from graphspace.exceptions import BadRequest, ErrorCodes
 from graphspace.utils import generate_uid
 
-
-from mailmanclient import Client
-
-client = Client('http://localhost:8001/3.1', 'restadmin', 'restpass')
-
 # import the logging library
 import logging
 
@@ -35,16 +30,13 @@ def authenticate_user(request, username=None, password=None):
 				'id': user.id,
 				'user_id': user.email,
 				'password': user.password,
-				'admin': user.is_admin,
-				'user_account_status':user.user_account_status,
-				'email_list_announcement': user.email_list_announcement,
-				'email_list_user': user.email_list_user
+				'admin': user.is_admin
 			}
 	else:
 		return None
 
 
-def update_user(request, user_id, email=None, password=None, is_admin=None, user_account_status=None, email_list_announcement=None, email_list_user=None):
+def update_user(request, user_id, email=None, password=None, is_admin=None):
 	user = {}
 	if email is not None:
 		user['email'] = email
@@ -52,18 +44,7 @@ def update_user(request, user_id, email=None, password=None, is_admin=None, user
 		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
 	if is_admin is not None:
 		user['is_admin'] = is_admin
-	if user_account_status is not None:
-		user['user_account_status'] = user_account_status
-	if email_list_announcement is not None:
-		user['email_list_announcement'] = email_list_announcement
-		if email_list_announcement == '1':
-			client_list_announcement = client.get_list(settings.ANNOUNCEMENTS_LIST)
-			client_list_announcement.subscribe(email, pre_verified=True, pre_confirmed=True)
-	if email_list_user is not None:
-		user['email_list_user'] = email_list_user
-		if email_list_user == '1':
-			client_list_user = client.get_list(settings.USERS_LIST)
-			client_list_user.subscribe(email, pre_verified=True, pre_confirmed=True)
+
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
 
 
@@ -145,16 +126,14 @@ def search_users(request, email=None, limit=20, offset=0, order='desc', sort='na
 	return total, users
 
 
-def register(request, username=None, password=None, user_account_status=None, email_confirmation_code=None, email_list_announcement=None, email_list_user=None):
+def register(request, username=None, password=None):
 	if db.get_user(request.db_session, username):
 		raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=username)
 
-	return add_user(request, email=username, password=password, user_account_status=user_account_status,
-					email_confirmation_code=email_confirmation_code, email_list_announcement=email_list_announcement,
-					email_list_user=email_list_user)
+	return add_user(request, email=username, password=password)
 
 
-def add_user(request, email=None, password="graphspace_public_user", is_admin=0, user_account_status=None, email_confirmation_code=None, email_list_announcement=None, email_list_user=None):
+def add_user(request, email=None, password="graphspace_public_user", is_admin=0):
 	"""
 	Add a new user. If email and password is not passed, it will create a user with default values.
 	By default a user has no admin access.
@@ -167,9 +146,7 @@ def add_user(request, email=None, password="graphspace_public_user", is_admin=0,
 	"""
 	email = "public_user_%s@graphspace.com" % generate_uid(size=10) if email is None else email
 
-	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin,
-					   user_account_status=user_account_status, email_confirmation_code=email_confirmation_code, email_list_announcement=email_list_announcement,
-					email_list_user=email_list_user)
+	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin)
 
 
 def is_member_of_group(request, username, group_id):
@@ -289,7 +266,6 @@ def delete_group_member(request, group_id, member_id):
 	db.delete_group_to_user(request.db_session, group_id=group_id, user_id=member_id)
 	return
 
-
 def search_group_graphs(request, group_id, owner_email, names=None, nodes=None, edges=None, limit=20, offset=0, order='asc', sort='name'):
 	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
 	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
@@ -317,9 +293,6 @@ def delete_group_graph(request, group_id, graph_id):
 def get_password_reset_by_code(request, code):
 	return db.get_password_reset_by_code(request.db_session, code)
 
-def get_email_confirmation_code(request, code):
-	return db.get_email_confirmation_code(request.db_session, code)
-
 
 def delete_password_reset_code(request, id):
 	return db.delete_password_reset(request.db_session, id)
@@ -342,17 +315,3 @@ def send_password_reset_email(request, password_reset_code):
 	email_from = "GraphSpace Admin"
 
 	return send_mail(mail_title, message, email_from, [password_reset_code.email], fail_silently=False)
-
-def send_confirmation_email(request, email, token, email_list_announcement, email_list_user):
-	# Construct email message
-	mail_title = 'Activate your account for GraphSpace!'
-	message = 'Please confirm your email address to complete the registration ' + settings.URL_PATH + 'activate_account/?activation_code=' + token #+ '/?email_list_announcement=' + email_list_announcement + '/?email_list_user=' + email_list_user #str(test_form)
-	email_from = "GraphSpace Admin"
-
-	return send_mail(mail_title, message, email_from, [email], fail_silently=False)
-
-#def send_account_creation_confirmation(request, email):
-	# Construct confimation message
-	#message = 'Congratuation' + email + '. You have created your account successfully.'
-#	return HttpResponse(json.dumps(json_success_response(200, message='congraduations')),
-#		content_type="application/json")
