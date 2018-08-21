@@ -1,0 +1,29 @@
+<table id="GraphVersionTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="graphPage.graphVersionTable.getVersionByGraphID"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="versions"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="name" data-formatter="graphPage.graphVersionTable.versionFormatter" data-sortable="True">Version Name</th>
+        <th data-field="description">Description</th>
+        {#        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last#}
+        {#            Modified#}
+        {#        </th>#}
+        <th data-field="created_at">Created at</th>
+
+            <th data-field="operations" data-formatter="graphPage.graphVersionTable.operationsFormatter" data-visible="true">
+                Operations
+            </th>
+
+    </tr>
+    </thead>
+</table>

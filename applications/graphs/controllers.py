@@ -191,8 +191,18 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 
 	# Construct new graph to add to database
 	new_graph = db.add_graph(request.db_session, name=name, owner_email=owner_email,
-	                         graph_json=json.dumps(G.get_graph_json()), style_json=json.dumps(G.get_style_json()),
 	                         is_public=is_public, default_layout_id=default_layout_id)
+	default_version =  db.add_graph_version(request.db_session, name=name, description='Default Version',
+	                                        owner_email=owner_email, graph_json=json.dumps(G.get_graph_json()),
+	                                        style_json=json.dumps(G.get_style_json()), graph_id=new_graph.id, is_default = True)
+
+	# Add default_version to new_graph
+	new_graph.__setattr__('default_version', default_version)
+	# Add graph_json to new_graph
+	new_graph.__setattr__('graph_json', default_version.graph_json)
+	# Add style_json to new_graph
+	new_graph.__setattr__('style_json', default_version.style_json)
+
 	# Add graph tags
 	for tag in G.get_tags():
 		add_graph_tag(request, new_graph.id, tag)
@@ -208,7 +218,7 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 
 @atomic_transaction
 def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
-                 default_layout_id=None):
+                 default_layout_id=None, default_version_id=None):
 	graph = {}
 	if name is not None:
 		graph['name'] = name
@@ -218,6 +228,9 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 		graph['is_public'] = is_public
 	if default_layout_id is not None:
 		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
+
+	if default_version_id is not None:
+		graph['default_version_id'] = default_version_id if default_version_id != 0 else None
 
 	if style_json is not None:
 		GSGraph.validate_style_json(style_json)
@@ -585,4 +598,91 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
+	return
+
+def search_graph_versions(request, graph_id=None, names=None, limit=20, offset=0, order='desc', sort='name'):
+	"""
+		Parameters
+		----------
+		request : object
+			HTTP GET Request.
+		graph_id : string
+			Unique ID of the graph.
+		names : list of strings
+			Search for graphs with given list of names. In order to search for graphs with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+		limit : integer
+			Number of entities to return. Default value is 20.
+		offset : integer
+			Offset the list of returned entities by this number. Default value is 0.
+		order : string
+			Defines the column sort order, can only be 'asc' or 'desc'.
+		sort : string
+			Defines which column will be sorted.
+
+		Returns
+		-------
+		total : integer
+			Number of groups matching the request.
+		graph_versions : List of Graph Versions.
+			List of Graph Version Objects with given limit and offset.
+
+		Raises
+		------
+
+		Notes
+		------
+		"""
+	if sort == 'name':
+		sort_attr = db.GraphVersion.name
+	elif sort == 'update_at':
+		sort_attr = db.GraphVersion.updated_at
+	else:
+		sort_attr = db.GraphVersion.name
+
+	if order == 'desc':
+		orber_by = db.desc(sort_attr)
+	else:
+		orber_by = db.asc(sort_attr)
+
+	total, graph_versions = db.find_graph_versions(request.db_session,
+	                             names=names,
+	                             graph_id=graph_id,
+	                             limit=limit,
+	                             offset=offset,
+	                             order_by=orber_by)
+
+	return total, graph_versions
+
+
+def get_graph_version_by_id(request, version_id):
+	return db.get_graph_version_by_id(request.db_session, version_id)
+
+
+def add_graph_version(request, name=None, description=None, owner_email=None, graph_json=None, graph_id=None, style_json=None):
+	if name is None or graph_id is None or graph_json is None:
+		raise Exception("Required Parameter is missing!")
+	return db.add_graph_version(request.db_session, name=name, description=description, owner_email=owner_email, graph_json=json.dumps(graph_json), style_json=json.dumps(style_json), graph_id=graph_id)
+
+
+def delete_graph_version_by_id(request, graph_version_id):
+	db.delete_graph_version(request.db_session, id=graph_version_id)
+	return
+
+
+def get_graph_version_to_layout_status(request, graph_version_id, layout_id):
+	return db.get_graph_version_to_layout_status(request.db_session, graph_version_id, layout_id)
+
+
+def add_graph_version_to_layout_status(request, graph_version_id, layout_id, status=None):
+	if graph_version_id is None or layout_id is None:
+		raise Exception("Required Parameter(s) are missing!")
+	return db.add_graph_version_to_layout_status(request.db_session, graph_version_id=graph_version_id, layout_id=layout_id, status=status)
+
+
+def update_graph_version_to_layout_status(request, graph_version_id, layout_id=None, status=None):
+	return db.update_graph_version_to_layout_status(request.db_session, graph_version_id, layout_id, status)
+
+
+def delete_graph_version_to_layout_status(request, graph_version_id, layout_id):
+	db.delete_graph_version_to_layout_status(request.db_session, graph_version_id=graph_version_id, layout_id=layout_id)
 	return
