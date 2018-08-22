@@ -1763,6 +1763,21 @@ var graphPage = {
                     $('#edgeSourceArrowShape').val(collection.style('source-arrow-shape'));
                     $('#edgeTargetArrowShape').val(collection.style('target-arrow-shape'));
                     $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
+
+
+                    //if default (haystack, haystack-radius: 0 set to none
+                    if (collection.style('curve-style') == "haystack" && collection.style("haystack-radius") == "0")
+                    {
+                        $("#edgeBend").val("none");
+                    }
+                    else if (collection.style('curve-style') == "unbundled-bezier" && collection.style("control-point-distances") == "40 -40")
+                    {
+                         $("#edgeBend").val("unbundled-bezier2");
+                    }
+                    else
+                    {
+                        $("#edgeBend").val(collection.style('curve-style'));
+                    }
                     collection.select();
                 } else {
                     $('#edgeWidth').val(null);
@@ -1888,6 +1903,74 @@ var graphPage = {
                         });
                     }
                 });
+
+                 $('#edgeBend').on('change', function (e) {
+                    if (_.isEmpty($('#edgeBend').val())) {
+                        return $.notify({
+                            message: 'Please enter valid edge type!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                            //none
+                            //Do nothing
+
+                            //bezier
+                            if ($('#edgeBend').val() == "bezier")
+                            {
+
+                                 graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                 "control-point-step-size": "40px",
+                                 'curve-style': $('#edgeBend').val()
+                                 });
+                            }
+                            //unbndled-bezier
+                            else if ($('#edgeBend').val() == "unbundled-bezier")
+                            {
+                                 graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                  "control-point-distances": "120",
+                                  "control-point-weights": "0.1",
+                                 'curve-style': $('#edgeBend').val()
+                                 });
+                            }
+                            //unbundled-bezier(multiple)
+                            else if ($('#edgeBend').val() == "unbundled-bezier2")
+                            {
+                                 graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                   "control-point-distances": "40 -40",
+                                    "control-point-weights": "0.25 0.75",
+                                 'curve-style': "unbundled-bezier"
+                                 });
+                            }
+                            //haystack
+                            else if ($('#edgeBend').val() == "haystack")
+                            {
+                                 graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                 "haystack-radius": "0.5",
+                                 'curve-style': $('#edgeBend').val()
+                                 });
+                            }
+                            //segments
+                            else if ($('#edgeBend').val() == "segments")
+                            {
+                                 graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                  "segment-weights": "0.25 0.75",
+                                  "segment-distances": "40 -40",
+                                 'curve-style': $('#edgeBend').val()
+                                 });
+                            }
+                            //none
+                            else
+                            {
+                                graphPage.layoutEditor.edgeEditor.updateEdgeProperty({
+                                    //Default settings
+                                    "haystack-radius": "0",
+                                    'curve-style': "haystack"
+                                });
+                            }
+                    }
+                });
+
 
                 $('#nodeBackgroundColorPicker').on('changeColor', graphPage.layoutEditor.edgeEditor.onEdgeLineColorChange);
 
