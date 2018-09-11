@@ -1524,26 +1524,30 @@ def _delete_edge(request, graph_id, edge_id):
 	graphs.delete_edge_by_id(request, edge_id)
 
 
-def upload_comment(request, graph_id):
-	context = RequestContext(request, {})
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	if 'POST' == request.method:
-		try:
-			comment = _add_comment(request, comment={
-				'message': request.POST.get('message', None),
-				'owner_email': request.POST.get('owner_email', None),
-				'nodes': [1, 2, 3],
-				'edges': [1, 2, 3],
-				'graph_id': graph_id
-			})
-			context['Success'] = 'Comment successfully added with comment id=' + str(comment['id']) 
-		except Exception as e:
-			context['Error'] = str(e)
-
-	return render(request, 'comments/upload_comment.html', context)
-
-
 def view_comments(request, graph_id):
+	"""
+
+	Parameters
+	----------
+	graph_id : Integer
+		Unique ID of the graph. Required.
+	request : object
+		HTTP GET Request.
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered comments list page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET.
+
+	Notes
+	------
+
+	"""
+
 	context = RequestContext(request, {})
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 	if 'GET' == request.method:
@@ -1567,6 +1571,50 @@ def view_comments(request, graph_id):
 
 
 def _add_comment(request, comment={}):
+	"""
+
+	Comment Parameters
+	----------
+	message: string
+		Comment message. Required
+	edge_names : string
+		List of names of edges associated with the comment. Required
+	node_names : string
+		List of names of nodes associated with the comment. Required
+	layout_id : Integer
+		Required if the comment is associated with a layout.
+	owner_email : string
+		Email of the person who made the comment on the graph. Required
+	graph_id : string
+		Unique ID of the graph for the comment. Required
+	parent_comment_id: Integer
+		Required if the comment is a reply to a parent comment.
+	is_resolved: Integer
+		Indicates if the comment is resolved or not. Required
+
+
+
+	Parameters
+	----------
+	comment : dict
+		Dictionary containing the data of the comment being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+	BadRequest: If the parent comment does not exist comment cannot be created.
+	BadRequest: If the parent comment is already resolved, reply to that comment cannot be done.
+
+	Notes
+	------
+
+	"""
 
 	edge_names = comment.get('edge_names', None)
 	node_names = comment.get('node_names', None)
@@ -1625,7 +1673,29 @@ def _add_comment(request, comment={}):
 
 
 def _get_comments_by_graph_id(request, graph_id):
+	"""
+	
+	Parameters
+	----------
+	graph_id : Integer
+		Unique ID of the graph. Required.
+	request : object
+		HTTP GET Request.
 
+	Returns
+	-------
+	total : integer
+		Number of comments associated with the graph_id.
+	groups : List of Groups.
+		List of Comment Objects associated with the graph_id.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
 	#Validate if user has permission to read the comments.
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
@@ -1647,7 +1717,38 @@ def _get_comments_by_graph_id(request, graph_id):
 	}
 
 def _edit_comment(request, graph_id, comment = {}):
+	"""
+	Comment Parameters
+	----------
+	message : string
+		Comment message. Required
+	comment_id : Integer
+		Unique ID of the comment for updating. Required
+	is_resolved : Integer
+		Indicates if the comment is resolved or not. Required
 
+
+	Parameters
+	----------
+	comment : dict
+		Dictionary containing the data of the comment being edited.
+	graph_id : Integer
+		Unique ID of the graph.
+	request : object
+		HTTP PUT Request.
+
+	Returns
+	-------
+	comment : object
+		Updated comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
 	#Validate if user has permission to edit comment
 	if comment.get('message', None) != None or comment.get('is_resolved', None) == 1: 
 		authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
@@ -1660,28 +1761,139 @@ def _edit_comment(request, graph_id, comment = {}):
 												  comment_id=comment.get('id', None)))
 
 def _delete_comment(request, graph_id, comment = {}):
-	#Validate if user has permission to edit comment 
+	"""
+	Comment Parameters
+	----------
+	id : Integer
+		Unique ID of the comment. Required
+
+	Parameters
+	----------
+	comment : dict
+		Dictionary containing the data of the comment being deleted.
+	graph_id : Integer
+		Unique ID of the graph.
+	request : object
+		HTTP DELETE Request.
+
+	Returns
+	-------
+	comment : object
+		Deleted comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	#Validate if user has permission to delete comment 
 	authorization.validate(request, permission='COMMENT_DELETE', comment_id=comment.get('id',None))
 	return utils.serializer(comments.delete_comment(request,
 													id=comment.get('id',None)))
 
 def _pin_comment(request, graph_id, data = {}):
+	"""
+	Data Parameters
+	----------
+	comment_id : Integer
+		Unique ID of the comment. Required
+
+	Parameters
+	----------
+	data : dict
+		Dictionary containing the data of the comment being deleted.
+	graph_id : Integer
+		Unique ID of the graph.
+	request : object
+		PIN Request.
+
+	Returns
+	-------
+	pin_comment : object
+		An object inserted into PinComments table.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
 	# Validate if user has permission to pin comment.
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 	pin_comment = comments.pin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
 	return pin_comment.serialize()
 
 def _unpin_comment(request, graph_id, data = {}):
+	"""
+	Data Parameters
+	----------
+	comment_id : Integer
+		Unique ID of the comment. Required
+
+	Parameters
+	----------
+	data : dict
+		Dictionary containing the data of the comment being deleted.
+	graph_id : Integer
+		Unique ID of the graph.
+	request : object
+		UNPIN Request.
+
+	Returns
+	-------
+	unpin_comment : object
+		An object indicating deleted entry in PinComments table.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
 	# Validate if user has permission to unpin comment.
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 	unpin_comment = comments.unpin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
 	return unpin_comment.serialize()
 
 def graph_comments_ajax_api(request, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/ajax/graphs/<graph_id>/comments
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
 	return _comments_api(request, graph_id=graph_id)
 
 def _comments_api(request, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/graphs/<graph_id>/comments
 
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET, POST, PUT, DELETE, PIN, UNPIN.
+	BadRequest: If HTTP_ACCEPT header is not set to application/json.
+
+	"""
 	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
 		if request.method == "POST":
 			return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
