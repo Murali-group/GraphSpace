@@ -11,6 +11,31 @@ from graphspace.database import *
 @with_session
 def add_comment(db_session, message, graph_id, owner_email=None, is_resolved=0, layout_id=None,
 			 parent_comment_id=None):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	message: string
+		Comment message.
+	graph_id: Integer
+		Unique ID of each graph.
+	owner_email: string
+		Email ID of user who comment on the graph.
+	is_resolved: Integer
+		Integer indicating if the comment is resolved or not.
+	layout_id: Integer
+		Unique ID of layout.
+	parent_comment_id:Integer
+		Unique ID of parent comment.
+
+	Returns
+	-------
+	comment: Object
+		Comment Object.
+
+	"""
 	comment = Comment(owner_email=owner_email, graph_id=graph_id, layout_id=layout_id,
 				  is_resolved=is_resolved, parent_comment_id=parent_comment_id, message=message)
 	graph = get_graph_by_id(db_session, graph_id)
@@ -20,12 +45,46 @@ def add_comment(db_session, message, graph_id, owner_email=None, is_resolved=0, 
 
 @with_session
 def pin_comment(db_session, owner_email, comment_id):
+	"""
+
+	Parameters
+	----------
+	db_session: object
+		Database session.
+	owner_email: string
+		Email ID of user who comment on the graph.
+	comment_id: Integer
+		Unique ID of comment.
+
+	Returns
+	-------
+	pin_comment: Object
+		PinComment object.
+
+	"""
 	pin_comment = PinComment(owner_email=owner_email, comment_id=comment_id)
 	db_session.add(pin_comment)
 	return pin_comment
 
 @with_session
 def unpin_comment(db_session, owner_email, comment_id):
+	"""
+
+	Parameters
+	----------
+	db_session: object
+		Database session.
+	owner_email: string
+		Email ID of user who comment on the graph.
+	comment_id: Integer
+		Unique ID of comment.
+
+	Returns
+	-------
+	query: Object
+		Deleted PinComment Object
+
+	"""
 	query = db_session.query(PinComment).filter(PinComment.owner_email == owner_email)
 	query = query.filter(PinComment.comment_id == comment_id).one_or_none()
 	db_session.delete(query)
@@ -33,28 +92,107 @@ def unpin_comment(db_session, owner_email, comment_id):
 
 @with_session
 def add_comment_to_edge(db_session, comment_id, edge_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	comment_id: Integer
+		Unique ID of comment.
+	edge_id: Integer
+		Unique ID of edge.
+
+	Returns
+	-------
+	comment_to_edge: Object.
+		CommentToEdge Object.
+
+	"""
 	comment_to_edge = CommentToEdge(comment_id=comment_id, edge_id=edge_id)
 	db_session.add(comment_to_edge)
 	return comment_to_edge
 
 @with_session
 def add_comment_to_node(db_session, comment_id, node_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	comment_id: Integer
+		Unique ID of comment.
+	node_id: Integer
+		Unique ID of node.
+
+	Returns
+	-------
+	comment_to_node: Object
+		CommentToNode Object
+
+	"""
 	comment_to_node = CommentToNode(comment_id=comment_id, node_id=node_id)
 	db_session.add(comment_to_node)
 	return comment_to_node
 
 @with_session
 def get_comment_by_graph_id(db_session, graph_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	graph_id: Integer
+		Unique ID of graph.
+
+	Returns
+	-------
+	return value: tuple
+	Count, List of comments associated with the graph.
+
+	"""
 	query = db_session.query(Comment).filter(Comment.graph_id == graph_id)
 	return query.count(), query.all()
 
 @with_session
 def get_comment_by_id(db_session, id):
+	"""
+
+	Parameters
+	----------
+	db_session: object
+		Database session.
+	id: Integer
+		Unique ID of comment.
+
+	Returns
+	-------
+	comment: Object
+		Comment Object.
+
+	"""
 	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
 	return comment
 
 @with_session
 def get_user_emails_by_graph_id(db_session, graph_id):
+	"""
+
+	Parameters
+	----------
+	db_session: object
+		Database session.
+	graph_id: Integer
+		Unique ID of the graph.
+
+	Returns
+	-------
+	return value: List
+		List of all email IDs who have permission to read the graph.
+
+	"""
 	query = db_session.query(User, GroupToGraph, GroupToUser)
 	query = query.filter(GroupToGraph.graph_id == graph_id)
 	query = query.filter(GroupToUser.group_id == GroupToGraph.group_id)
@@ -63,6 +201,21 @@ def get_user_emails_by_graph_id(db_session, graph_id):
 
 @with_session
 def get_nodes_by_comment_id(db_session, comment_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	comment_id: Integer
+		Unique ID of the comment.
+
+	Returns
+	-------
+	return value: List
+		List of all nodes associated with the given comment.
+
+	"""
 	query = db_session.query(Comment, CommentToNode, Node)
 	query = query.filter(comment_id == CommentToNode.comment_id)
 	query = query.filter(CommentToNode.node_id == Node.id)
@@ -70,6 +223,21 @@ def get_nodes_by_comment_id(db_session, comment_id):
 
 @with_session
 def get_edges_by_comment_id(db_session, comment_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	comment_id: Integer
+		Unique ID of the comment.
+
+	Returns
+	-------
+	return value: List
+		List of all edges associated with the given comment.
+
+	"""
 	query = db_session.query(Comment, CommentToEdge, Edge)
 	query = query.filter(comment_id == CommentToEdge.comment_id)
 	query = query.filter(CommentToEdge.edge_id == Edge.id)
@@ -77,12 +245,44 @@ def get_edges_by_comment_id(db_session, comment_id):
 
 @with_session
 def get_owner_email_by_graph_id(db_session, graph_id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	graph_id: Integer
+		Unique ID of graph.
+
+	Returns
+	-------
+	return value: List
+		List of all User Objects.
+
+	"""
 	query = db_session.query(User, Graph)
 	query = query.filter(User.email == Graph.owner_email)
 	return query.all()
 
 @with_session
 def update_comment(db_session, id, updated_comment):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	id: Integer
+		Unique ID of comment.
+	updated_comment: dict
+		Dict containing key, value pairs of updated_comment.
+
+	Returns
+	-------
+	comment: Object
+		Updated Comment Object.
+
+	"""
 	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
 	for (key, value) in updated_comment.items():
 		setattr(comment, key, value)
@@ -90,6 +290,21 @@ def update_comment(db_session, id, updated_comment):
 
 @with_session
 def delete_comment(db_session, id):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	id: Integer
+		Unique ID of comment.
+
+	Returns
+	-------
+	comment: Object
+		Deleted Comment Object.
+
+	"""
 	comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
 	query   = db_session.query(Comment).filter(Comment.parent_comment_id == id).all()
 	db_session.delete(comment)
@@ -99,6 +314,23 @@ def delete_comment(db_session, id):
 
 @with_session
 def get_pinned_comments(db_session, comment_id, owner_email):
+	"""
+
+	Parameters
+	----------
+	db_session: Object
+		Database session.
+	comment_id: Integer
+		Unique ID of Comment.
+	owner_email: string
+		Email ID of user.
+
+	Returns
+	-------
+	return value: tuple
+		count, list of all PinComment objects.
+
+	"""
 	query = db_session.query(PinComment).filter(PinComment.comment_id == comment_id)
 	query = query.filter(PinComment.owner_email == owner_email)
 	return query.count(), query.all()
