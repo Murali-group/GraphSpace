@@ -11,21 +11,11 @@ GraphSpace has three dummy users:
 
 Requirements
 ===================================
-
-1. [Python](https://askubuntu.com/a/101595) v2.7.10
-2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation) with pg_trgm extension
-3. [virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
-4. [bower](https://bower.io/) _dependant on [Node.js](https://github.com/Murali-group/GraphSpace/wiki/Install-Node.js)_
-5. [Apache Kafka](https://github.com/Murali-group/GraphSpace/wiki/Install-Apache-Kafka)
-6. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
-7. [Redis](https://github.com/Murali-group/GraphSpace/wiki/Install-Redis)
-8. [Supervisor](http://supervisord.org/installing.html#installing-via-pip)
-
-
-Running GraphSpace using Docker
-===================================
-This is the easiest way to run GraphSpace, if you are do not want or are not interested in making code changes. Follow the steps given [here](https://github.com/Murali-group/GraphSpace/wiki/GraphSpace-and-Docker) to setup and run GraphSpace using docker.
-
+1. Python v2.7.10
+2. [postgreSQL](https://github.com/Murali-group/GraphSpace/wiki/PostgreSQL-Installation)
+3. virtualenv
+4. [bower](https://bower.io/)
+5. [ElasticSearch](https://github.com/Murali-group/GraphSpace/wiki/Steps-for-setting-up-ElasticSearch-on-AWS)
 
 Running GraphSpace locally
 ===================================
@@ -36,43 +26,21 @@ In order to run GraphSpace, please install postgreSQL and both the Python runtim
 2. Visit the GraphSpace directory: `cd GraphSpace`
 3. Create a virtual environment for the project: `virtualenv venv`
 4. Start using the virtual environment: `source venv/bin/activate`
-5. Install graphspace: `sh install.sh`
-   
-   _Note : While installing psycopg2, you might encounter 
-   ```Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.```
-   To fix it run the following commands ([More](https://stackoverflow.com/a/28254860/4646197)):_
-   ```
-   sudo apt-get install libpq-dev python-dev
-   pip install psycopg2
-   ```
-6. In `/graphspace/settings/local.py` file, change the postgres user credentials:
+5. In `/graphspace/settings/local.py` file, change the postgres user credentials:
    ```
    DATABASES = {
-      'default': {
-          'ENGINE': 'django.db.backends.postgresql_psycopg2',
-          'NAME': <database name>,
-          'USER': <user name>,
-          'PASSWORD': <password (if any)>,
-          'HOST': 'localhost',
-          'PORT': '5432'
-      }
-   }
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': <database name>,
+            'USER': <user name>,
+            'PASSWORD': <password (if any)>,
+            'HOST': 'localhost',
+            'PORT': '5432'
+        }
+    }
    ```
+6. Install graphspace: `sh install.sh`
 7. Finally, start the GraphSpace server: `python manage.py runserver --settings=graphspace.settings.local`
-   _Note_: This will not activate websocket. To run GraphSpace with websockets follow these steps:
-   
-   1. Add settings file `production.py` by copying local settings file.
-      ```
-      cp graphspace/settings/local.py graphspace/settings/production.py
-      ```
-   2. Run Daphne interface server.
-      ```
-      daphne -b localhost -p 8000 graphspace.asgi:channel_layer
-      ```
-   3. Open another terminal, and run workers which would serve the requests.
-      ```
-      python manage.py runworker
-      ```
 8. Visit `http://localhost:8080` and enjoy using GraphSpace!
 
 Running GraphSpace on Apache
@@ -81,95 +49,48 @@ Running GraphSpace on Apache
 This section describes the steps required to launch GraphSpace on a server that has `apache2` running on it.  First, please follow the steps in **Running GraphSpace locally**.  Next, execute the instructions below. 
 
 1. Follow instructions 1-5 in `Running GraphSpace locally`
-2. Add settings file `production.py` by copying local settings file. 
-   ```
-   cp graphspace/settings/local.py graphspace/settings/production.py
-   ```
+2. Add settings file `production.py` by copying local settings file. `cp graphspace/settings/local.py graphspace/settings/`
 3. Update your `production.py` settings file.
-   1. Set `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
-   2. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
-4. Update location of graphspace directory (`GRAPHSPACE`) in `runworker` and `daphne` file.
-5. When Supervisor is installed you can give it programs to start and watch by creating configuration files in the `/etc/supervisor/conf.d` directory. For Daphne and workers we’ll create a file named `/etc/supervisor/conf.d/graphspace.conf` with the following content, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace, `path_to_kafka` with the name of the directory where you downloaded Kafka and `user_name` with the name of the current user:
+  1. InSet `URL_PATH` to the URL where your server will be running.  *Note: Please add the ending '/' character at the end of this value: For example: http://graphspace.org/*
+  2. Modify the `PATH` to point to where GraphSpace directory exists.  *Note: Please add the ending '/' character at the end of this value: For example: /home/ubuntu/GraphSpace/*
+4. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
+5. Navigate to the `sites-enabled` directory: `cd sites-enabled`
+6. Create a file called `graphspace.conf` and access this file using admin privileges: `sudo vim graphspace.conf'
+7. Inside this file, copy and paste following lines, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace:
 
-   ```
-   [program:daphne_graphspace]
-   command=sh /path_to_GraphSpace/daphne
-   user = user_name
-   stdout_logfile = /path_to_GraphSpace/logs/daphne.log
-   redirect_stderr = true
-   environment=LANG=en_US.UTF-8,LC_ALL=en_US.UTF-8,PYTHON_EGG_CACHE="/home/melvin15may/GraphSpace/python-eggs"
-   priority=2
+ ```
+WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace/venv/lib/python2.7/site-packages/ python-eggs=/path_to_python_eggs
+WSGIProcessGroup GraphSpace
+WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
 
-   [program:runworker_daphne_graphspace]
-   command=sh /path_to_GraphSpace/runworker
-   process_name=%(process_num)s
-   numprocs = 2
-   user = user_name
-   stdout_logfile = /path_to_GraphSpace/logs/runworker.log
-   redirect_stderr = true
-   environment=LANG=en_US.UTF-8,LC_ALL=en_US.UTF-8,PYTHON_EGG_CACHE="/home/melvin15may/GraphSpace/python-eggs"
-   priority=3
-
-   [program:kafka_graphspace]
-   command=/path_to_kafka/bin/kafka-server-start.sh /path_to/kafka/config/server.properties
-   user = user_name
-   stdout_logfile = /path_to_GraphSpace/logs/kafka.log
-   redirect_stderr = true
-   environment=LANG=en_US.UTF-8,LC_ALL=en_US.UTF-8
-   priority=1
-   ```
-6. Update settings and run supervisord:
-   ```
-   sudo supervisorctl reread
-   sudo supervisorctl update
-   sudo supervisorctl restart all
-   ```   
-7. Visit the `apache2` directory: `cd /path_to/apache2`. An example of the full path to this directory is `/etc/apache2`.
-8. Navigate to the `sites-enabled` directory: `cd sites-enabled`
-9. Create a file called `graphspace.conf` and access this file using admin privileges: `sudo vim graphspace.conf'
-10. Inside this file, copy and paste following lines, after replacing `path_to_GraphSpace` with the name of the directory where you downloaded GraphSpace and `path_to_python_eggs` with the name of the directory where you wish to put the python files:
-
-    ```
-    WSGIDaemonProcess GraphSpace python-path=/path_to_GraphSpace:/path_to_GraphSpace/venv/lib/python2.7/site-packages/ python-eggs=/path_to_python_eggs
-    WSGIProcessGroup GraphSpace
-    WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
-    
-    WSGIApplicationGroup %{GLOBAL}
-    
-    <Directory /path_to_GraphSpace/graphspace/>
-      <Files wsgi.py>
-          Order deny,allow
-          Require all granted
-      </Files>
-    </Directory>
-    
-    Alias /static/ /path_to_GraphSpace/static/
-    
-    <Directory /path_to_GraphSpace/static/>
-       Require all granted
-    </Directory>
-   
-    <Directory /path_to_GraphSpace>
-       Options Indexes FollowSymLinks
-       AllowOverride None
-       Require all granted
-    </Directory>
-    ```
-11. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi`
-12. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
-13. Create a directory for python-eggs. `mkdir /path_to_python_eggs`
-14. Give permission to access python-egg files through apache2. `chmod 777 /path_to_python_eggs`
-15. Run the following cmd: ``` a2enmod rewrite ```, ``` a2enmod proxy ``` and ``` a2enmod proxy_wstunnel ```
-16. Inside the `/path_to/apache2/sites-enabled/000-default.conf`, copy and paste following lines inside ``` <VirtualHost *:80> </VirtualHost> ```
-    ```
-    RewriteEngine on
-    RewriteCond %{HTTP:UPGRADE} ^WebSocket$ [NC,OR]
-    RewriteCond %{HTTP:CONNECTION} ^Upgrade$ [NC]
-    RewriteRule .* ws://127.0.0.1:9099%{REQUEST_URI} [P,QSA,L]
-    ```
-17. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
+  <Directory /path_to_GraphSpace/graphspace/>
+     <Files wsgi.py>
+         Order deny,allow
+         Require all granted
+     </Files>
+  </Directory>
+  
+  Alias /static/ /path_to_GraphSpace/static/
+  
+  <Directory /path_to_GraphSpace/static/>
+      Require all granted
+  </Directory>
+  
+  <Directory /path_to_GraphSpace>
+   Options Indexes FollowSymLinks
+   AllowOverride None
+   Require all granted
+  </Directory>
+ ```
+ 
+8. Install module to recognize Django application through apache2: `sudo apt-get install libapache2-mod-wsgi`
+9. Give permission to access static files through apache2.  Navigate outside GraphSpace and type: `chmod 777 GraphSpace`
+10. Create a directory for python-eggs. `mkdir /path_to_python_eggs`
+11. Give permission to access static files through apache2. `chmod 777 /path_to_python_eggs`
+12. Restart the apache server. On a computer running Ubuntu, the command is `sudo service apache2 restart`
 
 Refer to https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/modwsgi/ if any problems occur with the setup.
+
 
 Contributing
 =================
