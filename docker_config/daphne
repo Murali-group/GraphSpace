@@ -1,0 +1,9 @@
+#!/bin/bash
+
+NAME="GraphSpace daphne workers"
+GRAPHSPACE="/GraphSpace"
+
+set -e  # exit on error
+cd $GRAPHSPACE
+. venv/bin/activate
+exec daphne --fd 5 -b 0.0.0.0 -p 8000 graphspace.asgi:channel_layer

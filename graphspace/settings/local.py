@@ -1,11 +1,13 @@
 from graphspace.settings.base import *
+from kafka import KafkaConsumer, KafkaProducer
 
 # variables for setting up account through which GraphSpace emails
 EMAIL_HOST = 'NONE'
 EMAIL_HOST_USER = 'NONE'
 EMAIL_HOST_PASSWORD = 'NONE'
 
-# If error is thrown, display the error in the browser (ONLY FOR LOCAL MACHINES)
+# If error is thrown, display the error in the browser (ONLY FOR LOCAL
+# MACHINES)
 DEBUG = True
 TEMPLATE_DEBUG = True
 
@@ -15,7 +17,8 @@ URL_PATH = "http://localhost:8000/"
 # If tracking is enabled for GraphSpace in Google Analytics
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 
-# Keys given by creating a requestor account on Amazon Mechanical Turk (https://www.mturk.com/mturk/welcome)
+# Keys given by creating a requestor account on Amazon Mechanical Turk
+# (https://www.mturk.com/mturk/welcome)
 AWSACCESSKEYID = 'None'
 SECRETKEY = 'None'
 
@@ -35,14 +38,35 @@ AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 # http://stackoverflow.com/questions/4642011/test-sending-email-without-email-server
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'test_database',
-        'USER': 'adb',
-        'PASSWORD': '',
+        'NAME': 'test',
+        'USER': 'postgres',
+        'PASSWORD': '987654321',
         'HOST': 'localhost',
         'PORT': '5432'
     }
 }
+# Kafka Configuration
+KAFKA_URL = 'localhost:9092'
+    
+KAFKA_CONSUMER_OWNER = {
+    'bootstrap_servers': KAFKA_URL,
+    'group_id': 'graphspace_owner'
+}
+
+KAFKA_CONSUMER_GROUP = {
+    'bootstrap_servers': KAFKA_URL,
+    'group_id': 'graphspace_group'
+}
+
+# Consumer for owner notification
+KAFKA_CONSUMER = {
+    "owner": KafkaConsumer('owner', **KAFKA_CONSUMER_OWNER),
+    "group": KafkaConsumer('group', **KAFKA_CONSUMER_GROUP)
+}
+
+KAFKA_CONSUMER_POLL_TIMEOUT = 2
+
+KAFKA_PRODUCER = KafkaProducer(bootstrap_servers=KAFKA_URL)

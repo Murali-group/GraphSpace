@@ -5,7 +5,6 @@ urlpatterns = [
 
 	url(r'^groups/$', views.groups_page, name='groups'),
 	url(r'^groups/(?P<group_id>[^/]+)$', views.group_page, name='group'),
-
 	url(r'^groups/(?P<group_id>[^/]+)/join/$', views.join_group_page, name='signup_by_invitation'),
 
 	# AJAX APIs Endpoints

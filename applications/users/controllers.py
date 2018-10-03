@@ -36,7 +36,7 @@ def authenticate_user(request, username=None, password=None):
 		return None
 
 
-def update_user(request, user_id, email=None, password=None, is_admin=None):
+def update_user(request, user_id, email=None, password=None, is_admin=None, receive_notification_email=None):
 	user = {}
 	if email is not None:
 		user['email'] = email
@@ -44,6 +44,8 @@ def update_user(request, user_id, email=None, password=None, is_admin=None):
 		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
 	if is_admin is not None:
 		user['is_admin'] = is_admin
+	if receive_notification_email is not None:
+		user['receive_notification_email'] = receive_notification_email
 
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
 
@@ -102,6 +104,10 @@ def is_user_authorized_to_update_group(request, username, group_id):
 
 def get_user(request, email):
 	return db.get_user(request.db_session, email) if email is not None else None
+
+
+def get_user_by_id(request, id):
+	return db.get_user_by_id(request.db_session, id=id) if id is not None else None
 
 
 def search_users(request, email=None, limit=20, offset=0, order='desc', sort='name'):
@@ -186,6 +192,16 @@ def get_groups_by_owner_id(request, owner_id):
 	return db.get_groups_by_owner_id(request.db_session, owner_id=owner_id)
 
 
+def get_groups_by_graph_id(request, graph_id):
+	"""
+	Returns all groups where graph is shared.
+	:param request: HTTP Request
+	:param graph_id: id of graph which is shared
+	:return: list of Groups
+	"""
+	return db.get_groups_by_graph_id(request.db_session, graph_id=graph_id)
+
+
 def search_groups(request, owner_email=None, member_email=None, name=None, description=None, graph_ids=None, limit=20, offset=0, order='desc', sort='name'):
 	if sort == 'name':
 		sort_attr = db.Group.name
@@ -219,8 +235,7 @@ def get_group_by_id(request, group_id):
 
 
 def delete_group_by_id(request, group_id):
-	db.delete_group(request.db_session, id=group_id)
-	return
+	return db.delete_group(request.db_session, id=group_id)
 
 
 def update_group(request, group_id, name, description, owner_email):

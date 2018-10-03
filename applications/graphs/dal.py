@@ -117,7 +117,7 @@ def delete_graph(db_session, id):
 	"""
 	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
 	db_session.delete(graph)
-	return
+	return graph
 
 
 @with_session
@@ -314,7 +314,7 @@ def delete_graph_to_group(db_session, group_id, graph_id):
 
 @with_session
 def find_layouts(db_session, owner_email=None, is_shared=None, name=None, graph_id=None, limit=None, offset=None,
-                 order_by=desc(Layout.updated_at)):
+                 include_deleted=False, order_by=desc(Layout.updated_at)):
 	query = db_session.query(Layout)
 
 	if order_by is not None:
@@ -332,6 +332,9 @@ def find_layouts(db_session, owner_email=None, is_shared=None, name=None, graph_
 	if is_shared is not None:
 		query = query.filter(Layout.is_shared == is_shared)
 
+	if not include_deleted:
+		query = query.filter(Layout.is_deleted.is_(False))
+
 	total = query.count()
 
 	if offset is not None and limit is not None:
@@ -341,8 +344,13 @@ def find_layouts(db_session, owner_email=None, is_shared=None, name=None, graph_
 
 
 @with_session
-def get_layout_by_id(db_session, layout_id):
-	return db_session.query(Layout).filter(Layout.id == layout_id).one_or_none()
+def get_layout_by_id(db_session, layout_id, include_deleted=False):
+	query = db_session.query(Layout)
+	query = query.filter(Layout.id == layout_id)
+	if not include_deleted:
+		query = query.filter(Layout.is_deleted.is_(False))
+	
+	return query.one_or_none()
 
 
 @with_session
@@ -399,8 +407,8 @@ def delete_layout(db_session, id):
 	:return: None
 	"""
 	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
-	db_session.delete(layout)
-	return
+	setattr(layout, "is_deleted", True)
+	return layout
 
 
 @with_session

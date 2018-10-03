@@ -93,6 +93,10 @@
         }
     }
     header.init();
+    // Connect to socket if logged in
+    {% if uid != None %}
+        userSocket.init();
+    {% endif %}
 
     // This will capture hash changes while on the page
     window.addEventListener("hashchange", offsetAnchor);
@@ -102,6 +106,8 @@
     // seems necessary to allow the browser to jump to the anchor first.
     window.setTimeout(offsetAnchor, 2); // The delay of 1 is arbitrary and may not always work right (although it did in my testing).
 </script>
+
+
 
 
 </body>

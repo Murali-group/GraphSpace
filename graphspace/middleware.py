@@ -3,11 +3,18 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 import json
 from graphspace.exceptions import *
+from graphspace.database import *
+from channels.handler import AsgiRequest
 
 
 class SQLAlchemySessionMiddleware(object):
 	def process_request(self, request):
-		request.db_session = settings.db.session()
+		# Re-establish DB sessions for ASGI requests which are used for websockets
+		if type(request) == AsgiRequest:
+			# Database() is a func in graphspace.database
+			request.db_session = Database().session()
+		else:
+			request.db_session = settings.db.session()
 
 	def process_response(self, request, response):
 		try:

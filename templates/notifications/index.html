@@ -1,0 +1,57 @@
+{% extends 'base.html' %} {% block content %} {% load staticfiles %}
+<div class="container-fluid zero-padding padding-bottom-6" style="margin-top: 5px;">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="nav nav-pills nav-stacked" id="read-unread-tabs">
+                <li id="unread-notification" class="active"><a href="#unread-tab" data-toggle="pill">Unread <span id="unread-notification-total" class="badge">{{notificationsPage.notificationsTable.unreadTotal}}</span></a></li>
+                <li id="all-notification"><a href="#all-tab" data-toggle="pill">All notifications</a></li>
+            </ul>
+            <hr>
+            <ul class="nav nav-pills nav-stacked">
+                <li id="all-notification"><a href="#my-resources">My resources<span id="owner-notification-total" class="badge">{{ owner_notification.total }}</span></a></li>
+            </ul>
+            <hr>
+            <ul class="nav nav-pills nav-stacked group-tabs" id="group-tabs">
+            </ul>
+        </div>
+        <div class="col-md-9">
+            <br>
+            <div id="owner-toolbar row">
+                <button id="mark-all-read" type="submit" class="btn btn-default">Mark all as read</button>
+                <label class="btn btn-default" style="float: right;">
+                    <input id="send-email-checkbox" type="checkbox" value=""> Send notification email
+                </label>
+            </div>
+            <div class="tab-content">
+                {% include 'notifications/all_notification_table.html' %} {% include 'notifications/unread_notification_table.html' %}
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="sub-notification-modal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-body" id="sub-notification-table-modal">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="footer">
+    <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+    <br><a href="http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
+</footer>
+<!-- JSON support for Groups Page -->
+<script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/notifications_page.js' %}"></script>
+<script>
+$(document).ready(function() {
+    notificationsPage.init();
+});
+</script>
+{% endblock %}

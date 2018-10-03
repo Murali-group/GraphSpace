@@ -16,7 +16,7 @@ from elasticsearch import Elasticsearch
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
 
-APPEND_SLASH=True
+APPEND_SLASH = True
 
 # GLOBAL VALUES FOR DATABASE
 DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
@@ -33,7 +33,10 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 	'applications.users',
-	'applications.graphs'
+	'applications.graphs',
+	'applications.notifications',
+	'channels',
+	'django_crontab'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -123,7 +126,9 @@ TEMPLATES = [
 
 LOGIN_REDIRECT_URL = '/'
 
-# for authentication. Since we need to use SQL Alchemy for the ORM, we cannot use the authentication backend automatically provided by Django when using the Django ORM.
+# for authentication. Since we need to use SQL Alchemy for the ORM, we
+# cannot use the authentication backend automatically provided by Django
+# when using the Django ORM.
 AUTHENTICATION_BACKENDS = ('graphs.auth.AuthBackend.AuthBackend',)
 
 # Following the recommendation of the Django tutorial at
@@ -158,3 +163,69 @@ LOGGING = {
         },
     },
 }
+
+# Notification grouping interval in seconds
+NOTIFICATION_GROUP_INTERVAL = 24 * 60 * 60 # 24 hours
+
+# Notification messages
+NOTIFICATION_MESSAGE = {
+	'owner': {
+		'upload': {
+			'graph': 'New graph {name} uploaded.',
+			'bulk': 'uploads'
+		},
+		'create': {
+			'layout': 'New layout {name} created.',
+			'group': 'New group {name} created.',
+			'bulk': 'additions'
+		},
+		'delete': {
+			'graph': 'Graph {name} deleted.',
+			'layout': 'Layout {name} deleted.',
+			'group': 'Group {name} deleted.',
+			'bulk': 'removed'
+		},
+		'update': {
+			'graph': 'Graph {name} updated.', 
+			'layout': 'Layout {name} updated.',
+			'group': 'Group {name} updated.',
+			'bulk': 'updated'
+		}
+	},
+	'group':{
+		'share': {
+			'graph': 'Graph {name} shared.',
+			'layout': 'Layout {name} shared.',
+			'bulk': 'shared'
+		},
+		'unshare': {
+			'graph': 'Graph {name} removed.',
+			'layout': 'Layout {name} removed.',
+			'bulk': 'removed'
+		},
+		'add': {
+			'member': 'New group member {name} added.',
+			'bulk': 'additions'
+		},
+		'remove': {
+			'member': 'Group member {name} removed.',
+			'bulk': 'removed'
+		}
+	}
+}
+
+# Channel settings and routing
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+        'ROUTING': 'graphspace.routing.channel_routing',
+    }
+}
+
+CRONJOBS = [
+    ('0 0 * * *', 'graphspace.cron_job.send_notification_emails')
+]
+CRONTAB_LOCK_JOBS = True

@@ -5,6 +5,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 
 from applications.graphs.models import *
+from applications.notifications.models import *
 
 Base = settings.BASE
 
@@ -29,6 +30,11 @@ class User(IDMixin, TimeStampMixin, Base):
 	owned_graphs = relationship("Graph", back_populates="owner", cascade="all, delete-orphan")
 	owned_layouts = relationship("Layout", back_populates="owner", cascade="all, delete-orphan")
 
+	# Notification relationships
+	receive_notification_email = Column(Boolean, default=False)
+	owned_notifications = relationship("OwnerNotification", back_populates="owner", cascade="all, delete-orphan")
+	group_notifications = relationship("GroupNotification", back_populates="group_member", cascade="all, delete-orphan")
+
 	member_groups = association_proxy('user_groups', 'group')
 
 	constraints = ()
@@ -44,7 +50,8 @@ class User(IDMixin, TimeStampMixin, Base):
 			'id': cls.id,
 			'email': cls.email,
 			'created_at': cls.created_at.isoformat(),
-			'updated_at': cls.updated_at.isoformat()
+			'updated_at': cls.updated_at.isoformat(),
+			'receive_notification_email': cls.receive_notification_email
 		}
 
 
@@ -62,7 +69,7 @@ class PasswordResetCode(IDMixin, TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
-
+	
 	def serialize(cls, **kwargs):
 		return {
 			'id': cls.id,
@@ -84,6 +91,9 @@ class Group(IDMixin, TimeStampMixin, Base):
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
 	members = association_proxy('member_users', 'user')
 	graphs = association_proxy('shared_graphs', 'graph')
+
+	# Notification relationships
+	group_notifications = relationship("GroupNotification", back_populates="group", cascade="all, delete-orphan")
 
 	constraints = (UniqueConstraint('name', 'owner_email', name='_group_uc_name_owner_email'),)
 	indices = ()

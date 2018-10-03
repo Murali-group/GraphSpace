@@ -42,11 +42,11 @@ def get_user(db_session, email):
 @with_session
 def get_user_by_id(db_session, id):
 	"""
-	Get a user with given email.
+	Get a user with given id.
 
 	:param db_session: Database session.
 	:param id: id of the user.
-	:return: User if email exists else None.
+	:return: User if id exists else None.
 	"""
 	return db_session.query(User).filter(User.id == id).one_or_none()
 
@@ -210,7 +210,7 @@ def delete_group(db_session, id):
 	"""
 	group = db_session.query(Group).filter(Group.id == id).one_or_none()
 	db_session.delete(group)
-	return
+	return group
 
 
 @with_session
@@ -259,6 +259,20 @@ def get_groups_by_member_id(db_session, member_id):
 	"""
 	return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == member_id).all()]
 
+@with_session
+def get_groups_by_member_email(db_session, member_email):
+	"""
+	Returns all groups where user with given user_email is a member.
+	:param db_session: Database session.
+	:param member_email: email of a user who is a member of one or many groups.
+	:return: list of Groups
+	"""
+	user = db_session.query(User).filter(User.email == member_email).one_or_none()
+	if user is not None:
+		return [group_to_user.group for group_to_user in db_session.query(GroupToUser).filter(GroupToUser.user_id == user.id).all()]
+	else:
+		return []
+
 
 @with_session
 def get_groups_by_owner_id(db_session, owner_id):
@@ -274,6 +288,17 @@ def get_groups_by_owner_id(db_session, owner_id):
 		return user.owned_groups
 	else:
 		return None
+
+
+@with_session
+def get_groups_by_graph_id(db_session, graph_id):
+	"""
+	Returns all groups where graph is shared.
+	:param request: HTTP Request
+	:param graph_id: id of graph which is shared
+	:return: list of Groups
+	"""
+	return [group_to_graph.group for group_to_graph in db_session.query(GroupToGraph).filter(GroupToGraph.graph_id == graph_id).all()]
 
 
 # @with_session
@@ -322,3 +347,9 @@ def find_groups(db_session, owner_email, member_email, name, description, graph_
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+# Get all users who have receive_notification_email = True
+@with_session
+def get_users_email_notification(db_session, limit, offset):
+	query = db_session.query(User).filter(User.receive_notification_email.is_(True)).limit(limit).offset(offset)
+	return query.all()

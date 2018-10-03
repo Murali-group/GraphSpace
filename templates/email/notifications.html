@@ -1,0 +1,16 @@
+{% if owner_total > 0 %}
+<h4> My Resources <h4>
+{% for o in owner_notifications %}
+<tr class="">
+	<a href="{{host}}/notifications#my-resources">{{ o.message }}</a>
+</tr>
+{% endfor %}
+{% endif %}
+{% if group_total > 0 %}
+<h4> Groups <h4>
+{% for o in group_notifications %}
+<tr class="">
+	<a href="{{host}}http://127.0.0.1:8000/notifications#group-table-false-{{o.group.id}}">{{ o.count }} unread notifications in group {{o.group.name}}</a>
+</tr>
+{% endfor %}
+{% endif %}

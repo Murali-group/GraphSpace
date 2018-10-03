@@ -442,6 +442,7 @@ var graphPage = {
         utils.initializeTabs();
 
         $('#saveOnExitLayoutBtn').click(function () {
+
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
             cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
@@ -656,6 +657,7 @@ var graphPage = {
                     }
                 },
                 successCallback = function (response) {
+
                     $(modalNameId).modal('toggle');
                     $('#PrivateLayoutsTable').bootstrapTable('refresh');
                     $('#SharedLayoutsTable').bootstrapTable('refresh');

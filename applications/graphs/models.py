@@ -206,6 +206,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 	positions_json = Column(String, nullable=False)
 	style_json = Column(String, nullable=False)
 	is_shared = Column(Integer, nullable=False, default=0)
+	is_deleted = Column(Boolean, default=False)
 	original_json = Column(String, nullable=True)
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
@@ -233,6 +234,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 			'positions_json': cls.positions_json,
 			'style_json': cls.style_json,
 			'is_shared': cls.is_shared,
+			'is_deleted': cls.is_deleted,
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}
