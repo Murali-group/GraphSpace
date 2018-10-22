@@ -601,7 +601,7 @@ var graphPage = {
             });
             layoutID.positions = corrected_positions;
         }
-        graphPage.cyGraph.layout(layoutID);
+        graphPage.cyGraph.layout(layoutID).run();
 
     },
     saveLayout: function (layoutName, modalNameId) {
