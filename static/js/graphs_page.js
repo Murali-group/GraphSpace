@@ -2784,7 +2784,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: false,
                     padding: 0
-                });
+                }).run();
         } else if (layout_name === "fill_circle") {
             collection.layout(
                 {
@@ -2792,7 +2792,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: false,
                     padding: 40
-                });
+                }).run();
         } else if (layout_name === "grid") {
             collection.layout(
                 {
@@ -2800,7 +2800,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: true,
                     condense: true
-                });
+                }).run();
         } else if (layout_name === "square") {
             cytoscapeGraph.runSquareLayoutOnCollection(cy, collection);
         } else if (layout_name === "horizontal") {
