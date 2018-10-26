@@ -1969,43 +1969,6 @@ var graphPage = {
             }
             return largestK;
         },
-        applyMax: function (graph_layout) {
-            //Gets all nodes and edges up do the max value set
-            //and only renders them
-            var maxVal = parseInt($("#input_max").val());
-
-            if (!maxVal) {
-                return;
-            }
-            var newJSON = {
-                "nodes": new Array(),
-                "edges": new Array()
-            };
-
-            // List of node ids that should remain in the graph
-            var nodeNames = Array();
-
-            //Get all edges that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
-                var edge_data = graph_json.elements['edges'][i];
-                if (edge_data['data']['k'] <= maxVal) {
-                    newJSON['edges'].push(edge_data);
-                    nodeNames.push(edge_data['data']['source']);
-                    nodeNames.push(edge_data['data']['target']);
-                }
-            }
-
-            //Get all nodes that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
-                var node_data = graph_json.elements['nodes'][i];
-                if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-                    newJSON['nodes'].push(node_data);
-                }
-            }
-
-            graphPage.cyGraph.load(newJSON);
-            graphPage.filterNodesEdges.showOnlyK();
-        },
         showOnlyK: function () {
             // Returns all the id's that are > k value
             if ($("#input_k").val()) {
@@ -2337,43 +2300,6 @@ var graphPage = {
                 value: $("#NodeSpaceInput").val(),
                 max: 50
             });
-        },
-        applyMax: function (graph_layout) {
-            //Gets all nodes and edges up do the max value set
-            //and only renders them
-            var maxVal = parseInt($("#input_max").val());
-
-            if (!maxVal) {
-                return;
-            }
-            var newJSON = {
-                "nodes": new Array(),
-                "edges": new Array()
-            };
-
-            // List of node ids that should remain in the graph
-            var nodeNames = Array();
-
-            //Get all edges that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
-                var edge_data = graph_json.elements['edges'][i];
-                if (edge_data['data']['k'] <= maxVal) {
-                    newJSON['edges'].push(edge_data);
-                    nodeNames.push(edge_data['data']['source']);
-                    nodeNames.push(edge_data['data']['target']);
-                }
-            }
-
-            //Get all nodes that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
-                var node_data = graph_json.elements['nodes'][i];
-                if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-                    newJSON['nodes'].push(node_data);
-                }
-            }
-
-            graphPage.cyGraph.load(newJSON);
-            graphPage.filterNodesEdges.showOnlyK();
         },
         setBarToValueEdgeLength: function (inputId, barId) {
             /**
