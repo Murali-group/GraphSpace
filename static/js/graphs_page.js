@@ -1332,7 +1332,7 @@ var graphPage = {
     },
     onTapGraphElement: function (evt) {
         // get target
-        var target = evt.cyTarget;
+        var target = evt.Target;
         // target some element other than background (node/edge)
         if (target !== this) {
             var popup = target._private.data.popup;
@@ -1875,7 +1875,7 @@ var graphPage = {
 
             graphPage.cyGraph.on('free', function (e) {
 
-                var selected_elements = e.cyTarget.length > 1 ? graphPage.cyGraph.elements(':selected') : e.cyTarget;
+                var selected_elements = e.Target.length > 1 ? graphPage.cyGraph.elements(':selected') : e.Target;
                 graphPage.layoutEditor.undoRedoManager.update({
                     'action_type': 'move_node',
                     'data': {
@@ -2932,7 +2932,7 @@ var cytoscapeGraph = {
                         title: 'edit selected nodes',
                         selector: 'node',
                         onClickFunction: function (event) {
-                            graphPage.layoutEditor.nodeEditor.open(cy.collection(cy.elements(':selected')).add(event.cyTarget).select());
+                            graphPage.layoutEditor.nodeEditor.open(cy.collection(cy.elements(':selected')).add(event.Target).select());
                         },
                         hasTrailingDivider: true
                     },
@@ -2942,7 +2942,7 @@ var cytoscapeGraph = {
                         selector: 'node',
                         show: true,
                         onClickFunction: function (event) {
-                            selectAllOfTheSameType(event.cyTarget);
+                            selectAllOfTheSameType(event.Target);
                         }
                     },
                     {
@@ -2951,7 +2951,7 @@ var cytoscapeGraph = {
                         selector: 'node',
                         show: true,
                         onClickFunction: function (event) {
-                            unselectAllOfTheSameType(event.cyTarget);
+                            unselectAllOfTheSameType(event.Target);
                         }
                     },
                     {
@@ -2960,7 +2960,7 @@ var cytoscapeGraph = {
                         selector: 'edge',
                         show: true,
                         onClickFunction: function (event) {
-                            selectAllOfTheSameType(event.cyTarget);
+                            selectAllOfTheSameType(event.Target);
                         }
                     },
                     {
@@ -2969,7 +2969,7 @@ var cytoscapeGraph = {
                         selector: 'edge',
                         show: true,
                         onClickFunction: function (event) {
-                            unselectAllOfTheSameType(event.cyTarget);
+                            unselectAllOfTheSameType(event.Target);
                         }
                     }
                 ]
