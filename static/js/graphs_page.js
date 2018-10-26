@@ -1978,7 +1978,7 @@ var graphPage = {
                 }
             });
 
-            graphPage.cyGraph.elements().on('select, unselect', function () {
+            graphPage.cyGraph.elements().on('select unselect', function () {
                 if (graphPage.cyGraph.nodes(':selected').length > 0) {
                     $('#editSelectedNodesBtn').removeClass('disabled');
                 } else {
