@@ -17,6 +17,10 @@ class User(IDMixin, TimeStampMixin, Base):
 	:param email: Email ID of the user.
 	:param password: Password of the user.
 	:param admin: 1 if the user has admin access else 0.
+	:param user_account_status: 1 if the user has created account successfully else 0.
+	:param email_confirmation_code: confirmation code sent to email when the user creates account
+	:param email_list_announcement: 1 if the user has chosen to join GraphSpace announcement email list else 0
+	:param email_list_user: 1 if the user has chosen to join GraphSpace users email list else 0
 	"""
 	__tablename__ = "user"
 
@@ -25,8 +29,8 @@ class User(IDMixin, TimeStampMixin, Base):
 	is_admin = Column(Integer, nullable=False, default=0)
 	user_account_status = Column(Integer, nullable=False, default=0)
 	email_confirmation_code = Column(String, nullable=False, default=0)
-	email_list_announcement = Column(String, nullable=False, default=0)
-	email_list_user = Column(String, nullable=False, default=0)
+	email_list_announcement = Column(Integer, nullable=False, default=0)
+	email_list_user = Column(Integer, nullable=False, default=0)
 
 	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
