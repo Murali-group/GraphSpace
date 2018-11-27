@@ -12,10 +12,6 @@ TEMPLATE_DEBUG = True
 # URL through which to access graphspace
 URL_PATH = "http://localhost:8000/"
 
-# Email lists of graphspace
-ANNOUNCEMENTS_LIST = 'graphspace-announcements@graphspace.org'
-USERS_LIST = 'graphspace-users@graphspace.org' 	
-
 # If tracking is enabled for GraphSpace in Google Analytics
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-00000000-0'
 
