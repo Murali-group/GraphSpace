@@ -293,9 +293,9 @@ def activate_account_page(request):
 			request.session['admin'] = user.is_admin
 			request.session['email_list_announcement'] = user.email_list_announcement
 			request.session['email_list_user'] = user.email_list_user
-			announcement_list_message = 'announcements email list for GraphSpace ' + '(' + settings.ANNOUNCEMENTS_LIST + ')' if user.email_list_announcement == '1' else ''
-			user_list_message = 'users email list for GraphSpace ' + '(' + settings.USERS_LIST + ')' if user.email_list_user == '1' else ''
-			comma = ', ' if user.email_list_announcement == '1' and user.email_list_user == '1' else ''
+			announcement_list_message = 'announcements email list for GraphSpace ' + '(' + settings.ANNOUNCEMENTS_LIST + ')' if user.email_list_announcement == 1 else ''
+			user_list_message = 'users email list for GraphSpace ' + '(' + settings.USERS_LIST + ')' if user.email_list_user == 1 else ''
+			comma = ', ' if user.email_list_announcement == 1 and user.email_list_user == 1 else ''
 			context["success_message"] = 'Thank you! Your account has been activated successfully. You will also receive email confirmation(s) for the following email list(s): ' + announcement_list_message + comma + user_list_message +'.'
 			
 			return render(request, 'home/index.html', context)
