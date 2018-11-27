@@ -61,18 +61,18 @@ var header = {
         var user_id = $("#user_id").val();
         var password = $("#password").val();
         var verify_password = $("#verify_password").val();
-        var email_list_announcement = '0';
-        var email_list_user = '0';
+        var email_list_announcement = 0;
+        var email_list_user = 0;
         var announcement_checked = document.getElementById("email_list_announcement");
         var user_checked = document.getElementById("email_list_user");
 
         
         if (announcement_checked.checked == true) {
-            email_list_announcement = '1';
+            email_list_announcement = 1;
         }
           
         if (user_checked.checked == true) {
-            email_list_user = '1';
+            email_list_user = 1;
         }
 
         if (!$("#user_id") || user_id.length == 0) {
