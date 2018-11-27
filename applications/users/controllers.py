@@ -58,12 +58,12 @@ def update_user(request, user_id, email=None, password=None, is_admin=None, user
 		user['user_account_status'] = user_account_status
 	if email_list_announcement is not None:
 		user['email_list_announcement'] = email_list_announcement
-		if email_list_announcement == '1':
+		if email_list_announcement == 1:
 			client_list_announcement = client.get_list(settings.ANNOUNCEMENTS_LIST)
 			client_list_announcement.subscribe(email, pre_verified=True, pre_confirmed=True)
 	if email_list_user is not None:
 		user['email_list_user'] = email_list_user
-		if email_list_user == '1':
+		if email_list_user == 1:
 			client_list_user = client.get_list(settings.USERS_LIST)
 			client_list_user.subscribe(email, pre_verified=True, pre_confirmed=True)
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
