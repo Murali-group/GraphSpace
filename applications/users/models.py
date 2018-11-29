@@ -31,7 +31,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	email_confirmation_code = Column(String, nullable=False, default=0)
 	email_list_announcement = Column(Integer, nullable=False, default=0)
 	email_list_user = Column(Integer, nullable=False, default=0)
-
+	
 	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
 	owned_graphs = relationship("Graph", back_populates="owner", cascade="all, delete-orphan")
