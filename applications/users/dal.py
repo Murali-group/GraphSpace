@@ -12,7 +12,7 @@ from models import *
 
 
 @with_session
-def add_user(db_session, email, password, is_admin):
+def add_user(db_session, email, password, is_admin, user_account_status, email_confirmation_code, email_list_announcement, email_list_user):
 	"""
 	Add a new user.
 
@@ -20,9 +20,13 @@ def add_user(db_session, email, password, is_admin):
 	:param email: User ID of the user.
 	:param password: Password of the user.
 	:param admin: 1 if user has admin access else 0.
+	:param user_account_status: 1 if the user has created account successfully else 0.
+	:param email_confirmation_code: confirmation code sent to email when the user creates account
+	:param email_list_announcement: 1 if the user has chosen to join GraphSpace announcement email list else 0
+	:param email_list_user: 1 if the user has chosen to join GraphSpace users email list else 0
 	:return: User
 	"""
-	user = User(email=email, password=password, is_admin = is_admin)
+	user = User(email=email, password=password, is_admin = is_admin, user_account_status=user_account_status, email_confirmation_code=email_confirmation_code, email_list_announcement=email_list_announcement, email_list_user=email_list_user)
 	db_session.add(user)
 	return user
 
