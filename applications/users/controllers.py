@@ -165,6 +165,10 @@ def add_user(request, email=None, password="graphspace_public_user", is_admin=0,
 	:param email: User ID of the user. Default value is dynamically generated user id.
 	:param password: Password of the user. Default value is "public".
 	:param admin: 1 if user has admin access else 0. Default value is 0.
+	:param user_account_status: 1 if the user has created account successfully else 0.
+	:param email_confirmation_code: confirmation code sent to email when the user creates account
+	:param email_list_announcement: 1 if the user has chosen to join GraphSpace announcement email list else 0
+	:param email_list_user: 1 if the user has chosen to join GraphSpace users email list else 0
 	:return: User
 	"""
 	email = "public_user_%s@graphspace.com" % generate_uid(size=10) if email is None else email
