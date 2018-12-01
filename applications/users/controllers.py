@@ -20,9 +20,6 @@ def authenticate_user(request, username=None, password=None):
 
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
-	logger.error(user)
-	logger.error(username)
-	logger.error(password)
 
 	if user:
 		hashed_pw = user.password
