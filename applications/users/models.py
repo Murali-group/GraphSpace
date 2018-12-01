@@ -17,6 +17,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	:param email: Email ID of the user.
 	:param password: Password of the user.
 	:param admin: 1 if the user has admin access else 0.
+	:param auth_token: Auth_token of the user.
 	"""
 	__tablename__ = "user"
 
