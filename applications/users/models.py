@@ -23,6 +23,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	email = Column(String, nullable=False, unique=True, index=True)
 	password = Column(String, nullable=False)
 	is_admin = Column(Integer, nullable=False, default=0)
+	auth_token = Column(String, nullable=True)
 
 	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")

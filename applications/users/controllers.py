@@ -1,4 +1,5 @@
 import bcrypt
+import base64
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -19,6 +20,9 @@ def authenticate_user(request, username=None, password=None):
 
 	# check the username/password and return a User
 	user = db.get_user(request.db_session, username)
+	logger.error(user)
+	logger.error(username)
+	logger.error(password)
 
 	if user:
 		hashed_pw = user.password
@@ -26,11 +30,15 @@ def authenticate_user(request, username=None, password=None):
 		#check password. if the password matches, return a
 		#User object with associated information
 		if bcrypt.hashpw(password, hashed_pw) == hashed_pw:
+			#Check auth_token in database. If it is None, create and save new auth_token to database.
+			if user.auth_token == None:
+				user = update_user(request, user.id, email=user.email, password=password)
 			return {
 				'id': user.id,
 				'user_id': user.email,
 				'password': user.password,
-				'admin': user.is_admin
+				'admin': user.is_admin,
+				'auth_token': user.auth_token
 			}
 	else:
 		return None
@@ -40,11 +48,12 @@ def update_user(request, user_id, email=None, password=None, is_admin=None):
 	user = {}
 	if email is not None:
 		user['email'] = email
+		user['auth_token'] = 'Basic %s' % base64.b64encode('{0}:{1}'.format(email, password))
 	if password is not None:
 		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
+		user['auth_token'] = 'Basic %s' % base64.b64encode('{0}:{1}'.format(email, password))
 	if is_admin is not None:
 		user['is_admin'] = is_admin
-
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
 
 
@@ -129,11 +138,12 @@ def search_users(request, email=None, limit=20, offset=0, order='desc', sort='na
 def register(request, username=None, password=None):
 	if db.get_user(request.db_session, username):
 		raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=username)
+	auth_token = 'Basic %s' % base64.b64encode('{0}:{1}'.format(username, password))
 
-	return add_user(request, email=username, password=password)
+	return add_user(request, email=username, password=password, auth_token=auth_token)
 
 
-def add_user(request, email=None, password="graphspace_public_user", is_admin=0):
+def add_user(request, email=None, password="graphspace_public_user", auth_token=None, is_admin=0):
 	"""
 	Add a new user. If email and password is not passed, it will create a user with default values.
 	By default a user has no admin access.
@@ -142,11 +152,12 @@ def add_user(request, email=None, password="graphspace_public_user", is_admin=0)
 	:param email: User ID of the user. Default value is dynamically generated user id.
 	:param password: Password of the user. Default value is "public".
 	:param admin: 1 if user has admin access else 0. Default value is 0.
+	:param auth_token: Auth_token if the user. Default value is None.
 	:return: User
 	"""
 	email = "public_user_%s@graphspace.com" % generate_uid(size=10) if email is None else email
 
-	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin)
+	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), auth_token=auth_token, is_admin=is_admin)
 
 
 def is_member_of_group(request, username, group_id):
@@ -312,3 +323,13 @@ def send_password_reset_email(request, password_reset_code):
 	email_from = "GraphSpace Admin"
 
 	return send_mail(mail_title, message, email_from, [password_reset_code.email], fail_silently=False)
+
+def get_auth_token(request, email):
+	# check the username and return a User
+	user = db.get_user(request.db_session, email)
+
+	if user:
+		return user.auth_token
+	else:
+		return None
+
