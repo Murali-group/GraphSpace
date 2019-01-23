@@ -62,9 +62,9 @@ var header = {
         var password = $("#password").val();
         var verify_password = $("#verify_password").val();
 
-        if (!$("#user_id") || user_id.length == 0) {
+        if (!$("#user_id") || user_id.length == 0 || !validateEmail(user_id)) {
             $.notify({
-                message: 'Please enter your email!'
+                message: 'Please enter a valid email address!'
             }, {
                 type: 'warning'
             });
@@ -116,3 +116,5 @@ var header = {
             });
     }
 };
+
+
