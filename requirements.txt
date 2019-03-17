@@ -26,3 +26,6 @@ graphspace_python==0.8.2
 enum34
 elasticsearch>=5.0.0,<6.0.0
 elasticsearch-dsl>=5.0.0,<6.0.0
+channels==1.1.6
+asgi-redis==1.4.2
+asgiref==1.1.2
