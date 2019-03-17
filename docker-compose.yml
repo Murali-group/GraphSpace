@@ -1,0 +1,12 @@
+version: '2'  
+services:  
+  web:
+    build: .
+    container_name: COMMENTSYSTEM
+    # restart: unless-stopped
+    volumes:
+      - /GraphSpace
+    expose:
+      - "8000"
+    ports:
+      - "8001:8000"
