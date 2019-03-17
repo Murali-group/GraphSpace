@@ -43,7 +43,7 @@ RUN apt-get update -y && \
 	aptitude update && \
 	aptitude install -y zookeeperd && \
 	cd / && \ 
-	git clone -b notifications https://github.com/Murali-group/GraphSpace.git && \
+	git clone -b comment-system https://github.com/bruce-wayne99/GraphSpace.git && \
 	aptitude install -y python-psycopg2 libpq-dev && \
 	chmod -R 777 /GraphSpace && \
 	rm -r /var/cache/
@@ -61,3 +61,5 @@ RUN useradd -ms /bin/bash elasticsearch && \
 	chmod -R 777 /elasticsearch
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+EXPOSE 8002

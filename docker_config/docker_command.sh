@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "Pull changes"
 cd /GraphSpace
+git stash
+git pull
 
 echo "Copy configurations"
 yes | cp -rf /GraphSpace/docker_config/elasticsearch/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
