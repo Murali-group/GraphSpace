@@ -166,7 +166,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'asgi_redis.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('localhost', 6382)],
+            'hosts': [('127.0.0.1', 6379)],
         },
         'ROUTING': 'graphspace.routing.channel_routing',
     }
