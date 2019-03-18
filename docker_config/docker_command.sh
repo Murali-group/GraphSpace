@@ -52,12 +52,12 @@ echo "Migrate"
 python manage.py migrate --settings=graphspace.settings.production
 
 echo "Running Daphne"
-daphne -b localhost -p 8002 graphspace.asgi:channel_layer &
+exec daphne -b 0.0.0.0 -p 8002 graphspace.asgi:channel_layer &
 
 echo "Sleeping for 5 seconds"
 sleep 5
 
 echo "Running server"
-python manage.py runworker
+exec python manage.py runworker
 
 echo "Enjoy browsing GraphSpace"
