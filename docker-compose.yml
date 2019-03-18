@@ -2,11 +2,12 @@ version: '2'
 services:  
   web:
     build: .
-    container_name: COMMENTSYSTEM
-    # restart: unless-stopped
+    container_name: GRAPHSPACECOMMENTSYSTEM
+    command: bash -c "/GraphSpace/docker_config/docker_command.sh"
+    restart: unless-stopped
     volumes:
       - /GraphSpace
     expose:
-      - "8000"
+      - "8002"
     ports:
-      - "8001:8000"
+      - "8002:8002"
