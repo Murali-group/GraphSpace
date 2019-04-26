@@ -8,6 +8,7 @@ EMAIL_HOST_PASSWORD = 'NONE'
 # If error is thrown, display the error in the browser (ONLY FOR LOCAL MACHINES)
 DEBUG = True
 TEMPLATE_DEBUG = True
+MAINTENANCE = False
 
 # URL through which to access graphspace
 URL_PATH = "http://localhost:8000/"
