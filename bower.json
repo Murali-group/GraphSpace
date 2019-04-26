@@ -23,6 +23,7 @@
     "animate.css": "^3.5.2",
     "cytoscape": "^2.7.11",
     "webcola": "^3.3.0",
+    "bootstrap": "^3.3.7",
     "cytoscape-cola": "^1.6.0",
     "intro.js": "^2.4.0",
     "jquery-ui": "^1.12.1",
