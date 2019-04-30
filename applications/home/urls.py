@@ -14,4 +14,6 @@ urlpatterns = [
 	url(r'^about_us/$', views.about_us_page, name='about_us'),
 	url(r'^forgot_password/$', views.forgot_password_page, name='forgot_password'),
 	url(r'^reset_password/$', views.reset_password_page, name='reset_password'),
+	url(r'^activate_account/$', views.activate_account_page, name='activate_account'),
+
 ]

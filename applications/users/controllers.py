@@ -30,13 +30,14 @@ def authenticate_user(request, username=None, password=None):
 				'id': user.id,
 				'user_id': user.email,
 				'password': user.password,
-				'admin': user.is_admin
+				'admin': user.is_admin,
+				'user_account_status':user.user_account_status
 			}
 	else:
 		return None
 
 
-def update_user(request, user_id, email=None, password=None, is_admin=None):
+def update_user(request, user_id, email=None, password=None, is_admin=None, user_account_status=None):
 	user = {}
 	if email is not None:
 		user['email'] = email
@@ -44,6 +45,8 @@ def update_user(request, user_id, email=None, password=None, is_admin=None):
 		user['password'] = bcrypt.hashpw(password, bcrypt.gensalt())
 	if is_admin is not None:
 		user['is_admin'] = is_admin
+	if user_account_status is not None:
+		user['user_account_status'] = user_account_status
 
 	return db.update_user(request.db_session, id=user_id, updated_user=user)
 
@@ -126,14 +129,15 @@ def search_users(request, email=None, limit=20, offset=0, order='desc', sort='na
 	return total, users
 
 
-def register(request, username=None, password=None):
+def register(request, username=None, password=None, user_account_status=None, email_confirmation_code=None):
 	if db.get_user(request.db_session, username):
 		raise BadRequest(request, error_code=ErrorCodes.Validation.UserAlreadyExists, args=username)
 
-	return add_user(request, email=username, password=password)
+	return add_user(request, email=username, password=password, user_account_status=user_account_status,
+					email_confirmation_code=email_confirmation_code)
 
 
-def add_user(request, email=None, password="graphspace_public_user", is_admin=0):
+def add_user(request, email=None, password="graphspace_public_user", is_admin=0, user_account_status=None, email_confirmation_code=None):
 	"""
 	Add a new user. If email and password is not passed, it will create a user with default values.
 	By default a user has no admin access.
@@ -146,7 +150,8 @@ def add_user(request, email=None, password="graphspace_public_user", is_admin=0)
 	"""
 	email = "public_user_%s@graphspace.com" % generate_uid(size=10) if email is None else email
 
-	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin)
+	return db.add_user(request.db_session, email=email, password=bcrypt.hashpw(password, bcrypt.gensalt()), is_admin=is_admin,
+					   user_account_status=user_account_status, email_confirmation_code=email_confirmation_code)
 
 
 def is_member_of_group(request, username, group_id):
@@ -290,6 +295,9 @@ def delete_group_graph(request, group_id, graph_id):
 def get_password_reset_by_code(request, code):
 	return db.get_password_reset_by_code(request.db_session, code)
 
+def get_email_confirmation_code(request, code):
+	return db.get_email_confirmation_code(request.db_session, code)
+
 
 def delete_password_reset_code(request, id):
 	return db.delete_password_reset(request.db_session, id)
@@ -312,3 +320,11 @@ def send_password_reset_email(request, password_reset_code):
 	email_from = "GraphSpace Admin"
 
 	return send_mail(mail_title, message, email_from, [password_reset_code.email], fail_silently=False)
+
+def send_confirmation_email(request, email, token):
+	# Construct email message
+	mail_title = 'Activate your account for GraphSpace!'
+	message = 'Please confirm your email address to complete the registration ' + settings.URL_PATH + 'activate_account/?activation_code=' + token
+	email_from = "GraphSpace Admin"
+
+	return send_mail(mail_title, message, email_from, [email], fail_silently=False)

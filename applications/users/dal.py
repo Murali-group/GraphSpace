@@ -12,7 +12,7 @@ from models import *
 
 
 @with_session
-def add_user(db_session, email, password, is_admin):
+def add_user(db_session, email, password, is_admin, user_account_status, email_confirmation_code):
 	"""
 	Add a new user.
 
@@ -22,7 +22,8 @@ def add_user(db_session, email, password, is_admin):
 	:param admin: 1 if user has admin access else 0.
 	:return: User
 	"""
-	user = User(email=email, password=password, is_admin = is_admin)
+	user = User(email=email, password=password, is_admin = is_admin,
+		        user_account_status=user_account_status, email_confirmation_code=email_confirmation_code)
 	db_session.add(user)
 	return user
 
@@ -112,6 +113,15 @@ def get_password_reset_by_code(db_session, code):
 	:return: PasswordReset if email exists else None
 	"""
 	return db_session.query(PasswordResetCode).filter(PasswordResetCode.code == code).one_or_none()
+
+@with_session
+def get_email_confirmation_code(db_session, code):
+	"""
+	:param db_session: Database session.
+	:param code: PasswordReset code
+	:return: PasswordReset if email exists else None
+	"""
+	return db_session.query(User).filter(User.email_confirmation_code == code).one_or_none()
 
 
 @with_session
