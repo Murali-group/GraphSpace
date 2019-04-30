@@ -70,9 +70,9 @@ WSGIScriptAlias / /path_to_GraphSpace/graphspace/wsgi.py
      </Files>
   </Directory>
   
-  Alias /static/ /path_to_GraphSpace/graphs/static/
+  Alias /static/ /path_to_GraphSpace/static/
   
-  <Directory /path_to_GraphSpace/graphs/static/>
+  <Directory /path_to_GraphSpace/static/>
       Require all granted
   </Directory>
   

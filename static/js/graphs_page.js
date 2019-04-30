@@ -452,9 +452,6 @@ var graphPage = {
         });
 
         $('#saveLayoutBtn').click(function () {
-
-            cytoscapeGraph.showGraphInformation(graphPage.cyGraph);
-
             graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
 
