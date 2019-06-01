@@ -128,13 +128,34 @@ div.container-fluid {
     position: absolute;
 }
 
-#cyGraphContainer {
+#graphContainer{
     width: 100%;
-    height: 78%;
     position: absolute;
     left: 0px;
     top: 0px;
     z-index: 999;
+    background-color: white;
+}
+
+#cyGraphContainer {
+    width: 80%;
+    height: 78%;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+    z-index: 999;
+    background-color: white;
+}
+
+#cyLegendContainer{
+    width: 20%;
+    height: 100%;
+    right: 0px;
+    position: absolute;
+    padding-top: 10px;
+    padding-left: 10px;
+    z-index: 999;
+    border-left: thin solid #C0C0C0 ;
     background-color: white;
 }
 
@@ -431,6 +452,7 @@ p.lead {
 
     #page-content-wrapper {
         /*padding: 20px;*/
+        padding-right: 250px;
         position: relative;
     }
 

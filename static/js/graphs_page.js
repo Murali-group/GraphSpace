@@ -437,6 +437,10 @@ var graphPage = {
          */
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
 
+        if('legend' in style_json){
+            var cyLegend = graphPage.constructLegend();
+        }
+
         graphPage.cyGraph.panzoom();
 
         utils.initializeTabs();
@@ -496,6 +500,9 @@ var graphPage = {
         $('#graphVisualizationTabBtn').click(function (e) {
             window.setTimeout(function () {
                 $('#cyGraphContainer').css('height', '99%');
+            }, 100);
+            window.setTimeout(function () {
+                $('#cyLegendContainer').css('height', '99%');
             }, 100);
 
         });
@@ -971,7 +978,6 @@ var graphPage = {
                 }
             }
         }
-
         //DONE TO SUPPORT OLD GRAPHS: If "directed" property is not there, edge is undirected, otherwise it is directed
         if (edgeStyle['target-arrow-shape'] == undefined || (edgeData['directed'] == false || edgeData['directed'] == 'false')) {
             edgeStyle['target-arrow-shape'] = 'none';
@@ -990,6 +996,118 @@ var graphPage = {
             };
         });
 
+    },
+    constructLegend: function() {
+        /*
+        This function will create a legend graph(using cytoscape.js library) from the legend data
+        in the style_json object.
+        */
+        var node_legend = style_json['legend']['nodes'];
+        var edge_legend = style_json['legend']['edges'];
+        var node_legend_count = Object.keys(node_legend).length;
+        var edge_legend_count = Object.keys(edge_legend).length;
+        var cy = cytoscape({
+            container: document.getElementById('cyLegendContainer'),
+            autolock: true,
+            userPanningEnabled: false,
+            userZoomingEnabled: false,
+            boxSelectionEnabled: false,
+            ready: function () {
+                this.on('tap', graphPage.onTapLegendGraphElement);
+
+            }
+        });
+
+        var k = 10;
+        for (var i=0; i<node_legend_count; i++){
+            cy.add([
+                {group: 'nodes', data: { id: 'n'+i}, position: {y:k+10, x:20}}
+            ]).style({
+            'background-color': node_legend[Object.keys(node_legend)[i]]['background-color'],
+            'label': Object.keys(node_legend)[i],
+            'font-size': '14px',
+            'shape': node_legend[Object.keys(node_legend)[i]]['shape'].toLowerCase(),
+            'width':'20px',
+            'height':'20px',
+            'text-wrap': 'wrap',
+            'text-max-width': '150px',
+            'text-margin-x': '10px',
+            'text-valign': 'center',
+            'text-halign': 'right'
+            });
+            k = k+40;
+        }
+
+        for (var i=0; i<edge_legend_count; i++){
+            cy.add([
+                {group: 'nodes', data: { id: 'en'+i}, position: {y:k+10, x:1}}
+            ]).style({
+                'background-color': 'white',
+                'width':'1px',
+                'height':'1px'
+            });
+
+            cy.add([
+                {group: 'nodes', data: { id: 'en'+i+1}, position: {y:k+10, x:35}}
+            ]).style({
+                'background-color': 'white',
+                'width':'1px',
+                'height':'1px',
+                'label': Object.keys(edge_legend)[i],
+                'text-margin-x': '5px',
+                'font-size': '14px',
+                'text-wrap': 'wrap',
+                'text-max-width': '150px',
+                'text-valign': 'center',
+                'text-halign': 'right'
+            });
+
+            cy.add([
+                {group: 'edges', data: { id: 'e'+i, source: 'en'+i, target: 'en'+i+1}}
+            ]).style({
+               'line-color': edge_legend[Object.keys(edge_legend)[i]]['line-color'],
+               'curve-style': 'bezier',
+               'width': '5px',
+               'line-style': edge_legend[Object.keys(edge_legend)[i]]['line-style'],
+               'target-arrow-shape': edge_legend[Object.keys(edge_legend)[i]]['arrow-shape'],
+               'target-arrow-color': edge_legend[Object.keys(edge_legend)[i]]['line-color']
+            });
+
+            k=k+40;
+        }
+        return cy;
+    },
+    onTapLegendGraphElement: function(evt) {
+        var target = evt.cyTarget;
+
+        if(target.isNode()){
+            legend_shape = target.style()['shape'];
+            legend_color = target.style()['background-color'];
+            _.each(graphPage.cyGraph.nodes(), function (node) {
+                if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
+                    graphPage.cyGraph.edges().unselect();
+                    node.select();
+                }
+                else
+                    node.unselect();
+            });
+        }
+
+        if(target.isEdge()){
+            legend_style = target.style()['line-style'];
+            legend_color = target.style()['line-color'];
+            arrow_shape = target.style()['target-arrow-shape'];
+
+            _.each(graphPage.cyGraph.edges(), function (edge) {
+                if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
+                    graphPage.cyGraph.nodes().unselect();
+                    edge.select();
+                }
+                else{
+                    edge.unselect();
+                }
+            });
+        }
     },
     contructCytoscapeGraph: function (layout) {
         if (!layout) {
