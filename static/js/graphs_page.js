@@ -39,6 +39,15 @@ var apis = {
             apis.jsonRequest('GET', apis.nodes.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
+    version: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/version/'),
+        get: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, version_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}) + version_id, undefined, successCallback, errorCallback)
+        },
+    },
     edges: {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
         get: function (graph_id, data, successCallback, errorCallback) {
@@ -516,6 +525,32 @@ var graphPage = {
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
     },
+    selectGraphVersion: function (row) {
+        label = $("#version_selector_dropdown").find('a[row_id=' + row + ']').attr('data');
+        $("#GraphVersionTable").find('tr').removeClass('success');
+
+        apis.version.getByID($('#GraphID').val(), row,
+            successCallback = function (response) {
+                graph_json = JSON.parse(response.graph_json);
+
+                window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname);
+                $("#graphVisualizationTabBtn.link-reset").click();
+                $(location).attr('href', '#graph_visualization_tab');
+                graphPage.init();
+                $("#version_selector_dropdown").attr('current_version_id', row);
+                $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
+                /* Pan and zooms the graph to fit to a collection. */
+                window.setTimeout(function () {
+                    graphPage.cyGraph.fit();
+                }, 300);
+                //console.log("Success");
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access this Version."}, {type: 'danger'});
+            });
+        $('#version_selector > bold').text(label);
+    },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
         console.log("after applying layout");
@@ -691,7 +726,9 @@ var graphPage = {
     onShareGraphWithPublicBtn: function (e, graph_id) {
 
         apis.graphs.update(graph_id, {
-                'is_public': 1
+                'is_public': 1,
+                'version_id': parseInt( $("#version_selector_dropdown").attr('current_version_id')),
+                'style_json': style_json //JSON.stringify(style_json)
             },
             successCallback = function (response) {
                 // This method is called when group_to_graph relationship is successfully deleted.
@@ -1155,6 +1192,45 @@ var graphPage = {
                 }
             );
         }
+    },
+    graphVersionTable: {
+        getVersionByGraphID: function (params) {
+            /**
+             * This is the custom ajax request used to load version in graphVersionTable.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search, sort, order.
+             */
+
+            if (params.data["search"]) {
+                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
+                    return s.indexOf(':') === -1;
+                }), function (str) {
+                    return '%' + str + '%';
+                });
+                params.data["labels"] = params.data["names"];
+            }
+
+            params.data["graph_id"] = $('#GraphID').val();
+            params.data["owner_email"] = $('#UserEmail').val();
+            apis.version.get($('#GraphID').val(), params.data,
+                successCallback = function (response) {
+                    // This method is called when nodes are successfully fetched.
+                    params.success(response);
+                    default_version = response.versions.find(x => x.id === default_version_id);
+                    default_version ? $('#current_version_label').text(default_version.name) : $('#current_version_label').text('Default');
+                    $("#GraphVersionTable").find('span[row_id=' + default_version_id + ']').parent().parent().addClass('success');
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching nodes.
+                    params.error('Error');
+                }
+            );
+        },
+        versionFormatter: function (value, row, index) {
+            $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            return ('<span class="graph_version_span" onclick="graphPage.selectGraphVersion(' + row.id + ');" row_id="'+row.id+'">'+ value +'</span>')
+    }
     },
     layoutsTable: {
         getPrivateLayoutsByGraphID: function (params) {

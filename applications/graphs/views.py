@@ -114,6 +114,7 @@ def graph_page(request, graph_id):
 		else:
 			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
 
+	context['default_version_id'] = context['graph']['default_version_id']
 	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
 	context['data'] = {k: json.dumps(v, encoding='ascii') for k,v in context['graph']['graph_json']['data'].items()}
 	context['style_json_string'] = json.dumps(context['graph']['style_json'])
@@ -1522,3 +1523,244 @@ def _delete_edge(request, graph_id, edge_id):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	graphs.delete_edge_by_id(request, edge_id)
+
+
+'''
+Graph Version APIs
+'''
+
+@csrf_exempt
+@is_authenticated()
+def graph_versions_rest_api(request, graph_id, version_id=None):
+	"""
+	Handles any request sent to following urls:
+		/api/v1/graphs/<graph_id>/version
+		/api/v1/graphs/<graph_id>/version/<version_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _graph_versions_api(request, graph_id, version_id=version_id)
+
+
+def graph_versions_ajax_api(request, graph_id, version_id=None):
+	"""
+	Handles any request sent to following urls:
+		/javascript/graphs/<graph_id>/version
+		/javascript/graphs/<graph_id>/version/<version_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _graph_versions_api(request, graph_id, version_id=version_id)
+
+
+def _graph_versions_api(request, graph_id, version_id=None):
+	"""
+	Handles any request (GET/POST) sent to version/ or version/<version_id>.
+
+	Parameters
+	----------
+	request - HTTP Request
+	graph_id : string
+		Unique ID of the graph.
+	version_id : string
+		Unique ID of the version.
+
+	Returns
+	-------
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "GET" and version_id is None:
+			return HttpResponse(json.dumps(_get_graph_versions(request, graph_id, query=request.GET)),
+			                    content_type="application/json")
+		elif request.method == "GET" and version_id is not None:
+			return HttpResponse(json.dumps(_get_graph_version(request, graph_id, version_id)),
+			                    content_type="application/json")
+		elif request.method == "POST" and version_id is None:
+			return HttpResponse(json.dumps(_add_graph_version(request, graph_id, graph_version=json.loads(request.body))),
+			                    content_type="application/json",
+			                    status=201)
+		elif request.method == "DELETE" and version_id is not None:
+			_delete_graph_version(request, graph_id, version_id)
+			return HttpResponse(json.dumps({
+				"message": "Successfully deleted Graph Version with id=%s" % (version_id)
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+def _get_graph_versions(request, graph_id, query=dict()):
+	"""
+
+	Query Parameters
+	----------
+	graph_id : string
+		Unique ID of the graph.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	names : list of strings
+		Search for versions with given names. In order to search for versions with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all versions with xyz in their name.
+	order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
+
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+			Unique ID of the graph.
+
+	Returns
+	-------
+	total : integer
+		Number of graph versions matching the request.
+	versions : List of versions.
+		List of Version Objects with given limit and offset.
+
+	Raises
+	------
+	BadRequest - `User is not authorized to access private graphs created by given owner. This means either the graph belongs to a different owner
+	or graph is not shared with the user.
+
+	Notes
+	------
+
+	"""
+
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	# Validate search graphs API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if query.get('is_public', None) != '1':
+			if get_request_user(request) != query.get('member_email', None) \
+					and get_request_user(request) != query.get('owner_email', None):
+				raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+				                 args=query.get('owner_email', None))
+
+	total, versions_list = graphs.search_graph_versions(request,
+	                                        graph_id=graph_id,
+	                                        names=query.getlist('names[]', None),
+	                                        limit=query.get('limit', 20),
+	                                        offset=query.get('offset', 0),
+	                                        order=query.get('order', 'desc'),
+	                                        sort=query.get('sort', 'name'))
+
+	return {
+		'total': total,
+		'versions': [utils.serializer(version, summary=True) for version in versions_list]
+	}
+
+def _get_graph_version(request, graph_id, version_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	version_id : string
+		Unique ID of the version.
+
+	Returns
+	-------
+	version: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+	return utils.serializer(graphs.get_graph_version_by_id(request, version_id))
+
+@is_authenticated()
+def _add_graph_version(request, graph_id, graph_version={}):
+	"""
+	Node Parameters
+	----------
+	name : string
+		Name of the node. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	graph_id : string
+		Unique ID of the graph. Required
+
+
+	Parameters
+	----------
+	graph_json : dict
+		Dictionary containing the graph_json data of the graph being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	graph_version : object
+		Newly created graph_version object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+
+	return utils.serializer(graphs.add_graph_version(request,
+	                                        name=graph_version.get('name', None),
+	                                        description=graph_version.get('description', None),
+	                                        owner_email=graph_version.get('owner_email', None),
+	                                        graph_json=graph_version.get('graph_json', None),
+	                                        graph_id=graph_id))
+
+@is_authenticated()
+def _delete_graph_version(request, graph_id, graph_version_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_version_id : string
+		Unique ID of the Graph Version.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+	graphs.delete_graph_version_by_id(request, graph_version_id)

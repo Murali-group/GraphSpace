@@ -543,6 +543,156 @@ types:
       graph_id: number
       positions_json: string
       style_json: string
+  GraphVersion:
+    description: Graph Version object
+    example: |
+      {
+        "name": "Graph Version 1.0",
+        "owner_email": "user1@example.com",
+        "description": "This is Version 1.0 of Sample Graph",
+        "graph_id": 1,
+        "graph_json": {
+          "elements": {
+            "nodes": [
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 297.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P4314611",
+                  "name": "P4314611",
+                  "label": ""
+                }
+              },
+              {
+                "position": {
+                  "y": 277.5,
+                  "x": 892.5
+                },
+                "data": {
+                  "k": 0,
+                  "id": "P0810711",
+                  "name": "P0810711",
+                  "label": ""
+                }
+              }
+            ],
+            "edges": [
+              {
+                "data": {
+                  "target": "P0810711",
+                  "k": 0,
+                  "source": "P4314611",
+                  "is_directed": 1,
+                  "id": "P4314611-P0810711",
+                  "name": "P4314611-P0810711"
+                },
+                "style": {
+                  "line-color": "blue",
+                  "target-arrow-shape": "triangle",
+                  "source-arrow-color": "yellow",
+                  "width": "12px",
+                  "curve-style": "bezier",
+                  "line-style": "dotted"
+                }
+              }
+            ]
+          },
+          "data": {
+            "description": "Description of graph.. can also point to an image hosted elsewhere",
+            "name": "My first graph",
+            "tags": [
+              "tutorial", "sample"
+            ]
+          }
+        }
+      }
+    properties:
+      name: string
+      owner_email: string
+      description: string
+      graph_id: number
+      graph_json: GraphJSON
+  GraphVersionResponse:
+      description: Graph Version Response object
+      example: |
+        {
+          "name": "Graph Version 1.0",
+          "updated_at": "2017-03-25T15:37:20.728954",
+          "graph_id": 25,
+          "created_at": "2017-03-25T15:37:20.728954",
+          "owner_email": "user1@example.com",
+          "description": "This is Version 1.0 of Sample Graph",
+          "id": 21384,
+          "graph_json": {
+            "elements": {
+              "nodes": [
+                {
+                  "position": {
+                    "y": 277.5,
+                    "x": 297.5
+                  },
+                  "data": {
+                    "k": 0,
+                    "id": "P4314611",
+                    "name": "P4314611",
+                    "label": ""
+                  }
+                },
+                {
+                  "position": {
+                    "y": 277.5,
+                    "x": 892.5
+                  },
+                  "data": {
+                    "k": 0,
+                    "id": "P0810711",
+                    "name": "P0810711",
+                    "label": ""
+                  }
+                }
+              ],
+              "edges": [
+                {
+                  "data": {
+                    "target": "P0810711",
+                    "k": 0,
+                    "source": "P4314611",
+                    "is_directed": 1,
+                    "id": "P4314611-P0810711",
+                    "name": "P4314611-P0810711"
+                  },
+                  "style": {
+                    "line-color": "blue",
+                    "target-arrow-shape": "triangle",
+                    "source-arrow-color": "yellow",
+                    "width": "12px",
+                    "curve-style": "bezier",
+                    "line-style": "dotted"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "description": "Description of graph.. can also point to an image hosted elsewhere",
+              "name": "My first graph",
+              "tags": [
+                "tutorial", "sample"
+              ]
+            }
+          }
+        }
+      properties:
+        id: number
+        name: string
+        owner_email: string
+        graph_id: number
+        graph_json: GraphJSON
+        created_at: string
+        updated_at: string
+        description: string
   Member:
     description: Member Response object
     example: |
@@ -802,6 +952,117 @@ types:
                   example: |
                     {
                       "message": "Successfully deleted layout with id=1068"
+                    }
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+    /versions:
+      description: APIs to access versions of a specific graph on GraphSpace.
+      displayName: Graph Versions
+      get:
+        description: List all Graph Versions matching query criteria, if provided; otherwise list all Graph Versions.
+        queryParameters:
+          owner_email?: string
+          name?:
+            description: Search for Graph Versions with given name. In order to search for versions with given name as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all versions with xyz in their name.
+            type: string
+          limit?:
+            description: Number of entities to return.
+            default: 20
+            type: number
+          offset?:
+            description: Offset the list of returned entities by this number.
+            default: 0
+            type: number
+          order?:
+            description: Defines the column sort order, can only be 'asc' or 'desc'.
+            type: string
+          sort?:
+            description: Defines which column will be sorted.
+            type: string
+            example: "name"
+        responses:
+          200:
+            description: SUCCESS
+            body:
+              application/json:
+                type: object
+                properties:
+                  total: number
+                  versions: GraphVersionResponse[]
+          400:
+            description: BAD REQUEST
+            body:
+              application/json:
+                type: Error
+          403:
+            description: FORBIDDEN
+            body:
+              application/json:
+                type: Error
+      post:
+          description: Create a new Graph Version.
+          body:
+            application/json:
+              type: GraphVersion
+          responses:
+            201:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: GraphVersionResponse
+            400:
+              description: BAD REQUEST
+              body:
+                application/json:
+                  type: Error
+      /{version_id}:
+        description: APIs to access a specific graph version on GraphSpace.
+        displayName: Graph Version
+        get:
+          description: Get a Graph Version by id
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: GraphVersionResponse
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+        put:
+          description: Update a Graph Version by id
+          body:
+            application/json:
+              type: GraphVersion
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: GraphVersionResponse
+            403:
+              description: FORBIDDEN
+              body:
+                application/json:
+                  type: Error
+        delete:
+          description: Delete a Graph Version by id
+          responses:
+            200:
+              description: SUCCESS
+              body:
+                application/json:
+                  type: object
+                  properties:
+                    message: string
+                  example: |
+                    {
+                      "message": "Successfully deleted graph version with id=21341"
                     }
             403:
               description: FORBIDDEN

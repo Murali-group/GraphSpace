@@ -6,6 +6,7 @@
             var graph_json = {{ graph_json_string|safe }};
             var style_json = {{ style_json_string|safe }};
             var default_layout_id = {% if default_layout_id %}{{ default_layout_id|safe }}{% else %}null{% endif %};
+            var default_version_id = {% if default_version_id %}{{ default_version_id|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>
 
@@ -179,7 +180,7 @@
                         <i class="fa fa-share-alt fa-lg"></i> Share
                     </a>
                 {% endif %}
-                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 1002">
                     <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-download fa-lg"></i> Export <span class="caret"></span>
@@ -221,6 +222,20 @@
                     <a class="link-reset" href="#graph_layouts_tab" data-toggle="tab">Layouts</a>
                 </li>
             {% endif %}
+            {% if uid %}
+                <li class="text-center">
+                    <a class="link-reset" href="#graph_version_tab" data-toggle="tab">Graph Version</a>
+                </li>
+            {% endif %}
+            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 1001">
+                    <button type="button" id="version_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <bold style="font-weight: bold" id="current_version_label">--------</bold> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="version_selector_dropdown" current_version_id="">
+                        <li class="dropdown-header">Select Graph Version</li>
+                    </ul>
+                </div>
         </ul>
 
         <div id="myTabContent" class="tab-content gs-full-height bg-white">
@@ -274,6 +289,9 @@
 
             <div class="tab-pane fade gs-full-height" id="graph_layouts_tab">
                 {% include 'graph/layouts_table.html' %}
+            </div>
+            <div class="tab-pane fade gs-full-height container" id="graph_version_tab">
+                {% include 'graph/graph_version_table.html' %}
             </div>
 
         </div>

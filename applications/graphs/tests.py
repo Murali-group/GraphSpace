@@ -37,7 +37,7 @@ class GraphModelTestCase(TestCase):
 
 		# Create
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		self.session.commit()
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.assertEqual(graph1.name, 'graph1')
@@ -61,23 +61,23 @@ class GraphModelTestCase(TestCase):
 	def test_owner_email_fkey_constraint(self):
 
 		with self.assertRaises(IntegrityError):
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			self.session.commit()
 
 	def test_default_layout_id_fkey_constraint(self):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0, default_layout_id=1))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0, default_layout_id=1))
 			self.session.commit()
 
 	def test_name_owner_email_uc_constraint(self):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			self.session.commit()
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=1))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=1))
 			self.session.commit()
 
 	def test_cascade_on_user_delete(self):
@@ -85,7 +85,7 @@ class GraphModelTestCase(TestCase):
 		On deleting user row, the corresponding row in graph table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		self.session.commit()
 
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
@@ -101,7 +101,7 @@ class GraphModelTestCase(TestCase):
 		On deleting user row, the corresponding row in graph table should also be updated
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		self.session.commit()
 		graph1 = self.session.query(Graph).filter(and_(Graph.owner_email == 'owner@example.com', Graph.name == 'graph1')).one_or_none()
 
@@ -115,7 +115,7 @@ class GraphModelTestCase(TestCase):
 
 	def test_owner_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		self.session.commit()
 
 		graph1 = self.session.query(Graph).filter(and_(Graph.owner_email == 'owner@example.com', Graph.name == 'graph1')).one_or_none()
@@ -125,7 +125,7 @@ class GraphModelTestCase(TestCase):
 
 	def test_nodes_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source1'))
 		self.session.commit()
@@ -140,7 +140,7 @@ class GraphModelTestCase(TestCase):
 
 	def test_edges_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -154,9 +154,9 @@ class GraphModelTestCase(TestCase):
 
 	def test_layouts_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}'))
 		self.session.commit()
 
 		layout1 = self.session.query(Layout).filter(Layout.name == 'layout1').one_or_none()
@@ -165,9 +165,9 @@ class GraphModelTestCase(TestCase):
 
 	def test_default_layout_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		layout1 = self.session.query(Layout).filter(Layout.name == 'layout1').one_or_none()
@@ -188,7 +188,7 @@ class GraphModelTestCase(TestCase):
 			Group.owner_email == 'owner@example.com', Group.name == 'group1')).one_or_none()
 
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -197,7 +197,7 @@ class GraphModelTestCase(TestCase):
 
 	def test_tags_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -235,7 +235,7 @@ class NodeModelTestCase(TestCase):
 
 		# Create
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -272,7 +272,7 @@ class NodeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source1'))
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source2'))
@@ -283,7 +283,7 @@ class NodeModelTestCase(TestCase):
 		On deleting user row, the corresponding row in node table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source1'))
 		self.session.commit()
@@ -302,7 +302,7 @@ class NodeModelTestCase(TestCase):
 		On deleting graph row, the corresponding row in node table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source1'))
 		self.session.commit()
@@ -317,7 +317,7 @@ class NodeModelTestCase(TestCase):
 
 	def test_graph_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source1'))
 		self.session.commit()
@@ -329,7 +329,7 @@ class NodeModelTestCase(TestCase):
 
 	def test_source_edges_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -345,7 +345,7 @@ class NodeModelTestCase(TestCase):
 
 	def test_target_edges_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -388,7 +388,7 @@ class EdgeModelTestCase(TestCase):
 
 		# Create
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -419,7 +419,7 @@ class EdgeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 			self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -435,7 +435,7 @@ class EdgeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 			self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -451,7 +451,7 @@ class EdgeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 			self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -467,7 +467,7 @@ class EdgeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 			self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -481,7 +481,7 @@ class EdgeModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 			self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -496,7 +496,7 @@ class EdgeModelTestCase(TestCase):
 		On deleting user row, the corresponding row in edge table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -519,7 +519,7 @@ class EdgeModelTestCase(TestCase):
 		On deleting graph row, the corresponding row in edge table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -541,7 +541,7 @@ class EdgeModelTestCase(TestCase):
 		On deleting node row, the corresponding row in edge table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -560,7 +560,7 @@ class EdgeModelTestCase(TestCase):
 
 	def test_graph_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -574,7 +574,7 @@ class EdgeModelTestCase(TestCase):
 
 	def test_head_node_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -591,7 +591,7 @@ class EdgeModelTestCase(TestCase):
 
 	def test_tail_node_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(Node(graph_id=graph1.id, name='source', label='source'))
 		self.session.add(Node(graph_id=graph1.id, name='target', label='target'))
@@ -644,7 +644,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
@@ -676,7 +676,7 @@ class GroupToGraphModelTestCase(TestCase):
 			self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 			group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.delete(graph1)
 			self.session.commit()
@@ -700,7 +700,7 @@ class GroupToGraphModelTestCase(TestCase):
 			self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 			group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.delete(group1)
 			self.session.commit()
@@ -723,7 +723,7 @@ class GroupToGraphModelTestCase(TestCase):
 			self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 			group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 			self.session.commit()
@@ -745,7 +745,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -777,7 +777,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='member@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='member@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'member@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -808,7 +808,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		self.session.add(GroupToUser(user_id=graph_owner.id, group_id=group1.id))
 
-		self.session.add(Graph(name='graph1', owner_email='graph_owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='graph_owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'graph_owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -836,7 +836,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -865,7 +865,7 @@ class GroupToGraphModelTestCase(TestCase):
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
 		group2user1 = self.session.query(GroupToUser).filter(and_(GroupToUser.user_id == member.id, GroupToUser.group_id == group1.id)).one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -891,7 +891,7 @@ class GroupToGraphModelTestCase(TestCase):
 			Group.owner_email == 'owner@example.com', Group.name == 'group1')).one_or_none()
 
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -909,7 +909,7 @@ class GroupToGraphModelTestCase(TestCase):
 			Group.owner_email == 'owner@example.com', Group.name == 'group1')).one_or_none()
 
 		self.session.add(GroupToUser(user_id=member.id, group_id=group1.id))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 		self.session.add(GroupToGraph(graph_id=graph1.id, group_id=group1.id))
 		self.session.commit()
@@ -977,7 +977,7 @@ class GraphTagModelTestCase(TestCase):
 
 	def test_graphs_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1016,7 +1016,7 @@ class GraphToTagModelTestCase(TestCase):
 		# Create
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1040,7 +1040,7 @@ class GraphToTagModelTestCase(TestCase):
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 			self.session.add(GraphTag(name='tag1'))
@@ -1058,7 +1058,7 @@ class GraphToTagModelTestCase(TestCase):
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 			self.session.add(GraphTag(name='tag1'))
@@ -1074,7 +1074,7 @@ class GraphToTagModelTestCase(TestCase):
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 			self.session.add(GraphTag(name='tag1'))
@@ -1093,7 +1093,7 @@ class GraphToTagModelTestCase(TestCase):
 
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1117,7 +1117,7 @@ class GraphToTagModelTestCase(TestCase):
 	def test_cascade_on_tag_delete(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1142,7 +1142,7 @@ class GraphToTagModelTestCase(TestCase):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
 
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1166,7 +1166,7 @@ class GraphToTagModelTestCase(TestCase):
 	def test_graph_relationship(self):
 
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1179,7 +1179,7 @@ class GraphToTagModelTestCase(TestCase):
 
 	def test_tag_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 
 		self.session.add(GraphTag(name='tag1'))
@@ -1219,9 +1219,9 @@ class LayoutModelTestCase(TestCase):
 
 		# Create
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 		layout1 = self.session.query(Layout).filter(Layout.owner_email == 'owner@example.com').one_or_none()
 
@@ -1247,36 +1247,36 @@ class LayoutModelTestCase(TestCase):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.delete(graph1)
 			self.session.commit()
 
-			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 			self.session.commit()
 
 	def test_owner_email_fkey_constraint(self):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
 			self.session.delete(owner)
 			self.session.commit()
 
-			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 			self.session.commit()
 
 	def test_name_graph_id_owner_email_uc_constraint(self):
 
 		with self.assertRaises(IntegrityError):
 			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-			self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+			self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 			graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
 			self.session.commit()
 
-			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 			self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{"a": "a"}', is_public=1, is_shared=1, original_json='{"a": "a"}'))
 			self.session.commit()
 
@@ -1285,9 +1285,9 @@ class LayoutModelTestCase(TestCase):
 		On deleting user row, the corresponding row in node table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
@@ -1304,9 +1304,9 @@ class LayoutModelTestCase(TestCase):
 		On deleting graph row, the corresponding row in node table should also be deleted.
 		"""
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		self.session.delete(graph1)
@@ -1319,9 +1319,9 @@ class LayoutModelTestCase(TestCase):
 
 	def test_graph_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		layout1 = self.session.query(Layout).filter(Layout.name == 'layout1').one_or_none()
@@ -1330,9 +1330,9 @@ class LayoutModelTestCase(TestCase):
 
 	def test_owner_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
@@ -1342,9 +1342,9 @@ class LayoutModelTestCase(TestCase):
 
 	def test_default_layout_graph_relationship(self):
 		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
-		self.session.add(Graph(name='graph1', owner_email='owner@example.com', json='{}', is_public=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
 		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
-		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com', json='{}', is_public=0, is_shared=0, original_json='{}'))
+		self.session.add(Layout(graph_id=graph1.id, name='layout1', owner_email='owner@example.com',   is_shared=0, original_json='{}', positions_json='{}', style_json='{}'))
 		self.session.commit()
 
 		layout1 = self.session.query(Layout).filter(Layout.name == 'layout1').one_or_none()
@@ -1355,6 +1355,168 @@ class LayoutModelTestCase(TestCase):
 
 		self.assertEqual(layout1.default_layout_graph.id, graph1.id)
 
+
+class GraphVersionModelTestCase(TestCase):
+	def setUp(self):
+		db = Database()
+		# connect to the database
+		self.connection = db.engine.connect()
+		# begin a non-ORM transaction
+		self.trans = self.connection.begin()
+		# bind an individual Session to the connection
+		self.session = Session(bind=self.connection)
+
+	def tearDown(self):
+		self.session.close()
+
+		# rollback - everything that happened with the
+		# Session above (including calls to commit())
+		# is rolled back.
+		self.trans.rollback()
+
+		# return connection to the Engine
+		self.connection.close()
+
+	def test_crud_operation(self):
+		"""
+		Basic CRUD (Create, Retrieve, Update, Delete) operation should work properly.
+		"""
+
+		# Create
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.assertEqual(graph1.name, 'graph1')
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+		                             graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+		graphversion1 = self.session.query(GraphVersion).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.assertEqual(graphversion1.name, 'graphversion1')
+		#
+		# Update
+		graphversion1.name = 'updated_graph_version'
+		self.session.commit()
+		graphversion1 = self.session.query(GraphVersion).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.assertEqual(graphversion1.name, 'updated_graph_version')
+		#
+		# Delete
+		self.session.delete(graphversion1)
+		self.session.commit()
+		graphversion1 = self.session.query(GraphVersion).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.assertIsNone(graphversion1)
+
+		# Retrieve
+		num_graph_versions = self.session.query(GraphVersion).count()
+		self.assertEqual(num_graph_versions, 0)
+
+	def test_owner_email_fkey_constraint(self):
+
+		with self.assertRaises(IntegrityError):
+			self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=0,
+		                             graph_json='{}', style_json='{}', description='{}'))
+			self.session.commit()
+
+	def test_graph_id_fkey_constraint(self):
+
+		with self.assertRaises(IntegrityError):
+			self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+			self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=0,
+		                             graph_json='{}', style_json='{}', description='{}'))
+			self.session.commit()
+
+	def test_cascade_on_user_delete(self):
+		"""
+		On deleting user row, the corresponding row in graph version table should also be deleted.
+		"""
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+									  graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+
+		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
+		self.session.delete(owner)
+		self.session.commit()
+		self.assertIsNone(self.session.query(User).filter(User.email == 'owner@example.com').one_or_none())
+
+		self.assertIsNone(self.session.query(GraphVersion).filter(and_(GraphVersion.owner_email == 'owner@example.com', GraphVersion.name == 'graphversion1')).one_or_none())
+		self.session.commit()
+
+	def test_cascade_on_user_update(self):
+		"""
+		On deleting user row, the corresponding row in graph version table should also be updated
+		"""
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+									  graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+		graphversion1 = self.session.query(GraphVersion).filter(and_(GraphVersion.owner_email == 'owner@example.com', GraphVersion.name == 'graphversion1')).one_or_none()
+
+		owner = self.session.query(User).filter(User.email == 'owner@example.com').one_or_none()
+		owner.email = 'owner_updated@example.com'
+		self.session.commit()
+
+		graphversion1 = self.session.query(GraphVersion).filter(GraphVersion.id == graphversion1.id).one_or_none()
+		self.assertEqual(graphversion1.owner_email, 'owner_updated@example.com')
+		self.session.commit()
+
+	def test_cascade_on_graph_delete(self):
+		"""
+		On deleting graph row, the corresponding row in graph version table should also be deleted.
+		"""
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+									  graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+
+		self.session.delete(graph1)
+		self.session.commit()
+		self.assertIsNone(self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none())
+
+		self.assertIsNone(self.session.query(GraphVersion).filter(and_(GraphVersion.owner_email == 'owner@example.com', GraphVersion.name == 'graphversion1')).one_or_none())
+		self.session.commit()
+
+	def test_cascade_on_graph_update(self):
+		"""
+		On deleting graph row, the corresponding row in graph version table should also be updated
+		"""
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+									  graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+		graphversion1 = self.session.query(GraphVersion).filter(and_(GraphVersion.owner_email == 'owner@example.com', GraphVersion.name == 'graphversion1')).one_or_none()
+
+		graph1.id = 10
+		self.session.commit()
+
+		graphversion1 = self.session.query(GraphVersion).filter(GraphVersion.id == graphversion1.id).one_or_none()
+		self.assertEqual(graphversion1.graph_id, graph1.id)
+		self.session.commit()
+
+	def test_graph_relationship(self):
+		self.session.add(User(email='owner@example.com', password="password", is_admin=0))
+		self.session.add(Graph(name='graph1', owner_email='owner@example.com', is_public=0))
+		self.session.commit()
+		graph1 = self.session.query(Graph).filter(Graph.owner_email == 'owner@example.com').one_or_none()
+		self.session.add(GraphVersion(name='graphversion1', owner_email='owner@example.com', graph_id=graph1.id,
+									  graph_json='{}', style_json='{}', description='{}'))
+		self.session.commit()
+
+		graph1 = self.session.query(Graph).filter(and_(Graph.owner_email == 'owner@example.com', Graph.name == 'graph1')).one_or_none()
+		graphversion1 = self.session.query(GraphVersion).filter(and_(GraphVersion.owner_email == 'owner@example.com', GraphVersion.name == 'graphversion1')).one_or_none()
+		self.assertEqual(graphversion1.graph.id, graph1.id)
 
 
 

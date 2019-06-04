@@ -20,6 +20,11 @@ class Database(object):
 		self.engine = create_engine(''.join(
 			['postgresql://', config['USER'], ':', config['PASSWORD'], '@', config['HOST'], ':', config['PORT'], '/', config['NAME']]), echo=False)
 		# TODO: Find out what is the use of metadata and reflection.
+		self.connection = self.engine.connect()
+		result = self.connection.execute("SELECT * FROM pg_extension where extname like 'pg_trgm'")
+		if result.rowcount==0:
+			self.connection.execute("create extension btree_gin")
+			self.connection.execute("create extension pg_trgm")
 		settings.BASE.metadata.create_all(self.engine)
 		self.meta = sqlalchemy.schema.MetaData()
 		self.meta.reflect(bind=self.engine)
