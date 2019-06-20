@@ -14,6 +14,62 @@ from graphspace.utils import get_request_user
 from graphspace.wrappers import is_authenticated
 
 
+def compare_graph_page(request):
+    context = RequestContext(request, {})
+    return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+
+
+def compare_graphs(request):
+    context = RequestContext(request, {})
+
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET":
+            return HttpResponse(json.dumps(_compare_graph(request, request.GET['graph_1_id'],
+                                                          request.GET['graph_2_id'], request.GET['operation'])),
+                                content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise MethodNotAllowed(request)
+
+
+def _compare_graph(request, graph_1_id, graph_2_id, operation):
+    """
+
+    Parameters
+    ----------
+    request : object
+        HTTP GET Request.
+    graph_1_id : string
+        Unique ID of the 1st graph. Required.
+    graph_2_id : string
+        Unique ID of the 2nd graph. Required.
+    operation : string
+        Comparison operation difference or intersection. Required.
+
+    Returns
+    -------
+    nodes & edges: object
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_1_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_2_id)
+    nodes, edges = graphs.get_graph_comparison(request, graph_1_id, graph_2_id, operation)
+    if operation == 'intersection':
+        edges = [[utils.serializer(edge) for edge in item] for item in edges[1]]
+        nodes = [[utils.serializer(node) for node in item] for item in nodes[1]]
+    else:
+        edges = [utils.serializer(edge) for edge in edges[1]]
+        nodes = [utils.serializer(node) for node in nodes[1]]
+    return {'edges': edges, 'nodes': nodes}
+
+
 def upload_graph_page(request):
 	context = RequestContext(request, {})
 

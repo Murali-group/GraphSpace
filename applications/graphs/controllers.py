@@ -586,3 +586,22 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
+
+
+def get_graph_comparison(request, graph_1, graph_2, operation):
+	if operation == 'intersection':
+		return get_graphs_intersection(request, graph_1, graph_2)
+	else:
+		return get_graphs_difference(request, graph_1, graph_2)
+
+
+def get_graphs_intersection(request, graph_1, graph_2):
+	node_data = db.nodes_intersection(request.db_session, graph_1, graph_2)
+	edge_data = db.edges_intersection(request.db_session, graph_1, graph_2)
+	return node_data, edge_data
+
+
+def get_graphs_difference(request, graph_1, graph_2):
+	node_data = db.nodes_difference(request.db_session, graph_1, graph_2)
+	edge_data = db.edges_difference(request.db_session, graph_1, graph_2)
+	return node_data, edge_data

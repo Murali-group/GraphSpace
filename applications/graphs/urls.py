@@ -8,6 +8,7 @@ urlpatterns = [
 	url(r'^graphs/(?P<graph_id>[^/]+)$', views.graph_page, name='graph'),
 	url(r'^graphs/(?P<email>[^/]+)/(?P<graph_name>[^/]+)$', views.graph_page_by_name, name='graph_by_name'),
 	url(r'^upload$', views.upload_graph_page, name='upload_graph'),
+	url(r'^compare$', views.compare_graph_page, name='compare_graph_page'),
 
 	# AJAX APIs Endpoints
 
@@ -15,6 +16,7 @@ urlpatterns = [
 	url(r'^ajax/graphs/$', views.graphs_ajax_api, name='graphs_ajax_api'),
 	url(r'^ajax/graphs/advanced_search$', views.graphs_advanced_search_ajax_api, name='graphs_advanced_search_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)$', views.graphs_ajax_api, name='graph_ajax_api'),
+	url(r'^ajax/compare/$', views.compare_graphs, name='compare_graph'),
 	# Graphs Groups
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups$', views.graph_groups_ajax_api, name='graph_groups_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups/(?P<group_id>[^/]+)$', views.graph_groups_ajax_api, name='graph_group_ajax_api'),

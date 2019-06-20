@@ -3,7 +3,7 @@ from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.users.models import *
 from graphspace.wrappers import with_session
-from sqlalchemy.orm import defer, undefer
+from sqlalchemy.orm import defer, undefer, aliased
 
 
 @with_session
@@ -457,4 +457,57 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 	if offset is not None and limit is not None:
 		query = query.limit(limit).offset(offset)
 
+	return total, query.all()
+
+
+@with_session
+def nodes_intersection(db_session, graph_1_id=None, graph_2_id=None):
+	alias_node = aliased(Node)
+	query = db_session.query(Node, alias_node)
+
+	if graph_1_id is not None and graph_2_id is not None:
+		query = query.filter(Node.graph_id == graph_1_id).\
+				join(alias_node, Node.name == alias_node.name).\
+				filter(alias_node.graph_id == graph_2_id)
+	total = query.count()
+
+	return total, query.all()
+
+
+@with_session
+def nodes_difference(db_session, graph_1_id=None, graph_2_id=None):
+	graph1_query = db_session.query(Node).filter(Node.graph_id == graph_1_id)
+	graph2_query = db_session.query(Node).filter(Node.graph_id == graph_2_id)
+	sub_q = graph2_query.subquery()
+
+	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Node.name).\
+			filter(sub_q.c.name == None)
+
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_intersection(db_session, graph_1_id=None, graph_2_id=None):
+	alias_edge = aliased(Edge)
+	query = db_session.query(Edge, alias_edge)
+
+	if graph_1_id is not None and graph_2_id is not None:
+		query = query.filter(Edge.graph_id == graph_1_id).\
+				join(alias_edge, Edge.name == alias_edge.name).\
+				filter(alias_edge.graph_id == graph_2_id)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_difference(db_session, graph_1_id=None, graph_2_id=None):
+	graph1_query = db_session.query(Edge).filter(Edge.graph_id == graph_1_id)
+	graph2_query = db_session.query(Edge).filter(Edge.graph_id == graph_2_id)
+	sub_q = graph2_query.subquery()
+
+	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Edge.name). \
+		filter(sub_q.c.name == None)
+
+	total = query.count()
 	return total, query.all()
