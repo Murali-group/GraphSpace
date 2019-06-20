@@ -445,6 +445,74 @@ var graphPage = {
 
         utils.initializeTabs();
 
+        var update_legend_format = 0;
+        $("#graphDetailsTabBtn").click(function () {
+            if(graph_json['data']['description']) {
+
+                var html_legend_data = graph_json['data']['description'];
+                html_legend_data = $($.parseHTML(html_legend_data));
+
+                try {
+                    var node_table = html_legend_data.filter('table')[0].innerHTML;
+                    var edge_table = html_legend_data.filter('table')[1].innerHTML;
+
+                    var actual_node_desc = ['Source Receptor', 'Target TF', 'Receptor', 'TF', 'Intermediate Protein'];
+
+                    var node_elements = $(node_table);
+                    var found = $('td', node_elements);
+                    var parsed_node_desc = [];
+                    for(var i=1; i<found.length; i+=2){
+                        parsed_node_desc.push(found[i].innerText);
+                    }
+
+                    if(JSON.stringify(parsed_node_desc) === JSON.stringify(actual_node_desc)){
+                        $('#convertHtmlLegendModal').modal('show');
+                        update_legend_format = 1;
+
+                    }
+                }
+                catch(e) {
+                    try {
+                        var legend_table_count = html_legend_data.filter('table').length;
+
+                        var node_table = html_legend_data.filter('table')[0].innerHTML;
+                        var node_elements = $(node_table);
+                        var found = $('td', node_elements);
+                        var parsed_node_desc = [];
+
+                        parsed_node_desc.push(found[1].innerText);
+                        parsed_node_desc.push(found[3].innerText);
+
+                        if(legend_table_count == 1 && JSON.stringify(parsed_node_desc)==JSON.stringify(["Receptor", "Transcription Factor"])){
+                            $('#convertHtmlLegendModal').modal('show');
+                            update_legend_format = 2;
+
+                        }
+                    }
+                    catch(e) {
+                        console.log('error');
+                    }
+                }
+            }
+        });
+
+        $("#ConfirmHtmlLegendConversionBtn").click(function (){
+            apis.graphs.update($('#GraphID').val(), {
+                    'update_legend_format': update_legend_format
+                },
+                successCallback = function (response) {
+                    $('#convertHtmlLegendModal').modal('hide');
+                    location.reload(true);
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                   $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                });
+            });
+        });
+
         $('#saveOnExitLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 

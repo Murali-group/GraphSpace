@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from graphspace.exceptions import MethodNotAllowed, BadRequest, ErrorCodes
 from graphspace.utils import get_request_user
 from graphspace.wrappers import is_authenticated
+from graphspace.formatter.legend_formatter import convert_html_legend_1, convert_html_legend_2
 
 
 def upload_graph_page(request):
@@ -493,6 +494,18 @@ def _update_graph(request, graph_id, graph={}):
 	"""
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 	user_role = authorization.user_role(request)
+
+	if(graph['update_legend_format'] == 1):
+		graph = utils.serializer(graphs.get_graph_by_id(request, graph_id))
+		style_json = convert_html_legend_1(graph['graph_json'], graph['style_json'])
+		del graph['graph_json']["data"]["description"]
+		return utils.serializer(graphs.update_graph(request, graph_id=graph_id, style_json=style_json, graph_json=graph['graph_json']))
+
+	if(graph['update_legend_format'] == 2):
+		graph = utils.serializer(graphs.get_graph_by_id(request, graph_id))
+		style_json = convert_html_legend_2(graph['graph_json'], graph['style_json'])
+		del graph['graph_json']["data"]["description"]
+		return utils.serializer(graphs.update_graph(request, graph_id=graph_id, style_json=style_json, graph_json=graph['graph_json']))
 
 	return utils.serializer(graphs.update_graph(request,
 	                                            graph_id=graph_id,
