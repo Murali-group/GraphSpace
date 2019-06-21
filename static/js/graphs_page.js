@@ -63,6 +63,12 @@ var apis = {
             apis.jsonRequest('DELETE', apis.layouts.ENDPOINT({'graph_id': graph_id}) + layout_id, undefined, successCallback, errorCallback)
         }
     },
+    compare: {
+        ENDPOINT: '/ajax/compare/',
+        get: function (data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compare.ENDPOINT, data, successCallback, errorCallback)
+        }
+    },
     logging: {
         ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
@@ -425,6 +431,238 @@ var uploadGraphPage = {
         });
 
     }
+};
+
+var compareGraphPage = {
+    init: function () {
+        /**
+         * This function is called to setup the upload graph page.
+         * It will initialize all the event listeners.
+         */
+
+        // graphsPage.ownedGraphsTable.getGraphsByOwner(params);
+        // graphsPage.sharedGraphsTable.getGraphsByGroupMember('');
+        // graphsPage.publicGraphsTable.getPublicGraphs('');
+        $('#nodes-li').hide();
+        $('#edges-li').hide();
+        $('#visualization-li').hide();
+        compareGraphPage.loadGraphs();
+    },
+    loadGraphs: function () {
+        var params = {'data': {'sort': 'updated_at', 'order': 'desc', 'offset': 0, 'limit': 10}};
+        query = '';
+        params.data["owner_email"] = $('#UserEmail').val();
+
+        apis.graphs.getByID(1,  query,
+            successCallback = function (response) {
+                // This method is called when graphs are successfully fetched.
+                compareGraphPage.populateCompareDropdownMenu(response['graphs']);
+            },
+            errorCallback = function () {
+                // This method is called when error occurs while fetching graphs.
+                params.error('Error');
+            }
+        );
+
+        apis.graphs.search(params.data, query,
+            successCallback = function (response) {
+                // This method is called when graphs are successfully fetched.
+                compareGraphPage.populateCompareDropdownMenu(response['graphs']);
+            },
+            errorCallback = function () {
+                // This method is called when error occurs while fetching graphs.
+                params.error('Error');
+            }
+        );
+        delete params.data.owner_email;
+
+        params.data["member_email"] = $('#UserEmail').val();
+        apis.graphs.search(params.data, query,
+            successCallback = function (response) {
+                // This method is called when graphs are successfully fetched.
+                compareGraphPage.populateCompareDropdownMenu(response['graphs']);
+            },
+            errorCallback = function () {
+                // This method is called when error occurs while fetching graphs.
+                params.error('Error');
+            }
+        );
+        delete params.data.member_email;
+
+        params.data["is_public"] = 1;
+
+        apis.graphs.search(params.data, query,
+            successCallback = function (response) {
+                // This method is called when graphs are successfully fetched.
+                compareGraphPage.populateCompareDropdownMenu(response['graphs']);
+            },
+            errorCallback = function () {
+                // This method is called when error occurs while fetching graphs.
+                params.error('Error');
+            }
+        );
+    },
+    setDropdownMenu: function (obj) {
+        obj.parent().parent().siblings('button').text(obj.attr('data'));
+        obj.parent().parent().siblings('button').append('<span class="caret"></span>');
+        obj.parent().parent().siblings('button').attr("value", obj.attr('row_id'));
+    },
+    populateCompareDropdownMenu: function (data) {
+        $.each(data, function (i, item) {
+            if ($('#UserEmail').val() == item.owner_email && $(".compare-dropdown[mygraphs='false']").length) {
+                $(".compare-dropdown").append('<li class="dropdown-header">My Graphs </li>');
+                $(".compare-dropdown").attr('mygraphs', 'true');
+            } else if (item.owner_email.startsWith("public") && $(".compare-dropdown[publicgraphs='false']").length) {
+                $(".compare-dropdown").append('<li role="separator" class="divider"></li>');
+                $(".compare-dropdown").append('<li class="dropdown-header">Public Graphs </li>');
+                $(".compare-dropdown").attr('publicgraphs', 'true');
+            } else if ($('#UserEmail').val() != item.owner_email && !item.owner_email.startsWith("public") && $(".compare-dropdown[mygraphs='false']").length) {
+                $(".compare-dropdown").append('<li role="separator" class="divider"></li>');
+                $(".compare-dropdown").append('<li class="dropdown-header">Shared Graphs </li>');
+                $(".compare-dropdown").attr('sharedgraphs', 'true');
+            }
+            $(".compare-dropdown").append('<li><a row_id="' + item.id + '" data="'
+                + item.name + '" onclick="compareGraphPage.setDropdownMenu($(this));">'
+                + item.name + '</a></li>')
+        });
+
+
+    },
+    compareGraphs: function () {
+        graph_1_id = $('#dropdownMenu1').attr('value');
+        graph_2_id = $('#dropdownMenu2').attr('value');
+        operation = $('#operatorMenu1').attr('value');
+        if (operation && graph_1_id && graph_2_id){
+            apis.compare.get({'graph_1_id': graph_1_id, 'graph_2_id': graph_2_id, 'operation': operation},
+            successCallback = function (response) {
+                // $('#nodes-table').DataTable();
+                compareGraphPage.populateNodeData(response['nodes']);
+                compareGraphPage.populateEdgeData(response['edges']);
+                $('#nodes-total-badge').text(response['nodes'].length);
+                $('#edges-total-badge').text(response['edges'].length);
+
+                $('#nodes-table').DataTable({"destroy": true}).draw();
+                $('#edges-table').DataTable({"destroy": true}).draw();
+                $('.dataTables_length').addClass('bs-select');
+
+                $('#nodes-li').show();
+                $('#visualization-li').show();
+                $('#edges-li').show();
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access one or more graphs selected for comparison."}, {type: 'danger'});
+            });
+        }
+        else{
+            $.notify({message: "Please select correct parameters for Graph comparison."}, {type: 'danger'});
+        }
+
+    },
+    resetData: function() {
+        location.replace("/compare");
+
+    },
+    populateNodeData: function (nodes) {
+        // $('#nodes-table').DataTable().clear();
+        var trHTML = '';
+        $('#nodes-comparison-table').find("tr:gt(0)").remove();
+        $.each(nodes, function (i, item) {
+            if (item.length){
+                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
+                + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label']
+                + '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
+                + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'] + '</td></tr>';
+            }
+            else{
+                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
+                + '<br> <b class="compare-table-td"> Label : </b>' + item['label']
+                + '</td><td> <b class="compare-table-td">Name : </b>' + '---'
+                + '<br> <b class="compare-table-td"> Label : </b>' + '---' + '</td></tr>';
+            }
+        });
+        $('#nodes-comparison-table').append(trHTML);
+    },
+    populateEdgeData: function (edges) {
+        var trHTML = '';
+        $('#edges-comparison-table').find("tr:gt(0)").remove();
+        $.each(edges, function (i, item) {
+
+            if (item.length){
+                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
+                + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label']
+                + '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
+                + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'] + '</td></tr>';
+            }
+            else{
+                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
+                + '<br> <b class="compare-table-td"> Head Node : </b>' + item['head_node']['name']
+                + '<br> <b class="compare-table-td"> Tail Node : </b>' + item['tail_node']['name']
+                + '</td><td> <b class="compare-table-td">Name : </b>' + '---'
+                + '<br> <b class="compare-table-td"> Head Node : </b>' + '---'
+                + '<br> <b class="compare-table-td"> Tail Node : </b>' + '---' + '</td></tr>';
+            }
+        });
+        $('#edges-comparison-table').append(trHTML);
+    },
+    contructCytoscapeGraph: function (layout) {
+        if (!layout) {
+            layout = {
+                name: 'random',
+                padding: 10,
+                fit: true,
+                animate: false
+            };
+        }
+
+        graph_json['elements']['nodes'] = _.map(graph_json['elements']['nodes'], function (node) {
+            var newNode = {
+                "data": node['data']
+            };
+            if ('position' in node) {
+                newNode['position'] = node['position'];
+                layout = {
+                    name: 'preset'
+                };
+            }
+            return newNode
+        });
+
+        graph_json['elements']['edges'] = _.map(graph_json['elements']['edges'], function (edge) {
+            return {
+                "data": edge['data']
+            }
+        });
+
+        return cytoscape({
+            container: document.getElementById('cyGraphContainer'),
+            boxSelectionEnabled: true,
+            autounselectify: false,
+            wheelSensitivity: 0.2,
+            minZoom: 1e-2,
+            maxZoom: 1e2,
+            elements: graph_json['elements'],
+            layout: layout,
+
+            //Style properties of NODE body
+            style: _.concat(defaultStylesheet, cytoscapeGraph.parseStylesheet(style_json), selectedElementsStylesheet),
+
+            ready: function () {
+
+                //setup popup dialog for displaying dialog when nodes/edges
+                //are clicked for information.
+
+                $('#dialog').dialog({
+                    autoOpen: false
+                });
+
+                // display node data as a popup
+                this.on('tap', graphPage.onTapGraphElement);
+
+            }
+        });
+
+    },
 };
 
 var graphPage = {
