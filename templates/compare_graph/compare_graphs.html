@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+
+    <div class="container-fluid zero-margin zero-padding">
+        <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
+            <div class="col-md-10">
+                <p class="lead">
+                    Graph Comparison Page
+                </p>
+
+            </div>
+
+            <div class="col-md-2">
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" class="btn btn-sm btn-default"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-download fa-lg"></i> Save Config
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <ul class="nav nav-tabs">
+            <li class="active text-center">
+                <a id="graphVisualizationTabBtn" class="link-reset" href="#parameter_tab" data-toggle="tab">Parameters
+                </a>
+            </li>
+
+            <li id="visualization-li" class="text-center">
+                <a id="graphDetailsTabBtn" class="link-reset" href="#visualization_tab" data-toggle="tab">
+                    Visualization</a>
+            </li>
+
+            <li id="nodes-li" class="text-center">
+                <a class="link-reset" href="#nodes_tab" data-toggle="tab">Nodes <span
+                        class="badge" id="nodes-total-badge">0</span> </a>
+            </li>
+
+            <li id="edges-li" class="text-center">
+                <a class="link-reset" href="#edges_tab" data-toggle="tab">Edges <span
+                        class="badge" id="edges-total-badge">0</span></a>
+            </li>
+        </ul>
+
+        <div id="myTabContent" class="tab-content gs-full-height bg-white">
+
+            <div class="tab-pane fade in active gs-full-height" id="parameter_tab">
+                <div id="comparePageContent" class="tab-content gs-full-height bg-white">
+
+                    <div id="compare-pageview">
+
+
+
+
+                        <div id="selection-view" class="col-md-10">
+                            <div class="row banner-text container-fluid">
+                            <div class="col-md-12" style="text-align: center">
+                        <h1>Graph Comparison</h1>
+                        <h2><small>This interface allows two Graphs to be compared with each other.</small></h2>
+                        <h2><small>The supported operations are Intersection and Difference.</small></h2>
+                        </div>
+                            </div>
+                            <br>
+                            <br>
+                            <div class="col-md-12">
+                                <div class="col-md-4" style="text-align: center">
+                                    <h4>&nbsp;Choosing Graph A </h4>
+                                    <div class="dropdown btn-group">
+
+
+                                        <button class="btn btn-default dropdown-toggle" type="button"
+                                                id="dropdownMenu1"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                            Select Graph
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul style="max-height: 250px; overflow:scroll;"
+                                            class="compare-dropdown dropdown-menu" val="0"
+                                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
+                                            sharedgraphs="false">
+
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4" style="text-align: center">
+                                    <h4>&nbsp;Choosing Comparison Operator</h4>
+                                <div class="dropdown btn-group">
+
+                                    <button class="btn btn-default dropdown-toggle" type="button" id="operatorMenu1"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        Select Operator
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul style="max-height: 250px; overflow:scroll;" class="dropdown-menu" val="1"
+                                        aria-labelledby="operatorMenu1">
+                                        <li class="dropdown-header">Comparison Operations </li>
+                                        <li><a data="Intersection" row_id="intersection"
+                                               onclick="compareGraphPage.setDropdownMenu($(this));">Intersection</a>
+                                        </li>
+                                        <li><a data="Difference" row_id="difference"
+                                               onclick="compareGraphPage.setDropdownMenu($(this));">Difference</a></li>
+                                    </ul>
+                                </div>
+
+                            </div>
+
+                                <div class="col-md-4" style="text-align: center">
+                                    <h4>&nbsp;Choosing Graph B </h4>
+                                    <div class="dropdown btn-group">
+
+                                        <button class="btn btn-default dropdown-toggle" type="button"
+                                                id="dropdownMenu2"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                            Select Graph
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul style="max-height: 250px; overflow:scroll;"
+                                            class="compare-dropdown dropdown-menu" val="1"
+                                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
+                                            sharedgraphs="false">
+
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        <div id="compare-sidebar" class="col-md-2">
+                            <div style="text-align: center; margin-top: 15% !important;">
+                                <button id="ok" type="submit" class="btn btn-default"
+                                        onclick="compareGraphPage.compareGraphs()">Compare
+                                </button>
+                                <a onclick="compareGraphPage.resetData()" style="margin-left: 10px" id="clear" class="btn btn-default">Reset</a>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="tab-pane fade gs-full-height container" id="nodes_tab">
+                {% include 'compare_graph/nodes_table.html' %}
+            </div>
+
+            <div class="tab-pane fade gs-full-height container" id="edges_tab">
+                {% include 'compare_graph/edges_table.html' %}
+            </div>
+
+            <div class="tab-pane fade gs-full-height" id="visualization_tab">
+                {% include 'compare_graph/compare_visualization.html' %}
+            </div>
+
+        </div>
+
+
+        <script type="text/javascript" src="{% static 'components/cytoscape/dist/cytoscape.min.js' %}"></script>
+        <link rel="stylesheet" href="{% static 'components/cytoscape-panzoom/cytoscape.js-panzoom.css' %}"/>
+        <script type="text/javascript" src="{% static 'components/cytoscape-panzoom/cytoscape-panzoom.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
+
+        <link rel="stylesheet" type="text/css"
+              href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
+        <script type="text/javascript"
+                src="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'components/intro.js/intro.js' %}"></script>
+        <link rel="stylesheet" href="{% static 'components/intro.js/introjs.css' %}">
+
+        <script type="text/javascript" src="{% static 'components/jquery-ui/jquery-ui.min.js' %}"></script>
+        <link rel="stylesheet" href="{% static 'components/jquery-ui/themes/base/jquery-ui.min.css' %}">
+
+        <link rel="stylesheet"
+              href="{% static 'components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+        <script type="text/javascript" charset="utf-8"
+                src="{% static 'components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.18/datatables.min.css"/>
+
+        <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.18/datatables.min.js"></script>
+        <!-- JSON support for Graph Page -->
+        <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
+        <script>
+            $(document).ready(function () {
+                console.log("Loading graph page");
+                compareGraphPage.init();
+            });
+        </script>
+{% endblock %}

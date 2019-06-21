@@ -26,6 +26,9 @@
             <li class="text-center">
                 <a href="{% url 'upload_graph' %}">Upload New Graph</a>
             </li>
+            <li class="text-center">
+                <a href="{% url 'compare_graph_page' %}">Compare Graphs</a>
+            </li>
         </ul>
 
 
@@ -73,6 +76,11 @@
             <div class="tab-pane fade" id="upload_graph">
                 Upload Graph
             </div>
+
+            <div class="tab-pane fade" id="compare_graphs">
+                Compare Graphs
+            </div>
+
         </div>
 
         {% include 'graphs/delete_graph_modal.html' %}

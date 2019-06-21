@@ -261,6 +261,22 @@ ul.nav.nav-tabs > li > a:hover {
     border-left: 5px double rgba(36, 41, 46, 0.21);
 }
 
+#compare-sidebar {
+    z-index: 1000;
+    position: absolute;
+    right: 250px;
+    width: 250px;
+    height: 100%;
+    margin-right: -250px;
+    overflow-y: scroll;
+    background: transparent;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    border-left: 5px double rgba(36, 41, 46, 0.21);
+}
+
 #wrapper.toggled #sidebar-wrapper {
     width: 250px;
 }
@@ -438,4 +454,8 @@ p.lead {
         position: relative;
         margin-left: 0;
     }
+}
+
+.compare-table-td {
+    margin-right:15px;
 }
