@@ -124,9 +124,11 @@ def delete_graph(db_session, id):
 def get_graph_by_id(db_session, id):
 	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
 
+def get_fork_by_id(db_session, id):
+	return db_session.query(GraphFork).filter(GraphFork.graph_id == id).one_or_none()
 
 @with_session
-def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
+def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, is_forked=None, names=None, nodes=None,
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
@@ -151,6 +153,8 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 		options_group.append(subqueryload('nodes'))
 	if edges is not None and len(edges) > 0:
 		options_group.append(subqueryload(Graph.edges))
+	if is_forked is not None:
+		options_group.append(joinedload(Graph.forked_graphs))
 	if group_ids is not None and len(group_ids) > 0:
 		options_group.append(joinedload('shared_with_groups'))
 	if len(options_group) > 0:
@@ -158,6 +162,9 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 
 	if group_ids is not None:
 		query = query.filter(Graph.groups.any(Group.id.in_(group_ids)))
+
+	if is_forked is not None:
+		query = query.filter(Graph.forked_graphs.any())
 
 	edges = [] if edges is None else edges
 	nodes = [] if nodes is None else nodes
@@ -457,4 +464,22 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 	if offset is not None and limit is not None:
 		query = query.limit(limit).offset(offset)
 
+	return total, query.all()
+
+
+@with_session
+def add_fork(db_session, forked_graph_id, parent_graph_id, owner_email):
+	fork = GraphFork( graph_id=forked_graph_id, parent_graph_id=parent_graph_id)
+	db_session.add(fork)
+	return fork
+
+
+@with_session
+def get_fork(db_session, parent_graph_id=None, forked_graph_id=None):
+	query = db_session.query(GraphFork)
+	if parent_graph_id is not None:
+		query = query.filter(GraphFork.parent_graph_id == parent_graph_id)
+	if forked_graph_id is not None:
+		query = query.filter(GraphFork.graph_id == forked_graph_id)
+	total = query.count()
 	return total, query.all()

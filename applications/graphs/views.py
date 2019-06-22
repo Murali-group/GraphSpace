@@ -5,7 +5,7 @@ import applications.users.controllers as users
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
-from django.http import HttpResponse, QueryDict
+from django.http import HttpResponse, QueryDict, HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
@@ -212,9 +212,10 @@ def graphs_advanced_search_ajax_api(request):
 			if user_role == authorization.UserRole.LOGGED_IN:
 				if queryparams.get('owner_email', None) is None \
 						and queryparams.get('member_email', None) is None \
-						and queryparams.get('is_public', None) != '1':
+						and queryparams.get('is_public', None) != '1' \
+						and queryparams.get('is_forked', None) != '1' :
 					raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
-				if queryparams.get('is_public', None) != '1':
+				if queryparams.get('is_public', None) != '1' and queryparams.get('is_forked', None) != '1':
 					if get_request_user(request) != queryparams.get('member_email', None) \
 							and get_request_user(request) != queryparams.get('owner_email', None):
 						raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
@@ -225,6 +226,7 @@ def graphs_advanced_search_ajax_api(request):
 			                                           member_email=queryparams.get('member_email', None),
 			                                           names=list(filter(None, queryparams.getlist('names[]', []))),
 			                                           is_public=queryparams.get('is_public', None),
+													   is_forked=queryparams.get('is_forked', None),
 			                                           nodes=list(filter(None, queryparams.getlist('nodes[]', []))),
 			                                           edges=list(filter(None, queryparams.getlist('edges[]', []))),
 			                                           tags=list(filter(None, queryparams.getlist('tags[]', []))),
@@ -401,8 +403,11 @@ def _get_graph(request, graph_id):
 
 	"""
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-
-	return utils.serializer(graphs.get_graph_by_id(request, graph_id))
+	graph_by_id = utils.serializer(graphs.get_graph_by_id(request, graph_id))
+	graph_fork = graphs.get_fork_by_id(request, graph_id)
+	if graph_fork:
+		graph_by_id = graphs.get_forked_graph_data(request, graph_by_id, graph_fork)
+	return graph_by_id
 
 
 def _add_graph(request, graph={}):
@@ -1522,3 +1527,215 @@ def _delete_edge(request, graph_id, edge_id):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
 	graphs.delete_edge_by_id(request, edge_id)
+
+
+'''
+Graph Fork APIs
+'''
+
+@csrf_exempt
+@is_authenticated()
+def graph_fork_rest_api(request, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/api/v1/graphs
+		/api/v1/graphs/<graph_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _fork_api(request, graph_id=graph_id)
+
+
+def graph_fork_ajax_api(request, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/ajax/graphs
+		/ajax/graphs/<graph_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+	return _fork_api(request, graph_id=graph_id)
+
+def _fork_api(request, graph_id=None):
+	"""
+	Handles any request sent to following urls:
+		/graphs/<graph_id>/fork
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET or POST.
+	BadRequest: If HTTP_ACCEPT header is not set to application/json.
+
+	"""
+	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+		if request.method == "GET" and graph_id is not None:
+			return HttpResponse(json.dumps(_get_forks(request, query=request.GET)), content_type="application/json")
+		elif request.method == "GET" and graph_id is not None:
+			return HttpResponse(json.dumps(_get_fork(request, graph_id)), content_type="application/json",
+			                    status=200)
+		elif request.method == "POST" and graph_id is not None:
+			return HttpResponse(json.dumps(_add_fork(request, graph=json.loads(request.body))),
+			                    content_type="application/json", status=201)
+			return HttpResponse(json.dumps({
+				"message": "Successfully deleted graph with id=%s" % graph_id
+			}), content_type="application/json", status=200)
+		else:
+			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+	else:
+		raise BadRequest(request)
+
+def _add_fork(request, graph={}):
+	"""
+	Graph Parameters
+	----------
+	name : string
+		Name of group. Required
+	owner_email : string
+		Email of the Owner of the graph. Required
+	tags: list of strings
+		List of tags to be attached with the graph. Optional
+
+
+	Parameters
+	----------
+	graph : dict
+		Dictionary containing the data of the graph being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	Confirmation Message
+
+	Raises
+	------
+	BadRequest - Cannot create graph for user other than the requesting user.
+
+	Notes
+	------
+
+	"""
+
+	# Validate add graph API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if get_request_user(request) != graph.get('owner_email', None):
+			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
+			                 args=graph.get('owner_email', None))
+	elif user_role == authorization.UserRole.LOGGED_OFF and graph.get('owner_email', None) is not None:
+		raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
+		                 args=graph.get('owner_email', None))
+	try:
+		new_graph = graphs.add_graph(request,
+									 name=graph.get('name', None),
+									 is_public=graph.get('is_public', None),
+									 graph_json=graph.get('graph_json', None),
+									 style_json=graph.get('style_json', None),
+									 tags=graph.get('tags', None),
+									 owner_email=graph.get('owner_email', None))
+	except Exception as error:
+		return error
+	return utils.serializer(graphs.add_graph_to_fork(request,
+													 forked_graph_id=new_graph.id,
+													 parent_graph_id=graph.get('parent_id', None),
+													 owner_email=graph.get('owner_email', None)))
+
+def _get_forks(request, query=dict()):
+	"""
+	Query Parameters
+	----------
+	parent_graph_id : integer
+		ID of the Parent graph from which Graph was forked.
+
+	Parameters
+	----------
+	query : dict
+		Dictionary of query parameters.
+	request : object
+		HTTP GET Request.
+	parent_graph_id : Integer
+		ID of the Parent graph from which Graph was forked.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	forks : List of Forked Graphs.
+		List of Forked Graphs for the given parent graph ID.
+
+	Raises
+	------
+
+	BadRequest - `User is not authorized to access private graphs created by given owner. This means either the graph belongs to a different owner
+	or graph is not shared with the user.
+
+	Notes
+	------
+	"""
+
+	querydict = QueryDict('', mutable=True)
+	querydict.update(query)
+	query = querydict
+
+	# Validate search graphs API request
+	user_role = authorization.user_role(request)
+	if user_role == authorization.UserRole.LOGGED_IN:
+		if query.get('parent_graph_id', None) is None:
+			raise BadRequest(request, error_code=ErrorCodes.Validation.GraphIDMissing)
+
+	total, forks_list = graphs.find_forks(request,
+	                                       parent_graph_id=query.get('parent_graph_id', None),
+	                                       forked_graph_id=query.get('forked_graph_id', None)
+	                                       )
+
+	return {
+		'total': total,
+		'graphs': [utils.serializer(fork, summary=True) for fork in forks_list]
+	}
+
+def _get_fork(request, graph_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	graph_id : string
+		Unique ID of the graph.
+
+	Returns
+	-------
+	graph: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+
+	return utils.serializer(graphs.get_fork_by_id(request, graph_id))

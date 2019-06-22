@@ -39,6 +39,18 @@ var apis = {
             apis.jsonRequest('GET', apis.nodes.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
+    fork: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/fork/'),
+        add: function(graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.fork.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.fork.ENDPOINT({'graph_id': graph_id}), undefined, successCallback, errorCallback)
+        },
+        get: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.fork.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        }
+    },
     edges: {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
         get: function (graph_id, data, successCallback, errorCallback) {
@@ -382,6 +394,40 @@ var graphsPage = {
             );
         }
     },
+    forkedGraphsTable: {
+        getForkedGraphs: function(params) {
+            /**
+             * This is the custom ajax request used to load graphs in forkedGraphsTable.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search, sort, order.
+             */
+            $('#ForkedGraphsTable').bootstrapTable('showLoading');
+            $('#forkedGraphsTotal').html('<i class="fa fa-refresh fa-spin fa fa-fw"></i>');
+
+            query = params.data['query']
+            delete params.data.query;
+
+            params.data["is_forked"] = 1;
+            params.data["owner_email"] = $('#UserEmail').val();
+
+            apis.graphs.search(params.data, query,
+                successCallback = function (response) {
+                    // This method is called when graphs are successfully fetched.
+                    $('#ForkedGraphsTable').bootstrapTable('hideLoading');
+                    params.success(response);
+                    $('#forkedGraphsTotal').text(response.total);
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching graphs.
+                    $('#ForkedGraphsTable').bootstrapTable('hideLoading');
+                    params.error('Error');
+                }
+            );
+        },
+        },
+
+
 }; //var graph ends
 
 var uploadGraphPage = {
@@ -441,6 +487,13 @@ var graphPage = {
 
         utils.initializeTabs();
 
+        $("#ForkGraph").click(function (e) {
+            e.preventDefault();
+            if (!$(this).hasClass('disabled')){
+                $('#forkGraphModal').data('data', $(this).data()).modal('show');//graphPage.fork($(this).data()); // Passing data about parent graph to fork() as argument
+            }
+        });
+
         $('#saveOnExitLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
@@ -479,7 +532,7 @@ var graphPage = {
 
         $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
         $('#ConfirmUpdateLayoutBtn').click(graphPage.layoutsTable.onConfirmUpdateGraph);
-
+        $('#ConfirmForkGraphBtn').click(graphPage.fork);
         this.filterNodesEdges.init();
         this.colaLayoutWidget.init();
 
@@ -512,6 +565,33 @@ var graphPage = {
 
 
         graphPage.defaultLayoutWidget.init();
+    },
+    fork: function () {
+        //Read the meta_data object and add 'parent_id' & 'parent_email' to the data field.
+        data = $('#forkGraphModal').data('data')
+        graph_name = $('#forkGraphName').val()
+        if (graph_name!="") data.graph_name = graph_name;
+        $('#forkGraphModal').modal('hide');
+        //$.notify({message: 'Request to fork the graph has been submitted'}, {type: 'info'});
+        graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
+        var graphData = {
+            'name':data.graph_name,
+            'is_public':0,
+            'parent_id':data.graph_id,
+            'owner_email':data.uid,
+            'graph_json':graph_meta_data,//JSON.stringify(graph_meta_data, null, 4),
+            'style_json':cytoscapeGraph.getStyleJSON(graphPage.cyGraph)//JSON.stringify(cytoscapeGraph.getStyleJSON(graphPage.cyGraph), null, 4)
+        }
+
+        apis.fork.add(data.graph_id, graphData,
+                successCallback = function (response) {
+                    $.notify({message: 'The Graph has been forked successfully'}, {type: 'success'});
+                    $("#ForkGraph").addClass('disabled');
+                },
+                errorCallback = function (response) {
+                    $.notify({message: 'Could not fork the Graph due to the following error : <strong>' + response.responseJSON.error_message.split("'")[1] + '</strong>'}, {type: 'danger'});
+                }
+            );
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());

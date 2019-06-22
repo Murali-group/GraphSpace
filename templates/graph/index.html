@@ -140,12 +140,12 @@
                 </div>
             </div>
         </div>
-
+        {% include 'graphs/fork_graph_modal.html' %}
     </div>
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
         <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
-            <div class="col-md-10">
+            <div class="col-md-9">
                 <p class="lead">
                     {{ title }}
                 </p>
@@ -170,9 +170,31 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                {% if 'data' in graph.graph_json and 'parent_email' in graph.graph_json.data%}
+                    <p class="small">
+                        <small> forked from {{ graph.graph_json.data.parent_email }}/ <a class="text-center"
+                            href="{% url 'graphs' %}{{ graph.graph_json.data.parent_id }} "> {{ graph.name }} </a> </small>
+                    </p>
+                {% endif %}
+                {% if graph.is_fork %}
+                <h4 class="zero-margin">
+                    <small>Forked from {{ graph.parent_email }}/ <a class="text-center"
+                            href="{% url 'graphs' %}{{ graph.parent_id }} "> {{ graph.parent_graph_name }} </a> </small>
+                </h4>
+                {% endif %}
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
+                {% if uid != graph.owner_email %}
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" id='ForkGraph' class="btn btn-sm btn-default"
+                            aria-haspopup="true" aria-expanded="false" data-uid={{ uid }} data-graph_name="{{ title }}"
+                            data-graph_id={{ graph.id }} data-owner_email={{ graph.owner_email }}>
+                        <i class="fa fa-code-fork" aria-hidden="true"></i> <span>Fork</span>
+                    </button>
+                    <b class="btn btn-sm btn-default">0</b>
+                </div>
+                {% endif %}
                 {% if uid and uid == graph.owner_email %}
                     <a class="btn btn-default pull-right btn-sm" href="#" data-toggle="modal"
                        data-target="#shareGraphModal">
