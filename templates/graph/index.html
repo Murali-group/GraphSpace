@@ -111,6 +111,41 @@
             </div>
         </div>
 
+        <!-- Save on Exit Legend Modal -->
+        <div class="modal fade" id="saveOnExitLegendModal" tabindex="-1" role="dialog" aria-labelledby="saveOnExitLegendModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Save Legend</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="layout_fields">
+                            <div class="control-group">
+                                <label for="legendNameInput">Legend Name</label>
+                                <input id="saveOnExitLegendNameInput" class="form-control" type="text" name="legend_name"
+                                       autocomplete="off"/>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <button name="saveOnExitLegendBtn" id="saveOnExitLegendBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save and Exit
+                                </button>
+                                <button type="button" id="exitLegendBtn"
+                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
+                                        data-dismiss="modal">Exit without saving
+                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Save Layout Modal -->
         <div class="modal fade" id="saveLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveLayoutModalLabel"
              aria-hidden="true">
@@ -232,6 +267,7 @@
                         {% include 'graph/default_sidebar.html' %}
                         {% if uid %}
                             {% include 'graph/layout_editor_sidebar.html' %}
+                            {% include 'graph/legend_editor_sidebar.html' %}
                         {% endif %}
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
                         {% include 'graph/change_layout_sidebar.html' %}

@@ -429,6 +429,7 @@ var uploadGraphPage = {
 
 var graphPage = {
     cyGraph: undefined,
+    cyLegend: undefined,
     timeout: null,
     init: function () {
         /**
@@ -438,7 +439,7 @@ var graphPage = {
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
 
         if('legend' in style_json){
-            var cyLegend = graphPage.constructLegend();
+            graphPage.cyLegend = graphPage.constructLegend();
         }
 
         graphPage.cyGraph.panzoom();
@@ -527,13 +528,39 @@ var graphPage = {
             graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
 
+       $('#saveOnExitLegendBtn').click(function () {
+            graphPage.saveLegend($('#saveOnExitLegendNameInput').val(), '#saveOnExitLegendModal');
+            if('legend' in style_json){
+                graphPage.legendEditor.removeBinLegend();
+            }
+        });
+
         $('#layoutEditorBtn').click(function () {
             graphPage.layoutEditor.init();
         });
 
+        $('#legendEditorBtn').click(function () {
+            if('legend' in style_json){
+                graphPage.legendEditor.init();
+            }
+        });
+
+
         $('#exitLayoutEditorBtn').click(function () {
             $('#exitLayoutBtn').removeClass('hidden');
             $('#saveOnExitLayoutModal').modal('show');
+        });
+
+       $('#exitLegendEditorBtn').click(function () {
+            $('#exitLegendBtn').removeClass('hidden');
+            $('#saveOnExitLegendModal').modal('show');
+        });
+
+        $('#exitLegendBtn').click(function () {
+            console.log('done');
+            if('legend' in style_json){
+                graphPage.legendEditor.removeBinLegend();
+            }
         });
 
         $('#saveLayoutEditorBtn').click(function () {
@@ -555,9 +582,15 @@ var graphPage = {
         this.filterNodesEdges.init();
         this.colaLayoutWidget.init();
 
-        if (window.location.hash == '#editor') {
+        if (window.location.hash == '#layouteditor') {
             $('#layoutEditorBtn').trigger('click');
         }
+
+        if (window.location.hash == '#legendeditor') {
+            $('#legendEditorBtn').trigger('click');
+        }
+
+
 
         if (!_.isEmpty(utils.getURLParameter('auto_layout'))) {
             graphPage.applyAutoLayout(utils.getURLParameter('auto_layout'));
@@ -675,6 +708,50 @@ var graphPage = {
         }
         graphPage.cyGraph.layout(layoutID);
 
+    },
+    saveLegend: function(legendName, modalNameId, callback) {
+        if (_.trim(legendName).length === 0) {
+            return $.notify({
+                message: 'Please enter a valid layout name!',
+            }, {
+                type: 'warning'
+            });
+        }
+        else {
+                positions_json = cytoscapeGraph.getNodePositions(graphPage.cyLegend);
+                style_json = cytoscapeGraph.getStylesheet(graphPage.cyLegend);
+
+                apis.layouts.add($('#GraphID').val(), {
+                        "owner_email": $('#UserEmail').val(),
+                        "graph_id": $('#GraphID').val(),
+                        "name": legendName,
+                        "positions_json": positions_json,
+                        "style_json": {
+                            "format_version": "1.0",
+                            "generated_by": "graphspace-2.0.0",
+                            "target_cytoscapejs_version": "~2.7",
+                            "style": style_json
+                        }
+                    },
+                    successCallback = function (response) {
+                        $(modalNameId).modal('toggle');
+                        $('#PrivateLayoutsTable').bootstrapTable('refresh');
+                        $('#SharedLayoutsTable').bootstrapTable('refresh');
+                        $('table').bootstrapTable('refresh');
+                        if(typeof callback === 'function'){
+                            callback(response.id);
+                        };
+
+                    },
+                    errorCallback = function (response) {
+                        // This method is called when  error occurs while deleting group_to_graph relationship.
+                        $.notify({
+                            message: response.responseJSON.error_message
+                        }, {
+                            type: 'danger'
+                        });
+                    });
+            }
     },
     saveLayout: function (layoutName, modalNameId, callback) {
         graphPage.cyGraph.elements().unselect();
@@ -1543,6 +1620,73 @@ var graphPage = {
             );
         }
     },
+    legendEditor: {
+        init: function() {
+            graphPage.cyGraph.elements().unselect();
+            graphPage.cyLegend.elements().unselect();
+            graphPage.legendEditor.constructBinLegend();
+
+            graphPage.cyLegend.on('tap', 'node', function (evt) {
+                var bin_node = evt.cyTarget;
+                console.log( 'tapped ' + bin_node.id());
+                if(bin_node.id().slice(0,2) === 'rm'){
+                    bin_pos_x = bin_node.renderedPosition().x;
+                    bin_pos_y = bin_node.renderedPosition().y;
+                    _.each(graphPage.cyLegend.nodes(), function(node){
+                        node_pos_x = node.renderedPosition().x;
+                        node_pos_y = node.renderedPosition().y;
+                        if(node_pos_y == bin_pos_y && node_pos_x != bin_pos_x){
+                            graphPage.cyLegend.remove(node);
+                        }
+                    });
+                    bin_node.remove();
+                    graphPage.legendEditor.rearrangeLegend(bin_pos_y);
+                }
+            });
+        },
+        constructBinLegend: function() {
+            var edge_count = graphPage.cyLegend.edges().size();
+            var node_count = graphPage.cyLegend.nodes().size();
+            var actual_node_count = node_count - 2*edge_count;
+            var total_elements = edge_count + actual_node_count;
+
+            var k=10;
+            for(var i=0;i<total_elements;i++) {
+                graphPage.cyLegend.add([
+                    {group: 'nodes', data: { id: 'rm'+i}, position: {y:k+10, x:180}}
+                ]).style({
+                    'background-image': '../images/trash.png',
+                    'background-color': 'white',
+                    'width':'20px',
+                    'height':'25px',
+                    'shape': 'rectangle'
+                });
+                k=k+40;
+            }
+        },
+        rearrangeLegend: function(bin_pos_y) {
+            graphPage.cyLegend.autolock(false);
+
+            _.each(graphPage.cyLegend.nodes(), function (node) {
+                var node_pos_y = node.renderedPosition().y;
+                if(node_pos_y > bin_pos_y){
+                        node.animate({
+                        position: { y: node_pos_y-40 },
+                    }, {
+                        duration: 700
+                    });
+                }
+            });
+        },
+        removeBinLegend: function() {
+            _.each(graphPage.cyLegend.nodes(), function (node){
+                node_pos = node.renderedPosition();
+                if(node_pos.x == 180){
+                    node.remove();
+                }
+            });
+        }
+    },
     layoutEditor: {
         original_opacity: {},
         undoRedoManager: null,
@@ -1732,7 +1876,7 @@ var graphPage = {
 
 
             $('#importCytoscapeStyleBtn').change(function (e) {
-                //console.log($('#importCytoscapeStyleBtn').files);
+                console.log($('#importCytoscapeStyleBtn').files);
                 var reader = new FileReader();
                 reader.onload = function (event) {
                     var obj = JSON.parse(event.target.result);
