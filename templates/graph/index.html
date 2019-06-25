@@ -117,13 +117,13 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel">Save Legend</h4>
+                        <h4 class="modal-title" id="myModalLabel">Save Legend in a new Layout</h4>
                     </div>
                     <div class="modal-body">
 
                         <div class="layout_fields">
                             <div class="control-group">
-                                <label for="legendNameInput">Legend Name</label>
+                                <label for="legendNameInput">Layout Name</label>
                                 <input id="saveOnExitLegendNameInput" class="form-control" type="text" name="legend_name"
                                        autocomplete="off"/>
                             </div>
@@ -272,7 +272,9 @@
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
                         {% include 'graph/change_layout_sidebar.html' %}
                         {% include 'graph/node_editor.html' %}
+                        {% include 'graph/node_legend_editor.html' %}
                         {% include 'graph/edge_editor.html' %}
+                        {% include 'graph/edge_legend_editor.html' %}
                         {% include 'graph/cola_option.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
