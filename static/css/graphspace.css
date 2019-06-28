@@ -459,3 +459,19 @@ p.lead {
 .compare-table-td {
     margin-right:15px;
 }
+
+#search-place-holder {
+    padding: 20px;
+    margin-top: -6px;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    background: #f1f1f1;
+}
+
+#parameter-header {
+    text-align: left;
+    padding: 20px 30px 25px 20px;
+    border: 1px solid #e1e4e5;
+    border-radius: 3px;
+}

@@ -11,7 +11,6 @@
                 </p>
 
             </div>
-
             <div class="col-md-2">
                 <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
                     <button type="button" class="btn btn-sm btn-default"
@@ -20,17 +19,92 @@
                     </button>
                 </div>
             </div>
+            <div class="col-md-12">
+                <small>Choose two graphs to see which elements are in common and which ones are different.</small>
+                <div id="parameter-header">
+                    <i class="fa fa-sitemap"></i>
+                    <div class="btn-group" style="margin: 0px 10px 0px 10px">
+
+
+                        <button class="btn btn-default btn-sm dropdown-toggle" type="button"
+                                id="dropdownMenu1"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            <i value="primary graph:"> Select Primary Graph</i>
+                            <bold style="font-weight: bold"></bold>
+                            <span class="caret"></span>
+                        </button>
+                        <button id="colorpicker1" type="button" value="#0b58a2"
+                                class="btn btn-default btn-sm"
+                                style="background-color:#0b58a2; margin-left:5px;height:30px; width:50px">
+                        </button>
+                        <ul style="max-height: 250px; overflow:scroll;"
+                            class="compare-dropdown dropdown-menu" val="0"
+                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
+                            sharedgraphs="false">
+                            <input class="form-control" id="search-place-holder" type="text" placeholder="Search..">
+                        </ul>
+                    </div>
+                    <i class="fa fa-plus"></i>
+                    <div class="btn-group" style="margin-right: 10px; margin-left: 10px">
+
+                        <button class="btn btn-default btn-sm dropdown-toggle" type="button"
+                                id="dropdownMenu2"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            <i value="secondary graph:"> Select Secondary Graph</i>
+                            <bold style="font-weight: bold"></bold>
+                            <span class="caret"></span>
+                        </button>
+                        <button id="colorpicker2" type="button" value="#0C5404"
+                                class="btn btn-default btn-sm"
+                                style="background-color:#0C5404; margin-left:5px;height:30px; width:50px">
+                        </button>
+                        <ul style="max-height: 250px; overflow:scroll;"
+                            class="compare-dropdown dropdown-menu" val="1"
+                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
+                            sharedgraphs="false">
+                            <input class="form-control" id="search-place-holder" type="text" placeholder="Search..">
+                        </ul>
+                    </div>
+                    <i class="fa fa-random"></i>
+                    <div class="btn-group" style="margin-left: 10px">
+
+                        <button class="btn btn-default btn-sm dropdown-toggle" type="button" id="operatorMenu1"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            Select Operator
+                            <span class="caret"></span>
+                        </button>
+                        <button id="operatorcolorpicker" type="button" value="#ffff00"
+                                class="btn btn-default btn-sm"
+                                style="background-color:#ffff00; margin-left:5px;height:30px; width:50px">
+                        </button>
+                        <ul style="max-height: 250px; overflow:scroll;" class="dropdown-menu" val="1"
+                            aria-labelledby="operatorMenu1">
+                            <li class="dropdown-header">Comparison Operations</li>
+                            <li><a data="Intersection" row_id="intersection"
+                                   onclick="compareGraphPage.setDropdownMenu($(this));">Intersection</a>
+                            </li>
+                            <li><a data="Difference" row_id="difference"
+                                   onclick="compareGraphPage.setDropdownMenu($(this));">Difference</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group pull-right">
+                        <button id="ok" type="submit" class="btn btn-default"
+                                onclick="compareGraphPage.compareGraphs()">Compare
+                        </button>
+                        <a onclick="compareGraphPage.resetData()" style="margin-left: 10px" id="clear"
+                           class="btn btn-default">Reset</a>
+                    </div>
+                </div>
+            </div>
+
 
         </div>
 
         <ul class="nav nav-tabs">
-            <li class="active text-center">
-                <a id="graphVisualizationTabBtn" class="link-reset" href="#parameter_tab" data-toggle="tab">Parameters
-                </a>
-            </li>
 
             <li id="visualization-li" class="text-center">
-                <a id="graphDetailsTabBtn" class="link-reset" href="#visualization_tab" data-toggle="tab">
+                <a id="graphVisualizationTabBtn" class="link-reset" href="#visualization_tab" data-toggle="tab">
                     Visualization</a>
             </li>
 
@@ -46,103 +120,6 @@
         </ul>
 
         <div id="myTabContent" class="tab-content gs-full-height bg-white">
-
-            <div class="tab-pane fade in active gs-full-height" id="parameter_tab">
-                <div id="comparePageContent" class="tab-content gs-full-height bg-white">
-
-                    <div id="compare-pageview">
-
-
-
-
-                        <div id="selection-view" class="col-md-10">
-                            <div class="row banner-text container-fluid">
-                            <div class="col-md-12" style="text-align: center">
-                        <h1>Graph Comparison</h1>
-                        <h2><small>This interface allows two Graphs to be compared with each other.</small></h2>
-                        <h2><small>The supported operations are Intersection and Difference.</small></h2>
-                        </div>
-                            </div>
-                            <br>
-                            <br>
-                            <div class="col-md-12">
-                                <div class="col-md-4" style="text-align: center">
-                                    <h4>&nbsp;Choosing Graph A </h4>
-                                    <div class="dropdown btn-group">
-
-
-                                        <button class="btn btn-default dropdown-toggle" type="button"
-                                                id="dropdownMenu1"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                            Select Graph
-                                            <span class="caret"></span>
-                                        </button>
-                                        <ul style="max-height: 250px; overflow:scroll;"
-                                            class="compare-dropdown dropdown-menu" val="0"
-                                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
-                                            sharedgraphs="false">
-
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-4" style="text-align: center">
-                                    <h4>&nbsp;Choosing Comparison Operator</h4>
-                                <div class="dropdown btn-group">
-
-                                    <button class="btn btn-default dropdown-toggle" type="button" id="operatorMenu1"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                        Select Operator
-                                        <span class="caret"></span>
-                                    </button>
-                                    <ul style="max-height: 250px; overflow:scroll;" class="dropdown-menu" val="1"
-                                        aria-labelledby="operatorMenu1">
-                                        <li class="dropdown-header">Comparison Operations </li>
-                                        <li><a data="Intersection" row_id="intersection"
-                                               onclick="compareGraphPage.setDropdownMenu($(this));">Intersection</a>
-                                        </li>
-                                        <li><a data="Difference" row_id="difference"
-                                               onclick="compareGraphPage.setDropdownMenu($(this));">Difference</a></li>
-                                    </ul>
-                                </div>
-
-                            </div>
-
-                                <div class="col-md-4" style="text-align: center">
-                                    <h4>&nbsp;Choosing Graph B </h4>
-                                    <div class="dropdown btn-group">
-
-                                        <button class="btn btn-default dropdown-toggle" type="button"
-                                                id="dropdownMenu2"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                            Select Graph
-                                            <span class="caret"></span>
-                                        </button>
-                                        <ul style="max-height: 250px; overflow:scroll;"
-                                            class="compare-dropdown dropdown-menu" val="1"
-                                            aria-labelledby="dropdownMenu1" mygraphs="false" publicgraphs="false"
-                                            sharedgraphs="false">
-
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </div>
-
-                        <div id="compare-sidebar" class="col-md-2">
-                            <div style="text-align: center; margin-top: 15% !important;">
-                                <button id="ok" type="submit" class="btn btn-default"
-                                        onclick="compareGraphPage.compareGraphs()">Compare
-                                </button>
-                                <a onclick="compareGraphPage.resetData()" style="margin-left: 10px" id="clear" class="btn btn-default">Reset</a>
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
-            </div>
 
             <div class="tab-pane fade gs-full-height container" id="nodes_tab">
                 {% include 'compare_graph/nodes_table.html' %}
@@ -165,6 +142,8 @@
 
         <script type="text/javascript" src="{% static 'components/webcola/WebCola/cola.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'components/cytoscape-cola/cytoscape-cola.js' %}"></script>
+        <script type="text/javascript"
+                src="{% static 'components/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js' %}"></script>
 
         <link rel="stylesheet" type="text/css"
               href="{% static 'components/cytoscape-context-menus/cytoscape-context-menus.css' %}"/>
@@ -187,6 +166,7 @@
         <!-- JSON support for Graph Page -->
         <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
+
 
         <script>
             $(document).ready(function () {
