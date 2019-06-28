@@ -470,7 +470,6 @@ def nodes_intersection(db_session, graph_1_id=None, graph_2_id=None):
 				join(alias_node, Node.name == alias_node.name).\
 				filter(alias_node.graph_id == graph_2_id)
 	total = query.count()
-
 	return total, query.all()
 
 
@@ -482,7 +481,6 @@ def nodes_difference(db_session, graph_1_id=None, graph_2_id=None):
 
 	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Node.name).\
 			filter(sub_q.c.name == None)
-
 	total = query.count()
 	return total, query.all()
 
@@ -494,8 +492,9 @@ def edges_intersection(db_session, graph_1_id=None, graph_2_id=None):
 
 	if graph_1_id is not None and graph_2_id is not None:
 		query = query.filter(Edge.graph_id == graph_1_id).\
-				join(alias_edge, Edge.name == alias_edge.name).\
-				filter(alias_edge.graph_id == graph_2_id)
+				join(alias_edge, Edge.head_node_name == alias_edge.head_node_name).\
+				filter(alias_edge.graph_id == graph_2_id).\
+				filter(Edge.tail_node_name == alias_edge.tail_node_name)
 	total = query.count()
 	return total, query.all()
 
@@ -508,6 +507,5 @@ def edges_difference(db_session, graph_1_id=None, graph_2_id=None):
 
 	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Edge.name). \
 		filter(sub_q.c.name == None)
-
 	total = query.count()
 	return total, query.all()
