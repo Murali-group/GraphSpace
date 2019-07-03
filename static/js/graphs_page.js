@@ -802,7 +802,7 @@ var compareGraphPage = {
 
             if (item.length) {
                 cyEdge1 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
-                cyEdge2 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
+                cyEdge2 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[1]['name']]);
 
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
                     + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label'];
@@ -814,18 +814,16 @@ var compareGraphPage = {
                 trHTML += '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
                     + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'];
 
-                if (cyEdge2.length && cyEdge2.data() && cyEdge1.data()['popup']) {
+                if (cyEdge2.length && cyEdge2.data() && cyEdge2.data()['popup']) {
                     trHTML += '<br>' + cyEdge2.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
                 }
 
                 trHTML += '</td></tr>';
 
             } else {
-                cyEdge1 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
+                cyEdge1 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item['name']]);
                 
-                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
-                    + '<br> <b class="compare-table-td"> Head Node : </b>' + item['head_node']['name']
-                    + '<br> <b class="compare-table-td"> Tail Node : </b>' + item['tail_node']['name'];
+                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name'];
 
                 if (cyEdge1.length && cyEdge1.data() && cyEdge1.data()['popup']) {
                     trHTML += '<br>' + cyEdge1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
