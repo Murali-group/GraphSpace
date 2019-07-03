@@ -443,6 +443,7 @@ var compareGraphPage = {
     graph_json_2: undefined,
     style_json_2: undefined,
     common_nodes: undefined,
+    edge_name_to_id: {},
     timeout: null,
     init: function () {
         /**
@@ -690,10 +691,7 @@ var compareGraphPage = {
                 successCallback = function (response) {
                     // $('#nodes-table').DataTable();
                     compareGraphPage.common_nodes = response['nodes'];
-                    compareGraphPage.populateNodeData(response['nodes']);
-                    compareGraphPage.populateEdgeData(response['edges']);
-                    $('#nodes-total-badge').text(response['nodes'].length);
-                    $('#edges-total-badge').text(response['edges'].length);
+
 
                     compareGraphPage.setGraph0Groups(compareGraphPage.graph_json_1, response['nodes']);
                     compareGraphPage.setGraph1Groups(compareGraphPage.graph_json_2, response['nodes']);
@@ -703,6 +701,12 @@ var compareGraphPage = {
 
                     compareGraphPage.cyGraph = compareGraphPage.contructCytoscapeGraph(compareGraphPage.graph_json_1, compareGraphPage.style_json_1);
                     compareGraphPage.cyGraph.panzoom();
+
+                    compareGraphPage.populateNodeData(response['nodes']);
+                    compareGraphPage.populateEdgeData(response['edges']);
+                    $('#nodes-total-badge').text(response['nodes'].length);
+                    $('#edges-total-badge').text(response['edges'].length);
+
                     compareGraphPage.setNodesColor('graph_1', $('#colorpicker1').val());
                     compareGraphPage.setNodesColor('graph_2', $('#colorpicker2').val());
 
@@ -737,9 +741,11 @@ var compareGraphPage = {
     },
     populateNodeData: function (nodes) {
         var trHTML = '';
+        var cyNode1 = undefined;
+        var cyNode2 = undefined;
         $('#nodes-table').DataTable().clear().destroy();
         $('#nodes-comparison-table').find("tr:gt(0)").remove();
-        if (!nodes[0].length) {
+        if (nodes.length && !nodes[0].length) {
             $('#nodes-table > thead').find("th:gt(0)").remove();
             $('#nodes-table').parent().attr('align', 'center');
             $('#nodes-table').attr('style', 'width:800px;');
@@ -747,13 +753,35 @@ var compareGraphPage = {
         } else $('#nodes-table').attr('style', '');
         $.each(nodes, function (i, item) {
             if (item.length) {
+                // Use 'name' field instead - for testing use 'label'
+                cyNode1 = compareGraphPage.cyGraph.getElementById(item[0]['label']);
+                cyNode2 = compareGraphPage.cyGraph.getElementById(item[1]['label']);
+
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
-                    + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label']
-                    + '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
-                    + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'] + '</td></tr>';
+                        + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label'];
+                if (cyNode1.length && cyNode1.data() && cyNode1.data()['popup']) {
+                    trHTML += '<br>' + cyNode1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+
+                trHTML += '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
+                    + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'];
+
+                if (cyNode2.length && cyNode2.data() && cyNode2.data()['popup']){
+                    trHTML += '<br>' + cyNode2.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+                trHTML += '</td></tr>';
+
             } else {
+                // Use 'name' field instead - for testing use 'label'
+                cyNode1 = compareGraphPage.cyGraph.getElementById(item['label']);
+
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
                     + '<br> <b class="compare-table-td"> Label : </b>' + item['label'];
+
+                if (cyNode1.length && cyNode1.data() && cyNode1.data()['popup']) {
+                    trHTML += '<br>' + cyNode1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+                trHTML += '</td></tr>';
             }
 
         });
@@ -761,9 +789,11 @@ var compareGraphPage = {
     },
     populateEdgeData: function (edges) {
         var trHTML = '';
+        var cyEdge1 = undefined;
+        var cyEdge2 = undefined;
         $('#edges-table').DataTable().clear().destroy();
         $('#edges-comparison-table').find("tr:gt(0)").remove();
-        if (!edges[0].length) {
+        if (edges.length && !edges[0].length) {
             $('#edges-table > thead').find("th:gt(0)").remove();
             $('#edges-table').parent().attr('align', 'center');
             $('#edges-table').attr('style', 'width:800px;');
@@ -771,14 +801,36 @@ var compareGraphPage = {
         $.each(edges, function (i, item) {
 
             if (item.length) {
+                cyEdge1 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
+                cyEdge2 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
+
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
-                    + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label']
-                    + '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
-                    + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'] + '</td></tr>';
+                    + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label'];
+
+                if (cyEdge1.length && cyEdge1.data() && cyEdge1.data()['popup']) {
+                    trHTML += '<br>' + cyEdge1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+
+                trHTML += '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
+                    + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'];
+
+                if (cyEdge2.length && cyEdge2.data() && cyEdge1.data()['popup']) {
+                    trHTML += '<br>' + cyEdge2.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+
+                trHTML += '</td></tr>';
+
             } else {
+                cyEdge1 = compareGraphPage.cyGraph.getElementById(compareGraphPage.edge_name_to_id[item[0]['name']]);
+                
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
                     + '<br> <b class="compare-table-td"> Head Node : </b>' + item['head_node']['name']
                     + '<br> <b class="compare-table-td"> Tail Node : </b>' + item['tail_node']['name'];
+
+                if (cyEdge1.length && cyEdge1.data() && cyEdge1.data()['popup']) {
+                    trHTML += '<br>' + cyEdge1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                }
+                trHTML += '</td></tr>';
             }
         });
         $('#edges-comparison-table').append(trHTML);
@@ -798,6 +850,7 @@ var compareGraphPage = {
         });
 
         graph_json['elements']['edges'] = _.map(graph_json['elements']['edges'], function (edge) {
+            compareGraphPage.edge_name_to_id[edge['data']['name']] = edge['data']['id'];
             return {
                 "data": edge['data']
             }
