@@ -509,6 +509,42 @@ var compareGraphPage = {
             compareGraphPage.setNodesColor('common_2', event.color.toString());
         });
     },
+    validateExpression: function (infix) {
+        var balance = 0;
+        // remove white spaces to simplify regex
+        infix = infix.replace(/ /g, '');
+        var regex = /[\+\-]?\w+(([\+\-\*\/\&\|\!]|(\<\=?|\>\=?|\=\=|\!=))[\+\-]?\w+)*/;
+
+        // if it has empty parenthesis then is not valid
+        if (infix.match(/\(\)/)) {
+            return false;
+        }
+
+        // validate parenthesis balance
+        for (var i = 0; i < infix.length; i++) {
+            if (infix[i] == '(') {
+                balance++;
+            } else if (infix[i] == ')') {
+                balance--;
+            }
+
+            if (balance < 0) {
+                return false;
+            }
+        }
+
+        if (balance > 0) {
+            return false;
+        }
+
+        // remove all the parenthesis
+        infix = infix.replace(/[\(\)]/g, '');
+
+        return infix.match(regex)[0] == infix;
+    },
+    convertToPostfix: function(){
+
+    },
     loadGraphs: function () {
         var params = {'data': {'sort': 'updated_at', 'order': 'desc', 'offset': 0, 'limit': 10}};
         query = '';
@@ -594,8 +630,8 @@ var compareGraphPage = {
         graph_json['elements']['nodes'][len] = {
             'data': {
                 'id': 'graph_1',
-                'label': 'Primary Graph',
-                'name': 'Primary Graph'
+                'label': 'Graph 1',
+                'name': 'Graph 1'
             }
         };
         graph_json['elements']['nodes'][len + 1] = {'data': {'id': 'common_1', 'label': 'Common', 'name': 'Common'}};
@@ -621,8 +657,8 @@ var compareGraphPage = {
         graph_json['elements']['nodes'][len] = {
             'data': {
                 'id': 'graph_2',
-                'label': 'Secondary Graph',
-                'name': 'Secondary Graph'
+                'label': 'Graph 2',
+                'name': 'Graph 2'
             }
         };
         graph_json['elements']['nodes'][len + 1] = {'data': {'id': 'common_2', 'label': 'Common', 'name': 'Common'}};
@@ -677,11 +713,11 @@ var compareGraphPage = {
         if (operation && compareGraphPage.graph_1_id && compareGraphPage.graph_2_id) {
             $('#nodes-table > thead').find("th").remove();
             $('#edges-table > thead').find("th").remove();
-            $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Primary Graph</h4></th>');
-            $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Secondary Graph</h4></th>');
+            $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph 1</h4></th>');
+            $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph 2</h4></th>');
 
-            $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Primary Graph</h4></th>');
-            $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Secondary Graph</h4></th>');
+            $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph 1</h4></th>');
+            $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph 2</h4></th>');
 
             apis.compare.get({
                     'graph_1_id': compareGraphPage.graph_1_id,
@@ -701,6 +737,7 @@ var compareGraphPage = {
 
                     compareGraphPage.cyGraph = compareGraphPage.contructCytoscapeGraph(compareGraphPage.graph_json_1, compareGraphPage.style_json_1);
                     compareGraphPage.cyGraph.panzoom();
+                    compareGraphPage.cyGraph.fit().center();
 
                     compareGraphPage.populateNodeData(response['nodes']);
                     compareGraphPage.populateEdgeData(response['edges']);
@@ -875,7 +912,9 @@ var compareGraphPage = {
                 $('#dialog').dialog({
                     autoOpen: false
                 });
-
+                this.reset();
+                this.fit();
+                this.center();
                 // display node data as a popup
                 this.on('tap', graphPage.onTapGraphElement);
 
