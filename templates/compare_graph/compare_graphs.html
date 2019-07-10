@@ -6,23 +6,18 @@
     <div class="container-fluid zero-margin zero-padding">
         <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
             <div class="col-md-10">
-                <p class="lead">
-                    Graph Comparison Page
-                </p>
+
 
             </div>
-            <div class="col-md-2">
-                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
-                    <button type="button" class="btn btn-sm btn-default"
-                            aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-download fa-lg"></i> Save Config
-                    </button>
-                </div>
-            </div>
+
+
             <div class="col-md-12">
-                <small>Choose two graphs to see which elements are in common and which ones are different.</small>
-                <div id="parameter-header">
-                    <i class="fa fa-sitemap"></i>
+
+                <div id="">
+                    <div class="btn-group"> <p class="lead">
+                    Graph Comparison Page
+                    </p> </div>
+                    <div class="pull-right">
                     <div class="btn-group" style="margin: 0px 10px 0px 10px">
 
 
@@ -44,7 +39,7 @@
                             <input class="form-control" id="search-place-holder" type="text" placeholder="Search..">
                         </ul>
                     </div>
-                    <i class="fa fa-plus"></i>
+
                     <div class="btn-group" style="margin-right: 10px; margin-left: 10px">
 
                         <button class="btn btn-default btn-sm dropdown-toggle" type="button"
@@ -65,7 +60,7 @@
                             <input class="form-control" id="search-place-holder" type="text" placeholder="Search..">
                         </ul>
                     </div>
-                    <i class="fa fa-random"></i>
+
                     <div class="btn-group" style="margin-left: 10px">
 
                         <button class="btn btn-default btn-sm dropdown-toggle" type="button" id="operatorMenu1"
@@ -87,14 +82,8 @@
                                    onclick="compareGraphPage.setDropdownMenu($(this));">Difference</a></li>
                         </ul>
                     </div>
-
-                    <div class="btn-group pull-right">
-                        <button id="ok" type="submit" class="btn btn-default"
-                                onclick="compareGraphPage.compareGraphs()">Compare
-                        </button>
-                        <a onclick="compareGraphPage.resetData()" style="margin-left: 10px" id="clear"
-                           class="btn btn-default">Reset</a>
                     </div>
+
                 </div>
             </div>
 
