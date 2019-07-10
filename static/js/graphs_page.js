@@ -595,6 +595,7 @@ var compareGraphPage = {
         } else {
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").text(obj.attr('data'));
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").append('<span class="caret"></span>');
+            compareGraphPage.compareGraphs();
         }
         obj.parent().parent().siblings("button[class*='dropdown-toggle']").attr("value", obj.attr('row_id'));
     },
@@ -620,9 +621,14 @@ var compareGraphPage = {
     setNodesColor: function (graph_parent, color) {
         compareGraphPage.cyGraph.filter(":parent[id='" + graph_parent + "']").style({
             'background-color': color,
-            'background-opacity': 0.3
+            'background-opacity': 0,
+            'border-opacity': 0,
         });
         compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").style({'background-color': color});
+        compareGraphPage.cyGraph.filter("node[id='graph_1']").style({'background-opacity': 0});
+        compareGraphPage.cyGraph.filter("node[id='graph_2']").style({'background-opacity': 0});
+        compareGraphPage.cyGraph.filter("node[id='common_1']").style({'background-opacity': 0});
+        compareGraphPage.cyGraph.filter("node[id='common_2']").style({'background-opacity': 0});
     },
     setGraph0Groups: function (graph_json, common_nodes) {
         const len = graph_json['elements']['nodes'].length;
@@ -708,6 +714,107 @@ var compareGraphPage = {
             }
         );
     },
+    formatCyGraph: function(){
+
+        compareGraphPage.cyGraph.filter(":parent").style({
+            'font-size': '0px',
+        });
+        compareGraphPage.cyGraph.filter(":edges").style({
+            'text-outline-color': '#FFFFFF',
+            'line-color': '#000000'
+        });
+        compareGraphPage.cyGraph.filter("node[parent='" + 'graph_1' + "']").layout({
+            'name': 'grid',
+            'animate': false,
+            'padding': 10
+        }).run();
+        compareGraphPage.cyGraph.filter("node[parent='" + 'graph_2' + "']").layout({
+            'name': 'grid',
+            'animate': false,
+            'padding': 10
+        }).run();
+        compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").layout({
+            'name': 'grid',
+            'animate': false,
+            'padding': 10
+        }).run();
+
+         compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").layout({
+            'name': 'grid',
+            'animate': false,
+            'padding': 10
+        }).run();
+
+        let x_max = compareGraphPage.cyGraph.filter("node[parent='" + 'graph_1' + "']").max(function (ele, i, eles) {
+            return ele.position()['x'];
+        });
+        let y_max = compareGraphPage.cyGraph.filter("node[parent='" + 'graph_1' + "']").max(function (ele, i, eles) {
+            return ele.position()['y'];
+        });
+        y_max = Math.max(y_max.value, compareGraphPage.cyGraph.filter("node[parent='" + 'graph_2' + "']").max(function (ele, i, eles) {
+            return ele.position()['y'];
+        }).value);
+        let cm_len_2 = compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").max(function (ele, i, eles) {
+            return ele.position()['x'];
+        }).value - compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").min(function (ele, i, eles) {
+            return ele.position()['x'];
+        }).value;
+
+        let cm_len_1 = compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").max(function (ele, i, eles) {
+            return ele.position()['x'];
+        }).value - compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").min(function (ele, i, eles) {
+            return ele.position()['x'];
+        }).value;
+
+        compareGraphPage.cyGraph.filter("node[parent='" + 'graph_2' + "']").layout({
+            'name': 'grid', 'animate': false, 'padding': 10, transform: (node) => {
+                let position = {};
+                position.x = node.position('x') + x_max.value + 100;
+                position.y = node.position('y');
+                return position;
+            }
+        }).run();
+
+        compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").layout({
+            'name': 'grid', 'animate': false, 'padding': 10, transform: (node) => {
+                let position = {};
+                position.x = node.position('x') + Math.abs(cm_len_2/2 - x_max.value) + 100;
+                position.y = node.position('y') + y_max + 150;
+                return position;
+            }
+        }).run();
+
+        compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").layout({
+            'name': 'grid', 'animate': false, 'padding': 10, transform: (node) => {
+                let position = {};
+                position.x = node.position('x') + Math.abs(cm_len_1/2 - x_max.value) + 100;
+                position.y = node.position('y') + y_max + 150;
+                return position;
+            }
+        }).run();
+    },
+    setCommonElements: function(nodes){
+        $.each(nodes, function (i, node) {
+            if (node.length>1){
+            let id_1 = compareGraphPage.cyGraph.nodes("[label = '" + node[0]['label'] + "']").id();
+            let id_2 = compareGraphPage.cyGraph.nodes("[label = '" + node[1]['label'] + "']").id();
+
+            edges = compareGraphPage.cyGraph.nodes("[id = '" + id_1 + "']").connectedEdges();
+            $.each(edges, function (i, edge) {
+                if (edge.data('source') == id_1){
+                    edge.move({source: id_2});
+                }
+                else
+                    edge.move({target: id_2});
+            });
+            compareGraphPage.cyGraph.remove("node[id = '" + id_1 + "']");
+
+
+
+            }
+        });
+
+    },
     compareGraphHelper: function () {
         operation = $('#operatorMenu1').attr('value');
         if (operation && compareGraphPage.graph_1_id && compareGraphPage.graph_2_id) {
@@ -735,12 +842,28 @@ var compareGraphPage = {
                     compareGraphPage.graph_json_1['elements']['edges'] = compareGraphPage.graph_json_1['elements']['edges'].concat(compareGraphPage.graph_json_2['elements']['edges']);
                     compareGraphPage.style_json_1['style'] = compareGraphPage.style_json_1['style'].concat(compareGraphPage.style_json_2['style']);
 
-                    compareGraphPage.cyGraph = compareGraphPage.contructCytoscapeGraph(compareGraphPage.graph_json_1, compareGraphPage.style_json_1);
-                    compareGraphPage.cyGraph.panzoom();
-                    compareGraphPage.cyGraph.fit().center();
+                    compareGraphPage.cyGraph = compareGraphPage.constructCytoscapeGraph(compareGraphPage.graph_json_1, compareGraphPage.style_json_1);
 
                     compareGraphPage.populateNodeData(response['nodes']);
                     compareGraphPage.populateEdgeData(response['edges']);
+                    compareGraphPage.setCommonElements(response['nodes']);
+                    compareGraphPage.cyGraph.ready(function () {                 // Wait for cytoscape to actually load and map eles
+                        compareGraphPage.cyGraph.nodes().forEach(function (ele) { // Your function call inside
+                            console.log("loop", ele.id(), ele.position());
+                        });
+                        compareGraphPage.formatCyGraph();
+                        compareGraphPage.cyGraph.panzoom();
+                        compareGraphPage.cyGraph.reset().fit().center();
+                    });
+                   /* compareGraphPage.cyGraph.filter("node[parent='" + 'graph_1' + "']").layout({ 'name': 'grid', 'animate': false, 'padding':10, transform: (node) => {
+        let position = {};
+        position.x = node.position('x') + 500;
+        position.y = node.position('y') + 00;
+        return position;
+    }}).run();*/
+
+
+
                     $('#nodes-total-badge').text(response['nodes'].length);
                     $('#edges-total-badge').text(response['edges'].length);
 
@@ -750,10 +873,6 @@ var compareGraphPage = {
                     compareGraphPage.setNodesColor('common_1', $('#operatorcolorpicker').val());
                     compareGraphPage.setNodesColor('common_2', $('#operatorcolorpicker').val());
 
-                    compareGraphPage.cyGraph.layout({
-                        'name': 'cose-bilkent',
-                        'animate': false,
-                    }).run();
                     $('#nodes-table').DataTable().draw();
                     $('#edges-table').DataTable().draw();
                     $('.dataTables_length').addClass('bs-select');
@@ -791,8 +910,11 @@ var compareGraphPage = {
         $.each(nodes, function (i, item) {
             if (item.length) {
                 // Use 'name' field instead - for testing use 'label'
-                cyNode1 = compareGraphPage.cyGraph.getElementById(item[0]['label']);
-                cyNode2 = compareGraphPage.cyGraph.getElementById(item[1]['label']);
+                // cyNode1 = compareGraphPage.cyGraph.getElementById(item[0]['label']);
+                // cyNode2 = compareGraphPage.cyGraph.getElementById(item[1]['label']);
+
+                cyNode1 = compareGraphPage.cyGraph.nodes("[label = '" + item[0]['label'] + "']");
+                cyNode2 = compareGraphPage.cyGraph.nodes("[label = '" + item[1]['label'] + "']");
 
                 trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item[0]['name']
                         + '<br> <b class="compare-table-td"> Label : </b>' + item[0]['label'];
@@ -870,7 +992,15 @@ var compareGraphPage = {
         });
         $('#edges-comparison-table').append(trHTML);
     },
-    contructCytoscapeGraph: function (graph_json, style_json) {
+    constructCytoscapeGraph: function (graph_json, style_json) {
+
+        layout = {
+            name: 'grid',
+            padding: 20,
+            fit: true,
+            animate: false
+        };
+
         graph_json['elements']['nodes'] = _.map(graph_json['elements']['nodes'], function (node) {
             var newNode = {
                 "data": node['data']
@@ -912,9 +1042,13 @@ var compareGraphPage = {
                 $('#dialog').dialog({
                     autoOpen: false
                 });
-                this.reset();
-                this.fit();
-                this.center();
+                // this.layout({
+                //             'name': 'grid',
+                //             'animate': false,
+                //         }).run();
+                // this.reset();
+                // this.fit();
+                // this.center();
                 // display node data as a popup
                 this.on('tap', graphPage.onTapGraphElement);
 
