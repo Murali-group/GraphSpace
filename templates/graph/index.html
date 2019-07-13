@@ -275,6 +275,7 @@
                         {% include 'graph/node_legend_editor.html' %}
                         {% include 'graph/edge_editor.html' %}
                         {% include 'graph/edge_legend_editor.html' %}
+                        {% include 'graph/legend_label_editor.html' %}
                         {% include 'graph/cola_option.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
@@ -388,8 +389,8 @@
           var graphContainer = document.getElementById("cyGraphContainer");
           if (legendContainer.style.display === "none") {
             legendContainer.style.display = "block";
-            legendContainer.style.width = "20%";
-            graphContainer.style.width = "80%";
+            legendContainer.style.width = "25%";
+            graphContainer.style.width = "75%";
             document.getElementById("legendBtn").innerHTML = "Hide Legend";
         } else {
             legendContainer.style.display = "none";

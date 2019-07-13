@@ -532,6 +532,7 @@ var graphPage = {
             graphPage.saveLayout($('#saveOnExitLegendNameInput').val(), '#saveOnExitLegendModal');
             if('legend' in style_json){
                 graphPage.legendEditor.removeBinLegend();
+                graphPage.legendEditor.removeEditLegend();
             }
         });
 
@@ -558,6 +559,7 @@ var graphPage = {
         $('#exitLegendBtn').click(function () {
             if('legend' in style_json){
                 graphPage.legendEditor.removeBinLegend();
+                graphPage.legendEditor.removeEditLegend();
             }
         });
 
@@ -1182,33 +1184,49 @@ var graphPage = {
     onTapLegendGraphElement: function(evt) {
         var target = evt.cyTarget;
 
-        if(target.isNode()){
-            legend_shape = target.style()['shape'];
-            legend_color = target.style()['background-color'];
-            _.each(graphPage.cyGraph.nodes(), function (node) {
-                if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
-                    graphPage.cyGraph.edges().unselect();
-                    node.select();
-                }
-                else
-                    node.unselect();
-            });
+        try{
+            if(target.isNode()){
+                graphPage.cyLegend.style().selector('node:selected').style({
+                    'overlay-color': 'red',
+                    'overlay-padding': 8,
+                    'overlay-opacity': 0.3
+                }).update();
+
+                legend_shape = target.style()['shape'];
+                legend_color = target.style()['background-color'];
+                _.each(graphPage.cyGraph.nodes(), function (node) {
+                    if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
+                        graphPage.cyGraph.edges().unselect();
+                        node.select();
+                    }
+                    else
+                        node.unselect();
+                });
+            }
+
+            if(target.isEdge()){
+                graphPage.cyLegend.style().selector('edge:selected').style({
+                    'overlay-color': 'red',
+                    'overlay-padding': 8,
+                    'overlay-opacity': 0.3
+                }).update();
+
+                legend_style = target.style()['line-style'];
+                legend_color = target.style()['line-color'];
+                arrow_shape = target.style()['target-arrow-shape'];
+                _.each(graphPage.cyGraph.edges(), function (edge) {
+                    if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
+                        graphPage.cyGraph.nodes().unselect();
+                        edge.select();
+                    }
+                    else{
+                        edge.unselect();
+                    }
+                });
+            }
         }
-
-        if(target.isEdge()){
-            legend_style = target.style()['line-style'];
-            legend_color = target.style()['line-color'];
-            arrow_shape = target.style()['target-arrow-shape'];
-
-            _.each(graphPage.cyGraph.edges(), function (edge) {
-                if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
-                    graphPage.cyGraph.nodes().unselect();
-                    edge.select();
-                }
-                else{
-                    edge.unselect();
-                }
-            });
+        catch{
+            // $('#editSelectedLegendBtn').addClass('disabled');
         }
     },
     contructCytoscapeGraph: function (layout) {
@@ -1582,6 +1600,7 @@ var graphPage = {
             graphPage.cyGraph.elements().unselect();
             graphPage.cyLegend.elements().unselect();
             graphPage.legendEditor.constructBinLegend();
+            graphPage.legendEditor.constructEditLegend();
 
             graphPage.cyLegend.on('tap', 'node', function (evt) {
                 var bin_node = evt.cyTarget;
@@ -1603,6 +1622,9 @@ var graphPage = {
                     graphPage.cyLegend.remove(bin_node);
                     graphPage.legendEditor.rearrangeLegend(bin_pos_y);
                 }
+                if(bin_node.id().slice(0,4) === 'edit'){
+                    graphPage.legendEditor.legendLabelEditor.open();
+                }
             });
 
             $('#addNodeLegendBtn').click(function () {
@@ -1611,6 +1633,10 @@ var graphPage = {
 
             $('#addEdgeLegendBtn').click(function () {
                 graphPage.legendEditor.edgeLegendEditor.open();
+            });
+
+            $('#editSelectedLegendBtn').click(function () {
+                graphPage.legendEditor.legendLabelEditor.open(graphPage.cyLegend.collection(graphPage.cyLegend.elements(':selected')));
             });
         },
         constructBinLegend: function() {
@@ -1628,6 +1654,26 @@ var graphPage = {
                     'background-color': 'white',
                     'width':'20px',
                     'height':'25px',
+                    'shape': 'rectangle'
+                });
+                k=k+40;
+            }
+        },
+        constructEditLegend: function() {
+            var edge_count = graphPage.cyLegend.edges().length;
+            var node_count = graphPage.cyLegend.nodes().length;
+            var actual_node_count = node_count - 2*edge_count;
+            var total_elements = edge_count + actual_node_count;
+
+            var k=10;
+            for(var i=0;i<total_elements/2;i++) {
+                graphPage.cyLegend.add([
+                    {group: 'nodes', data: { id: 'edit'+i}, position: {y:k+10, x:220}}
+                ]).style({
+                    'background-image': '../images/edit_icon.png',
+                    'background-color': 'white',
+                    'width':'28px',
+                    'height':'28px',
                     'shape': 'rectangle'
                 });
                 k=k+40;
@@ -1654,6 +1700,59 @@ var graphPage = {
                     graphPage.cyLegend.remove(node);
                 }
             });
+        },
+        removeEditLegend: function() {
+            _.each(graphPage.cyLegend.nodes(), function (node){
+                node_pos = node.renderedPosition();
+                if(node_pos.x == 220){
+                    graphPage.cyLegend.remove(node);
+                }
+            });
+        },
+        legendLabelEditor: {
+            legend_label: {},
+            init: function(){
+                $('#nodeLegendLabel').val(null);
+            },
+            open: function() {
+                graphPage.legendEditor.legendLabelEditor.init();
+                $('.gs-sidebar-nav').removeClass('active');
+                $('#legendLabelEditorSideBar').addClass('active');
+                $('#legendLabel').on('input', function (e) {
+                    if (!_.isEmpty($('#legendLabel').val())) {
+                        graphPage.legendEditor.legendLabelEditor.legend_label['label'] =  $('#legendLabel').val();
+                    }
+                });
+            },
+            updateLegendLabel: function(label) {
+                collection=graphPage.cyLegend.collection(graphPage.cyLegend.elements(':selected'));
+                col_pos = collection.renderedPosition();
+                console.log(col_pos);
+                _.each(graphPage.cyLegend.elements(), function (elem) {
+                    if(elem.isNode() && elem.id().slice(0,1) == 'n' && elem.renderedPosition().y == col_pos.y){
+                        console.log(elem.id().slice(0,1));
+                        style_json['legend']['nodes'][label] = {};
+                        style_json['legend']['nodes'][label] = style_json['legend']['nodes'][elem.style()['label']];
+                        delete style_json['legend']['nodes'][elem.style()['label']];
+                        elem.style('label',label);
+                    }
+
+                    if(elem.isNode() && elem.id().slice(0,2) == 'en' && elem.id().length == 4 && elem.renderedPosition().y == col_pos.y){
+                        style_json['legend']['edges'][label] = {};
+                        style_json['legend']['edges'][label] = style_json['legend']['edges'][elem.style()['label']];
+                        delete style_json['legend']['nodes'][elem.style()['label']];
+                        graphPage.cyLegend.nodes('[id=' + '"' + elem.id() + '"' +']').style('label',label);
+                        // elem.style('label',label);
+                    }
+                });
+            },
+            close: function() {
+                if(save) {
+                    graphPage.legendEditor.legendLabelEditor.updateLegendLabel(graphPage.legendEditor.legendLabelEditor.legend_label['label']);
+                }
+                $('.gs-sidebar-nav').removeClass('active');
+                $('#legendEditorSideBar').addClass('active');
+            }
         },
         nodeLegendEditor: {
             node_legend: {},
