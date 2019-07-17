@@ -509,3 +509,70 @@ def edges_difference(db_session, graph_1_id=None, graph_2_id=None):
 		filter(sub_q.c.name == None)
 	total = query.count()
 	return total, query.all()
+
+
+@with_session
+def nodes_subquery(db_session, graph_1_id=None, graph_2_id=None, operation=None):
+	alias_node = aliased(Node)
+	if operation == 'i':
+		query = db_session.query(Node, alias_node)
+		if graph_1_id is not None and graph_2_id is not None:
+			query = query.filter(Node.graph_id == graph_1_id). \
+				join(alias_node, Node.name == alias_node.name). \
+				filter(alias_node.graph_id == graph_2_id)
+			return query.subquery()
+	else:
+		graph1_query = db_session.query(Node).filter(Node.graph_id == graph_1_id)
+		graph2_query = db_session.query(Node).filter(Node.graph_id == graph_2_id)
+		sub_q = graph2_query.subquery()
+
+		query = graph1_query.outerjoin(sub_q, sub_q.c.name == Node.name). \
+			filter(sub_q.c.name == None)
+		return query.subquery()
+
+@with_session
+def edges_subquery(db_session, graph_1_id=None, graph_2_id=None, operation=None):
+	alias_edge = aliased(Edge)
+	if operation == 'intersection':
+		query = db_session.query(Edge, alias_edge)
+
+		if graph_1_id is not None and graph_2_id is not None:
+			query = query.filter(Edge.graph_id == graph_1_id). \
+				join(alias_edge, Edge.head_node_name == alias_edge.head_node_name). \
+				filter(alias_edge.graph_id == graph_2_id). \
+			filter(Edge.tail_node_name == alias_edge.tail_node_name)
+			return query.subquery
+		else:
+			graph1_query = db_session.query(Edge).filter(Edge.graph_id == graph_1_id)
+			graph2_query = db_session.query(Edge).filter(Edge.graph_id == graph_2_id)
+			sub_q = graph2_query.subquery()
+
+			query = graph1_query.outerjoin(sub_q, sub_q.c.name == Edge.name). \
+				filter(sub_q.c.name == None)
+			return query.subquery
+
+
+@with_session
+def nodes_comparison(db_session, comp_expression=None):
+	# Infix -> a 'i' ( b - c )
+	# Postfix  ->  a b c - 'i'
+
+	comp_expression = [1, 2, 5, 'd', 'i']
+	temp_stack = []
+	for item in comp_expression:
+		if item not in ['d','i']:
+			temp_stack.append(item)
+		elif item in ['d','i']:
+			query1 = temp_stack.pop()
+			query2 = temp_stack.pop()
+			if type(query1) != int:
+				query = db_session.query(Node).filter(Node.graph_id == query2)
+				sub_query = query.outerjoin(query1, query1.c.name == Node.name). \
+					filter(query1.c.name == None)
+			else:
+				sub_query = nodes_subquery(db_session, query1, query2, item)
+			temp_stack.append(sub_query)
+	query = temp_stack.pop()
+	count = query.count()
+
+	return count, query.all()

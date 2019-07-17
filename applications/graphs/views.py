@@ -16,7 +16,19 @@ from graphspace.wrappers import is_authenticated
 
 def compare_graph_page(request):
     context = RequestContext(request, {})
-    return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+    if request.GET.get('graph_1') is None and request.GET.get('graph_2') is None \
+            and request.GET.get('operation') is None:
+        return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+
+    if request.GET.get('graph_1') and request.GET.get('graph_2') \
+            and request.GET.get('operation'):
+        if request.GET.get('operation') == 'intersection' or request.GET.get('operation') == 'difference':
+            context['graph_1_id'] = json.dumps(request.GET.get('graph_1'))
+            context['graph_2_id'] = json.dumps(request.GET.get('graph_2'))
+            context['operation'] = json.dumps(request.GET.get('operation'))
+            return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+        else:
+            raise MethodNotAllowed(request)
 
 
 def compare_graphs(request):

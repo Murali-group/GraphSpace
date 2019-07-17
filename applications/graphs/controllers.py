@@ -596,6 +596,9 @@ def get_graph_comparison(request, graph_1, graph_2, operation):
 
 
 def get_graphs_intersection(request, graph_1, graph_2):
+	# calling nodes_comparison function for testing purpose only
+	# db.nodes_comparison(request.db_session,)
+
 	node_data = db.nodes_intersection(request.db_session, graph_1, graph_2)
 	edge_data = db.edges_intersection(request.db_session, graph_1, graph_2)
 	return node_data, edge_data
