@@ -4,13 +4,9 @@
 
 var compareGraphPage = {
     cyGraph: undefined,
-    cyGraph2: undefined,
-    graph_1_id: undefined,
-    graph_2_id: undefined,
-    graph_json_1: undefined,
-    style_json_1: undefined,
-    graph_json_2: undefined,
-    style_json_2: undefined,
+    graph_ids: [],
+    graphs_json: [],
+    styles_json: [],
     common_nodes: undefined,
     edge_name_to_id: {},
     timeout: null,
@@ -251,7 +247,7 @@ var compareGraphPage = {
                 item['data']['parent'] = graph_json['elements']['nodes'][len]['data']['id'];
             _.each(common_nodes, function (innerNode) {
                 if (innerNode.length)
-                    innerNode = (innerNode[0]['graph_id'] == compareGraphPage.graph_2_id) ? innerNode[0] : innerNode[1];
+                    innerNode = (innerNode[0]['graph_id'] == compareGraphPage.graph_ids[1]) ? innerNode[0] : innerNode[1];
                 if (item['data']['label'] == innerNode['label']) {
                     if (!common_id) {
                         common_id = item['data']['id'];
@@ -264,20 +260,20 @@ var compareGraphPage = {
         graph_json['elements']['nodes'][len + 1]['data']['parent'] = 'graph_2';
     },
     compareGraphs: function () {
-        graph_1_id = compareGraphPage.graph_1_id = $('#dropdownMenu1').attr('value');
-        graph_2_id = compareGraphPage.graph_2_id = $('#dropdownMenu2').attr('value');
+        graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
+        graph_2_id = compareGraphPage.graph_ids[1] = $('#dropdownMenu2').attr('value');
 
         operation = $('#operatorMenu1').attr('value');
-        apis.graphs.getByID(compareGraphPage.graph_1_id,
+        apis.graphs.getByID(compareGraphPage.graph_ids[0],
             successCallback = function (response) {
                 // This method is called when graphs are successfully fetched.
-                compareGraphPage.graph_json_1 = response['graph_json'];
-                compareGraphPage.style_json_1 = response['style_json'];
-                apis.graphs.getByID(compareGraphPage.graph_2_id,
+                compareGraphPage.graphs_json[0] = response['graph_json'];
+                compareGraphPage.styles_json[0] = response['style_json'];
+                apis.graphs.getByID(compareGraphPage.graph_ids[1],
                     successCallback = function (response) {
                         // This method is called when graphs are successfully fetched.
-                        compareGraphPage.graph_json_2 = response['graph_json'];
-                        compareGraphPage.style_json_2 = response['style_json'];
+                        compareGraphPage.graphs_json[1] = response['graph_json'];
+                        compareGraphPage.styles_json[1] = response['style_json'];
                         compareGraphPage.compareGraphHelper();
                         $('#dropdownMenu1').parent().find('a[row_id="'+ graph_1_id +'"]').click();
                         $('#dropdownMenu2').parent().find('a[row_id="'+ graph_2_id +'"]').click();
@@ -394,7 +390,7 @@ var compareGraphPage = {
     },
     compareGraphHelper: function () {
         operation = $('#operatorMenu1').attr('value');
-        if (operation && compareGraphPage.graph_1_id && compareGraphPage.graph_2_id) {
+        if (operation && compareGraphPage.graph_ids[0] && compareGraphPage.graph_ids[1]) {
             $('#nodes-table > thead').find("th").remove();
             $('#edges-table > thead').find("th").remove();
             $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph 1</h4></th>');
@@ -404,8 +400,8 @@ var compareGraphPage = {
             $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph 2</h4></th>');
 
             apis.compare.get({
-                    'graph_1_id': compareGraphPage.graph_1_id,
-                    'graph_2_id': compareGraphPage.graph_2_id,
+                    'graph_1_id': compareGraphPage.graph_ids[0],
+                    'graph_2_id': compareGraphPage.graph_ids[1],
                     'operation': operation
                 },
                 successCallback = function (response) {
@@ -413,13 +409,13 @@ var compareGraphPage = {
                     compareGraphPage.common_nodes = response['nodes'];
 
 
-                    compareGraphPage.setGraph0Groups(compareGraphPage.graph_json_1, response['nodes']);
-                    compareGraphPage.setGraph1Groups(compareGraphPage.graph_json_2, response['nodes']);
-                    compareGraphPage.graph_json_1['elements']['nodes'] = compareGraphPage.graph_json_1['elements']['nodes'].concat(compareGraphPage.graph_json_2['elements']['nodes']);
-                    compareGraphPage.graph_json_1['elements']['edges'] = compareGraphPage.graph_json_1['elements']['edges'].concat(compareGraphPage.graph_json_2['elements']['edges']);
-                    compareGraphPage.style_json_1['style'] = compareGraphPage.style_json_1['style'].concat(compareGraphPage.style_json_2['style']);
+                    compareGraphPage.setGraph0Groups(compareGraphPage.graphs_json[0], response['nodes']);
+                    compareGraphPage.setGraph1Groups(compareGraphPage.graphs_json[1], response['nodes']);
+                    compareGraphPage.graphs_json[0]['elements']['nodes'] = compareGraphPage.graphs_json[0]['elements']['nodes'].concat(compareGraphPage.graphs_json[1]['elements']['nodes']);
+                    compareGraphPage.graphs_json[0]['elements']['edges'] = compareGraphPage.graphs_json[0]['elements']['edges'].concat(compareGraphPage.graphs_json[1]['elements']['edges']);
+                    compareGraphPage.styles_json[0]['style'] = compareGraphPage.styles_json[0]['style'].concat(compareGraphPage.styles_json[1]['style']);
 
-                    compareGraphPage.cyGraph = compareGraphPage.constructCytoscapeGraph(compareGraphPage.graph_json_1, compareGraphPage.style_json_1);
+                    compareGraphPage.cyGraph = compareGraphPage.constructCytoscapeGraph(compareGraphPage.graphs_json[0], compareGraphPage.styles_json[0]);
 
                     compareGraphPage.populateNodeData(response['nodes']);
                     compareGraphPage.populateEdgeData(response['edges']);
