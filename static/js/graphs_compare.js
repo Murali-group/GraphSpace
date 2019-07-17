@@ -202,6 +202,7 @@ var compareGraphPage = {
             'border-color':color,
         });
         compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").style({'background-color': color, 'border-color': color});
+        compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").connectedEdges().style({'line-color': color});
         compareGraphPage.cyGraph.filter("node[id='graph_1']").style({'background-opacity': 0, 'font-size': '1px'});
         compareGraphPage.cyGraph.filter("node[id='graph_2']").style({'background-opacity': 0, 'font-size': '1px'});
         compareGraphPage.cyGraph.filter("node[id='common_1']").style({'background-opacity': 0, 'font-size': '1px'});
@@ -263,8 +264,9 @@ var compareGraphPage = {
         graph_json['elements']['nodes'][len + 1]['data']['parent'] = 'graph_2';
     },
     compareGraphs: function () {
-        compareGraphPage.graph_1_id = $('#dropdownMenu1').attr('value');
-        compareGraphPage.graph_2_id = $('#dropdownMenu2').attr('value');
+        graph_1_id = compareGraphPage.graph_1_id = $('#dropdownMenu1').attr('value');
+        graph_2_id = compareGraphPage.graph_2_id = $('#dropdownMenu2').attr('value');
+
         operation = $('#operatorMenu1').attr('value');
         apis.graphs.getByID(compareGraphPage.graph_1_id,
             successCallback = function (response) {
