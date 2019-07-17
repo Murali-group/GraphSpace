@@ -53,7 +53,6 @@ var compareGraphPage = {
             if (compareGraphPage.cyGraph) {
                 compareGraphPage.setNodesColor('graph_1', event.color.toString());
                 compareGraphPage.setNodesColor('common_1', $('#operatorcolorpicker').val());
-                compareGraphPage.setNodesColor('common_2', $('#operatorcolorpicker').val());
             }
         });
         $('#colorpicker2').colorpicker();
@@ -63,7 +62,6 @@ var compareGraphPage = {
             if (compareGraphPage.cyGraph) {
                 compareGraphPage.setNodesColor('graph_2', event.color.toString());
                 compareGraphPage.setNodesColor('common_1', $('#operatorcolorpicker').val());
-                compareGraphPage.setNodesColor('common_2', $('#operatorcolorpicker').val());
             }
         });
         $('#operatorcolorpicker').colorpicker();
@@ -71,7 +69,6 @@ var compareGraphPage = {
             $('#operatorcolorpicker').css('background-color', event.color.toString());
             $('#operatorcolorpicker').val(event.color.toString());
             compareGraphPage.setNodesColor('common_1', event.color.toString());
-            compareGraphPage.setNodesColor('common_2', event.color.toString());
         });
         if ( graph_1_id && graph_2_id && operation ){
             $('#dropdownMenu1').attr('value', graph_1_id);
@@ -202,7 +199,6 @@ var compareGraphPage = {
         compareGraphPage.cyGraph.filter("node[id='graph_1']").style({'background-opacity': 0, 'font-size': '1px'});
         compareGraphPage.cyGraph.filter("node[id='graph_2']").style({'background-opacity': 0, 'font-size': '1px'});
         compareGraphPage.cyGraph.filter("node[id='common_1']").style({'background-opacity': 0, 'font-size': '1px'});
-        compareGraphPage.cyGraph.filter("node[id='common_2']").style({'background-opacity': 0, 'font-size': '1px'});
     },
     setGraph0Groups: function (graph_json, common_nodes) {
         const len = graph_json['elements']['nodes'].length;
@@ -242,7 +238,6 @@ var compareGraphPage = {
                 'name': 'Graph 2'
             }
         };
-        graph_json['elements']['nodes'][len + 1] = {'data': {'id': 'common_2', 'label': 'Common', 'name': 'Common'}};
         _.each(graph_json['elements']['nodes'], function (item) {
             if (item['data']['id'] != graph_json['elements']['nodes'][len]['data']['id'])
                 item['data']['parent'] = graph_json['elements']['nodes'][len]['data']['id'];
@@ -250,12 +245,6 @@ var compareGraphPage = {
                 if (innerNode.length)
                     innerNode = (innerNode[0]['graph_id'] == compareGraphPage.graph_ids[1]) ? innerNode[0] : innerNode[1];
                 if (item['data']['label'] == innerNode['label']) {
-                    if (!common_id) {
-                        common_id = item['data']['id'];
-                        compareGraphPage.common_nodes['parent2'] = common_id;
-                    }
-                    item['data']['parent'] = 'common_2';
-
                     duplicate_nodes.push(item);
                 }
             });
@@ -263,7 +252,7 @@ var compareGraphPage = {
         _.each(duplicate_nodes, function (node) {
             graph_json['elements']['nodes'].splice(graph_json['elements']['nodes'].indexOf(node),1);
         });
-        graph_json['elements']['nodes'][len - duplicate_nodes.length + 1]['data']['parent'] = 'graph_2';
+        graph_json['elements']['nodes'][len - duplicate_nodes.length]['data']['parent'] = 'graph_2';
     },
     compareGraphs: function () {
         graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
@@ -316,11 +305,6 @@ var compareGraphPage = {
             'animate': false,
             'padding': 10
         }).run();
-        compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").layout({
-            'name': 'grid',
-            'animate': false,
-            'padding': 10
-        }).run();
 
         compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").layout({
             'name': 'grid',
@@ -337,11 +321,6 @@ var compareGraphPage = {
         y_max = Math.max(y_max.value, compareGraphPage.cyGraph.filter("node[parent='" + 'graph_2' + "']").max(function (ele, i, eles) {
             return ele.position()['y'];
         }).value);
-        let cm_len_2 = compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").max(function (ele, i, eles) {
-            return ele.position()['x'];
-        }).value - compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").min(function (ele, i, eles) {
-            return ele.position()['x'];
-        }).value;
 
         let cm_len_1 = compareGraphPage.cyGraph.filter("node[parent='" + 'common_1' + "']").max(function (ele, i, eles) {
             return ele.position()['x'];
@@ -354,15 +333,6 @@ var compareGraphPage = {
                 let position = {};
                 position.x = node.position('x') + x_max.value + 100;
                 position.y = node.position('y');
-                return position;
-            }
-        }).run();
-
-        compareGraphPage.cyGraph.filter("node[parent='" + 'common_2' + "']").layout({
-            'name': 'grid', 'animate': false, 'padding': 10, transform: (node) => {
-                let position = {};
-                position.x = node.position('x') + Math.abs(cm_len_2 / 2 - x_max.value) + 100;
-                position.y = node.position('y') + y_max + 150;
                 return position;
             }
         }).run();
@@ -445,7 +415,6 @@ var compareGraphPage = {
                     compareGraphPage.setNodesColor('graph_2', $('#colorpicker2').val());
 
                     compareGraphPage.setNodesColor('common_1', $('#operatorcolorpicker').val());
-                    compareGraphPage.setNodesColor('common_2', $('#operatorcolorpicker').val());
 
                     $('#nodes-table').DataTable().draw();
                     $('#edges-table').DataTable().draw();
