@@ -234,6 +234,7 @@ var compareGraphPage = {
     setGraph1Groups: function (graph_json, common_nodes) {
         const len = graph_json['elements']['nodes'].length;
         var common_id = undefined;
+        var duplicate_nodes = [];
         graph_json['elements']['nodes'][len] = {
             'data': {
                 'id': 'graph_2',
@@ -254,10 +255,15 @@ var compareGraphPage = {
                         compareGraphPage.common_nodes['parent2'] = common_id;
                     }
                     item['data']['parent'] = 'common_2';
+
+                    duplicate_nodes.push(item);
                 }
             });
         });
-        graph_json['elements']['nodes'][len + 1]['data']['parent'] = 'graph_2';
+        _.each(duplicate_nodes, function (node) {
+            graph_json['elements']['nodes'].splice(graph_json['elements']['nodes'].indexOf(node),1);
+        });
+        graph_json['elements']['nodes'][len - duplicate_nodes.length + 1]['data']['parent'] = 'graph_2';
     },
     compareGraphs: function () {
         graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
@@ -370,6 +376,9 @@ var compareGraphPage = {
             }
         }).run();
     },
+    CommonElementsHelper: function(nodes){
+
+    },
     setCommonElements: function (nodes) {
         $.each(nodes, function (i, node) {
             if (node.length > 1) {
@@ -419,7 +428,7 @@ var compareGraphPage = {
 
                     compareGraphPage.populateNodeData(response['nodes']);
                     compareGraphPage.populateEdgeData(response['edges']);
-                    compareGraphPage.setCommonElements(response['nodes']);
+                    // compareGraphPage.setCommonElements(response['nodes']);
                     compareGraphPage.cyGraph.ready(function () {                 // Wait for cytoscape to actually load and map eles
                         compareGraphPage.cyGraph.nodes().forEach(function (ele) { // Your function call inside
                             console.log("loop", ele.id(), ele.position());
