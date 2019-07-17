@@ -530,6 +530,12 @@ var graphPage = {
 
        $('#saveOnExitLegendBtn').click(function () {
             graphPage.saveLayout($('#saveOnExitLegendNameInput').val(), '#saveOnExitLegendModal');
+
+            var legendContainer = document.getElementById("cyLegendContainer");
+            var graphContainer = document.getElementById("cyGraphContainer");
+            legendContainer.style.width = "20%";
+            graphContainer.style.width = "80%";
+
             if('legend' in style_json){
                 graphPage.legendEditor.removeBinLegend();
                 graphPage.legendEditor.removeEditLegend();
@@ -541,6 +547,10 @@ var graphPage = {
         });
 
         $('#legendEditorBtn').click(function () {
+            var legendContainer = document.getElementById("cyLegendContainer");
+            var graphContainer = document.getElementById("cyGraphContainer");
+            legendContainer.style.width = "25%";
+            graphContainer.style.width = "75%";
             if('legend' in style_json){
                 graphPage.legendEditor.init();
             }
@@ -557,6 +567,10 @@ var graphPage = {
         });
 
         $('#exitLegendBtn').click(function () {
+            var legendContainer = document.getElementById("cyLegendContainer");
+            var graphContainer = document.getElementById("cyGraphContainer");
+            legendContainer.style.width = "20%";
+            graphContainer.style.width = "80%";
             if('legend' in style_json){
                 graphPage.legendEditor.removeBinLegend();
                 graphPage.legendEditor.removeEditLegend();
@@ -1122,17 +1136,29 @@ var graphPage = {
             }
         });
 
+        for (var i=0; i<node_legend_count; i++){
+            cy.add([
+                {group: 'nodes', data: {id: 'p'+i}}
+            ]).style({
+                'background-color': 'white',
+                'border-color': 'white',
+                'padding':'5px',
+                'padding-relative-to':'height'
+            });
+            parentId = i;
+        }
+
         var k = 10;
         for (var i=0; i<node_legend_count; i++){
             cy.add([
-                {group: 'nodes', data: { id: 'n'+i}, position: {y:k+10, x:20}}
+                {group: 'nodes', data: { id: 'n'+i, parent: 'p'+i}, position: {y:k+10, x:20}}
             ]).style({
             'background-color': node_legend[Object.keys(node_legend)[i]]['background-color'],
             'label': Object.keys(node_legend)[i],
             'font-size': '14px',
             'shape': node_legend[Object.keys(node_legend)[i]]['shape'].toLowerCase(),
-            'width':'20px',
-            'height':'20px',
+            'width':'15px',
+            'height':'15px',
             'text-wrap': 'wrap',
             'text-max-width': '150px',
             'text-margin-x': '10px',
@@ -1142,9 +1168,21 @@ var graphPage = {
             k = k+40;
         }
 
+        for (var i=parentId+1; i<edge_legend_count+parentId+1; i++){
+            cy.add([
+                {group: 'nodes', data: {id: 'p'+i}}
+            ]).style({
+                'background-color': 'white',
+                'border-color': 'white',
+                'padding':'5px',
+                'padding-relative-to':'height'
+            });
+        }
+
+        var x = parentId+1;
         for (var i=0; i<edge_legend_count; i++){
             cy.add([
-                {group: 'nodes', data: { id: 'en'+i}, position: {y:k+10, x:1}}
+                {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y:k+10, x:1}}
             ]).style({
                 'background-color': 'white',
                 'width':'1px',
@@ -1152,7 +1190,7 @@ var graphPage = {
             });
 
             cy.add([
-                {group: 'nodes', data: { id: 'en'+i+1}, position: {y:k+10, x:35}}
+                {group: 'nodes', data: { id: 'en'+i+1, parent: 'p'+x}, position: {y:k+10, x:35}}
             ]).style({
                 'background-color': 'white',
                 'width':'1px',
@@ -1178,6 +1216,7 @@ var graphPage = {
             });
 
             k=k+40;
+            x=x+1;
         }
         return cy;
     },
@@ -1185,43 +1224,49 @@ var graphPage = {
         var target = evt.cyTarget;
 
         try{
-            if(target.isNode()){
-                graphPage.cyLegend.style().selector('node:selected').style({
-                    'overlay-color': 'red',
-                    'overlay-padding': 8,
-                    'overlay-opacity': 0.3
+            if(target.isParent()) {
+                graphPage.cyLegend.style().selector(':parent:selected').style({
+                    'overlay-color': 'grey',
+                    'overlay-padding': 0,
+                    'overlay-opacity': 0.2
                 }).update();
 
-                legend_shape = target.style()['shape'];
-                legend_color = target.style()['background-color'];
-                _.each(graphPage.cyGraph.nodes(), function (node) {
-                    if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
-                        graphPage.cyGraph.edges().unselect();
-                        node.select();
+                Object.keys(target.children()).forEach(function(key) {
+                    // console.log(key, target.children()[key].data().id);
+                    nodeId = target.children()[key].data().id;
+                    if(nodeId.slice(0,1) == 'n'){
+                        targetNode = graphPage.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']');
+                        legend_shape = targetNode.style()['shape'];
+                        legend_color = targetNode.style()['background-color'];
+                        _.each(graphPage.cyGraph.nodes(), function (node) {
+                            if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
+                                graphPage.cyGraph.edges().unselect();
+                                node.select();
+                            }
+                            else
+                                node.unselect();
+                        });
                     }
-                    else
-                        node.unselect();
-                });
-            }
+                    if(nodeId.slice(0,2) == 'en' && nodeId.length == 3){
+                        targetEdge=graphPage.cyLegend.edges('[id=' + '"' + 'e' + nodeId[2] + '"' +']');
+                        legend_style = targetEdge.style()['line-style'];
+                        legend_color = targetEdge.style()['line-color'];
+                        arrow_shape = targetEdge.style()['target-arrow-shape'];
+                        _.each(graphPage.cyGraph.edges(), function (edge) {
+                            if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
+                                graphPage.cyGraph.nodes().unselect();
+                                edge.select();
+                            }
+                            else{
+                                edge.unselect();
+                            }
+                        });
+                    }
+                    // if(nodeId.slice(0,4)=='edit'){
+                    //     graphPage.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']').style('background-color','grey');
+                    //     graphPage.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']').style('background-opacity','0.1');
 
-            if(target.isEdge()){
-                graphPage.cyLegend.style().selector('edge:selected').style({
-                    'overlay-color': 'red',
-                    'overlay-padding': 8,
-                    'overlay-opacity': 0.3
-                }).update();
-
-                legend_style = target.style()['line-style'];
-                legend_color = target.style()['line-color'];
-                arrow_shape = target.style()['target-arrow-shape'];
-                _.each(graphPage.cyGraph.edges(), function (edge) {
-                    if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
-                        graphPage.cyGraph.nodes().unselect();
-                        edge.select();
-                    }
-                    else{
-                        edge.unselect();
-                    }
+                    // }
                 });
             }
         }
@@ -1646,14 +1691,14 @@ var graphPage = {
             var total_elements = edge_count + actual_node_count;
 
             var k=10;
-            for(var i=0;i<total_elements;i++) {
+            for(var i=0;i<total_elements/2;i++) {
                 graphPage.cyLegend.add([
-                    {group: 'nodes', data: { id: 'rm'+i}, position: {y:k+10, x:180}}
+                    {group: 'nodes', data: { id: 'rm'+i, parent:'p'+i}, position: {y:k+10, x:180}}
                 ]).style({
                     'background-image': '../images/trash.png',
                     'background-color': 'white',
-                    'width':'20px',
-                    'height':'25px',
+                    'width':'15px',
+                    'height':'20px',
                     'shape': 'rectangle'
                 });
                 k=k+40;
@@ -1666,14 +1711,14 @@ var graphPage = {
             var total_elements = edge_count + actual_node_count;
 
             var k=10;
-            for(var i=0;i<total_elements/2;i++) {
+            for(var i=0;i<total_elements/3;i++) {
                 graphPage.cyLegend.add([
-                    {group: 'nodes', data: { id: 'edit'+i}, position: {y:k+10, x:220}}
+                    {group: 'nodes', data: { id: 'edit'+i, parent:'p'+i}, position: {y:k+10, x:220}}
                 ]).style({
                     'background-image': '../images/edit_icon.png',
                     'background-color': 'white',
-                    'width':'28px',
-                    'height':'28px',
+                    'width':'20px',
+                    'height':'20px',
                     'shape': 'rectangle'
                 });
                 k=k+40;
