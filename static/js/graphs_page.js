@@ -528,8 +528,43 @@ var graphPage = {
             graphPage.saveLayout($('#saveLayoutNameInput').val(), '#saveLayoutModal');
         });
 
+        $('input[name="checkForCurrentGraph"]').click(function () {
+            $('.check').not(this).prop('checked', false);
+            if($('#selectLayoutDropdown').length)
+                $('#selectLayoutDropdown').remove();
+        });
+
+        $('input[name="checkForUserLayout"]').click(function () {
+            $('.check').not(this).prop('checked', false);
+            if(!($('#selectLayoutDropdown').length)){
+                params = {}
+                params["is_shared"] = 0;
+                params["owner_email"] = $('#UserEmail').val();
+                apis.layouts.get($('#GraphID').val(), params,
+                    successCallback = function (response) {
+                        var s = $("<select></select>").attr("id", 'selectLayoutDropdown').attr("name", 'selectLayoutDropdown');
+                        _.each(response.layouts, function (layout) {
+                            $('<option />', {value: JSON.stringify(layout), text: layout.name}).appendTo(s);
+                        });
+                        s.appendTo('#userPrivateLayoutDropdown');
+                    },
+                    errorCallback = function () {
+                        console.log('error!');
+                    }
+                );
+            }
+        });
+
        $('#saveOnExitLegendBtn').click(function () {
-            graphPage.saveLayout($('#saveOnExitLegendNameInput').val(), '#saveOnExitLegendModal');
+            try {
+                layoutData = document.getElementById('selectLayoutDropdown').value;
+                layout_id = JSON.parse(layoutData).id;
+                layout_style_json = JSON.parse(layoutData).style_json;
+                graphPage.saveLegendInUserLayout(layout_id, layout_style_json, '#saveOnExitLegendModal')
+            }
+            catch(e){
+                graphPage.saveLegendInGraph('#saveOnExitLegendModal');
+            }
 
             var legendContainer = document.getElementById("cyLegendContainer");
             var graphContainer = document.getElementById("cyGraphContainer");
@@ -562,6 +597,11 @@ var graphPage = {
         });
 
        $('#exitLegendEditorBtn').click(function () {
+            $("#checkForCurrentGraph"). prop("checked", true);
+            $("#checkForUserLayout"). prop("checked", false);
+            if($('#selectLayoutDropdown').length)
+                $('#selectLayoutDropdown').remove();
+
             $('#exitLegendBtn').removeClass('hidden');
             $('#saveOnExitLegendModal').modal('show');
         });
@@ -653,7 +693,8 @@ var graphPage = {
                     positions: JSON.parse(response['positions_json'])
                 });
                 style_json = JSON.parse(response['style_json']);
-                graphPage.constructLegend(JSON.parse(response['style_json']));
+                if('legend' in JSON.parse(response['style_json']))
+                    graphPage.constructLegend(JSON.parse(response['style_json']));
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
                 graphPage.defaultLayoutWidget.init(response['is_shared']);
             },
@@ -723,6 +764,58 @@ var graphPage = {
             layoutID.positions = corrected_positions;
         }
         graphPage.cyGraph.layout(layoutID);
+
+    },
+    saveLegendInUserLayout: function (layoutId, styleJSON, modalNameId, callback) {
+        graphPage.cyGraph.elements().unselect();
+        graphPage.cyLegend.elements().unselect();
+        apis.layouts.update($('#GraphID').val(), layoutId, {
+                "style_json": {
+                    "format_version": "1.0",
+                    "generated_by": "graphspace-2.0.0",
+                    "target_cytoscapejs_version": "~2.7",
+                    "style":  JSON.parse(styleJSON).style,
+                    "legend": style_json['legend']
+                }
+            },
+            successCallback = function (response) {
+                $(modalNameId).modal('toggle');
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+               $.notify({
+                    message: response.responseJSON.error_message
+                }, {
+                    type: 'danger'
+            });
+        });
+
+    },
+    saveLegendInGraph: function (modalNameId, callback) {
+        graphPage.cyGraph.elements().unselect();
+        graphPage.cyLegend.elements().unselect();
+
+        positions_json = cytoscapeGraph.getNodePositions(graphPage.cyGraph);
+        cyGraph_style_json = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
+
+        apis.graphs.update($('#GraphID').val(), {
+                "style_json": {
+                    "format_version": "1.0",
+                    "generated_by": "graphspace-2.0.0",
+                    "target_cytoscapejs_version": "~2.7",
+                    "style": cyGraph_style_json,
+                    "legend": style_json['legend']
+                }
+            },
+            successCallback = function (response) {
+                $(modalNameId).modal('toggle');
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+               $.notify({
+                    message: response.responseJSON.error_message
+                }, {
+                    type: 'danger'
+            });
+        });
 
     },
     saveLayout: function (layoutName, modalNameId, callback) {
@@ -1119,7 +1212,6 @@ var graphPage = {
         This function will create a legend graph(using cytoscape.js library) from the legend data
         in the style_json object.
         */
-
         var node_legend = styleJSON["legend"]['nodes'];
         var edge_legend = styleJSON["legend"]['edges'];
         var node_legend_count = Object.keys(node_legend).length;
@@ -1136,6 +1228,7 @@ var graphPage = {
             }
         });
 
+        var parentId = 0;
         for (var i=0; i<node_legend_count; i++){
             cy.add([
                 {group: 'nodes', data: {id: 'p'+i}}
@@ -1168,7 +1261,15 @@ var graphPage = {
             k = k+40;
         }
 
-        for (var i=parentId+1; i<edge_legend_count+parentId+1; i++){
+    // Below if else condition is to tackle the problem when node legend doesnt exist and only edge legend is there and vice-versa
+        if(node_legend_count  == 0){
+            var x = parentId;
+        }
+        else {
+            var x = parentId+1;
+        }
+
+        for (var i=x; i<edge_legend_count+x; i++){
             cy.add([
                 {group: 'nodes', data: {id: 'p'+i}}
             ]).style({
@@ -1179,7 +1280,6 @@ var graphPage = {
             });
         }
 
-        var x = parentId+1;
         for (var i=0; i<edge_legend_count; i++){
             cy.add([
                 {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y:k+10, x:1}}

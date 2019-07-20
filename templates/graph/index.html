@@ -117,18 +117,22 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel">Save Legend in a new Layout</h4>
+                        <h4 class="modal-title" id="myModalLabel">Save Legend</h4>
                     </div>
                     <div class="modal-body">
 
                         <div class="layout_fields">
-                            <div class="control-group">
-                                <label for="legendNameInput">Layout Name</label>
-                                <input id="saveOnExitLegendNameInput" class="form-control" type="text" name="legend_name"
-                                       autocomplete="off"/>
-                            </div>
-                            <br>
                             <div class="form-group">
+                                <div class="checkbox">
+                                    <label><input type="checkbox" name="checkForCurrentGraph" class="check" id="checkForCurrentGraph">Save legend data in the current graph</label>
+                                </div>
+                                <div class="checkbox">
+                                    <label><input type="checkbox" name="checkForUserLayout" class="check" id="checkForUserLayout">Save legend data in the user layout</label>
+                                </div>
+                                <div id="userPrivateLayoutDropdown">
+
+                                </div>
+                                <br>
                                 <button name="saveOnExitLegendBtn" id="saveOnExitLegendBtn"
                                         class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save and Exit
                                 </button>
