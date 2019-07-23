@@ -177,7 +177,7 @@ var compareGraphPage = {
                 $(".compare-dropdown").append('<li role="separator" class="divider"></li>');
                 $(".compare-dropdown").append('<li class="dropdown-header">Public Graphs </li>');
                 $(".compare-dropdown").attr('publicgraphs', 'true');
-            } else if ($('#UserEmail').val() != item.owner_email && !item.owner_email.startsWith("public") && $(".compare-dropdown[mygraphs='false']").length) {
+            } else if ($('#UserEmail').val() != item.owner_email && !item.owner_email.startsWith("public") && $(".compare-dropdown[sharedgraphs='false']").length) {
                 $(".compare-dropdown").append('<li role="separator" class="divider"></li>');
                 $(".compare-dropdown").append('<li class="dropdown-header">Shared Graphs </li>');
                 $(".compare-dropdown").attr('sharedgraphs', 'true');
