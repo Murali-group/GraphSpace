@@ -2506,6 +2506,10 @@ var graphPage = {
             });
 
            $('#saveOnExitLegendBtn').click(function () {
+                // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
+                // the ids of editlegend and binlegend
+                graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
+                graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
                 try {
                     layoutData = document.getElementById('selectLayoutDropdown').value;
                     layout_id = JSON.parse(layoutData).id;
@@ -2542,6 +2546,10 @@ var graphPage = {
             });
 
             $('#exitLegendBtn').click(function () {
+                // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
+                // the ids of editlegend and binlegend
+                graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
+                graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
                 graphPage.legend.resizeLegendInterface('20%', '80%');
                 if('legend' in style_json){
                     graphPage.legend.legendEditor.removeBinLegend();
@@ -3023,7 +3031,7 @@ var graphPage = {
                     style_json['legend']['nodes'][n_label]['background-color'] = n_color;
 
                     graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                    graphPage.legend.cyLegend=graphPage.legend.constructLegend(style_json);
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
                     graphPage.legend.legendEditor.init();
                 },
                 close: function() {
@@ -3107,7 +3115,7 @@ var graphPage = {
                     style_json['legend']['edges'][e_label]['arrow-shape'] = e_arrow_shape;
 
                     graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                    graphPage.legend.cyLegend=graphPage.legend.constructLegend(style_json);
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
                     graphPage.legend.legendEditor.init();
                 },
                 close: function() {
