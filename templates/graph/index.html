@@ -13,7 +13,6 @@
     <div>
         {% include 'graph/delete_layout_modal.html' %}
         {% include 'graph/edit_layout_modal.html' %}
-        {% include 'graph/convert_html_legend_modal.html' %}
 
         <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
             <div class="modal-dialog" role="document">
@@ -271,15 +270,15 @@
                         {% include 'graph/default_sidebar.html' %}
                         {% if uid %}
                             {% include 'graph/layout_editor_sidebar.html' %}
-                            {% include 'graph/legend_editor_sidebar.html' %}
+                            {% include 'graph/legend/legend_editor_sidebar.html' %}
                         {% endif %}
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
                         {% include 'graph/change_layout_sidebar.html' %}
                         {% include 'graph/node_editor.html' %}
-                        {% include 'graph/node_legend_editor.html' %}
+                        {% include 'graph/legend/node_legend_editor.html' %}
                         {% include 'graph/edge_editor.html' %}
-                        {% include 'graph/edge_legend_editor.html' %}
-                        {% include 'graph/legend_label_editor.html' %}
+                        {% include 'graph/legend/edge_legend_editor.html' %}
+                        {% include 'graph/legend/legend_label_editor.html' %}
                         {% include 'graph/cola_option.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
