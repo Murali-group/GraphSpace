@@ -63,6 +63,12 @@ var apis = {
             apis.jsonRequest('DELETE', apis.layouts.ENDPOINT({'graph_id': graph_id}) + layout_id, undefined, successCallback, errorCallback)
         }
     },
+    compare: {
+        ENDPOINT: '/ajax/compare/',
+        get: function (data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compare.ENDPOINT, data, successCallback, errorCallback)
+        }
+    },
     logging: {
         ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
@@ -427,6 +433,8 @@ var uploadGraphPage = {
     }
 };
 
+
+
 var graphPage = {
     cyGraph: undefined,
     timeout: null,
@@ -497,7 +505,6 @@ var graphPage = {
             window.setTimeout(function () {
                 $('#cyGraphContainer').css('height', '99%');
             }, 100);
-
         });
 
         if (utils.getURLParameter('query')) {
@@ -598,7 +605,7 @@ var graphPage = {
             });
             layoutID.positions = corrected_positions;
         }
-        graphPage.cyGraph.layout(layoutID);
+        graphPage.cyGraph.layout(layoutID).run();
 
     },
     saveLayout: function (layoutName, modalNameId, callback) {
@@ -872,7 +879,7 @@ var graphPage = {
     },
     onTapGraphElement: function (evt) {
         // get target
-        var target = evt.cyTarget;
+        var target = evt.target;
         // target some element other than background (node/edge)
         if (target !== this) {
             var popup = target._private.data.popup;
@@ -1415,7 +1422,7 @@ var graphPage = {
 
             graphPage.cyGraph.on('free', function (e) {
 
-                var selected_elements = e.cyTarget.length > 1 ? graphPage.cyGraph.elements(':selected') : e.cyTarget;
+                var selected_elements = e.target.length > 1 ? graphPage.cyGraph.elements(':selected') : e.target;
                 graphPage.layoutEditor.undoRedoManager.update({
                     'action_type': 'move_node',
                     'data': {
@@ -1518,7 +1525,7 @@ var graphPage = {
                 }
             });
 
-            graphPage.cyGraph.elements().on('select, unselect', function () {
+            graphPage.cyGraph.elements().on('select unselect', function () {
                 if (graphPage.cyGraph.nodes(':selected').length > 0) {
                     $('#editSelectedNodesBtn').removeClass('disabled');
                 } else {
@@ -1998,43 +2005,6 @@ var graphPage = {
             }
             return largestK;
         },
-        applyMax: function (graph_layout) {
-            //Gets all nodes and edges up do the max value set
-            //and only renders them
-            var maxVal = parseInt($("#input_max").val());
-
-            if (!maxVal) {
-                return;
-            }
-            var newJSON = {
-                "nodes": new Array(),
-                "edges": new Array()
-            };
-
-            // List of node ids that should remain in the graph
-            var nodeNames = Array();
-
-            //Get all edges that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
-                var edge_data = graph_json.elements['edges'][i];
-                if (edge_data['data']['k'] <= maxVal) {
-                    newJSON['edges'].push(edge_data);
-                    nodeNames.push(edge_data['data']['source']);
-                    nodeNames.push(edge_data['data']['target']);
-                }
-            }
-
-            //Get all nodes that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
-                var node_data = graph_json.elements['nodes'][i];
-                if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-                    newJSON['nodes'].push(node_data);
-                }
-            }
-
-            graphPage.cyGraph.load(newJSON);
-            graphPage.filterNodesEdges.showOnlyK();
-        },
         showOnlyK: function () {
             // Returns all the id's that are > k value
             if ($("#input_k").val()) {
@@ -2367,43 +2337,6 @@ var graphPage = {
                 max: 50
             });
         },
-        applyMax: function (graph_layout) {
-            //Gets all nodes and edges up do the max value set
-            //and only renders them
-            var maxVal = parseInt($("#input_max").val());
-
-            if (!maxVal) {
-                return;
-            }
-            var newJSON = {
-                "nodes": new Array(),
-                "edges": new Array()
-            };
-
-            // List of node ids that should remain in the graph
-            var nodeNames = Array();
-
-            //Get all edges that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['edges'].length; i++) {
-                var edge_data = graph_json.elements['edges'][i];
-                if (edge_data['data']['k'] <= maxVal) {
-                    newJSON['edges'].push(edge_data);
-                    nodeNames.push(edge_data['data']['source']);
-                    nodeNames.push(edge_data['data']['target']);
-                }
-            }
-
-            //Get all nodes that meet the max quantifier
-            for (var i = 0; i < graph_json.elements['nodes'].length; i++) {
-                var node_data = graph_json.elements['nodes'][i];
-                if (nodeNames.indexOf(node_data['data']['id']) > -1) {
-                    newJSON['nodes'].push(node_data);
-                }
-            }
-
-            graphPage.cyGraph.load(newJSON);
-            graphPage.filterNodesEdges.showOnlyK();
-        },
         setBarToValueEdgeLength: function (inputId, barId) {
             /**
              * If the user enters a value greater than the max value allowed, change value of bar to max allowed value.
@@ -2472,7 +2405,7 @@ var cytoscapeGraph = {
                         title: 'edit selected nodes',
                         selector: 'node',
                         onClickFunction: function (event) {
-                            graphPage.layoutEditor.nodeEditor.open(cy.collection(cy.elements(':selected')).add(event.cyTarget).select());
+                            graphPage.layoutEditor.nodeEditor.open(cy.collection(cy.elements(':selected')).add(event.target).select());
                         },
                         hasTrailingDivider: true
                     },
@@ -2482,7 +2415,7 @@ var cytoscapeGraph = {
                         selector: 'node',
                         show: true,
                         onClickFunction: function (event) {
-                            selectAllOfTheSameType(event.cyTarget);
+                            selectAllOfTheSameType(event.target);
                         }
                     },
                     {
@@ -2491,7 +2424,7 @@ var cytoscapeGraph = {
                         selector: 'node',
                         show: true,
                         onClickFunction: function (event) {
-                            unselectAllOfTheSameType(event.cyTarget);
+                            unselectAllOfTheSameType(event.target);
                         }
                     },
                     {
@@ -2500,7 +2433,7 @@ var cytoscapeGraph = {
                         selector: 'edge',
                         show: true,
                         onClickFunction: function (event) {
-                            selectAllOfTheSameType(event.cyTarget);
+                            selectAllOfTheSameType(event.target);
                         }
                     },
                     {
@@ -2509,7 +2442,7 @@ var cytoscapeGraph = {
                         selector: 'edge',
                         show: true,
                         onClickFunction: function (event) {
-                            unselectAllOfTheSameType(event.cyTarget);
+                            unselectAllOfTheSameType(event.target);
                         }
                     }
                 ]
@@ -2813,7 +2746,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: false,
                     padding: 0
-                });
+                }).run();
         } else if (layout_name === "fill_circle") {
             collection.layout(
                 {
@@ -2821,7 +2754,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: false,
                     padding: 40
-                });
+                }).run();
         } else if (layout_name === "grid") {
             collection.layout(
                 {
@@ -2829,7 +2762,7 @@ var cytoscapeGraph = {
                     fit: false,
                     avoidOverlap: true,
                     condense: true
-                });
+                }).run();
         } else if (layout_name === "square") {
             cytoscapeGraph.runSquareLayoutOnCollection(cy, collection);
         } else if (layout_name === "horizontal") {
