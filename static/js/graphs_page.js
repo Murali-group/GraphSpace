@@ -2439,6 +2439,8 @@ var graphPage = {
     legend: {
         cyLegend: undefined,
         init: function () {
+            graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+
             var updateLegendInHtmlFormat = 0;
             $("#graphDetailsTabBtn").click(function () {
                 htmlLegendData = graph_json['data']['description'];
@@ -2474,7 +2476,25 @@ var graphPage = {
                 });
             });
 
-            graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+            $("#legendBtn").click(function(e) {
+                var legendContainer = document.getElementById("cyLegendContainer");
+                var graphContainer = document.getElementById("cyGraphContainer");
+                if (legendContainer.style.display === "none") {
+                    legendContainer.style.display = "block";
+                    legendContainer.style.width = "20%";
+                    graphContainer.style.width = "80%";
+                    document.getElementById("legendBtn").innerHTML = "Hide Legend";
+                }
+                else {
+                    legendContainer.style.display = "none";
+                    legendContainer.style.width = "0%";
+                    graphContainer.style.width = "100%";
+                    document.getElementById("legendBtn").innerHTML = "Show Legend";
+                }
+                graphPage.legend.cyLegend.elements().unselect();
+                graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+                graphPage.cyGraph.panzoom();
+            });
 
             $('input[name="checkForCurrentGraph"]').click(function () {
                 $('.check').not(this).prop('checked', false);
@@ -2509,7 +2529,6 @@ var graphPage = {
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
 
-                graphPage.cyGraph.elements().unselect();
                 try {
                     layoutData = document.getElementById('selectLayoutDropdown').value;
                     layout_id = JSON.parse(layoutData).id;
@@ -2601,6 +2620,8 @@ var graphPage = {
             var graphContainer = document.getElementById("cyGraphContainer");
             legendContainer.style.width = legendContainerWidth;
             graphContainer.style.width = graphContainerWidth;
+            graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+            graphPage.cyGraph.panzoom();
         },
         saveLegendInUserLayout: function (layoutId, styleJSON, modalNameId, callback) {
             graphPage.cyGraph.elements().unselect();
@@ -2832,7 +2853,6 @@ var graphPage = {
         },
         legendEditor: {
             init: function() {
-                graphPage.cyGraph.elements().unselect();
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
                 graphPage.legend.legendEditor.constructEditLegend();

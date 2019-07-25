@@ -379,21 +379,5 @@
 
             })
         })
-
-        $("#legendBtn").click(function(e) {
-          var legendContainer = document.getElementById("cyLegendContainer");
-          var graphContainer = document.getElementById("cyGraphContainer");
-          if (legendContainer.style.display === "none") {
-            legendContainer.style.display = "block";
-            legendContainer.style.width = "20%";
-            graphContainer.style.width = "80%";
-            document.getElementById("legendBtn").innerHTML = "Hide Legend";
-        } else {
-            legendContainer.style.display = "none";
-            legendContainer.style.width = "0%";
-            graphContainer.style.width = "100%";
-            document.getElementById("legendBtn").innerHTML = "Show Legend";
-        }
-    });
     </script>
 {% endblock %}
