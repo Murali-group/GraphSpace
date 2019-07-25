@@ -2491,9 +2491,8 @@ var graphPage = {
                     graphContainer.style.width = "100%";
                     document.getElementById("legendBtn").innerHTML = "Show Legend";
                 }
+                graphPage.cyGraph.elements().unselect();
                 graphPage.legend.cyLegend.elements().unselect();
-                graphPage.cyGraph = graphPage.contructCytoscapeGraph();
-                graphPage.cyGraph.panzoom();
             });
 
             $('input[name="checkForCurrentGraph"]').click(function () {
@@ -2619,8 +2618,6 @@ var graphPage = {
             var graphContainer = document.getElementById("cyGraphContainer");
             legendContainer.style.width = legendContainerWidth;
             graphContainer.style.width = graphContainerWidth;
-            graphPage.cyGraph = graphPage.contructCytoscapeGraph();
-            graphPage.cyGraph.panzoom();
         },
         saveLegendInUserLayout: function (layoutId, styleJSON, modalNameId, callback) {
             graphPage.cyGraph.elements().unselect();
@@ -2720,7 +2717,7 @@ var graphPage = {
             var k = 10;
             for (var i=0; i<node_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'n'+i, parent: 'p'+i}, position: {y:k+10, x:20}}
+                    {group: 'nodes', data: { id: 'n'+i, parent: 'p'+i}, position: {y:k+10, x:23}}
                 ]).style({
                 'background-color': node_legend[Object.keys(node_legend)[i]]['background-color'],
                 'label': Object.keys(node_legend)[i],
@@ -2758,7 +2755,7 @@ var graphPage = {
 
             for (var i=0; i<edge_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y:k+10, x:1}}
+                    {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y:k+10, x:7}}
                 ]).style({
                     'background-color': 'white',
                     'width':'1px',
@@ -2793,6 +2790,18 @@ var graphPage = {
 
                 k=k+40;
                 x=x+1;
+            }
+
+            k=10;
+            for (var i=0; i<node_legend_count+edge_legend_count; i++){
+                cy.add([
+                    {group: 'nodes', data: { id: 'useless'+i, parent: 'p'+i}, position: {y:k+10, x:185}}
+                ]).style({
+                    'background-color': 'white',
+                    'width':'1px',
+                    'height':'1px'
+                });
+                k=k+40;
             }
             return cy;
         },
@@ -2858,6 +2867,7 @@ var graphPage = {
                 }
 
                 graphPage.legend.resizeLegendInterface('25%', '75%');
+                graphPage.cyGraph.elements().unselect();
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
                 graphPage.legend.legendEditor.constructEditLegend();
