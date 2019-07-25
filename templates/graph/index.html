@@ -358,13 +358,6 @@
     <script>
         $(document).ready(function () {
             console.log("Loading graph page");
-            if(!("legend"  in style_json)){
-                var legendContainer = document.getElementById("cyLegendContainer");
-                var graphContainer = document.getElementById("cyGraphContainer");
-                legendContainer.style.display = "none";
-                legendContainer.style.width = "0%";
-                graphContainer.style.width = "100%";
-            }
             graphPage.init();
         });
     </script>

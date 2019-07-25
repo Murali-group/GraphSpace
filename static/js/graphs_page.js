@@ -2474,9 +2474,7 @@ var graphPage = {
                 });
             });
 
-            if('legend' in style_json){
-                graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
-            }
+            graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
 
             $('input[name="checkForCurrentGraph"]').click(function () {
                 $('.check').not(this).prop('checked', false);
@@ -2510,6 +2508,8 @@ var graphPage = {
                 // the ids of editlegend and binlegend
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+
+                graphPage.cyGraph.elements().unselect();
                 try {
                     layoutData = document.getElementById('selectLayoutDropdown').value;
                     layout_id = JSON.parse(layoutData).id;
@@ -2550,6 +2550,7 @@ var graphPage = {
                 // the ids of editlegend and binlegend
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+                graphPage.cyGraph.elements().unselect();
                 graphPage.legend.resizeLegendInterface('20%', '80%');
                 if('legend' in style_json){
                     graphPage.legend.legendEditor.removeBinLegend();
@@ -2657,10 +2658,21 @@ var graphPage = {
             This function will create a legend graph(using cytoscape.js library) from the legend data
             in the style_json object.
             */
-            var node_legend = styleJSON["legend"]['nodes'];
-            var edge_legend = styleJSON["legend"]['edges'];
+            if(!('legend' in styleJSON)){
+                styleJSON['legend'] = {};
+            }
+            if(!('nodes' in styleJSON['legend'])){
+                styleJSON['legend']['nodes'] = {};
+            }
+            if(!('edges' in styleJSON['legend'])){
+                styleJSON['legend']['edges'] = {};
+            }
+
+            var node_legend = styleJSON['legend']['nodes'];
+            var edge_legend = styleJSON['legend']['edges'];
             var node_legend_count = Object.keys(node_legend).length;
             var edge_legend_count = Object.keys(edge_legend).length;
+
             var cy = cytoscape({
                 container: document.getElementById('cyLegendContainer'),
                 autolock: true,
@@ -2672,7 +2684,6 @@ var graphPage = {
 
                 }
             });
-
             var parentId = 0;
             for (var i=0; i<node_legend_count; i++){
                 cy.add([
@@ -2825,7 +2836,6 @@ var graphPage = {
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
                 graphPage.legend.legendEditor.constructEditLegend();
-
                 graphPage.legend.cyLegend.on('tap', 'node', function (evt) {
                     var bin_node = evt.cyTarget;
                     console.log( 'tapped ' + bin_node.id());
@@ -2864,13 +2874,21 @@ var graphPage = {
                 });
             },
             constructBinLegend: function() {
-                var edge_count = graphPage.legend.cyLegend.edges().length;
-                var node_count = graphPage.legend.cyLegend.nodes().length;
-                var actual_node_count = node_count - 2*edge_count;
-                var total_elements = edge_count + actual_node_count;
+                // var edge_count = graphPage.legend.cyLegend.edges().length;
+                // var node_count = graphPage.legend.cyLegend.nodes().length;
+                // console.log(edge_count, node_count);
+                // var actual_node_count = node_count - 2*edge_count;
+                // var total_elements = edge_count + actual_node_count;
+
+                var node_legend = style_json['legend']['nodes'];
+                var edge_legend = style_json['legend']['edges'];
+                var node_legend_count = Object.keys(node_legend).length;
+                var edge_legend_count = Object.keys(edge_legend).length;
+                console.log(node_legend_count, edge_legend_count);
+                var total_elements = node_legend_count + edge_legend_count;
 
                 var k=10;
-                for(var i=0;i<total_elements/2;i++) {
+                for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
                         {group: 'nodes', data: { id: 'rm'+i, parent:'p'+i}, position: {y:k+10, x:180}}
                     ]).style({
@@ -2884,13 +2902,20 @@ var graphPage = {
                 }
             },
             constructEditLegend: function() {
-                var edge_count = graphPage.legend.cyLegend.edges().length;
-                var node_count = graphPage.legend.cyLegend.nodes().length;
-                var actual_node_count = node_count - 2*edge_count;
-                var total_elements = edge_count + actual_node_count;
+                // var edge_count = graphPage.legend.cyLegend.edges().length;
+                // var node_count = graphPage.legend.cyLegend.nodes().length;
+                // var actual_node_count = node_count - 2*edge_count;
+                // var total_elements = edge_count + actual_node_count;
+
+                var node_legend = style_json['legend']['nodes'];
+                var edge_legend = style_json['legend']['edges'];
+                var node_legend_count = Object.keys(node_legend).length;
+                var edge_legend_count = Object.keys(edge_legend).length;
+                console.log(node_legend_count, edge_legend_count);
+                var total_elements = node_legend_count + edge_legend_count;
 
                 var k=10;
-                for(var i=0;i<total_elements/3;i++) {
+                for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
                         {group: 'nodes', data: { id: 'edit'+i, parent:'p'+i}, position: {y:k+10, x:220}}
                     ]).style({
