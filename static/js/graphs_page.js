@@ -2548,7 +2548,6 @@ var graphPage = {
             });
 
             $('#legendEditorBtn').click(function () {
-                graphPage.legend.resizeLegendInterface('25%', '75%');
                 if('legend' in style_json){
                     graphPage.legend.legendEditor.init();
                 }
@@ -2853,6 +2852,12 @@ var graphPage = {
         },
         legendEditor: {
             init: function() {
+                // Check if legend interface is active or not. If not, activate it first.
+                if(document.getElementById("legendBtn").innerHTML == "Show Legend"){
+                    $('#legendBtn').trigger('click');
+                }
+
+                graphPage.legend.resizeLegendInterface('25%', '75%');
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
                 graphPage.legend.legendEditor.constructEditLegend();
