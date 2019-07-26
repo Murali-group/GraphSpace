@@ -53,12 +53,6 @@ def convert_html_legend_1(graph_json,  style_json):
 	node_shape = convert_unicode_node_shape(node_shape)
 	edge_shape = convert_unicode_edge_shape(edge_shape)
 
-	print(elements_color)
-	print(node_color)
-	print(edge_color)
-	print(node_shape)
-	print(edge_shape)
-
 	legend_json = {}
 	legend_json['legend'] = {}
 	legend_json['legend']['nodes'] = {}

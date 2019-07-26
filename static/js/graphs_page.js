@@ -2437,19 +2437,30 @@ var graphPage = {
         }
     },
     legend: {
+        /**
+         * This function is called to setup the legend in graph page.
+         * It will initialize all the event listeners.
+        */
         cyLegend: undefined,
         init: function () {
             graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
 
             var updateLegendInHtmlFormat = 0;
             $("#graphDetailsTabBtn").click(function () {
+                /* This function is called when a user clicks on graph details tab.
+                 * This function will check if the graph contains HTML legend data in a particular format.
+                 * If the graph contains such HTML legend format,the variable "updateLegendInHtmlFormat"
+                 * is set to a unique value else 0 as default.
+                */
                 htmlLegendData = graph_json['data']['description'];
                 if(htmlLegendData){
                     try{
+                        //Checks if the HTML format legend data is in format1. If not throws error.
                         updateLegendInHtmlFormat = graphPage.legend.checkGraphWithHtmlLegendFormat1(htmlLegendData);
                     }
                     catch(e){
                         try{
+                            //Checks if the HTML format legend data is in format2. If not throws error.
                             updateLegendInHtmlFormat = graphPage.legend.checkGraphWithHtmlLegendFormat2(htmlLegendData);
                         }
                         catch(e){
@@ -2460,14 +2471,18 @@ var graphPage = {
             });
 
             $("#ConfirmHtmlLegendConversionBtn").click(function (){
+                /*This is the custom ajax request to convert and update the HTML format legend to JSON format*/
                 apis.graphs.update($('#GraphID').val(), {
                         'update_legend_format': updateLegendInHtmlFormat
                     },
                     successCallback = function (response) {
+                        // This method is called when the graph is successfully updated with the legend JSON format.
+                        // The option to convert and update the HTML format legend to JSON format for the grah is hidden.
                         $('#convertHtmlLegendOption').hide();
                         location.reload(true);
                     },
                     errorCallback = function (xhr, status, errorThrown) {
+                       // This method is called when error occurs while updating the graph.
                        $.notify({
                             message: response.responseJSON.error_message
                         }, {
@@ -2477,6 +2492,10 @@ var graphPage = {
             });
 
             $("#legendBtn").click(function(e) {
+                /*This function is called when user clicks either Hide Legend or Show Legend button available in the
+                * default sidebar.
+                * This function toggles the legend interface.
+                */
                 var legendContainer = document.getElementById("cyLegendContainer");
                 var graphContainer = document.getElementById("cyGraphContainer");
                 if (legendContainer.style.display === "none") {
@@ -2496,45 +2515,57 @@ var graphPage = {
             });
 
             $('input[name="checkForCurrentGraph"]').click(function () {
+               /* This method is called when the user choose to save legend in the current graph.
+                * It un-checks the other option to save the legend in a user layout and also removes
+                * the dropdown(if present) containing all the user layout to choose upon.
+                */
                 $('.check').not(this).prop('checked', false);
                 if($('#selectLayoutDropdown').length)
                     $('#selectLayoutDropdown').remove();
             });
 
             $('input[name="checkForUserLayout"]').click(function () {
+               /* This method is called when the user choose to save legend in a user layout.
+                * Once checked creates a dropdown with all the user layout to choose upon which layout to save the legend.
+                * Un-checks the other option to save the legend in the current graph.
+                */
                 $('.check').not(this).prop('checked', false);
-                if(!($('#selectLayoutDropdown').length)){
-                    params = {}
-                    params["is_shared"] = 0;
-                    params["owner_email"] = $('#UserEmail').val();
-                    apis.layouts.get($('#GraphID').val(), params,
-                        successCallback = function (response) {
-                            var s = $("<select></select>").attr("id", 'selectLayoutDropdown').attr("name", 'selectLayoutDropdown');
-                            _.each(response.layouts, function (layout) {
-                                $('<option />', {value: JSON.stringify(layout), text: layout.name}).appendTo(s);
-                            });
-                            s.appendTo('#userPrivateLayoutDropdown');
-                        },
-                        errorCallback = function () {
-                            console.log('error!');
-                        }
-                    );
-                }
+                params = {}
+                params["is_shared"] = 0;
+                params["owner_email"] = $('#UserEmail').val();
+                apis.layouts.get($('#GraphID').val(), params,
+                    successCallback = function (response) {
+                        var s = $("<select></select>").attr("id", 'selectLayoutDropdown').attr("name", 'selectLayoutDropdown');
+                        _.each(response.layouts, function (layout) {
+                            $('<option />', {value: JSON.stringify(layout), text: layout.name}).appendTo(s);
+                        });
+                        s.appendTo('#userPrivateLayoutDropdown');
+                    },
+                    errorCallback = function () {
+                        console.log('error!');
+                    }
+                );
             });
 
            $('#saveOnExitLegendBtn').click(function () {
-                // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
-                // the ids of editlegend and binlegend
+                /*This function is called when user clicks on the "save and exit" legend button available on the legend modal.*/
+
+                /*Remove legend with old ids and reconstructs legend with new ids to make it consistent with
+                the ids of editlegend and binlegend*/
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
 
                 try {
+                    // Finds the user layout in which the user wants to save the legend.
+                    // Throws error if user the user select to save the legend in the current graph. Else calls
+                    // function to save the legend in the user layout.
                     layoutData = document.getElementById('selectLayoutDropdown').value;
                     layout_id = JSON.parse(layoutData).id;
                     layout_style_json = JSON.parse(layoutData).style_json;
                     graphPage.legend.saveLegendInUserLayout(layout_id, layout_style_json, '#saveOnExitLegendModal')
                 }
                 catch(e){
+                    // Calls the function to save the legend in the current graph.
                     graphPage.legend.saveLegendInGraph('#saveOnExitLegendModal');
                 }
 
@@ -2553,6 +2584,10 @@ var graphPage = {
             });
 
            $('#exitLegendEditorBtn').click(function () {
+            /*This function is called when user clicks on the "Exit Legend Editor" legend button available on the legend editor sidebar.
+             *This function activates the save on exit legend modal which provides user the option to save legend.
+            */
+
                 $("#checkForCurrentGraph"). prop("checked", true);
                 $("#checkForUserLayout"). prop("checked", false);
                 if($('#selectLayoutDropdown').length)
@@ -2563,8 +2598,12 @@ var graphPage = {
             });
 
             $('#exitLegendBtn').click(function () {
+                /*This function is called when user clicks on the "Exit without saving" legend button available on the legend modal.
+                * This function exits the legend editor tool without saving the current available legend anywhere.
+                */
+
                 // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
-                // the ids of editlegend and binlegend
+                // the ids of editlegend and binlegend.
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
                 graphPage.cyGraph.elements().unselect();
@@ -2701,6 +2740,8 @@ var graphPage = {
 
                 }
             });
+
+            // Adds parent node for the node legend
             var parentId = 0;
             for (var i=0; i<node_legend_count; i++){
                 cy.add([
@@ -2714,10 +2755,11 @@ var graphPage = {
                 parentId = i;
             }
 
-            var k = 10;
+            // Adds node legend
+            var y_pos = 10;
             for (var i=0; i<node_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'n'+i, parent: 'p'+i}, position: {y:k+10, x:23}}
+                    {group: 'nodes', data: { id: 'n'+i, parent: 'p'+i}, position: {y: y_pos+10, x: 23}}
                 ]).style({
                 'background-color': node_legend[Object.keys(node_legend)[i]]['background-color'],
                 'label': Object.keys(node_legend)[i],
@@ -2731,10 +2773,12 @@ var graphPage = {
                 'text-valign': 'center',
                 'text-halign': 'right'
                 });
-                k = k+40;
+                y_pos = y_pos + 40;
             }
 
-        // Below if else condition is to tackle the problem when node legend doesnt exist and only edge legend is there and vice-versa
+            /*
+            Below if else condition is to tackle the problem when node legend doesnt exist and
+            only edge legend is there and vice-versa*/
             if(node_legend_count  == 0){
                 var x = parentId;
             }
@@ -2742,6 +2786,7 @@ var graphPage = {
                 var x = parentId+1;
             }
 
+            // Adds parent node for edge legend
             for (var i=x; i<edge_legend_count+x; i++){
                 cy.add([
                     {group: 'nodes', data: {id: 'p'+i}}
@@ -2753,9 +2798,10 @@ var graphPage = {
                 });
             }
 
+            // Adds edge legend
             for (var i=0; i<edge_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y:k+10, x:7}}
+                    {group: 'nodes', data: { id: 'en'+i, parent: 'p'+x}, position: {y: y_pos+10, x: 7}}
                 ]).style({
                     'background-color': 'white',
                     'width':'1px',
@@ -2763,7 +2809,7 @@ var graphPage = {
                 });
 
                 cy.add([
-                    {group: 'nodes', data: { id: 'en'+i+1, parent: 'p'+x}, position: {y:k+10, x:35}}
+                    {group: 'nodes', data: { id: 'en'+i+1, parent: 'p'+x}, position: {y: y_pos+10, x: 35}}
                 ]).style({
                     'background-color': 'white',
                     'width':'1px',
@@ -2788,24 +2834,29 @@ var graphPage = {
                    'target-arrow-color': edge_legend[Object.keys(edge_legend)[i]]['line-color']
                 });
 
-                k=k+40;
-                x=x+1;
+                y_pos = y_pos+40;
+                x = x+1;
             }
 
-            k=10;
+            // Adds a node of negligible size to make the width of the selected box consistent in all legend entries
+            y_pos=10;
             for (var i=0; i<node_legend_count+edge_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'useless'+i, parent: 'p'+i}, position: {y:k+10, x:185}}
+                    {group: 'nodes', data: { id: 'useless'+i, parent: 'p'+i}, position: {y: y_pos+10, x: 185}}
                 ]).style({
                     'background-color': 'white',
                     'width':'1px',
                     'height':'1px'
                 });
-                k=k+40;
+                y_pos = y_pos+40;
             }
+
             return cy;
         },
         onTapLegendGraphElement: function(evt) {
+            /*Selects the corresponding elements in the cyGraph whenever tapped on the parent node.*/
+
+            // get target
             var target = evt.cyTarget;
 
             try{
@@ -2816,9 +2867,11 @@ var graphPage = {
                         'overlay-opacity': 0.2
                     }).update();
 
+                    /*Iterate through all the child elements of the selected compound node and get the actual legend
+                    with its property to select the corresponding elements in the cyGraph.*/
                     Object.keys(target.children()).forEach(function(key) {
-                        // console.log(key, target.children()[key].data().id);
                         nodeId = target.children()[key].data().id;
+
                         if(nodeId.slice(0,1) == 'n'){
                             targetNode = graphPage.legend.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']');
                             legend_shape = targetNode.style()['shape'];
@@ -2847,16 +2900,11 @@ var graphPage = {
                                 }
                             });
                         }
-                        // if(nodeId.slice(0,4)=='edit'){
-                        //     graphPage.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']').style('background-color','grey');
-                        //     graphPage.cyLegend.nodes('[id=' + '"' + nodeId + '"' +']').style('background-opacity','0.1');
-
-                        // }
                     });
                 }
             }
             catch{
-                // $('#editSelectedLegendBtn').addClass('disabled');
+                console.log('error!');
             }
         },
         legendEditor: {
@@ -2871,6 +2919,10 @@ var graphPage = {
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
                 graphPage.legend.legendEditor.constructEditLegend();
+
+                /*Once a bin node(identified by id with "rm" as prefix) is tapped, all the nodes having same
+                * y-coordinate and different x-cordinate is removed.
+                */
                 graphPage.legend.cyLegend.on('tap', 'node', function (evt) {
                     var bin_node = evt.cyTarget;
                     console.log( 'tapped ' + bin_node.id());
@@ -2881,13 +2933,18 @@ var graphPage = {
                             node_pos_x = node.renderedPosition().x;
                             node_pos_y = node.renderedPosition().y;
                             if(node_pos_y == bin_pos_y && node_pos_x != bin_pos_x){
-                                graphPage.legend.cyLegend.remove(node);
-                                if(node.style()['label'] in style_json['legend']['nodes'])
+                                /*If this node contains legend label, style_json is updated first and then
+                                the node is removed*/
+                                if(node.style()['label'] in style_json['legend']['nodes']){
                                     delete style_json['legend']['nodes'][node.style()['label']];
-                                else
+                                }
+                                else{
                                     delete style_json['legend']['edges'][node.style()['label']];
+                                }
+                                graphPage.legend.cyLegend.remove(node);
                             }
                         });
+                        //finally remove the tapped bin node and then shift other nodes to occupy the vaccant space
                         graphPage.legend.cyLegend.remove(bin_node);
                         graphPage.legend.legendEditor.rearrangeLegend(bin_pos_y);
                     }
@@ -2909,23 +2966,17 @@ var graphPage = {
                 });
             },
             constructBinLegend: function() {
-                // var edge_count = graphPage.legend.cyLegend.edges().length;
-                // var node_count = graphPage.legend.cyLegend.nodes().length;
-                // console.log(edge_count, node_count);
-                // var actual_node_count = node_count - 2*edge_count;
-                // var total_elements = edge_count + actual_node_count;
-
                 var node_legend = style_json['legend']['nodes'];
                 var edge_legend = style_json['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
-                console.log(node_legend_count, edge_legend_count);
                 var total_elements = node_legend_count + edge_legend_count;
 
-                var k=10;
+                var y_pos = 10;
+                var x_pos = 180;
                 for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
-                        {group: 'nodes', data: { id: 'rm'+i, parent:'p'+i}, position: {y:k+10, x:180}}
+                        {group: 'nodes', data: { id: 'rm'+i, parent:'p'+i}, position: {y: y_pos+10, x: x_pos}}
                     ]).style({
                         'background-image': '../images/trash.png',
                         'background-color': 'white',
@@ -2933,26 +2984,21 @@ var graphPage = {
                         'height':'20px',
                         'shape': 'rectangle'
                     });
-                    k=k+40;
+                    y_pos = y_pos + 40;
                 }
             },
             constructEditLegend: function() {
-                // var edge_count = graphPage.legend.cyLegend.edges().length;
-                // var node_count = graphPage.legend.cyLegend.nodes().length;
-                // var actual_node_count = node_count - 2*edge_count;
-                // var total_elements = edge_count + actual_node_count;
-
                 var node_legend = style_json['legend']['nodes'];
                 var edge_legend = style_json['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
-                console.log(node_legend_count, edge_legend_count);
                 var total_elements = node_legend_count + edge_legend_count;
 
-                var k=10;
+                var y_pos = 10;
+                var x_pos = 220;
                 for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
-                        {group: 'nodes', data: { id: 'edit'+i, parent:'p'+i}, position: {y:k+10, x:220}}
+                        {group: 'nodes', data: { id: 'edit'+i, parent:'p'+i}, position: {y: y_pos+10, x: x_pos}}
                     ]).style({
                         'background-image': '../images/edit_icon.png',
                         'background-color': 'white',
@@ -2960,7 +3006,7 @@ var graphPage = {
                         'height':'20px',
                         'shape': 'rectangle'
                     });
-                    k=k+40;
+                    y_pos = y_pos + 40;
                 }
             },
             rearrangeLegend: function(bin_pos_y) {
@@ -3045,6 +3091,7 @@ var graphPage = {
                     $('#nodeLegendBackgroundColorPicker').on('changeColor', graphPage.legend.legendEditor.nodeLegendEditor.addNodeLegendBackgroundColor);
                 },
                 open: function() {
+                    /*Opens node legend editor. Provides option to select styles to add a new node legend */
                     graphPage.legend.legendEditor.nodeLegendEditor.init();
                     $('.gs-sidebar-nav').removeClass('active');
                     $('#nodeLegendEditorSideBar').addClass('active');
@@ -3115,6 +3162,7 @@ var graphPage = {
                     $('#edgeLegendColorPicker').on('changeColor', graphPage.legend.legendEditor.edgeLegendEditor.addEdgeLegendBackgroundColor);
                 },
                 open: function() {
+                    /*Opens edge legend editor. Provides option to select styles to add a new edge legend */
                     graphPage.legend.legendEditor.edgeLegendEditor.init();
                     $('.gs-sidebar-nav').removeClass('active');
                     $('#edgeLegendEditorSideBar').addClass('active');
