@@ -545,7 +545,7 @@ var graphPage = {
                 });
                 style_json = JSON.parse(response['style_json']);
                 if('legend' in JSON.parse(response['style_json']))
-                    graphPage.legend.constructLegend(JSON.parse(response['style_json']));
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(JSON.parse(response['style_json']));
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
                 graphPage.defaultLayoutWidget.init(response['is_shared']);
             },
@@ -3068,9 +3068,8 @@ var graphPage = {
                         if(elem.isNode() && elem.id().slice(0,2) == 'en' && elem.id().length == 4 && elem.renderedPosition().y == col_pos.y){
                             style_json['legend']['edges'][label] = {};
                             style_json['legend']['edges'][label] = style_json['legend']['edges'][elem.style()['label']];
-                            delete style_json['legend']['nodes'][elem.style()['label']];
-                            graphPage.legend.cyLegend.nodes('[id=' + '"' + elem.id() + '"' +']').style('label',label);
-                            // elem.style('label',label);
+                            delete style_json['legend']['edges'][elem.style()['label']];
+                            elem.style('label',label);
                         }
                     });
                 },
