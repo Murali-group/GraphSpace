@@ -2556,9 +2556,6 @@ var graphPage = {
            $('#saveOnExitLegendBtn').click(function () {
                 /*This function is called when user clicks on the "save and exit" legend button available on the legend modal.*/
 
-                /*Remove legend with old ids and reconstructs legend with new ids to make it consistent with
-                the ids of editlegend and binlegend*/
-                graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
                 try {
@@ -2602,10 +2599,6 @@ var graphPage = {
                 /*This function is called when user clicks on the "Exit without saving" legend button available on the legend modal.
                 * This function exits the legend editor tool without saving the current available legend anywhere.
                 */
-
-                // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
-                // the ids of editlegend and binlegend.
-                graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                 graphPage.cyGraph.elements().unselect();
                 graphPage.legend.resizeLegendInterface('20%', '80%');
@@ -3134,7 +3127,6 @@ var graphPage = {
                     graphPage.legend.currentLegendJSON['legend']['nodes'][n_label]['shape'] = n_shape;
                     graphPage.legend.currentLegendJSON['legend']['nodes'][n_label]['background-color'] = n_color;
 
-                    graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                     graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                     graphPage.legend.legendEditor.init();
                 },
@@ -3219,7 +3211,6 @@ var graphPage = {
                     graphPage.legend.currentLegendJSON['legend']['edges'][e_label]['line-color'] = e_color;
                     graphPage.legend.currentLegendJSON['legend']['edges'][e_label]['arrow-shape'] = e_arrow_shape;
 
-                    graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
                     graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                     graphPage.legend.legendEditor.init();
                 },
