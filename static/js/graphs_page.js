@@ -437,7 +437,7 @@ var graphPage = {
          */
         graphPage.cyGraph = graphPage.contructCytoscapeGraph();
 
-        graphPage.legend.init();
+        graphPage.legend.init(style_json);
 
         graphPage.cyGraph.panzoom();
 
@@ -543,9 +543,10 @@ var graphPage = {
                     name: 'preset',
                     positions: JSON.parse(response['positions_json'])
                 });
-                style_json = JSON.parse(response['style_json']);
-                if('legend' in JSON.parse(response['style_json']))
-                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(JSON.parse(response['style_json']));
+                if('legend' in JSON.parse(response['style_json'])){
+                    graphPage.legend.currentLegendJSON['legend'] = JSON.parse(response['style_json'])['legend'];
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend();
+                }
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
                 graphPage.defaultLayoutWidget.init(response['is_shared']);
             },
@@ -665,7 +666,7 @@ var graphPage = {
                         "generated_by": "graphspace-2.0.0",
                         "target_cytoscapejs_version": "~2.7",
                         "style": cyGraph_style_json,
-                        "legend": style_json['legend']
+                        "legend": graphPage.legend.currentLegendJSON['legend']
                     }
                 },
                 successCallback = function (response) {
@@ -2442,8 +2443,13 @@ var graphPage = {
          * It will initialize all the event listeners.
         */
         cyLegend: undefined,
-        init: function () {
-            graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+        currentLegendJSON: {},
+        init: function (styleJSON) {
+            if(!('legend' in styleJSON)){
+                styleJSON['legend'] = {};
+            }
+            graphPage.legend.currentLegendJSON['legend'] = styleJSON['legend'];
+            graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
             var updateLegendInHtmlFormat = 0;
             $("#graphDetailsTabBtn").click(function () {
@@ -2553,7 +2559,7 @@ var graphPage = {
                 /*Remove legend with old ids and reconstructs legend with new ids to make it consistent with
                 the ids of editlegend and binlegend*/
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+                graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
                 try {
                     // Finds the user layout in which the user wants to save the legend.
@@ -2570,17 +2576,12 @@ var graphPage = {
                 }
 
                 graphPage.legend.resizeLegendInterface('20%', '80%');
-
-                if('legend' in style_json){
-                    graphPage.legend.legendEditor.removeBinLegend();
-                    graphPage.legend.legendEditor.removeEditLegend();
-                }
+                graphPage.legend.legendEditor.removeBinLegend();
+                graphPage.legend.legendEditor.removeEditLegend();
             });
 
             $('#legendEditorBtn').click(function () {
-                if('legend' in style_json){
-                    graphPage.legend.legendEditor.init();
-                }
+                graphPage.legend.legendEditor.init();
             });
 
            $('#exitLegendEditorBtn').click(function () {
@@ -2605,13 +2606,11 @@ var graphPage = {
                 // Remove legend with old ids and reconstructs legend with new ids to make it consistent with
                 // the ids of editlegend and binlegend.
                 graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+                graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                 graphPage.cyGraph.elements().unselect();
                 graphPage.legend.resizeLegendInterface('20%', '80%');
-                if('legend' in style_json){
-                    graphPage.legend.legendEditor.removeBinLegend();
-                    graphPage.legend.legendEditor.removeEditLegend();
-                }
+                graphPage.legend.legendEditor.removeBinLegend();
+                graphPage.legend.legendEditor.removeEditLegend();
             });
         },
         checkGraphWithHtmlLegendFormat1: function(htmlLegendData){
@@ -2667,7 +2666,7 @@ var graphPage = {
                         "generated_by": "graphspace-2.0.0",
                         "target_cytoscapejs_version": "~2.7",
                         "style":  JSON.parse(styleJSON).style,
-                        "legend": style_json['legend']
+                        "legend": graphPage.legend.currentLegendJSON['legend']
                     }
                 },
                 successCallback = function (response) {
@@ -2694,7 +2693,7 @@ var graphPage = {
                         "generated_by": "graphspace-2.0.0",
                         "target_cytoscapejs_version": "~2.7",
                         "style": cyGraph_style_json,
-                        "legend": style_json['legend']
+                        "legend": graphPage.legend.currentLegendJSON['legend']
                     }
                 },
                 successCallback = function (response) {
@@ -2709,23 +2708,20 @@ var graphPage = {
             });
 
         },
-        constructLegend: function(styleJSON) {
+        constructLegend: function() {
             /*
             This function will create a legend graph(using cytoscape.js library) from the legend data
             in the style_json object.
             */
-            if(!('legend' in styleJSON)){
-                styleJSON['legend'] = {};
+            if(!('nodes' in graphPage.legend.currentLegendJSON['legend'])){
+                graphPage.legend.currentLegendJSON['legend']['nodes'] = {};
             }
-            if(!('nodes' in styleJSON['legend'])){
-                styleJSON['legend']['nodes'] = {};
-            }
-            if(!('edges' in styleJSON['legend'])){
-                styleJSON['legend']['edges'] = {};
+            if(!('edges' in graphPage.legend.currentLegendJSON['legend'])){
+                graphPage.legend.currentLegendJSON['legend']['edges'] = {};
             }
 
-            var node_legend = styleJSON['legend']['nodes'];
-            var edge_legend = styleJSON['legend']['edges'];
+            var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
+            var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
             var node_legend_count = Object.keys(node_legend).length;
             var edge_legend_count = Object.keys(edge_legend).length;
 
@@ -2935,11 +2931,11 @@ var graphPage = {
                             if(node_pos_y == bin_pos_y && node_pos_x != bin_pos_x){
                                 /*If this node contains legend label, style_json is updated first and then
                                 the node is removed*/
-                                if(node.style()['label'] in style_json['legend']['nodes']){
-                                    delete style_json['legend']['nodes'][node.style()['label']];
+                                if(node.style()['label'] in graphPage.legend.currentLegendJSON['legend']['nodes']){
+                                    delete graphPage.legend.currentLegendJSON['legend']['nodes'][node.style()['label']];
                                 }
                                 else{
-                                    delete style_json['legend']['edges'][node.style()['label']];
+                                    delete graphPage.legend.currentLegendJSON['legend']['edges'][node.style()['label']];
                                 }
                                 graphPage.legend.cyLegend.remove(node);
                             }
@@ -2966,8 +2962,8 @@ var graphPage = {
                 });
             },
             constructBinLegend: function() {
-                var node_legend = style_json['legend']['nodes'];
-                var edge_legend = style_json['legend']['edges'];
+                var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
+                var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
                 var total_elements = node_legend_count + edge_legend_count;
@@ -2988,8 +2984,8 @@ var graphPage = {
                 }
             },
             constructEditLegend: function() {
-                var node_legend = style_json['legend']['nodes'];
-                var edge_legend = style_json['legend']['edges'];
+                var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
+                var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
                 var total_elements = node_legend_count + edge_legend_count;
@@ -3059,17 +3055,19 @@ var graphPage = {
                     col_pos = collection.renderedPosition();
                     _.each(graphPage.legend.cyLegend.elements(), function (elem) {
                         if(elem.isNode() && elem.id().slice(0,1) == 'n' && elem.renderedPosition().y == col_pos.y){
-                            style_json['legend']['nodes'][label] = {};
-                            style_json['legend']['nodes'][label] = style_json['legend']['nodes'][elem.style()['label']];
-                            delete style_json['legend']['nodes'][elem.style()['label']];
+                            graphPage.legend.currentLegendJSON['legend']['nodes'][label] = {};
+                            graphPage.legend.currentLegendJSON['legend']['nodes'][label] = graphPage.legend.currentLegendJSON['legend']['nodes'][elem.style()['label']];
+                            delete graphPage.legend.currentLegendJSON['legend']['nodes'][elem.style()['label']];
                             elem.style('label',label);
+                            console.log(graphPage.legend.currentLegendJSON);
                         }
 
                         if(elem.isNode() && elem.id().slice(0,2) == 'en' && elem.id().length == 4 && elem.renderedPosition().y == col_pos.y){
-                            style_json['legend']['edges'][label] = {};
-                            style_json['legend']['edges'][label] = style_json['legend']['edges'][elem.style()['label']];
-                            delete style_json['legend']['edges'][elem.style()['label']];
+                            graphPage.legend.currentLegendJSON['legend']['edges'][label] = {};
+                            graphPage.legend.currentLegendJSON['legend']['edges'][label] = graphPage.legend.currentLegendJSON['legend']['edges'][elem.style()['label']];
+                            delete graphPage.legend.currentLegendJSON['legend']['edges'][elem.style()['label']];
                             elem.style('label',label);
+                            console.log(graphPage.legend.currentLegendJSON);
                         }
                     });
                 },
@@ -3132,12 +3130,12 @@ var graphPage = {
                     var n_shape = graphPage.legend.legendEditor.nodeLegendEditor.node_legend['shape'];
                     var n_color = graphPage.legend.legendEditor.nodeLegendEditor.node_legend['background-color'];
 
-                    style_json['legend']['nodes'][n_label] = {};
-                    style_json['legend']['nodes'][n_label]['shape'] = n_shape;
-                    style_json['legend']['nodes'][n_label]['background-color'] = n_color;
+                    graphPage.legend.currentLegendJSON['legend']['nodes'][n_label] = {};
+                    graphPage.legend.currentLegendJSON['legend']['nodes'][n_label]['shape'] = n_shape;
+                    graphPage.legend.currentLegendJSON['legend']['nodes'][n_label]['background-color'] = n_color;
 
                     graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                     graphPage.legend.legendEditor.init();
                 },
                 close: function() {
@@ -3216,13 +3214,13 @@ var graphPage = {
                     var e_color = graphPage.legend.legendEditor.edgeLegendEditor.edge_legend['line-color'];
                     var e_arrow_shape = graphPage.legend.legendEditor.edgeLegendEditor.edge_legend['arrow-shape'];
 
-                    style_json['legend']['edges'][e_label] = {};
-                    style_json['legend']['edges'][e_label]['line-style'] = e_style;
-                    style_json['legend']['edges'][e_label]['line-color'] = e_color;
-                    style_json['legend']['edges'][e_label]['arrow-shape'] = e_arrow_shape;
+                    graphPage.legend.currentLegendJSON['legend']['edges'][e_label] = {};
+                    graphPage.legend.currentLegendJSON['legend']['edges'][e_label]['line-style'] = e_style;
+                    graphPage.legend.currentLegendJSON['legend']['edges'][e_label]['line-color'] = e_color;
+                    graphPage.legend.currentLegendJSON['legend']['edges'][e_label]['arrow-shape'] = e_arrow_shape;
 
                     graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.elements());
-                    graphPage.legend.cyLegend = graphPage.legend.constructLegend(style_json);
+                    graphPage.legend.cyLegend = graphPage.legend.constructLegend();
                     graphPage.legend.legendEditor.init();
                 },
                 close: function() {
@@ -3502,7 +3500,7 @@ var cytoscapeGraph = {
             "generated_by": "graphspace-2.0.0",
             "target_cytoscapejs_version": "~2.7",
             'style': cytoscapeGraph.getStylesheet(cy),
-            'legend': style_json['legend']
+            'legend': graphPage.legend.currentLegendJSON['legend']
         };
     },
     getAutomaticLayoutSettings: function (layout_name) {
