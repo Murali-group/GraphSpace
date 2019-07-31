@@ -26,6 +26,9 @@ var compareGraphPage = {
             }, 100);
             compareGraphPage.cyGraph.fit().center();
         });
+        $('#resetMenus').click(function () {
+            compareGraphPage.resetMenus();
+        });
         $("#search-place-holder").on("keyup", function () {
             var value = $(this).val().toLowerCase();
             $(".dropdown-menu li").filter(function () {
@@ -111,6 +114,25 @@ var compareGraphPage = {
         if (compareGraphPage.cyGraph) {
             compareGraphPage.setNodesColor(graph_id, event.color.toString());
             compareGraphPage.setNodesColor('common_1', common.val());
+        }
+    },
+    resetMenus: function(){
+        /**
+         * This function is called to whenever user wants to reset selection.
+         * All dropdown menus are reset to default state.
+         * graph_ids need to reset to allow fresh graph comparison
+         */
+        compareGraphPage.graph_ids= [];
+        for (let i = 1; i<8; i++){
+            $('#dropdownMenu'+i).attr('value', undefined);
+            $('#dropdownMenu'+i).val('');
+            $('#dropdownMenu'+i).children().text('');
+            $('#dropdownMenu'+i+' > i').text('Select Graph '+i);
+            if (i<3){
+                $('#operatorMenu'+i).attr('value', undefined);
+                $('#operatorMenu'+i).text('Select Operation');
+                $('#operatorMenu'+i).append('<span class="caret"></span>');
+            }
         }
     },
     validateExpression: function (infix) {
