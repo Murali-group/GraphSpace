@@ -8,6 +8,8 @@
             var operation = {% if operation %}{{ operation|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>
+<!-- Create Modal -->
+{% include 'compare_graph/compare_modal.html' %}
 
     <div class="container-fluid zero-margin zero-padding">
         <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
@@ -52,7 +54,7 @@
                         <button class="btn btn-default btn-sm dropdown-toggle" type="button"
                                 id="dropdownMenu2"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                            <i value="graph 1:"> Select Graph 2</i>
+                            <i value="graph 2:"> Select Graph 2</i>
                             <bold style="font-weight: bold"></bold>
                             <span class="caret"></span>
                         </button>
@@ -88,6 +90,16 @@
                             <li><a data="Difference" row_id="difference"
                                    onclick="compareGraphPage.setDropdownMenu($(this));">Difference</a></li>
                         </ul>
+                    </div>
+
+
+                        <div class="btn-group" style="margin-left: 10px">
+
+                        <button class="btn btn-default btn-sm dropdown-toggle" type="button" id="operatorMenu1"
+                                 aria-haspopup="true" aria-expanded="true">
+                            <a style="text-decoration: none" href="#compare" data-toggle="modal" data-target="#compareModal">+ Add Graphs</a>
+                        </button>
+
                     </div>
                     </div>
 
