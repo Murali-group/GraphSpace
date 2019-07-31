@@ -17,6 +17,7 @@ urlpatterns = [
 	url(r'^ajax/graphs/advanced_search$', views.graphs_advanced_search_ajax_api, name='graphs_advanced_search_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)$', views.graphs_ajax_api, name='graph_ajax_api'),
 	url(r'^ajax/compare/$', views.compare_graphs, name='compare_graph'),
+	url(r'^ajax/compare/multi/$', views.compare_graphs, name='compare_graph'),
 	# Graphs Groups
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups$', views.graph_groups_ajax_api, name='graph_groups_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/groups/(?P<group_id>[^/]+)$', views.graph_groups_ajax_api, name='graph_group_ajax_api'),
