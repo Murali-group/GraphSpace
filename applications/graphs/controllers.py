@@ -589,6 +589,23 @@ def delete_edge_by_id(request, edge_id):
 
 
 def get_graph_comparison(request, graph_1, graph_2, operation):
+	"""
+	Caller function to execute 2-Graph Intersection or Graph Difference operation.
+
+	Parameters
+	----------
+	graph_1: string
+		Unique ID of the 1st graph. Required.
+	graph_2: string
+		Unique ID of the 1st graph. Required.
+	operation: string
+		Comparison operation difference or intersection. Required.
+
+	Returns
+	-------
+	nodes & edges: object
+
+	"""
 	if operation == 'intersection':
 		return get_graphs_intersection(request, graph_1, graph_2)
 	else:
@@ -596,15 +613,110 @@ def get_graph_comparison(request, graph_1, graph_2, operation):
 
 
 def get_graphs_intersection(request, graph_1, graph_2):
-	# calling nodes_comparison function for testing purpose only
-	# db.nodes_comparison(request.db_session,)
+	"""
+		Caller function to execute 2-Graph Intersection operation.
 
+		Parameters
+		----------
+		graph_1: string
+			Unique ID of the 1st graph. Required.
+		graph_2: string
+			Unique ID of the 1st graph. Required.
+		operation: string
+			Comparison operation difference or intersection. Required.
+
+		Returns
+		-------
+		nodes & edges: object
+
+	"""
 	node_data = db.nodes_intersection(request.db_session, graph_1, graph_2)
 	edge_data = db.edges_intersection(request.db_session, graph_1, graph_2)
 	return node_data, edge_data
 
 
 def get_graphs_difference(request, graph_1, graph_2):
+	"""
+			Caller function to execute 2-Graph Difference operation.
+
+			Parameters
+			----------
+			graph_1: string
+				Unique ID of the 1st graph. Required.
+			graph_2: string
+				Unique ID of the 1st graph. Required.
+			operation: string
+				Comparison operation difference or intersection. Required.
+
+			Returns
+			-------
+			nodes & edges: object
+
+	"""
+	node_data = db.nodes_difference(request.db_session, graph_1, graph_2)
+	edge_data = db.edges_difference(request.db_session, graph_1, graph_2)
+	return node_data, edge_data
+
+
+def get_graph_comparison_multi(request, graphs, operation):
+	"""
+		Caller function to execute N-Graph Intersection or Graph Difference operation.
+
+		Parameters
+		----------
+		graphs: List[string]
+			Unique IDs of the graphs. Required.
+		operation: string
+			Comparison operation difference or intersection. Required.
+
+		Returns
+		-------
+		nodes & edges: object
+
+	"""
+	if operation == 'intersection':
+		return get_graphs_intersection_multi(request, graphs)
+	else:
+		return get_graphs_difference_multi(request, graphs)
+
+
+def get_graphs_intersection_multi(request, graphs):
+	"""
+		Caller function to execute N-Graph Intersection operation.
+
+		Parameters
+		----------
+		graphs: List[string]
+			Unique IDs of the graphs. Required.
+		operation: string
+			Comparison operation difference or intersection. Required.
+
+		Returns
+		-------
+		nodes & edges: object
+
+	"""
+	node_data = db.nodes_intersection_multi(request.db_session, graphs)
+	edge_data = db.edges_intersection_multi(request.db_session, graphs)
+	return node_data, edge_data
+
+
+def get_graphs_difference_multi(request, graphs):
+	"""
+		Caller function to execute N-Graph Difference operation.
+
+		Parameters
+		----------
+		graphs: List[string]
+			Unique IDs of the graphs. Required.
+		operation: string
+			Comparison operation difference or intersection. Required.
+
+		Returns
+		-------
+		nodes & edges: object
+
+	"""
 	node_data = db.nodes_difference(request.db_session, graph_1, graph_2)
 	edge_data = db.edges_difference(request.db_session, graph_1, graph_2)
 	return node_data, edge_data
