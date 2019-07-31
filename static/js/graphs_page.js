@@ -69,6 +69,12 @@ var apis = {
             apis.jsonRequest('GET', apis.compare.ENDPOINT, data, successCallback, errorCallback)
         }
     },
+    compareMultiple: {
+        ENDPOINT: '/ajax/compare/multi',
+        get: function (data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compare.ENDPOINT, data, successCallback, errorCallback)
+        }
+    },
     logging: {
         ENDPOINT: _.template('http://<%= hostname %>:9200/layouts/action'),
         add: function (data, successCallback, errorCallback) {
