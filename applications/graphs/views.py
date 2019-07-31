@@ -15,6 +15,26 @@ from graphspace.wrappers import is_authenticated
 
 
 def compare_graph_page(request):
+    """
+        Wrapper view function for the following pages:
+        /compare/
+
+        Parameters
+        ----------
+        request : HTTP Request
+
+        Returns
+        -------
+        response : HTML Page Response
+            Rendered graphs list page in HTML.
+
+        Raises
+        ------
+        MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+        Notes
+        ------
+    """
     context = RequestContext(request, {})
     if request.GET.get('graph_1') is None and request.GET.get('graph_2') is None \
             and request.GET.get('operation') is None:
@@ -32,10 +52,33 @@ def compare_graph_page(request):
 
 
 def compare_graphs(request):
+    """
+
+        Parameters
+        ----------
+        request : object
+            HTTP GET Request.
+
+        Returns
+        -------
+        JSON Response of nodes & edges
+
+        Raises
+        ------
+        MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+        Notes
+        ------
+
+    """
     context = RequestContext(request, {})
 
     if request.META.get('HTTP_ACCEPT', None) == 'application/json':
         if request.method == "GET":
+            if request.GET.get('multiple'):
+                return HttpResponse(json.dumps(_compare_graph_multiple(request, request.GET)),
+                                    content_type="application/json", status=200)
+
             return HttpResponse(json.dumps(_compare_graph(request, request.GET['graph_1_id'],
                                                           request.GET['graph_2_id'], request.GET['operation'])),
                                 content_type="application/json", status=200)
@@ -43,6 +86,43 @@ def compare_graphs(request):
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
     else:
         raise MethodNotAllowed(request)
+
+
+def _compare_graph_multiple(request, data):
+    """
+
+    Parameters
+    ----------
+    request : object
+        HTTP GET Request.
+    data : dict
+        graph_ids and operation. Required.
+
+    Returns
+    -------
+    nodes & edges: object
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+
+    # authorization.validate(request, permission='GRAPH_READ', graph_id=graph_1_id)
+    # authorization.validate(request, permission='GRAPH_READ', graph_id=graph_2_id)`
+
+    # Populate list of graph_ids
+    id_list = []
+    for i in range(1, len(data)-1):
+        if data.get('graph_id_' + str(i)):
+            id_list.append(data.get('graph_id_' + str(i)))
+
+    nodes, edges = graphs.get_graph_comparison_multi(request, id_list, data.get('operation'))
+    edges = [utils.serializer(edge) for edge in edges[1]]
+    nodes = [utils.serializer(node) for node in nodes[1]]
+    return {'edges': edges, 'nodes': nodes}
 
 
 def _compare_graph(request, graph_1_id, graph_2_id, operation):
