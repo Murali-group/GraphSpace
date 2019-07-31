@@ -2520,56 +2520,81 @@ var graphPage = {
                 graphPage.legend.cyLegend.elements().unselect();
             });
 
-            $('input[name="checkForCurrentGraph"]').click(function () {
-               /* This method is called when the user choose to save legend in the current graph.
-                * It un-checks the other option to save the legend in a user layout and also removes
-                * the dropdown(if present) containing all the user layout to choose upon.
-                */
-                $('.check').not(this).prop('checked', false);
-                if($('#selectLayoutDropdown').length)
-                    $('#selectLayoutDropdown').remove();
-            });
-
-            $('input[name="checkForUserLayout"]').click(function () {
+            $('input[name="checkForUserLayout"]').change(function () {
                /* This method is called when the user choose to save legend in a user layout.
                 * Once checked creates a dropdown with all the user layout to choose upon which layout to save the legend.
                 * Un-checks the other option to save the legend in the current graph.
                 */
-                $('.check').not(this).prop('checked', false);
-                params = {}
-                params["is_shared"] = 0;
-                params["owner_email"] = $('#UserEmail').val();
-                apis.layouts.get($('#GraphID').val(), params,
-                    successCallback = function (response) {
-                        var s = $("<select></select>").attr("id", 'selectLayoutDropdown').attr("name", 'selectLayoutDropdown');
-                        _.each(response.layouts, function (layout) {
-                            $('<option />', {value: JSON.stringify(layout), text: layout.name}).appendTo(s);
-                        });
-                        s.appendTo('#userPrivateLayoutDropdown');
-                    },
-                    errorCallback = function () {
-                        console.log('error!');
-                    }
-                );
+                if($(this).is(":checked")){
+                    params = {}
+                    params["is_shared"] = 0;
+                    params["owner_email"] = $('#UserEmail').val();
+                    apis.layouts.get($('#GraphID').val(), params,
+                        successCallback = function (response) {
+                            var s = $("<select></select>").attr("id", 'selectLayoutDropdown').attr("name", 'selectLayoutDropdown');
+                            _.each(response.layouts, function (layout) {
+                                $('<option />', {value: JSON.stringify(layout), text: layout.name}).appendTo(s);
+                            });
+                            s.appendTo('#userPrivateLayoutDropdown');
+                        },
+                        errorCallback = function () {
+                            console.log('error!');
+                        }
+                    );
+                }
+                else{
+                    if($('#selectLayoutDropdown').length)
+                        $('#selectLayoutDropdown').remove();
+                }
             });
 
-           $('#saveOnExitLegendBtn').click(function () {
+           $('#saveOnExitLegendEditorBtn').click(function () {
                 /*This function is called when user clicks on the "save and exit" legend button available on the legend modal.*/
 
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
-                try {
-                    // Finds the user layout in which the user wants to save the legend.
-                    // Throws error if user the user select to save the legend in the current graph. Else calls
-                    // function to save the legend in the user layout.
+                if($('#checkForUserLayout').is(':checked') && !$('#checkForCurrentGraph').is(':checked')){
                     layoutData = document.getElementById('selectLayoutDropdown').value;
                     layout_id = JSON.parse(layoutData).id;
                     layout_style_json = JSON.parse(layoutData).style_json;
-                    graphPage.legend.saveLegendInUserLayout(layout_id, layout_style_json, '#saveOnExitLegendModal')
+                    graphPage.legend.saveLegendInUserLayout(layout_id, layout_style_json, '#saveOnExitLegendModal');
                 }
-                catch(e){
-                    // Calls the function to save the legend in the current graph.
+
+                if($('#checkForCurrentGraph').is(':checked') && !$('#checkForUserLayout').is(':checked')){
                     graphPage.legend.saveLegendInGraph('#saveOnExitLegendModal');
+                }
+
+                if($('#checkForCurrentGraph').is(':checked') && $('#checkForUserLayout').is(':checked')){
+                    layoutData = document.getElementById('selectLayoutDropdown').value;
+                    layoutId = JSON.parse(layoutData).id;
+                    layout_style_json = JSON.parse(layoutData).style_json;
+                    apis.layouts.update($('#GraphID').val(), layoutId, {
+                            "style_json": {
+                                "format_version": "1.0",
+                                "generated_by": "graphspace-2.0.0",
+                                "target_cytoscapejs_version": "~2.7",
+                                "style":  JSON.parse(layout_style_json).style,
+                                "legend": graphPage.legend.currentLegendJSON['legend']
+                            }
+                        },
+                        successCallback = function (response) {
+                            graphPage.legend.saveLegendInGraph('#saveOnExitLegendModal');
+                        },
+                        errorCallback = function (xhr, status, errorThrown) {
+                           $.notify({
+                                message: response.responseJSON.error_message
+                            }, {
+                                type: 'danger'
+                        });
+                    });
+                }
+
+                if(!$('#checkForUserLayout').is(':checked') && !$('#checkForCurrentGraph').is(':checked')){
+                    $.notify({
+                        message: 'Select atleast one of the options to save Legend'
+                    }, {
+                        type: 'warning'
+                    });
                 }
 
                 graphPage.legend.resizeLegendInterface('20%', '80%');
@@ -2581,11 +2606,10 @@ var graphPage = {
                 graphPage.legend.legendEditor.init();
             });
 
-           $('#exitLegendEditorBtn').click(function () {
+            $('#exitLegendEditorBtn').click(function () {
             /*This function is called when user clicks on the "Exit Legend Editor" legend button available on the legend editor sidebar.
              *This function activates the save on exit legend modal which provides user the option to save legend.
             */
-
                 $("#checkForCurrentGraph"). prop("checked", true);
                 $("#checkForUserLayout"). prop("checked", false);
                 if($('#selectLayoutDropdown').length)
