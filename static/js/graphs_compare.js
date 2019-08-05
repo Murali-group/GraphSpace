@@ -8,6 +8,7 @@ var compareGraphPage = {
     graphs_json: [],
     styles_json: [],
     common_nodes: undefined,
+    common_metadata: {},
     edge_name_to_id: {},
     timeout: null,
     init: function () {
@@ -395,6 +396,52 @@ var compareGraphPage = {
         // }
         graph_json['elements']['nodes'][len - duplicate_nodes.length]['data']['parent'] = 'graph_2';
     },
+    setGraphClasses: function(graph_json, common_nodes, graph_id){
+        /**
+         * Params
+         * graph_json :  nodes & edges datastructure
+         * common_nodes :  nodes indentified by the comparison function
+         * graph_id :   identity of graph
+         *
+         * This function assigns a group to elements of a graph based on its ID.
+         * This is required later to identify which graph  nodes/edges belong to
+         * (as Cytoscape.js only supports 1 instance per canvas - all graphs needs
+         * to be merged into a single graph grouping helps in identifying elements
+         * of individual graphs).
+         * Also, removes duplicate entries for common_nodes from the merged graph.
+         *
+         * It is called in compareGraphHelperMultiple() during comparison operation.
+         */
+        const len = graph_json['elements']['nodes'].length;
+        var common_id = undefined;
+        var duplicate_nodes = [];
+        _.each(graph_json['elements']['nodes'], function (item) {
+            if (item['data']['id'] != (graph_id + 1))
+                item['classes'] = 'graph_' + (graph_id + 1);
+            _.each(common_nodes, function (innerNode) {
+                if (!compareGraphPage.common_metadata[innerNode['name']])
+                    compareGraphPage.common_metadata[innerNode['name']] = [];
+                if (item['data']['name'] == innerNode['name']) {
+                    let g_id = compareGraphPage.graph_ids[graph_id];
+                    if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0])
+                        duplicate_nodes.push(item);
+                    if (compareGraphPage.graph_ids[graph_id] == compareGraphPage.graph_ids[0]) {
+                        if (!common_id) {
+                            common_id = item['data']['id'];
+                        }
+                        item['classes'] = 'common_1';
+                    }
+                    compareGraphPage.common_metadata[innerNode['name']].push(item['data']);
+                }
+            });
+        });
+        // if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0]) {
+        _.each(duplicate_nodes, function (node) {
+            graph_json['elements']['nodes'].splice(graph_json['elements']['nodes'].indexOf(node), 1);
+        });
+        // }
+        // graph_json['elements']['nodes'][len - duplicate_nodes.length]['data']['parent'] = (graph_id + 1);
+    },
     setGraphGroupsMultiple: function (graph_json, common_nodes, graph_id) {
         /**
          * Params
@@ -425,7 +472,10 @@ var compareGraphPage = {
             if (item['data']['id'] != graph_json['elements']['nodes'][len]['data']['id'])
                 item['data']['parent'] = graph_json['elements']['nodes'][len]['data']['id'];
             _.each(common_nodes, function (innerNode) {
+                if (!compareGraphPage.common_metadata[innerNode['name']])
+                    compareGraphPage.common_metadata[innerNode['name']] = [];
                 if (item['data']['name'] == innerNode['name']) {
+                    let g_id = compareGraphPage.graph_ids[graph_id];
                     if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0])
                         duplicate_nodes.push(item);
                     if (compareGraphPage.graph_ids[graph_id] == compareGraphPage.graph_ids[0]) {
@@ -435,6 +485,7 @@ var compareGraphPage = {
                         }
                         item['data']['parent'] = 'common_1';
                     }
+                    compareGraphPage.common_metadata[innerNode['name']].push(item['data']);
                 }
             });
         });
@@ -616,6 +667,7 @@ var compareGraphPage = {
                 console.log('Success');
                 compareGraphPage.common_nodes = response['nodes'];
                 for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
+                    compareGraphPage.setGraphClasses(compareGraphPage.graphs_json[i], response['nodes'], i);
                     compareGraphPage.setGraphGroupsMultiple(compareGraphPage.graphs_json[i], response['nodes'], i);
                     if (i > 0) {
                         compareGraphPage.graphs_json[0]['elements']['nodes'] =
@@ -643,12 +695,12 @@ var compareGraphPage = {
                     }, 100);
                 });
 
-                compareGraphPage.populateNodeDataMulti(response['nodes']);
+                compareGraphPage.populateNodeData(response['nodes']);
                 compareGraphPage.populateEdgeData(response['edges']);
 
                 $('#nodes-total-badge').text(response['nodes'].length);
                 $('#edges-total-badge').text(response['edges'].length);
-                compareGraphPage.tabHelper();
+                // compareGraphPage.tabHelper();
 
             },
             errorCallback = function (xhr, status, errorThrown) {
@@ -765,7 +817,6 @@ var compareGraphPage = {
         }
 
         var trHTML = '';
-        var cyNode = undefined;
         $('#nodes-table').DataTable().clear().destroy();
         $('#nodes-comparison-table').find("tr:gt(0)").remove();
         if (nodes.length && !nodes[0].length) {
@@ -774,38 +825,20 @@ var compareGraphPage = {
             $('#nodes-table').attr('style', 'width:800px;');
 
         } else $('#nodes-table').attr('style', '');
-        $.each(nodes, function (i, item) {
+        $.each(compareGraphPage.common_metadata, function (i, item) {
             if (item.length) {
                 // Use 'name' field instead - for testing use 'label'
-                cyNode = compareGraphPage.cyGraph.nodes("[label = '" + item['label'] + "']");
-                for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
+                trHTML += '<tr>'
+                $.each(item, function (j, node) {
 
-                    trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
-                        + '<br> <b class="compare-table-td"> Label : </b>' + item['label'];
-                    if (cyNode.length && cyNode.data() && cyNode.data()['popup']) {
-                        trHTML += '<br>' + cyNode1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                    trHTML += '<td><b class="compare-table-td" >Name : </b>' + node['name']
+                        + '<br> <b class="compare-table-td"> Label : </b>' + node['label'];
+                    if (node['popup']) {
+                        trHTML += '<br>' + node['popup'].replace(/<\s*hr\s*\/>/gi, '');
                     }
-
-                    trHTML += '</td><td> <b class="compare-table-td">Name : </b>' + item[1]['name']
-                        + '<br> <b class="compare-table-td"> Label : </b>' + item[1]['label'];
-
-                    if (cyNode2.length && cyNode2.data() && cyNode2.data()['popup']) {
-                        trHTML += '<br>' + cyNode2.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
-                    }
-                    trHTML += '</td></tr>';
-                }
-
-            } else {
-                // Use 'name' field instead - for testing use 'label'
-                cyNode1 = compareGraphPage.cyGraph.getElementById(item['label']);
-
-                trHTML += '<tr><td><b class="compare-table-td" >Name : </b>' + item['name']
-                    + '<br> <b class="compare-table-td"> Label : </b>' + item['label'];
-
-                if (cyNode1.length && cyNode1.data() && cyNode1.data()['popup']) {
-                    trHTML += '<br>' + cyNode1.data()['popup'].replace(/<\s*hr\s*\/>/gi, '');
-                }
-                trHTML += '</td></tr>';
+                    trHTML += '</td>';
+                });
+                trHTML += '</tr>';
             }
 
         });
@@ -938,6 +971,7 @@ var compareGraphPage = {
             };
             if ('position' in node) {
                 newNode['position'] = node['position'];
+                newNode['classes'] = node['classes']
                 if (node['data']['parent'] == 'graph_1') {
                     x_max = (x_max > node['position']['x']) ? x_max : node['position']['x'];
                 }
