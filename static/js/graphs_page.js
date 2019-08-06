@@ -226,7 +226,9 @@ var graphsPage = {
         },
         graphNameFormatter: function (value, row) {
             var queryString = (graphsPage.searchBar.val() && graphsPage.searchBar.val().length > 0) ? '?query=' + _.join(graphsPage.searchBar.val(), ',') : '';
-            return $('<a>').attr('href', '/graphs/' + row.id + queryString).text(value)[0].outerHTML;
+            var checkbox =  $('<input>').attr('type', 'checkbox').attr('row_id', row.id).attr('onclick', 'compareGraphPage.selectGraphForCompare(' + row.id +')').text(value)[0].outerHTML;
+            return checkbox + $('<a>').attr('href', '/graphs/' + row.id + queryString).text(value)[0].outerHTML;
+            // return $('<a>').attr('href', '/graphs/' + row.id + queryString).text(value)[0].outerHTML;
         },
         tagsFormatter: function (value, row) {
             links = [];
