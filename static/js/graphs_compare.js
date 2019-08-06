@@ -21,12 +21,13 @@ var compareGraphPage = {
         $('#edges-li').hide();
         $('#visualization-li').hide();
         compareGraphPage.loadGraphs();
-        $('#graphVisualizationTabBtn').click(function (e) {
+        /*$('#graphVisualizationTabBtn').click(function (e) {
             window.setTimeout(function () {
                 $('#cyGraphContainer').css('height', '99%');
+                compareGraphPage.cyGraph.fit().center();
             }, 100);
-            compareGraphPage.cyGraph.fit().center();
-        });
+
+        });*/
         $('#resetMenus').click(function () {
             compareGraphPage.resetMenus();
         });
@@ -52,12 +53,6 @@ var compareGraphPage = {
         });
         $('#colorpicker1').colorpicker();
         $('#colorpicker1').colorpicker().on('changeColor', function (event) {
-            // $('#colorpicker1').css('background-color', event.color.toString());
-            // $('#colorpicker1').val(event.color.toString());
-            // if (compareGraphPage.cyGraph) {
-            //     compareGraphPage.setNodesColor('graph_1', event.color.toString());
-            //     compareGraphPage.setNodesColor('common_1', $('#operatorcolorpicker').val());
-            // }
             compareGraphPage.colorPickerHelper($('#colorpicker1'), event, 'graph_1', $('#operatorcolorpicker'));
         });
         $('#colorpicker2').colorpicker();
@@ -103,7 +98,40 @@ var compareGraphPage = {
             $('#operatorMenu1').attr('value', operation);
             $('#operatorMenu1').parent().find('a[row_id="' + operation + '"]').click();
         }
-
+        if (graph_ids && operation) {
+            for (let i = 0; i < graph_ids.length; i++) {
+                $('#dropdownMenu' + (i + 3)).attr('value', graph_ids[i]);
+            }
+            $('#operatorMenu2').attr('value', operation);
+            $('#operatorMenu2').parent().find('a[row_id="' + operation + '"]').click();
+        }
+    },
+    selectGraphForCompare: function () {
+        /**
+         * This function is called to when User selects
+         * graphs for comparison from Graph Index Page.
+         * It generates the graph comparison url for the selected graphs.
+         */
+        let href = '/compare?'
+        _.each($('input:checkbox:checked'), function (item) {
+            href += 'id=' + item.getAttribute('row_id') + '&';
+        });
+        if ($('input:checkbox:checked').length > 1) {
+            console.log('Compare');
+            $('#comparehref > li > a')[0].setAttribute('href', href + 'operation=intersection');
+            $('#comparehref > li > a')[1].setAttribute('href', href + 'operation=difference');
+            $('#compareHrefDiv').css('visibility', 'visible');
+        } else {
+            $('#compareHrefDiv').css('visibility', 'hidden');
+        }
+        if ($('input:checkbox:checked').length == 2) {
+            console.log('Compare');
+            $('#comparehref > li > a')[0].setAttribute('href', '/compare?graph_1=' + $('input:checkbox:checked')[0].getAttribute('row_id')
+                + '&graph_2=' + $('input:checkbox:checked')[1].getAttribute('row_id') + '&operation=intersection');
+            $('#comparehref > li > a')[1].setAttribute('href', '/compare?graph_1=' + $('input:checkbox:checked')[0].getAttribute('row_id')
+                + '&graph_2=' + $('input:checkbox:checked')[1].getAttribute('row_id') + '&operation=difference');
+            $('#compareHrefDiv').css('visibility', 'visible');
+        }
     },
     colorPickerHelper: function (obj, event, graph_id, common) {
         /**
@@ -117,26 +145,30 @@ var compareGraphPage = {
             compareGraphPage.setNodesColor('common_1', common.val());
         }
     },
-    resetMenus: function(){
+    resetMenus: function () {
         /**
          * This function is called to whenever user wants to reset selection.
          * All dropdown menus are reset to default state.
          * graph_ids need to reset to allow fresh graph comparison
          */
-        compareGraphPage.graph_ids= [];
-        for (let i = 1; i<8; i++){
-            $('#dropdownMenu'+i).attr('value', undefined);
-            $('#dropdownMenu'+i).val('');
-            $('#dropdownMenu'+i).children().text('');
-            $('#dropdownMenu'+i+' > i').text('Select Graph '+i);
-            if (i<3){
-                $('#operatorMenu'+i).attr('value', undefined);
-                $('#operatorMenu'+i).text('Select Operation');
-                $('#operatorMenu'+i).append('<span class="caret"></span>');
+        compareGraphPage.graph_ids = [];
+        for (let i = 1; i < 8; i++) {
+            $('#dropdownMenu' + i).attr('value', undefined);
+            $('#dropdownMenu' + i).val('');
+            $('#dropdownMenu' + i).children().text('');
+            $('#dropdownMenu' + i + ' > i').text('Select Graph ' + i);
+            if (i < 3) {
+                $('#operatorMenu' + i).attr('value', undefined);
+                $('#operatorMenu' + i).text('Select Operation');
+                $('#operatorMenu' + i).append('<span class="caret"></span>');
             }
         }
     },
     validateExpression: function (infix) {
+        /**
+         * Might be needed in future!
+         *
+         */
         var balance = 0;
         // remove white spaces to simplify regex
         infix = infix.replace(/ /g, '');
@@ -264,24 +296,15 @@ var compareGraphPage = {
          * graph_parent :  identifies the group of nodes
          * color :  color for the group of nodes
          *
-         * This function color a group of nodes according to the graph_parent id.
+         * This function color a group of nodes according to the class of the element.
          * It is called when comparison is executed and whenever user changes node
          * color dynamically using the colorpickers.
          */
-        compareGraphPage.cyGraph.filter(":parent[id='" + graph_parent + "']").style({
-            'background-color': color,
-            'background-opacity': 0,
-            'border-opacity': 0,
-            'border-color': color,
-        });
-        compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").style({
+        compareGraphPage.cyGraph.$("." + graph_parent).style({
             'background-color': color,
             'border-color': color
         });
-        compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").connectedEdges().style({'line-color': color});
-        compareGraphPage.cyGraph.filter("node[id='graph_1']").style({'background-opacity': 0, 'font-size': '1px'});
-        compareGraphPage.cyGraph.filter("node[id='graph_2']").style({'background-opacity': 0, 'font-size': '1px'});
-        compareGraphPage.cyGraph.filter("node[id='common_1']").style({'background-opacity': 0, 'font-size': '1px'});
+        compareGraphPage.cyGraph.$("." + graph_parent).connectedEdges().style({'line-color': color});
     },
     setNodesColorMultiple: function (graph_parent, color) {
         /**
@@ -293,25 +316,25 @@ var compareGraphPage = {
          * It is called when comparison is executed and whenever user changes node
          * color dynamically using the colorpickers.
          */
-        compareGraphPage.cyGraph.filter(":parent[id='" + graph_parent + "']").style({
+        compareGraphPage.cyGraph.$("." + graph_parent).style({
             'background-color': color,
             'background-opacity': 0,
             'border-opacity': 0,
             'border-color': color,
         });
-        compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").style({
+        compareGraphPage.cyGraph.$("." + graph_parent).style({
             'background-color': color,
             'border-color': color
         });
-        compareGraphPage.cyGraph.filter("node[parent='" + graph_parent + "']").connectedEdges().style({'line-color': color});
+        compareGraphPage.cyGraph.$("." + graph_parent).connectedEdges().style({'line-color': color});
 
         for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
-            compareGraphPage.cyGraph.filter("node[id='graph_'" + (i + 1) + "]").style({
+            compareGraphPage.cyGraph.$(".graph_" + (i + 1)).style({
                 'background-opacity': 0,
                 'font-size': '1px'
             });
         }
-        compareGraphPage.cyGraph.filter("node[id='common_1']").style({'background-opacity': 0, 'font-size': '1px'});
+        compareGraphPage.cyGraph.$('.common_1').style({'background-opacity': 0, 'font-size': '1px'});
     },
     setGraph0Groups: function (graph_json, common_nodes) {
         /**
@@ -351,32 +374,24 @@ var compareGraphPage = {
          * common_nodes :  nodes indentified by the comparison function
          * graph_id :   identity of graph
          *
-         * This function assigns a group to elements of a graph based on its ID.
-         * This is required later to identify which graph  nodes/edges belong to
+         * This function assigns classes to elements of a graph based on its ID.
+         * This is required later to identify nodes/edges for each graphs.
          * (as Cytoscape.js only supports 1 instance per canvas - all graphs needs
-         * to be merged into a single graph grouping helps in identifying elements
+         * to be merged into a single graph. Classes help in identifying elements
          * of individual graphs).
          * Also, removes duplicate entries for common_nodes from the merged graph.
          *
          * It is called in compareGraphHelper() during comparison operation.
          */
-        const len = graph_json['elements']['nodes'].length;
         var common_id = undefined;
         var duplicate_nodes = [];
-        graph_json['elements']['nodes'][len] = {
-            'data': {
-                'id': 'graph_' + (graph_id + 1),
-                'label': 'Graph ' + (graph_id + 1),
-                'name': 'Graph ' + (graph_id + 1)
-            }
-        };
         _.each(graph_json['elements']['nodes'], function (item) {
-            if (item['data']['id'] != graph_json['elements']['nodes'][len]['data']['id'])
-                item['data']['parent'] = graph_json['elements']['nodes'][len]['data']['id'];
+            if (item['data']['id'] != (graph_id + 1))
+                item['classes'] = 'graph_' + (graph_id + 1);
             _.each(common_nodes, function (innerNode) {
                 if (innerNode.length)
                     innerNode = (innerNode[0]['graph_id'] == compareGraphPage.graph_ids[graph_id]) ? innerNode[0] : innerNode[1];
-                if (item['data']['label'] == innerNode['label']) {
+                if (item['data']['name'] == innerNode['name'] || item['data']['label'] == innerNode['label']) {
                     if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0])
                         duplicate_nodes.push(item);
                     if (compareGraphPage.graph_ids[graph_id] == compareGraphPage.graph_ids[0]) {
@@ -384,29 +399,26 @@ var compareGraphPage = {
                             common_id = item['data']['id'];
                             compareGraphPage.common_nodes['parent1'] = common_id;
                         }
-                        item['data']['parent'] = 'common_1';
+                        item['classes'] = 'common_1';
                     }
                 }
             });
         });
-        // if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0]) {
         _.each(duplicate_nodes, function (node) {
             graph_json['elements']['nodes'].splice(graph_json['elements']['nodes'].indexOf(node), 1);
         });
-        // }
-        graph_json['elements']['nodes'][len - duplicate_nodes.length]['data']['parent'] = 'graph_2';
     },
-    setGraphClasses: function(graph_json, common_nodes, graph_id){
+    setGraphClasses: function (graph_json, common_nodes, graph_id) {
         /**
          * Params
          * graph_json :  nodes & edges datastructure
          * common_nodes :  nodes indentified by the comparison function
          * graph_id :   identity of graph
          *
-         * This function assigns a group to elements of a graph based on its ID.
-         * This is required later to identify which graph  nodes/edges belong to
+         * This function assigns a classes to elements of a graph based on its ID.
+         * This is required later to identify nodes/edges for each graphs.
          * (as Cytoscape.js only supports 1 instance per canvas - all graphs needs
-         * to be merged into a single graph grouping helps in identifying elements
+         * to be merged into a single graph. Classes help in identifying elements
          * of individual graphs).
          * Also, removes duplicate entries for common_nodes from the merged graph.
          *
@@ -421,7 +433,7 @@ var compareGraphPage = {
             _.each(common_nodes, function (innerNode) {
                 if (!compareGraphPage.common_metadata[innerNode['name']])
                     compareGraphPage.common_metadata[innerNode['name']] = [];
-                if (item['data']['name'] == innerNode['name']) {
+                if (item['data']['name'] == innerNode['name'] || item['data']['label'] == innerNode['label']) {
                     let g_id = compareGraphPage.graph_ids[graph_id];
                     if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0])
                         duplicate_nodes.push(item);
@@ -435,12 +447,9 @@ var compareGraphPage = {
                 }
             });
         });
-        // if (compareGraphPage.graph_ids[graph_id] != compareGraphPage.graph_ids[0]) {
         _.each(duplicate_nodes, function (node) {
             graph_json['elements']['nodes'].splice(graph_json['elements']['nodes'].indexOf(node), 1);
         });
-        // }
-        // graph_json['elements']['nodes'][len - duplicate_nodes.length]['data']['parent'] = (graph_id + 1);
     },
     setGraphGroupsMultiple: function (graph_json, common_nodes, graph_id) {
         /**
@@ -543,7 +552,7 @@ var compareGraphPage = {
          */
         graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
         graph_2_id = compareGraphPage.graph_ids[1] = $('#dropdownMenu2').attr('value');
-
+        $('#visualization-li a:first').tab('show');
         operation = $('#operatorMenu1').attr('value');
         apis.graphs.getByID(compareGraphPage.graph_ids[0],
             successCallback = function (response) {
@@ -668,7 +677,7 @@ var compareGraphPage = {
                 compareGraphPage.common_nodes = response['nodes'];
                 for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
                     compareGraphPage.setGraphClasses(compareGraphPage.graphs_json[i], response['nodes'], i);
-                    compareGraphPage.setGraphGroupsMultiple(compareGraphPage.graphs_json[i], response['nodes'], i);
+                    // compareGraphPage.setGraphGroupsMultiple(compareGraphPage.graphs_json[i], response['nodes'], i);
                     if (i > 0) {
                         compareGraphPage.graphs_json[0]['elements']['nodes'] =
                             compareGraphPage.graphs_json[0]['elements']['nodes']
@@ -692,11 +701,12 @@ var compareGraphPage = {
                         $('#cyGraphContainer').css('height', '99%');
                         $('#visualization-li a:last').tab('show');
                         $('#visualization-li a:first').tab('show');
+                        compareGraphPage.cyGraph.nodes().style("display", "element");
                     }, 100);
                 });
 
-                compareGraphPage.populateNodeData(response['nodes']);
-                compareGraphPage.populateEdgeData(response['edges']);
+                // compareGraphPage.populateNodeData(response['nodes']);
+                // compareGraphPage.populateEdgeData(response['edges']);
 
                 $('#nodes-total-badge').text(response['nodes'].length);
                 $('#edges-total-badge').text(response['edges'].length);
@@ -720,7 +730,6 @@ var compareGraphPage = {
         $('#nodes-li').show();
         $('#visualization-li').show();
         $('#edges-li').show();
-        $('#visualization-li a:last').tab('show');
         $('#visualization-li a:first').tab('show');
     },
     compareGraphHelper: function () {
@@ -751,6 +760,7 @@ var compareGraphPage = {
 
                     compareGraphPage.setGraphGroups(compareGraphPage.graphs_json[0], response['nodes'], 0);
                     compareGraphPage.setGraphGroups(compareGraphPage.graphs_json[1], response['nodes'], 1);
+
                     compareGraphPage.graphs_json[0]['elements']['nodes'] = compareGraphPage.graphs_json[0]['elements']['nodes'].concat(compareGraphPage.graphs_json[1]['elements']['nodes']);
                     compareGraphPage.graphs_json[0]['elements']['edges'] = compareGraphPage.graphs_json[0]['elements']['edges'].concat(compareGraphPage.graphs_json[1]['elements']['edges']);
                     compareGraphPage.styles_json[0]['style'] = compareGraphPage.styles_json[0]['style'].concat(compareGraphPage.styles_json[1]['style']);
@@ -759,14 +769,13 @@ var compareGraphPage = {
 
                     compareGraphPage.populateNodeData(response['nodes']);
                     compareGraphPage.populateEdgeData(response['edges']);
-                    // compareGraphPage.setCommonElements(response['nodes']);
+
                     compareGraphPage.cyGraph.ready(function () {                 // Wait for cytoscape to actually load and map eles
-                        // compareGraphPage.formatCyGraph();
+
                         compareGraphPage.cyGraph.panzoom();
                         window.setTimeout(function () {
                             $('#cyGraphContainer').css('height', '99%');
-                            $('#visualization-li a:last').tab('show');
-                            $('#visualization-li a:first').tab('show');
+                            compareGraphPage.cyGraph.nodes().style("display", "element");
                         }, 100);
                     });
 
@@ -774,8 +783,6 @@ var compareGraphPage = {
                         window.setTimeout(function () {
                             compareGraphPage.cyGraph.reset().fit().center();
                             $('#cyGraphContainer').css('height', '99%');
-                            $('#visualization-li a:last').tab('show');
-                            $('#visualization-li a:first').tab('show');
                         }, 100);
                     });
 
@@ -959,6 +966,8 @@ var compareGraphPage = {
          */
         layout = {
             name: 'cola',
+            animate: true,
+            maxSimulationTime: 1000,
         };
         let y_max = 0;
         let y_min = Infinity;
@@ -972,10 +981,10 @@ var compareGraphPage = {
             if ('position' in node) {
                 newNode['position'] = node['position'];
                 newNode['classes'] = node['classes']
-                if (node['data']['parent'] == 'graph_1') {
+                if (node['classes'] == 'graph_1') {
                     x_max = (x_max > node['position']['x']) ? x_max : node['position']['x'];
                 }
-                if (node['data']['parent'] == 'common_1') {
+                if (node['classes'] == 'common_1') {
                     c_max = (c_max > node['position']['x']) ? c_max : node['position']['x'];
                     c_min = (c_min < node['position']['x']) ? c_min : node['position']['x'];
                 }
@@ -992,10 +1001,10 @@ var compareGraphPage = {
         _.map(graph_json['elements']['nodes'], function (node) {
             if ('position' in node) {
 
-                if (node['data']['parent'] == 'graph_2') {
+                if (node['classes'] == 'graph_2') {
                     node['position']['x'] = node['position']['x'] + x_max + 100;
                 }
-                if (node['data']['parent'] == 'common_1') {
+                if (node['classes'] == 'common_1') {
                     node['position']['x'] = node['position']['x'] + Math.abs((c_max - c_min) / 2 - x_max) + 100;
                     node['position']['y'] = node['position']['y'] + y_max + 50;
                 }
@@ -1030,6 +1039,7 @@ var compareGraphPage = {
                 $('#dialog').dialog({
                     autoOpen: false
                 });
+                this.nodes().style("display", "none");
                 // display node data as a popup
                 this.on('tap', graphPage.onTapGraphElement);
 
