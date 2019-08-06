@@ -36,9 +36,16 @@ def compare_graph_page(request):
         ------
     """
     context = RequestContext(request, {})
-    if request.GET.get('graph_1') is None and request.GET.get('graph_2') is None \
-            and request.GET.get('operation') is None:
+    if request.GET.get('graph_1') is None and request.GET.get('operation') is None:
         return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+
+    if request.GET.getlist('id'):
+        if request.GET.get('operation') == 'intersection' or request.GET.get('operation') == 'difference':
+            context['graph_ids'] = json.dumps(request.GET.getlist('id'))
+            context['operation'] = json.dumps(request.GET.get('operation'))
+            return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+        else:
+            raise MethodNotAllowed(request)
 
     if request.GET.get('graph_1') and request.GET.get('graph_2') \
             and request.GET.get('operation'):
