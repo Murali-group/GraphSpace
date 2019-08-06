@@ -106,16 +106,31 @@ var compareGraphPage = {
             $('#operatorMenu2').parent().find('a[row_id="' + operation + '"]').click();
         }
     },
-    selectGraphForCompare: function () {
+    selectGraphForCompare: function (obj, graph_id) {
         /**
          * This function is called to when User selects
          * graphs for comparison from Graph Index Page.
          * It generates the graph comparison url for the selected graphs.
          */
         let href = '/compare?'
+        if (obj[0].checked){
+            compareGraphPage.graph_ids.push(graph_id);
+        }
+        else {
+            for( var i = 0; i < compareGraphPage.graph_ids.length; i++){
+               if ( compareGraphPage.graph_ids[i] === graph_id) {
+                 compareGraphPage.graph_ids.splice(i, 1);
+               }
+            }
+        }
+        _.each(compareGraphPage.graph_ids, function (item) {
+             href += 'id=' + item + '&';
+        });
+        /*
         _.each($('input:checkbox:checked'), function (item) {
             href += 'id=' + item.getAttribute('row_id') + '&';
         });
+        */
         if ($('input:checkbox:checked').length > 1) {
             console.log('Compare');
             $('#comparehref > li > a')[0].setAttribute('href', href + 'operation=intersection');
@@ -126,10 +141,10 @@ var compareGraphPage = {
         }
         if ($('input:checkbox:checked').length == 2) {
             console.log('Compare');
-            $('#comparehref > li > a')[0].setAttribute('href', '/compare?graph_1=' + $('input:checkbox:checked')[0].getAttribute('row_id')
-                + '&graph_2=' + $('input:checkbox:checked')[1].getAttribute('row_id') + '&operation=intersection');
-            $('#comparehref > li > a')[1].setAttribute('href', '/compare?graph_1=' + $('input:checkbox:checked')[0].getAttribute('row_id')
-                + '&graph_2=' + $('input:checkbox:checked')[1].getAttribute('row_id') + '&operation=difference');
+            $('#comparehref > li > a')[0].setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
+                + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=intersection');
+            $('#comparehref > li > a')[1].setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
+                + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=difference');
             $('#compareHrefDiv').css('visibility', 'visible');
         }
     },
