@@ -717,6 +717,7 @@ var compareGraphPage = {
                         $('#visualization-li a:last').tab('show');
                         $('#visualization-li a:first').tab('show');
                         compareGraphPage.cyGraph.nodes().style("display", "element");
+                        $('#compareModal').modal('hide');
                     }, 100);
                 });
 
