@@ -120,13 +120,13 @@
                     </div>
                     <div class="modal-body">
 
-                        <div class="layout_fields">
+                        <div class="legend_fields">
                             <div class="form-group">
                                 <div class="checkbox">
-                                    <label><input type="checkbox" name="checkForCurrentGraph" class="check" id="checkForCurrentGraph">Save legend data in the current graph</label>
+                                    <label><input type="checkbox" name="checkForCurrentGraph" class="check" id="checkForCurrentGraph">Use as default legend when no layout is selected</label>
                                 </div>
-                                <div class="checkbox">
-                                    <label><input type="checkbox" name="checkForUserLayout" class="check" id="checkForUserLayout">Save legend data in the user layout</label>
+                                <div class="checkbox" id="selectUserLayoutCheckbox">
+                                    <label><input type="checkbox" name="checkForUserLayout" class="check" id="checkForUserLayout">Use as legend for the current user layout </label>
                                 </div>
                                 <div id="userPrivateLayoutDropdown">
 
@@ -297,7 +297,7 @@
                                 <div id="dialog"></div>
                                 <div id="graphContainer gs-full-height">
                                     <div id="cyGraphContainer"></div>
-                                    <div id="cyLegendContainer"></div>
+                                    <div id="cyLegendContainer" class="draggable ui-widget-content"></div>
                                 </div>
                             </div>
                         </div>
