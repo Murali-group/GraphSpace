@@ -29,7 +29,7 @@ var compareGraphPage = {
 
         });*/
         $('#resetMenus').click(function () {
-            compareGraphPage.resetMenus();
+            compareGraphPage.resetMenus(1,8);
         });
         $("#search-place-holder").on("keyup", function () {
             var value = $(this).val().toLowerCase();
@@ -37,12 +37,19 @@ var compareGraphPage = {
                 $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
             });
         });
+        /*
+        $("#dropdownMenu1").on("change", function(){
+            if ($('#dropdownMenu1').attr('value') && $('#dropdownMenu2').attr('value') && $('#operatorMenu1').attr('value'))
+            compareGraphPage.compareGraphs();
+        });
+        */
         $("#dropdownMenu1").on("focusin", function () {
             var value = "";
             $("#search-place-holder").val("");
             $(".dropdown-menu li").filter(function () {
                 $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
             });
+
         });
         $("#dropdownMenu2").on("focusin", function () {
             var value = "";
@@ -160,14 +167,21 @@ var compareGraphPage = {
             compareGraphPage.setNodesColor('common_1', common.val());
         }
     },
-    resetMenus: function () {
+    setDropdownLabel: function(source, target){
+          target.attr('value', source.attr('row_id'));
+          target.val(source.attr('row_id'));
+          target.children('i').text(' ');
+          target.children('bold').text(source.attr('data'));
+    },
+    resetMenus: function (start, end) {
         /**
          * This function is called to whenever user wants to reset selection.
          * All dropdown menus are reset to default state.
          * graph_ids need to reset to allow fresh graph comparison
          */
-        compareGraphPage.graph_ids = [];
-        for (let i = 1; i < 8; i++) {
+        if (start==1)
+            compareGraphPage.graph_ids = [];
+        for (let i = start; i < end; i++) {
             $('#dropdownMenu' + i).attr('value', undefined);
             $('#dropdownMenu' + i).val('');
             $('#dropdownMenu' + i).children().text('');
@@ -268,18 +282,37 @@ var compareGraphPage = {
          * correspond to the selected value.
          * It called in populateCompareDropdownMenu().
          */
+        if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu1")
+            compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu3'));
+        if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu2")
+            compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu4'));
+        if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu3")
+            compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu1'));
+        if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu4")
+            compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu2'));
+
         var label = obj.parent().parent().siblings('button').children('i');
         if (label.text()) {
-            label.text(label.attr('value'));
+            // label.text(label.attr('value'));
+            label.text(' ');
             obj.parent().parent().siblings('button').children('bold').text(obj.attr('data'));
         } else {
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").text(obj.attr('data'));
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").append('<span class="caret"></span>');
 
             if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu1') {
+                $('#operatorMenu2').attr('value', undefined);
+                compareGraphPage.graph_ids.length=2;
                 compareGraphPage.compareGraphs();
-            } else compareGraphPage.compareGraphsMultiple();
+                compareGraphPage.resetMenus(3,8)
+                // compareGraphPage.compareGraphsMultiple();
+            } if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu2') {
+                $('#operatorMenu1').attr('value', undefined);
+                compareGraphPage.compareGraphsMultiple();
+            }
         }
+        // if ($('#dropdownMenu1').attr('value') && $('#dropdownMenu2').attr('value') && $('#operatorMenu1').attr('value'))
+        //     compareGraphPage.compareGraphs();
         obj.parent().parent().siblings("button[class*='dropdown-toggle']").attr("value", obj.attr('row_id'));
     },
     populateCompareDropdownMenu: function (data) {
@@ -528,6 +561,8 @@ var compareGraphPage = {
          *
          * Returns error whenever AJAX requests fail.
          */
+        $('#visualization-li a:first').tab('show');
+        compareGraphPage.common_metadata = {};
         let graph_ids = []
         let count = 0;
         for (let i = 0; i < 5; i++) {
@@ -536,7 +571,7 @@ var compareGraphPage = {
             if (graph_ids[i])
                 count++;
         }
-        operation = $('#operatorMenu2').attr('value');
+        operation = $('#operatorMenu1').attr('value') || $('#operatorMenu2').attr('value');
         for (let i = 0; i < count; i++) {
             apis.graphs.getByID(graph_ids[i],
                 successCallback = function (response) {
@@ -705,6 +740,7 @@ var compareGraphPage = {
                 }
 
                 compareGraphPage.cyGraph = compareGraphPage.constructCytoscapeGraph(compareGraphPage.graphs_json[0], compareGraphPage.styles_json[0]);
+                compareGraphPage.populateNodeDataMulti(response['nodes'], response['edges']);
                 for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
                     compareGraphPage.setNodesColor('graph_' + (i + 1), $('#colorpicker' + (i + 3)).val());
                 }
@@ -713,7 +749,7 @@ var compareGraphPage = {
                     compareGraphPage.cyGraph.panzoom();
                     window.setTimeout(function () {
                         compareGraphPage.cyGraph.reset().fit().center();
-                        $('#cyGraphContainer').css('height', '99%');
+                        // $('#cyGraphContainer').css('height', '99%');
                         $('#visualization-li a:last').tab('show');
                         $('#visualization-li a:first').tab('show');
                         compareGraphPage.cyGraph.nodes().style("display", "element");
@@ -726,7 +762,7 @@ var compareGraphPage = {
 
                 $('#nodes-total-badge').text(response['nodes'].length);
                 $('#edges-total-badge').text(response['edges'].length);
-                // compareGraphPage.tabHelper();
+                compareGraphPage.tabHelper();
 
             },
             errorCallback = function (xhr, status, errorThrown) {
@@ -790,7 +826,7 @@ var compareGraphPage = {
 
                         compareGraphPage.cyGraph.panzoom();
                         window.setTimeout(function () {
-                            $('#cyGraphContainer').css('height', '99%');
+                            // $('#cyGraphContainer').css('height', '99%');
                             compareGraphPage.cyGraph.nodes().style("display", "element");
                         }, 100);
                     });
@@ -798,7 +834,7 @@ var compareGraphPage = {
                     compareGraphPage.cyGraph.once('render', function () {                 // Wait for cytoscape to actually load and map eles
                         window.setTimeout(function () {
                             compareGraphPage.cyGraph.reset().fit().center();
-                            $('#cyGraphContainer').css('height', '99%');
+                            // $('#cyGraphContainer').css('height', '99%');
                         }, 100);
                     });
 
@@ -825,47 +861,89 @@ var compareGraphPage = {
         location.replace("/compare");
 
     },
-    populateNodeDataMulti: function (nodes) {
+    populateNodeDataMulti: function (nodes, edges) {
         /**
          * This function sets up the headers and body of the nodes table.
          * This setup needs to be done dynamically as table columns are variable
          * depending on the number of graphs selected for comparison operation.
          * It is called in compareGraphHelperMulti() during graphs comparison.
          */
+        $('#result-view').empty();
+        $('#result-view').append('<div id="result-view" class="bootstrap-table margin-top-8">\n' +
+            '    <table id="nodes-table" style="display:1" class="table table-striped ">\n' +
+            '        <thead>\n' +
+            '        <tr>\n' +
+
+            '        </tr>\n' +
+            '        </thead>\n' +
+            '        <tbody id="nodes-comparison-table">\n' +
+            '\n' +
+            '        </tbody>\n' +
+            '    </table>\n' +
+            '</div>\n');
         $('#nodes-table > thead').find("th").remove();
+        $('#nodes-comparison-table').empty();
         $('#edges-table > thead').find("th").remove();
         for (let i = 0; i < compareGraphPage.graph_ids.length; i++) {
             $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
             $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
         }
 
-        var trHTML = '';
-        $('#nodes-table').DataTable().clear().destroy();
+        var trHTML_nodes = '';
+        var trHTML_edges = '';
+        // $('#nodes-table').DataTable().clear().destroy();
+
+
+
         $('#nodes-comparison-table').find("tr:gt(0)").remove();
         if (nodes.length && !nodes[0].length) {
-            $('#nodes-table > thead').find("th:gt(0)").remove();
+            // $('#nodes-table > thead').find("th:gt(0)").remove();
             $('#nodes-table').parent().attr('align', 'center');
-            $('#nodes-table').attr('style', 'width:800px;');
+            // $('#nodes-table').attr('style', 'width:800px;');
 
         } else $('#nodes-table').attr('style', '');
         $.each(compareGraphPage.common_metadata, function (i, item) {
             if (item.length) {
                 // Use 'name' field instead - for testing use 'label'
-                trHTML += '<tr>'
+                trHTML_nodes += '<tr>'
                 $.each(item, function (j, node) {
 
-                    trHTML += '<td><b class="compare-table-td" >Name : </b>' + node['name']
+                    trHTML_nodes += '<td><b class="compare-table-td" >Name : </b>' + node['name']
                         + '<br> <b class="compare-table-td"> Label : </b>' + node['label'];
                     if (node['popup']) {
-                        trHTML += '<br>' + node['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                        trHTML_nodes += '<br>' + node['popup'].replace(/<\s*hr\s*\/>/gi, '');
                     }
-                    trHTML += '</td>';
+                    trHTML_nodes += '</td>';
                 });
-                trHTML += '</tr>';
+                trHTML_nodes += '</tr>';
             }
 
         });
-        $('#nodes-comparison-table').append(trHTML);
+        $('#nodes-comparison-table').append(trHTML_nodes);
+
+         $('#edges-comparison-table').find("tr:gt(0)").remove();
+        if (edges.length && !edges[0].length) {
+            $('#edges-table').parent().attr('align', 'center');
+
+        } else $('#edges-table').attr('style', '');
+        $.each([], function (i, item) {
+            if (item.length) {
+                // Use 'name' field instead - for testing use 'label'
+                trHTML_edges += '<tr>'
+                $.each(item, function (j, node) {
+
+                    trHTML_edges += '<td><b class="compare-table-td" >Name : </b>' + node['name']
+                        + '<br> <b class="compare-table-td"> Label : </b>' + node['label'];
+                    if (node['popup']) {
+                        trHTML_edges += '<br>' + node['popup'].replace(/<\s*hr\s*\/>/gi, '');
+                    }
+                    trHTML_edges += '</td>';
+                });
+                trHTML_edges += '</tr>';
+            }
+
+        });
+        $('#edges-comparison-table').append(trHTML_edges);
     },
     populateNodeData: function (nodes) {
         /**
@@ -874,13 +952,35 @@ var compareGraphPage = {
          * depending on the number of graphs selected for comparison operation.
          * It is called in compareGraphHelperMulti() during graphs comparison.
          */
+        $('#result-view').empty();
+        $('#result-view').append('<div id="result-view" class="bootstrap-table margin-top-8">\n' +
+            '    <table id="nodes-table" style="display:1" class="table table-striped ">\n' +
+            '        <thead>\n' +
+            '        <tr>\n' +
+
+            '        </tr>\n' +
+            '        </thead>\n' +
+            '        <tbody id="nodes-comparison-table">\n' +
+            '\n' +
+            '        </tbody>\n' +
+            '    </table>\n' +
+            '</div>\n');
+        $('#nodes-table > thead').find("th").remove();
+        $('#nodes-comparison-table').empty();
+        // $('#edges-table > thead').find("th").remove();
+        let len = ($('#operatorMenu1').attr('value')=='intersection')?2:1;
+
+        for (let i = 0; i < len; i++) {
+            $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
+            // $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
+        }
         var trHTML = '';
         var cyNode1 = undefined;
         var cyNode2 = undefined;
-        $('#nodes-table').DataTable().clear().destroy();
+        // $('#nodes-table').DataTable().clear().destroy();
         $('#nodes-comparison-table').find("tr:gt(0)").remove();
         if (nodes.length && !nodes[0].length) {
-            $('#nodes-table > thead').find("th:gt(0)").remove();
+            // $('#nodes-table > thead').find("th:gt(0)").remove();
             $('#nodes-table').parent().attr('align', 'center');
             $('#nodes-table').attr('style', 'width:800px;');
 
@@ -928,6 +1028,27 @@ var compareGraphPage = {
          * depending on the number of graphs selected for comparison operation.
          * It is called in compareGraphHelperMulti() during graphs comparison.
          */
+        $('#result-view1').empty();
+        $('#result-view1').append('<div id="result-view1" class="bootstrap-table margin-top-8">\n' +
+            '    <table style="display:1" id="edges-table" class="table table-striped">\n' +
+            '        <thead>\n' +
+            '        <tr>\n' +
+            '        </tr>\n' +
+            '        </thead>\n' +
+            '        <tbody id="edges-comparison-table">\n' +
+            '\n' +
+            '        </tbody>\n' +
+            '    </table>\n' +
+            '</div>\n');
+        // $('#nodes-table > thead').find("th").remove();
+        $('#edges-comparison-table').empty();
+        $('#edges-table > thead').find("th").remove();
+        let len = ($('#operatorMenu1').attr('value')=='intersection')?2:1;
+
+        for (let i = 0; i < len; i++) {
+            // $('#nodes-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
+            $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph' + (i + 1) + '</h4></th>');
+        }
         var trHTML = '';
         var cyEdge1 = undefined;
         var cyEdge2 = undefined;
