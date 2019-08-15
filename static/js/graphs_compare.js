@@ -30,6 +30,7 @@ var compareGraphPage = {
         });*/
         $('#resetMenus').click(function () {
             compareGraphPage.resetMenus(1,8);
+            $('#compareModal').modal('hide');
         });
         $("#search-place-holder").on("keyup", function () {
             var value = $(this).val().toLowerCase();
@@ -179,6 +180,10 @@ var compareGraphPage = {
          * All dropdown menus are reset to default state.
          * graph_ids need to reset to allow fresh graph comparison
          */
+        $('#nodes-li').hide();
+        $('#visualization-li').hide();
+        $('#edges-li').hide();
+        $('#cyGraphContainer').hide();
         if (start==1)
             compareGraphPage.graph_ids = [];
         for (let i = start; i < end; i++) {
@@ -780,6 +785,7 @@ var compareGraphPage = {
         $('.dataTables_length').addClass('bs-select');
 
         $('#nodes-li').show();
+        $('#cyGraphContainer').show();
         $('#visualization-li').show();
         $('#edges-li').show();
         $('#visualization-li a:first').tab('show');
