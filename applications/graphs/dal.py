@@ -18,8 +18,8 @@ def get_edges(db_session, edges, order=desc(Edge.updated_at), page=0, page_size=
 
 @with_session
 def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None, names=None, nodes=None, edges=None, tags=None,
-                                            order=desc(Graph.updated_at), page=0, page_size=10, partial_matching=False,
-                                            owner_email=None, is_public=None):
+	                                   order=desc(Graph.updated_at), page=0, page_size=10, partial_matching=False,
+	                                   owner_email=None, is_public=None):
 	query = db_session.query(Graph)
 
 	edges = [] if edges is None else edges
@@ -47,7 +47,7 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None, names=No
 	nodes_filter_group = [Node.label.ilike(node) for node in nodes]
 	nodes_filter_group.extend([Node.name.ilike(node) for node in nodes])
 	edges_filter_group = [and_(Edge.head_node.has(Node.name.ilike(u)), Edge.tail_node.has(Node.name.ilike(v))) for u, v
-	                      in edges]
+						  in edges]
 	edges_filter_group.extend(
 		[and_(Edge.tail_node.has(Node.name.ilike(u)), Edge.head_node.has(Node.name.ilike(v))) for u, v in edges])
 	edges_filter_group.extend(
@@ -80,9 +80,9 @@ def get_graphs_by_edges_and_nodes_and_names(db_session, group_ids=None, names=No
 
 
 @with_session
-def add_graph(db_session, name, owner_email, graph_json, style_json, is_public=0, default_layout_id=None):
-	graph = Graph(name=name, owner_email=owner_email, graph_json=graph_json, style_json=style_json, is_public=is_public,
-	              default_layout_id=default_layout_id)
+def add_graph(db_session, name, owner_email, is_public=0, default_layout_id=None):
+	graph = Graph(name=name, owner_email=owner_email,  is_public=is_public,
+				  default_layout_id=default_layout_id)
 	db_session.add(graph)
 	return graph
 
@@ -97,7 +97,12 @@ def update_graph(db_session, id, updated_graph):
 	:return: Graph if id exists else None
 	"""
 	graph = db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	version_id = update_graph if 'default_version_id' in updated_graph else graph.default_version_id
+	graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == version_id)
+
 	for (key, value) in updated_graph.items():
+		if key == 'graph_json' or key == 'style_json':
+			setattr(graph_version, key, value)
 		setattr(graph, key, value)
 	return graph
 
@@ -122,15 +127,17 @@ def delete_graph(db_session, id):
 
 @with_session
 def get_graph_by_id(db_session, id):
-	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
+	query = db_session.query(Graph).filter(Graph.id == id)
+	query.options(joinedload('graph_versions')).filter(GraphVersion.id==Graph.default_version_id)
+	return query.one_or_none()
 
 
 @with_session
 def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
-                edges=None,
-                tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
+				edges=None,
+				tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
 	query = db_session.query(Graph)
-	query = query.options(defer("graph_json")).options(defer("style_json"))
+	#query = query.options(defer("graph_json")).options(defer("style_json"))
 
 	graph_filter_group = []
 	if is_public is not None:
@@ -145,6 +152,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 		query = query.filter(Graph.id.in_(graph_ids))
 
 	options_group = []
+	options_group.append(joinedload('graph_versions'))
 	if tags is not None and len(tags) > 0:
 		options_group.append(joinedload('graph_tags'))
 	if nodes is not None and len(nodes) > 0:
@@ -158,6 +166,7 @@ def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is
 
 	if group_ids is not None:
 		query = query.filter(Graph.groups.any(Group.id.in_(group_ids)))
+	query = query.filter(GraphVersion.id==Graph.default_version_id)
 
 	edges = [] if edges is None else edges
 	nodes = [] if nodes is None else nodes
@@ -217,10 +226,10 @@ def add_edge(db_session, graph_id, head_node_id, tail_node_id, name, is_directed
 	tail_node = get_node_by_id(db_session, tail_node_id)
 
 	edge = Edge(name=name, graph_id=graph_id,
-	            head_node_id=head_node_id, tail_node_id=tail_node_id,
-	            head_node_name=head_node.name, tail_node_name=tail_node.name,
-	            head_node_label=head_node.label, tail_node_label=tail_node.label,
-	            is_directed=is_directed)
+				head_node_id=head_node_id, tail_node_id=tail_node_id,
+				head_node_name=head_node.name, tail_node_name=tail_node.name,
+				head_node_label=head_node.label, tail_node_label=tail_node.label,
+				is_directed=is_directed)
 	db_session.add(edge)
 	return edge
 
@@ -314,7 +323,7 @@ def delete_graph_to_group(db_session, group_id, graph_id):
 
 @with_session
 def find_layouts(db_session, owner_email=None, is_shared=None, name=None, graph_id=None, limit=None, offset=None,
-                 order_by=desc(Layout.updated_at)):
+				 order_by=desc(Layout.updated_at)):
 	query = db_session.query(Layout)
 
 	if order_by is not None:
@@ -364,7 +373,7 @@ def add_layout(db_session, owner_email, name, graph_id, is_shared, style_json, p
 
 	"""
 	layout = Layout(owner_email=owner_email, name=name, graph_id=graph_id, is_shared=is_shared, style_json=style_json,
-	                positions_json=positions_json)
+					positions_json=positions_json)
 	db_session.add(layout)
 	return layout
 
@@ -387,6 +396,9 @@ def update_layout(db_session, id, updated_layout):
 	layout = db_session.query(Layout).filter(Layout.id == id).one_or_none()
 	for (key, value) in updated_layout.items():
 		setattr(layout, key, value)
+	layout_to_graph_versions = db_session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.layout_id == 7).all()
+	for obj in layout_to_graph_versions:
+		obj.status = "Null"
 	return layout
 
 
@@ -405,7 +417,7 @@ def delete_layout(db_session, id):
 
 @with_session
 def find_nodes(db_session, labels=None, names=None, graph_id=None, limit=None, offset=None,
-               order_by=desc(Node.updated_at)):
+			   order_by=desc(Node.updated_at)):
 	query = db_session.query(Node)
 
 	if graph_id is not None:
@@ -430,7 +442,7 @@ def find_nodes(db_session, labels=None, names=None, graph_id=None, limit=None, o
 
 @with_session
 def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=None, limit=None, offset=None,
-               order_by=desc(Node.updated_at)):
+			   order_by=desc(Node.updated_at)):
 	query = db_session.query(Edge)
 
 	if graph_id is not None:
@@ -664,3 +676,156 @@ def nodes_comparison(db_session, comp_expression=None):
 	return count, query.all()
 
 
+@with_session
+def find_graph_versions(db_session, names=None, graph_id=None, limit=None, offset=None,
+			   order_by=desc(GraphVersion.updated_at)):
+	"""
+	Find graph version by Graph ID.
+	:param db_session: Database session.
+	:param graph_id: Unique ID of the graph
+	:param name - Name of the graph version
+	:param limit - Number of entities to return. Default value is 20.
+	:param offset - Offset the list of returned entities by this number. Default value is 0.
+	:param order_by - Defines which column the results will be sorted by.
+	:return: Total, Graph Versions
+	"""
+
+	query = db_session.query(GraphVersion)
+
+	if graph_id is not None:
+		query = query.filter(GraphVersion.graph_id == graph_id)
+
+	names = [] if names is None else names
+	if len(names) > 0:
+		query = query.filter(
+			or_(*([GraphVersion.name.ilike(name) for name in names])))
+
+	total = query.count()
+
+	if order_by is not None:
+		query = query.order_by(order_by)
+
+	if offset is not None and limit is not None:
+		query = query.limit(limit).offset(offset)
+
+	return total, query.all()
+
+@with_session
+def get_graph_version_by_id(db_session, id):
+	"""
+	Get graph version by ID.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph version
+	:return: Graph Version if id exists else None
+	"""
+	return db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
+
+@with_session
+def add_graph_version(db_session, graph_id, name, graph_json, owner_email, style_json=None, description=None, is_default=None):
+	"""
+	Get graph version by ID.
+	:param db_session: Database session.
+	:param graph_id: Unique ID of the graph
+	:param name - Name of the graph version
+	:param graph_json - positions_json of the layouts.
+	:param owner_email - ID of user who owns the graph
+	:param style_json - style_json of the layouts.
+	:param description - ID of the graph the layout belongs to.
+	:param is_default - Set this graph_version as the default version of the graph
+	:return: Graph Version if id exists else None
+	"""
+	graph_version = GraphVersion(name=name, graph_id=graph_id, graph_json=graph_json, style_json=style_json, owner_email=owner_email, description=description)
+	if is_default is not None:
+		set_default_version(db_session, graph_id, graph_version.id)
+	db_session.add(graph_version)
+	return graph_version
+
+@with_session
+def delete_graph_version(db_session, id):
+	"""
+	Delete graph version.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph version
+	:return: None
+	"""
+	graph_version = db_session.query(GraphVersion).filter(GraphVersion.id == id).one_or_none()
+	db_session.delete(graph_version)
+	return
+
+@with_session
+def set_default_version(db_session, graph_id, default_version_id):
+	"""
+	Set the default graph version.
+	:param db_session: Database session.
+	:param graph_id: Unique ID of the graph
+	:param default_version_id: Unique ID of the graph version
+	:return: None
+	"""
+	graph = db_session.query(Graph).filter(Graph.id == graph_id).one_or_none()
+	setattr(graph, 'default_version_id', default_version_id)
+	return
+
+
+@with_session
+def get_graph_version_to_layout_status(db_session, graph_version_id, layout_id):
+	"""
+	GET graph version to layout compatibility status.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id: Unique ID of the layout
+	:return: Graph Version to Layout compatibility status if it exists else None
+	"""
+	return db_session.query(LayoutToGraphVersion).filter(and_(LayoutToGraphVersion.graph_version_id == graph_version_id, LayoutToGraphVersion.layout_id == layout_id)).one_or_none()
+
+
+@with_session
+def add_graph_version_to_layout_status(db_session, graph_version_id, layout_id, status=None):
+	"""
+	ADD graph version to layout compatibility.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id - Unique ID of the layout.
+	:param status - Compatibility status. [Default = None].
+	:return: Graph Version to Layout compatibility status if it exists else None
+	"""
+	graph_version_to_layout = LayoutToGraphVersion(graph_version_id=graph_version_id, layout_id=layout_id, status=status)
+	db_session.add(graph_version_to_layout)
+	return graph_version_to_layout
+
+
+@with_session
+def delete_graph_version_to_layout_status(db_session, graph_version_id, layout_id):
+	"""
+	DELETE graph version.
+	:param db_session: Database session.
+	:param id: Unique ID of the graph version
+	:return: None
+	"""
+	graph_version_to_layout = db_session.query(LayoutToGraphVersion).filter(and_(LayoutToGraphVersion.graph_version_id == graph_version_id,
+																		 LayoutToGraphVersion.layout_id == layout_id)).one_or_none()
+	db_session.delete(graph_version_to_layout)
+	return
+
+
+@with_session
+def update_graph_version_to_layout_status(db_session, graph_version_id, layout_id=None, status=None):
+	"""
+	UPDATE graph version to layout compatibility.
+	:param db_session: Database session.
+	:param graph_version_id: Unique ID of the graph version
+	:param layout_id - Unique ID of the layout.
+	:param status - Compatibility status. [Default = None].
+	:return: Graph Version to Layout compatibility status if layout_id is passed and row exists else None
+	"""
+
+	query = db_session.query(LayoutToGraphVersion).filter(LayoutToGraphVersion.graph_version_id == graph_version_id)
+	if layout_id:
+		query = query.filter(LayoutToGraphVersion.layout_id == layout_id)
+
+	graph_version_to_layout = query.all()
+
+	for item in graph_version_to_layout:
+		item.status = status
+	# if len(graph_version_to_layout) >1:
+	#	return {"message": "Updated status of %d Layouts" % (len(graph_version_to_layout))}
+	return graph_version_to_layout[0]

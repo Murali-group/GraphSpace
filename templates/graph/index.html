@@ -6,12 +6,14 @@
             var graph_json = {{ graph_json_string|safe }};
             var style_json = {{ style_json_string|safe }};
             var default_layout_id = {% if default_layout_id %}{{ default_layout_id|safe }}{% else %}null{% endif %};
+            var default_version_id = {% if default_version_id %}{{ default_version_id|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>
 
     <!--- Modals start here--->
     <div>
         {% include 'graph/delete_layout_modal.html' %}
+        {% include 'graph/layout_compatibility_table.html' %}
         {% include 'graph/edit_layout_modal.html' %}
 
         <div class="modal fade" id="shareGraphModal" tabindex="-1" role="dialog" aria-labelledby="shareGraphModalLabel">
@@ -221,8 +223,45 @@
                     <a class="link-reset" href="#graph_layouts_tab" data-toggle="tab">Layouts</a>
                 </li>
             {% endif %}
-        </ul>
+            {% if uid %}
+                <li class="text-center">
+                    <a class="link-reset" href="#graph_version_tab" data-toggle="tab">Graph Version</a>
+                </li>
+            {% endif %}
+            {% if uid %}
+                <li id="layout_compatibility_navtab" class="text-center bg-danger invisible">
+                    <a class="link-reset" href="#layout_compatibility_tab" data-toggle="tab">Layout Compatibility</a>
+                </li>
+            {% endif %}
 
+            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" id="layout_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                      <i> Layout :</i>    <bold style="font-weight: bold" id="current_layout_label">Select Layout</bold> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="layout_selector_dropdown" current_layout_id="">
+                        <li class="dropdown-header">Select Automatic Layout</li>
+                        <li> <a class="auto-layout" data-layout-id="circle" onclick="graphPage.onSelectLayoutBtnClick(this)">Circle </a></li>
+                        <li> <a class="auto-layout" data-layout-id="grid" onclick="graphPage.onSelectLayoutBtnClick(this)">Grid </a></li>
+                        <li> <a class="auto-layout" data-layout-id="concentric" onclick="graphPage.onSelectLayoutBtnClick(this)">Concentric </a></li>
+                        <li> <a class="auto-layout" data-layout-id="cose" onclick="graphPage.onSelectLayoutBtnClick(this)">Spring Embedder </a></li>
+                        <li> <a class="auto-layout" data-layout-id="breadthfirst" onclick="graphPage.onSelectLayoutBtnClick(this)">Tree </a></li>
+                        <li> <a class="auto-layout" data-layout-id="cola" onclick="graphPage.onSelectLayoutBtnClick(this)">Cola </a></li>
+                    </ul>
+                </div>
+
+            <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                    <button type="button" id="version_selector" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i> Version :</i> <bold style="font-weight: bold" id="current_version_label">--------</bold> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="version_selector_dropdown" current_version_id="">
+                    </ul>
+                </div>
+        </ul>
+        <div id="tickerBar">
+            <!-- Ticker bar content is rendered from graph_page.js !-->
+        </div>
         <div id="myTabContent" class="tab-content gs-full-height bg-white">
             <div class="tab-pane fade in active gs-full-height" id="graph_visualization_tab">
                 <div id="wrapper" class="gs-full-height">
@@ -275,7 +314,12 @@
             <div class="tab-pane fade gs-full-height" id="graph_layouts_tab">
                 {% include 'graph/layouts_table.html' %}
             </div>
-
+            <div class="tab-pane fade gs-full-height container" id="graph_version_tab">
+                {% include 'graph/graph_version_table.html' %}
+            </div>
+            <!--<div class="tab-pane fade gs-full-height container" id="layout_compatibility_tab">
+                {% include 'graph/layout_compatibility_table.html' %}
+            </div>-->
         </div>
 
     </div>

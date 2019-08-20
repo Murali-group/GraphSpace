@@ -475,3 +475,14 @@ p.lead {
     border: 1px solid #e1e4e5;
     border-radius: 3px;
 }
+
+.graph_version_span {
+    cursor:pointer;
+    color:#337ab7;
+
+}
+
+.graph_version_span:hover {
+    text-decoration:underline;
+
+}

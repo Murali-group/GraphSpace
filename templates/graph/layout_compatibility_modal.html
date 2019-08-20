@@ -1,0 +1,61 @@
+<div class="modal fade" id="applyLayoutModal" tabindex="-1" role="dialog" aria-labelledby="checkLayoutCompatibilityModal"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="applyLModal">Apply Selected Layout</h4>
+            </div>
+            <div class="modal-body">
+
+                <h4>The selected layout is compatible with the current version of this Graph.</h4>
+                <h4>Are you sure you want to apply this layout?</h4>
+                <br/>
+                <button type="button" id="ConfirmApplyLayoutBtn" class="btn btn-success">
+                    Apply Layout
+                </button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="checkLayoutCompatibilityModal" tabindex="-1" role="dialog" aria-labelledby="checkLayoutCompatibilityModal"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="checkLayoutModal">Check Layout Compatibility</h4>
+            </div>
+            <div class="modal-body">
+
+                <h4>The compatibility of this Layout is unknown for the selected version of the Graph</h4>
+                <h4>Do you want to run Compatibility check?</h4>
+                <br/>
+                <button type="button" id="ConfirmRemoveLayoutBtn" class="btn btn-success">
+                    Check Layout Compatibility
+                </button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="nonCompatibleLayoutModal" tabindex="-1" role="dialog" aria-labelledby="checkLayoutCompatibilityModal"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="nonLayoutModal">Layout not compatible</h4>
+            </div>
+            <div class="modal-body">
+
+                <h4>This layout is not compatible with the current version of the Graph</h4>
+                <br/>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>

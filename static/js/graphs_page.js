@@ -39,6 +39,15 @@ var apis = {
             apis.jsonRequest('GET', apis.nodes.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
         },
     },
+    version: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/version/'),
+        get: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, version_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.version.ENDPOINT({'graph_id': graph_id}) + version_id, undefined, successCallback, errorCallback)
+        },
+    },
     edges: {
         ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/edges/'),
         get: function (graph_id, data, successCallback, errorCallback) {
@@ -73,6 +82,24 @@ var apis = {
         ENDPOINT: '/ajax/compare/multi',
         get: function (data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.compare.ENDPOINT, data, successCallback, errorCallback)
+        }
+    },
+    compatibility: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/version/<%= graph_version_id %>/compatibility/'),
+        get: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        add: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        getByID: function (graph_id, graph_version_id, layout_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, undefined, successCallback, errorCallback)
+        },
+        update: function (graph_id, graph_version_id, layout_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, data, successCallback, errorCallback)
+        },
+        delete: function (graph_id, graph_version_id, layout_id, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.compatibility.ENDPOINT({'graph_id': graph_id, 'graph_version_id': graph_version_id}) + layout_id, undefined, successCallback, errorCallback)
         }
     },
     logging: {
@@ -450,6 +477,10 @@ var uploadGraphPage = {
 var graphPage = {
     cyGraph: undefined,
     timeout: null,
+    currentVersionID: null,
+    currentLayoutID: null,
+    elementsWithoutStyle: [],
+    unidentifiedLayoutElements: [],
     init: function () {
         /**
          * This function is called to setup the graph page.
@@ -497,6 +528,37 @@ var graphPage = {
             graphPage.cyGraph.unbind('tap').on('tap', graphPage.onTapGraphElement);
         });
 
+        $('#layoutCompatibilityModal').on('hidden.bs.modal', function () {
+            current_layout = $("#current_layout_label").text();
+            if( graphPage.elementsWithoutStyle.length ){
+                $('#tickerBar').empty();
+                $('#tickerBar').append($('<span>', {
+                        style : "padding:5px; display: block; background:#DB3847; color: white",
+                    }).html('<b>ERROR : &nbsp' + graphPage.elementsWithoutStyle.length + '</b> elements of <b>' + current_layout + '</b> are not compatible with the current version of the Graph.&nbsp').append($('<a>', {
+                            style : 'color:inherit',
+                            'id': 'tickerBarInfo',
+                            'onclick': "$('#layoutCompatibilityModal').modal('show');"
+                        }).html('<b>Click here to view more information!</b>'))
+                    );
+            }
+            else if( graphPage.unidentifiedLayoutElements.length ){
+                $('#tickerBar').empty();
+                $('#tickerBar').append($('<span>', {
+                        style : "padding:5px; display: block; background:#FFC010; color: black",
+                    }).html('<b>WARNING : &nbsp'  + current_layout + '</b> contains additional <b>' + graphPage.unidentifiedLayoutElements.length + '</b> elements absent in the current version of the Graph.&nbsp').append($('<a>', {
+                            style : 'color:inherit',
+                            'id': 'tickerBarInfo',
+                            'onclick': "$('#layoutCompatibilityModal').modal('show');"
+                        }).html('<b>Click here to view more information!</b>')).append($('<button>', {
+                            type : "button",
+                            class : "close",
+                            'aria-label' : "Close",
+                            'onclick': "$('#tickerBar').empty();"
+                }).html('<span aria-hidden="true">&times;</span>'))
+                    );
+            }
+        });
+
         $('#ConfirmRemoveLayoutBtn').click(graphPage.layoutsTable.onConfirmRemoveGraph);
         $('#ConfirmUpdateLayoutBtn').click(graphPage.layoutsTable.onConfirmUpdateGraph);
 
@@ -510,7 +572,8 @@ var graphPage = {
         if (!_.isEmpty(utils.getURLParameter('auto_layout'))) {
             graphPage.applyAutoLayout(utils.getURLParameter('auto_layout'));
         } else if (!_.isEmpty(utils.getURLParameter('user_layout'))) {
-            graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
+            //graphPage.applyUserLayout(utils.getURLParameter('user_layout'));
+            graphPage.getLayoutCompatibilityStatus(utils.getURLParameter('user_layout'));
         }
 
         $('#graphVisualizationTabBtn').click(function (e) {
@@ -535,13 +598,58 @@ var graphPage = {
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
     },
+    selectGraphVersion: function (row) {
+        label = $("#version_selector_dropdown").find('a[row_id=' + row + ']').attr('data');
+        $("#GraphVersionTable").find('tr').removeClass('success');
+
+        apis.version.getByID($('#GraphID').val(), row,
+            successCallback = function (response) {
+                graph_json = JSON.parse(response.graph_json);
+                style_json = JSON.parse(response.style_json);
+                if(style_json==null) style_json={}
+                //graphPage.cyGraph = graphPage.contructCytoscapeGraph();
+                $("#graphVisualizationTabBtn.link-reset").click();
+                $(location).attr('href', '#graph_visualization_tab');
+                graphPage.currentVersionID = row;
+                graphPage.init();
+                $("#version_selector_dropdown").attr('current_version_id', row);
+                $("#GraphVersionTable").find('span[row_id=' + row + ']').parent().parent().addClass('success');
+                window.history.pushState('graph_version', 'Graph Page', window.location.origin + window.location.pathname + '?graph_version=' + row);
+                //console.log("Success");
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access this Version."}, {type: 'danger'});
+            });
+        $('#version_selector > bold').text(label);
+    },
+    onSelectLayoutCompBtnClick: function (selector, index) {
+        elementType = selector.split('[')[0];
+        graphPage.cyGraph.elements().unselect();
+        graphPage.cyGraph.elements(selector).select();
+        graphPage.layoutEditor.init();
+        if (elementType == 'node') {
+            graphPage.layoutEditor.nodeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.nodes(':selected')));//$('#editSelectedNodesBtn').click();
+        }
+        else {
+            graphPage.layoutEditor.edgeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.edges(':selected')));//$('#editSelectedEdgesBtn').click();
+        }
+        //$("#graphVisualizationTabBtn.link-reset").click();
+        //$(location).attr('href', '#graph_visualization_tab');
+    },
     applyAutoLayout: function (layout_id) {
         graphPage.applyLayout(cytoscapeGraph.getAutomaticLayoutSettings(layout_id));
         console.log("after applying layout");
+        $('#tickerBar').empty();
+        $('#changeLayoutBtns').find('button').removeClass('btn-primary').addClass('btn-default');
+        $('#changeLayoutBtns').find('button[data-layout-id=' + layout_id + ']').removeClass('btn-default').addClass('btn-primary');
+        current_layout_name = $('#layout_selector_dropdown').find('a[data-layout-id=' + layout_id + ']').text();
+        $('#current_layout_label').text(current_layout_name);
         window.history.pushState('auto-layout', 'Graph Page', window.location.origin + window.location.pathname + '?auto_layout=' + layout_id);
         graphPage.defaultLayoutWidget.init(0);
     },
     applyUserLayout: function (layout_id) {
+        graphPage.currentLayoutID = layout_id;
         apis.layouts.getByID($('#GraphID').val(), layout_id,
             successCallback = function (response) {
                 graphPage.applyLayoutStyle(JSON.parse(response['style_json']));
@@ -549,6 +657,14 @@ var graphPage = {
                     name: 'preset',
                     positions: JSON.parse(response['positions_json'])
                 });
+
+                $('#changeLayoutBtns').find('button').removeClass('btn-primary').addClass('btn-default');
+                $('#userPrivateLayoutBtns').find('button').removeClass('btn-primary').addClass('btn-default');
+                $('#userSharedLayoutBtns').find('button').removeClass('btn-primary').addClass('btn-default');
+                $('#userPrivateLayoutBtns').find('button[data-layout-id=' + layout_id + ']').removeClass('btn-default').addClass('btn-primary');
+                $('#userSharedLayoutBtns').find('button[data-layout-id=' + layout_id + ']').removeClass('btn-default').addClass('btn-primary');
+                $('#current_layout_label').text(response.name);
+
                 window.history.pushState('user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id);
                 graphPage.defaultLayoutWidget.init(response['is_shared']);
             },
@@ -561,8 +677,156 @@ var graphPage = {
         if ($(e).hasClass('auto-layout')) {
             graphPage.applyAutoLayout($(e).data('layout-id'));
         } else {
-            graphPage.applyUserLayout($(e).data('layout-id'));
+            //graphPage.applyUserLayout($(e).data('layout-id'));
+            graphPage.getLayoutCompatibilityStatus($(e).data('layout-id'));
         }
+    },
+    getLayoutCompatibilityStatus: function (layout_id) {
+        //graphPage.applyUserLayout($(e).data('layout-id'));
+        var params = {data:''};
+        params.data["owner_email"] = $('#UserEmail').val();
+        //If current Version ID is not set use Default Version ID
+        var version_id = (graphPage.currentVersionID!=null)?graphPage.currentVersionID:default_version_id;
+        var current_layout = $('#layout_selector_dropdown').find('a[data-layout-id=' + layout_id + ']').text();
+        apis.compatibility.get($('#GraphID').val(), version_id, layout_id, params.data,
+                successCallback = function (response) {
+                    // This method is called when layouts are successfully fetched.
+                    if(response == null){
+                        response = {'status':'null'};
+                    }
+                    if(response.status=="False"){
+                        //graphPage.checkLayoutCompatibility(layout_id);
+                        $('#tickerBar').empty();
+                        $('#tickerBar').append($('<span>', {
+                        style : "padding:5px; display: block; background:#DB3847; color: white",
+                    }).html('<b>ERROR : &nbsp' + current_layout + '</b> is not compatible with the current version of the Graph.&nbsp').append($('<a>', {
+                            style : 'color:inherit',
+                            'id': 'tickerBarInfo',
+                            'onclick': "graphPage.checkLayoutCompatibility("+layout_id+");"
+                        }).html('<b>Click here to view more information!</b>'))
+                    );
+                    }
+                    /*else if(response.status=="False"){
+                        $.notify({
+                        message: "The selected layout is not compatible with the current version of Graph"
+                    }, {
+                        type: 'danger'
+                    });
+
+                    }*/
+                    else if(response.status=="True" || response.status=="true"){
+                        graphPage.applyUserLayout(layout_id);
+                        $("#layout_compatibility_navtab").addClass('invisible');
+                        $('#tickerBar').empty();
+                    }
+                    else {
+                        //graphPage.checkLayoutCompatibility(layout_id);
+                        $('#tickerBar').empty();
+                        $('#tickerBar').append($('<span>', {
+                        style : "padding: 5px; display: block; background:#FFC010; color: black",
+                    }).html('<b>WARNING : &nbsp </b> Compatibility status of <b>' + current_layout + '</b> is unknown for the current version of the Graph. &nbsp ').append($('<a>', {
+                            style : 'color:inherit',
+                            'id': 'tickerBarInfo',
+                            'onclick': "graphPage.checkLayoutCompatibility("+layout_id+");"
+                        }).html('<b>Click here to check Layout Compatibility!</b>'))
+                    );
+                    }
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching layouts.
+                    params.error('Error');
+                }
+            );
+    },
+    checkLayoutCompatibility: function (layout_id) {
+
+        var layout ={'style_json':'', 'position_json':''};
+        var res = null;
+        var style_json_dict = {};
+        var matchedElements = 0;
+        var compatibility_status = "False";
+        var style_json1 = cytoscapeGraph.getStylesheet(graphPage.cyGraph);
+        var current_layout = $('#layout_selector_dropdown').find('a[data-layout-id=' + layout_id + ']').text();
+        graphPage.unidentifiedLayoutElements = [];
+        graphPage.elementsWithoutStyle = [];
+        $.each(style_json1, function( index, value ) {
+            style_json_dict[value.selector] = false;
+        });
+        apis.layouts.getByID($('#GraphID').val(), layout_id,
+            successCallback = function (response) {
+                layout['style_json'] = JSON.parse(response['style_json']);
+                layout['positions_json'] = JSON.parse(response['positions_json']);
+                $.each(layout["style_json"].style, function( index, value ) {
+                    res = graphPage.cyGraph.filter(value.selector);
+                    if (res.length){
+                        style_json_dict[value.selector]= true;
+                        matchedElements += 1;
+                    }
+                    else {
+                        graphPage.unidentifiedLayoutElements.push({'name' : value.selector, 'style' : value.style});
+                    }
+                    console.log( index + ": " + value.selector );
+                });
+                if (Object.keys(style_json_dict).length <= matchedElements) {
+                    compatibility_status = "True";
+                    apis.compatibility.add($('#GraphID').val(), graphPage.currentVersionID, layout_id,
+                         {
+                            "owner_email": $('#UserEmail').val(),
+                            "graph_id": $('#GraphID').val(),
+                            "compatibility_status": compatibility_status
+                        },
+                        successCallback = function (response) {
+                        if (Object.keys(style_json_dict).length <= matchedElements){
+                            /*$.notify({
+                                message: "Compatibility status of Layout with ID : " + layout_id + " has been updated successfully"
+                            }, {
+                                type: 'success'
+                            });*/
+                        }
+                },
+                        errorCallback = function (response) {
+                        // This method is called when  error occurs while deleting group_to_graph relationship.
+                        $.notify({
+                            message: "Error storing Compatibility status"
+                        }, {
+                            type: 'danger'
+                        });
+                });
+
+                    //graphPage.applyUserLayout(layout_id);
+                    $("#layout_compatibility_navtab").addClass('invisible');
+
+                    $('#tickerBar').empty();
+                    $('#tickerBar').append($('<span>', {
+                        style : "padding: 5px; display: block; background:#2CA647; color: black",
+                    }).html('<b>Success : &nbsp ' + current_layout + '</b> is compatible with the current version of the Graph. &nbsp ').append($('<a>', {
+                            style : 'color:inherit',
+                            'id': 'tickerBarInfo',
+                            'onclick': "graphPage.applyUserLayout("+layout_id+"); $('#tickerBar').empty();"
+                        }).html('<b>Click here to apply this Layout!</b>'))
+                    );
+                }
+                else {
+                    graphPage.applyUserLayout(layout_id);
+                    $('#layoutCompatibilityModal').modal('show')
+                }
+                $.each(style_json1, function( index, value ) {
+                        if (style_json_dict[value.selector] == false){
+                            graphPage.elementsWithoutStyle.push({'name' : value.selector, 'style' : value.style});
+                        }
+                    });
+                $('#LayoutCompatibilityTable').bootstrapTable('refresh');
+                $('#UnknownElementsTable').bootstrapTable('refresh');
+
+
+
+                console.log("Applied Layout on " + matchedElements + " matching elements of "+ Object.keys(style_json_dict).length)
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when  error occurs while deleting group_to_graph relationship.
+                $.notify({message: "You are not authorized to access this layout, create an account and contact resource's owner for permission to access this layout."}, {type: 'danger'});
+            });
+
     },
     applyLayoutStyle: function (layoutStyle) {
         layoutStyle = _.map(cytoscapeGraph.parseStylesheet(layoutStyle), function (elemStyle) {
@@ -572,13 +836,14 @@ var graphPage = {
                     'selector': elemStyle['selector'],
                     'style': graphPage.getGraphSpaceNodeStyle(elemStyle['style'], elem.data())
                 }
-            } else {
+            } else if(elem.isEdge()){
                 return {
                     'selector': elemStyle['selector'],
                     'style': graphPage.getGraphSpaceEdgeStyle(elemStyle['style'], elem.data())
                 }
             }
         });
+        layoutStyle = layoutStyle.filter(function(n){ return n != undefined });
         graphPage.cyGraph.style().fromJson(_.concat(defaultStylesheet, layoutStyle, selectedElementsStylesheet)).update();
     },
     applyLayout: function (layoutID) {
@@ -679,7 +944,22 @@ var graphPage = {
                     if(typeof callback === 'function'){
                         callback(response.id);
                     };
-
+                    apis.compatibility.add($('#GraphID').val(), graphPage.currentVersionID, response.id,
+                         {
+                            "owner_email": $('#UserEmail').val(),
+                            "graph_id": $('#GraphID').val(),
+                            "compatibility_status": 'True'
+                        },
+                        successCallback = function (response) {
+                },
+                        errorCallback = function (response) {
+                        // This method is called when  error occurs while deleting group_to_graph relationship.
+                        $.notify({
+                            message: "Error storing Compatibility status"
+                        }, {
+                            type: 'danger'
+                        });
+                });
                 },
                 errorCallback = function (response) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
@@ -710,7 +990,9 @@ var graphPage = {
     onShareGraphWithPublicBtn: function (e, graph_id) {
 
         apis.graphs.update(graph_id, {
-                'is_public': 1
+                'is_public': 1,
+                'version_id': parseInt( $("#version_selector_dropdown").attr('current_version_id')),
+                'style_json': style_json //JSON.stringify(style_json)
             },
             successCallback = function (response) {
                 // This method is called when group_to_graph relationship is successfully deleted.
@@ -1070,7 +1352,7 @@ var graphPage = {
     },
     defaultLayoutWidget: {
         init: function (is_shared) {
-            if (_.isNil(is_shared)) {
+            if (utils.getURLParameter('auto_layout') || _.isNil(is_shared)) {
                 $('#setDefaultLayoutBtn').hide();
                 $('#removeDefaultLayoutBtn').hide();
             }else if (utils.getURLParameter('auto_layout')) {
@@ -1125,6 +1407,7 @@ var graphPage = {
                 });
             }
         },
+
         onRemoveDefaultLayoutBtn: function (e) {
             apis.graphs.update($('#GraphID').val(), {
                     'default_layout_id': 0
@@ -1175,6 +1458,143 @@ var graphPage = {
             );
         }
     },
+    graphVersionTable: {
+        getVersionByGraphID: function (params) {
+            /**
+             * This is the custom ajax request used to load version in graphVersionTable.
+             *
+             * params - query parameters for the ajax request.
+             *          It contains parameters like limit, offset, search, sort, order.
+             */
+
+            if (params.data["search"]) {
+                params.data["names"] = _.map(_.filter(_.split(params.data["search"], ','), function (s) {
+                    return s.indexOf(':') === -1;
+                }), function (str) {
+                    return '%' + str + '%';
+                });
+                params.data["labels"] = params.data["names"];
+            }
+
+            params.data["graph_id"] = $('#GraphID').val();
+            params.data["owner_email"] = $('#UserEmail').val();
+            apis.version.get($('#GraphID').val(), params.data,
+                successCallback = function (response) {
+                    // This method is called when nodes are successfully fetched.
+                    params.success(response);
+                    $(".link-reset[href='#graph_version_tab']").append('<span class="badge">' + response.total + '</span>')
+                    graphPage.currentVersionID = default_version_id;
+                    default_version = response.versions.find(x => x.id === default_version_id);
+                    default_version ? $('#current_version_label').text(default_version.name) : $('#current_version_label').text('Default');
+                    $("#GraphVersionTable").find('span[row_id=' + default_version_id + ']').parent().parent().addClass('success');
+                    if (!_.isEmpty(utils.getURLParameter('graph_version'))) {
+                    graphPage.selectGraphVersion(utils.getURLParameter('graph_version'));
+                }
+                },
+                errorCallback = function () {
+                    // This method is called when error occurs while fetching nodes.
+                    params.error('Error');
+                }
+            );
+        },
+        versionFormatter: function (value, row, index) {
+            dropdown_value = value
+            if (dropdown_value.length >15){
+                dropdown_value = dropdown_value.slice(0,15) + '...';
+            }
+            $("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + dropdown_value + '</a></li>')
+            return ('<span class="graph_version_span" onclick="graphPage.selectGraphVersion(' + row.id + ');" row_id="'+row.id+'">'+ value +'</span>')
+    },
+        operationsFormatter: function (value, row, index) {
+            if (row.id == default_version_id){
+                return [
+                    '<button class="btn btn-default btn-sm disabled" onclick="graphPage.graphVersionTable.setDefaultVersion(' +  row.id + ')" href="javascript:void(0)" version_id="' + row.id +  '" name="setGraphVersion">',
+                    'Default Version ',
+                    '</button>'
+                ].join('');
+            }
+            else
+                return [
+                    '<button class="btn btn-default btn-sm" onclick="graphPage.graphVersionTable.setDefaultVersion(' +  row.id + ')" href="javascript:void(0)" version_id="' + row.id +  '" name="setGraphVersion">',
+                    'Set as Default ',
+                    '</button>'
+                ].join('');
+        },
+        setDefaultVersion: function (version_id) {
+            console.log(version_id);
+            apis.graphs.update($('#GraphID').val(), {
+                    'default_version_id': version_id
+                },
+                successCallback = function (response) {
+                    default_version_id = response.default_version_id;
+                    $("button[name='setGraphVersion']").removeClass('disabled');
+                    $("button[name='setGraphVersion']").text('Set as default');
+                    $("button[version_id=" + version_id + "]").addClass('disabled');
+                    $("button[version_id=" + version_id + "]").text('Default Version');
+                    //$("#GraphVersionTable").find('tr').removeClass('success');
+                    //$("#GraphVersionTable").find('span[row_id=' + version_id + ']').parent().parent().addClass('success');
+
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting group_to_graph relationship.
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+        }
+    },
+    layoutCompatibilityTable: {
+        getConflictingLayoutElements: function (param) {
+            param.success({'data': graphPage.elementsWithoutStyle});
+            return [];
+        },
+        getUnidentifiedLayoutElements: function (param) {
+            param.success({'data': graphPage.unidentifiedLayoutElements});
+            return [];
+        },
+        elementsFormatter: function (value, row, index) {
+            //$("#version_selector_dropdown").append('<li><a row_id="'+row.id+'" data="' + value +'" onclick="graphPage.selectGraphVersion(' + row.id + ');">' + value + '</a></li>')
+            element_type = value.split('[')[0];
+            element_type = element_type[0].toUpperCase() + element_type.slice(1);
+            value = value.split('\'')[1];
+
+            return [
+                '<div class="pull-left"><strong>',
+                element_type=='Node'?row.style.label:value,
+                '</strong><br><small>', element_type, '</small>',
+                '</div>',
+                '<div class="pull-right margin-top-1">',
+                '&nbsp;<a class="edit-layout"  href="javascript:void(0)" title="Add Layout Element"> Add Style ' +  ' <i class="fa fa-lg fa-pencil"></i> </a>&nbsp;',
+                '</div>'
+            ].join('');
+        },
+        unknownElementsFormatter: function (value, row, index) {
+            element_type = value.split('[')[0];
+            element_type = element_type[0].toUpperCase() + element_type.slice(1);
+            value = value.split('\'')[1];
+            return [
+                '<div class="pull-left"><strong>',
+                element_type=='Node'?row.style.label:value,
+                '</strong><br><small>', element_type, '</small>',
+                '</div>',
+            ].join('');
+        },
+        operationEvents: {
+            'click .edit-layout': function (e, value, row, index) {
+                $('#nodeEditorSideBar1').addClass('active');
+                graphPage.onSelectLayoutCompBtnClick(row.name, index);
+                $('#editLayoutCompatibilityModal').data('index', index).modal('show');
+            }
+        },
+        selectorFormatter: function (value, row, index) {
+            return ('<span class="graph_version_span" onclick="graphPage.onSelectLayoutCompBtnClick(&quot;' + (row.name) + '&quot;);" row_name="'+row.name+'">'+ value +'</span>')
+    },
+        styleFormatter: function (value, row, index) {
+            return ('<span  >'+ JSON.stringify(value) +'</span>')
+    },
+    },
     layoutsTable: {
         getPrivateLayoutsByGraphID: function (params) {
             /**
@@ -1198,11 +1618,24 @@ var graphPage = {
 
                     if (response.total > 0) {
                         $('#selectSavedLayoutHeading').show();
+                        $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Private Layout'));
+                        _.each(response.layouts, function (layout) {
+                        graphPage.addLayoutBtns(layout, 'userPrivateLayoutBtns');
+                        dropdown_value = layout.name
+                        if (dropdown_value.length >15){
+                            dropdown_value = dropdown_value.slice(0,15) + '...';
+                        }
+                        $("#layout_selector_dropdown").append($('<li>').append($('<a>', {
+                                'row_id' : layout.id,
+                                'data-layout-id' : layout.id,
+                                'onclick' :"graphPage.onSelectLayoutBtnClick(this)"
+                            }).html(dropdown_value)));
+
+                        });
                     }
                     $('#userPrivateLayoutBtns').html('');
-                    _.each(response.layouts, function (layout) {
-                        graphPage.addLayoutBtns(layout, 'userPrivateLayoutBtns');
-                    });
+
+
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.
@@ -1231,11 +1664,23 @@ var graphPage = {
 
                     if (response.total > 0) {
                         $('#selectSavedLayoutHeading').show();
+                        $("#layout_selector_dropdown").append($('<li>', {class:"dropdown-header"}).html('Select Shared Layout'));
+                        _.each(response.layouts, function (layout) {
+                        graphPage.addLayoutBtns(layout, 'userSharedLayoutBtns');
+                        dropdown_value = layout.name
+                        if (dropdown_value.length >15){
+                            dropdown_value = dropdown_value.slice(0,15) + '...';
+                        }
+                        $("#layout_selector_dropdown").append($('<li>').append($('<a>', {
+                                'row_id' : layout.id,
+                                'data-layout-id' : layout.id,
+                                'onclick' :"graphPage.onSelectLayoutBtnClick(this)"
+                            }).html(dropdown_value)));
+                        });
                     }
                     $('#userSharedLayoutBtns').html('');
-                    _.each(response.layouts, function (layout) {
-                        graphPage.addLayoutBtns(layout, 'userSharedLayoutBtns');
-                    });
+
+
                 },
                 errorCallback = function () {
                     // This method is called when error occurs while fetching layouts.
@@ -1679,6 +2124,12 @@ var graphPage = {
                     $('#nodeLabel').val(collection.style('content'));
 
                     $("#nodeBackgroundColorPicker").colorpicker('setValue', collection.style('background-color'));
+
+                    $('#nodeShape1').val(collection.style('shape'));
+                    $('#nodeWidth1').val(_.replace(collection.style('width'), 'px', ''));
+                    $('#nodeHeight1').val(_.replace(collection.style('height'), 'px', ''));
+                    $('#nodeLabel1').val(collection.style('content'));
+                    $("#nodeBackgroundColorPicker1").colorpicker('setValue', collection.style('background-color'));
                 } else {
                     $('#nodeShape').val(null);
                     $('#nodeWidth').val(null);
@@ -1687,7 +2138,29 @@ var graphPage = {
 
                     $("#nodeBackgroundColorPicker").unbind('changeColor').colorpicker('setValue', null);
                     $('#nodeBackgroundColorPicker').on('changeColor', graphPage.layoutEditor.nodeEditor.onNodeBackgroudColorChange);
+
+                    $('#nodeShape1').val(null);
+                    $('#nodeWidth1').val(null);
+                    $('#nodeHeight1').val(null);
+                    $('#nodeLabel1').val(null);
+                    $("#nodeBackgroundColorPicker1").unbind('changeColor').colorpicker('setValue', null);
+                    $('#nodeBackgroundColorPicker1').on('changeColor', graphPage.layoutEditor.nodeEditor.changeNodeColor);
                 }
+                $(".colorpicker.dropdown-menu").css('z-index', '20500');
+            },
+            changeNodeColor: function () {
+                if (_.isEmpty($("#nodeBackgroundColorPicker1").colorpicker('getValue'))) {
+                    return $.notify({
+                        message: 'Please enter valid color value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+
+                    $('#nodeBackgroundColorPicker').colorpicker('setValue', $("#nodeBackgroundColorPicker1").colorpicker('getValue'))
+                }
+
+
             },
             updateNodeProperty: function (styleJSON) {
                 nodeSelector = _.template("node[name='<%= name %>']");
@@ -1712,6 +2185,7 @@ var graphPage = {
                 });
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#nodeEditorSideBar').addClass('active');
+                $('#nodeEditorSideBar1').addClass('active');
                 graphPage.layoutEditor.nodeEditor.init();
 
                 $('#nodeWidth').on('input', function (e) {
@@ -1766,6 +2240,57 @@ var graphPage = {
                         });
                     }
                 });
+
+
+                $('#nodeWidth1').on('input', function (e) {
+                    if (!_.isEmpty($('#nodeWidth1').val())) {
+                        $('#nodeWidth').val($('#nodeWidth1').val());
+                        $('#nodeWidth').trigger('input');
+                    }
+                    else {
+                        return $.notify({
+                            message: 'Please enter valid width value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    }
+                });
+
+                $('#nodeHeight1').on('input', function (e) {
+                    if (!_.isEmpty($('#nodeHeight1').val())) {
+                        $('#nodeHeight').val($('#nodeHeight1').val());
+                        $('#nodeHeight').trigger('input');
+                    }
+                    else {
+                        return $.notify({
+                            message: 'Please enter valid height value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    }
+                });
+
+                $('#nodeShape1').on('change', function (e) {
+                    if (_.isEmpty($('#nodeShape1').val())) {
+                        return $.notify({
+                            message: 'Please enter valid shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        $('#nodeShape').val($('#nodeShape1').val());
+                        $('#nodeShape').trigger('change');
+                    }
+                });
+
+                $('#nodeLabel1').on('input', function (e) {
+                    if (!_.isEmpty($('#nodeLabel1').val())) {
+                        $('#nodeLabel').val($('#nodeLabel1').val());
+                        $('#nodeLabel').trigger('input');
+                    }
+                });
+
+                $('#nodeBackgroundColorPicker1').on('changeColor', graphPage.layoutEditor.nodeEditor.changeNodeColor);
             },
             close: function (save) {
                 if (save) {
@@ -1779,11 +2304,21 @@ var graphPage = {
                         }
                     });
                     graphPage.layoutEditor.nodeEditor.styleBeforeEdit = null;
+                    index = $('#editLayoutCompatibilityModal').data('index');
+                    if (graphPage.elementsWithoutStyle.length){
+                        graphPage.elementsWithoutStyle.splice(index, 1);
+                    }
+                    else {
+                        $('#tickerBar').empty();
+                    }
+                    $('#LayoutCompatibilityTable').bootstrapTable('refresh');
                 } else {
                     cytoscapeGraph.applyStylesheet(graphPage.cyGraph, graphPage.layoutEditor.nodeEditor.styleBeforeEdit);
                 }
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#layoutEditorSideBar').addClass('active');
+                $('#editLayoutCompatibilityModal').modal('hide');
+                if (graphPage.elementsWithoutStyle.length==0) $('#tickerBar').empty();
             },
             onNodeBackgroudColorChange: function (e) {
                 if (_.isEmpty($("#nodeBackgroundColorPicker").colorpicker('getValue'))) {
@@ -1811,6 +2346,13 @@ var graphPage = {
                     $('#edgeSourceArrowShape').val(collection.style('source-arrow-shape'));
                     $('#edgeTargetArrowShape').val(collection.style('target-arrow-shape'));
                     $("#edgeLineColorPicker").colorpicker('setValue', collection.style('line-color'));
+
+
+                    $('#edgeWidth1').val(_.replace(collection.style('width'), 'px', ''));
+                    $('#edgeStyle1').val(collection.style('line-style'));
+                    $('#edgeSourceArrowShape1').val(collection.style('source-arrow-shape'));
+                    $('#edgeTargetArrowShape1').val(collection.style('target-arrow-shape'));
+                    $("#edgeLineColorPicker1").colorpicker('setValue', collection.style('line-color'));
                     collection.select();
                 } else {
                     $('#edgeWidth').val(null);
@@ -1819,7 +2361,31 @@ var graphPage = {
 
                     $("#edgeLineColorPicker").unbind('changeColor').colorpicker('setValue', null);
                     $('#edgeLineColorPicker').on('changeColor', graphPage.layoutEditor.edgeEditor.onEdgeLineColorChange);
+
+
+                    $('#edgeWidth1').val(null);
+                    $('#edgeStyle1').val(null);
+
+
+                    $("#edgeLineColorPicker1").unbind('changeColor').colorpicker('setValue', null);
+                    $('#edgeLineColorPicker1').on('changeColor', graphPage.layoutEditor.edgeEditor.changeEdgeColor);
                 }
+                $(".colorpicker.dropdown-menu").css('z-index', '20500');
+            },
+            changeEdgeColor: function () {
+                if (_.isEmpty($("#edgeLineColorPicker1").colorpicker('getValue'))) {
+                    return $.notify({
+                        message: 'Please enter valid color value!',
+                    }, {
+                        type: 'warning'
+                    });
+                } else {
+                    $('#edgeLineColorPicker').colorpicker('setValue', $("#edgeLineColorPicker1").colorpicker('getValue'))
+                    //$('#nodeBackgroundColorPicker').val($("#nodeBackgroundColorPicker1").colorpicker('getValue'));
+                    //$('#nodeBackgroundColorPicker').trigger('change');
+                }
+
+
             },
             onEdgeLineColorChange: function (e) {
 
@@ -1861,12 +2427,22 @@ var graphPage = {
                             'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
                         }
                     });
+                    index = $('#editLayoutCompatibilityModal').data('index');
+                    if (graphPage.elementsWithoutStyle.length){
+                        graphPage.elementsWithoutStyle.splice(index, 1);
+                    }
+                    else {
+                        $('#tickerBar').empty();
+                    }
+                    $('#LayoutCompatibilityTable').bootstrapTable('refresh');
                     graphPage.layoutEditor.edgeEditor.styleBeforeEdit = null;
                 } else {
                     cytoscapeGraph.applyStylesheet(graphPage.cyGraph, graphPage.layoutEditor.edgeEditor.styleBeforeEdit);
                 }
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#layoutEditorSideBar').addClass('active');
+                $('#editLayoutCompatibilityModal').modal('hide');
+                if (graphPage.elementsWithoutStyle.length==0) $('#tickerBar').empty();
             },
             open: function (collection) {
                 collection.unselect();
@@ -1879,6 +2455,7 @@ var graphPage = {
 
                 $('.gs-sidebar-nav').removeClass('active');
                 $('#edgeEditorSideBar').addClass('active');
+                $('#edgeEditorSideBar1').addClass('active');
                 graphPage.layoutEditor.edgeEditor.init();
 
                 $('#edgeWidth').on('input', function (e) {
@@ -1937,8 +2514,62 @@ var graphPage = {
                     }
                 });
 
-                $('#nodeBackgroundColorPicker').on('changeColor', graphPage.layoutEditor.edgeEditor.onEdgeLineColorChange);
+                //$('#nodeBackgroundColorPicker').on('changeColor', graphPage.layoutEditor.edgeEditor.onEdgeLineColorChange);
+                $('#edgeLineColorPicker').on('changeColor', graphPage.layoutEditor.edgeEditor.onEdgeLineColorChange);
 
+                $('#edgeLineColorPicker1').on('changeColor', graphPage.layoutEditor.edgeEditor.changeEdgeColor);
+
+                $('#edgeWidth1').on('input', function (e) {
+                    if (_.isEmpty($('#edgeWidth1').val())) {
+                        return $.notify({
+                            message: 'Please enter valid width value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        $('#edgeWidth').val($('#edgeWidth1').val());
+                        $('#edgeWidth').trigger('input');
+                    }
+                });
+
+                $('#edgeStyle1').on('change', function (e) {
+                    if (_.isEmpty($('#edgeStyle1').val())) {
+                        return $.notify({
+                            message: 'Please enter valid style value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        $('#edgeStyle').val($('#edgeStyle1').val());
+                        $('#edgeStyle').trigger('change');
+                    }
+                });
+
+                $('#edgeSourceArrowShape1').on('change', function (e) {
+                    if (_.isEmpty($('#edgeSourceArrowShape1').val())) {
+                        return $.notify({
+                            message: 'Please enter valid arrow shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                        $('#edgeSourceArrowShape').val($('#edgeSourceArrowShape1').val());
+                        $('#edgeSourceArrowShape').trigger('change');
+                    }
+                });
+
+                $('#edgeTargetArrowShape1').on('change', function (e) {
+                    if (_.isEmpty($('#edgeTargetArrowShape1').val())) {
+                        return $.notify({
+                            message: 'Please enter valid arrow shape value!',
+                        }, {
+                            type: 'warning'
+                        });
+                    } else {
+                         $('#edgeTargetArrowShape').val($('#edgeTargetArrowShape1').val());
+                        $('#edgeTargetArrowShape').trigger('change');
+                    }
+                });
             }
 
         }

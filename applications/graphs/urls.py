@@ -30,6 +30,11 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	# Graph Versions
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/$', views.graph_versions_ajax_api, name='graph_versions_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)$', views.graph_versions_ajax_api, name='graph_versions_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)/compatibility$', views.graph_versions_to_layout_ajax_api, name='graph_versions_to_layout_ajax_api'),
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)/compatibility/(?P<layout_id>[^/]+)$', views.graph_versions_to_layout_ajax_api, name='graph_versions_to_layout_ajax_api'),
 
 	# REST APIs Endpoints
 
@@ -48,5 +53,8 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_rest_api, name='graph_layouts_rest_api'),
 	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_rest_api, name='graph_layouts_rest_api'),
+	# Graph Nodes
+	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/version/$', views.graph_versions_rest_api, name='graph_versions_rest_api'),
+	url(r'^api/v1/graphs/(?P<graph_id>[^/]+)/version/(?P<version_id>[^/]+)$', views.graph_versions_rest_api, name='graph_versions_rest_api'),
 
 ]

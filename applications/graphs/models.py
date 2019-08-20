@@ -19,6 +19,10 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 	graph_json = Column(String)
 	style_json = Column(String)
+	#graph_json = Column(String, nullable=False)
+	#style_json = Column(String, nullable=False)
+	default_version_id = Column(Integer, ForeignKey('graph_version.id', ondelete="CASCADE", onupdate="CASCADE"),
+	                           nullable=True)
 	is_public = Column(Integer, nullable=False, default=0)
 	default_layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"),
 	                           nullable=True)
@@ -31,6 +35,11 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	                       cascade="all, delete-orphan")
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
+
+	default_version = relationship("GraphVersion", foreign_keys=[default_version_id], back_populates="default_version_graph",
+								  uselist=False)
+	graph_versions = relationship("GraphVersion", foreign_keys="GraphVersion.graph_id", back_populates="graph",
+								  passive_deletes=True)
 
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
@@ -56,6 +65,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 				'is_public': cls.is_public,
 				'tags': [tag.name for tag in cls.tags],
 				'default_layout_id': cls.default_layout_id,
+				'default_version_id': cls.default_version_id,
 				'created_at': cls.created_at.isoformat(),
 				'updated_at': cls.updated_at.isoformat()
 			}
@@ -64,11 +74,12 @@ class Graph(IDMixin, TimeStampMixin, Base):
 				'id': cls.id,
 				'owner_email': cls.owner_email,
 				'name': cls.name,
-				'graph_json': json.loads(cls.graph_json),
-				'style_json': json.loads(cls.style_json),
+				'graph_json': json.loads(cls.default_version.graph_json),
+				'style_json': json.loads(cls.default_version.style_json) if cls.default_version.style_json else {},
 				'is_public': cls.is_public,
 				'tags': [tag.name for tag in cls.tags],
 				'default_layout_id': cls.default_layout_id,
+				'default_version_id': cls.default_version_id,
 				'created_at': cls.created_at.isoformat(),
 				'updated_at': cls.updated_at.isoformat()
 			}
@@ -279,3 +290,74 @@ class GraphToTag(TimeStampMixin, Base):
 	def __table_args__(cls):
 		args = cls.constraints + cls.indices
 		return args
+
+
+class GraphVersion(IDMixin, TimeStampMixin, Base):
+	__tablename__ = 'graph_version'
+
+	name = Column(String, nullable=False)
+	graph_id = Column(Integer, ForeignKey('graph.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+	graph_json = Column(String, nullable=False)
+	style_json = Column(String, nullable=False)
+	description = Column(String, nullable=True)
+	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="graph_versions", uselist=False)
+	default_version_graph = relationship("Graph", foreign_keys="Graph.default_version_id",
+	                                     back_populates="default_version", cascade="all,  delete-orphan",
+	                                     uselist=False)
+	constraints = (
+		UniqueConstraint('graph_id', 'name', name='_graph_version_uc_graph_id_name'),
+		UniqueConstraint('id', 'name', name='_graph_version_uc_id_name'),
+	)
+
+	indices = (
+		Index('graph_version_idx_name', text("name gin_trgm_ops"), postgresql_using="gin"),
+	)
+
+	@declared_attr
+	def __table_args__(cls):
+		args = cls.constraints + cls.indices
+		return args
+
+	def serialize(cls, **kwargs):
+		if 'summary' in kwargs and kwargs['summary']:
+			return {
+				'id': cls.id,
+				'name': cls.name,
+				'description': cls.description,
+				'creator': cls.owner_email,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}
+		else:
+			return {
+				'id': cls.id,
+				'name': cls.name,
+				'description': cls.description,
+				'graph_json': cls.graph_json,
+				'style_json': cls.style_json,
+				'creator': cls.owner_email,
+				'created_at': cls.created_at.isoformat(),
+				'updated_at': cls.updated_at.isoformat()
+			}
+
+
+class LayoutToGraphVersion(IDMixin, TimeStampMixin, Base):
+	__tablename__ = 'layout_to_graph_version'
+
+	layout_id = Column(Integer, ForeignKey('layout.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	graph_version_id = Column(Integer, ForeignKey('graph_version.id', ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+	status = Column(String, nullable=True)
+
+	constraints = (
+		UniqueConstraint('layout_id', 'graph_version_id', 'compatibility_status', name='layout_uc_layout_id_graph_version_id_compatibility_status')
+	)
+
+	def serialize(cls, **kwargs):
+		return {
+			'graph_version_id': cls.graph_version_id,
+			'layout_id': cls.layout_id,
+			'status': cls.status,
+			'created_at': cls.created_at.isoformat(),
+			'updated_at': cls.updated_at.isoformat()
+		}
