@@ -44,13 +44,15 @@ var compareGraphPage = {
             compareGraphPage.compareGraphs();
         });
         */
-        $("#dropdownMenu1").on("focusin", function () {
+        $("#dropdownMenu1").on("focusout", function () {
             var value = "";
             $("#search-place-holder").val("");
             $(".dropdown-menu li").filter(function () {
                 $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
             });
-
+            if( $('#dropdownMenu1').val() && $('#dropdownMenu2').val() && $('#operatorMenu1').val()){
+                compareGraphPage.compareGraphs();
+            }
         });
         $("#dropdownMenu2").on("focusin", function () {
             var value = "";
@@ -141,19 +143,27 @@ var compareGraphPage = {
         */
         if ($('input:checkbox:checked').length > 1) {
             console.log('Compare');
-            $('#comparehref > li > a')[0].setAttribute('href', href + 'operation=intersection');
-            $('#comparehref > li > a')[1].setAttribute('href', href + 'operation=difference');
-            $('#compareHrefDiv').css('visibility', 'visible');
+            _.each($('[id^=comparehref] > li > a[data="Intersection"]'), function(item){
+                item.setAttribute('href', href + 'operation=intersection');
+            });
+            _.each($('[id^=comparehref] > li > a[data="Difference"]'), function(item){
+                item.setAttribute('href', href + 'operation=difference');
+            });
+            $('[id^=compareHrefDiv]').css('visibility', 'visible');
         } else {
-            $('#compareHrefDiv').css('visibility', 'hidden');
+            $('[id^=compareHrefDiv]').css('visibility', 'hidden');
         }
         if ($('input:checkbox:checked').length == 2) {
             console.log('Compare');
-            $('#comparehref > li > a')[0].setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
-                + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=intersection');
-            $('#comparehref > li > a')[1].setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
+            _.each($('[id^=comparehref] > li > a[data="Intersection"]'), function(item){
+                item.setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
+                    + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=intersection');
+            });
+            _.each($('[id^=comparehref] > li > a[data="Difference"]'), function(item){
+                item.setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
                 + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=difference');
-            $('#compareHrefDiv').css('visibility', 'visible');
+            });
+            $('[id^=compareHrefDiv]').css('visibility', 'visible');
         }
     },
     colorPickerHelper: function (obj, event, graph_id, common) {
