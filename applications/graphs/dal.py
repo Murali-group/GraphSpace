@@ -628,6 +628,23 @@ def nodes_intersection_multi(db_session, graphs):
 
 
 @with_session
+def nodes_difference_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Node).filter(Node.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Node).filter(Node.graph_id == graph_id).subquery()
+		query = query.outerjoin(sub_q, sub_q.c.name == Node.name).\
+			filter(sub_q.c.name == None)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
 def edges_intersection_multi(db_session, graphs):
 	"""
 		Find node intersection of N Graphs.
@@ -640,6 +657,23 @@ def edges_intersection_multi(db_session, graphs):
 		sub_q = db_session.query(Edge).filter(Edge.graph_id == graph_id).subquery()
 		query = query.join(sub_q, sub_q.c.head_node_name == Edge.head_node_name)\
 			.filter(Edge.tail_node_name == sub_q.c.tail_node_name)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_difference_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Edge).filter(Edge.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Edge).filter(Edge.graph_id == graph_id).subquery()
+		query = query.join(sub_q, sub_q.c.head_node_name == Edge.head_node_name)\
+			.filter(Edge.tail_node_name == sub_q.c.tail_node_name).filter(sub_q.c.head_node_name == None)
 	total = query.count()
 	return total, query.all()
 

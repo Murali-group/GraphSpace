@@ -730,8 +730,8 @@ def get_graphs_difference_multi(request, graphs):
 		nodes & edges: object
 
 	"""
-	node_data = db.nodes_difference(request.db_session, graph_1, graph_2)
-	edge_data = db.edges_difference(request.db_session, graph_1, graph_2)
+	node_data = db.nodes_difference_multi(request.db_session, graphs)
+	edge_data = db.edges_difference_multi(request.db_session, graphs)
 	return node_data, edge_data
 
 
