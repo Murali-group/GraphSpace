@@ -141,6 +141,7 @@ var compareGraphPage = {
             href += 'id=' + item.getAttribute('row_id') + '&';
         });
         */
+        $('.bootstrap-table > .fixed-table-toolbar').addClass('pull-right');
         if ($('input:checkbox:checked').length > 1) {
             console.log('Compare');
             _.each($('[id^=comparehref] > li > a[data="Intersection"]'), function(item){
