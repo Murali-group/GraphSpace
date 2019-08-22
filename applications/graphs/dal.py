@@ -3,7 +3,7 @@ from sqlalchemy.orm import joinedload, subqueryload
 
 from applications.users.models import *
 from graphspace.wrappers import with_session
-from sqlalchemy.orm import defer, undefer
+from sqlalchemy.orm import defer, undefer, aliased
 
 
 @with_session
@@ -458,3 +458,243 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+
+@with_session
+def nodes_intersection(db_session, graph_1_id=None, graph_2_id=None):
+	"""
+		Find node intersection of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:return: list: Total, queried nodes
+	"""
+	alias_node = aliased(Node)
+	query = db_session.query(Node, alias_node)
+
+	if graph_1_id is not None and graph_2_id is not None:
+		query = query.filter(Node.graph_id == graph_1_id).\
+				join(alias_node, Node.name == alias_node.name).\
+				filter(alias_node.graph_id == graph_2_id)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def nodes_difference(db_session, graph_1_id=None, graph_2_id=None):
+	"""
+		Find node difference of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:return: list: Total, queried nodes
+	"""
+	graph1_query = db_session.query(Node).filter(Node.graph_id == graph_1_id)
+	graph2_query = db_session.query(Node).filter(Node.graph_id == graph_2_id)
+	sub_q = graph2_query.subquery()
+
+	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Node.name).\
+			filter(sub_q.c.name == None)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_intersection(db_session, graph_1_id=None, graph_2_id=None):
+	"""
+		Find edge intersection of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:return: list: Total, queried nodes
+	"""
+	alias_edge = aliased(Edge)
+	query = db_session.query(Edge, alias_edge)
+
+	if graph_1_id is not None and graph_2_id is not None:
+		query = query.filter(Edge.graph_id == graph_1_id).\
+				join(alias_edge, Edge.head_node_name == alias_edge.head_node_name).\
+				filter(alias_edge.graph_id == graph_2_id).\
+				filter(Edge.tail_node_name == alias_edge.tail_node_name)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_difference(db_session, graph_1_id=None, graph_2_id=None):
+	"""
+		Find edge difference of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:return: list: Total, queried nodes
+	"""
+	graph1_query = db_session.query(Edge).filter(Edge.graph_id == graph_1_id)
+	graph2_query = db_session.query(Edge).filter(Edge.graph_id == graph_2_id)
+	sub_q = graph2_query.subquery()
+
+	query = graph1_query.outerjoin(sub_q, sub_q.c.name == Edge.name). \
+		filter(sub_q.c.name == None)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def nodes_subquery(db_session, graph_1_id=None, graph_2_id=None, operation=None):
+	"""
+		Find node subquery of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:param operation: Comparison operation - difference or intersection..
+		:return: query.subquery object.
+	"""
+	alias_node1 = aliased(Node, name='n1')
+	alias_node2 = aliased(Node, name='n2')
+	if operation == 'intersection':
+		query = db_session.query(alias_node1, alias_node2)
+		if graph_1_id is not None and graph_2_id is not None:
+			query = query.filter(alias_node1.graph_id == graph_1_id). \
+				join(alias_node2, alias_node1.name == alias_node2.name). \
+				filter(alias_node2.graph_id == graph_2_id)
+			n1 = query.subquery(name='s1', with_labels=True)
+			db_session.query(Node).filter(Node.graph_id == 6).join(n1, n1.c.name == Node.name)
+			return query.subquery(name='s1', with_labels=True)
+	else:
+		graph1_query = db_session.query(Node).filter(Node.graph_id == graph_1_id)
+		graph2_query = db_session.query(Node).filter(Node.graph_id == graph_2_id)
+		sub_q = graph2_query.subquery()
+
+		query = graph1_query.outerjoin(sub_q, sub_q.c.name == Node.name). \
+			filter(sub_q.c.name == None)
+		return query.subquery()
+
+@with_session
+def edges_subquery(db_session, graph_1_id=None, graph_2_id=None, operation=None):
+	"""
+		Find node subquery of 2 Graphs.
+		:param db_session: Database session.
+		:param graph_1_id: Unique ID of Graph 1.
+		:param graph_2_id: Unique ID of the Graph 2.
+		:param operation: Comparison operation - difference or intersection..
+		:return: query.subquery object.
+	"""
+	alias_edge = aliased(Edge)
+	if operation == 'intersection':
+		query = db_session.query(Edge, alias_edge)
+
+		if graph_1_id is not None and graph_2_id is not None:
+			query = query.filter(Edge.graph_id == graph_1_id). \
+				join(alias_edge, Edge.head_node_name == alias_edge.head_node_name). \
+				filter(alias_edge.graph_id == graph_2_id). \
+			filter(Edge.tail_node_name == alias_edge.tail_node_name)
+			return query.subquery
+		else:
+			graph1_query = db_session.query(Edge).filter(Edge.graph_id == graph_1_id)
+			graph2_query = db_session.query(Edge).filter(Edge.graph_id == graph_2_id)
+			sub_q = graph2_query.subquery()
+
+			query = graph1_query.outerjoin(sub_q, sub_q.c.name == Edge.name). \
+				filter(sub_q.c.name == None)
+			return query.subquery
+
+
+@with_session
+def nodes_intersection_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Node).filter(Node.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Node).filter(Node.graph_id == graph_id).subquery()
+		query = query.join(sub_q, sub_q.c.name == Node.name)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def nodes_difference_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Node).filter(Node.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Node).filter(Node.graph_id == graph_id).subquery()
+		query = query.outerjoin(sub_q, sub_q.c.name == Node.name).\
+			filter(sub_q.c.name == None)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_intersection_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Edge).filter(Edge.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Edge).filter(Edge.graph_id == graph_id).subquery()
+		query = query.join(sub_q, sub_q.c.head_node_name == Edge.head_node_name)\
+			.filter(Edge.tail_node_name == sub_q.c.tail_node_name)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def edges_difference_multi(db_session, graphs):
+	"""
+		Find node intersection of N Graphs.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	query = db_session.query(Edge).filter(Edge.graph_id == graphs[0])
+	for graph_id in graphs[1:]:
+		sub_q = db_session.query(Edge).filter(Edge.graph_id == graph_id).subquery()
+		query = query.join(sub_q, sub_q.c.head_node_name == Edge.head_node_name)\
+			.filter(Edge.tail_node_name == sub_q.c.tail_node_name).filter(sub_q.c.head_node_name == None)
+	total = query.count()
+	return total, query.all()
+
+
+@with_session
+def nodes_comparison(db_session, comp_expression=None):
+	"""
+		Work In Progress.
+		:param db_session: Database session.
+		:param graph: Unique IDs of the Graphs.
+		:return: list: total, queried nodes
+	"""
+	# Infix -> a 'i' ( b - c )
+	# Postfix  ->  a b c - 'i'
+
+	comp_expression = [1, 2, 5, 'd', 'i']
+	temp_stack = []
+	for item in comp_expression:
+		if item not in ['d','i']:
+			temp_stack.append(item)
+		elif item in ['d','i']:
+			query1 = temp_stack.pop()
+			query2 = temp_stack.pop()
+			if type(query1) != int:
+				query = db_session.query(Node).filter(Node.graph_id == query2)
+				sub_query = query.outerjoin(query1, query1.c.name == Node.name). \
+					filter(query1.c.name == None)
+			else:
+				sub_query = nodes_subquery(db_session, query1, query2, item)
+			temp_stack.append(sub_query)
+	query = temp_stack.pop()
+	count = query.count()
+
+	return count, query.all()
+
+

@@ -1,5 +1,7 @@
 <table id="SharedGraphsTable"
        data-toggle="table"
+       data-toolbar="#compareHrefDiv1"
+       data-toolbar-align="left"
        data-show-refresh="true"
        data-show-columns="false"
        data-show-toggle="true"
@@ -13,6 +15,7 @@
        data-sort-order="desc">
     <thead>
     <tr>
+        <th data-width="10" data-field="selection" data-formatter="graphsPage.graphsTable.graphCheckBoxFormatter"></th>
         <th data-field="name" data-sortable="True"
             data-formatter="graphsPage.graphsTable.graphNameFormatter">Graph Name
         </th>
