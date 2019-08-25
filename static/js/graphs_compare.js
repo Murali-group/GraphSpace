@@ -44,23 +44,23 @@ var compareGraphPage = {
             compareGraphPage.compareGraphs();
         });
         */
-        $("#dropdownMenu1").on("focusout", function () {
-            var value = "";
-            $("#search-place-holder").val("");
-            $(".dropdown-menu li").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-            if( $('#dropdownMenu1').val() && $('#dropdownMenu2').val() && $('#operatorMenu1').val()){
-                compareGraphPage.compareGraphs();
-            }
-        });
-        $("#dropdownMenu2").on("focusin", function () {
-            var value = "";
-            $("#search-place-holder").val("");
-            $(".dropdown-menu li").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-        });
+        // $("#dropdownMenu1").on("change", function () {
+        //     var value = "";
+        //     $("#search-place-holder").val("");
+        //     $(".dropdown-menu li").filter(function () {
+        //         $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        //     });
+        //     if( $('#dropdownMenu1').val() && $('#dropdownMenu2').val() && $('#operatorMenu1').val()){
+        //         compareGraphPage.compareGraphs();
+        //     }
+        // });
+        // $("#dropdownMenu2").on("focusin", function () {
+        //     var value = "";
+        //     $("#search-place-holder").val("");
+        //     $(".dropdown-menu li").filter(function () {
+        //         $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        //     });
+        // });
         $('#colorpicker1').colorpicker();
         $('#colorpicker1').colorpicker().on('changeColor', function (event) {
             compareGraphPage.colorPickerHelper($('#colorpicker1'), event, 'graph_1', $('#operatorcolorpicker'));
@@ -144,11 +144,8 @@ var compareGraphPage = {
         $('.bootstrap-table > .fixed-table-toolbar').addClass('pull-right');
         if ($('input:checkbox:checked').length > 1) {
             console.log('Compare');
-            _.each($('[id^=comparehref] > li > a[data="Intersection"]'), function(item){
+            _.each($('[id^=compareHrefDiv] > a[data="Intersection"]'), function(item){
                 item.setAttribute('href', href + 'operation=intersection');
-            });
-            _.each($('[id^=comparehref] > li > a[data="Difference"]'), function(item){
-                item.setAttribute('href', href + 'operation=difference');
             });
             $('[id^=compareHrefDiv]').css('visibility', 'visible');
         } else {
@@ -156,13 +153,9 @@ var compareGraphPage = {
         }
         if ($('input:checkbox:checked').length == 2) {
             console.log('Compare');
-            _.each($('[id^=comparehref] > li > a[data="Intersection"]'), function(item){
+            _.each($('[id^=compareHrefDiv] > a[data="Intersection"]'), function(item){
                 item.setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
                     + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=intersection');
-            });
-            _.each($('[id^=comparehref] > li > a[data="Difference"]'), function(item){
-                item.setAttribute('href', '/compare?graph_1=' + compareGraphPage.graph_ids[0]
-                + '&graph_2=' + compareGraphPage.graph_ids[1] + '&operation=difference');
             });
             $('[id^=compareHrefDiv]').css('visibility', 'visible');
         }
@@ -298,14 +291,24 @@ var compareGraphPage = {
          * correspond to the selected value.
          * It called in populateCompareDropdownMenu().
          */
+        if (obj.parent().parent().siblings('button').attr('id') == "operatorMenu1")
+            $('#operatorMenu1').attr('value', obj.attr('row_id'));
         if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu1")
+        {
             compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu3'));
+            $('#dropdownMenu1').attr('value', obj.attr('row_id'))
+        }
         if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu2")
+        {
             compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu4'));
+            $('#dropdownMenu2').attr('value', obj.attr('row_id'))
+        }
         if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu3")
             compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu1'));
         if (obj.parent().parent().siblings('button').attr('id') == "dropdownMenu4")
             compareGraphPage.setDropdownLabel(obj, $('#dropdownMenu2'));
+        if (obj.parent().parent().siblings('button').attr('id')[12]>2)
+            $('#operatorMenu1').attr('value', '');
 
         var label = obj.parent().parent().siblings('button').children('i');
         if (label.text()) {
@@ -316,17 +319,24 @@ var compareGraphPage = {
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").text(obj.attr('data'));
             obj.parent().parent().siblings("button[class*='dropdown-toggle']").append('<span class="caret"></span>');
 
-            if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu1') {
-                $('#operatorMenu2').attr('value', undefined);
-                compareGraphPage.graph_ids.length=2;
-                compareGraphPage.compareGraphs();
-                compareGraphPage.resetMenus(3,8)
-                // compareGraphPage.compareGraphsMultiple();
-            } if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu2') {
-                $('#operatorMenu1').attr('value', undefined);
+            // if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu1') {
+            //     $('#operatorMenu2').attr('value', undefined);
+            //     compareGraphPage.graph_ids.length=2;
+            //     compareGraphPage.compareGraphs();
+            //     compareGraphPage.resetMenus(3,8)
+            //     // compareGraphPage.compareGraphsMultiple();
+            // }
+            if (obj.parent().parent().siblings("button[class*='dropdown-toggle']")[0].id == 'operatorMenu2') {
+                $('#operatorMenu1').attr('value', '');
                 compareGraphPage.compareGraphsMultiple();
             }
         }
+        if($('#operatorMenu1').attr('value') && $('#dropdownMenu1').attr('value')&& $('#dropdownMenu2').attr('value')){
+                $('#operatorMenu2').attr('value', '');
+                compareGraphPage.graph_ids.length=2;
+                compareGraphPage.compareGraphs();
+                compareGraphPage.resetMenus(3,8)
+            }
         // if ($('#dropdownMenu1').attr('value') && $('#dropdownMenu2').attr('value') && $('#operatorMenu1').attr('value'))
         //     compareGraphPage.compareGraphs();
         obj.parent().parent().siblings("button[class*='dropdown-toggle']").attr("value", obj.attr('row_id'));
@@ -616,6 +626,7 @@ var compareGraphPage = {
          *
          * Returns error whenever AJAX requests fail.
          */
+        var temp_label = new Object();
         graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
         graph_2_id = compareGraphPage.graph_ids[1] = $('#dropdownMenu2').attr('value');
         $('#visualization-li a:first').tab('show');
@@ -631,8 +642,12 @@ var compareGraphPage = {
                         compareGraphPage.graphs_json[1] = response['graph_json'];
                         compareGraphPage.styles_json[1] = response['style_json'];
                         compareGraphPage.compareGraphHelper();
-                        $('#dropdownMenu1').parent().find('a[row_id="' + graph_1_id + '"]').click();
-                        $('#dropdownMenu2').parent().find('a[row_id="' + graph_2_id + '"]').click();
+                        compareGraphPage.setDropdownLabel($('#dropdownMenu1').parent().find('a[row_id="' + graph_1_id + '"]'),
+                            $('#dropdownMenu1'));
+                        compareGraphPage.setDropdownLabel($('#dropdownMenu2').parent().find('a[row_id="' + graph_2_id + '"]'),
+                            $('#dropdownMenu2'));
+                        // $('#dropdownMenu1').parent().find('a[row_id="' + graph_1_id + '"]').click();
+                        // $('#dropdownMenu2').parent().find('a[row_id="' + graph_2_id + '"]').click();
                     },
                     errorCallback = function () {
                         // This method is called when error occurs while fetching graphs.
@@ -778,6 +793,9 @@ var compareGraphPage = {
 
                 $('#nodes-total-badge').text(response['nodes'].length);
                 $('#edges-total-badge').text(response['edges'].length);
+                $('#operatorMenu1').attr('value', undefined);
+                $('#operatorMenu1').text('Select Operation');
+                $('#operatorMenu1').append('<span class="caret"></span>');
                 compareGraphPage.tabHelper();
 
             },
