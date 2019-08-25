@@ -6,6 +6,7 @@
             var graph_1_id = {% if graph_1_id %}{{ graph_1_id|safe }}{% else %}null{% endif %};
             var graph_2_id = {% if graph_2_id %}{{ graph_2_id|safe }}{% else %}null{% endif %};
             var graph_ids = {% if graph_ids %}{{ graph_ids|safe }}{% else %}null{% endif %};
+            var version = {% if version %}{{ version|safe }}{% else %}null{% endif %};
             var operation = {% if operation %}{{ operation|safe }}{% else %}null{% endif %};
         {% endif %}
     </script>

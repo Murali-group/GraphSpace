@@ -115,6 +115,13 @@ var compareGraphPage = {
             $('#operatorMenu2').attr('value', operation);
             $('#operatorMenu2').parent().find('a[row_id="' + operation + '"]').click();
         }
+        if (version && operation) {
+            $('#dropdownMenu1').attr('value', graph_1_id);
+            $('#dropdownMenu2').attr('value', graph_1_id);
+            $('#operatorMenu1').attr('value', operation);
+            $('#operatorMenu1').parent().find('a[row_id="' + operation + '"]').click();
+            // compareGraphPage.compareGraphVersions();
+        }
     },
     selectGraphForCompare: function (obj, graph_id) {
         /**
@@ -661,6 +668,49 @@ var compareGraphPage = {
             }
         );
     },
+    compareGraphVersions: function () {
+        /**
+         * This function is called when the user initiates graph comparison.
+         * Sends AJAX requests to load all the graphs selected by the user,
+         * it then calls compareGraphHelpe().
+         *
+         * Returns error whenever AJAX requests fail.
+         */
+        var temp_label = new Object();
+        graph_1_id = compareGraphPage.graph_ids[0] = $('#dropdownMenu1').attr('value');
+        graph_2_id = compareGraphPage.graph_ids[1] = $('#dropdownMenu2').attr('value');
+        $('#visualization-li a:first').tab('show');
+        operation = $('#operatorMenu1').attr('value');
+        apis.version.getByID(compareGraphPage.graph_ids[0], version[0],
+            successCallback = function (response) {
+                // This method is called when graphs are successfully fetched.
+                compareGraphPage.graphs_json[0] = response['graph_json'];
+                compareGraphPage.styles_json[0] = response['style_json'];
+                apis.version.getByID(compareGraphPage.graph_ids[0], version[1],
+                    successCallback = function (response) {
+                        // This method is called when graphs are successfully fetched.
+                        compareGraphPage.graphs_json[1] = response['graph_json'];
+                        compareGraphPage.styles_json[1] = response['style_json'];
+                        compareGraphPage.compareGraphHelper();
+                        compareGraphPage.setDropdownLabel($('#dropdownMenu1').parent().find('a[row_id="' + graph_1_id + '"]'),
+                            $('#dropdownMenu1'));
+                        compareGraphPage.setDropdownLabel($('#dropdownMenu2').parent().find('a[row_id="' + graph_2_id + '"]'),
+                            $('#dropdownMenu2'));
+                        // $('#dropdownMenu1').parent().find('a[row_id="' + graph_1_id + '"]').click();
+                        // $('#dropdownMenu2').parent().find('a[row_id="' + graph_2_id + '"]').click();
+                    },
+                    errorCallback = function () {
+                        // This method is called when error occurs while fetching graphs.
+                        params.error('Error');
+                    }
+                );
+            },
+            errorCallback = function () {
+                // This method is called when error occurs while fetching graphs.
+                params.error('Error');
+            }
+        );
+    },
     formatCyGraph: function () {
         /**
          * May be needed for future changes.
@@ -826,7 +876,22 @@ var compareGraphPage = {
          * The AJAX request returns a list of nodes and edges identified by the comparison operation.
          * Additionally, this function populates the Nodes and Edges table.
          */
+        let data = '';
         operation = $('#operatorMenu1').attr('value');
+        if (version){
+            data = {
+                    'graph_id': compareGraphPage.graph_ids[0],
+                    'version': version,
+                    'operation': operation
+                }
+        }
+        else
+            data = {
+                    'graph_1_id': compareGraphPage.graph_ids[0],
+                    'graph_2_id': compareGraphPage.graph_ids[1],
+                    'operation': operation
+                }
+
         if (operation && compareGraphPage.graph_ids[0] && compareGraphPage.graph_ids[1]) {
             $('#nodes-table > thead').find("th").remove();
             $('#edges-table > thead').find("th").remove();
@@ -836,11 +901,7 @@ var compareGraphPage = {
             $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph 1</h4></th>');
             $('#edges-table > thead > tr').append('<th><h4 style="text-align:center">Graph 2</h4></th>');
 
-            apis.compare.get({
-                    'graph_1_id': compareGraphPage.graph_ids[0],
-                    'graph_2_id': compareGraphPage.graph_ids[1],
-                    'operation': operation
-                },
+            apis.compare.get(data,
                 successCallback = function (response) {
                     // $('#nodes-table').DataTable();
                     compareGraphPage.common_nodes = response['nodes'];

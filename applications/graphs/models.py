@@ -17,10 +17,6 @@ class Graph(IDMixin, TimeStampMixin, Base):
 
 	name = Column(String, nullable=False)
 	owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-	graph_json = Column(String)
-	style_json = Column(String)
-	#graph_json = Column(String, nullable=False)
-	#style_json = Column(String, nullable=False)
 	default_version_id = Column(Integer, ForeignKey('graph_version.id', ondelete="CASCADE", onupdate="CASCADE"),
 	                           nullable=True)
 	is_public = Column(Integer, nullable=False, default=0)

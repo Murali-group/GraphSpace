@@ -57,6 +57,16 @@ def compare_graph_page(request):
         else:
             raise MethodNotAllowed(request)
 
+    if request.GET.get('graph') and request.GET.getlist('version') \
+            and request.GET.get('operation'):
+        if request.GET.get('operation') == 'intersection' or request.GET.get('operation') == 'difference':
+            context['graph_1_id'] = json.dumps(request.GET.get('graph'))
+            context['version'] = json.dumps(request.GET.getlist('version'))
+            context['operation'] = json.dumps(request.GET.get('operation'))
+            return render(request, 'graphs/../../templates/compare_graph/compare_graphs.html', context)
+        else:
+            raise MethodNotAllowed(request)
+
 
 def compare_graphs(request):
     """
@@ -83,6 +93,9 @@ def compare_graphs(request):
     if request.META.get('HTTP_ACCEPT', None) == 'application/json':
         if request.method == "GET":
             if request.GET.get('multiple'):
+                return HttpResponse(json.dumps(_compare_graph_multiple(request, request.GET)),
+                                    content_type="application/json", status=200)
+            if request.GET.get('version[]'):
                 return HttpResponse(json.dumps(_compare_graph_multiple(request, request.GET)),
                                     content_type="application/json", status=200)
 
