@@ -2453,6 +2453,7 @@ var graphPage = {
             graphPage.legend.currentLegendJSON['legend'] = JSON.parse(JSON.stringify(styleJSON['legend']));
             graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
+            // makes the legend interface draggable
             $("#cyLegendContainer").draggable({ containment: "#cyGraphContainer", scroll: false});
 
             var updateLegendInHtmlFormat = 0;
@@ -3098,6 +3099,9 @@ var graphPage = {
                 });
             },
             constructBinLegend: function() {
+            /*This function is called when user clicks on the "Use Legend Editor" button available sidebar panel.
+             *This function create bin icon adjacent to each legend on the legend interface which provides user the option to remove the legend.
+            */
                 var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
                 var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
@@ -3120,6 +3124,9 @@ var graphPage = {
                 }
             },
             constructEditLegend: function() {
+            /*This function is called when user clicks on the "Use Legend Editor" button available sidebar panel.
+             *This function create edit icon adjacent to each legend on the legend interface which provides user the option to edit the legend label.
+            */
                 var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
                 var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
                 var node_legend_count = Object.keys(node_legend).length;
