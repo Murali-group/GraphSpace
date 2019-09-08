@@ -2445,6 +2445,7 @@ var graphPage = {
         */
         cyLegend: undefined,
         currentLegendJSON: {},
+        currentLegendSizeFactor: 1,
         init: function (styleJSON) {
             if(!('legend' in styleJSON)){
                 styleJSON['legend'] = {};
@@ -2622,8 +2623,7 @@ var graphPage = {
                         });
                     }
                 }
-
-                graphPage.legend.resizeLegendInterfaceWidth('20%');
+                graphPage.legend.resizeLegendInterfaceWidth(20*graphPage.legend.currentLegendSizeFactor + '%');
                 graphPage.legend.legendEditor.removeBinLegend();
                 graphPage.legend.legendEditor.removeEditLegend();
             });
@@ -2661,7 +2661,7 @@ var graphPage = {
                 graphPage.legend.cyLegend = graphPage.legend.constructLegend();
 
                 graphPage.cyGraph.elements().unselect();
-                graphPage.legend.resizeLegendInterfaceWidth('20%');
+                graphPage.legend.resizeLegendInterfaceWidth(20*graphPage.legend.currentLegendSizeFactor + '%');
                 graphPage.legend.legendEditor.removeBinLegend();
                 graphPage.legend.legendEditor.removeEditLegend();
             });
@@ -2838,6 +2838,9 @@ var graphPage = {
                 graphPage.legend.currentLegendJSON['legend']['edges'] = {};
             }
 
+            var factor = graphPage.legend.currentLegendSizeFactor;
+            graphPage.legend.resizeLegendInterfaceWidth(20*factor+"%");
+
             var node_legend = graphPage.legend.currentLegendJSON['legend']['nodes'];
             var edge_legend = graphPage.legend.currentLegendJSON['legend']['edges'];
             var node_legend_count = Object.keys(node_legend).length;
@@ -2856,6 +2859,39 @@ var graphPage = {
                 }
             });
 
+            // Adds elements to resize the legend interface
+            var y_pos = 5*factor;
+            cy.add([
+                    {group: 'nodes', data: {id: 'sm'}, position: {y: y_pos+10, x: 182*factor}}
+                ]).style({
+                    'background-image': '../images/expand.png',
+                    'background-color': 'white',
+                    'shape': 'square',
+                    'width': 15*factor + 'px',
+                    'height': 15*factor + 'px',
+                });
+
+            cy.add([
+                    {group: 'nodes', data: {id: 'md'}, position: {y: y_pos+10, x: 105*factor}}
+                ]).style({
+                    'background-image': '../images/collapse.png',
+                    'background-color': 'white',
+                    'shape': 'square',
+                    'width': 15*factor + 'px',
+                    'height': 15*factor + 'px',
+                });
+
+            cy.add([
+                    {group: 'nodes', data: {id: 'lg'}, position: {y: y_pos+10, x: 25*factor}}
+                ]).style({
+                    'background-image': '../images/collapse.png',
+                    'background-color': 'white',
+                    'shape': 'square',
+                    'width': 15*factor + 'px',
+                    'height': 15*factor + 'px',
+                });
+            graphPage.legend.incrementLegendInterfaceHeight(30*factor + 'px');
+
             // Adds parent node for the node legend
             var parentId = 0;
             for (var i=0; i<node_legend_count; i++){
@@ -2864,33 +2900,33 @@ var graphPage = {
                 ]).style({
                     'background-color': 'white',
                     'border-color': 'white',
-                    'padding':'3px',
+                    'padding': 3*factor +'px',
                     'padding-relative-to':'height'
                 });
                 parentId = i;
             }
 
             // Adds node legend
-            var y_pos = 10;
+            y_pos = y_pos + 30*factor;
             for (var i=0; i<node_legend_count; i++){
-                graphPage.legend.incrementLegendInterfaceHeight('40px');
+                graphPage.legend.incrementLegendInterfaceHeight(40*factor + 'px');
                 cy.add([
-                    {group: 'nodes', data: { id: NODE_LEGEND_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: 23}}
+                    {group: 'nodes', data: { id: NODE_LEGEND_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: 23*factor}}
                 ]).style({
                 'background-color': node_legend[Object.keys(node_legend)[i]]['background-color'],
                 'label': Object.keys(node_legend)[i],
-                'font-size': '14px',
+                'font-size': 14*factor+'px',
                 'shape': node_legend[Object.keys(node_legend)[i]]['shape'].toLowerCase(),
-                'width':'15px',
-                'height':'15px',
+                'width': 15*factor + 'px',
+                'height': 15*factor + 'px',
                 'text-wrap': 'wrap',
-                'text-max-width': '150px',
-                'text-margin-x': '10px',
-                'text-margin-y': '2px',
+                'text-max-width': 150*factor + 'px',
+                'text-margin-x': 10*factor + 'px',
+                'text-margin-y': 2*factor + 'px',
                 'text-valign': 'center',
                 'text-halign': 'right'
                 });
-                y_pos = y_pos + 40;
+                y_pos = y_pos + 40*factor;
             }
 
             /*
@@ -2910,16 +2946,16 @@ var graphPage = {
                 ]).style({
                     'background-color': 'white',
                     'border-color': 'white',
-                    'padding':'3px',
+                    'padding': 3*factor + 'px',
                     'padding-relative-to':'height'
                 });
             }
 
             // Adds edge legend
             for (var i=0; i<edge_legend_count; i++){
-                graphPage.legend.incrementLegendInterfaceHeight('40px');
+                graphPage.legend.incrementLegendInterfaceHeight(40*factor+'px');
                 cy.add([
-                    {group: 'nodes', data: { id: EDGE_NODE_LEGEND_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+x}, position: {y: y_pos+10, x: 15}}
+                    {group: 'nodes', data: { id: EDGE_NODE_LEGEND_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+x}, position: {y: y_pos+10, x: 15*factor}}
                 ]).style({
                     'background-color': 'white',
                     'background-opacity': '0',
@@ -2928,17 +2964,18 @@ var graphPage = {
                 });
 
                 cy.add([
-                    {group: 'nodes', data: { id: EDGE_NODE_LEGEND_INITIALS+i+1, parent: PARENT_NODE_LEGEND_INITIALS+x}, position: {y: y_pos+10, x: 35}}
+                    {group: 'nodes', data: { id: EDGE_NODE_LEGEND_INITIALS+i+1, parent: PARENT_NODE_LEGEND_INITIALS+x}, position: {y: y_pos+10, x: 35*factor}}
                 ]).style({
                     'background-color': 'white',
                     'background-opacity': '0',
                     'width':'1px',
                     'height':'1px',
                     'label': Object.keys(edge_legend)[i],
-                    'text-margin-x': '5px',
-                    'font-size': '14px',
+                    'text-margin-x': 5*factor+'px',
+                    'text-margin-y': factor + 'px',
+                    'font-size': 14*factor+'px',
                     'text-wrap': 'wrap',
-                    'text-max-width': '150px',
+                    'text-max-width': 150*factor+'px',
                     'text-valign': 'center',
                     'text-halign': 'right'
                 });
@@ -2948,28 +2985,28 @@ var graphPage = {
                 ]).style({
                    'line-color': edge_legend[Object.keys(edge_legend)[i]]['line-color'],
                    'curve-style': 'bezier',
-                   'width': '4px',
+                   'width': 4*factor+'px',
                    'line-style': edge_legend[Object.keys(edge_legend)[i]]['line-style'],
                    'target-arrow-shape': edge_legend[Object.keys(edge_legend)[i]]['arrow-shape'],
                    'target-arrow-color': edge_legend[Object.keys(edge_legend)[i]]['line-color']
                 });
 
-                y_pos = y_pos+40;
+                y_pos = y_pos+40*factor;
                 x = x+1;
             }
 
             // Adds a node of negligible size to make the width of the selected box consistent in all legend entries
-            y_pos = 10;
+            y_pos = 35*factor;
             for (var i=0; i<node_legend_count+edge_legend_count; i++){
                 cy.add([
-                    {group: 'nodes', data: { id: 'useless'+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: 185}}
+                    {group: 'nodes', data: { id: 'useless'+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: 185*factor}}
                 ]).style({
                     'background-color': 'white',
                     'background-opacity': '0',
                     'width':'1px',
                     'height':'1px'
                 });
-                y_pos = y_pos+40;
+                y_pos = y_pos+40*factor;
             }
 
             return cy;
@@ -3023,6 +3060,71 @@ var graphPage = {
                         }
                     });
                 }
+
+                else{
+                    if(target.isNode()){
+                        nodeId = target.id();
+                        if(nodeId.slice(0, 2) == 'sm'){
+                            graphPage.legend.currentLegendSizeFactor = 0.8;
+                            graphPage.legend.cyLegend.destroy();
+                            graphPage.legend.resizeLegendInterfaceHeight("0px");
+                            graphPage.legend.cyLegend = graphPage.legend.constructLegend();
+                            if (window.location.hash == '#legendEditor') {
+                                graphPage.legend.legendEditor.init();
+                            }
+                        }
+
+                        if(nodeId.slice(0, 2) == 'md'){
+                            graphPage.legend.currentLegendSizeFactor = 1;
+                            graphPage.legend.cyLegend.destroy();
+                            graphPage.legend.resizeLegendInterfaceHeight("0px");
+                            graphPage.legend.cyLegend = graphPage.legend.constructLegend();
+                            if (window.location.hash == '#legendEditor') {
+                                graphPage.legend.legendEditor.init();
+                            }
+                        }
+
+                        if(nodeId.slice(0, 2) == 'lg'){
+                            graphPage.legend.currentLegendSizeFactor = 1.2;
+                            graphPage.legend.cyLegend.destroy();
+                            graphPage.legend.resizeLegendInterfaceHeight("0px");
+                            graphPage.legend.cyLegend = graphPage.legend.constructLegend();
+                            if (window.location.hash == '#legendEditor') {
+                                graphPage.legend.legendEditor.init();
+                            }
+                        }
+
+                        if(nodeId.slice(0, 1) == 'n'){
+                            legend_shape = target.style()['shape'];
+                            legend_color = target.style()['background-color'];
+                            _.each(graphPage.cyGraph.nodes(), function (node) {
+                                if (node.style('background-color') == legend_color && node.style('shape') == legend_shape) {
+                                    graphPage.cyGraph.edges().unselect();
+                                    node.select();
+                                }
+                                else{
+                                    node.unselect();
+                                }
+                            });
+                        }
+                    }
+
+                    if(target.isEdge()){
+                        legend_style = target.style()['line-style'];
+                        legend_color = target.style()['line-color'];
+                        arrow_shape = target.style()['target-arrow-shape'];
+
+                        _.each(graphPage.cyGraph.edges(), function (edge) {
+                            if (edge.style('line-color') == legend_color && edge.style('line-style') == legend_style && (edge.style('source-arrow-shape') == arrow_shape || edge.style('target-arrow-shape') == arrow_shape)) {
+                                graphPage.cyGraph.nodes().unselect();
+                                edge.select();
+                            }
+                            else{
+                                edge.unselect();
+                            }
+                        });
+                    }
+                }
             }
             catch{
                 console.log('error!');
@@ -3035,7 +3137,7 @@ var graphPage = {
                     $('#toggleLegendBtn').trigger('click');
                 }
 
-                graphPage.legend.resizeLegendInterfaceWidth('24%');
+                graphPage.legend.resizeLegendInterfaceWidth(24*graphPage.legend.currentLegendSizeFactor + '%');
                 graphPage.cyGraph.elements().unselect();
                 graphPage.legend.cyLegend.elements().unselect();
                 graphPage.legend.legendEditor.constructBinLegend();
@@ -3079,7 +3181,7 @@ var graphPage = {
                         graphPage.legend.cyLegend.remove(graphPage.legend.cyLegend.getElementById(bin_node_parentID));
                         // shift other nodes to occupy the vaccant space
                         graphPage.legend.legendEditor.rearrangeLegend(bin_pos_y);
-                        graphPage.legend.decrementLegendInterfaceHeight('40px');
+                        graphPage.legend.decrementLegendInterfaceHeight(40*graphPage.legend.currentLegendSizeFactor + 'px');
                     }
                     if(bin_node.id().slice(0,4) === EDIT_ICON_INITIALS){
                         graphPage.legend.legendEditor.legendLabelEditor.open();
@@ -3107,20 +3209,21 @@ var graphPage = {
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
                 var total_elements = node_legend_count + edge_legend_count;
+                var factor = graphPage.legend.currentLegendSizeFactor;
 
-                var y_pos = 10;
-                var x_pos = 180;
+                var y_pos = 35*factor;
+                var x_pos = 180*factor;
                 for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
                         {group: 'nodes', data: { id: BIN_ICON_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: x_pos}}
                     ]).style({
                         'background-image': '../images/trash.png',
                         'background-color': 'white',
-                        'width':'15px',
-                        'height':'18px',
+                        'width': 15*factor + 'px',
+                        'height': 18*factor + 'px',
                         'shape': 'rectangle'
                     });
-                    y_pos = y_pos + 40;
+                    y_pos = y_pos + 40*factor;
                 }
             },
             constructEditLegend: function() {
@@ -3132,29 +3235,32 @@ var graphPage = {
                 var node_legend_count = Object.keys(node_legend).length;
                 var edge_legend_count = Object.keys(edge_legend).length;
                 var total_elements = node_legend_count + edge_legend_count;
+                var factor = graphPage.legend.currentLegendSizeFactor;
 
-                var y_pos = 10;
-                var x_pos = 220;
+                var y_pos = 35*factor;
+                var x_pos = 220*factor;
                 for(var i=0;i<total_elements;i++) {
                     graphPage.legend.cyLegend.add([
                         {group: 'nodes', data: { id: EDIT_ICON_INITIALS+i, parent: PARENT_NODE_LEGEND_INITIALS+i}, position: {y: y_pos+10, x: x_pos}}
                     ]).style({
                         'background-image': '../images/edit_icon.png',
                         'background-color': 'white',
-                        'width':'15px',
-                        'height':'18px',
+                        'width': 15*factor + 'px',
+                        'height': 18*factor + 'px',
                         'shape': 'rectangle'
                     });
-                    y_pos = y_pos + 40;
+                    y_pos = y_pos + 40*factor;
                 }
             },
             rearrangeLegend: function(bin_pos_y) {
+                var factor = graphPage.legend.currentLegendSizeFactor;
+
                 _.each(graphPage.legend.cyLegend.nodes(), function (node) {
                     var node_pos_y = node.renderedPosition().y;
                     if(node_pos_y > bin_pos_y){
                         graphPage.legend.cyLegend.autolock(false);
                         node.animate({
-                            position: { y: node_pos_y-40 },
+                            position: { y: node_pos_y-40*factor},
                         }, {
                             duration: 700
                         });
@@ -3162,17 +3268,19 @@ var graphPage = {
                 });
             },
             removeBinLegend: function() {
+                var factor = graphPage.legend.currentLegendSizeFactor;
                 _.each(graphPage.legend.cyLegend.nodes(), function (node){
                     node_pos = node.renderedPosition();
-                    if(node_pos.x == 180){
+                    if(node_pos.x == 180*factor){
                         graphPage.legend.cyLegend.remove(node);
                     }
                 });
             },
             removeEditLegend: function() {
+                var factor = graphPage.legend.currentLegendSizeFactor;
                 _.each(graphPage.legend.cyLegend.nodes(), function (node){
                     node_pos = node.renderedPosition();
-                    if(node_pos.x == 220){
+                    if(node_pos.x == 220*factor){
                         graphPage.legend.cyLegend.remove(node);
                     }
                 });
