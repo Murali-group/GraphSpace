@@ -1442,16 +1442,38 @@ var graphPage = {
 
             $('#undoBtn').addClass('disabled');
 
-            $("#unselectBtn").click(function (e) {
-                //Unselect all nodes/edges when button is clicked
+            $("#unselectNodesBtn").click(function (e) {
+                //Unselect all nodes when button is clicked
                 e.preventDefault();
                 cytoscapeGraph.unSelectAllNodes(graphPage.cyGraph);
-                cytoscapeGraph.unSelectAllEdges(graphPage.cyGraph);
 
-                $('input:checkbox[name=colors]').each(function (index) {
+                $('input:checkbox[name=node-colors]').each(function (index) {
                     $(this).prop('checked', false);
                 });
-                $('input:checkbox[name=shapes]').each(function (index) {
+                $('input:checkbox[name=node-shapes]').each(function (index) {
+                    $(this).prop('checked', false);
+                });
+
+                graphPage.layoutEditor.undoRedoManager.update({
+                    'action_type': 'unselect_all',
+                    'data': {
+                        'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                        'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                        'selected_elements': graphPage.cyGraph.elements(':selected'),
+                        'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
+                    }
+                });
+            });
+
+            $("#unselectEdgesBtn").click(function (e) {
+                //Unselect all edges when button is clicked
+                e.preventDefault();
+                cytoscapeGraph.unSelectAllEdges(graphPage.cyGraph);
+
+                $('input:checkbox[name=edge-colors]').each(function (index) {
+                    $(this).prop('checked', false);
+                });
+                $('input:checkbox[name=edge-shapes]').each(function (index) {
                     $(this).prop('checked', false);
                 });
 
@@ -1574,12 +1596,12 @@ var graphPage = {
         },
         nodeSelector: {
             init: function () {
-                var colors = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                var node_colors = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
                     return node.style('background-color');
                 }));
-                $('#selectColors').html('');
-                _.each(colors, function (color) {
-                    $('#selectColors').append(
+                $('#selectNodeColors').html('');
+                _.each(node_colors, function (color) {
+                    $('#selectNodeColors').append(
                         $('<label>', {class: "checkbox-inline zero-padding"}).css({
                             'margin-left': '10px',
                             'margin-right': '10px'
@@ -1588,32 +1610,91 @@ var graphPage = {
                                 id: color,
                                 type: 'checkbox',
                                 value: color,
-                                name: 'colors'
+                                name: 'node-colors'
                             })).append($('<p>', {
                             class: 'select-color-box'
                         }).css('background', color)));
                 });
 
-                var shapes = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                var node_shapes = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
                     return node.style('shape');
                 }));
-                $('#selectShapes').html('');
-                _.each(shapes, function (shape) {
-                    $('#selectShapes').append(
+                $('#selectNodeShapes').html('');
+                _.each(node_shapes, function (shape) {
+                    $('#selectNodeShapes').append(
                         $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
                             $('<input>', {
                                 id: shape,
                                 type: 'checkbox',
                                 value: shape,
-                                name: 'shapes'
+                                name: 'node-shapes'
                             })).append(_.capitalize(shape)));
                 });
 
-                $('input:checkbox[name=shapes], input:checkbox[name=colors] ').change(function () {
-                    var selectedShapes = _.map($('input:checkbox[name=shapes]:checked'), function (elem) {
+                var edge_source_arrow_shapes = _.uniq(_.map(graphPage.cyGraph.edges(), function(edge) {
+                    if(edge.style('source-arrow-shape')) {
+                        return edge.style('source-arrow-shape');
+                    }
+                }));
+                var edge_target_arrow_shapes = _.uniq(_.map(graphPage.cyGraph.edges(), function(edge) {
+                    if(edge.style('target-arrow-shape')) {
+                        return edge.style('target-arrow-shape');
+                    }
+                }));
+                var edge_arrow_shapes = _.without((_.uniq(edge_source_arrow_shapes.concat(edge_target_arrow_shapes))), "none");
+                $('#selectEdgeShapes').html('');
+                _.each(edge_arrow_shapes, function (shape) {
+                    $('#selectEdgeShapes').append(
+                        $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
+                            $('<input>', {
+                                id: shape,
+                                type: 'checkbox',
+                                value: shape,
+                                name: 'edge-shapes'
+                            })).append(_.capitalize(shape)));
+                });
+
+                var edge_colors = _.uniq(_.map(graphPage.cyGraph.edges(), function(edge) {
+                    return edge.style('line-color');
+                }));
+                $('#selectEdgeColors').html('');
+                _.each(node_colors, function (color) {
+                    $('#selectEdgeColors').append(
+                        $('<label>', {class: "checkbox-inline zero-padding"}).css({
+                            'margin-left': '10px',
+                            'margin-right': '10px'
+                        }).append(
+                            $('<input>', {
+                                id: color,
+                                type: 'checkbox',
+                                value: color,
+                                name: 'edge-colors'
+                            })).append($('<p>', {
+                            class: 'select-color-box'
+                        }).css('background', color)));
+                });
+
+                var edge_styles = _.uniq(_.map(graphPage.cyGraph.edges(), function(edge) {
+                    return edge.style('line-style');
+                }));
+                $('#selectEdgeStyles').html('');
+                _.each(edge_styles, function(style) {
+                    $('#selectEdgeStyles').append(
+                        $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
+                            $('<input>', {
+                                id: style,
+                                type: 'checkbox',
+                                value: style,
+                                name: 'edge-styles'
+                            })).append(_.capitalize(style)));
+                        
+                });
+
+                $('input:checkbox[name=node-shapes], input:checkbox[name=node-colors] ').change(function () {
+                    var selectedShapes = _.map($('input:checkbox[name=node-shapes]:checked'), function (elem) {
                         return $(elem).val();
                     });
-                    var selectedColors = _.map($('input:checkbox[name=colors]:checked'), function (elem) {
+                    var selectedColors = _.map($('input:checkbox[name=node-colors]:checked'), function (elem) {
                         return $(elem).val();
                     });
 
@@ -1639,6 +1720,46 @@ var graphPage = {
 
                     graphPage.layoutEditor.undoRedoManager.update({
                         'action_type': 'select_widget_' + _.join(_.sortBy(_.concat(selectedColors, selectedShapes)), '_'),
+                        'data': {
+                            'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                            'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                            'selected_elements': graphPage.cyGraph.elements(':selected'),
+                            'metadata': layoutLearner.computeLayoutMetadata(graphPage.cyGraph)
+                        }
+                    });
+                });
+
+                $('input:checkbox[name=edge-shapes], input:checkbox[name=edge-colors], input:checkbox[name=edge-styles] ').change(function () {
+                    var selectedEdgeShapes = _.map($('input:checkbox[name=edge-shapes]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
+                    var selectedEdgeColors = _.map($('input:checkbox[name=edge-colors]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
+                    var selectedEdgeStyles = _.map($('input:checkbox[name=edge-styles]:checked'), function(elem) {
+                        return $(elem).val();
+                    });
+
+                    var attributeValue = $(this).val();
+                    var isSelected = $(this).is(":checked");
+
+                    _.each(graphPage.cyGraph.edges(), function (edge) {
+
+                        if ((selectedEdgeColors.length > 0 && _.indexOf(selectedEdgeColors, edge.style('line-color')) === -1) ||
+                            (selectedEdgeStyles.length > 0 && _.indexOf(selectedEdgeStyles, edge.style('line-style')) === -1) ||
+                            (selectedEdgeShapes.length > 0 && (_.indexOf(selectedEdgeShapes, edge.style('source-arrow-shape')) === -1) && 
+                            (_.indexOf(selectedEdgeShapes, edge.style('target-arrow-shape')) === -1))) {
+                            edge.unselect();
+                        } else if (selectedEdgeColors.length > 0 || selectedEdgeShapes.length > 0 || selectedEdgeStyles.length > 0) {
+                            edge.select();
+                        } else {
+                            edge.unselect();
+                        }
+
+                    });
+
+                    graphPage.layoutEditor.undoRedoManager.update({
+                        'action_type': 'select_widget_' + _.join(_.sortBy(_.concat(selectedEdgeColors, selectedEdgeShapes)), '_'),
                         'data': {
                             'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
                             'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
