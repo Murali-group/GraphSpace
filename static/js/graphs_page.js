@@ -441,6 +441,13 @@ var graphPage = {
 
         utils.initializeTabs();
 
+        $("#ForkGraph").click(function (e) {
+            e.preventDefault();
+            if (!$(this).hasClass('disabled')){
+                graphPage.fork($(this).data()); // Passing data about parent graph to fork() as argument
+            }
+        });
+
         $('#saveOnExitLayoutBtn').click(function () {
             graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
 
@@ -512,6 +519,34 @@ var graphPage = {
 
 
         graphPage.defaultLayoutWidget.init();
+    },
+    fork: function (data) {
+        //Read the meta_data object and add 'parent_id' & 'parent_email' to the data field.
+        graph_meta_data = cytoscapeGraph.getNetworkAndViewJSON(graphPage.cyGraph);
+        graph_meta_data.data['parent_id'] = data.graph_id;
+        graph_meta_data.data['parent_email'] = data.owner_email;
+        var graphData = {
+            'name':data.graph_name,
+            'is_public':0,
+            'owner_email':data.uid,
+            'graph_json':JSON.stringify(graph_meta_data, null, 4),
+            'style_json':JSON.stringify(cytoscapeGraph.getStyleJSON(graphPage.cyGraph), null, 4)
+        }
+        $.ajax({
+            "type": "POST",
+            "dataType": "json",
+            "url": "/fork_graph",
+            "data": graphData,
+            "success": function (data) {
+                if(data.result=='Success'){
+                    $("#ForkGraph span").text('Forked Successfully');
+                    $("#ForkGraph").addClass('disabled');
+                }
+                else{
+                    alert('Could not fork the Graph due to the following error : ' + data.result);
+                }
+            },
+        });
     },
     export: function (format) {
         cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());

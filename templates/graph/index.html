@@ -145,7 +145,7 @@
     <!--- Modals end here--->
     <div class="container-fluid zero-margin zero-padding">
         <div class="row zero-margin zero-padding padding-top-2 padding-bottom-2">
-            <div class="col-md-10">
+            <div class="col-md-9">
                 <p class="lead">
                     {{ title }}
                 </p>
@@ -170,16 +170,40 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                {% if 'data' in graph.graph_json and 'parent_email' in graph.graph_json.data%}
+                    <p class="small">
+                        <small> forked from {{ graph.graph_json.data.parent_email }}/ <a class="text-center"
+                            href="{% url 'graphs' %}{{ graph.graph_json.data.parent_id }} "> {{ graph.name }} </a> </small>
+                    </p>
+                {% endif %}
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
+                {% if isForked %}
+                <div class="btn-group" style=": 1em !important; z-index: 20000">
+                    <button type="button" class="btn btn-sm btn-default disabled"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-code-fork" aria-hidden="true"></i> Forked Successfully
+                    </button>
+
+                </div>
+                {% elif uid != graph.owner_email %}
+                <div class="btn-group pull-right" style=": 1em !important; z-index: 20000">
+                    <button type="button" id='ForkGraph' class="btn btn-sm btn-default"
+                            aria-haspopup="true" aria-expanded="false" data-uid={{ uid }} data-graph_name="{{ title }}"
+                            data-graph_id={{ graph.id }} data-owner_email={{ graph.owner_email }}>
+                        <i class="fa fa-code-fork" aria-hidden="true"></i> <span>Fork</span>
+                    </button>
+
+                </div>
+                {% endif %}
                 {% if uid and uid == graph.owner_email %}
                     <a class="btn btn-default pull-right btn-sm" href="#" data-toggle="modal"
                        data-target="#shareGraphModal">
                         <i class="fa fa-share-alt fa-lg"></i> Share
                     </a>
                 {% endif %}
-                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 20000">
+                <div class="btn-group pull-right" style="margin-right: 1em !important; z-index: 1001">
                     <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-download fa-lg"></i> Export <span class="caret"></span>
