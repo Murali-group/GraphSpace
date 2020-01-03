@@ -229,6 +229,11 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 		if name is not None:
 			G.set_name(name)
 
+		db.remove_tags_by_graph_id(request.db_session, graph_id=graph_id)
+		# Add graph tags
+		for tag in G.get_tags():
+			add_graph_tag(request, graph_id, tag)
+
 		db.remove_nodes_by_graph_id(request.db_session, graph_id=graph_id)
 		# Add graph nodes
 		node_name_to_id_map = add_graph_nodes(request, graph_id, G.nodes(data=True))

@@ -290,6 +290,9 @@ def add_tag(db_session, name):
 	db_session.add(tag)
 	return tag
 
+@with_session
+def remove_tags_by_graph_id(db_session, graph_id):
+	db_session.query(GraphToTag).filter(GraphToTag.graph_id == graph_id).delete()
 
 @with_session
 def get_layout(db_session, owner_email, name, graph_id):

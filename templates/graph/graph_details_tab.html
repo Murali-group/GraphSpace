@@ -3,12 +3,27 @@
         img {
             max-width: 200px;
         }
+        textarea {
+          width: 90%;
+          height: 150px;
+          padding: 12px 20px;
+          box-sizing: border-box;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          resize: none;
+          font-size: 15px;
+      }
     </style>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6" id="view-desc">
+          <div style="font-weight: bold; font-size: 15px">Description</div><br/>
             <table>
                 {{ description|safe }}
             </table>
+        </div>
+        <div class="col-md-6" style="display:none" id="edit-desc">
+          <div style="font-weight: bold; font-size: 15px">Description</div><br/>
+            <textarea id="new_description"> {{ description | safe}} </textarea>
         </div>
         <div class="col-md-6">
             <div class="table-responsive">
