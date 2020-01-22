@@ -2582,6 +2582,12 @@ var cytoscapeGraph = {
             var b64 = cy.jpg({'full': true}).substring(cy.jpg({'full': true}).indexOf(b64key) + b64key.length);
             blob = utils.base64ToBlob(b64, 'image/jpeg');
             fileformat = '.jpg';
+        } else if (format === 'pdf') {
+            var b64key = 'base64,';
+            var b64 = cy.jpg({'full': true}).substring(cy.jpg({'full': true}).indexOf(b64key) + b64key.length);
+            var doc = new jsPDF()
+            doc.addImage(b64, 'JPEG', 15, 40, 180, 160)
+            doc.save(filename + ".pdf")            
         } else if (format === 'png') {
             var b64key = 'base64,';
             var b64 = cy.png({'full': true}).substring(cy.png({'full': true}).indexOf(b64key) + b64key.length);

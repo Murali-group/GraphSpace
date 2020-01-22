@@ -186,6 +186,7 @@
                     <ul class="dropdown-menu">
                         <li><a onclick="graphPage.export('png');">Network Graphics (.png)</a></li>
                         <li><a onclick="graphPage.export('jpg');">Network Graphics (.jpg)</a></li>
+                        <li><a onclick="graphPage.export('pdf');">Network Graphics (.pdf)</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a onclick="graphPage.export('cyjs');">Network Data (.cyjs)</a></li>
                         <li><a onclick="graphPage.export('style');">Network Stylesheet (.json)</a></li>
@@ -305,6 +306,7 @@
 
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
+    <script type="text/javascript" src="/static/js/jspdf.min.js"></script>
     <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
 
 
