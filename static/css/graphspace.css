@@ -305,7 +305,7 @@ ul.nav.nav-tabs > li > a:hover {
 }
 
 .sidebar-nav li {
-    padding: 10px;
+    padding: 10px 10px 10px 10px;
     text-align: center;
 }
 
@@ -347,7 +347,7 @@ ul.nav.nav-tabs > li > a:hover {
 
 .sidebar-nav li a.btn:hover {
     color: #666;
-    background-color: transparent;
+    background-color: transparent;webkit-input-placeholder
     -webkit-transition: all .4s;
     -moz-transition: all .4s;
     -o-transition: all .4s;
@@ -439,3 +439,10 @@ p.lead {
         margin-left: 0;
     }
 }
+.inputSrchEdgeNodes{
+    padding-top: 6px !important;
+    padding-right: 19px !important;
+    padding-bottom: 6px !important;
+    padding-left: 6px !important;
+}
+
