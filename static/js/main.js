@@ -62,6 +62,18 @@ var header = {
         var password = $("#password").val();
         var verify_password = $("#verify_password").val();
 
+        if ($("#user_id")) {
+            var reg = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            if (reg.test(user_id) == false) {
+                $.notify({
+                message: 'Please enter a valid email address!'
+                }, {
+                    type: 'warning'
+                });
+                return;
+            }
+        }
+
         if (!$("#user_id") || user_id.length == 0) {
             $.notify({
                 message: 'Please enter your email!'

@@ -8,6 +8,7 @@ from graphspace.exceptions import ErrorCodes, BadRequest
 from graphspace_python.graphs.classes.gsgraph import GSGraph
 from graphspace.wrappers import atomic_transaction
 from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
+from applications.legend_formatter import convert_html_legend_1, convert_html_legend_2
 
 import json
 from json import dumps, loads
@@ -18,6 +19,9 @@ from graphspace.data_type import DataType
 
 AUTOMATIC_LAYOUT_ALGORITHMS = ['default_breadthfirst', 'default_concentric', 'default_circle', 'default_cose',
                                'default_grid']
+
+HTML_LEGEND_TABLE_FORMAT_1 = 1
+HTML_LEGEND_TABLE_FORMAT_2 = 2
 
 def map_attributes(attributes):
 
@@ -586,3 +590,20 @@ def add_edge(request, name=None, head_node_id=None, tail_node_id=None, is_direct
 def delete_edge_by_id(request, edge_id):
 	db.delete_edge(request.db_session, id=edge_id)
 	return
+
+
+def convert_html_legend(graph_json, style_json, param):
+	if param['update_legend_format'] == HTML_LEGEND_TABLE_FORMAT_1:
+		return convert_html_legend_1(graph_json, style_json)
+
+	if param['update_legend_format'] == HTML_LEGEND_TABLE_FORMAT_2:
+		return convert_html_legend_2(graph_json, style_json)
+
+
+def update_graph_with_html_legend(request, graph_id, param):
+	graph = db.get_graph_by_id(request.db_session, graph_id)
+	style_json = json.loads(graph.style_json)
+	graph_json = json.loads(graph.graph_json)
+	updated_style_json = convert_html_legend(graph_json=graph_json,  style_json=style_json, param=param)
+	del graph_json["data"]["description"]
+	return update_graph(request, graph_id=graph_id, style_json=updated_style_json, graph_json=graph_json)
