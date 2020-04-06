@@ -481,7 +481,6 @@ var graphPage = {
       cytoscapeGraph.showGraphInformation( graphPage.cyGraph );
       // display node data as a popup
       graphPage.cyGraph.unbind( 'tap' ).on( 'tap', graphPage.onTapGraphElement );
-
       graphPage.saveLayout( $( '#saveOnExitLayoutNameInput' ).val(), '#saveOnExitLayoutModal' );
     } );
 
