@@ -3405,6 +3405,11 @@ var graphPage = {
         var total_elements = node_legend_count + edge_legend_count;
         var factor = graphPage.legend.currentLegendSizeFactor;
 
+        graphPage.legend.cyLegend.nodes( '#sm' ).renderedPosition( {
+          y: graphPage.legend.cyLegend.extent()[ 'y1' ] + ( 5 + 5 * factor ),
+          x: graphPage.legend.cyLegend.extent()[ 'x2' ]
+        } )
+
         // var y_pos = 35 * factor;
         // var x_pos = 180 * factor;
         // for ( var i = 0; i < total_elements; i++ ) {
@@ -3503,6 +3508,10 @@ var graphPage = {
         //   } );
         //   y_pos = y_pos + 40 * factor;
         // }
+        graphPage.legend.cyLegend.nodes( '#sm' ).renderedPosition( {
+          y: graphPage.legend.cyLegend.extent()[ 'y1' ] + ( 5 + 5 * factor ),
+          x: graphPage.legend.cyLegend.extent()[ 'x2' ] + 25 * factor,
+        } )
 
         for ( var i = 0; i < node_legend_count; i++ ) {
           graphPage.legend.cyLegend.add( [ {
@@ -3513,13 +3522,13 @@ var graphPage = {
             },
             position: {
               y: graphPage.legend.cyLegend.nodes( '#' + NODE_LEGEND_INITIALS + i ).position( 'y' ),
-              x: graphPage.legend.cyLegend.extent()[ 'x2' ] + 20 * factor,
+              x: graphPage.legend.cyLegend.extent()[ 'x2' ] + 25 * factor,
             }
           } ] ).style( {
             'background-image': '../images/edit_icon.png',
             'background-fit': 'cover',
             'background-color': 'white',
-            'width': 15 * factor + 'px',
+            'width': 18 * factor + 'px',
             'height': 18 * factor + 'px',
             'shape': 'rectangle'
           } );
@@ -3534,13 +3543,13 @@ var graphPage = {
             },
             position: {
               y: graphPage.legend.cyLegend.nodes( '#' + EDGE_NODE_LEGEND_INITIALS + i + '-target' ).position( 'y' ),
-              x: graphPage.legend.cyLegend.extent()[ 'x2' ] + 20 * factor,
+              x: graphPage.legend.cyLegend.extent()[ 'x2' ] + 25 * factor,
             }
           } ] ).style( {
             'background-image': '../images/edit_icon.png',
             'background-fit': 'cover',
             'background-color': 'white',
-            'width': 15 * factor + 'px',
+            'width': 18 * factor + 'px',
             'height': 18 * factor + 'px',
             'shape': 'rectangle'
           } );
