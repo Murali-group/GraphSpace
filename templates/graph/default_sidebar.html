@@ -29,6 +29,13 @@
             <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
         </a>
     </li>
+
+    <li>
+        <a id="toggleLegendBtn" class="btn sidebar-nav-pills" href="#" data-target="#defaultSideBar">
+            Hide Legend
+        </a>
+    </li>
+
     <li>
         <a class="btn sidebar-nav-pills" href="#change_layout" data-target="#changeLayoutSidebar">
             Change Layout
@@ -42,8 +49,13 @@
             </a>
         </li>
         <li>
-            <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#editor" data-target="#layoutEditorSideBar">
+            <a id="layoutEditorBtn" class="btn sidebar-nav-pills" href="#layoutEditor" data-target="#layoutEditorSideBar">
                 <i class="fa fa-pencil-square-o fa-lg"></i> Use Layout <br> Editor
+            </a>
+        </li>
+        <li>
+            <a id="legendEditorBtn" class="btn sidebar-nav-pills" href="#legendEditor" data-target="#legendEditorSideBar">
+                <i class="fa fa-pencil-square-o fa-lg"></i> Use Legend <br> Editor
             </a>
         </li>
     {% endif %}
@@ -62,4 +74,3 @@
     {% endif %}
 
 </ul>
-

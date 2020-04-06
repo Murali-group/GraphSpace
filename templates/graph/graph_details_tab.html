@@ -1,52 +1,63 @@
 <div class="margin-top-4">
-    <style>
-        img {
-            max-width: 200px;
-        }
-    </style>
-    <div class="row">
-        <div class="col-md-6">
-            <table>
-                {{ description|safe }}
-            </table>
-        </div>
-        <div class="col-md-6">
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
-                    </tr>
+	<style>
+		img {
+			max-width: 200px;
+		}
+	</style>
+	<div class="row">
+		<div class="col-md-6">
+			<!-- <div class="table-responsive" id="convertHtmlLegendOption" style="display:none">
+				<div class="panel panel-info">
+					<div class="panel-heading">
+				    <h3 class="panel-title">Important Note</h3>
+				  </div>
+					<div class="panel-body">
+				    <p>GraphSpace now supports legend in JSON format. You can include the legend very easily in JSON format in the style file and can even interact with them. Please click on the "Convert" button to automatically convert your HTML format legend data into JSON format for this graph.</p>
+						<button class="btn btn-info" id="ConfirmHtmlLegendConversionBtn">Convert</button>
+				  </div>
+				</div>
+			</div> -->
 
-                    {% for k,v in data.items %}
-                        {% if k != 'description' %}
-                            <tr>
-                                <td>{{ k|safe}}</td>
-                                <td>{{ v|safe }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
+			<table>
+				{{ description|safe }}
+			</table>
+		</div>
+		<div class="col-md-6">
+			<div class="table-responsive">
+				<table class="table table-bordered">
+					<tr>
+						<th>Attribute</th>
+						<th>Value</th>
+					</tr>
+          
+					{% for k,v in data.items %}
+						{% if k != 'description' %}
+							<tr>
+								<td>{{ k|safe}}</td>
+								<td>{{ v|safe }}</td>
+							</tr>
+						{% endif %}
+					{% endfor %}
 
-                </table>
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Shared with groups</th>
-                    </tr>
+				</table>
+				<table class="table table-bordered">
+					<tr>
+						<th>Shared with groups</th>
+					</tr>
 
-                    {% if shared_groups %}
-                        {% for k in shared_groups %}
-                            <tr>
-                                <td><a href="{% url 'group' group_id=k.id %}">{{k.name|safe}}</a></td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td>'The graph is not shared with any groups'</td>
-                        </tr>
-                    {% endif %}
-                </table>
-            </div>
-        </div>
-    </div>
-
+					{% if shared_groups %}
+						{% for k in shared_groups %}
+							<tr>
+								<td><a href="{% url 'group' group_id=k.id %}">{{k.name|safe}}</a></td>
+							</tr>
+						{% endfor %}
+					{% else %}
+						<tr>
+							<td>'The graph is not shared with any groups'</td>
+						</tr>
+					{% endif %}
+				</table>
+			</div>
+		</div>
+	</div>
 </div>
