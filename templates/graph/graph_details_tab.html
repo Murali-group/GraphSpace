@@ -1,35 +1,74 @@
 <div class="margin-top-4">
-    <style>
-        img {
-            max-width: 200px;
-        }
-    </style>
-    <div class="row">
-        <div class="col-md-6">
-            <table>
-                {{ description|safe }}
-            </table>
-        </div>
-        <div class="col-md-6">
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
-                    </tr>
+	<style>
+		img {
+			max-width: 200px;
+		}
+	</style>
+	<div class="row">
+		<div class="col-md-6">
+			<div class="table-responsive" id="convertHtmlLegendOption" style="display:none">
+			  <table class="table table-bordered">
+				<thead>
+				  <tr>
+					<th><h4>Important Note</h4></th>
+				  </tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							We have now migrated from HTML format legend support to JSON format legend support. Now, you can include the legend very easily in JSON format in the style file and can even interact with them. Please agree to automatically convert your HTML format legend data into JSON format for this graph.
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button class="btn btn-success" id="ConfirmHtmlLegendConversionBtn">I Agree</button>
+						</td>
+					</tr>
+				</tbody>
+			  </table>
+			</div>
 
-                    {% for k,v in data.items %}
-                        {% if k != 'description' %}
-                            <tr>
-                                <td>{{ k|safe}}</td>
-                                <td>{{ v|safe }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
+			<table>
+				{{ description|safe }}
+			</table>
+		</div>
+		<div class="col-md-6">
+			<div class="table-responsive">
+				<table class="table table-bordered">
+					<tr>
+						<th>Attribute</th>
+						<th>Value</th>
+					</tr>
 
-                </table>
-            </div>
-        </div>
-    </div>
+					{% for k,v in data.items %}
+						{% if k != 'description' %}
+							<tr>
+								<td>{{ k|safe}}</td>
+								<td>{{ v|safe }}</td>
+							</tr>
+						{% endif %}
+					{% endfor %}
+
+				</table>
+				<table class="table table-bordered">
+					<tr>
+						<th>Shared with groups</th>
+					</tr>
+
+					{% if shared_groups %}
+						{% for k in shared_groups %}
+							<tr>
+								<td><a href="{% url 'group' group_id=k.id %}">{{k.name|safe}}</a></td>
+							</tr>
+						{% endfor %}
+					{% else %}
+						<tr>
+							<td>'The graph is not shared with any groups'</td>
+						</tr>
+					{% endif %}
+				</table>
+			</div>
+		</div>
+	</div>
 
 </div>

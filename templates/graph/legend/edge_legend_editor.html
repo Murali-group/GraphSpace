@@ -1,0 +1,62 @@
+<ul id="edgeLegendEditorSideBar" class="sidebar-nav gs-sidebar-nav">
+    <li><p class="lead text-center">Add Edge Legend</p></li>
+    <li>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="edgeLegendColorPicker" class="col-sm-4 control-label">Line Color</label>
+                <div class="col-sm-8">
+                    <div id="edgeLegendColorPicker" class="input-group colorpicker-component">
+                        <input id="edgeLegendColor" type="text" value="#00AABB" class="form-control"/>
+                        <span class="input-group-addon"><i></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeLegendStyle" class="col-sm-4 control-label">Line Style</label>
+                <div class="col-sm-8">
+                    <select id="edgeLegendStyle" class="form-control">
+                        <option value="solid">solid</option>
+                        <option value="dotted">dotted</option>
+                        <option value="dashed">dashed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeLegendArrowShape" class="col-sm-4 control-label">Arrow Shape</label>
+                <div class="col-sm-8">
+                    <select id="edgeLegendArrowShape" class="form-control">
+                        <option value="none">none</option>
+                        <option value="triangle">triangle</option>
+                        <option value="tee">tee</option>
+                        <option value="triangle-tee">triangle-tee</option>
+                        <option value="triangle-backcurve">triangle-backcurve</option>
+                        <option value="square">square</option>
+                        <option value="circle">circle</option>
+                        <option value="diamond">diamond</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edgeLegendLabel" class="col-sm-4 control-label">Label</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" id="edgeLegendLabel" placeholder="label"/>
+                </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.legend.legendEditor.edgeLegendEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.legend.legendEditor.edgeLegendEditor.close(save=true);">
+                    Ok
+                </button>
+            </div>
+        </div>
+    </li>
+</ul>

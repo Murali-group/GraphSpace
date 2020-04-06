@@ -110,13 +110,53 @@
             </div>
         </div>
 
+        <!-- Save on Exit Legend Modal -->
+        <div class="modal fade" id="saveOnExitLegendModal" tabindex="-1" role="dialog" aria-labelledby="saveOnExitLegendModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Save Legend</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="legend_fields">
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label><input type="checkbox" name="checkForCurrentGraph" class="check" id="checkForCurrentGraph">Use as default legend when no layout is selected</label>
+                                </div>
+                                <div class="checkbox" id="selectUserLayoutCheckbox">
+                                    <label><input type="checkbox" name="checkForUserLayout" class="check" id="checkForUserLayout">Use as legend for the current user layout </label>
+                                </div>
+                                <div id="userPrivateLayoutDropdown">
+
+                                </div>
+                                <br>
+                                <button name="saveOnExitLegendEditorBtn" id="saveOnExitLegendEditorBtn"
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save and Exit
+                                </button>
+                                <button type="button" id="exitLegendBtn"
+                                        class="btn btn-success hidden sidebar-nav-pills" data-target="#defaultSideBar"
+                                        data-dismiss="modal">Exit without saving
+                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Save Layout Modal -->
         <div class="modal fade" id="saveLayoutModal" tabindex="-1" role="dialog" aria-labelledby="saveLayoutModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel">Save Layout</h4>
+                        <h4 class="modal-title" id="myModalLabel">Save Positions and Style</h4>
+                        <h6 class="modal-title" id="myModalLabel">Save the current x- and y-coordinates of every node and the style attributes of every node and edge</h6>
                     </div>
                     <div class="modal-body">
 
@@ -129,7 +169,7 @@
                             <br>
                             <div class="form-group">
                                 <button name="saveLayoutBtn" id="saveLayoutBtn"
-                                        class="btn btn-success sidebar-nav-pills" data-target="#layoutEditorSideBar">Save
+                                        class="btn btn-success sidebar-nav-pills" data-target="#defaultSideBar">Save
                                 </button>
                                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                             </div>
@@ -187,6 +227,9 @@
                         <li><a onclick="graphPage.export('png');">Network Graphics (.png)</a></li>
                         <li><a onclick="graphPage.export('jpg');">Network Graphics (.jpg)</a></li>
                         <li role="separator" class="divider"></li>
+                        <li><a onclick="graphPage.legend.exportNetworkWithLegend('png');">Network Graphics with Legend(.png)</a></li>
+                        <li><a onclick="graphPage.legend.exportNetworkWithLegend('jpg');">Network Graphics with Legend(.jpg)</a></li>
+                        <li role="separator" class="divider"></li>
                         <li><a onclick="graphPage.export('cyjs');">Network Data (.cyjs)</a></li>
                         <li><a onclick="graphPage.export('style');">Network Stylesheet (.json)</a></li>
                     </ul>
@@ -230,11 +273,15 @@
                         {% include 'graph/default_sidebar.html' %}
                         {% if uid %}
                             {% include 'graph/layout_editor_sidebar.html' %}
+                            {% include 'graph/legend/legend_editor_sidebar.html' %}
                         {% endif %}
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
                         {% include 'graph/change_layout_sidebar.html' %}
                         {% include 'graph/node_editor.html' %}
+                        {% include 'graph/legend/node_legend_editor.html' %}
                         {% include 'graph/edge_editor.html' %}
+                        {% include 'graph/legend/edge_legend_editor.html' %}
+                        {% include 'graph/legend/legend_label_editor.html' %}
                         {% include 'graph/cola_option.html' %}
                     </div>
                     <!-- #sidebar-wrapper ends -->
@@ -251,7 +298,10 @@
                                    data-intro="Welcome to the tour of the layout editor! To leave this tour, please press either the Skip button below or just click anywhere outside this box."
                                    data-step='1'></p>
                                 <div id="dialog"></div>
-                                <div id="cyGraphContainer"></div>
+                                <div id="graphContainer gs-full-height">
+                                    <div id="cyGraphContainer"></div>
+                                    <div id="cyLegendContainer" class="draggable ui-widget-content"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
