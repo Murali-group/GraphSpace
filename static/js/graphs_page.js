@@ -2517,6 +2517,9 @@ var graphPage = {
     cyLegend: undefined,
     currentLegendJSON: {},
     currentLegendSizeFactor: 0.7,
+    isEmpty: function () {
+      return _.isEmpty( graphPage.legend.currentLegendJSON[ 'legend' ][ 'nodes' ] ) && _.isEmpty( graphPage.legend.currentLegendJSON[ 'legend' ][ 'edges' ] )
+    },
     init: function ( styleJSON ) {
       if ( !( 'legend' in styleJSON ) ) {
         styleJSON[ 'legend' ] = {};
@@ -2599,6 +2602,11 @@ var graphPage = {
         graphPage.cyGraph.elements().unselect();
         graphPage.legend.cyLegend.elements().unselect();
       } );
+
+      if ( graphPage.legend.isEmpty() ) {
+        $( '#toggleLegendBtn' ).trigger( 'click' );
+        $( '#toggleLegendBtn' ).hide();
+      }
 
       $( 'input[name="checkForUserLayout"]' ).change( function () {
         /* This method is called when the user choose to save legend in a user layout.
@@ -2965,8 +2973,7 @@ var graphPage = {
         position: {
           // y: y_pos + 10,
           y: cy.extent()[ 'y1' ] + padding,
-          // x: 175 * factor
-          x: cy.extent()[ 'x1' ] + padding
+          x: cy.extent()[ 'x2' ] - padding
         }
       } ] ).style( {
         'background-image': '../images/minimize.png',
@@ -3001,10 +3008,9 @@ var graphPage = {
         },
         classes: 'legend_resize',
         position: {
-          // y: y_pos + 10,
-          // x: 25 * factor
           y: cy.extent()[ 'y1' ] + padding,
-          x: cy.extent()[ 'x2' ] - padding
+          // x: 175 * factor
+          x: cy.extent()[ 'x1' ] + padding
         }
       } ] ).style( {
         'background-image': '../images/full.png',
@@ -3065,8 +3071,8 @@ var graphPage = {
           'height': 15 * factor + 'px',
           'text-wrap': 'wrap',
           'text-overflow-wrap': 'anywhere',
-          'text-max-width': ( cy.extent()[ 'w' ] - padding - 15 * factor - 10 - 10 * factor ) + 'px',
-          'text-margin-x': 10 + 10 * factor + 'px',
+          'text-max-width': ( cy.extent()[ 'w' ] - padding - 15 * factor - 10 * factor - 10 * factor ) + 'px',
+          'text-margin-x': 20 * factor + 'px',
           'text-margin-y': -16 * factor + 'px',
           'text-valign': 'bottom',
           'text-halign': 'right'
@@ -3114,7 +3120,7 @@ var graphPage = {
             // y: y_pos + 10,
             // x: 15 * factor,
             y: cy.extent()[ 'y1' ] + padding + y_offset,
-            x: cy.extent()[ 'x1' ] + padding - 5
+            x: cy.extent()[ 'x1' ] + padding - 10 * factor
           }
         } ] ).style( {
           'background-color': 'white',
@@ -3133,7 +3139,7 @@ var graphPage = {
             // y: y_pos + 10,
             // x: 35 * factor,
             y: cy.extent()[ 'y1' ] + padding + y_offset,
-            x: cy.extent()[ 'x1' ] + padding + 15
+            x: cy.extent()[ 'x1' ] + padding + 20 * factor
           }
         } ] ).style( {
           'background-color': 'white',
@@ -3146,8 +3152,8 @@ var graphPage = {
           'font-size': 16 * factor + 'px',
           'text-wrap': 'wrap',
           'text-overflow-wrap': 'anywhere',
-          'text-max-width': ( cy.extent()[ 'w' ] - padding - 10 * factor - 20 ) + 'px',
-          'text-margin-x': 10 * factor + 'px',
+          'text-max-width': ( cy.extent()[ 'w' ] - padding - 10 * factor - 20 * factor ) + 'px',
+          'text-margin-x': 5 * factor + 'px',
           'text-margin-y': -10 * factor + 'px',
           'text-valign': 'bottom',
           'text-halign': 'right'
@@ -3195,6 +3201,11 @@ var graphPage = {
       //   } );
       //   y_pos = y_pos + 40 * factor;
       // }
+
+      if ( graphPage.legend.isEmpty() ) {
+        $( '#toggleLegendBtn' ).trigger( 'click' );
+        $( '#toggleLegendBtn' ).hide();
+      }
 
       return cy;
     },
