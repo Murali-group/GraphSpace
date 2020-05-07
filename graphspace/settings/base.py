@@ -25,15 +25,17 @@ DB_FULL_PATH = os.path.join(BASE_DIR, 'graphspace.db')
 # Application definition
 
 INSTALLED_APPS = (
-    'analytical',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'applications.users',
-    'applications.graphs'
+	'analytical',
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'applications.users',
+	'applications.graphs',
+	'applications.comments',
+	'channels'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -159,4 +161,18 @@ LOGGING = {
     },
 }
 
+
+
+
+# Channel settings and routing
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+        'ROUTING': 'graphspace.routing.channel_routing',
+    }
+}
 MAINTENANCE = False
+

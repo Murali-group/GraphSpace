@@ -29,10 +29,17 @@ class ErrorCodes(object):
         CannotCreateGroupForOtherUser = (
             1011, "Cannot create group with owner email = `{0}`.")
 
-        # Layouts API
-        NotAllowedLayoutAccess = (
-            1012, "User is not authorized to access layouts which are not shared. Set `owner_email` to {0} or `is_shared` to 1.")
-        CannotCreateLayoutForOtherUser = (
-            1013, "Cannot create layout with owner email = `{0}`.")
-        LayoutNameAlreadyExists = (
-            1014, "Layout with name `{0}` already exists.")
+
+	# Layouts API
+		NotAllowedLayoutAccess = (1012, "User is not authorized to access layouts which are not shared. Set `owner_email` to {0} or `is_shared` to 1.")
+		CannotCreateLayoutForOtherUser = (1013, "Cannot create layout with owner email = `{0}`.")
+		LayoutNameAlreadyExists = (1014, "Layout with name `{0}` already exists.")
+
+	# Comments API
+		UserNotAuthorizedToCreateComment = (1015, "Please create an account or login to create a comment on this graph.")
+		UserNotAuthorizedToUpdateComment = (1016, "You do not have permission to update this comment.")
+		UserNotAuthorizedToDeleteComment = (1017, "You do not have permission to delete this comment.")
+		ParentCommentDoesNotExist = (1018, "You cannot reply to comments which do not exist")
+		CannotReplyToResolvedComment = (1019, "You cannot reply to resolved comment")
+		UserCannotPinThisComment = (1020, "You cannot pin this comment")
+		UserCannotUnpinThisComment = (1021, "You cannot unpin this comment")

@@ -1,7 +1,6 @@
 /**
  * Created by adb on 25/11/16.
  */
-
 var apis = {
   graphs: {
     ENDPOINT: '/ajax/graphs/',
@@ -31,8 +30,42 @@ var apis = {
     },
     unshareGraph: function ( graph_id, group_id, successCallback, errorCallback ) {
       apis.jsonRequest( 'DELETE', apis.graphs.ENDPOINT + graph_id + '/groups/' + group_id, undefined, successCallback, errorCallback )
+    },
+    jsonRequest: function (method, url, data, successCallback, errorCallback) {
+        $.ajax({
+            headers: {
+                'Accept': 'application/json'
+            },
+            method: method,
+            data: method == 'GET' ? data : JSON.stringify(data),
+            url: url,
+            success: successCallback,
+            error: errorCallback
+        });
     }
   },
+    comments: {
+        ENDPOINT: _.template('/ajax/graphs/<%= graph_id %>/comments/'),
+        add: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        get: function (graph_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.comments.ENDPOINT({'graph_id': graph_id}), undefined, successCallback, errorCallback)
+        },
+        update: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        delete: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        pin: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        },
+        unpin: function (graph_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('UNPIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+        }
+    },
+
   nodes: {
     ENDPOINT: _.template( '/ajax/graphs/<%= graph_id %>/nodes/' ),
     get: function ( graph_id, data, successCallback, errorCallback ) {
@@ -462,6 +495,7 @@ var uploadGraphPage = {
 var graphPage = {
   cyGraph: undefined,
   timeout: null,
+  presentComments: null,
   init: function () {
     /**
      * This function is called to setup the graph page.
@@ -519,11 +553,35 @@ var graphPage = {
     if ( window.location.hash == '#layoutEditor' ) {
       $( '#layoutEditorBtn' ).trigger( 'click' );
     }
-
     if ( window.location.hash == '#legendEditor' ) {
       $( '#legendEditorBtn' ).trigger( 'click' );
     }
+        $('#commentAddBtn').click(function () {
+            $('#defaultSideBar').removeClass('active');
+            $('#AddCommentSideBar').addClass('active');
+            graphPage.expandTextarea($('#commentMessage'));
+        });
 
+        $('#createCommentBtn').click(function () {
+            graphPage.createComment($('#commentMessage').val(), null);
+        });
+
+        $('#cancelCommentBtn').click(function () {
+            $('#commentMessage').val("");
+            $('#AddCommentSideBar').removeClass('active');
+            $('#defaultSideBar').addClass('active');
+        });
+
+        $('#viewCommentsBtn').click(function () {
+            $('#defaultSideBar').removeClass('active');
+            $('#ViewCommentSideBar').addClass('active');
+            graphPage.getComments();
+            $('#allComments').click();
+        });
+
+        $('#exitLayoutBtn').click(function () {
+            graphPage.cyGraph.contextMenus('get').destroy(); // Destroys the cytocscape context menu extension instance.
+        });
     if ( window.location.hash == '#graph_details_tab' ) {
       $( '#graphDetailsTabBtn' ).trigger( 'click' );
     }
@@ -1154,6 +1212,483 @@ var graphPage = {
             type: 'danger'
           } );
         } );
+    createComment: function(message, parent_comment_id) {
+        console.log('creating comment');
+        var nodes = graphPage.cyGraph.$(':selected').nodes();
+        var edges = graphPage.cyGraph.$(':selected').edges();
+        var node_names = [], edge_names = [];
+        nodes.each(function(idx) {
+            node_names.push(nodes[idx]._private.data.id);
+        });
+        edges.each(function(idx) {
+            edge_names.push(edges[idx]._private.data.id);
+        });
+        var owner_email = ($('#UserEmail').val() && $('#UserEmail').val() != "None")? $('#UserEmail').val() : null;
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        if(message == "") {
+            $.notify({
+                message: 'Please enter a valid message'
+            }, {
+                type: 'danger'
+            });
+            return;
+        }
+        apis.comments.add(graph_id, {
+                    "owner_email": owner_email,
+                    "graph_id": graph_id,
+                    "node_names": node_names,
+                    "edge_names": edge_names,
+                    "message": message,
+                    "parent_comment_id": parent_comment_id
+                },
+                successCallback = function (response) {
+                    $('#commentMessage').val("");
+                    graphPage.cyGraph.edges().unselect();
+                    graphPage.cyGraph.nodes().unselect();
+                    $.notify({
+                        message: 'Successfully created a comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    getComments: function() {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.get(graph_id,
+                successCallback = function (response) {
+                    graphPage.commentsFormatter(response.total, response.comments);
+                    $('#allComments').click();
+                    $.notify({
+                        message: 'Successfully fetched comments of this graph'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    editComment: function(comment_id, message, is_resolved) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.update(graph_id, {
+                    'id': comment_id,
+                    'message': message,
+                    'is_resolved': is_resolved
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully edited the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    deleteComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.delete(graph_id, {
+                    'id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully deleted the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    pinComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.pin(graph_id, {
+                    'comment_id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully pinned the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    unpinComment: function(comment_id) {
+        var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
+        apis.comments.unpin(graph_id, {
+                    'comment_id': comment_id,
+                },
+                successCallback = function (response) {
+                    $.notify({
+                        message: 'Successfully unpinned the comment'
+                    }, {
+                        type: 'success'
+                    });
+                },
+                errorCallback = function (response) {
+                    $.notify({
+                        message: response.responseJSON.error_message
+                    }, {
+                        type: 'danger'
+                    });
+                });
+    },
+    commentsFormatter: function (total, comments) {
+        var ele = $('#commentsList'); ele.html(""); 
+        var comment_threads = [], comment_obj = {};
+        var visited = {}, str = "";
+        comments.forEach(function (comment) {
+            if(comment.parent_comment_id == null) {
+                if(comment_obj[comment.id] == null) {
+                    comment_obj[comment.id] = [];
+                }
+                comment_obj[comment.id].push(comment);
+            }
+            else {
+                if(comment_obj[comment.parent_comment_id] == null) {
+                    comment_obj[comment.parent_comment_id] = [];
+                }
+                comment_obj[comment.parent_comment_id].push(comment);
+            }
+        });
+        $.each(comment_obj, function( key, value ) {
+            comment_threads.push(value);
+        });
+        comment_threads.forEach(function (comment_thread) {
+            comment_thread.sort(function(a, b) {
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+            var p_comment = comment_thread[0];
+            str = '<div class="list-group comment-box" id="commentContainer' + p_comment.id + '">';
+            str += '<a class="list-group-item comment-highlight">';
+            str += graphPage.generateCommentTemplate(p_comment);
+            comment_thread.shift();
+            if(comment_thread.length > 0) {
+                str += '<div class="collapse-comments">View all hidden replies</div>';
+                str += '<div class="collapse">';
+                for(var comment of comment_thread) {
+                    str += graphPage.generateCommentTemplate(comment);
+                };
+                str += '</div>';
+            }
+            str += graphPage.generateReplyTemplate(p_comment) + '</a></div>';
+            ele.append(str);
+
+            //Do setting is_resolved field if the comment is resolved.
+            if(p_comment != null) {
+                if(p_comment.is_resolved == 1) {
+                    $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+                    $('#commentContainer' + p_comment.id).find('.reply-message').addClass('passive');
+                    $('#commentContainer' + p_comment.id).find('.res-comment-desc').removeClass('passive');
+                }
+                else {
+                    $('#commentContainer' + p_comment.id).data("is_resolved", 0);
+                }
+                if(p_comment.is_pinned !== undefined && p_comment.is_pinned == 1) {
+                    $('#commentContainer' + p_comment.id).data("is_pinned", 1);
+                }
+                else {
+                    $('#commentContainer' + p_comment.id).data("is_pinned", 0);
+                }
+            }
+        });
+        comments.forEach(function (comment) {
+            graphPage.addCommentHandlers(comment);
+        });
+
+        $('#cyGraphContainer').click(function () {
+            if($("#filterComments").is(':checked')) {
+                $('#filterComments').click();
+            }
+        });
+
+        $('#filterComments').click(function () {
+            graphPage.presentComments = [];
+            graphPage.filterCommentsBasedOnGraph();
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
+        });
+
+        $('#allComments').click(function () {
+            graphPage.presentComments = [];
+            $.each($('#commentsList').children("div"), function (key, child) {
+                $(child).removeClass('passive');
+                graphPage.presentComments.push(child);
+            });
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
+        });
+
+        $('#pinnedComments').click(function () {
+            $('#commentsList').children("div").addClass("passive");
+            graphPage.presentComments = [];
+            $.each($('#commentsList').children("div"), function(key, child) {
+                if($(child).data("is_pinned") === 1) {
+                    graphPage.presentComments.push(child);
+                    $(child).removeClass('passive');
+                }
+                else {
+                    $(child).addClass('passive');
+                }
+            });
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
+        });
+
+        $('#filterResolvedComments').click(function () {
+            commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length,
+                                    commentsPagination.page);
+        });
+
+        $('#cancelViewCommentsBtn').click(function () {
+            $('#ViewCommentSideBar').removeClass('active');
+            $('#defaultSideBar').addClass('active');
+        });
+    },
+    addCommentHandlers: function(comment) {
+        var comment_box = $('#commentBox' + comment.id);
+        if(comment.parent_comment_id === null) {
+            var container = $('#commentContainer' + comment.id);
+            graphPage.expandTextarea(container.find('.reply-message'));
+            container.find('.reply-message').unbind('click').click(function (e) {
+                e.preventDefault();
+                container.find('.reply-table').removeClass('passive');
+            });
+            container.find('.cancel-reply-btn').unbind('click').click(function (e) {
+                e.preventDefault();
+                container.find('.reply-table').addClass('passive');
+            });
+            container.find('.create-reply-btn').unbind('click').click(function (e) {
+                e.preventDefault();
+                var comment_id = parseInt(container.attr('id').split("commentContainer")[1]);
+                graphPage.createComment($('#commentContainer' + comment_id).find('.reply-message').val(), comment_id);
+                $('#commentContainer' + comment_id).find('.reply-message').val("");
+            });
+            container.find('.collapse-comments').click(function () {
+                container.find(".collapse").slideToggle('slow');
+                var text = $(this).text().split(' ');
+                if(text[0] === 'View') {
+                    $(this).text('Hide replies');
+                }
+                else {
+                    $(this).text('View all hidden replies');   
+                }
+            });
+            container.data("nodes", comment.nodes);
+            container.data("edges", comment.edges);
+            container.hover(
+                function () {
+                    graphPage.cacheNodes = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedNodes(graphPage.cyGraph));
+                    graphPage.cacheEdges = graphPage.cyGraph.collection(cytoscapeGraph.getAllSelectedEdges(graphPage.cyGraph));
+                    graphPage.cyGraph.nodes().unselect();
+                    graphPage.cyGraph.edges().unselect();
+                    $(this).data("nodes").forEach(function (node) {
+                        graphPage.cyGraph.nodes("[name = '" + node + "']").select();
+                    });
+                    $(this).data("edges").forEach(function (edge) {
+                        graphPage.cyGraph.edges("[name = '" + edge + "']").select();
+                    });
+                }, function() {
+                    graphPage.cyGraph.nodes().unselect();
+                    graphPage.cyGraph.edges().unselect();
+                    graphPage.cacheNodes.select();
+                    graphPage.cacheEdges.select();
+                }
+            );
+        };
+        comment_box.find('.edit-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var ele = $('#commentBox' + comment.id);
+            var msg = ele.find('p'); msg.addClass('passive');
+            var inp = ele.find('textarea'); inp.val(msg.text()); inp.removeClass('passive');
+            var btn = ele.find('.edit-table'); btn.removeClass('passive');
+            graphPage.expandTextarea(inp);
+        });
+        comment_box.find('.resolve-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.editComment(comment_id, undefined, 1);
+        });
+        comment_box.find('.reopen-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.editComment(comment_id, undefined, 0);
+        });
+        comment_box.find('.delete-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.deleteComment(comment_id);
+        });
+        comment_box.find('.pin-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.pinComment(comment_id);
+        });
+        comment_box.find('.unpin-comment').unbind('click').click(function (e) {
+            e.preventDefault();
+            var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+            graphPage.unpinComment(comment_id);
+        });
+        comment_box.find('.edit-comment-btn').unbind('click').click(function (e) {
+            e.preventDefault();
+            var ele = $('#commentBox' + comment.id);
+            var comment_id = parseInt(comment_box.attr('id').split('commentBox')[1]);
+            var msg = ele.find('textarea').val();
+            graphPage.editComment(comment_id, msg, undefined);
+        });
+        comment_box.find('.cancel-edit-btn').unbind('click').click(function (e) {
+            e.preventDefault();
+            var ele = $('#commentBox' + comment.id);
+            var btn = ele.find('.edit-table'); btn.addClass('passive');
+            var inp = ele.find('textarea'); inp.addClass('passive');
+            var msg = ele.find('.comment-message'); msg.removeClass('passive');
+        });
+    },
+    generateCommentTemplate: function(comment) {
+        if (comment.owner_email == null || comment.owner_email == "None") {
+                    comment.owner_email = "Anonymous";
+        }
+        var str = '<div id="commentBox' + comment.id + '">';
+        var date = comment.updated_at.split(/:|T/);
+        var date = date[1] + ':' + date[2] + ' ' + date[0];
+        str += '<table style="width:100%"><tr>';
+        str += '<td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>';
+        str += '<td class="comment-email">' + comment.owner_email + '<div class="comment-date">' + date + '</div></td>';
+        str += '<td style="vertical-align:top;">' + graphPage.generateCommentOptions(comment) + '</td></tr></table>';
+        str += '<table style="width:100%"><tr><td><p class="comment-message">' + comment.message + '</p>';
+        str += '<textarea class="form-control passive" style="height:32px;" placeholder="Edit.."></textarea>';
+        str += '</td></tr></table>';
+        str += '<table class="passive edit-table" style="width: 100%;"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary edit-comment-btn" href="#">Edit</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-edit-btn" href="#">Cancel</a></td>';
+        str += '</tr></table><hr style="width:213px;margin-left:-7px;"></div>';
+        return str;
+    },
+    generateCommentOptions: function(comment) {
+        var str = "";
+        str += '<div class="dropdown">';
+        str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
+        str += '<i class="fa comment-symbol">&#xf142;</i>';
+        str += '</button><div class="dropdown-menu">';
+        if($('#UserEmail').val() === comment.owner_email) {
+            str += '<a class="dropdown-item edit-comment">Edit</a>';
+            if(comment.parent_comment_id === null && comment.is_resolved === 0) {
+                str += '<a class="dropdown-item resolve-comment">Resolve</a>';
+            }
+            str += '<a class="dropdown-item delete-comment">Delete</a>';
+        }
+        else if($('#UserEmail').val() === comment.graph_owner_email) {
+            str += '<a class="dropdown-item delete-comment">Delete</a>';
+        }
+        if(comment.parent_comment_id === null) {
+            if(comment.is_resolved === 1) {
+                str += '<a class="dropdown-item reopen-comment">Re-open</a>';
+            }
+            if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
+                str += '<a class="dropdown-item pin-comment">Pin</a>';
+            }
+            else {
+                str += '<a class="dropdown-item unpin-comment">Unpin</a>';
+            }
+        }
+        str += '</div></div>';
+        return str;
+    },
+    generateReplyTemplate: function(comment) {
+        var str = "";
+        str += '<textarea class="form-control reply-message" style="height:32px;"';
+        str += '" placeholder="Reply.."></textarea><table class="passive reply-table" style="width: 100%"><tr>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary create-reply-btn" href="#">Reply</a></td>';
+        str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-reply-btn" href="#">Cancel</a></td>';
+        str += '</tr></table>';
+        str += '<div class="passive res-comment-desc">Comment has been resolved</div>';
+        return str;
+    },
+    filterCommentsBasedOnGraph: function () {
+        var nodes = graphPage.cyGraph.$(':selected').nodes();
+        var edges = graphPage.cyGraph.$(':selected').edges();
+        var node_names = [], edge_names = [];
+        nodes.each(function(idx) {
+            node_names.push(nodes[idx]._private.data.id);
+        });
+        edges.each(function(idx) {
+            edge_names.push(edges[idx]._private.data.id);
+        });
+        var ele = $('#commentsList');
+        $.each(ele.children("div"), function(key, comment) {
+            if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
+                graphPage.presentComments.push(comment);
+                $(comment).removeClass('passive');
+            }
+            else if(graphPage.hasCommonElement($(comment).data("edges"), edge_names)) {
+                graphPage.presentComments.push(comment);
+                $(comment).removeClass('passive');
+            }
+            else {
+                $(comment).addClass('passive');
+            }
+        });
+    },
+    filterCommentsBasedOnPageNumber: function (number, resolved) {
+        var pg_size = commentsPagination.perPage;
+        $.each(graphPage.presentComments, function(key, comment) {
+            if($(comment).data("is_resolved") && !resolved) {
+                $(comment).addClass('passive');
+            }
+            else if(key >= pg_size*(number - 1) && key < pg_size*number) {
+                $(comment).removeClass('passive');
+            }
+            else {
+                $(comment).addClass('passive');
+            }
+        });
+    },
+    expandTextarea: function (element) {
+        element.keyup(function() {
+            this.style.overflow = 'hidden';
+            this.style.height = 0;
+            this.style.height = this.scrollHeight + 'px';
+        });
+    },
+    hasCommonElement: function (arr1, arr2) {
+        var bExists = false;
+        $.each(arr2, function(index, value) {
+            if($.inArray(value,arr1)!=-1) {
+                bExists = true;
+            }
+            if(bExists) {
+                return false;  //break
+            }
+        });
+        return bExists;
+    },
+    export: function (format) {
+        cytoscapeGraph.export(graphPage.cyGraph, format, $('#GraphName').val());
     },
     onSetDefaultLayoutBtn: function ( e ) {
       if ( utils.getURLParameter( 'auto_layout' ) ) {
@@ -3285,6 +3820,120 @@ var graphPage = {
               if ( window.location.hash == '#legendEditor' ) {
                 graphPage.legend.legendEditor.init();
               }
+
+            };
+
+            $('#editSelectedNodesBtn').click(function () {
+                graphPage.layoutEditor.nodeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.nodes(':selected')));
+            });
+
+            $('#editSelectedEdgesBtn').click(function () {
+                graphPage.layoutEditor.edgeEditor.open(graphPage.cyGraph.collection(graphPage.cyGraph.edges(':selected')));
+            });
+
+            graphPage.layoutEditor.nodeEditor.init();
+            graphPage.layoutEditor.edgeEditor.init();
+
+
+            $('#importCytoscapeStyleBtn').change(function (e) {
+                //console.log($('#importCytoscapeStyleBtn').files);
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    var obj = JSON.parse(event.target.result);
+
+                    if (cytoscapeGraph.applyStylesheet(graphPage.cyGraph, obj)) {
+                        graphPage.layoutEditor.undoRedoManager.update({
+                            'action_type': 'style',
+                            'data': {
+                                'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                                'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                                'elements': graphPage.cyGraph.elements(':selected')
+                            }
+                        });
+                    } else {
+                        graphPage.layoutEditor.undoRedoManager.undo();
+                    }
+                };
+                reader.readAsText(event.target.files[0]);
+            });
+
+            $("#nodeBackgroundColorPicker").colorpicker();
+            $("#edgeLineColorPicker").colorpicker();
+        },
+        nodeSelector: {
+            init: function () {
+                var colors = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                    return node.style('background-color');
+                }));
+                $('#selectColors').html('');
+                _.each(colors, function (color) {
+                    $('#selectColors').append(
+                        $('<label>', {class: "checkbox-inline zero-padding"}).css({
+                            'margin-left': '10px',
+                            'margin-right': '10px'
+                        }).append(
+                            $('<input>', {
+                                id: color,
+                                type: 'checkbox',
+                                value: color,
+                                name: 'colors'
+                            })).append($('<p>', {
+                            class: 'select-color-box'
+                        }).css('background', color)));
+                });
+
+                var shapes = _.uniq(_.map(graphPage.cyGraph.nodes(), function (node) {
+                    return node.style('shape');
+                }));
+                $('#selectShapes').html('');
+                _.each(shapes, function (shape) {
+                    $('#selectShapes').append(
+                        $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
+                            $('<input>', {
+                                id: shape,
+                                type: 'checkbox',
+                                value: shape,
+                                name: 'shapes'
+                            })).append(_.capitalize(shape)));
+                });
+
+                $('input:checkbox[name=shapes], input:checkbox[name=colors] ').change(function () {
+                    var selectedShapes = _.map($('input:checkbox[name=shapes]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
+                    var selectedColors = _.map($('input:checkbox[name=colors]:checked'), function (elem) {
+                        return $(elem).val();
+                    });
+
+                    if ($(this).attr('name') === 'colors') {
+                        var attributeName = 'background-color';
+                    } else {
+                        var attributeName = 'shape';
+                    }
+                    var attributeValue = $(this).val();
+                    var isSelected = $(this).is(":checked");
+
+                    _.each(graphPage.cyGraph.nodes(), function (node) {
+
+                        if ((selectedColors.length > 0 && _.indexOf(selectedColors, node.style('background-color')) === -1) || (selectedShapes.length > 0 && _.indexOf(selectedShapes, node.style('shape')) === -1)) {
+                            node.unselect();
+                        } else if (selectedColors.length > 0 || selectedShapes.length > 0) {
+                            node.select();
+                        } else {
+                            node.unselect();
+                        }
+
+                    });
+
+                    graphPage.layoutEditor.undoRedoManager.update({
+                        'action_type': 'select',
+                        'data': {
+                            'style': cytoscapeGraph.getStylesheet(graphPage.cyGraph),
+                            'positions': cytoscapeGraph.getRenderedNodePositionsMap(graphPage.cyGraph),
+                            'elements': graphPage.cyGraph.elements(':selected')
+                        }
+                    });
+                });
             }
 
             if ( nodeId.slice( 0, 1 ) == 'n' ) {
@@ -4138,17 +4787,148 @@ var cytoscapeGraph = {
       }
     }
     return graph_layout;
-  },
-  hideGraphInformation: function ( cy ) {
-    /*
-     Function to hide information about the graph that the layout editor doesn't need to see.
-     */
-    cy.style()
-      .selector( 'node' ).style( {
-        'text-opacity': function ( ele ) {
-          graphPage.layoutEditor.original_opacity[ ele.data().id ] = ele.style()[ 'text-opacity' ];
 
-          return 0;
+    },
+    hideGraphInformation: function (cy) {
+        /*
+         Function to hide information about the graph that the layout editor doesn't need to see.
+         */
+        cy.style()
+            .selector('node').style({
+                'font-size': "0px"
+            })
+            .update(); // update the elements in the graph with the new style
+
+    },
+    showGraphInformation: function (cy) {
+        /*
+         Function to Show information about the graph that the layout editor hid from the users.
+         */
+        cy.style()
+            .selector('node').style({
+                'font-size': "16px"
+            })
+            .update();
+        console.log('done');
+    },
+    getRenderedNodePositionsMap: function (cy) {
+        var result = {};
+        _.each(cy.nodes(), function (node) {
+            result[node.id()] = node.renderedPosition();
+        });
+        return result;
+    },
+    setRenderedNodePositions: function (cy, positions) {
+        _.each(cy.nodes(), function (node) {
+            node.renderedPosition(positions[node.id()]);
+        });
+    },
+    unSelectAllNodes: function (cy) {
+        _.each(cy.nodes(), function (node) {
+            node.unselect();
+        });
+    },
+    unSelectAllEdges: function (cy) {
+        _.each(cy.edges(), function (edge) {
+            edge.unselect();
+        });
+    },
+    getAllSelectedNodes: function (cy) {
+        return _.filter(cy.nodes(), function (node) {
+            return node.selected();
+        });
+    },
+    getAllSelectedEdges: function (cy) {
+        return _.filter(cy.edges(), function (edge) {
+            return edge.selected();
+        });
+    },
+    applyLayoutToCollection: function (cy, collection, layout_name) {
+        if (layout_name === "circle") {
+            collection.layout(
+                {
+                    name: "circle",
+                    fit: false,
+                    avoidOverlap: false,
+                    padding: 0
+                });
+        } else if (layout_name === "fill_circle") {
+            collection.layout(
+                {
+                    name: "concentric",
+                    fit: false,
+                    avoidOverlap: false,
+                    padding: 40
+                });
+        } else if (layout_name === "grid") {
+            collection.layout(
+                {
+                    name: "grid",
+                    fit: false,
+                    avoidOverlap: true,
+                    condense: true
+                });
+        } else if (layout_name === "square") {
+            cytoscapeGraph.runSquareLayoutOnCollection(cy, collection);
+        } else if (layout_name === "horizontal") {
+            cytoscapeGraph.runHorizontalVerticalLayoutOnCollection(cy, collection, "horizontal");
+        } else if (layout_name === "vertical") {
+            cytoscapeGraph.runHorizontalVerticalLayoutOnCollection(cy, collection, "vertical");
+        } else if (layout_name === "release") {
+            cytoscapeGraph.runSqueezeReleaseOnCollection(collection, "release");
+        } else if (layout_name === "squeeze") {
+            cytoscapeGraph.runSqueezeReleaseOnCollection(collection, "squeeze");
+        }
+    },
+    runSqueezeReleaseOnCollection: function (collection, type) {
+        var data = cytoscapeGraph.computeCollectionCentroid(collection);
+
+        var centroid = data[0];
+        var selectedNodes = collection.nodes();
+
+        for (var i = 0; i < selectedNodes.length; i++) {
+            var node = selectedNodes[i];
+            var position = node.renderedPosition();
+            var distance = cytoscapeGraph.travelDistance(centroid, position);
+
+            if (!isNaN(position.x)) {
+                if (position.x < centroid.x) {
+                    if (type === 'squeeze') {
+                        position.x += distance.x;
+                    } else {
+                        position.x -= distance.x;
+                    }
+
+                }
+                if (position.x > centroid.x) {
+                    if (type == 'squeeze') {
+                        position.x -= distance.x;
+                    } else {
+                        position.x += distance.x;
+                    }
+                }
+            }
+
+            if (!isNaN(position.y)) {
+                if (position.y < centroid.y) {
+                    if (type == 'squeeze') {
+                        position.y += distance.y;
+                    } else {
+                        position.y -= distance.y;
+                    }
+                }
+                if (position.y > centroid.y) {
+                    if (type == 'squeeze') {
+                        position.y -= distance.y;
+                    } else {
+                        position.y += distance.y;
+                    }
+                }
+            }
+
+            if (!isNaN(position.x) && !isNaN(position.y)) {
+                node.renderedPosition(position);
+            }
         }
       } )
       .update(); // update the elements in the graph with the new style
@@ -4513,3 +5293,111 @@ var EDGE_NODE_LEGEND_INITIALS = "en";
 var EDGE_LEGEND_INITIALS = "e";
 var NODE_LEGEND_INITIALS = "n";
 var PARENT_NODE_LEGEND_INITIALS = "p";
+var commentsPagination = {
+    code: '',
+    add: function(s, f) {
+        for (var i = s; i < f; i++) {
+            commentsPagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
+        }
+    },
+    last: function() {
+        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
+        commentsPagination.code += '<li class="page-item"><a class="page-link">' + commentsPagination.size + '</a></li>';
+    },
+    first: function() {
+        commentsPagination.code += '<li class="page-item"><a class="page-link">1</a></li>';
+        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
+    },
+    click: function() {
+        commentsPagination.page = parseInt($(this).html());
+        commentsPagination.start();
+    },
+    prev: function() {
+        commentsPagination.page--;
+        if (commentsPagination.page < 1) {
+            commentsPagination.page = 1;
+        }
+        commentsPagination.start();
+    },
+    next: function() {
+        commentsPagination.page++;
+        if (commentsPagination.page > commentsPagination.size) {
+            commentsPagination.page = commentsPagination.size;
+        }
+        commentsPagination.start();
+    },
+    bind: function() {
+        var a = commentsPagination.e.find('a');
+        $.each(a, function (key, link) {
+            if(parseInt($(link).html()) === commentsPagination.page) {
+                $(link).parent().addClass('active');
+                graphPage.filterCommentsBasedOnPageNumber(commentsPagination.page,
+                                                          $('#filterResolvedComments').prop("checked"));  
+            }
+            $(link).click(commentsPagination.click);
+        });
+    },
+    finish: function() {
+        commentsPagination.e.html(commentsPagination.code);
+        commentsPagination.code = '';
+        commentsPagination.bind();
+    },
+    start: function() {
+        if (commentsPagination.size < 5) {
+            commentsPagination.add(1, commentsPagination.size + 1);
+        }
+        else if (commentsPagination.page == 1) {
+            commentsPagination.first();
+            commentsPagination.add(2, 3);
+            commentsPagination.last();
+        }
+        else if (commentsPagination.page == commentsPagination.size) {
+            commentsPagination.first();
+            commentsPagination.add(commentsPagination.size - 1, commentsPagination.size);
+            commentsPagination.last();
+        }
+        else {
+            commentsPagination.first();
+            if(commentsPagination.page > 2) {
+                commentsPagination.add(commentsPagination.page - 1, commentsPagination.page);
+            }
+            commentsPagination.add(commentsPagination.page, commentsPagination.page + 1);
+            if(commentsPagination.page < commentsPagination.size - 1) {
+                commentsPagination.add(commentsPagination.page + 1, commentsPagination.page + 2);
+            }
+            commentsPagination.last();
+        }
+        commentsPagination.finish();
+    },
+    buttons: function(e) {
+        $.each(e.find('a'), function(key, link) {
+            if($(link).html() === "&lt;&lt;") {
+                $(link).click(commentsPagination.prev);
+            }
+            else {
+                $(link).click(commentsPagination.next);
+            }
+        });
+    },
+    create: function(e) {
+        var html = [
+            '<li class="page-item"><a class="page-link">&lt;&lt;</a></li>',
+            '<span style="white-space: nowrap;"></span>',
+            '<li class="page-item"><a class="page-link">&gt;&gt;</a></li>'
+        ];
+
+        e.html(html.join(''));
+        commentsPagination.e = $(e.find('span')[0]);
+        commentsPagination.buttons(e);
+    },
+    init: function(e, length, page) {
+        commentsPagination.perPage = 3;
+        commentsPagination.size = Math.ceil(length / commentsPagination.perPage);
+        commentsPagination.page = page;
+        if(commentsPagination.page > commentsPagination.size) {
+            commentsPagination.page = commentsPagination.size;
+        }
+        commentsPagination.create(e);
+        commentsPagination.start();
+    }
+};

@@ -592,6 +592,7 @@ def delete_edge_by_id(request, edge_id):
 	return
 
 
+
 def convert_html_legend(graph_json, style_json, param):
 	if param['update_legend_format'] == HTML_LEGEND_TABLE_FORMAT_1:
 		return convert_html_legend_1(graph_json, style_json)
@@ -607,3 +608,10 @@ def update_graph_with_html_legend(request, graph_id, param):
 	updated_style_json = convert_html_legend(graph_json=graph_json,  style_json=style_json, param=param)
 	del graph_json["data"]["description"]
 	return update_graph(request, graph_id=graph_id, style_json=updated_style_json, graph_json=graph_json)
+
+def get_edge_by_name(request, graph_id, name):
+	return db.get_edge_by_name(request.db_session, graph_id=graph_id, name=name)
+
+def get_node_by_name(request, graph_id, name):
+	return db.get_node_by_name(request.db_session, graph_id=graph_id, name=name)
+

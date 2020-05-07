@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+    <div class="container-fluid graphs padding-bottom-6">
+        <div class="content">
+
+            <h1 class="text-center">Add comment</h1>
+            <div class="row">
+                <div class="col-md-offset-3 col-md-6 col-sm-12 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            {% if Success != None %}
+                                <div class="alert alert-success" role="alert">
+                                    <p style="display: inline">{{ Success }}</p>
+                                </div>
+                            {% elif Error != None %}
+                                <div class="alert alert-danger" role="alert">
+                                    <samp>Error: {{ Error }}</samp>
+                                </div>
+                            {% endif %}
+                            <form id="UploadCommentForm" action="upload_comment" role="form"
+                                  enctype="multipart/form-data" method="POST">
+                                {% csrf_token %}
+                                <div class="control-group">
+                                    <label for="CommentMessageInput">Comment Message:</label>
+                                    <input id="CommentMessageInput" class="form-control" maxlength="32" type="text"
+                                           name="message" autocomplete="off" placeholder="Required"/>
+                                </div>
+                                <br>
+                                {% if uid %}
+                                    <input type="string" name="owner_email" hidden value="{{ uid }}"/>
+                                {% endif %}
+                                <button type="button" id="UploadCommentBtn" data-loading-text="Submitting..."
+                                        class="btn btn-primary gs-full-width" autocomplete="off">
+                                    Submit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+            var ele = $('#UploadCommentBtn');
+            ele.click(function(e) { e.preventDefault(); $('#UploadCommentForm').submit();});
+    </script>
+{% endblock %}

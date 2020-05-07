@@ -470,3 +470,84 @@ p.lead {
         margin-left: 0;
     }
 }
+
+
+#ViewCommentSideBar {
+    height: 100%;
+    width: 100%;
+}
+
+#AddCommentSideBar {
+    height: 100%;
+    width: 100%;
+}
+
+.comment-box {
+    margin: auto;
+    width: 100%;
+    padding-left: 13px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+
+.comment-highlight {
+    background-color: #F7F7F7;
+    padding:7px;
+}
+
+.comment-image {
+    width: 100%;
+}
+
+.comment-email {
+    padding: 5px;
+}
+
+.comment-message {
+    width: 169px;
+    overflow-wrap: break-word;
+}
+
+.passive {
+    display: none;
+}
+
+.comment-date {
+    color: grey;
+    font-size: 13px;
+}
+
+.comment-options {
+    background-color: #F7F7F7;
+    width: 1em !important;
+}
+
+.comment-symbol {
+    font-size: 17px;
+    color: grey;
+}
+
+.comment-options:hover {
+    border-style: solid;
+    border-width: 1px;
+    border-color: silver;
+}
+
+.collapse-comments {
+    color: #4588FD;
+    text-decoration: underline;
+    padding-bottom: 7px;
+}
+
+.res-comment-desc {
+    padding-top: 2px;
+    color: grey;
+    font-size: 14px;
+    font-style: italic;
+}
+
+#commentsPagination li {
+    padding: 0px;
+    display: inline-block;
+    font-size: 9px;
+}

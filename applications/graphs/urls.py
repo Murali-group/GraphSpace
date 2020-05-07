@@ -6,6 +6,7 @@ urlpatterns = [
 
 	url(r'^graphs/$', views.graphs_page, name='graphs'),
 	url(r'^graphs/(?P<graph_id>[^/]+)$', views.graph_page, name='graph'),
+	url(r'^graphs/(?P<graph_id>[^/]+)/view_comments$', views.view_comments, name='view_comments'),
 	url(r'^graphs/(?P<email>[^/]+)/(?P<graph_name>[^/]+)$', views.graph_page_by_name, name='graph_by_name'),
 	url(r'^upload$', views.upload_graph_page, name='upload_graph'),
 
@@ -27,6 +28,8 @@ urlpatterns = [
 	# Graph Layouts
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
 	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/layouts/(?P<layout_id>[^/]+)$', views.graph_layouts_ajax_api, name='graph_layouts_ajax_api'),
+	# Graph Comments
+	url(r'^ajax/graphs/(?P<graph_id>[^/]+)/comments/$', views.graph_comments_ajax_api, name='graph_comments_ajax_api'),
 
 	# REST APIs Endpoints
 

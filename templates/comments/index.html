@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+    	<div class="container comment-list">
+    		<br/><br/>
+    		<h4> Comments under this Graph with id: {{graph_id}}</h4>
+    		{% for comment in comments %}
+    		<ul class="list-group">
+    			<li class="list-group-item"><b>Email: </b>{{comment.owner_email}} <br/><b> Message: </b>{{comment.message}}</li>
+            </ul>
+            <br/>
+            {% endfor %}
+    	</div>
+{% endblock %}
