@@ -1919,4 +1919,5 @@ def _comments_api(request, graph_id=None):
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
 	else:
+		console.log(7)
 		raise BadRequest(request)

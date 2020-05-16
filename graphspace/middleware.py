@@ -8,13 +8,13 @@ from graphspace.database import *
 from channels.handler import AsgiRequest
 
 class SQLAlchemySessionMiddleware(object):
-	def process_request(self, request):
+    def process_request(self, request):
 		# Re-establish DB sessions for ASGI requests which are used for websockets
-		if type(request) == AsgiRequest:
+	if type(request) == AsgiRequest:
 			# Database() is a func in graphspace.database
-			request.db_session = Database().session()
-		else:
-			request.db_session = settings.db.session()
+	    request.db_session = Database().session()
+	else:
+	    equest.db_session = settings.db.session()
 
     def process_response(self, request, response):
         try:
