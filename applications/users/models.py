@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, backref
 
 from applications.graphs.models import *
 from applications.comments.models import *
+from applications.discussions.models import *
 
 
 Base = settings.BASE
@@ -31,7 +32,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	owned_graphs = relationship("Graph", back_populates="owner", cascade="all, delete-orphan")
 	owned_layouts = relationship("Layout", back_populates="owner", cascade="all, delete-orphan")
 	owned_comments = relationship("Comment", back_populates="owner", cascade="all, delete-orphan")
-
+	owned_discussions = relationship("Discussion", back_populates="owner", cascade="all, delete-orphan")
 
 	member_groups = association_proxy('user_groups', 'group')
 
@@ -86,6 +87,8 @@ class Group(IDMixin, TimeStampMixin, Base):
 	invite_code = Column(String, nullable=False)
 
 	owner = relationship("User", back_populates="owned_groups", uselist=False)
+	group_discussions = relationship("Discussion", back_populates="group", cascade="all, delete-orphan")
+
 	members = association_proxy('member_users', 'user')
 	graphs = association_proxy('shared_graphs', 'graph')
 
@@ -106,6 +109,7 @@ class Group(IDMixin, TimeStampMixin, Base):
 			'description': cls.description,
 			'total_graphs': len(cls.graphs),
 			'total_members': len(cls.members),
+			'group_discussions': len(cls.group_discussions),
 			'created_at': cls.created_at.isoformat(),
 			'updated_at': cls.updated_at.isoformat()
 		}

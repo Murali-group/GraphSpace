@@ -14,7 +14,7 @@ class SQLAlchemySessionMiddleware(object):
 			# Database() is a func in graphspace.database
 	    request.db_session = Database().session()
 	else:
-	    equest.db_session = settings.db.session()
+	    request.db_session = settings.db.session()
 
     def process_response(self, request, response):
         try:

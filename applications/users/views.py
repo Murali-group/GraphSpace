@@ -1,6 +1,7 @@
 import json
 
 import applications.users.controllers as users
+import applications.discussions.controllers as discussions
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -858,3 +859,138 @@ def _delete_group_graph(request, group_id, graph_id):
 							 graph_id=graph_id)
 
 
+def group_discussions_ajax_api(request, group_id, discussion_id=None):
+    """
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>/graphs
+		/javascript/groups/<group_id>/graphs/<graph_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+    return _group_discussions_api(request, group_id, discussion_id=discussion_id)
+
+def _group_discussions_api(request, group_id=None, discussion_id=None):
+    """
+	Handles any request (GET/POST) sent to /groups or groups/<group_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST" and group_id is not None:
+            return HttpResponse(json.dumps(_add_discussion(request, group_id, group=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET" and discussion_id is None:
+            return HttpResponse(json.dumps(_get_group_discussions(request, group_id)),
+                                content_type="application/json")
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_discussion(request, group_id, group={}):
+    """
+	Group Parameters
+	----------
+	name : string
+		Name of group. Required
+	description : string
+		Description of the group. Optional
+	owner_email : string
+		Email of the Owner of the groups. Required
+
+
+	Parameters
+	----------
+	group : dict
+		Dictionary containing the data of the group being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	group : object
+		Newly created group object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != group.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+                             args=group.get('owner_email', None))
+
+    return utils.serializer(discussions.add_discussion(request, group_id=group_id,
+                                                       message=group.get('message', None),
+                                                       topic=group.get('topic', None),
+                                                       owner_email=group.get('owner_email', None)))
+
+def _get_group_discussions(request, group_id):
+    """
+
+	Query Parameters
+	----------
+	owner_email : string
+		Email of the Owner of the graphs.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+	names : string
+		Search for graphs with given names. In order to search for graphs with either of the given names as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
+	nodes : list of strings
+		Search for graphs with the given node names. In order to search for graphs with either of the given node names as a substring, wrap the node name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node names.
+	edges : list of strings
+		Search for graphs with the given edges. An edge can be represented as <head_node_name>:<tail_node_name>. In order to perform a substring on edges, wrap the node names with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edges between nodes with xyz in their node names to nodes with abc in their node name.
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	total : integer
+		Number of groups matching the request.
+	graphs : List of Graphs.
+		List of Graphs Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
+    total, discussionss = discussions.search_discussions_by_group_id(request, group_id=group_id)
+
+    return {
+        'total': total,
+        'discussions': [utils.serializer(discussion) for discussion in discussionss]
+    }

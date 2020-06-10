@@ -1,0 +1,35 @@
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#addDiscussionForm" data-whatever="@getbootstrap">Add Discussion</button>
+
+<table id="SharedDiscussionsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="groupPage.SharedDiscussionsTable.getDiscussionsSharedToGroup"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="discussions"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-field="topic" data-sortable="True" data-formatter="groupPage.SharedDiscussionsTable.nameFormatter">Topic
+        </th>
+        <th data-field="owner_email" data-sortable="True">Discussion Owner</th>
+        <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
+        <th data-field="is_resolved" data-formatter="groupPage.SharedDiscussionsTable.visibilityFormatter"
+            data-sortable="True">Status
+        </th>
+        {% if group.owner_email == uid %}
+            <th data-field="operations"
+                data-formatter="groupPage.SharedDiscussionsTable.operationsFormatter"
+                data-events="groupPage.SharedDiscussionsTable.operationEvents">
+                Remove
+            </th>
+        {% endif %}
+
+    </tr>
+    </thead>
+</table>

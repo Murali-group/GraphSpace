@@ -16,7 +16,7 @@ class Discussion(IDMixin, TimeStampMixin, Base):
 
     message = Column(String, nullable=False)
     is_resolved = Column(Integer, nullable=False, default=0)
-    description = Column(String, nullable=True)
+    topic = Column(String, nullable=True)
 
     owner_email = Column(String, ForeignKey('user.email', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     owner = relationship("User", back_populates="owned_discussions", uselist=False)
@@ -39,7 +39,7 @@ class Discussion(IDMixin, TimeStampMixin, Base):
             'id': cls.id,
             'owner_email': cls.owner_email,
             'message': cls.message,
-            'description': cls.description,
+            'topic': cls.topic,
             'is_resolved': cls.is_resolved,
             'group_id': cls.group_id,
             'parent_discussion_id': cls.parent_discussion_id,
