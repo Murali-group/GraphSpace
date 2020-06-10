@@ -48,6 +48,27 @@ def group_page(request, group_id):
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
+@is_authenticated(redirect_url='/')
+def discussion_page(request, group_id, discussion_id):
+	"""
+		Wrapper view for the group page. /groups/<group_id>
+
+		:param request: HTTP GET Request.
+
+	Parameters
+	----------
+	group_id : string
+		Unique ID of the group. Required
+	"""
+	if 'GET' == request.method:
+		context = RequestContext(request, {})
+		context.push({
+			"discussion": _get_discussion(request, int(discussion_id), int(group_id)),
+		})
+		return render(request, 'discussions/index.html', context)
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
 
 def join_group_page(request, group_id):
 	"""
@@ -420,6 +441,31 @@ def _get_group(request, group_id):
 
 	return utils.serializer(users.get_group_by_id(request, group_id))
 
+def _get_discussion(request, discussion_id, group_id):
+	"""
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	group: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
+	return utils.serializer(discussions.get_discussion_by_id(request, discussion_id))
 
 @is_authenticated()
 def _update_group(request, group_id, group={}):

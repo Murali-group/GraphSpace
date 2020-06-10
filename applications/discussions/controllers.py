@@ -14,8 +14,10 @@ def add_discussion(request, message=None, topic=None, group_id=None, is_resolved
                                    parent_discussion_id=parent_discussion_id)
     return discussion
 
-
 def search_discussions_by_group_id(request, group_id=None):
 	if group_id is None:
 		raise Exception("Atleast one group id is required.")
 	return db.get_discussion_by_group_id(request.db_session, group_id=group_id)
+
+def get_discussion_by_id(request, discussion_id):
+	return db.get_discussion(request.db_session, id=discussion_id)
