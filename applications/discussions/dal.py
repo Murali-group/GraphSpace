@@ -18,7 +18,7 @@ def add_discussion(db_session, message, topic, group_id, owner_email=None, is_re
 
 
 @with_session
-def get_discussion_by_group_id(db_session, group_id):
+def get_discussions_by_group_id(db_session, group_id):
 	query = db_session.query(Discussion).filter(Discussion.group_id == group_id)
 	query = query.filter(Discussion.parent_discussion_id == None)
 	return query.count(), query.all()
@@ -32,6 +32,11 @@ def get_discussion(db_session, id):
 	:return: Group if id exists else None
 	"""
 	return db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
+def get_comments_by_discussion_id(db_session, group_id, discussion_id):
+	query = db_session.query(Discussion).filter(Discussion.group_id == group_id)
+	query = query.filter(Discussion.parent_discussion_id == discussion_id)
+	return query.count(), query.all()
+
 
 @event.listens_for(Discussion, 'after_insert')
 def update_listener(mapper, connection, discussion):

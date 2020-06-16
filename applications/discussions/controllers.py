@@ -15,9 +15,16 @@ def add_discussion(request, message=None, topic=None, group_id=None, is_resolved
     return discussion
 
 def search_discussions_by_group_id(request, group_id=None):
-	if group_id is None:
-		raise Exception("Atleast one group id is required.")
-	return db.get_discussion_by_group_id(request.db_session, group_id=group_id)
+    if group_id is None:
+        raise Exception("Atleast one group id is required.")
+    return db.get_discussions_by_group_id(request.db_session, group_id=group_id)
 
 def get_discussion_by_id(request, discussion_id):
-	return db.get_discussion(request.db_session, id=discussion_id)
+    return db.get_discussion(request.db_session, id=discussion_id)
+
+def search_comments_by_discussion_id(request, group_id=None, discussion_id=None):
+    if group_id is None:
+        raise Exception("Atleast one group id is required.")
+    if discussion_id is None:
+        raise Exception("Atleast one discussion id is required.")
+    return db.get_comments_by_discussion_id(request.db_session, group_id=group_id, discussion_id=discussion_id)

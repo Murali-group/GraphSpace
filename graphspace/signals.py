@@ -34,4 +34,4 @@ def send_discussion(discussion, type, users=None, event=None):
                 email_list.append(user['email'])
             email_list = list(set(email_list))
         for email in email_list:
-            send_message(group_name=email, type="comment", message=discussion, event=event)
+            send_message(group_name=email, type="discussion", message=discussion, event=event)

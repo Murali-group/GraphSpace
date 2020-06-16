@@ -49,6 +49,9 @@ var apis = {
         getSharedDiscussions: function (id, data, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.groups.ENDPOINT + id + '/discussions', data, successCallback, errorCallback)
         },
+        getComments: function (group_id, discussion_id, successCallback, errorCallback) {
+            apis.jsonRequest('GET', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, undefined, successCallback, errorCallback)
+        },
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -383,7 +386,11 @@ var groupPage = {
             apis.discussion.add($('#GroupID').val(), discussion,
                 successCallback = function (response) {
                     // This method is called when group is successfully added.
-                    window.location = location.pathname;
+
+                    window.location = location.pathname + '#discussions';
+                    window.location.reload()
+
+
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while adding group.
@@ -661,4 +668,194 @@ var joinGroupPage = {
         //POST Request to log in user
         $('#joinGraphSpaceForm').submit();
     }
+};
+
+var discussionPage = {
+
+  presentComments: null,
+
+  init: function () {
+
+    $('#createCommentBtn').click(function () {
+        discussionPage.createComment($('#commentMessage').val());
+    });
+
+    discussionPage.getComments();
+    $('.btn-back').click(function(){
+        parent.history.back();
+        return false;
+    });
+  },
+
+
+
+
+    createComment: function(message) {
+      console.log('creating comment');
+      var owner_email = ($('#UserEmail').val() && $('#UserEmail').val() != "None")? $('#UserEmail').val() : null;
+      var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
+      var parent_discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
+      if(message == "") {
+          $.notify({
+              message: 'Please enter a valid message'
+          }, {
+              type: 'danger'
+          });
+          return;
+      }
+      apis.discussion.add(group_id, {
+                  "owner_email": owner_email,
+                  "group_id": group_id,
+                  "message": message,
+                  "parent_discussion_id": parent_discussion_id
+              },
+              successCallback = function (response) {
+                  $('#commentMessage').val("");              
+                  
+              },
+              errorCallback = function (response) {
+                  $.notify({
+                      message: response.responseJSON.error_message
+                  }, {
+                      type: 'danger'
+                  });
+              });
+  },
+  
+    getComments: function () {
+        console.log("dveuvdcuwevgu")
+        var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
+        var discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
+        console.log(group_id);
+      apis.discussion.getComments(group_id, discussion_id,
+              successCallback = function (response) {
+                  discussionPage.commentsFormatter(response.total, response.discussions);
+                  console.log(response);
+                  
+              },
+              errorCallback = function (response) {
+                  $.notify({
+                      message: response.responseJSON.error_message
+                  }, {
+                      type: 'danger'
+                  });
+              });
+  },
+  commentsFormatter: function (total, comments) {
+      var ele = $('#commentsList'); ele.html(""); 
+      var comment_threads = [], comment_obj = {};
+      var visited = {}, str = "";
+      comments.forEach(function (comment) {
+          if(comment.parent_comment_id == null) {
+              if(comment_obj[comment.id] == null) {
+                  comment_obj[comment.id] = [];
+              }
+              comment_obj[comment.id].push(comment);
+          }
+          else {
+              if(comment_obj[comment.parent_comment_id] == null) {
+                  comment_obj[comment.parent_comment_id] = [];
+              }
+              comment_obj[comment.parent_comment_id].push(comment);
+          }
+      });
+      $.each(comment_obj, function( key, value ) {
+          comment_threads.push(value);
+      });
+      comment_threads.forEach(function (comment_thread) {
+          comment_thread.sort(function(a, b) {
+              return new Date(a.created_at) - new Date(b.created_at);
+          });
+          var p_comment = comment_thread[0];
+          str = '<div class="TimelineItem container-sm" id="commentContainer' + p_comment.id + '">';
+          str += '<div class="panel panel-default">';
+          str += discussionPage.generateCommentTemplate(p_comment);
+          comment_thread.shift();
+          if(comment_thread.length > 0) {
+              // str += '<div class="collapse-comments">View all hidden replies</div>';
+              // str += '<div class="collapse">';
+              for(var comment of comment_thread) {
+                  str += discussionPage.generateCommentTemplate(comment);
+              };
+              str += '</div>';
+              str += '</div>';
+          }
+          // str += discussionPage.generateReplyTemplate(p_comment) + '</a></div>';
+          ele.append(str);
+
+          //Do setting is_resolved field if the comment is resolved.
+          if(p_comment != null) {
+              if(p_comment.is_resolved == 1) {
+                  $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+                  $('#commentContainer' + p_comment.id).find('.reply-message').addClass('passive');
+                  $('#commentContainer' + p_comment.id).find('.res-comment-desc').removeClass('passive');
+              }
+              else {
+                  $('#commentContainer' + p_comment.id).data("is_resolved", 0);
+              }
+              if(p_comment.is_pinned !== undefined && p_comment.is_pinned == 1) {
+                  $('#commentContainer' + p_comment.id).data("is_pinned", 1);
+              }
+              else {
+                  $('#commentContainer' + p_comment.id).data("is_pinned", 0);
+              }
+          }
+      });
+      
+  },
+  generateCommentTemplate: function(comment) {
+      if (comment.owner_email == null || comment.owner_email == "None") {
+                  comment.owner_email = "Anonymous";
+      }
+      var str = '<div class="panel-heading" id="commentBox' + comment.id + '">';
+      var date = comment.updated_at.split(/:|T/);
+      var date = date[1] + ':' + date[2] + ' ' + date[0];
+      str += '<b>' + comment.owner_email + '</b> on <i>' + date +'</i>';
+      str += '<span style="float: right;">' + discussionPage.generateCommentOptions(comment) + '</i></span></div>';
+      str += '<div class="panel-body discussion-message"><pre style="white-space: pre-line; display: contents;">' + comment.message +'</pre></div>';
+      // str += '<div class="panel-footer" style="height: 40px" ></div>';
+      return str;
+  },
+  generateCommentOptions: function(comment) {
+      var str = "";
+      str += '<div class="dropdown">';
+      str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
+      str += '<i class="fa comment-symbol">&#xf142;</i>';
+      str += '</button><div class="dropdown-menu">';
+      if($('#UserEmail').val() === comment.owner_email) {
+          str += '<a class="dropdown-item edit-comment">Edit</a>';
+          if(comment.parent_comment_id === null && comment.is_resolved === 0) {
+              str += '<a class="dropdown-item resolve-comment">Resolve</a>';
+          }
+          str += '<a class="dropdown-item delete-comment">Delete</a>';
+      }
+      else if($('#UserEmail').val() === comment.graph_owner_email) {
+          str += '<a class="dropdown-item delete-comment">Delete</a>';
+      }
+      if(comment.parent_comment_id === null) {
+          if(comment.is_resolved === 1) {
+              str += '<a class="dropdown-item reopen-comment">Re-open</a>';
+          }
+          if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
+              str += '<a class="dropdown-item pin-comment">Pin</a>';
+          }
+          else {
+              str += '<a class="dropdown-item unpin-comment">Unpin</a>';
+          }
+      }
+      str += '</div></div>';
+      return str;
+  },
+  generateReplyTemplate: function(comment) {
+      var str = "";
+      str += '<textarea class="form-control reply-message" style="height:32px;"';
+      str += '" placeholder="Reply.."></textarea><table class="passive reply-table" style="width: 100%"><tr>';
+      str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary create-reply-btn" href="#">Reply</a></td>';
+      str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-reply-btn" href="#">Cancel</a></td>';
+      str += '</tr></table>';
+      str += '<div class="passive res-comment-desc">Comment has been resolved</div>';
+      return str;
+  },
+
+
 };

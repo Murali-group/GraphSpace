@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+
+
+
+
+
+<button type="button" class="btn btn-back" style="margin-top: 150px; float: right; margin-right:190px;"> <- Back To Discussions</button></a>
+
+<div class="container comment-list " style="margin-left: 10px"  >
+
+
+  <br><br><br><br><br><br><br>
+            
+    <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
+    <input type="text" id="GroupID" hidden value="{{ discussion.group_id }}">
+
+
+
+
+<div class = "container-sm">
+<div class="panel panel-default">
+<div class="panel-heading"><b>{{discussion.owner_email}}</b> on <i> {{discussion.created_at}}</i><span style="float: right;"><i class="fa fa-ellipsis-v" aria-hidden="true" ></i></span></div>
+<div class="panel-body discussion-message"><pre style="white-space: pre-line; display: contents;">{{discussion.message}}</pre></div>
+<!-- <div class="panel-footer" style="height: 40px" ></div>
+ --></div>
+</div>
+<div id="commentsList"></div>
+
+
+<div class="container-sm pb-cmnt-container">
+    <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <textarea placeholder="Write your comment here!" id= "commentMessage" class="pb-cmnt-textarea"></textarea>
+                    <form class="form-inline">
+                        <button class="btn btn-success pull-right" id="createCommentBtn" type="button">Comment</button>
+                    </form>
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+
+
+
+</div>
+  <div class="sticky headerr"><h3>   #{{discussion.id}} {{discussion.topic}}</h3></div>
+
+    <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+          console.log($('#GroupID').val());
+          console.log($('#DiscussionID').val());
+          discussionPage.init();
+
+        });
+    </script>
+
+{% endblock %}
