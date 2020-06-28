@@ -43,3 +43,6 @@ class ErrorCodes(object):
 	CannotReplyToResolvedComment = (1019, "You cannot reply to resolved comment")
 	UserCannotPinThisComment = (1020, "You cannot pin this comment")
 	UserCannotUnpinThisComment = (1021, "You cannot unpin this comment")
+
+    # Discussions API
+    UserNotAuthorizedToDeleteDiscussion = (1022, "You do not have permission to delete this discussion.")
