@@ -949,7 +949,7 @@ def _group_discussions_api(request, group_id, discussion_id=None):
                                 content_type="application/json",
                                 status=201)
         elif request.method == "GET" and discussion_id is None:
-            return HttpResponse(json.dumps(_get_group_discussions(request, group_id)),
+            return HttpResponse(json.dumps(_get_group_discussions(request, group_id, query=request.GET)),
                                 content_type="application/json")
         else:
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
@@ -1004,7 +1004,7 @@ def _add_discussion(request, group_id, group={}):
                                                        parent_discussion_id=group.get('parent_discussion_id', None)))
 
 
-def _get_group_discussions(request, group_id):
+def _get_group_discussions(request, group_id, query={}):
     """
 
 	Query Parameters
@@ -1043,9 +1043,31 @@ def _get_group_discussions(request, group_id):
 	------
 
 	"""
-    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-    total, discussionss = discussions.search_discussions_by_group_id(request, group_id=group_id)
+
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+    #
+    # total, groups = users.search_groups(request,
+    #                                     owner_email=query.get('owner_email', None),
+    #                                     member_email=query.get('member_email', None),
+    #                                     name=query.get('name', None),
+    #                                     description=query.get('description', None),
+    #                                     limit=query.get('limit', 20),
+    #                                     offset=query.get('offset', 0),
+    #                                     order=query.get('order', 'desc'),
+    #                                     sort=query.get('sort', 'name'))
+
+
+
+    total, discussionss = discussions.search_discussions_by_group_id(request,
+                                                                     group_id=group_id,
+                                                                     topic=query.get('topic', None),
+                                                                     limit=query.get('limit', 20),
+                                                                     offset=query.get('offset', 0),
+                                                                     order=query.get('order', None),
+                                                                     sort=query.get('sort', None))
 
     return {
         'total': total,
@@ -1084,6 +1106,15 @@ def _discussion_comments_api(request, group_id, discussion_id):
         if request.method == "GET" and discussion_id is not None:
             return HttpResponse(json.dumps(_get_discussion_comments(request, group_id, discussion_id)),
                                 content_type="application/json")
+        elif request.method == "DELETE" and discussion_id is not None:
+            _delete_discussion(request, discussion_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion with id=%s" % discussion_id
+            }), content_type="application/json", status=200)
+        elif request.method == "PUT" and discussion_id is not None:
+            return HttpResponse(json.dumps(_update_discussion(request, discussion_id, discussion=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
         else:
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
     else:
@@ -1136,3 +1167,69 @@ def _get_discussion_comments(request, group_id, discussion_id):
         'total': total,
         'discussions': [utils.serializer(discussion) for discussion in discussionss]
     }
+
+def _delete_discussion(request, discussion_id):
+    """
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    authorization.validate(request, permission='DISCUSSION_DELETE', discussion_id=discussion_id)
+
+    discussions.delete_discussion_by_id(request, discussion_id)
+
+
+@is_authenticated()
+def _update_discussion(request, discussion_id, discussion={}):
+    """
+	Group Parameters
+	----------
+	name : string
+		Name of group. Required
+	description : string
+		Description of the group. Optional
+	owner_email : string
+		Email of the Owner of the groups. Required
+
+
+	Parameters
+	----------
+	group : dict
+		Dictionary containing the data of the group being added.
+	request : object
+		HTTP POST Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	group : object
+		Newly created group object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    # authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+
+    return utils.serializer(discussions.update_discussion(request, discussion_id=discussion_id,
+                                               message=discussion.get('message', None),
+                                               is_resolved=discussion.get('is_resolved', None)))
