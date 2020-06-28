@@ -15,20 +15,18 @@
        data-sort-order="asc">
     <thead>
     <tr>
-        <th data-field="topic" data-sortable="True" data-formatter="groupPage.SharedDiscussionsTable.nameFormatter">Topic
+        <th data-sortable="True" data-formatter="groupPage.SharedDiscussionsTable.discussionFormatter">Topic
         </th>
-        <th data-field="owner_email" data-sortable="True">Discussion Owner</th>
+       <!--  <th data-field="owner_email" data-sortable="True">Discussion Owner</th>
         <th data-field="updated_at" data-formatter="utils.dateFormatter" data-sortable="True">Last Modified</th>
         <th data-field="is_resolved" data-formatter="groupPage.SharedDiscussionsTable.visibilityFormatter"
             data-sortable="True">Status
         </th>
-        {% if group.owner_email == uid %}
             <th data-field="operations"
                 data-formatter="groupPage.SharedDiscussionsTable.operationsFormatter"
                 data-events="groupPage.SharedDiscussionsTable.operationEvents">
                 Remove
-            </th>
-        {% endif %}
+            </th> -->
 
     </tr>
     </thead>
