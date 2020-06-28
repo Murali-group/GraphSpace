@@ -5,7 +5,7 @@ from django.conf import settings
 from graphspace.mixins import *
 import json
 from sqlalchemy import ForeignKeyConstraint, text, Enum, Boolean
-
+from sqlalchemy import String, ForeignKey, UniqueConstraint
 Base = settings.BASE
 
 
@@ -26,7 +26,7 @@ class Discussion(IDMixin, TimeStampMixin, Base):
 
     parent_discussion_id = Column(Integer, ForeignKey('discussion.id', ondelete="CASCADE", onupdate="CASCADE"),
                                   nullable=True)
-    constraints = ()
+    constraints = (UniqueConstraint('topic', 'group_id', name='_discussion_uc_topic_group_id'),)
     indices = ()
 
     @declared_attr
