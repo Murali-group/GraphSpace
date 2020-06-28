@@ -52,6 +52,12 @@ var apis = {
         getComments: function (group_id, discussion_id, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, undefined, successCallback, errorCallback)
         },
+        delete: function (group_id, discussion_id, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, undefined, successCallback, errorCallback)
+        },
+        editDiscussion: function (group_id, discussion_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, data, successCallback, errorCallback)
+        },
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -281,6 +287,7 @@ var groupPage = {
         $('#CreateDiscussionBtn').click(groupPage.createDiscussionForm.submit);
         $('#UpdateGroupBtn').click(groupPage.updateGroupForm.submit);
         $('#ConfirmRemoveGroupToGraphBtn').click(groupPage.SharedGraphsTable.onRemoveGroupToGraphConfirm);
+        $('#ConfirmRemoveGroupToDiscussionBtn').click(groupPage.SharedDiscussionsTable.onRemoveGroupToDiscussionConfirm);
         $('#ConfirmRemoveGroupMemberBtn').click(groupPage.GroupMembersTable.onRemoveGroupMemberConfirm);
         $('#submitNewGroupMemberEmailBtn').click(groupPage.onAddGroupMember);
     },
@@ -396,7 +403,7 @@ var groupPage = {
                     // This method is called when  error occurs while adding group.
                     if(xhr.responseJSON.error_message.includes('duplicate key')) {
                         $.notify({
-                            message: 'Group name ' + discussion['message'] + ' already exists!'
+                            message: 'Discussion topic ' + discussion['topic'] + ' already exists!'
                         }, {
                             type: 'danger'
                         });
@@ -478,40 +485,112 @@ var groupPage = {
         }
     },
     SharedDiscussionsTable: {
+        discussionFormatter: function (value, row) {
+            str ='<div id="Discussionrow' + row.id + '" >';
+            str += '<div>' + groupPage.SharedDiscussionsTable.visibilityFormatter(value, row) + groupPage.SharedDiscussionsTable.nameFormatter(value, row) + groupPage.SharedDiscussionsTable.deleteFormatter(value, row) + groupPage.SharedDiscussionsTable.resolveFormatter(value, row) + '</div>';
+            // str += '<button onclick = "groupPage.SharedDiscussionsTable.operationEvents(' + row.owner_email + ',' +row.id + ')">dfdff</button>';
+            str +='<div><h6><i>' + '#'+ row.id + groupPage.SharedDiscussionsTable.dateFormatter(value, row) + ' by ' + row.owner_email +  '</i></h6></div>';
+            str +='</div>';
+            
+            return str;
+        },
         visibilityFormatter: function (value, row) {
             if (row.is_resolved === 1) {
-                return "<i class='fa fa-lock'></i> Closed";
+                return '<i class="fa fa-lock discussionLock' + String(row.id) + '"></i><i class="fa fa-unlock passive discussionUnlock' + String(row.id) + '"></i> ';
             } else {
-                return "<i class='fa fa-unlock'></i> Open";
+                return '<i class="fa fa-unlock discussionUnlock' + String(row.id) + '"></i><i class="fa fa-lock passive discussionLock' + String(row.id) + '"></i> ';
+            }
+        },
+        dateFormatter: function(value, row){
+            if(row.is_resolved ===1){
+                var str = '';
+                str += '<span class="discussionLock' + String(row.id) + '">';
+                str += ' closed ';
+                str += moment(row.updated_at).fromNow();
+                str += '</span>';
+                str += '<span class="passive discussionUnlock' + String(row.id) + '">';
+                str += ' opened ';
+                str += moment(row.created_at).fromNow();
+                str += '</span>';
+                return str;
+            } else{
+                var str = '';
+                str += '<span class="discussionUnlock' + String(row.id) + '">';
+                str += ' opened ';
+                str += moment(row.created_at).fromNow();
+                str += '</span>';
+                str += '<span class="passive discussionLock' + String(row.id) + '">';
+                str += ' closed ';
+                str += moment(row.updated_at).fromNow();
+                str += '</span>';
+                return str;
             }
         },
         nameFormatter: function (value, row) {
-            console.log("dvdfve")
+            console.log(row);
             return $('<a>').attr('href', $('#GroupID').val() +'/discussions/' + row.id).text(row.topic)[0].outerHTML;
         },
-        operationsFormatter: function (value, row, index) {
-            return [
-                '<a class="remove btn btn-default btn-sm" href="javascript:void(0)" title="Delete">',
-                'Delete <i class="glyphicon glyphicon-remove"></i>',
+        deleteFormatter: function (value, row) {
+            if(row.owner_email === $('#UserEmail').val()){
+                return [
+                '<a style = "float:right;"  onclick = "groupPage.SharedDiscussionsTable.operationEvents(\''+row.owner_email+'\',\''+row.id+'\')"   id="deleteModal' + String(row.id) + '" href="javascript:void(0)" title="Delete">',
+                'Delete <i class="fa fa-trash"></i>&nbsp;',
                 '</a>'
             ].join('');
-        },
-        operationEvents: {
-            'click .remove': function (e, value, row, index) {
-                $('#DeleteDiscussionModal').data('id', row.id).modal('show');
             }
+            else return '';
         },
-        onRemoveGroupToGraphConfirm: function (e) {
+        resolveFormatter: function (value, row) {
+            if(row.owner_email === $('#UserEmail').val()){
+                if (row.is_resolved === 1){
+                var str = '';
+                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
+                str+= '<span class="discussionLock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
+                str+= '</a>';
+                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
+                str+= '<span class="passive discussionUnlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
+                str+= '</a>';
+                return str;
+            } else{
+                var str = '';
+                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
+                str+= '<span class="discussionUnlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
+                str+= '</a>';
+                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
+                str+= '<span class="passive discussionLock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
+                str+= '</a>';
+                return str;
+            }
+            } else{
+                return '';
+            }
+            
+        },
+        operationEvents: function (owner_email, id) {
+                if (owner_email === $('#UserEmail').val()){
+                    $('#DeleteDiscussionModal').data('id', id).modal('show');
+                } else{
+                    $.notify({
+                      message: 'You are not authorized to delete this discussion'
+                  }, {
+                      type: 'danger'
+                  });
+                }
+            
+        },
+        onRemoveGroupToDiscussionConfirm: function (e) {
             e.preventDefault();
-            apis.groups.unshareGraph($('#GroupID').val(), $('#deleteGroupToGraphModal').data('id'),
+            apis.discussion.delete($('#GroupID').val(), $('#DeleteDiscussionModal').data('id'),
                 successCallback = function (response) {
                     // This method is called when group_to_graph relationship is successfully deleted.
                     // The entry from the table is deleted.
-                    $('#SharedGraphsTable').bootstrapTable('remove', {
+                    $('#SharedDiscussionsTable').bootstrapTable('remove', {
                         field: 'id',
-                        values: [$('#deleteGroupToGraphModal').data('id')]
+                        values: [$('#DeleteDiscussionModal').data('id')]
                     });
-                    $('#deleteGroupToGraphModal').modal('hide');
+                    $('#DeleteDiscussionModal').modal('hide');
+                    var total_discussions = $('#groupDiscussionsTotal').text() - 1;
+                    $('#groupDiscussionsTotal').text(total_discussions);
                 },
                 errorCallback = function (xhr, status, errorThrown) {
                     // This method is called when  error occurs while deleting group_to_graph relationship.
@@ -528,10 +607,10 @@ var groupPage = {
 
             if (params.data["search"]) {
                 // Currently we assume that term entered in the search bar is used to search for the graph name only.
-                params.data["names"] = '%' + params.data["search"] + '%';
+                params.data["topic"] = '%' + params.data["search"] + '%';
             }
 
-            apis.discussion.getSharedDiscussions($('#GroupID').val(), $('#GroupID').val(),
+            apis.discussion.getSharedDiscussions($('#GroupID').val(), params.data,
                 successCallback = function (response) {
                     // This method is called when groups are successfully fetched.
                     params.success(response);
@@ -679,13 +758,87 @@ var discussionPage = {
     $('#createCommentBtn').click(function () {
         discussionPage.createComment($('#commentMessage').val());
     });
-
+    $('#DeleteDiscussion').click(function () {
+        discussionPage.deleteDiscussionComment($('#DiscussionID').val());
+    });
     discussionPage.getComments();
-    $('.btn-back').click(function(){
+
+    $('.btn-default').click(function(){
         parent.history.back();
         return false;
     });
+
+    $('#messageDisplay').text($('#Message').val());
+
+    $('#Discussiondate').text(moment($('#Discussioncreated_at').val()).fromNow());
+    // $('#editDiscussionMessage').text($('#discussionMessage').text());
+    // $('#createCommentBt').click(function () {
+    //     $("#tt").removeClass("passive");
+    //     $("#bye").addClass("passive");
+    // });
+    $("#EditDiscussion").click(function(){
+        $("#edit-discussion").removeClass("passive");
+        // $('#editDiscussionMessage').text($('#messageDisplay').text());
+        $("#discussionMessage").addClass("passive");
+        // var text = $('#messageDisplay').text();
+        // var input = $('<input id="attribute" type="text" value="' + text + '" />')
+        $('#editDiscussionMessage').val($('#messageDisplay').text());
+
+    });
+    $("#cancelDiscussionMessage").click(function(){
+        $("#edit-discussion").addClass("passive");
+        $("#discussionMessage").removeClass("passive");
+
+    });
+    $("#updateDiscussionMessage").click(function(){
+        
+        console.log($('#editDiscussionMessage').val());
+        discussionPage.editDiscussionComment($('#editDiscussionMessage').val(),$('#DiscussionID').val());
+        $("#edit-discussion").addClass("passive");
+        $("#discussionMessage").removeClass("passive");
+    });
+
+    $("#resolveDiscussionBtn").click(function(){
+        discussionPage.resolveDiscussion(1,$('#DiscussionID').val());
+
+    });
+    $("#reopenDiscussionBtn").click(function(){
+        discussionPage.resolveDiscussion(0,$('#DiscussionID').val());
+
+    });
+
+    // var group = {
+    //             "message": "yashyash"
+    //         };
+
+    // apis.discussion.editDiscussion($('#GroupID').val(), 142, group,
+    //             successCallback = function (response) {
+    //                 // This method is called when group is successfully updated.
+    //                 // window.location = location.pathname;
+    //             },
+    //             errorCallback = function (xhr, status, errorThrown) {
+    //                 console.log("cfcc");
+    //                 // This method is called when  error occurs while updating group.
+    //                 // if(xhr.responseJSON.error_message.includes('duplicate key')) {
+    //                 //     $.notify({
+    //                 //         message: 'Group name ' + group['name'] + ' already exists!'
+    //                 //     }, {
+    //                 //         type: 'danger'
+    //                 //     });
+    //                 // }
+    //                 // else {
+    //                 //     $.notify({
+    //                 //         message: xhr.responseText
+    //                 //     }, {
+    //                 //         type: 'danger'
+    //                 //     });
+    //                 // }
+    //                 // $('#UpdateGroupBtn').attr('disabled', false);
+    //             });
+
+
   },
+
 
 
 
@@ -723,7 +876,6 @@ var discussionPage = {
   },
   
     getComments: function () {
-        console.log("dveuvdcuwevgu")
         var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
         var discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
         console.log(group_id);
@@ -741,6 +893,111 @@ var discussionPage = {
                   });
               });
   },
+    deleteDiscussionComment: function (discussion_id) {
+            // e.preventDefault();
+            apis.discussion.delete($('#GroupID').val(), discussion_id,
+                successCallback = function (response) {
+                    // This method is called when group_to_graph relationship is successfully deleted.
+                    // The entry from the table is deleted.
+                    // $('#SharedDiscussionsTable').bootstrapTable('remove', {
+                    //     field: 'id',
+                    //     values: [$('#DeleteDiscussionModal').data('id')]
+                    // });
+                    // $('#DeleteDiscussionModal').modal('hide');
+                    // var total_discussions = $('#groupDiscussionsTotal').text() - 1;
+                    // $('#groupDiscussionsTotal').text(total_discussions);
+                    console.log("deletedd");
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting group_to_graph relationship.
+                    alert(xhr.responseText);
+                });
+  },
+    editDiscussionComment: function(message,discussion_id){
+        // submit: function (e) {
+        //     e.preventDefault();
+
+            // $('#UpdateGroupBtn').attr('disabled', true);
+            console.log(message);
+            var discussion = {
+                "message": message
+            };
+
+            if (!discussion['message']) {
+                // $('#UpdateGroupBtn').attr('disabled', false);
+                $.notify({
+                    message: 'Please enter in a valid group name!'
+                }, {
+                    type: 'warning'
+                });
+                return
+            }
+
+                apis.discussion.editDiscussion($('#GroupID').val(), discussion_id, discussion,
+                successCallback = function (response) {
+                    // This method is called when group is successfully updated.
+                    // window.location = location.pathname;
+                    console.log("different");
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while updating group.
+                    // if(xhr.responseJSON.error_message.includes('duplicate key')) {
+                    //     $.notify({
+                    //         message: 'Group name ' + group['name'] + ' already exists!'
+                    //     }, {
+                    //         type: 'danger'
+                    //     });
+                    // }
+                    // else {
+                    //     $.notify({
+                    //         message: xhr.responseText
+                    //     }, {
+                    //         type: 'danger'
+                    //     });
+                    // }
+                    // $('#UpdateGroupBtn').attr('disabled', false);
+                    console.log("jai hooooo");
+                });
+        // }
+    },
+    resolveDiscussion: function(is_resolved,discussion_id){
+        // submit: function (e) {
+        //     e.preventDefault();
+
+            // $('#UpdateGroupBtn').attr('disabled', true);
+            
+            var discussion = {
+                "is_resolved": is_resolved
+            };
+
+                apis.discussion.editDiscussion($('#GroupID').val(), discussion_id, discussion,
+                successCallback = function (response) {
+                    // This method is called when group is successfully updated.
+                    // window.location = location.pathname;
+                    console.log("different");
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while updating group.
+                    // if(xhr.responseJSON.error_message.includes('duplicate key')) {
+                    //     $.notify({
+                    //         message: 'Group name ' + group['name'] + ' already exists!'
+                    //     }, {
+                    //         type: 'danger'
+                    //     });
+                    // }
+                    // else {
+                    //     $.notify({
+                    //         message: xhr.responseText
+                    //     }, {
+                    //         type: 'danger'
+                    //     });
+                    // }
+                    // $('#UpdateGroupBtn').attr('disabled', false);
+                    console.log("jai hooooo");
+                });
+        // }
+    },
+
   commentsFormatter: function (total, comments) {
       var ele = $('#commentsList'); ele.html(""); 
       var comment_threads = [], comment_obj = {};
@@ -801,18 +1058,30 @@ var discussionPage = {
               }
           }
       });
-      
+      comments.forEach(function (comment) {
+          discussionPage.addCommentHandlers(comment);
+      });
+          utils.readmoreFormatter(300);
+
   },
   generateCommentTemplate: function(comment) {
       if (comment.owner_email == null || comment.owner_email == "None") {
                   comment.owner_email = "Anonymous";
       }
       var str = '<div class="panel-heading" id="commentBox' + comment.id + '">';
-      var date = comment.updated_at.split(/:|T/);
-      var date = date[1] + ':' + date[2] + ' ' + date[0];
-      str += '<b>' + comment.owner_email + '</b> on <i>' + date +'</i>';
+      var date = moment(comment.created_at).fromNow();
+
+
+      str += '<b>' + comment.owner_email + '</b> <i> commented ' + date +'</i>';
       str += '<span style="float: right;">' + discussionPage.generateCommentOptions(comment) + '</i></span></div>';
-      str += '<div class="panel-body discussion-message"><pre style="white-space: pre-line; display: contents;">' + comment.message +'</pre></div>';
+      str += '<div class="panel-body" id="discussionMessage' + String(comment.id) + '"> <pre class = "discussion-message show-read-more" id="messageDisplay' + String(comment.id) + '" value="' + String(comment.message) + '" ></pre></div>';
+      str += '<div class="panel-body passive" id="edit-discussion'+ String(comment.id) + '">';
+      str += '<textarea class="pb-cmnt-textarea edit " id= "editDiscussionMessage' + String(comment.id) + '"></textarea>';
+      str += '<form class="form-inline">';
+      str += '<button class="btn btn-success pull-right" id="updateDiscussionMessage' + String(comment.id) + '" type="button">Update Discussion</button>';
+      str += '<button class="btn btn-danger" id="cancelDiscussionMessage' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
+      str += '</form>';
+      str += '</div>';
       // str += '<div class="panel-footer" style="height: 40px" ></div>';
       return str;
   },
@@ -820,28 +1089,13 @@ var discussionPage = {
       var str = "";
       str += '<div class="dropdown">';
       str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
-      str += '<i class="fa comment-symbol">&#xf142;</i>';
-      str += '</button><div class="dropdown-menu">';
+      str += '<i class="fa fa-sort-desc" aria-hidden="true"></i>';
+      str += '</button><div class="dropdown-menu" style = "min-width:80px; ">';
       if($('#UserEmail').val() === comment.owner_email) {
-          str += '<a class="dropdown-item edit-comment">Edit</a>';
-          if(comment.parent_comment_id === null && comment.is_resolved === 0) {
-              str += '<a class="dropdown-item resolve-comment">Resolve</a>';
-          }
-          str += '<a class="dropdown-item delete-comment">Delete</a>';
-      }
-      else if($('#UserEmail').val() === comment.graph_owner_email) {
-          str += '<a class="dropdown-item delete-comment">Delete</a>';
-      }
-      if(comment.parent_comment_id === null) {
-          if(comment.is_resolved === 1) {
-              str += '<a class="dropdown-item reopen-comment">Re-open</a>';
-          }
-          if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
-              str += '<a class="dropdown-item pin-comment">Pin</a>';
-          }
-          else {
-              str += '<a class="dropdown-item unpin-comment">Unpin</a>';
-          }
+        if($('#DiscussionStatus').val()==0){
+            str += '<a class="dropdown-item edit-comment" id="EditDiscussion' + String(comment.id) + '">Edit</a><br>';
+            str += '<a class="dropdown-item delete-comment" id="DeleteDiscussion' + String(comment.id) + '">Delete</a><br>';
+        }
       }
       str += '</div></div>';
       return str;
@@ -856,6 +1110,82 @@ var discussionPage = {
       str += '<div class="passive res-comment-desc">Comment has been resolved</div>';
       return str;
   },
+  expandTextarea: function (element) {
+      element.keyup(function() {
+          this.style.overflow = 'hidden';
+          this.style.height = 0;
+          this.style.height = this.scrollHeight + 'px';
+      });
+  },
+  addCommentHandlers: function(comment) {
+      var comment_box = $('#commentBox' + comment.id);
 
+
+        $('#messageDisplay' + String(comment.id)).text(comment.message);
+    $('#EditDiscussion' + String(comment.id)).click(function(){
+        $('#edit-discussion' + String(comment.id)).removeClass("passive");
+        // $('#editDiscussionMessage').text($('#messageDisplay').text());
+        $('#discussionMessage' + String(comment.id)).addClass("passive");
+        // var text = $('#messageDisplay').text();
+        // var input = $('<input id="attribute" type="text" value="' + text + '" />')
+        $('#editDiscussionMessage' + String(comment.id)).val($('#messageDisplay' + String(comment.id)).text());
+
+    });
+    $("#cancelDiscussionMessage" + String(comment.id)).click(function(){
+        $("#edit-discussion" + String(comment.id)).addClass("passive");
+        $("#discussionMessage" + String(comment.id)).removeClass("passive");
+
+    });
+    $("#updateDiscussionMessage" + String(comment.id)).click(function(){
+        
+        console.log($('#editDiscussionMessage').val());
+        discussionPage.editDiscussionComment($('#editDiscussionMessage' + String(comment.id)).val(), comment.id);
+        $("#edit-discussion" + String(comment.id)).addClass("passive");
+        $("#discussionMessage" + String(comment.id)).removeClass("passive");
+    });
+
+    $("#DeleteDiscussion" + String(comment.id)).click(function(){
+        discussionPage.deleteDiscussionComment(comment.id);
+
+    });
+
+      // comment_box.find('.edit-comment').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var ele = $('#commentBox' + comment.id);
+      //     var msg = ele.find('p'); msg.addClass('passive');
+      //     var inp = ele.find('textarea'); inp.val(msg.text()); inp.removeClass('passive');
+      //     var btn = ele.find('.edit-table'); btn.removeClass('passive');
+      //     discussionPage.expandTextarea(inp);
+      // });
+      // comment_box.find('.resolve-comment').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+      //     discussionPage.editComment(comment_id, undefined, 1);
+      // });
+      // comment_box.find('.reopen-comment').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+      //     discussionPage.editComment(comment_id, undefined, 0);
+      // });
+      // comment_box.find('.delete-comment').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
+      //     discussionPage.deleteDiscussionComment(comment_id);
+      // });
+      // comment_box.find('.edit-comment-btn').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var ele = $('#commentBox' + comment.id);
+      //     var comment_id = parseInt(comment_box.attr('id').split('commentBox')[1]);
+      //     var msg = ele.find('textarea').val();
+      //     discussionPage.editComment(comment_id, msg, undefined);
+      // });
+      // comment_box.find('.cancel-edit-btn').unbind('click').click(function (e) {
+      //     e.preventDefault();
+      //     var ele = $('#commentBox' + comment.id);
+      //     var btn = ele.find('.edit-table'); btn.addClass('passive');
+      //     var inp = ele.find('textarea'); inp.addClass('passive');
+      //     var msg = ele.find('.comment-message'); msg.removeClass('passive');
+      // });
+  },
 
 };
