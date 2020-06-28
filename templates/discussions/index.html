@@ -7,56 +7,93 @@
 
 
 
-<button type="button" class="btn btn-back" style="margin-top: 150px; float: right; margin-right:190px;"> <- Back To Discussions</button></a>
 
-<div class="container comment-list " style="margin-left: 10px"  >
-
-
+<div class="container comment-list "  >
+<!-- <button type="button" class="btn btn-li pull-right" > <- Back To Discussions</button></a>
+ -->
   <br><br><br><br><br><br><br>
             
     <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
     <input type="text" id="GroupID" hidden value="{{ discussion.group_id }}">
-
+    <input type="text" id="DiscussionStatus" hidden value="{{ discussion.is_resolved }}">
+    <input type="text" id="Discussioncreated_at" hidden value="{{ discussion.created_at}}">
+    <input type="text" id="Message" hidden value="{{ discussion.message }}">
 
 
 
 <div class = "container-sm">
 <div class="panel panel-default">
-<div class="panel-heading"><b>{{discussion.owner_email}}</b> on <i> {{discussion.created_at}}</i><span style="float: right;"><i class="fa fa-ellipsis-v" aria-hidden="true" ></i></span></div>
-<div class="panel-body discussion-message"><pre style="white-space: pre-line; display: contents;">{{discussion.message}}</pre></div>
+<div class="panel-heading"><b>{{discussion.owner_email}}</b> <i> commented <span id=Discussiondate></span></i>
+<span style="float: right;">
+    <div class="dropdown">
+        <button type="button" class="btn comment-options" data-toggle="dropdown">
+            <i class="fa fa-sort-desc" aria-hidden="true"></i>
+            </button>
+        {% if uid == discussion.owner_email %}
+        <div class="dropdown-menu" style = "min-width:80px; ">
+            <a class="dropdown-item edit-comment" id="EditDiscussion">Edit</a>
+            <br>
+            {% if discussion.is_resolved == 0 %}
+            <a class="dropdown-item resolve-comment" id="resolveDiscussionBtn">Resolve</a>
+            <br>
+            {% endif %} 
+            {% if discussion.is_resolved == 1 %}
+            <a class="dropdown-item reopen-comment" id="reopenDiscussionBtn">Re-open</a>
+            <br>
+            {% endif %}   
+            <a class="dropdown-item delete-comment" id="DeleteDiscussion" >Delete</a>
+            <br>
+      </div>
+      {% endif %}
+  </div>';
+
+</span>
+</div>
+<div class="panel-body" id="discussionMessage" > <pre class = "discussion-message show-read-more" id="messageDisplay" value="{{discussion.message}}"></pre></div>
+                <div class="panel-body passive" id="edit-discussion">
+                    <textarea class="pb-cmnt-textarea edit " id= "editDiscussionMessage"></textarea>
+                    <form class="form-inline">
+                        <button class="btn btn-success pull-right" id="updateDiscussionMessage" type="button">Update Discussion</button>
+                        <button class="btn btn-danger" id="cancelDiscussionMessage" type="button" style="float: right; margin-right: 20px;">Cancel</button>
+                    </form>
+                </div>
 <!-- <div class="panel-footer" style="height: 40px" ></div>
  --></div>
 </div>
+<!-- <button class="btn btn-success pull-right" id="xyz" type="button">Update Comment</button>
+ -->
 <div id="commentsList"></div>
 
-
+{% if discussion.is_resolved == 0 %}
 <div class="container-sm pb-cmnt-container">
     <div class="row">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <textarea placeholder="Write your comment here!" id= "commentMessage" class="pb-cmnt-textarea"></textarea>
                     <form class="form-inline">
-                        <button class="btn btn-success pull-right" id="createCommentBtn" type="button">Comment</button>
+                        <button class="btn btn-success pull-right" id="createCommentBtn" type="button">Add Comment</button>
                     </form>
                 </div>
             
         </div>
     </div>
 </div>
-
+{% endif %}
 
 
 
 </div>
-  <div class="sticky headerr"><h3>   #{{discussion.id}} {{discussion.topic}}</h3></div>
+  <div class="sticky discussionheader">
+    <h3> {{discussion.topic}}</h3>
+    <span><button type="button" class="btn btn-sm btn-default pull-right" style="float: right; margin-right: 100px;"> <- Back To Discussions</button></span>
+    <h6> {{discussion.owner_email}}<h6>
+  </div>
 
     <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script>
         $(document).ready(function () {
-          console.log($('#GroupID').val());
-          console.log($('#DiscussionID').val());
           discussionPage.init();
-
         });
     </script>
 
