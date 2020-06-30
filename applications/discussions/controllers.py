@@ -57,7 +57,7 @@ def is_user_authorized_to_delete_discussion(request, username, discussion_id):
 
     discussion = db.get_discussion(request.db_session, discussion_id)
 
-    if discussion is not None:  # Graph exists
+    if discussion is not None: 
         if discussion.owner_email == username:
             is_authorized = True
 

@@ -9,8 +9,7 @@
 
 
 <div class="container comment-list "  >
-<!-- <button type="button" class="btn btn-li pull-right" > <- Back To Discussions</button></a>
- -->
+
   <br><br><br><br><br><br><br>
             
     <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
@@ -57,11 +56,11 @@
                         <button class="btn btn-danger" id="cancelDiscussionMessage" type="button" style="float: right; margin-right: 20px;">Cancel</button>
                     </form>
                 </div>
-<!-- <div class="panel-footer" style="height: 40px" ></div>
- --></div>
+
 </div>
-<!-- <button class="btn btn-success pull-right" id="xyz" type="button">Update Comment</button>
- -->
+</div>
+
+
 <div id="commentsList"></div>
 
 {% if discussion.is_resolved == 0 %}

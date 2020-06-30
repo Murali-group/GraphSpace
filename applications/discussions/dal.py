@@ -19,34 +19,6 @@ def add_discussion(db_session, message, topic, group_id, owner_email=None, is_re
 
 @with_session
 def get_discussions_by_group_id(db_session, group_id, topic, limit, offset, order_by=desc(Discussion.created_at)):
-	# query = db_session.query(Group)
-	#
-	# if order_by is not None:
-	# 	query = query.order_by(order_by)
-	#
-	# if owner_email is not None:
-	# 	query = query.filter(Group.owner_email.ilike(owner_email))
-	#
-	# if name is not None:
-	# 	query = query.filter(Group.name.ilike(name))
-	#
-	# if description is not None:
-	# 	query = query.filter(Group.description.ilike(description))
-	#
-	# if member_email is not None:
-	# 	query = query.options(joinedload('member_users'))
-	# 	query = query.filter(Group.members.any(User.email == member_email))
-	#
-	# if graph_ids is not None and len(graph_ids) > 0:
-	# 	query = query.options(joinedload('shared_graphs'))
-	# 	query = query.filter(Group.graphs.any(Graph.id.in_(graph_ids)))
-	#
-	# total = query.count()
-	#
-	# if offset is not None and limit is not None:
-	# 	query = query.limit(limit).offset(offset)
-	#
-	# return total, query.all()
 
 	query = db_session.query(Discussion).filter(Discussion.group_id == group_id)
 	query = query.filter(Discussion.parent_discussion_id == None)
@@ -58,25 +30,20 @@ def get_discussions_by_group_id(db_session, group_id, topic, limit, offset, orde
 		query3 = query.filter(Discussion.message.ilike(topic))
 		query4 = query1.union(query2)
 		query = query3.union(query4)
-	# query = query.filter(Discussion.topic.ilike(topic))
-	# query2 = query.filter(Discussion.owner_email.ilike('%wano%'))
-	# query = query1.union(query2)
-	# query = query.order_by(desc(Discussion.created_at))
 	total = query.count()
 
 	if offset is not None and limit is not None:
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
-	# return query.count(), query.all()
 
 @with_session
 def get_discussion(db_session, id):
 	"""
-	Get group by group id.
+	Get discussion by discussion id.
 	:param db_session: Database session.
-	:param id: Unique ID of the group
-	:return: Group if id exists else None
+	:param id: Unique ID of the discussion
+	:return: Discussion if id exists else None
 	"""
 	return db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
 def get_comments_by_discussion_id(db_session, group_id, discussion_id):
@@ -87,10 +54,10 @@ def get_comments_by_discussion_id(db_session, group_id, discussion_id):
 @with_session
 def delete_discussion(db_session, id):
 	"""
-	Delete group from Group table.
+	Delete discussion from Discussion table.
 	:param db_session: Database session.
-	:param id: Unique ID of the group
-	:return: None
+	:param id: Unique ID of the discussion
+	:return: discussion
 	"""
 	discussion = db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
 	query = db_session.query(Discussion).filter(Discussion.parent_discussion_id == id).all()
@@ -102,11 +69,11 @@ def delete_discussion(db_session, id):
 @with_session
 def update_discussion(db_session, id, updated_discussion):
 	"""
-	Update group row entry.
+	Update discussion row entry.
 	:param db_session: Database session.
-	:param id: Unique ID of the group
-	:param updated_group: Updated group row entry
-	:return: Group if id exists else None
+	:param id: Unique ID of the discussion
+	:param updated_discussion: Updated discussion row entry
+	:return: Discussion if id exists else None
 	"""
 	discussion = db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
 	for (key, value) in updated_discussion.items():
@@ -117,11 +84,11 @@ def update_discussion(db_session, id, updated_discussion):
 @with_session
 def resolve_discussion(db_session, id, updated_discussion):
 	"""
-	Update group row entry.
+	Update discussion row entry.
 	:param db_session: Database session.
-	:param id: Unique ID of the group
-	:param updated_group: Updated group row entry
-	:return: Group if id exists else None
+	:param id: Unique ID of the discussion
+	:param updated_discussion: Updated discussion row entry
+	:return: Discussion if id exists else None
 	"""
 	discussion = db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
 	for (key, value) in updated_discussion.items():
@@ -132,11 +99,11 @@ def resolve_discussion(db_session, id, updated_discussion):
 @with_session
 def reopen_discussion(db_session, id, updated_discussion):
 	"""
-	Update group row entry.
+	Update discussion row entry.
 	:param db_session: Database session.
-	:param id: Unique ID of the group
-	:param updated_group: Updated group row entry
-	:return: Group if id exists else None
+	:param id: Unique ID of the discussion
+	:param updated_discussion: Updated discussion row entry
+	:return: Discussion if id exists else None
 	"""
 	discussion = db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
 	for (key, value) in updated_discussion.items():

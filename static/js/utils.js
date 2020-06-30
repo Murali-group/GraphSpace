@@ -263,6 +263,7 @@ var utils = {
         }
     },
     readmoreFormatter: function(value){
+        // Breaks the string into two with first substring with (value) length
     var maxLength = value;
         $(".show-read-more").each(function(){
         var myStr = $(this).text();

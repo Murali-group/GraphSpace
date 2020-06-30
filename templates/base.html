@@ -281,13 +281,6 @@
             }
         },
         discussionComments: function(data){
-            console.log(data);
-            // var graph_id = ($('#GraphID').val())? parseInt($('#GraphID').val()) : null;
-            // var is_event = false;
-            // if(graph_id === null || graph_id !== data.message.graph_id) {
-            //     //the user did not open the graph page of the required graph.
-            //     return;
-            // }
             if(data.event === "insert") {
                 userSocket.addDiscussionComment(data.message);
                 is_event = true;
@@ -308,17 +301,6 @@
                 userSocket.reopenDiscussion(data.message);
                 is_event = true;
             }
-            // else if(data.event === "pinned") {
-            //     userSocket.pincomment(data.message);
-            //     is_event = true;
-            // }
-            // else if(data.event === "unpinned") {
-            //     userSocket.unpincomment(data.message);
-            //     is_event = true;
-            // }
-            // if(is_event) {
-            //     userSocket.resetCommentsPage();
-            // }
         },
         addDiscussionComment: function(comment) {
             if(comment.parent_discussion_id !=null){
@@ -331,23 +313,16 @@
                 str += discussionPage.generateCommentTemplate(comment);
                 str += '</div>';
                 str += '</div>';
-                
-                
-   
-                // var ele = $('#commentsList');
-                // var str = "";
-                // str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
-                // str += '<a class="list-group-item comment-highlight">';
-                // str += graphPage.generateCommentTemplate(comment);
-                // str += graphPage.generateReplyTemplate(comment) + '</a></div>';
+    
                 ele.append(str);
             }
 
             discussionPage.addCommentHandlers(comment);
         }
         }
-            // graphPage.addCommentHandlers(comment);
+
         },
+        
         deleteDiscussioncomment: function(comment) {
             if(comment.parent_discussion_id != null) {
                 $('#commentContainer' + comment.id).remove();

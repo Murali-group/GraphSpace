@@ -916,8 +916,7 @@ def _delete_group_graph(request, group_id, graph_id):
 def group_discussions_ajax_api(request, group_id, discussion_id=None):
     """
 	Handles any request sent to following urls:
-		/javascript/groups/<group_id>/graphs
-		/javascript/groups/<group_id>/graphs/<graph_id>
+		/javascript/groups/<group_id>#discussions
 
 	Parameters
 	----------
@@ -933,7 +932,7 @@ def group_discussions_ajax_api(request, group_id, discussion_id=None):
 
 def _group_discussions_api(request, group_id, discussion_id=None):
     """
-	Handles any request (GET/POST) sent to /groups or groups/<group_id>
+	Handles any request (GET/POST) sent to /groups or groups/<group_id>#discussions
 
 	Parameters
 	----------
@@ -945,7 +944,7 @@ def _group_discussions_api(request, group_id, discussion_id=None):
 	"""
     if request.META.get('HTTP_ACCEPT', None) == 'application/json':
         if request.method == "POST" and group_id is not None:
-            return HttpResponse(json.dumps(_add_discussion(request, group_id, group=request.POST)),
+            return HttpResponse(json.dumps(_add_discussion(request, group_id, discussion=request.POST)),
                                 content_type="application/json",
                                 status=201)
         elif request.method == "GET" and discussion_id is None:
@@ -958,29 +957,31 @@ def _group_discussions_api(request, group_id, discussion_id=None):
 
 
 @is_authenticated()
-def _add_discussion(request, group_id, group={}):
+def _add_discussion(request, group_id, discussion={}):
     """
 	Group Parameters
 	----------
-	name : string
-		Name of group. Required
-	description : string
-		Description of the group. Optional
+	topic : string
+		Topic of group. Required
+	message : string
+		Message of the discussion.
 	owner_email : string
-		Email of the Owner of the groups. Required
+		Email of the Owner of the discussion. Required
+	parent_discussion_id : integer
+		Id of the discussion on which comment is done. Optional
 
 
 	Parameters
 	----------
-	group : dict
-		Dictionary containing the data of the group being added.
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
 	request : object
 		HTTP POST Request.
 
 	Returns
 	-------
-	group : object
-		Newly created group object.
+	discussion : object
+		Newly created discussion object.
 
 	Raises
 	------
@@ -993,15 +994,16 @@ def _add_discussion(request, group_id, group={}):
     # Validate add graph API request
     user_role = authorization.user_role(request)
     if user_role == authorization.UserRole.LOGGED_IN:
-        if get_request_user(request) != group.get('owner_email', None):
+        if get_request_user(request) != discussion.get('owner_email', None):
             raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
-                             args=group.get('owner_email', None))
+                             args=discussion.get('owner_email', None))
 
     return utils.serializer(discussions.add_discussion(request, group_id=group_id,
-                                                       message=group.get('message', None),
-                                                       topic=group.get('topic', None),
-                                                       owner_email=group.get('owner_email', None),
-                                                       parent_discussion_id=group.get('parent_discussion_id', None)))
+                                                       message=discussion.get('message', None),
+                                                       topic=discussion.get('topic', None),
+                                                       owner_email=discussion.get('owner_email', None),
+                                                       parent_discussion_id=discussion.get('parent_discussion_id',
+                                                                                           None)))
 
 
 def _get_group_discussions(request, group_id, query={}):
@@ -1009,18 +1011,12 @@ def _get_group_discussions(request, group_id, query={}):
 
 	Query Parameters
 	----------
-	owner_email : string
-		Email of the Owner of the graphs.
+	topic : string
+		Topic of the Discussion.
 	limit : integer
 		Number of entities to return. Default value is 20.
 	offset : integer
 		Offset the list of returned entities by this number. Default value is 0.
-	names : string
-		Search for graphs with given names. In order to search for graphs with either of the given names as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
-	nodes : list of strings
-		Search for graphs with the given node names. In order to search for graphs with either of the given node names as a substring, wrap the node name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node names.
-	edges : list of strings
-		Search for graphs with the given edges. An edge can be represented as <head_node_name>:<tail_node_name>. In order to perform a substring on edges, wrap the node names with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edges between nodes with xyz in their node names to nodes with abc in their node name.
 
 	Parameters
 	----------
@@ -1032,9 +1028,9 @@ def _get_group_discussions(request, group_id, query={}):
 	Returns
 	-------
 	total : integer
-		Number of groups matching the request.
-	graphs : List of Graphs.
-		List of Graphs Objects with given limit and offset.
+		Number of discussions matching the request.
+	discussions : List of Discussions.
+		List of Discussions Objects with given limit and offset.
 
 	Raises
 	------
@@ -1044,22 +1040,9 @@ def _get_group_discussions(request, group_id, query={}):
 
 	"""
 
-
     user_role = authorization.user_role(request)
     if user_role == authorization.UserRole.LOGGED_IN:
         authorization.validate(request, permission='GROUP_READ', group_id=group_id)
-    #
-    # total, groups = users.search_groups(request,
-    #                                     owner_email=query.get('owner_email', None),
-    #                                     member_email=query.get('member_email', None),
-    #                                     name=query.get('name', None),
-    #                                     description=query.get('description', None),
-    #                                     limit=query.get('limit', 20),
-    #                                     offset=query.get('offset', 0),
-    #                                     order=query.get('order', 'desc'),
-    #                                     sort=query.get('sort', 'name'))
-
-
 
     total, discussionss = discussions.search_discussions_by_group_id(request,
                                                                      group_id=group_id,
@@ -1073,11 +1056,12 @@ def _get_group_discussions(request, group_id, query={}):
         'total': total,
         'discussions': [utils.serializer(discussion) for discussion in discussionss]
     }
+
+
 def discussion_comments_ajax_api(request, group_id, discussion_id):
     """
 	Handles any request sent to following urls:
-		/javascript/groups/<group_id>/graphs
-		/javascript/groups/<group_id>/graphs/<graph_id>
+		/javascript/groups/<group_id>#discussions/<discussion_id>
 
 	Parameters
 	----------
@@ -1090,9 +1074,10 @@ def discussion_comments_ajax_api(request, group_id, discussion_id):
 	"""
     return _discussion_comments_api(request, group_id, discussion_id)
 
+
 def _discussion_comments_api(request, group_id, discussion_id):
     """
-	Handles any request (GET/POST) sent to /groups or groups/<group_id>
+	Handles any request (GET/POST) sent to /<group_id>#discussions/<discussion_id>
 
 	Parameters
 	----------
@@ -1112,31 +1097,25 @@ def _discussion_comments_api(request, group_id, discussion_id):
                 "message": "Successfully deleted discussion with id=%s" % discussion_id
             }), content_type="application/json", status=200)
         elif request.method == "PUT" and discussion_id is not None:
-            return HttpResponse(json.dumps(_update_discussion(request, discussion_id, discussion=QueryDict(request.body))),
-                                content_type="application/json",
-                                status=200)
+            return HttpResponse(
+                json.dumps(_update_discussion(request, discussion_id, discussion=QueryDict(request.body))),
+                content_type="application/json",
+                status=200)
         else:
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
     else:
         raise BadRequest(request)
+
 
 def _get_discussion_comments(request, group_id, discussion_id):
     """
 
 	Query Parameters
 	----------
-	owner_email : string
-		Email of the Owner of the graphs.
 	limit : integer
 		Number of entities to return. Default value is 20.
 	offset : integer
 		Offset the list of returned entities by this number. Default value is 0.
-	names : string
-		Search for graphs with given names. In order to search for graphs with either of the given names as a substring, wrap the name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their name.
-	nodes : list of strings
-		Search for graphs with the given node names. In order to search for graphs with either of the given node names as a substring, wrap the node name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node names.
-	edges : list of strings
-		Search for graphs with the given edges. An edge can be represented as <head_node_name>:<tail_node_name>. In order to perform a substring on edges, wrap the node names with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edges between nodes with xyz in their node names to nodes with abc in their node name.
 
 	Parameters
 	----------
@@ -1144,13 +1123,16 @@ def _get_discussion_comments(request, group_id, discussion_id):
 		HTTP GET Request.
 	group_id : string
 		Unique ID of the group.
+	discussion_id : string
+		Unique ID of the discussion.
+
 
 	Returns
 	-------
 	total : integer
-		Number of groups matching the request.
-	graphs : List of Graphs.
-		List of Graphs Objects with given limit and offset.
+		Number of discussions matching the request.
+	discussions : List of Discussions.
+		List of Discussions Objects with given limit and offset.
 
 	Raises
 	------
@@ -1161,12 +1143,14 @@ def _get_discussion_comments(request, group_id, discussion_id):
 	"""
     authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-    total, discussionss = discussions.search_comments_by_discussion_id(request, group_id=group_id, discussion_id=discussion_id)
+    total, discussionss = discussions.search_comments_by_discussion_id(request, group_id=group_id,
+                                                                       discussion_id=discussion_id)
 
     return {
         'total': total,
         'discussions': [utils.serializer(discussion) for discussion in discussionss]
     }
+
 
 def _delete_discussion(request, discussion_id):
     """
@@ -1175,8 +1159,8 @@ def _delete_discussion(request, discussion_id):
 	----------
 	request : object
 		HTTP GET Request.
-	group_id : string
-		Unique ID of the group.
+	discussion_id : string
+		Unique ID of the discussion.
 
 	Returns
 	-------
@@ -1199,27 +1183,25 @@ def _update_discussion(request, discussion_id, discussion={}):
     """
 	Group Parameters
 	----------
-	name : string
-		Name of group. Required
-	description : string
-		Description of the group. Optional
-	owner_email : string
-		Email of the Owner of the groups. Required
+	message : string
+		Message of discussion. Required
+	is_resolved : integer
+		status of the discussion (0,1) . Optional
 
 
 	Parameters
 	----------
-	group : dict
-		Dictionary containing the data of the group being added.
+	discussion : dict
+		Dictionary containing the data of the discussion being updated.
 	request : object
 		HTTP POST Request.
-	group_id : string
-		Unique ID of the group.
+	discussion_id : string
+		Unique ID of the discussion.
 
 	Returns
 	-------
-	group : object
-		Newly created group object.
+	discussion : object
+		Newly created discussion object.
 
 	Raises
 	------
@@ -1228,8 +1210,7 @@ def _update_discussion(request, discussion_id, discussion={}):
 	------
 
 	"""
-    # authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
     return utils.serializer(discussions.update_discussion(request, discussion_id=discussion_id,
-                                               message=discussion.get('message', None),
-                                               is_resolved=discussion.get('is_resolved', None)))
+                                                          message=discussion.get('message', None),
+                                                          is_resolved=discussion.get('is_resolved', None)))
