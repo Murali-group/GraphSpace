@@ -287,7 +287,7 @@ var groupPage = {
         $('#CreateDiscussionBtn').click(groupPage.createDiscussionForm.submit);
         $('#UpdateGroupBtn').click(groupPage.updateGroupForm.submit);
         $('#ConfirmRemoveGroupToGraphBtn').click(groupPage.SharedGraphsTable.onRemoveGroupToGraphConfirm);
-        $('#ConfirmRemoveGroupToDiscussionBtn').click(groupPage.SharedDiscussionsTable.onRemoveGroupToDiscussionConfirm);
+        $('#ConfirmRemoveGroupToDiscussionBtn').click(groupPage.sharedDiscussionsTable.onRemoveGroupToDiscussionConfirm);
         $('#ConfirmRemoveGroupMemberBtn').click(groupPage.GroupMembersTable.onRemoveGroupMemberConfirm);
         $('#submitNewGroupMemberEmailBtn').click(groupPage.onAddGroupMember);
     },
@@ -484,42 +484,42 @@ var groupPage = {
             );
         }
     },
-    SharedDiscussionsTable: {
+    sharedDiscussionsTable: {
         discussionFormatter: function (value, row) {
-            str ='<div id="Discussionrow' + row.id + '" >';
-            str += '<div>' + groupPage.SharedDiscussionsTable.visibilityFormatter(value, row) + groupPage.SharedDiscussionsTable.nameFormatter(value, row) + groupPage.SharedDiscussionsTable.deleteFormatter(value, row) + groupPage.SharedDiscussionsTable.resolveFormatter(value, row) + '</div>';
-            // str += '<button onclick = "groupPage.SharedDiscussionsTable.operationEvents(' + row.owner_email + ',' +row.id + ')">dfdff</button>';
-            str +='<div><h6><i>' + '#'+ row.id + groupPage.SharedDiscussionsTable.dateFormatter(value, row) + ' by ' + row.owner_email +  '</i></h6></div>';
+            str ='<div id="DiscussionRow' + row.id + '" >';
+            str += '<div>' + groupPage.sharedDiscussionsTable.visibilityFormatter(value, row) + groupPage.sharedDiscussionsTable.nameFormatter(value, row) + groupPage.sharedDiscussionsTable.deleteFormatter(value, row) + groupPage.sharedDiscussionsTable.isClosedFormatter(value, row) + '</div>';
+            // str += '<button onclick = "groupPage.sharedDiscussionsTable.operationEvents(' + row.owner_email + ',' +row.id + ')">dfdff</button>';
+            str +='<div><h6><i>' + '#'+ row.id + groupPage.sharedDiscussionsTable.dateFormatter(value, row) + ' by ' + row.owner_email +  '</i></h6></div>';
             str +='</div>';
             
             return str;
         },
         visibilityFormatter: function (value, row) {
             if (row.is_resolved === 1) {
-                return '<i class="fa fa-lock discussionLock' + String(row.id) + '"></i><i class="fa fa-unlock passive discussionUnlock' + String(row.id) + '"></i> ';
+                return '<i class="fa fa-lock discussion-lock' + String(row.id) + '"></i><i class="fa fa-unlock passive discussion-unlock' + String(row.id) + '"></i> ';
             } else {
-                return '<i class="fa fa-unlock discussionUnlock' + String(row.id) + '"></i><i class="fa fa-lock passive discussionLock' + String(row.id) + '"></i> ';
+                return '<i class="fa fa-unlock discussion-unlock' + String(row.id) + '"></i><i class="fa fa-lock passive discussion-lock' + String(row.id) + '"></i> ';
             }
         },
         dateFormatter: function(value, row){
             if(row.is_resolved ===1){
                 var str = '';
-                str += '<span class="discussionLock' + String(row.id) + '">';
+                str += '<span class="discussion-lock' + String(row.id) + '">';
                 str += ' closed ';
                 str += moment(row.updated_at).fromNow();
                 str += '</span>';
-                str += '<span class="passive discussionUnlock' + String(row.id) + '">';
+                str += '<span class="passive discussion-unlock' + String(row.id) + '">';
                 str += ' opened ';
                 str += moment(row.created_at).fromNow();
                 str += '</span>';
                 return str;
             } else{
                 var str = '';
-                str += '<span class="discussionUnlock' + String(row.id) + '">';
+                str += '<span class="discussion-unlock' + String(row.id) + '">';
                 str += ' opened ';
                 str += moment(row.created_at).fromNow();
                 str += '</span>';
-                str += '<span class="passive discussionLock' + String(row.id) + '">';
+                str += '<span class="passive discussion-lock' + String(row.id) + '">';
                 str += ' closed ';
                 str += moment(row.updated_at).fromNow();
                 str += '</span>';
@@ -533,31 +533,31 @@ var groupPage = {
         deleteFormatter: function (value, row) {
             if(row.owner_email === $('#UserEmail').val()){
                 return [
-                '<a style = "float:right;"  onclick = "groupPage.SharedDiscussionsTable.operationEvents(\''+row.owner_email+'\',\''+row.id+'\')"   id="deleteModal' + String(row.id) + '" href="javascript:void(0)" title="Delete">',
+                '<a style = "float:right;"  onclick = "groupPage.sharedDiscussionsTable.operationEvents(\''+row.owner_email+'\',\''+row.id+'\')"   id="deleteModal' + String(row.id) + '" href="javascript:void(0)" title="Delete">',
                 'Delete <i class="fa fa-trash"></i>&nbsp;',
                 '</a>'
             ].join('');
             }
             else return '';
         },
-        resolveFormatter: function (value, row) {
+        isClosedFormatter: function (value, row) {
             if(row.owner_email === $('#UserEmail').val()){
                 if (row.is_resolved === 1){
                 var str = '';
                 str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
-                str+= '<span class="discussionLock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
+                str+= '<span class="discussion-lock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
-                str+= '<span class="passive discussionUnlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
+                str+= '<span class="passive discussion-unlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 return str;
             } else{
                 var str = '';
                 str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
-                str+= '<span class="discussionUnlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
+                str+= '<span class="discussion-unlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
-                str+= '<span class="passive discussionLock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
+                str+= '<span class="passive discussion-lock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 return str;
             }
@@ -584,7 +584,7 @@ var groupPage = {
                 successCallback = function (response) {
                     // This method is called when discussion is successfully deleted.
                     // The entry from the table is deleted.
-                    $('#SharedDiscussionsTable').bootstrapTable('remove', {
+                    $('#sharedDiscussionsTable').bootstrapTable('remove', {
                         field: 'id',
                         values: [$('#DeleteDiscussionModal').data('id')]
                     });
@@ -601,7 +601,7 @@ var groupPage = {
         },
         getDiscussionsSharedToGroup: function (params) {
             /**
-             * This is the custom ajax request used to load discussion in SharedDiscussionsTable.
+             * This is the custom ajax request used to load discussion in sharedDiscussionsTable.
              *
              * params - query parameters for the ajax request.
              *          It contains parameters like limit, offset, search, sort, order.
@@ -757,10 +757,10 @@ var discussionPage = {
 
   init: function () {
 
-    $('#createCommentBtn').click(function () {
-        discussionPage.createComment($('#commentMessage').val());
+    $('#CreateCommentBtn').click(function () {
+        discussionPage.createComment($('#CommentMessage').val());
     });
-    $('#DeleteDiscussion').click(function () {
+    $('#DeleteDiscussionBtn').click(function () {
         discussionPage.deleteDiscussionComment($('#DiscussionID').val());
     });
     discussionPage.getComments();
@@ -770,34 +770,34 @@ var discussionPage = {
         return false;
     });
 
-    $('#messageDisplay').text($('#Message').val());
+    $('#MessageDisplay').text($('#Message').val());
 
-    $('#Discussiondate').text(moment($('#Discussioncreated_at').val()).fromNow());
+    $('#DiscussionDate').text(moment($('#DiscussionCreatedAt').val()).fromNow());
 
     $("#EditDiscussion").click(function(){
-        $("#edit-discussion").removeClass("passive");
-        $("#discussionMessage").addClass("passive");
-        $('#editDiscussionMessage').val($('#messageDisplay').text());
+        $("#EditDiscussionForm").removeClass("passive");
+        $("#DiscussionMessage").addClass("passive");
+        $('#EditDiscussionMessage').val($('#MessageDisplay').text());
 
     });
-    $("#cancelDiscussionMessage").click(function(){
-        $("#edit-discussion").addClass("passive");
-        $("#discussionMessage").removeClass("passive");
+    $("#CancelDiscussionMessage").click(function(){
+        $("#EditDiscussionForm").addClass("passive");
+        $("#DiscussionMessage").removeClass("passive");
 
     });
-    $("#updateDiscussionMessage").click(function(){
+    $("#UpdateDiscussionMessage").click(function(){
         
-        console.log($('#editDiscussionMessage').val());
-        discussionPage.editDiscussionComment($('#editDiscussionMessage').val(),$('#DiscussionID').val());
-        $("#edit-discussion").addClass("passive");
-        $("#discussionMessage").removeClass("passive");
+        console.log($('#EditDiscussionMessage').val());
+        discussionPage.editDiscussionComment($('#EditDiscussionMessage').val(),$('#DiscussionID').val());
+        $("#EditDiscussionForm").addClass("passive");
+        $("#DiscussionMessage").removeClass("passive");
     });
 
-    $("#resolveDiscussionBtn").click(function(){
+    $("#CloseDiscussionBtn").click(function(){
         discussionPage.resolveDiscussion(1,$('#DiscussionID').val());
 
     });
-    $("#reopenDiscussionBtn").click(function(){
+    $("#ReopenDiscussionBtn").click(function(){
         discussionPage.resolveDiscussion(0,$('#DiscussionID').val());
 
     });
@@ -824,7 +824,7 @@ var discussionPage = {
                   "parent_discussion_id": parent_discussion_id
               },
               successCallback = function (response) {
-                  $('#commentMessage').val("");              
+                  $('#CommentMessage').val("");
                   
               },
               errorCallback = function (response) {
@@ -902,7 +902,7 @@ var discussionPage = {
     },
 
   commentsFormatter: function (total, comments) {
-      var ele = $('#commentsList'); ele.html(""); 
+      var ele = $('#CommentsList'); ele.html("");
       var comment_threads = [], comment_obj = {};
       var visited = {}, str = "";
       comments.forEach(function (comment) {
@@ -927,7 +927,7 @@ var discussionPage = {
               return new Date(a.created_at) - new Date(b.created_at);
           });
           var p_comment = comment_thread[0];
-          str = '<div class="TimelineItem container-sm" id="commentContainer' + p_comment.id + '">';
+          str = '<div class="comment-timeline-item container-sm" id="commentContainer' + p_comment.id + '">';
           str += '<div class="panel panel-default">';
           str += discussionPage.generateCommentTemplate(p_comment);
           comment_thread.shift();
@@ -957,12 +957,12 @@ var discussionPage = {
 
       str += '<b>' + comment.owner_email + '</b> <i> commented ' + date +'</i>';
       str += '<span style="float: right;">' + discussionPage.generateCommentOptions(comment) + '</i></span></div>';
-      str += '<div class="panel-body" id="discussionMessage' + String(comment.id) + '"> <pre class = "discussion-message show-read-more" id="messageDisplay' + String(comment.id) + '" value="' + String(comment.message) + '" ></pre></div>';
-      str += '<div class="panel-body passive" id="edit-discussion'+ String(comment.id) + '">';
-      str += '<textarea class="pb-cmnt-textarea edit " id= "editDiscussionMessage' + String(comment.id) + '"></textarea>';
+      str += '<div class="panel-body" id="DiscussionMessage' + String(comment.id) + '"> <pre class = "discussion-text show-read-more" id="MessageDisplay' + String(comment.id) + '" value="' + String(comment.message) + '" ></pre></div>';
+      str += '<div class="panel-body passive" id="EditDiscussionForm'+ String(comment.id) + '">';
+      str += '<textarea class="pb-comment-textarea edit " id= "EditDiscussionMessage' + String(comment.id) + '"></textarea>';
       str += '<form class="form-inline">';
-      str += '<button class="btn btn-success pull-right" id="updateDiscussionMessage' + String(comment.id) + '" type="button">Update Discussion</button>';
-      str += '<button class="btn btn-danger" id="cancelDiscussionMessage' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
+      str += '<button class="btn btn-success pull-right" id="UpdateDiscussionMessage' + String(comment.id) + '" type="button">Update Discussion</button>';
+      str += '<button class="btn btn-danger" id="CancelDiscussionMessage' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
       str += '</form>';
       str += '</div>';
       return str;
@@ -976,7 +976,7 @@ var discussionPage = {
       if($('#UserEmail').val() === comment.owner_email) {
         if($('#DiscussionStatus').val()==0){
             str += '<a class="dropdown-item edit-comment" id="EditDiscussion' + String(comment.id) + '">Edit</a><br>';
-            str += '<a class="dropdown-item delete-comment" id="DeleteDiscussion' + String(comment.id) + '">Delete</a><br>';
+            str += '<a class="dropdown-item delete-comment" id="DeleteDiscussionBtn' + String(comment.id) + '">Delete</a><br>';
         }
       }
       str += '</div></div>';
@@ -1003,28 +1003,28 @@ var discussionPage = {
       var comment_box = $('#commentBox' + comment.id);
 
 
-    $('#messageDisplay' + String(comment.id)).text(comment.message);
+    $('#MessageDisplay' + String(comment.id)).text(comment.message);
 
     $('#EditDiscussion' + String(comment.id)).click(function(){
-        $('#edit-discussion' + String(comment.id)).removeClass("passive");
-        $('#discussionMessage' + String(comment.id)).addClass("passive");
-        $('#editDiscussionMessage' + String(comment.id)).val($('#messageDisplay' + String(comment.id)).text());
+        $('#EditDiscussionForm' + String(comment.id)).removeClass("passive");
+        $('#DiscussionMessage' + String(comment.id)).addClass("passive");
+        $('#EditDiscussionMessage' + String(comment.id)).val($('#MessageDisplay' + String(comment.id)).text());
     });
 
-    $("#cancelDiscussionMessage" + String(comment.id)).click(function(){
-        $("#edit-discussion" + String(comment.id)).addClass("passive");
-        $("#discussionMessage" + String(comment.id)).removeClass("passive");
+    $("#CancelDiscussionMessage" + String(comment.id)).click(function(){
+        $("#EditDiscussionForm" + String(comment.id)).addClass("passive");
+        $("#DiscussionMessage" + String(comment.id)).removeClass("passive");
 
     });
 
-    $("#updateDiscussionMessage" + String(comment.id)).click(function(){  
-        console.log($('#editDiscussionMessage').val());
-        discussionPage.editDiscussionComment($('#editDiscussionMessage' + String(comment.id)).val(), comment.id);
-        $("#edit-discussion" + String(comment.id)).addClass("passive");
-        $("#discussionMessage" + String(comment.id)).removeClass("passive");
+    $("#UpdateDiscussionMessage" + String(comment.id)).click(function(){
+        console.log($('#EditDiscussionMessage').val());
+        discussionPage.editDiscussionComment($('#EditDiscussionMessage' + String(comment.id)).val(), comment.id);
+        $("#EditDiscussionForm" + String(comment.id)).addClass("passive");
+        $("#DiscussionMessage" + String(comment.id)).removeClass("passive");
     });
 
-    $("#DeleteDiscussion" + String(comment.id)).click(function(){
+    $("#DeleteDiscussionBtn" + String(comment.id)).click(function(){
         discussionPage.deleteDiscussionComment(comment.id);
 
     });

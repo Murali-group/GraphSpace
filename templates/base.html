@@ -165,7 +165,7 @@
                 $('#commentContainer' + comment.parent_comment_id).find('.reply-table').addClass('passive');
             }
             if(comment.parent_comment_id == null) {
-                var ele = $('#commentsList');
+                var ele = $('#CommentsList');
                 var str = "";
                 str += '<div class="list-group comment-box" id="commentContainer' + comment.id + '">';
                 str += '<a class="list-group-item comment-highlight">';
@@ -258,7 +258,7 @@
             }
             if($("#allComments").is(':checked')) {
                 graphPage.presentComments = [];
-                $.each($('#commentsList').children("div"), function (key, child) {
+                $.each($('#CommentsList').children("div"), function (key, child) {
                     $(child).removeClass('passive');
                     graphPage.presentComments.push(child);
                 });
@@ -267,7 +267,7 @@
             }
             if($("#pinnedComments").is(':checked')) {
                 graphPage.presentComments = [];
-                $.each($('#commentsList').children("div"), function(key, child) {
+                $.each($('#CommentsList').children("div"), function(key, child) {
                     if($(child).data("is_pinned") == 1) {
                         graphPage.presentComments.push(child);
                         $(child).removeClass('passive');
@@ -307,8 +307,8 @@
             if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.parent_discussion_id)){
             var str = "";
             if(comment.parent_discussion_id != null) {
-                var ele = $('#commentsList');
-                str = '<div class="TimelineItem container-sm" id="commentContainer' + comment.id + '">';
+                var ele = $('#CommentsList');
+                str = '<div class="comment-timeline-item container-sm" id="commentContainer' + comment.id + '">';
                 str += '<div class="panel panel-default">';
                 str += discussionPage.generateCommentTemplate(comment);
                 str += '</div>';
@@ -334,7 +334,7 @@
                     window.location = str;
                 }
                 else{
-                    $('#Discussionrow' + comment.id).remove();
+                    $('#DiscussionRow' + comment.id).remove();
                 }
                 
                 
@@ -346,20 +346,20 @@
             console.log(location.pathname);
             if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
                 if(comment.parent_discussion_id == null) {
-                $('#messageDisplay').text(comment.message);
+                $('#MessageDisplay').text(comment.message);
                 console.log(comment);
                 }
             }
             if(comment.parent_discussion_id != null){
-                $('#messageDisplay' + String(comment.id)).text(comment.message);
+                $('#MessageDisplay' + String(comment.id)).text(comment.message);
             }
             
             
         },
         resolveDiscussion: function(comment) {
             if(location.pathname==('/groups/' + comment.group_id)){
-                $('.discussionUnlock' + String(comment.id)).addClass("passive");
-                $('.discussionLock' + String(comment.id)).removeClass("passive");
+                $('.discussion-unlock' + String(comment.id)).addClass("passive");
+                $('.discussion-lock' + String(comment.id)).removeClass("passive");
             }
             if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
                 window.location=location.pathname;
@@ -370,8 +370,8 @@
                 window.location=location.pathname;
             }
             if(location.pathname==('/groups/'+ comment.group_id)){
-                $('.discussionLock' + String(comment.id)).addClass("passive");
-                $('.discussionUnlock' + String(comment.id)).removeClass("passive");
+                $('.discussion-lock' + String(comment.id)).addClass("passive");
+                $('.discussion-unlock' + String(comment.id)).removeClass("passive");
             }
         },
     }

@@ -15,14 +15,14 @@
     <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
     <input type="text" id="GroupID" hidden value="{{ discussion.group_id }}">
     <input type="text" id="DiscussionStatus" hidden value="{{ discussion.is_resolved }}">
-    <input type="text" id="Discussioncreated_at" hidden value="{{ discussion.created_at}}">
+    <input type="text" id="DiscussionCreatedAt" hidden value="{{ discussion.created_at}}">
     <input type="text" id="Message" hidden value="{{ discussion.message }}">
 
 
 
 <div class = "container-sm">
 <div class="panel panel-default">
-<div class="panel-heading"><b>{{discussion.owner_email}}</b> <i> commented <span id=Discussiondate></span></i>
+<div class="panel-heading"><b>{{discussion.owner_email}}</b> <i> commented <span id=DiscussionDate></span></i>
 <span style="float: right;">
     <div class="dropdown">
         <button type="button" class="btn comment-options" data-toggle="dropdown">
@@ -33,14 +33,14 @@
             <a class="dropdown-item edit-comment" id="EditDiscussion">Edit</a>
             <br>
             {% if discussion.is_resolved == 0 %}
-            <a class="dropdown-item resolve-comment" id="resolveDiscussionBtn">Resolve</a>
+            <a class="dropdown-item resolve-comment" id="CloseDiscussionBtn">Resolve</a>
             <br>
             {% endif %} 
             {% if discussion.is_resolved == 1 %}
-            <a class="dropdown-item reopen-comment" id="reopenDiscussionBtn">Re-open</a>
+            <a class="dropdown-item reopen-comment" id="ReopenDiscussionBtn">Re-open</a>
             <br>
             {% endif %}   
-            <a class="dropdown-item delete-comment" id="DeleteDiscussion" >Delete</a>
+            <a class="dropdown-item delete-comment" id="DeleteDiscussionBtn" >Delete</a>
             <br>
       </div>
       {% endif %}
@@ -48,12 +48,12 @@
 
 </span>
 </div>
-<div class="panel-body" id="discussionMessage" > <pre class = "discussion-message show-read-more" id="messageDisplay" value="{{discussion.message}}"></pre></div>
-                <div class="panel-body passive" id="edit-discussion">
-                    <textarea class="pb-cmnt-textarea edit " id= "editDiscussionMessage"></textarea>
+<div class="panel-body" id="DiscussionMessage" > <pre class = "discussion-text show-read-more" id="MessageDisplay" value="{{discussion.message}}"></pre></div>
+                <div class="panel-body passive" id="EditDiscussionForm">
+                    <textarea class="pb-comment-textarea edit " id= "EditDiscussionMessage"></textarea>
                     <form class="form-inline">
-                        <button class="btn btn-success pull-right" id="updateDiscussionMessage" type="button">Update Discussion</button>
-                        <button class="btn btn-danger" id="cancelDiscussionMessage" type="button" style="float: right; margin-right: 20px;">Cancel</button>
+                        <button class="btn btn-success pull-right" id="UpdateDiscussionMessage" type="button">Update Discussion</button>
+                        <button class="btn btn-danger" id="CancelDiscussionMessage" type="button" style="float: right; margin-right: 20px;">Cancel</button>
                     </form>
                 </div>
 
@@ -61,16 +61,16 @@
 </div>
 
 
-<div id="commentsList"></div>
+<div id="CommentsList"></div>
 
 {% if discussion.is_resolved == 0 %}
-<div class="container-sm pb-cmnt-container">
+<div class="container-sm pb-comment-container">
     <div class="row">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <textarea placeholder="Write your comment here!" id= "commentMessage" class="pb-cmnt-textarea"></textarea>
+                    <textarea placeholder="Write your comment here!" id= "CommentMessage" class="pb-comment-textarea"></textarea>
                     <form class="form-inline">
-                        <button class="btn btn-success pull-right" id="createCommentBtn" type="button">Add Comment</button>
+                        <button class="btn btn-success pull-right" id="CreateCommentBtn" type="button">Add Comment</button>
                     </form>
                 </div>
             
@@ -82,7 +82,7 @@
 
 
 </div>
-  <div class="sticky discussionheader">
+  <div class="sticky discussion-header">
     <h3> {{discussion.topic}}</h3>
     <span><button type="button" class="btn btn-sm btn-default pull-right" style="float: right; margin-right: 100px;"> <- Back To Discussions</button></span>
     <h6> {{discussion.owner_email}}<h6>

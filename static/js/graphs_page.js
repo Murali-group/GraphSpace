@@ -527,15 +527,15 @@ var graphPage = {
     $('#commentAddBtn').click(function () {
         $('#defaultSideBar').removeClass('active');
         $('#AddCommentSideBar').addClass('active');
-        graphPage.expandTextarea($('#commentMessage'));
+        graphPage.expandTextarea($('#CommentMessage'));
     });
 
-    $('#createCommentBtn').click(function () {
-        graphPage.createComment($('#commentMessage').val(), null);
+    $('#CreateCommentBtn').click(function () {
+        graphPage.createComment($('#CommentMessage').val(), null);
     });
 
     $('#cancelCommentBtn').click(function () {
-        $('#commentMessage').val("");
+        $('#CommentMessage').val("");
         $('#AddCommentSideBar').removeClass('active');
         $('#defaultSideBar').addClass('active');
     });
@@ -629,7 +629,7 @@ var graphPage = {
                   "parent_comment_id": parent_comment_id
               },
               successCallback = function (response) {
-                  $('#commentMessage').val("");
+                  $('#CommentMessage').val("");
                   graphPage.cyGraph.edges().unselect();
                   graphPage.cyGraph.nodes().unselect();
                   $.notify({
@@ -749,7 +749,7 @@ var graphPage = {
               });
   },
   commentsFormatter: function (total, comments) {
-      var ele = $('#commentsList'); ele.html(""); 
+      var ele = $('#CommentsList'); ele.html("");
       var comment_threads = [], comment_obj = {};
       var visited = {}, str = "";
       comments.forEach(function (comment) {
@@ -825,7 +825,7 @@ var graphPage = {
 
       $('#allComments').click(function () {
           graphPage.presentComments = [];
-          $.each($('#commentsList').children("div"), function (key, child) {
+          $.each($('#CommentsList').children("div"), function (key, child) {
               $(child).removeClass('passive');
               graphPage.presentComments.push(child);
           });
@@ -833,9 +833,9 @@ var graphPage = {
       });
 
       $('#pinnedComments').click(function () {
-          $('#commentsList').children("div").addClass("passive");
+          $('#CommentsList').children("div").addClass("passive");
           graphPage.presentComments = [];
-          $.each($('#commentsList').children("div"), function(key, child) {
+          $.each($('#CommentsList').children("div"), function(key, child) {
               if($(child).data("is_pinned") === 1) {
                   graphPage.presentComments.push(child);
                   $(child).removeClass('passive');
@@ -1026,7 +1026,7 @@ var graphPage = {
       edges.each(function(idx) {
           edge_names.push(edges[idx]._private.data.id);
       });
-      var ele = $('#commentsList');
+      var ele = $('#CommentsList');
       $.each(ele.children("div"), function(key, comment) {
           if(graphPage.hasCommonElement($(comment).data("nodes"), node_names)) {
               graphPage.presentComments.push(comment);
