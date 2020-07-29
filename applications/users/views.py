@@ -950,6 +950,15 @@ def _group_discussions_api(request, group_id, discussion_id=None):
         elif request.method == "GET" and discussion_id is None:
             return HttpResponse(json.dumps(_get_group_discussions(request, group_id, query=request.GET)),
                                 content_type="application/json")
+        elif request.method == "PUT" and discussion_id is None:
+            return HttpResponse(json.dumps(_update_discussion(request, discussion=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and group_id is not None:
+            _delete_discussion(request, QueryDict(request.body).get('discussion_id', None))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
         else:
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
     else:
@@ -961,14 +970,14 @@ def _add_discussion(request, group_id, discussion={}):
     """
 	Group Parameters
 	----------
+	group_id : Integer
+		Unique Id of group. Required
 	topic : string
 		Topic of group. Required
-	message : string
-		Message of the discussion.
+	description : string
+		Topic of group. Optional
 	owner_email : string
 		Email of the Owner of the discussion. Required
-	parent_discussion_id : integer
-		Id of the discussion on which comment is done. Optional
 
 
 	Parameters
@@ -999,11 +1008,9 @@ def _add_discussion(request, group_id, discussion={}):
                              args=discussion.get('owner_email', None))
 
     return utils.serializer(discussions.add_discussion(request, group_id=group_id,
-                                                       message=discussion.get('message', None),
                                                        topic=discussion.get('topic', None),
-                                                       owner_email=discussion.get('owner_email', None),
-                                                       parent_discussion_id=discussion.get('parent_discussion_id',
-                                                                                           None)))
+                                                       description=discussion.get('description', None),
+                                                       owner_email=discussion.get('owner_email', None)))
 
 
 def _get_group_discussions(request, group_id, query={}):
@@ -1011,8 +1018,8 @@ def _get_group_discussions(request, group_id, query={}):
 
 	Query Parameters
 	----------
-	topic : string
-		Topic of the Discussion.
+	keyword : string
+		Keyword for searching of the Discussion.
 	limit : integer
 		Number of entities to return. Default value is 20.
 	offset : integer
@@ -1044,18 +1051,79 @@ def _get_group_discussions(request, group_id, query={}):
     if user_role == authorization.UserRole.LOGGED_IN:
         authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-    total, discussionss = discussions.search_discussions_by_group_id(request,
-                                                                     group_id=group_id,
-                                                                     topic=query.get('topic', None),
-                                                                     limit=query.get('limit', 20),
-                                                                     offset=query.get('offset', 0),
-                                                                     order=query.get('order', None),
-                                                                     sort=query.get('sort', None))
+    total, discussionss = discussions.get_discussions(request,
+                                                      group_id=group_id,
+                                                      keyword=query.get('keyword', None),
+                                                      limit=query.get('limit', 20),
+                                                      offset=query.get('offset', 0),
+                                                      order=query.get('order', None),
+                                                      sort=query.get('sort', None))
 
     return {
         'total': total,
         'discussions': [utils.serializer(discussion) for discussion in discussionss]
     }
+
+
+@is_authenticated()
+def _update_discussion(request, discussion={}):
+    """
+	Group Parameters
+	----------
+	is_closed : integer
+		status of the discussion (0,1) . Optional
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being updated.
+	request : object
+		HTTP POST Request.
+	discussion_id : string
+		Unique ID of the discussion.
+
+	Returns
+	-------
+	discussion : object
+		Newly created discussion object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    return utils.serializer(discussions.update_discussion(request, discussion_id=discussion.get('discussion_id', None),
+                                                          is_closed=discussion.get('is_closed', None)))
+
+
+def _delete_discussion(request, discussion_id):
+    """
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	discussion_id : string
+		Unique ID of the discussion.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    authorization.validate(request, permission='DISCUSSION_DELETE', discussion_id=discussion_id)
+
+    discussions.delete_discussion_by_id(request, discussion_id)
 
 
 def discussion_comments_ajax_api(request, group_id, discussion_id):
@@ -1088,35 +1156,75 @@ def _discussion_comments_api(request, group_id, discussion_id):
 
 	"""
     if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-        if request.method == "GET" and discussion_id is not None:
+        if request.method == "POST" and discussion_id is not None:
+            return HttpResponse(json.dumps(_add_discussion_comment(request, discussion_id, discussion=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET" and discussion_id is not None:
             return HttpResponse(json.dumps(_get_discussion_comments(request, group_id, discussion_id)),
                                 content_type="application/json")
-        elif request.method == "DELETE" and discussion_id is not None:
-            _delete_discussion(request, discussion_id)
-            return HttpResponse(json.dumps({
-                "message": "Successfully deleted discussion with id=%s" % discussion_id
-            }), content_type="application/json", status=200)
         elif request.method == "PUT" and discussion_id is not None:
-            return HttpResponse(
-                json.dumps(_update_discussion(request, discussion_id, discussion=QueryDict(request.body))),
-                content_type="application/json",
-                status=200)
+            return HttpResponse(json.dumps(_update_discussion_comment(request, comment=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and discussion_id is not None:
+            _delete_discussion_comment(request, QueryDict(request.body).get('comment_id', None))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
         else:
             raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
     else:
         raise BadRequest(request)
 
 
+@is_authenticated()
+def _add_discussion_comment(request, discussion_id, discussion={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of the discussion.
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	discussion_id : string
+		Unique ID of the discussion.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != discussion.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+                             args=discussion.get('owner_email', None))
+
+    return utils.serializer(discussions.add_discussion_comment(request, discussion_id=discussion_id,
+                                                               text=discussion.get('text', None),
+                                                               owner_email=discussion.get('owner_email', None)))
+
+
 def _get_discussion_comments(request, group_id, discussion_id):
     """
-
-	Query Parameters
-	----------
-	limit : integer
-		Number of entities to return. Default value is 20.
-	offset : integer
-		Offset the list of returned entities by this number. Default value is 0.
-
 	Parameters
 	----------
 	request : object
@@ -1130,9 +1238,9 @@ def _get_discussion_comments(request, group_id, discussion_id):
 	Returns
 	-------
 	total : integer
-		Number of discussions matching the request.
-	discussions : List of Discussions.
-		List of Discussions Objects with given limit and offset.
+		Number of comments matching the request.
+	comments : List of Comments.
+		List of comments Objects.
 
 	Raises
 	------
@@ -1143,24 +1251,57 @@ def _get_discussion_comments(request, group_id, discussion_id):
 	"""
     authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-    total, discussionss = discussions.search_comments_by_discussion_id(request, group_id=group_id,
-                                                                       discussion_id=discussion_id)
+    total, comments = discussions.search_comments_by_discussion_id(request, group_id=group_id,
+                                                                   discussion_id=discussion_id)
 
     return {
         'total': total,
-        'discussions': [utils.serializer(discussion) for discussion in discussionss]
+        'comments': [utils.serializer(comment) for comment in comments]
     }
 
 
-def _delete_discussion(request, discussion_id):
+@is_authenticated()
+def _update_discussion_comment(request, comment={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of comment. Required
+
+
+	Parameters
+	----------
+	request : object
+		HTTP POST Request.
+	comment_id : string
+		Unique ID of the comment.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    return utils.serializer(discussions.update_comment(request, comment_id=comment.get('comment_id', None),
+                                                       text=comment.get('text', None)))
+
+
+def _delete_discussion_comment(request, comment_id):
     """
 
 	Parameters
 	----------
 	request : object
 		HTTP GET Request.
-	discussion_id : string
-		Unique ID of the discussion.
+	comment_id : string
+		Unique ID of the comment.
 
 	Returns
 	-------
@@ -1173,44 +1314,5 @@ def _delete_discussion(request, discussion_id):
 	------
 
 	"""
-    authorization.validate(request, permission='DISCUSSION_DELETE', discussion_id=discussion_id)
 
-    discussions.delete_discussion_by_id(request, discussion_id)
-
-
-@is_authenticated()
-def _update_discussion(request, discussion_id, discussion={}):
-    """
-	Group Parameters
-	----------
-	message : string
-		Message of discussion. Required
-	is_resolved : integer
-		status of the discussion (0,1) . Optional
-
-
-	Parameters
-	----------
-	discussion : dict
-		Dictionary containing the data of the discussion being updated.
-	request : object
-		HTTP POST Request.
-	discussion_id : string
-		Unique ID of the discussion.
-
-	Returns
-	-------
-	discussion : object
-		Newly created discussion object.
-
-	Raises
-	------
-
-	Notes
-	------
-
-	"""
-
-    return utils.serializer(discussions.update_discussion(request, discussion_id=discussion_id,
-                                                          message=discussion.get('message', None),
-                                                          is_resolved=discussion.get('is_resolved', None)))
+    discussions.delete_comment_by_id(request, comment_id)

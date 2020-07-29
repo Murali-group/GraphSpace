@@ -527,15 +527,15 @@ var graphPage = {
     $('#commentAddBtn').click(function () {
         $('#defaultSideBar').removeClass('active');
         $('#AddCommentSideBar').addClass('active');
-        graphPage.expandTextarea($('#CommentMessage'));
+        graphPage.expandTextarea($('#CommentText'));
     });
 
     $('#CreateCommentBtn').click(function () {
-        graphPage.createComment($('#CommentMessage').val(), null);
+        graphPage.createComment($('#CommentText').val(), null);
     });
 
     $('#cancelCommentBtn').click(function () {
-        $('#CommentMessage').val("");
+        $('#CommentText').val("");
         $('#AddCommentSideBar').removeClass('active');
         $('#defaultSideBar').addClass('active');
     });
@@ -629,7 +629,7 @@ var graphPage = {
                   "parent_comment_id": parent_comment_id
               },
               successCallback = function (response) {
-                  $('#CommentMessage').val("");
+                  $('#CommentText').val("");
                   graphPage.cyGraph.edges().unselect();
                   graphPage.cyGraph.nodes().unselect();
                   $.notify({

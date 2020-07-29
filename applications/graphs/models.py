@@ -32,7 +32,7 @@ class Graph(IDMixin, TimeStampMixin, Base):
 	                       cascade="all, delete-orphan")
 	edges = relationship("Edge", back_populates="graph", cascade="all, delete-orphan")
 	nodes = relationship("Node", back_populates="graph", cascade="all, delete-orphan")
-	comments = relationship("Comment", back_populates="graph", cascade="all, delete-orphan")
+	comments = relationship("CommentToGraph", back_populates="graph", cascade="all, delete-orphan")
 
 	groups = association_proxy('shared_with_groups', 'group')
 	tags = association_proxy('graph_tags', 'tag')
@@ -213,7 +213,7 @@ class Layout(IDMixin, TimeStampMixin, Base):
 
 	graph = relationship("Graph", foreign_keys=[graph_id], back_populates="layouts", uselist=False)
 	owner = relationship("User", back_populates="owned_layouts", uselist=False)
-	comments = relationship("Comment", back_populates="layout", cascade="all, delete-orphan")
+	comments = relationship("CommentToGraph", back_populates="layout", cascade="all, delete-orphan")
 
 
 	default_layout_graph = relationship("Graph", foreign_keys="Graph.default_layout_id",

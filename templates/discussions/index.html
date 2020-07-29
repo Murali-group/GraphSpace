@@ -10,65 +10,22 @@
 
 <div class="container comment-list "  >
 
-  <br><br><br><br><br><br><br>
+  <br><br><br><br><br>
             
     <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
     <input type="text" id="GroupID" hidden value="{{ discussion.group_id }}">
-    <input type="text" id="DiscussionStatus" hidden value="{{ discussion.is_resolved }}">
+    <input type="text" id="DiscussionStatus" hidden value="{{ discussion.is_closed }}">
     <input type="text" id="DiscussionCreatedAt" hidden value="{{ discussion.created_at}}">
-    <input type="text" id="Message" hidden value="{{ discussion.message }}">
-
-
-
-<div class = "container-sm">
-<div class="panel panel-default">
-<div class="panel-heading"><b>{{discussion.owner_email}}</b> <i> commented <span id=DiscussionDate></span></i>
-<span style="float: right;">
-    <div class="dropdown">
-        <button type="button" class="btn comment-options" data-toggle="dropdown">
-            <i class="fa fa-sort-desc" aria-hidden="true"></i>
-            </button>
-        {% if uid == discussion.owner_email %}
-        <div class="dropdown-menu" style = "min-width:80px; ">
-            <a class="dropdown-item edit-comment" id="EditDiscussion">Edit</a>
-            <br>
-            {% if discussion.is_resolved == 0 %}
-            <a class="dropdown-item resolve-comment" id="CloseDiscussionBtn">Resolve</a>
-            <br>
-            {% endif %} 
-            {% if discussion.is_resolved == 1 %}
-            <a class="dropdown-item reopen-comment" id="ReopenDiscussionBtn">Re-open</a>
-            <br>
-            {% endif %}   
-            <a class="dropdown-item delete-comment" id="DeleteDiscussionBtn" >Delete</a>
-            <br>
-      </div>
-      {% endif %}
-  </div>';
-
-</span>
-</div>
-<div class="panel-body" id="DiscussionMessage" > <pre class = "discussion-text show-read-more" id="MessageDisplay" value="{{discussion.message}}"></pre></div>
-                <div class="panel-body passive" id="EditDiscussionForm">
-                    <textarea class="pb-comment-textarea edit " id= "EditDiscussionMessage"></textarea>
-                    <form class="form-inline">
-                        <button class="btn btn-success pull-right" id="UpdateDiscussionMessage" type="button">Update Discussion</button>
-                        <button class="btn btn-danger" id="CancelDiscussionMessage" type="button" style="float: right; margin-right: 20px;">Cancel</button>
-                    </form>
-                </div>
-
-</div>
-</div>
 
 
 <div id="CommentsList"></div>
 
-{% if discussion.is_resolved == 0 %}
+{% if discussion.is_closed == 0 %}
 <div class="container-sm pb-comment-container">
     <div class="row">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <textarea placeholder="Write your comment here!" id= "CommentMessage" class="pb-comment-textarea"></textarea>
+                    <textarea placeholder="Write your comment here!" id= "CommentText" class="pb-comment-textarea"></textarea>
                     <form class="form-inline">
                         <button class="btn btn-success pull-right" id="CreateCommentBtn" type="button">Add Comment</button>
                     </form>
@@ -83,9 +40,11 @@
 
 </div>
   <div class="sticky discussion-header">
-    <h3> {{discussion.topic}}</h3>
+    <span style="font-size: 30px;"> #{{discussion.id}} {{discussion.topic}}</span> <span style="font-size: 12px;">{{discussion.description}}</span>
+    <br>
+    <span style="font-size: 15px;"> {{discussion.owner_email}}</span>
     <span><button type="button" class="btn btn-sm btn-default pull-right" style="float: right; margin-right: 100px;"> <- Back To Discussions</button></span>
-    <h6> {{discussion.owner_email}}<h6>
+    
   </div>
 
     <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>

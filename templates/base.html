@@ -281,19 +281,19 @@
             }
         },
         discussionComments: function(data){
-            if(data.event === "insert") {
+            if(data.event === "insert_comment") {
                 userSocket.addDiscussionComment(data.message);
                 is_event = true;
             }
-            else if(data.event === "edited") {
-                userSocket.editDiscussion(data.message);
+            else if(data.event === "update_comment") {
+                userSocket.editDiscussionComment(data.message);
                 is_event = true;
             }
-            else if(data.event === "delete") {
+            else if(data.event === "delete_comment") {
                 userSocket.deleteDiscussioncomment(data.message);
                 is_event = true;
             }
-            else if(data.event === "resolve") {
+            else if(data.event === "close") {
                 userSocket.resolveDiscussion(data.message);
                 is_event = true;
             }
@@ -301,77 +301,59 @@
                 userSocket.reopenDiscussion(data.message);
                 is_event = true;
             }
+            else if(data.event === "delete_discussion") {
+                userSocket.deleteDiscussion(data.message);
+                is_event = true;
+            }
         },
         addDiscussionComment: function(comment) {
-            if(comment.parent_discussion_id !=null){
-            if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.parent_discussion_id)){
+            if(location.pathname==('/groups/'+ comment.group_id[0] +'/discussions/' + comment.discussion_id[0])){
             var str = "";
-            if(comment.parent_discussion_id != null) {
                 var ele = $('#CommentsList');
                 str = '<div class="comment-timeline-item container-sm" id="commentContainer' + comment.id + '">';
                 str += '<div class="panel panel-default">';
                 str += discussionPage.generateCommentTemplate(comment);
                 str += '</div>';
                 str += '</div>';
-    
                 ele.append(str);
-            }
-
             discussionPage.addCommentHandlers(comment);
         }
-        }
-
         },
         
         deleteDiscussioncomment: function(comment) {
-            if(comment.parent_discussion_id != null) {
                 $('#commentContainer' + comment.id).remove();
                 console.log(comment);
-            }
-            if(comment.parent_discussion_id == null) {
-                if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
-                    var str ='/groups/'+ comment.group_id + ' #discussions';
+            
+        },
+        deleteDiscussion: function(discussion) {
+                $('#DiscussionRow' + discussion.id).remove();
+                if(location.pathname==('/groups/'+ discussion.group_id +'/discussions/' + discussion.id)){
+                    var str ='/groups/'+ discussion.group_id + '#discussions';
                     window.location = str;
                 }
-                else{
-                    $('#DiscussionRow' + comment.id).remove();
-                }
-                
-                
-                console.log(location.pathname);
-            }
             
         },
-        editDiscussion: function(comment) {
+        editDiscussionComment: function(comment) {
             console.log(location.pathname);
-            if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
-                if(comment.parent_discussion_id == null) {
-                $('#MessageDisplay').text(comment.message);
-                console.log(comment);
-                }
-            }
-            if(comment.parent_discussion_id != null){
-                $('#MessageDisplay' + String(comment.id)).text(comment.message);
-            }
-            
-            
+                $('#TextDisplay' + String(comment.id)).text(comment.text);
         },
-        resolveDiscussion: function(comment) {
-            if(location.pathname==('/groups/' + comment.group_id)){
-                $('.discussion-unlock' + String(comment.id)).addClass("passive");
-                $('.discussion-lock' + String(comment.id)).removeClass("passive");
+
+        resolveDiscussion: function(discussion) {
+            if(location.pathname==('/groups/' + discussion.group_id)){
+                $('.discussion-unlock' + String(discussion.id)).addClass("passive");
+                $('.discussion-lock' + String(discussion.id)).removeClass("passive");
             }
-            if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
+            if(location.pathname==('/groups/'+ discussion.group_id +'/discussions/' + discussion.id)){
                 window.location=location.pathname;
             }
         },
-        reopenDiscussion: function(comment) {
-            if(location.pathname==('/groups/'+ comment.group_id +'/discussions/' + comment.id)){
+        reopenDiscussion: function(discussion) {
+            if(location.pathname==('/groups/'+ discussion.group_id +'/discussions/' + discussion.id)){
                 window.location=location.pathname;
             }
-            if(location.pathname==('/groups/'+ comment.group_id)){
-                $('.discussion-lock' + String(comment.id)).addClass("passive");
-                $('.discussion-unlock' + String(comment.id)).removeClass("passive");
+            if(location.pathname==('/groups/'+ discussion.group_id)){
+                $('.discussion-lock' + String(discussion.id)).addClass("passive");
+                $('.discussion-unlock' + String(discussion.id)).removeClass("passive");
             }
         },
     }

@@ -608,7 +608,7 @@ p.lead {
     width: 100%;
     border: 1px solid #F2F2F2;
     }
-.discussion-text {
+.comment-text {
     white-space: pre-line; 
     display: contents;
     font-family: sans-serif;

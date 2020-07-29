@@ -33,6 +33,7 @@ class User(IDMixin, TimeStampMixin, Base):
 	owned_layouts = relationship("Layout", back_populates="owner", cascade="all, delete-orphan")
 	owned_comments = relationship("Comment", back_populates="owner", cascade="all, delete-orphan")
 	owned_discussions = relationship("Discussion", back_populates="owner", cascade="all, delete-orphan")
+	owned_reactions = relationship("Reaction", back_populates="owner", cascade="all, delete-orphan")
 
 	member_groups = association_proxy('user_groups', 'group')
 

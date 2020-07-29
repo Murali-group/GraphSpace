@@ -42,7 +42,7 @@ var apis = {
     },
     discussion: {
         ENDPOINT: '/ajax/groups/',
-        add: function (id, data, successCallback, errorCallback) {
+        addDiscussion: function (id, data, successCallback, errorCallback) {
             console.log("gogo")
             apis.jsonRequest('POST', apis.groups.ENDPOINT + id + '/discussions', data, successCallback, errorCallback)
         },
@@ -52,12 +52,22 @@ var apis = {
         getComments: function (group_id, discussion_id, successCallback, errorCallback) {
             apis.jsonRequest('GET', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, undefined, successCallback, errorCallback)
         },
-        delete: function (group_id, discussion_id, successCallback, errorCallback) {
-            apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, undefined, successCallback, errorCallback)
+        deleteDiscussion: function (group_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions', data, successCallback, errorCallback)
         },
-        editDiscussion: function (group_id, discussion_id, data, successCallback, errorCallback) {
+        editDiscussion: function (group_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('PUT', apis.groups.ENDPOINT + group_id + '/discussions', data, successCallback, errorCallback)
+        },
+        addComment: function (group_id, discussion_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, data, successCallback, errorCallback)
+        },
+        editComment: function (group_id, discussion_id, data, successCallback, errorCallback) {
             apis.jsonRequest('PUT', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, data, successCallback, errorCallback)
         },
+        deleteComment: function (group_id, discussion_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, data, successCallback, errorCallback)
+        },
+
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
         $.ajax({
@@ -372,25 +382,23 @@ var groupPage = {
             e.preventDefault();
 
              $('#CreateDiscussionBtn').attr('disabled', true);
-            console.log("jafdfdfdf");
             var discussion = {
                 "topic": $("#DiscussionTopicInput").val() == "" ? undefined : $("#DiscussionTopicInput").val(),
-                "message": $("#DiscussionMessageInput").val() == "" ? undefined : $("#DiscussionMessageInput").val(),
+                "description": $("#DiscussionDescriptionInput").val() == "" ? undefined : $("#DiscussionDescriptionInput").val(),
                 "owner_email": $('#UserEmail').val(),
                 "group_id": $('#GroupID').val()                
             };
-            console.log($('#GroupID').val())
-            if (!discussion['message']) {
+            if (!discussion['topic']) {
                 $('#CreateDiscussionBtn').attr('disabled', false);
                 $.notify({
-                    message: 'Please enter in a valid Comment'
+                    message: 'Please enter in a valid topic'
                 }, {
                     type: 'warning'
                 });
                 return;
             }
 
-            apis.discussion.add($('#GroupID').val(), discussion,
+            apis.discussion.addDiscussion($('#GroupID').val(), discussion,
                 successCallback = function (response) {
                     // This method is called when discussion is successfully added.
 
@@ -488,21 +496,20 @@ var groupPage = {
         discussionFormatter: function (value, row) {
             str ='<div id="DiscussionRow' + row.id + '" >';
             str += '<div>' + groupPage.sharedDiscussionsTable.visibilityFormatter(value, row) + groupPage.sharedDiscussionsTable.nameFormatter(value, row) + groupPage.sharedDiscussionsTable.deleteFormatter(value, row) + groupPage.sharedDiscussionsTable.isClosedFormatter(value, row) + '</div>';
-            // str += '<button onclick = "groupPage.sharedDiscussionsTable.operationEvents(' + row.owner_email + ',' +row.id + ')">dfdff</button>';
             str +='<div><h6><i>' + '#'+ row.id + groupPage.sharedDiscussionsTable.dateFormatter(value, row) + ' by ' + row.owner_email +  '</i></h6></div>';
             str +='</div>';
             
             return str;
         },
         visibilityFormatter: function (value, row) {
-            if (row.is_resolved === 1) {
+            if (row.is_closed === 1) {
                 return '<i class="fa fa-lock discussion-lock' + String(row.id) + '"></i><i class="fa fa-unlock passive discussion-unlock' + String(row.id) + '"></i> ';
             } else {
                 return '<i class="fa fa-unlock discussion-unlock' + String(row.id) + '"></i><i class="fa fa-lock passive discussion-lock' + String(row.id) + '"></i> ';
             }
         },
         dateFormatter: function(value, row){
-            if(row.is_resolved ===1){
+            if(row.is_closed ===1){
                 var str = '';
                 str += '<span class="discussion-lock' + String(row.id) + '">';
                 str += ' closed ';
@@ -527,7 +534,6 @@ var groupPage = {
             }
         },
         nameFormatter: function (value, row) {
-            console.log(row);
             return $('<a>').attr('href', $('#GroupID').val() +'/discussions/' + row.id).text(row.topic)[0].outerHTML;
         },
         deleteFormatter: function (value, row) {
@@ -542,21 +548,21 @@ var groupPage = {
         },
         isClosedFormatter: function (value, row) {
             if(row.owner_email === $('#UserEmail').val()){
-                if (row.is_resolved === 1){
+                if (row.is_closed === 1){
                 var str = '';
-                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
+                str+= '<a style = "float:right;" onclick="groupPage.sharedDiscussionsTable.closeReopenDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
                 str+= '<span class="discussion-lock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
                 str+= '</a>';
-                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
+                str+= '<a style = "float:right;" onclick="groupPage.sharedDiscussionsTable.closeReopenDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
                 str+= '<span class="passive discussion-unlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 return str;
             } else{
                 var str = '';
-                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
+                str+= '<a style = "float:right;" onclick="groupPage.sharedDiscussionsTable.closeReopenDiscussion(\''+1+'\',\''+row.id+'\')" href="javascript:void(0)" title="Close">';
                 str+= '<span class="discussion-unlock' + String(row.id) + '">Close</span>&nbsp;&nbsp;';
                 str+= '</a>';
-                str+= '<a style = "float:right;" onclick="discussionPage.resolveDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
+                str+= '<a style = "float:right;" onclick="groupPage.sharedDiscussionsTable.closeReopenDiscussion(\''+0+'\',\''+row.id+'\')" href="javascript:void(0)" title="Reopen">';
                 str+= '<span class="passive discussion-lock' + String(row.id) + '">Reopen</span>&nbsp;&nbsp;';
                 str+= '</a>';
                 return str;
@@ -578,9 +584,25 @@ var groupPage = {
                 }
             
         },
+        closeReopenDiscussion: function(is_closed,discussion_id){
+            
+            var discussion = {
+                "is_closed": is_closed,
+                "discussion_id": discussion_id
+            };
+
+                apis.discussion.editDiscussion($('#GroupID').val(), discussion,
+                successCallback = function (response) {
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                });
+        },    
         onRemoveGroupToDiscussionConfirm: function (e) {
             e.preventDefault();
-            apis.discussion.delete($('#GroupID').val(), $('#DeleteDiscussionModal').data('id'),
+            var discussion = {
+                "discussion_id": $('#DeleteDiscussionModal').data('id')
+            };
+            apis.discussion.deleteDiscussion($('#GroupID').val(), discussion,
                 successCallback = function (response) {
                     // This method is called when discussion is successfully deleted.
                     // The entry from the table is deleted.
@@ -609,7 +631,7 @@ var groupPage = {
 
             if (params.data["search"]) {
                 // Currently we assume that term entered in the search bar is used to search for the discussion topic, email, comment only.
-                params.data["topic"] = '%' + params.data["search"] + '%';
+                params.data["keyword"] = '%' + params.data["search"] + '%';
             }
 
             apis.discussion.getSharedDiscussions($('#GroupID').val(), params.data,
@@ -758,11 +780,9 @@ var discussionPage = {
   init: function () {
 
     $('#CreateCommentBtn').click(function () {
-        discussionPage.createComment($('#CommentMessage').val());
+        discussionPage.createComment($('#CommentText').val());
     });
-    $('#DeleteDiscussionBtn').click(function () {
-        discussionPage.deleteDiscussionComment($('#DiscussionID').val());
-    });
+
     discussionPage.getComments();
 
     $('.btn-default').click(function(){
@@ -770,46 +790,14 @@ var discussionPage = {
         return false;
     });
 
-    $('#MessageDisplay').text($('#Message').val());
-
-    $('#DiscussionDate').text(moment($('#DiscussionCreatedAt').val()).fromNow());
-
-    $("#EditDiscussion").click(function(){
-        $("#EditDiscussionForm").removeClass("passive");
-        $("#DiscussionMessage").addClass("passive");
-        $('#EditDiscussionMessage').val($('#MessageDisplay').text());
-
-    });
-    $("#CancelDiscussionMessage").click(function(){
-        $("#EditDiscussionForm").addClass("passive");
-        $("#DiscussionMessage").removeClass("passive");
-
-    });
-    $("#UpdateDiscussionMessage").click(function(){
-        
-        console.log($('#EditDiscussionMessage').val());
-        discussionPage.editDiscussionComment($('#EditDiscussionMessage').val(),$('#DiscussionID').val());
-        $("#EditDiscussionForm").addClass("passive");
-        $("#DiscussionMessage").removeClass("passive");
-    });
-
-    $("#CloseDiscussionBtn").click(function(){
-        discussionPage.resolveDiscussion(1,$('#DiscussionID').val());
-
-    });
-    $("#ReopenDiscussionBtn").click(function(){
-        discussionPage.resolveDiscussion(0,$('#DiscussionID').val());
-
-    });
-
   },
 
-    createComment: function(message) {
+    createComment: function(text) {
       console.log('creating comment');
       var owner_email = ($('#UserEmail').val() && $('#UserEmail').val() != "None")? $('#UserEmail').val() : null;
       var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
-      var parent_discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
-      if(message == "") {
+      var discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
+      if(text == "") {
           $.notify({
               message: 'Please enter a valid message'
           }, {
@@ -817,15 +805,12 @@ var discussionPage = {
           });
           return;
       }
-      apis.discussion.add(group_id, {
+      apis.discussion.addComment(group_id, discussion_id, {
                   "owner_email": owner_email,
-                  "group_id": group_id,
-                  "message": message,
-                  "parent_discussion_id": parent_discussion_id
+                  "text": text
               },
               successCallback = function (response) {
-                  $('#CommentMessage').val("");
-                  
+                  $('#CommentText').val("");                  
               },
               errorCallback = function (response) {
                   $.notify({
@@ -840,11 +825,10 @@ var discussionPage = {
         var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
         var discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
         console.log(group_id);
-      apis.discussion.getComments(group_id, discussion_id,
+        apis.discussion.getComments(group_id, discussion_id,
               successCallback = function (response) {
-                  discussionPage.commentsFormatter(response.total, response.discussions);
-                  console.log(response);
-                  
+                  discussionPage.commentsFormatter(response.total, response.comments);   
+                  console.log(response.comments);               
               },
               errorCallback = function (response) {
                   $.notify({
@@ -854,8 +838,11 @@ var discussionPage = {
                   });
               });
   },
-    deleteDiscussionComment: function (discussion_id) {
-            apis.discussion.delete($('#GroupID').val(), discussion_id,
+    deleteDiscussionComment: function (comment_id) {
+            var comment = {
+                "comment_id": comment_id
+            };
+            apis.discussion.deleteComment($('#GroupID').val(), $('#DiscussionID').val(), comment,
                 successCallback = function (response) {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
@@ -863,43 +850,33 @@ var discussionPage = {
                     alert(xhr.responseText);
                 });
   },
-    editDiscussionComment: function(message,discussion_id){
+    editDiscussionComment: function(text,comment_id){
 
 
-            var discussion = {
-                "message": message
+            var comment = {
+                "text": text,
+                "comment_id": comment_id
             };
 
-            if (!discussion['message']) {
+            if (!comment['text']) {
                 $.notify({
-                    message: 'Please enter in a valid group name!'
+                    message: 'Please enter in a valid comment!'
                 }, {
                     type: 'warning'
                 });
                 return
             }
 
-                apis.discussion.editDiscussion($('#GroupID').val(), discussion_id, discussion,
+                apis.discussion.editComment($('#GroupID').val(), $('#DiscussionID').val(), comment,
                 successCallback = function (response) {
 
                 },
                 errorCallback = function (xhr, status, errorThrown) {
-
+                    alert(xhr.responseText);
                 });
        
     },
-    resolveDiscussion: function(is_resolved,discussion_id){
-            
-            var discussion = {
-                "is_resolved": is_resolved
-            };
 
-                apis.discussion.editDiscussion($('#GroupID').val(), discussion_id, discussion,
-                successCallback = function (response) {
-                },
-                errorCallback = function (xhr, status, errorThrown) {
-                });
-    },
 
   commentsFormatter: function (total, comments) {
       var ele = $('#CommentsList'); ele.html("");
@@ -948,21 +925,16 @@ var discussionPage = {
 
   },
   generateCommentTemplate: function(comment) {
-      if (comment.owner_email == null || comment.owner_email == "None") {
-                  comment.owner_email = "Anonymous";
-      }
       var str = '<div class="panel-heading" id="commentBox' + comment.id + '">';
       var date = moment(comment.created_at).fromNow();
-
-
       str += '<b>' + comment.owner_email + '</b> <i> commented ' + date +'</i>';
       str += '<span style="float: right;">' + discussionPage.generateCommentOptions(comment) + '</i></span></div>';
-      str += '<div class="panel-body" id="DiscussionMessage' + String(comment.id) + '"> <pre class = "discussion-text show-read-more" id="MessageDisplay' + String(comment.id) + '" value="' + String(comment.message) + '" ></pre></div>';
-      str += '<div class="panel-body passive" id="EditDiscussionForm'+ String(comment.id) + '">';
-      str += '<textarea class="pb-comment-textarea edit " id= "EditDiscussionMessage' + String(comment.id) + '"></textarea>';
+      str += '<div class="panel-body" id="CommentText' + String(comment.id) + '"> <pre class = "comment-text show-read-more" id="TextDisplay' + String(comment.id) + '" value="' + String(comment.text) + '" ></pre></div>';
+      str += '<div class="panel-body passive" id="EditCommentForm'+ String(comment.id) + '">';
+      str += '<textarea class="pb-comment-textarea edit " id= "EditCommentText' + String(comment.id) + '"></textarea>';
       str += '<form class="form-inline">';
-      str += '<button class="btn btn-success pull-right" id="UpdateDiscussionMessage' + String(comment.id) + '" type="button">Update Discussion</button>';
-      str += '<button class="btn btn-danger" id="CancelDiscussionMessage' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
+      str += '<button class="btn btn-success pull-right" id="UpdateCommentText' + String(comment.id) + '" type="button">Update</button>';
+      str += '<button class="btn btn-danger" id="CancelCommentText' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
       str += '</form>';
       str += '</div>';
       return str;
@@ -972,24 +944,14 @@ var discussionPage = {
       str += '<div class="dropdown">';
       str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
       str += '<i class="fa fa-sort-desc" aria-hidden="true"></i>';
-      str += '</button><div class="dropdown-menu" style = "min-width:80px; ">';
+      str += '</button>';
       if($('#UserEmail').val() === comment.owner_email) {
-        if($('#DiscussionStatus').val()==0){
-            str += '<a class="dropdown-item edit-comment" id="EditDiscussion' + String(comment.id) + '">Edit</a><br>';
-            str += '<a class="dropdown-item delete-comment" id="DeleteDiscussionBtn' + String(comment.id) + '">Delete</a><br>';
-        }
+        str += '<div class="dropdown-menu" style = "min-width:80px; ">';
+        str += '<a class="dropdown-item edit-comment" id="EditCommentBtn' + String(comment.id) + '">Edit</a><br>';
+        str += '<a class="dropdown-item delete-comment" id="DeleteCommentBtn' + String(comment.id) + '">Delete</a><br>';
+        str += '</div>';
       }
-      str += '</div></div>';
-      return str;
-  },
-  generateReplyTemplate: function(comment) {
-      var str = "";
-      str += '<textarea class="form-control reply-message" style="height:32px;"';
-      str += '" placeholder="Reply.."></textarea><table class="passive reply-table" style="width: 100%"><tr>';
-      str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary create-reply-btn" href="#">Reply</a></td>';
-      str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-reply-btn" href="#">Cancel</a></td>';
-      str += '</tr></table>';
-      str += '<div class="passive res-comment-desc">Comment has been resolved</div>';
+      str += '</div>';
       return str;
   },
   expandTextarea: function (element) {
@@ -1003,28 +965,27 @@ var discussionPage = {
       var comment_box = $('#commentBox' + comment.id);
 
 
-    $('#MessageDisplay' + String(comment.id)).text(comment.message);
+    $('#TextDisplay' + String(comment.id)).text(comment.text);
 
-    $('#EditDiscussion' + String(comment.id)).click(function(){
-        $('#EditDiscussionForm' + String(comment.id)).removeClass("passive");
-        $('#DiscussionMessage' + String(comment.id)).addClass("passive");
-        $('#EditDiscussionMessage' + String(comment.id)).val($('#MessageDisplay' + String(comment.id)).text());
+    $('#EditCommentBtn' + String(comment.id)).click(function(){
+        $('#EditCommentForm' + String(comment.id)).removeClass("passive");
+        $('#CommentText' + String(comment.id)).addClass("passive");
+        $('#EditCommentText' + String(comment.id)).val($('#TextDisplay' + String(comment.id)).text());
     });
 
-    $("#CancelDiscussionMessage" + String(comment.id)).click(function(){
-        $("#EditDiscussionForm" + String(comment.id)).addClass("passive");
-        $("#DiscussionMessage" + String(comment.id)).removeClass("passive");
+    $("#CancelCommentText" + String(comment.id)).click(function(){
+        $("#EditCommentForm" + String(comment.id)).addClass("passive");
+        $("#CommentText" + String(comment.id)).removeClass("passive");
 
     });
 
-    $("#UpdateDiscussionMessage" + String(comment.id)).click(function(){
-        console.log($('#EditDiscussionMessage').val());
-        discussionPage.editDiscussionComment($('#EditDiscussionMessage' + String(comment.id)).val(), comment.id);
-        $("#EditDiscussionForm" + String(comment.id)).addClass("passive");
-        $("#DiscussionMessage" + String(comment.id)).removeClass("passive");
+    $("#UpdateCommentText" + String(comment.id)).click(function(){
+        discussionPage.editDiscussionComment($('#EditCommentText' + String(comment.id)).val(), comment.id);
+        $("#EditCommentForm" + String(comment.id)).addClass("passive");
+        $("#CommentText" + String(comment.id)).removeClass("passive");
     });
 
-    $("#DeleteDiscussionBtn" + String(comment.id)).click(function(){
+    $("#DeleteCommentBtn" + String(comment.id)).click(function(){
         discussionPage.deleteDiscussionComment(comment.id);
 
     });
