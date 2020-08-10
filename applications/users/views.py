@@ -751,6 +751,10 @@ def _get_group_graphs(request, group_id):
 		Search for graphs with the given node names. In order to search for graphs with either of the given node names as a substring, wrap the node name with percentage symbol. For example, %xyz% will search for all graphs with xyz in their node names.
 	edges : list of strings
 		Search for graphs with the given edges. An edge can be represented as <head_node_name>:<tail_node_name>. In order to perform a substring on edges, wrap the node names with percentage symbol. For example, %xyz%:%abc% will search for all graphs with edges between nodes with xyz in their node names to nodes with abc in their node name.
+    order : string
+		Defines the column sort order, can only be 'asc' or 'desc'.
+	sort : string
+		Defines which column will be sorted.
 
 	Parameters
 	----------
@@ -785,7 +789,10 @@ def _get_group_graphs(request, group_id):
 											  nodes=nodes if nodes is None or isinstance(nodes, list) else [nodes],
 											  edges=edges if edges is None or isinstance(edges, list) else [edges],
 											  limit=request.GET.get('limit', 20),
-											  offset=request.GET.get('offset', 0))
+											  offset=request.GET.get('offset', 0),
+											  order=request.GET.get('order', 'asc'),
+											  sort=request.GET.get('sort', 'name')
+											  )
 
 	return {
 		'total': total,

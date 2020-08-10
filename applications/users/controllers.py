@@ -266,8 +266,10 @@ def delete_group_member(request, group_id, member_id):
 	db.delete_group_to_user(request.db_session, group_id=group_id, user_id=member_id)
 	return
 
+def search_group_graphs(request, group_id, owner_email, names=None, nodes=None, edges=None, limit=20, offset=0, order='asc', sort='name'):
+	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
+	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 
-def search_group_graphs(request, group_id, owner_email, names=None, nodes=None, edges=None, limit=20, offset=0):
 	total, group_graphs = graphs.controllers.search_graphs_by_group_ids(request,
 						group_ids=[group_id],
 						owner_email=owner_email,
@@ -275,7 +277,8 @@ def search_group_graphs(request, group_id, owner_email, names=None, nodes=None, 
 						nodes=nodes,
 						edges=edges,
 						limit=limit,
-						offset=offset)
+						offset=offset,
+						order_by=orber_by)
 	return total, group_graphs
 
 
