@@ -67,6 +67,15 @@ var apis = {
         deleteComment: function (group_id, discussion_id, data, successCallback, errorCallback) {
             apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id, data, successCallback, errorCallback)
         },
+        addCommentReaction: function (group_id, discussion_id, comment_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('POST', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id + '/' + comment_id, data, successCallback, errorCallback)
+        },
+        deleteCommentReaction: function (group_id, discussion_id, comment_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('DELETE', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id + '/' + comment_id, data, successCallback, errorCallback)
+        },
+        getCommentReaction: function (group_id, discussion_id, comment_id, data, successCallback, errorCallback) {
+            apis.jsonRequest('Get', apis.groups.ENDPOINT + group_id + '/discussions/' + discussion_id + '/' + comment_id, data, successCallback, errorCallback)
+        },
 
     },
     jsonRequest: function (method, url, data, successCallback, errorCallback) {
@@ -776,9 +785,9 @@ var joinGroupPage = {
 var discussionPage = {
 
   presentComments: null,
-
+  
   init: function () {
-
+    reactions_code = [128077, 128078, 128516, 128543, 127881, 128640, 128147, 128064];
     $('#CreateCommentBtn').click(function () {
         discussionPage.createComment($('#CommentText').val());
     });
@@ -789,7 +798,6 @@ var discussionPage = {
         parent.history.back();
         return false;
     });
-
   },
 
     createComment: function(text) {
@@ -876,7 +884,55 @@ var discussionPage = {
                 });
        
     },
+    addCommentReaction: function (comment_id, owner_email, reaction_content) {
+            var reaction = {
+                "content": reaction_content,
+                "owner_email": owner_email
+            };
+            apis.discussion.addCommentReaction($('#GroupID').val(), $('#DiscussionID').val(), comment_id, reaction, 
+                successCallback = function (response) {
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting comment.
+                    alert(xhr.responseText);
+                });
+    },
+    deleteCommentReaction: function (comment_id, owner_email, reaction_content) {
+            var reaction = {
+                "content": reaction_content,
+                "owner_email": owner_email
+            };
+            apis.discussion.deleteCommentReaction($('#GroupID').val(), $('#DiscussionID').val(), comment_id, reaction, 
+                successCallback = function (response) {
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting comment.
+                    alert(xhr.responseText);
+                });
+    },
+    getCommentReaction: function (comment_id, reaction_content) {
+            var reaction = {
+                "content": reaction_content
+            };
+            apis.discussion.getCommentReaction($('#GroupID').val(), $('#DiscussionID').val(), comment_id, reaction, 
+                successCallback = function (response) {
+                    console.log(response);
+                    var response_reactions = response.reactions;
+                    var str = "";
+                    for(var i=0; i<response_reactions.length; i++){
+                        str+= response_reactions[i].owner_email + '<br>'; 
+                    }
+                    console.log(str);
+                    $("#" + String(comment_id) + '-' + reaction_content + '-emoji').attr('data-original-title', str);
 
+                // $("#" + String(comment_id) + '-' + reaction_content + '-emoji').tooltip({title: str, html: true, placement: "bottom"}); 
+                    
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting comment.
+                    alert(xhr.responseText);
+                });
+    },
 
   commentsFormatter: function (total, comments) {
       var ele = $('#CommentsList'); ele.html("");
@@ -937,19 +993,71 @@ var discussionPage = {
       str += '<button class="btn btn-danger" id="CancelCommentText' + String(comment.id) + '" type="button" style="float: right; margin-right: 20px;">Cancel</button>';
       str += '</form>';
       str += '</div>';
+      str += discussionPage.displayCommentReactions(comment);
       return str;
   },
   generateCommentOptions: function(comment) {
       var str = "";
-      str += '<div class="dropdown">';
+      str += '<span class="dropdown">';
       str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
-      str += '<i class="fa fa-sort-desc" aria-hidden="true"></i>';
+      str += '<i class="fa fa-smile-o fa-lg" aria-hidden="true"></i>';
+      str += '</button>';
+      str += discussionPage.generateCommentReactions(comment);
+      str += '</span>';
+      str += '<span class="dropdown">';
+      str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
+      str += '<i class="fa fa-ellipsis-h fa-lg" aria-hidden="true"></i>';
       str += '</button>';
       if($('#UserEmail').val() === comment.owner_email) {
-        str += '<div class="dropdown-menu" style = "min-width:80px; ">';
+        str += '<div class="dropdown-menu " style = "min-width:80px; ">';
         str += '<a class="dropdown-item edit-comment" id="EditCommentBtn' + String(comment.id) + '">Edit</a><br>';
         str += '<a class="dropdown-item delete-comment" id="DeleteCommentBtn' + String(comment.id) + '">Delete</a><br>';
         str += '</div>';
+      }
+      str += '</span>';
+      return str;
+  },
+  generateCommentReactions: function(comment) {
+      var str = "";
+      str += '<div class="dropdown-menu" style = "min-width:140px; ">';
+      var user_reacted_emoji = [];
+      for(var i=0; i<(comment.reaction_owner).length;i++){
+        if(comment.reaction_owner[i]==$('#UserEmail').val())
+            user_reacted_emoji.push(comment.reaction_content[i]);
+      }
+      for(var i=0; i<reactions_code.length; i++){
+        if(user_reacted_emoji.includes(reactions_code[i])){
+            str += '<span class="emoji-reacted" id="' + String(comment.id) + '-' + reactions_code[i] + '-unreact">&#' + reactions_code[i] + ';</span>';
+            str += '<span class="emoji-unreacted passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-react">&#' + reactions_code[i] + ';</span>';            
+        }
+        else{
+            str += '<span class="emoji-reacted passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-unreact">&#' + reactions_code[i] + ';</span>';
+            str += '<span class="emoji-unreacted" id="' + String(comment.id) + '-' + reactions_code[i] + '-react">&#' + reactions_code[i] + ';</span>';
+        }
+      }
+      str += '</div>';
+      return str;
+  },
+  displayCommentReactions: function(comment) {
+      var str = "";
+      if((comment.reaction_content).length==0){
+        str += '<div class="panel-footer passive" id="footer-' + String(comment.id) + '" style="height:40px;" >';
+      }
+      else{
+        str += '<div class="panel-footer" id="footer-' + String(comment.id) + '" style="height:40px;" >';
+      }
+      var user_reacted_emoji = [];
+      for(var i=0; i<(comment.reaction_content).length;i++){
+        user_reacted_emoji.push(comment.reaction_content[i]);
+      }
+      var comment_unique_emojis = Array.from(new Set(user_reacted_emoji));
+      for(var i=0; i<reactions_code.length; i++){
+        if(comment_unique_emojis.includes(reactions_code[i])){
+            str += '<span class="display-emoji" id="' + String(comment.id) + '-' + reactions_code[i] + '-emoji">&#' + reactions_code[i] + ';</span>';
+        }
+        else{
+            str += '<span class="display-emoji passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-emoji">&#' + reactions_code[i] + ';</span>';
+        }
       }
       str += '</div>';
       return str;
@@ -989,6 +1097,44 @@ var discussionPage = {
         discussionPage.deleteDiscussionComment(comment.id);
 
     });
+    for(var i=0; i<reactions_code.length; i++){
+        var content = reactions_code[i];
+        $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').tooltip({title: "", html: true, placement: "bottom"}); 
+
+        $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').hover(function(){
+            console.log("vfdvfdv");
+            content=(this.id).split("-");
+            discussionPage.getCommentReaction(comment.id, content[1]);
+            // content=(this.id).split("-");
+            // $("#" + this.id).addClass("passive");
+            // $("#" + (this.id).replace("unreact","react")).removeClass("passive");
+            // $("#" + (this.id).replace("unreact","emoji")).addClass("passive");
+            // discussionPage.deleteCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
+        });
+                        // discussionPage.getCommentReaction(comment.id, content[1]);
+
+    }
+    for(var i=0; i<reactions_code.length; i++){
+        var content = reactions_code[i];
+        $("#" + String(comment.id) + '-' + content + '-unreact').click(function(){
+            content=(this.id).split("-");
+            $("#" + this.id).addClass("passive");
+            $("#" + (this.id).replace("unreact","react")).removeClass("passive");
+            $("#" + (this.id).replace("unreact","emoji")).addClass("passive");
+            discussionPage.deleteCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
+        });
+        $("#" + String(comment.id) + '-' + content + '-react').click(function(){
+            content=(this.id).split("-");
+            $("#" + this.id).addClass("passive");
+            $("#" + (this.id).replace("react","unreact")).removeClass("passive");
+            $("#" + (this.id).replace("react","emoji")).removeClass("passive");
+            if($("#footer-" + String(comment.id)).hasClass("passive")){
+                $("#footer-" + String(comment.id)).removeClass("passive");
+            }
+            discussionPage.addCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
+        });
+        
+    }
 
 
   },

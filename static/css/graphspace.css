@@ -635,3 +635,28 @@ p.lead {
 .show-read-more .more-text{
     display: none;
 }
+.emoji-reacted {
+  padding: 5px 5px;
+  font-size: 18px;
+  background-color: #cae5ff; 
+  border: 1px solid #e1e4e8;
+
+}
+.emoji-reacted:hover {
+  cursor: pointer;
+}
+.emoji-unreacted {
+  padding: 5px 5px;
+  font-size: 18px;
+  border: 1px solid #e1e4e8;
+}
+.emoji-unreacted:hover {
+  cursor: pointer;
+}
+.display-emoji {
+  padding: 5px 4px;
+  font-size: 18px;
+}
+.display-emoji:hover {
+  cursor: pointer;
+}

@@ -203,6 +203,63 @@ def delete_comment(db_session, id):
     send_comment(comment, event="delete_comment")
     return comment
 
+@with_session
+def add_comment_reaction(db_session, content, owner_email):
+    """
+    Get discussion by discussion id.
+    :param db_session: Database session.
+    :param content: message of reaction.
+    :param owner_email: owner email of reaction.
+    :return: Discussion if id exists else None
+    """
+    reaction = Reaction(content=content, owner_email=owner_email)
+    db_session.add(reaction)
+    # send_discussion(comment, event="insert_comment")
+    return reaction
+
+@with_session
+def add_comment_to_reaction(db_session, comment_id, reaction_id):
+    """
+    Adding discussion_id comment_id to comment_to_discussion table.
+    :param db_session: Database session.
+    :param reaction_id: Unique ID of the reaction
+    :param comment_id: Unique ID of the comment
+    :return: comment_to discussion row
+    """
+    comment_to_reaction = CommentToReaction(comment_id=comment_id, reaction_id=reaction_id)
+    db_session.add(comment_to_reaction)
+    return comment_to_reaction
+@with_session
+def delete_comment_reaction(db_session, comment_id, content, owner_email):
+    """
+    Get discussion by discussion id.
+    :param db_session: Database session.
+    :param content: message of reaction.
+    :param owner_email: owner email of reaction.
+    :return: Discussion if id exists else None
+    """
+    query = db_session.query(Reaction)
+    query = query.options(joinedload('associated_comments'))
+    query = query.filter(Reaction.comments.any(CommentToReaction.comment_id == comment_id))
+    query = query.filter(Reaction.content == content, Reaction.owner_email == owner_email).one_or_none()
+
+    # send_discussion(comment, event="insert_comment")
+    db_session.delete(query)
+    return query
+
+def get_comment_reactions(db_session, comment_id, content):
+    """
+    	Get comments vy discussion id
+    	:param db_session: Database session.
+    	:param group_id: Unique ID of the group
+    	:param discussion_id: Unique ID of the discussion
+    	:return: total comments value and comments if id exists else None
+    	"""
+    query = db_session.query(Reaction)
+    query = query.options(joinedload('associated_comments'))
+    query = query.filter(Reaction.comments.any(CommentToReaction.comment_id == comment_id))
+    query = query.filter(Reaction.content == content)
+    return query.count(), query.all()
 
 def send_comment(comment, event):
     users_list = get_users_by_group(Database().session(), comment.associated_discussion[0].discussion.group_id)

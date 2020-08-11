@@ -26,7 +26,8 @@ urlpatterns = [
 	# Group Discussions
 	url(r'^ajax/groups/(?P<group_id>[^/]+)/discussions$', views.group_discussions_ajax_api, name='group_discussions_ajax_api'),
 	url(r'^ajax/groups/(?P<group_id>[^/]+)/discussions/(?P<discussion_id>[^/]+)$', views.discussion_comments_ajax_api, name='discussion_comments_ajax_api'),
-
+	# Comment Reactions
+	url(r'^ajax/groups/(?P<group_id>[^/]+)/discussions/(?P<discussion_id>[^/]+)/(?P<comment_id>[^/]+)$', views.comment_reactions_ajax_api, name='comment_reactions_ajax_api'),
 	# REST APIs Endpoints
 
 	# Groups

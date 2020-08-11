@@ -1316,3 +1316,167 @@ def _delete_discussion_comment(request, comment_id):
 	"""
 
     discussions.delete_comment_by_id(request, comment_id)
+
+
+def comment_reactions_ajax_api(request, group_id, discussion_id, comment_id):
+    """
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+    return _comments_reactions_api(request, group_id, discussion_id, comment_id)
+
+
+def _comments_reactions_api(request, group_id, discussion_id, comment_id):
+    """
+	Handles any request (GET/POST) sent to /<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST":
+            return HttpResponse(json.dumps(_add_comment_reaction(request, comment_id, reaction=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET":
+            return HttpResponse(json.dumps(_get_comment_reactions(request, comment_id, reaction=request.GET)),
+                                content_type="application/json")
+        elif request.method == "DELETE":
+            _delete_comment_reaction(request, comment_id, reaction=QueryDict(request.body))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_comment_reaction(request, comment_id, reaction={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of the discussion.
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	discussion_id : string
+		Unique ID of the discussion.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    return utils.serializer(discussions.add_comment_reaction(request, comment_id=comment_id,
+                                                             content=reaction.get('content', None),
+                                                             owner_email=reaction.get('owner_email', None)))
+
+
+@is_authenticated()
+def _delete_comment_reaction(request, comment_id, reaction={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of the discussion.
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	discussion_id : string
+		Unique ID of the discussion.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    utils.serializer(discussions.delete_comment_reaction(request, comment_id=comment_id,
+                                                         content=reaction.get('content', None),
+                                                         owner_email=reaction.get('owner_email', None)))
+
+@is_authenticated()
+def _get_comment_reactions(request, comment_id, reaction={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of the discussion.
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	discussion_id : string
+		Unique ID of the discussion.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    total, reactions = discussions.get_comment_reactions(request, comment_id=comment_id,
+                                                             content=reaction.get('content', None))
+
+    return {
+        'total': total,
+        'reactions': [utils.serializer(reaction) for reaction in reactions]
+    }
