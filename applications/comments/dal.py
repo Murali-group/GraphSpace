@@ -304,11 +304,36 @@ def update_comment(db_session, id, updated_comment):
                 setattr(ele, key, value)
     for (key, value) in updated_comment.items():
         setattr(comment, key, value)
-
     comment_to_graph = get_comment_to_graph(Database().session(), comment.id)
     send_comment(comment, comment_to_graph, event="update")
     return comment
 
+@with_session
+def edit_comment(db_session, id, updated_comment):
+    """
+
+    Parameters
+    ----------
+    db_session: Object
+        Database session.
+    id: Integer
+        Unique ID of comment.
+    updated_comment: dict
+        Dict containing key, value pairs of updated_comment.
+
+    Returns
+    -------
+    comment: Object
+        Updated Comment Object.
+
+    """
+    comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
+    for (key, value) in updated_comment.items():
+        setattr(comment, key, value)
+
+    comment_to_graph = get_comment_to_graph(Database().session(), comment.id)
+    send_comment(comment, comment_to_graph, event="update")
+    return comment
 
 @with_session
 def delete_comment(db_session, id):

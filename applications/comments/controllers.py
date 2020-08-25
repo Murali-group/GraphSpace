@@ -179,6 +179,7 @@ def edit_comment(request, comment_id=None, text=None, is_closed=None):
         updated_comment['is_closed'] = is_closed
     if text != None:
         updated_comment['text'] = text
+        return db.edit_comment(request.db_session, id=comment_id, updated_comment=updated_comment)
 
     # # Only top comment in a comment thread can be resolved.
     comment = db.get_comment_by_id(request.db_session, id=comment_id)
