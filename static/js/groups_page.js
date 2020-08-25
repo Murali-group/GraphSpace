@@ -43,7 +43,6 @@ var apis = {
     discussion: {
         ENDPOINT: '/ajax/groups/',
         addDiscussion: function (id, data, successCallback, errorCallback) {
-            console.log("gogo")
             apis.jsonRequest('POST', apis.groups.ENDPOINT + id + '/discussions', data, successCallback, errorCallback)
         },
         getSharedDiscussions: function (id, data, successCallback, errorCallback) {
@@ -832,11 +831,9 @@ var discussionPage = {
     getComments: function () {
         var group_id = ($('#GroupID').val())? $('#GroupID').val() : null;
         var discussion_id = ($('#DiscussionID').val())? $('#DiscussionID').val() : null;
-        console.log(group_id);
         apis.discussion.getComments(group_id, discussion_id,
               successCallback = function (response) {
                   discussionPage.commentsFormatter(response.total, response.comments);   
-                  console.log(response.comments);               
               },
               errorCallback = function (response) {
                   $.notify({
@@ -893,7 +890,6 @@ var discussionPage = {
                 successCallback = function (response) {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
-                    // This method is called when  error occurs while deleting comment.
                     alert(xhr.responseText);
                 });
     },
@@ -906,7 +902,7 @@ var discussionPage = {
                 successCallback = function (response) {
                 },
                 errorCallback = function (xhr, status, errorThrown) {
-                    // This method is called when  error occurs while deleting comment.
+                    // This method is called when  error occurs while deleting comment reaction.
                     alert(xhr.responseText);
                 });
     },
@@ -916,20 +912,15 @@ var discussionPage = {
             };
             apis.discussion.getCommentReaction($('#GroupID').val(), $('#DiscussionID').val(), comment_id, reaction, 
                 successCallback = function (response) {
-                    console.log(response);
                     var response_reactions = response.reactions;
                     var str = "";
                     for(var i=0; i<response_reactions.length; i++){
                         str+= response_reactions[i].owner_email + '<br>'; 
                     }
-                    console.log(str);
                     $("#" + String(comment_id) + '-' + reaction_content + '-emoji').attr('data-original-title', str);
-
-                // $("#" + String(comment_id) + '-' + reaction_content + '-emoji').tooltip({title: str, html: true, placement: "bottom"}); 
                     
                 },
                 errorCallback = function (xhr, status, errorThrown) {
-                    // This method is called when  error occurs while deleting comment.
                     alert(xhr.responseText);
                 });
     },
@@ -1102,16 +1093,9 @@ var discussionPage = {
         $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').tooltip({title: "", html: true, placement: "bottom"}); 
 
         $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').hover(function(){
-            console.log("vfdvfdv");
             content=(this.id).split("-");
             discussionPage.getCommentReaction(comment.id, content[1]);
-            // content=(this.id).split("-");
-            // $("#" + this.id).addClass("passive");
-            // $("#" + (this.id).replace("unreact","react")).removeClass("passive");
-            // $("#" + (this.id).replace("unreact","emoji")).addClass("passive");
-            // discussionPage.deleteCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
         });
-                        // discussionPage.getCommentReaction(comment.id, content[1]);
 
     }
     for(var i=0; i<reactions_code.length; i++){

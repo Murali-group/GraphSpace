@@ -485,9 +485,14 @@ p.lead {
 .comment-box {
     margin: auto;
     width: 100%;
-    padding-left: 13px;
+    padding-left: 2px;
     padding-top: 13px;
     padding-bottom: 13px;
+}
+.comment-box:hover {
+    background-color: #fdfd96;
+    padding:7px;
+
 }
 
 .comment-highlight {
@@ -503,7 +508,7 @@ p.lead {
     padding: 5px;
 }
 
-.comment-message {
+.comment-text {
     width: 169px;
     overflow-wrap: break-word;
 }

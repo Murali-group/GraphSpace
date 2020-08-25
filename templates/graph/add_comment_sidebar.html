@@ -6,11 +6,8 @@
         <a href="#" class="list-group-item list-group-item-action">
             <table style="width:100%">
                 <tr>
-                    <td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>
                     {% if uid %}
                         <td class="comment-email">{{uid}}</td>
-                    {% else %}
-                        <td class="comment-email">Anonymous</td>
                     {% endif %}
                 </tr>
             </table><br/>

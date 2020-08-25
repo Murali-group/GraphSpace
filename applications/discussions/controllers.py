@@ -99,19 +99,17 @@ def delete_comment_by_id(request, comment_id):
 
 
 def add_comment_reaction(request, comment_id=None, content=None, owner_email=None):
-    # Construct new comment to add to database
+    # Construct new reaction to add to database
     reaction = db.add_comment_reaction(request.db_session, content=content, owner_email=owner_email)
     comment_to_reaction = db.add_comment_to_reaction(request.db_session, comment_id=comment_id, reaction_id=reaction.id)
     return reaction
 
 
 def delete_comment_reaction(request, comment_id=None, content=None, owner_email=None):
-    # Construct new comment to add to database
     reaction = db.delete_comment_reaction(request.db_session, comment_id=comment_id, content=content,
                                           owner_email=owner_email)
 
 
 def get_comment_reactions(request, comment_id=None, content=None):
-    # Construct new comment to add to database
     total, reactions = db.get_comment_reactions(request.db_session, comment_id=comment_id, content=content)
     return total, reactions

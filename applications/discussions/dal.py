@@ -110,8 +110,10 @@ def delete_discussion(db_session, id):
     discussion = db_session.query(Discussion).filter(Discussion.id == id).one_or_none()
     query = db_session.query(Comment)
     query = query.options(joinedload('associated_discussion'))
-    query = query.filter(Comment.discussion.any(CommentToDiscussion.discussion_id == id))
+    query = query.filter(Comment.discussion.any(CommentToDiscussion.discussion_id == id)).all()
     for ele in query:
+        for reaction in ele.reactions:
+            db_session.delete(reaction)
         db_session.delete(ele)
     db_session.delete(discussion)
     send_discussion(discussion, event="delete_discussion")
@@ -199,28 +201,32 @@ def delete_comment(db_session, id):
 	:return: comment
 	"""
     comment = db_session.query(Comment).filter(Comment.id == id).one_or_none()
+    for reaction in comment.reactions:
+        db_session.delete(reaction)
     db_session.delete(comment)
     send_comment(comment, event="delete_comment")
     return comment
 
+
 @with_session
 def add_comment_reaction(db_session, content, owner_email):
     """
-    Get discussion by discussion id.
+    Add reaction.
     :param db_session: Database session.
     :param content: message of reaction.
     :param owner_email: owner email of reaction.
-    :return: Discussion if id exists else None
+    :return: Reaction
     """
     reaction = Reaction(content=content, owner_email=owner_email)
     db_session.add(reaction)
     # send_discussion(comment, event="insert_comment")
     return reaction
 
+
 @with_session
 def add_comment_to_reaction(db_session, comment_id, reaction_id):
     """
-    Adding discussion_id comment_id to comment_to_discussion table.
+    Adding comment_id reaction_id to comment_to_reaction table.
     :param db_session: Database session.
     :param reaction_id: Unique ID of the reaction
     :param comment_id: Unique ID of the comment
@@ -229,37 +235,41 @@ def add_comment_to_reaction(db_session, comment_id, reaction_id):
     comment_to_reaction = CommentToReaction(comment_id=comment_id, reaction_id=reaction_id)
     db_session.add(comment_to_reaction)
     return comment_to_reaction
+
+
 @with_session
 def delete_comment_reaction(db_session, comment_id, content, owner_email):
     """
-    Get discussion by discussion id.
+    Delete reaction by comment_id content owner_email.
     :param db_session: Database session.
-    :param content: message of reaction.
+    :param comment_id: Unique Id of comment.
+    :param content: content of reaction.
     :param owner_email: owner email of reaction.
-    :return: Discussion if id exists else None
+    :return:
     """
     query = db_session.query(Reaction)
     query = query.options(joinedload('associated_comments'))
     query = query.filter(Reaction.comments.any(CommentToReaction.comment_id == comment_id))
     query = query.filter(Reaction.content == content, Reaction.owner_email == owner_email).one_or_none()
 
-    # send_discussion(comment, event="insert_comment")
     db_session.delete(query)
     return query
 
+
 def get_comment_reactions(db_session, comment_id, content):
     """
-    	Get comments vy discussion id
+    	Get reaction by comment_id
     	:param db_session: Database session.
-    	:param group_id: Unique ID of the group
-    	:param discussion_id: Unique ID of the discussion
-    	:return: total comments value and comments if id exists else None
+    	:param comment_id: Unique ID of the comment
+    	:param content: content of reaction.
+    	:return: total reactions value and reactions
     	"""
     query = db_session.query(Reaction)
     query = query.options(joinedload('associated_comments'))
     query = query.filter(Reaction.comments.any(CommentToReaction.comment_id == comment_id))
     query = query.filter(Reaction.content == content)
     return query.count(), query.all()
+
 
 def send_comment(comment, event):
     users_list = get_users_by_group(Database().session(), comment.associated_discussion[0].discussion.group_id)

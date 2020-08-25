@@ -1369,35 +1369,35 @@ def _comments_reactions_api(request, group_id, discussion_id, comment_id):
 @is_authenticated()
 def _add_comment_reaction(request, comment_id, reaction={}):
     """
-	Group Parameters
-	----------
-	text : string
-		Text of the discussion.
-	owner_email : string
-		Email of the Owner of the discussion. Required
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
+    owner_email : string
+        Email of the Owner of the reaction. Required
 
 
-	Parameters
-	----------
-	discussion : dict
-		Dictionary containing the data of the discussion being added.
-	discussion_id : string
-		Unique ID of the discussion.
-	request : object
-		HTTP POST Request.
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
 
-	Returns
-	-------
-	comment : object
-		Newly created comment object.
+    Returns
+    -------
+    reaction : object
+        Newly created reaction object.
 
-	Raises
-	------
+    Raises
+    ------
 
-	Notes
-	------
+    Notes
+    ------
 
-	"""
+    """
 
     return utils.serializer(discussions.add_comment_reaction(request, comment_id=comment_id,
                                                              content=reaction.get('content', None),
@@ -1407,74 +1407,75 @@ def _add_comment_reaction(request, comment_id, reaction={}):
 @is_authenticated()
 def _delete_comment_reaction(request, comment_id, reaction={}):
     """
-	Group Parameters
-	----------
-	text : string
-		Text of the discussion.
-	owner_email : string
-		Email of the Owner of the discussion. Required
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
+    owner_email : string
+        Email of the Owner of the reaction. Required
 
 
-	Parameters
-	----------
-	discussion : dict
-		Dictionary containing the data of the discussion being added.
-	discussion_id : string
-		Unique ID of the discussion.
-	request : object
-		HTTP POST Request.
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
 
-	Returns
-	-------
-	comment : object
-		Newly created comment object.
+    Returns
+    -------
+    reaction : object
+        Newly created reaction object.
 
-	Raises
-	------
+    Raises
+    ------
 
-	Notes
-	------
+    Notes
+    ------
 
-	"""
+    """
 
     utils.serializer(discussions.delete_comment_reaction(request, comment_id=comment_id,
                                                          content=reaction.get('content', None),
                                                          owner_email=reaction.get('owner_email', None)))
 
+
 @is_authenticated()
 def _get_comment_reactions(request, comment_id, reaction={}):
     """
-	Group Parameters
-	----------
-	text : string
-		Text of the discussion.
-	owner_email : string
-		Email of the Owner of the discussion. Required
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
 
 
-	Parameters
-	----------
-	discussion : dict
-		Dictionary containing the data of the discussion being added.
-	discussion_id : string
-		Unique ID of the discussion.
-	request : object
-		HTTP POST Request.
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
 
-	Returns
-	-------
-	comment : object
-		Newly created comment object.
+    Returns
+    -------
+    total : integer
+        Number of reaction associated with the comment_id.
+    reactions : List of Reactions.
+        List of Reaction Objects associated with the comment_id.
 
-	Raises
-	------
+    Raises
+    ------
 
-	Notes
-	------
+    Notes
+    ------
 
-	"""
+    """
     total, reactions = discussions.get_comment_reactions(request, comment_id=comment_id,
-                                                             content=reaction.get('content', None))
+                                                         content=reaction.get('content', None))
 
     return {
         'total': total,

@@ -112,12 +112,18 @@ var apis = {
       delete: function (graph_id, data, successCallback, errorCallback) {
           apis.jsonRequest('DELETE', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
       },
-      pin: function (graph_id, data, successCallback, errorCallback) {
-          apis.jsonRequest('PIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+      getCommentToGraph: function (graph_id, data, successCallback, errorCallback) {
+          apis.jsonRequest('GET_COMMENT_TO_GRAPH', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
       },
-      unpin: function (graph_id, data, successCallback, errorCallback) {
-          apis.jsonRequest('UNPIN', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
-      }
+      addCommentReaction: function (graph_id, data, successCallback, errorCallback) {
+          apis.jsonRequest('POST_REACTION', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+      },
+      deleteCommentReaction: function (graph_id, data, successCallback, errorCallback) {
+          apis.jsonRequest('DELETE_REACTION', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+      },
+      getCommentReaction: function (graph_id, data, successCallback, errorCallback) {
+          apis.jsonRequest('GET_REACTION', apis.comments.ENDPOINT({'graph_id': graph_id}), data, successCallback, errorCallback)
+      },
   },
   jsonRequest: function ( method, url, data, successCallback, errorCallback ) {
     $.ajax( {
@@ -489,6 +495,8 @@ var graphPage = {
      * This function is called to setup the graph page.
      * It will initialize all the event listeners.
      */
+    reactions_code = [128077, 128078, 128516, 128543, 127881, 128640, 128147, 128064];
+
     graphPage.cyGraph = graphPage.contructCytoscapeGraph();
 
     graphPage.legend.init( style_json );
@@ -573,6 +581,9 @@ var graphPage = {
     if ( window.location.hash == '#graph_details_tab' ) {
       $( '#graphDetailsTabBtn' ).trigger( 'click' );
     }
+    if ( window.location.hash == '#comments' ) {
+      $( '#viewCommentsBtn' ).trigger( 'click' );
+    }
 
     if ( !_.isEmpty( utils.getURLParameter( 'auto_layout' ) ) ) {
       graphPage.applyAutoLayout( utils.getURLParameter( 'auto_layout' ) );
@@ -599,22 +610,22 @@ var graphPage = {
 
     graphPage.defaultLayoutWidget.init();
   },
-  createComment: function(message, parent_comment_id) {
+  createComment: function(text, parent_comment_id) {
       console.log('creating comment');
       var nodes = graphPage.cyGraph.$(':selected').nodes();
       var edges = graphPage.cyGraph.$(':selected').edges();
       var node_names = [], edge_names = [];
       nodes.each(function(idx) {
-          node_names.push(nodes[idx]._private.data.id);
+          node_names.push(nodes[idx]._private.data.name);
       });
       edges.each(function(idx) {
-          edge_names.push(edges[idx]._private.data.id);
+          edge_names.push(edges[idx]._private.data.name);
       });
       var owner_email = ($('#UserEmail').val() && $('#UserEmail').val() != "None")? $('#UserEmail').val() : null;
       var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
-      if(message == "") {
+      if(text == "") {
           $.notify({
-              message: 'Please enter a valid message'
+              message: 'Please enter a valid text'
           }, {
               type: 'danger'
           });
@@ -625,18 +636,14 @@ var graphPage = {
                   "graph_id": graph_id,
                   "node_names": node_names,
                   "edge_names": edge_names,
-                  "message": message,
+                  "text": text,
                   "parent_comment_id": parent_comment_id
               },
               successCallback = function (response) {
                   $('#CommentText').val("");
                   graphPage.cyGraph.edges().unselect();
                   graphPage.cyGraph.nodes().unselect();
-                  $.notify({
-                      message: 'Successfully created a comment'
-                  }, {
-                      type: 'success'
-                  });
+                  
               },
               errorCallback = function (response) {
                   $.notify({
@@ -652,11 +659,7 @@ var graphPage = {
               successCallback = function (response) {
                   graphPage.commentsFormatter(response.total, response.comments);
                   $('#allComments').click();
-                  $.notify({
-                      message: 'Successfully fetched comments of this graph'
-                  }, {
-                      type: 'success'
-                  });
+                  
               },
               errorCallback = function (response) {
                   $.notify({
@@ -666,19 +669,15 @@ var graphPage = {
                   });
               });
   },
-  editComment: function(comment_id, message, is_resolved) {
+  editComment: function(comment_id, text, is_closed) {
       var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
       apis.comments.update(graph_id, {
                   'id': comment_id,
-                  'message': message,
-                  'is_resolved': is_resolved
+                  'text': text,
+                  'is_closed': is_closed
               },
               successCallback = function (response) {
-                  $.notify({
-                      message: 'Successfully edited the comment'
-                  }, {
-                      type: 'success'
-                  });
+                  
               },
               errorCallback = function (response) {
                   $.notify({
@@ -694,11 +693,7 @@ var graphPage = {
                   'id': comment_id,
               },
               successCallback = function (response) {
-                  $.notify({
-                      message: 'Successfully deleted the comment'
-                  }, {
-                      type: 'success'
-                  });
+                  
               },
               errorCallback = function (response) {
                   $.notify({
@@ -708,46 +703,51 @@ var graphPage = {
                   });
               });
   },
-  pinComment: function(comment_id) {
-      var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
-      apis.comments.pin(graph_id, {
-                  'comment_id': comment_id,
-              },
-              successCallback = function (response) {
-                  $.notify({
-                      message: 'Successfully pinned the comment'
-                  }, {
-                      type: 'success'
-                  });
-              },
-              errorCallback = function (response) {
-                  $.notify({
-                      message: response.responseJSON.error_message
-                  }, {
-                      type: 'danger'
-                  });
-              });
-  },
-  unpinComment: function(comment_id) {
-      var graph_id = ($('#GraphID').val())? $('#GraphID').val() : null;
-      apis.comments.unpin(graph_id, {
-                  'comment_id': comment_id,
-              },
-              successCallback = function (response) {
-                  $.notify({
-                      message: 'Successfully unpinned the comment'
-                  }, {
-                      type: 'success'
-                  });
-              },
-              errorCallback = function (response) {
-                  $.notify({
-                      message: response.responseJSON.error_message
-                  }, {
-                      type: 'danger'
-                  });
-              });
-  },
+  addCommentReaction: function (comment_id, owner_email, reaction_content) {
+            var reaction = {
+                "comment_id": comment_id,
+                "content": reaction_content,
+                "owner_email": owner_email
+            };
+            apis.comments.addCommentReaction($('#GraphID').val(), reaction, 
+                successCallback = function (response) {
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    alert(xhr.responseText);
+                });
+    },
+  deleteCommentReaction: function (comment_id, owner_email, reaction_content) {
+            var reaction = {
+                "comment_id": comment_id,
+                "content": reaction_content,
+                "owner_email": owner_email
+            };
+            apis.comments.deleteCommentReaction($('#GraphID').val(), reaction,
+                successCallback = function (response) {
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    // This method is called when  error occurs while deleting reaction.
+                    alert(xhr.responseText);
+                });
+    },
+  getCommentReaction: function (comment_id, reaction_content) {
+            var reaction = {
+                "comment_id": comment_id,
+                "content": reaction_content
+            };
+            apis.comments.getCommentReaction($('#GraphID').val(), reaction,
+                successCallback = function (response) {
+                    var response_reactions = response.reactions;
+                    var str = "";
+                    for(var i=0; i<response_reactions.length; i++){
+                        str+= response_reactions[i].owner_email + '<br>'; 
+                    }
+                    $("#" + String(comment_id) + '-' + reaction_content + '-emoji').attr('data-original-title', str);                    
+                },
+                errorCallback = function (xhr, status, errorThrown) {
+                    alert(xhr.responseText);
+                });
+    },
   commentsFormatter: function (total, comments) {
       var ele = $('#CommentsList'); ele.html("");
       var comment_threads = [], comment_obj = {};
@@ -789,21 +789,15 @@ var graphPage = {
           str += graphPage.generateReplyTemplate(p_comment) + '</a></div>';
           ele.append(str);
 
-          //Do setting is_resolved field if the comment is resolved.
+          //Do setting is_closed field if the comment is resolved.
           if(p_comment != null) {
-              if(p_comment.is_resolved == 1) {
-                  $('#commentContainer' + p_comment.id).data("is_resolved", 1);
+              if(p_comment.is_closed == 1) {
+                  $('#commentContainer' + p_comment.id).data("is_closed", 1);
                   $('#commentContainer' + p_comment.id).find('.reply-message').addClass('passive');
                   $('#commentContainer' + p_comment.id).find('.res-comment-desc').removeClass('passive');
               }
               else {
-                  $('#commentContainer' + p_comment.id).data("is_resolved", 0);
-              }
-              if(p_comment.is_pinned !== undefined && p_comment.is_pinned == 1) {
-                  $('#commentContainer' + p_comment.id).data("is_pinned", 1);
-              }
-              else {
-                  $('#commentContainer' + p_comment.id).data("is_pinned", 0);
+                  $('#commentContainer' + p_comment.id).data("is_closed", 0);
               }
           }
       });
@@ -820,7 +814,6 @@ var graphPage = {
       $('#filterComments').click(function () {
           graphPage.presentComments = [];
           graphPage.filterCommentsBasedOnGraph();
-          commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
       });
 
       $('#allComments').click(function () {
@@ -829,33 +822,13 @@ var graphPage = {
               $(child).removeClass('passive');
               graphPage.presentComments.push(child);
           });
-          commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
-      });
-
-      $('#pinnedComments').click(function () {
-          $('#CommentsList').children("div").addClass("passive");
-          graphPage.presentComments = [];
-          $.each($('#CommentsList').children("div"), function(key, child) {
-              if($(child).data("is_pinned") === 1) {
-                  graphPage.presentComments.push(child);
-                  $(child).removeClass('passive');
-              }
-              else {
-                  $(child).addClass('passive');
-              }
-          });
-          commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length, 1);
-      });
-
-      $('#filterResolvedComments').click(function () {
-          commentsPagination.init($('#commentsPagination').find('.pagination'), graphPage.presentComments.length,
-                                  commentsPagination.page);
       });
 
       $('#cancelViewCommentsBtn').click(function () {
           $('#ViewCommentSideBar').removeClass('active');
           $('#defaultSideBar').addClass('active');
       });
+      utils.readmoreFormatter(100);
   },
   addCommentHandlers: function(comment) {
       var comment_box = $('#commentBox' + comment.id);
@@ -931,16 +904,6 @@ var graphPage = {
           var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
           graphPage.deleteComment(comment_id);
       });
-      comment_box.find('.pin-comment').unbind('click').click(function (e) {
-          e.preventDefault();
-          var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
-          graphPage.pinComment(comment_id);
-      });
-      comment_box.find('.unpin-comment').unbind('click').click(function (e) {
-          e.preventDefault();
-          var comment_id = parseInt(comment_box.attr('id').split("commentBox")[1]);
-          graphPage.unpinComment(comment_id);
-      });
       comment_box.find('.edit-comment-btn').unbind('click').click(function (e) {
           e.preventDefault();
           var ele = $('#commentBox' + comment.id);
@@ -953,26 +916,62 @@ var graphPage = {
           var ele = $('#commentBox' + comment.id);
           var btn = ele.find('.edit-table'); btn.addClass('passive');
           var inp = ele.find('textarea'); inp.addClass('passive');
-          var msg = ele.find('.comment-message'); msg.removeClass('passive');
+          var msg = ele.find('.comment-text'); msg.removeClass('passive');
       });
+      for(var i=0; i<reactions_code.length; i++){
+        var content = reactions_code[i];
+        $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').tooltip({title: "", html: true, placement: "bottom"}); 
+
+        $("#" + String(comment.id) + '-' + reactions_code[i] + '-emoji').hover(function(){
+            content=(this.id).split("-");
+            graphPage.getCommentReaction(comment.id, content[1]);
+        });
+
+    }
+    for(var i=0; i<reactions_code.length; i++){
+        var content = reactions_code[i];
+        $("#" + String(comment.id) + '-' + content + '-unreact').click(function(){
+            content=(this.id).split("-");
+            $("#" + this.id).addClass("passive");
+            $("#" + (this.id).replace("unreact","react")).removeClass("passive");
+            $("#" + (this.id).replace("unreact","emoji")).addClass("passive");
+            graphPage.deleteCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
+        });
+        $("#" + String(comment.id) + '-' + content + '-react').click(function(){
+            content=(this.id).split("-");
+            $("#" + this.id).addClass("passive");
+            $("#" + (this.id).replace("react","unreact")).removeClass("passive");
+            $("#" + (this.id).replace("react","emoji")).removeClass("passive");
+            graphPage.addCommentReaction(comment.id, $('#UserEmail').val(), content[1]);
+        });
+        
+    }
   },
   generateCommentTemplate: function(comment) {
-      if (comment.owner_email == null || comment.owner_email == "None") {
-                  comment.owner_email = "Anonymous";
-      }
       var str = '<div id="commentBox' + comment.id + '">';
-      var date = comment.updated_at.split(/:|T/);
-      var date = date[1] + ':' + date[2] + ' ' + date[0];
+      var date = moment(comment.created_at).fromNow();
+      var label = "";
+      if((comment.nodes).length==0 && (comment.edges).length==0 && comment.parent_comment_id==null){
+        label += "#Graph";
+      }
+      if((comment.nodes).length>0 && comment.parent_comment_id==null){
+        label += "#Nodes ";
+      }
+      if((comment.edges).length>0 && comment.parent_comment_id==null){
+        label += "#Edges";
+      }
+
       str += '<table style="width:100%"><tr>';
-      str += '<td style="width:25%"><img class="comment-image" src="/static/images/img_avatar.png" alt="Avatar"></td>';
-      str += '<td class="comment-email">' + comment.owner_email + '<div class="comment-date">' + date + '</div></td>';
-      str += '<td style="vertical-align:top;">' + graphPage.generateCommentOptions(comment) + '</td></tr></table>';
-      str += '<table style="width:100%"><tr><td><p class="comment-message">' + comment.message + '</p>';
+      str += '<td class="comment-email">' + comment.owner_email + '<div class="comment-date">commented ' + date + '</div></td>';
+      str += '<td style="vertical-align:top; margin-right:10px;">' + graphPage.generateCommentOptions(comment) +  graphPage.generateCommentReactions(comment) + '</span></td></tr></table>';
+      str += '<span>' + label + '</span>';
+      str += '<table style="width:100%"><tr><td><pre class="comment-text show-read-more">' + comment.text + '</pre>';
       str += '<textarea class="form-control passive" style="height:32px;" placeholder="Edit.."></textarea>';
       str += '</td></tr></table>';
       str += '<table class="passive edit-table" style="width: 100%;"><tr>';
       str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary edit-comment-btn" href="#">Edit</a></td>';
       str += '<td style="text-align: center; padding-top: 12px;"><a class="btn btn-primary cancel-edit-btn" href="#">Cancel</a></td>';
+      str += graphPage.displayCommentReactions(comment);
       str += '</tr></table><hr style="width:213px;margin-left:-7px;"></div>';
       return str;
   },
@@ -981,29 +980,67 @@ var graphPage = {
       str += '<div class="dropdown">';
       str += '<button type="button" class="btn comment-options" data-toggle="dropdown">';
       str += '<i class="fa comment-symbol">&#xf142;</i>';
-      str += '</button><div class="dropdown-menu">';
+      str += '</button><div class="dropdown-menu dropdown-menu-right" style="min-width:80px; ">';
       if($('#UserEmail').val() === comment.owner_email) {
-          str += '<a class="dropdown-item edit-comment">Edit</a>';
-          if(comment.parent_comment_id === null && comment.is_resolved === 0) {
-              str += '<a class="dropdown-item resolve-comment">Resolve</a>';
+        if(comment.is_closed === 0) {
+              str += '<a class="dropdown-item edit-comment">Edit</a><br>';
           }
-          str += '<a class="dropdown-item delete-comment">Delete</a>';
+          if(comment.parent_comment_id === null && comment.is_closed === 0) {
+              str += '<a class="dropdown-item resolve-comment">Resolve</a><br>';
+          }
+          str += '<a class="dropdown-item delete-comment">Delete</a><br>';
+          if(comment.parent_comment_id === null && comment.is_closed === 1) {
+              str += '<a class="dropdown-item reopen-comment">Re-open</a><br>';
+          }
       }
       else if($('#UserEmail').val() === comment.graph_owner_email) {
-          str += '<a class="dropdown-item delete-comment">Delete</a>';
-      }
-      if(comment.parent_comment_id === null) {
-          if(comment.is_resolved === 1) {
-              str += '<a class="dropdown-item reopen-comment">Re-open</a>';
-          }
-          if(comment.is_pinned === 0 || comment.is_pinned === undefined) {
-              str += '<a class="dropdown-item pin-comment">Pin</a>';
-          }
-          else {
-              str += '<a class="dropdown-item unpin-comment">Unpin</a>';
-          }
+          str += '<a class="dropdown-item delete-comment">Delete</a><br>';
       }
       str += '</div></div>';
+      return str;
+  },
+  generateCommentReactions: function(comment) {
+      var str = "";
+      str += '<span class="dropdown">';
+      str += '<button type="button" class="btn comment-options reaction-dropdown" style="padding: 3px 3px;" data-toggle="dropdown">';
+      str += '<i class="fa fa-smile-o fa-lg" aria-hidden="true"></i>';
+      str += '</button>';
+      str += '<div class="dropdown-menu dropdown-menu-right" style = "min-width:140px; ">';
+      var user_reacted_emoji = [];
+      for(var i=0; i<(comment.reaction_owner).length;i++){
+        if(comment.reaction_owner[i]==$('#UserEmail').val())
+            user_reacted_emoji.push(comment.reaction_content[i]);
+      }
+      for(var i=0; i<reactions_code.length; i++){
+        if(user_reacted_emoji.includes(reactions_code[i])){
+            str += '<span class="emoji-reacted" id="' + String(comment.id) + '-' + reactions_code[i] + '-unreact">&#' + reactions_code[i] + ';</span>';
+            str += '<span class="emoji-unreacted passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-react">&#' + reactions_code[i] + ';</span>';            
+        }
+        else{
+            str += '<span class="emoji-reacted passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-unreact">&#' + reactions_code[i] + ';</span>';
+            str += '<span class="emoji-unreacted" id="' + String(comment.id) + '-' + reactions_code[i] + '-react">&#' + reactions_code[i] + ';</span>';
+        }
+      }
+      str += '</div>';
+      str += '</span>';
+      return str;
+  },
+  displayCommentReactions: function(comment) {
+      var str="<div>";
+      var user_reacted_emoji = [];
+      for(var i=0; i<(comment.reaction_content).length;i++){
+        user_reacted_emoji.push(comment.reaction_content[i]);
+      }
+      var comment_unique_emojis = Array.from(new Set(user_reacted_emoji));
+      for(var i=0; i<reactions_code.length; i++){
+        if(comment_unique_emojis.includes(reactions_code[i])){
+            str += '<span class="display-emoji" id="' + String(comment.id) + '-' + reactions_code[i] + '-emoji">&#' + reactions_code[i] + ';</span>';
+        }
+        else{
+            str += '<span class="display-emoji passive" id="' + String(comment.id) + '-' + reactions_code[i] + '-emoji">&#' + reactions_code[i] + ';</span>';
+        }
+      }
+      str += '</div>';
       return str;
   },
   generateReplyTemplate: function(comment) {
@@ -1021,10 +1058,10 @@ var graphPage = {
       var edges = graphPage.cyGraph.$(':selected').edges();
       var node_names = [], edge_names = [];
       nodes.each(function(idx) {
-          node_names.push(nodes[idx]._private.data.id);
+          node_names.push(nodes[idx]._private.data.name);
       });
       edges.each(function(idx) {
-          edge_names.push(edges[idx]._private.data.id);
+          edge_names.push(edges[idx]._private.data.name);
       });
       var ele = $('#CommentsList');
       $.each(ele.children("div"), function(key, comment) {
@@ -1034,20 +1071,6 @@ var graphPage = {
           }
           else if(graphPage.hasCommonElement($(comment).data("edges"), edge_names)) {
               graphPage.presentComments.push(comment);
-              $(comment).removeClass('passive');
-          }
-          else {
-              $(comment).addClass('passive');
-          }
-      });
-  },
-  filterCommentsBasedOnPageNumber: function (number, resolved) {
-      var pg_size = commentsPagination.perPage;
-      $.each(graphPage.presentComments, function(key, comment) {
-          if($(comment).data("is_resolved") && !resolved) {
-              $(comment).addClass('passive');
-          }
-          else if(key >= pg_size*(number - 1) && key < pg_size*number) {
               $(comment).removeClass('passive');
           }
           else {
@@ -5020,116 +5043,116 @@ var cytoscapeGraph = {
   }
 
 };
-var commentsPagination = {
-    code: '',
-    add: function(s, f) {
-        for (var i = s; i < f; i++) {
-            commentsPagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
-        }
-    },
-    last: function() {
-        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
-        commentsPagination.code += '<li class="page-item"><a class="page-link">' + commentsPagination.size + '</a></li>';
-    },
-    first: function() {
-        commentsPagination.code += '<li class="page-item"><a class="page-link">1</a></li>';
-        commentsPagination.code += '<li class="page-item"><i>..</i></li>';
-    },
-    click: function() {
-        commentsPagination.page = parseInt($(this).html());
-        commentsPagination.start();
-    },
-    prev: function() {
-        commentsPagination.page--;
-        if (commentsPagination.page < 1) {
-            commentsPagination.page = 1;
-        }
-        commentsPagination.start();
-    },
-    next: function() {
-        commentsPagination.page++;
-        if (commentsPagination.page > commentsPagination.size) {
-            commentsPagination.page = commentsPagination.size;
-        }
-        commentsPagination.start();
-    },
-    bind: function() {
-        var a = commentsPagination.e.find('a');
-        $.each(a, function (key, link) {
-            if(parseInt($(link).html()) === commentsPagination.page) {
-                $(link).parent().addClass('active');
-                graphPage.filterCommentsBasedOnPageNumber(commentsPagination.page,
-                                                          $('#filterResolvedComments').prop("checked"));  
-            }
-            $(link).click(commentsPagination.click);
-        });
-    },
-    finish: function() {
-        commentsPagination.e.html(commentsPagination.code);
-        commentsPagination.code = '';
-        commentsPagination.bind();
-    },
-    start: function() {
-        if (commentsPagination.size < 5) {
-            commentsPagination.add(1, commentsPagination.size + 1);
-        }
-        else if (commentsPagination.page == 1) {
-            commentsPagination.first();
-            commentsPagination.add(2, 3);
-            commentsPagination.last();
-        }
-        else if (commentsPagination.page == commentsPagination.size) {
-            commentsPagination.first();
-            commentsPagination.add(commentsPagination.size - 1, commentsPagination.size);
-            commentsPagination.last();
-        }
-        else {
-            commentsPagination.first();
-            if(commentsPagination.page > 2) {
-                commentsPagination.add(commentsPagination.page - 1, commentsPagination.page);
-            }
-            commentsPagination.add(commentsPagination.page, commentsPagination.page + 1);
-            if(commentsPagination.page < commentsPagination.size - 1) {
-                commentsPagination.add(commentsPagination.page + 1, commentsPagination.page + 2);
-            }
-            commentsPagination.last();
-        }
-        commentsPagination.finish();
-    },
-    buttons: function(e) {
-        $.each(e.find('a'), function(key, link) {
-            if($(link).html() === "&lt;&lt;") {
-                $(link).click(commentsPagination.prev);
-            }
-            else {
-                $(link).click(commentsPagination.next);
-            }
-        });
-    },
-    create: function(e) {
-        var html = [
-            '<li class="page-item"><a class="page-link">&lt;&lt;</a></li>',
-            '<span style="white-space: nowrap;"></span>',
-            '<li class="page-item"><a class="page-link">&gt;&gt;</a></li>'
-        ];
+// var commentsPagination = {
+//     code: '',
+//     add: function(s, f) {
+//         for (var i = s; i < f; i++) {
+//             commentsPagination.code += '<li class="page-item"><a class="page-link">' + i + '</a></li>';
+//         }
+//     },
+//     last: function() {
+//         commentsPagination.code += '<li class="page-item"><i>..</i></li>';
+//         commentsPagination.code += '<li class="page-item"><a class="page-link">' + commentsPagination.size + '</a></li>';
+//     },
+//     first: function() {
+//         commentsPagination.code += '<li class="page-item"><a class="page-link">1</a></li>';
+//         commentsPagination.code += '<li class="page-item"><i>..</i></li>';
+//     },
+//     click: function() {
+//         commentsPagination.page = parseInt($(this).html());
+//         commentsPagination.start();
+//     },
+//     prev: function() {
+//         commentsPagination.page--;
+//         if (commentsPagination.page < 1) {
+//             commentsPagination.page = 1;
+//         }
+//         commentsPagination.start();
+//     },
+//     next: function() {
+//         commentsPagination.page++;
+//         if (commentsPagination.page > commentsPagination.size) {
+//             commentsPagination.page = commentsPagination.size;
+//         }
+//         commentsPagination.start();
+//     },
+//     bind: function() {
+//         var a = commentsPagination.e.find('a');
+//         $.each(a, function (key, link) {
+//             if(parseInt($(link).html()) === commentsPagination.page) {
+//                 $(link).parent().addClass('active');
+//                 graphPage.filterCommentsBasedOnPageNumber(commentsPagination.page,
+//                                                           $('#filterResolvedComments').prop("checked"));  
+//             }
+//             $(link).click(commentsPagination.click);
+//         });
+//     },
+//     finish: function() {
+//         commentsPagination.e.html(commentsPagination.code);
+//         commentsPagination.code = '';
+//         commentsPagination.bind();
+//     },
+//     start: function() {
+//         if (commentsPagination.size < 5) {
+//             commentsPagination.add(1, commentsPagination.size + 1);
+//         }
+//         else if (commentsPagination.page == 1) {
+//             commentsPagination.first();
+//             commentsPagination.add(2, 3);
+//             commentsPagination.last();
+//         }
+//         else if (commentsPagination.page == commentsPagination.size) {
+//             commentsPagination.first();
+//             commentsPagination.add(commentsPagination.size - 1, commentsPagination.size);
+//             commentsPagination.last();
+//         }
+//         else {
+//             commentsPagination.first();
+//             if(commentsPagination.page > 2) {
+//                 commentsPagination.add(commentsPagination.page - 1, commentsPagination.page);
+//             }
+//             commentsPagination.add(commentsPagination.page, commentsPagination.page + 1);
+//             if(commentsPagination.page < commentsPagination.size - 1) {
+//                 commentsPagination.add(commentsPagination.page + 1, commentsPagination.page + 2);
+//             }
+//             commentsPagination.last();
+//         }
+//         commentsPagination.finish();
+//     },
+//     buttons: function(e) {
+//         $.each(e.find('a'), function(key, link) {
+//             if($(link).html() === "&lt;&lt;") {
+//                 $(link).click(commentsPagination.prev);
+//             }
+//             else {
+//                 $(link).click(commentsPagination.next);
+//             }
+//         });
+//     },
+//     create: function(e) {
+//         var html = [
+//             '<li class="page-item"><a class="page-link">&lt;&lt;</a></li>',
+//             '<span style="white-space: nowrap;"></span>',
+//             '<li class="page-item"><a class="page-link">&gt;&gt;</a></li>'
+//         ];
 
-        e.html(html.join(''));
-        commentsPagination.e = $(e.find('span')[0]);
-        commentsPagination.buttons(e);
-    },
-    init: function(e, length, page) {
-        commentsPagination.perPage = 3;
-        commentsPagination.size = Math.ceil(length / commentsPagination.perPage);
-        commentsPagination.page = page;
-        if(commentsPagination.page > commentsPagination.size) {
-            commentsPagination.page = commentsPagination.size;
-        }
-        commentsPagination.create(e);
-        commentsPagination.start();
-    }
+//         e.html(html.join(''));
+//         commentsPagination.e = $(e.find('span')[0]);
+//         commentsPagination.buttons(e);
+//     },
+//     init: function(e, length, page) {
+//         commentsPagination.perPage = 3;
+//         commentsPagination.size = Math.ceil(length / commentsPagination.perPage);
+//         commentsPagination.page = page;
+//         if(commentsPagination.page > commentsPagination.size) {
+//             commentsPagination.page = commentsPagination.size;
+//         }
+//         commentsPagination.create(e);
+//         commentsPagination.start();
+//     }
 
 
-};
+// };
 
 //variables for cola
 //Different from other layout options, cola can choose options for other variables

@@ -3,6 +3,7 @@ import json
 import applications.graphs.controllers as graphs
 import applications.users.controllers as users
 import applications.comments.controllers as comments
+import applications.discussions.controllers as discussions
 import graphspace.authorization as authorization
 import graphspace.utils as utils
 from django.conf import settings
@@ -16,28 +17,28 @@ from graphspace.wrappers import is_authenticated
 
 
 def upload_graph_page(request):
-	context = RequestContext(request, {})
+    context = RequestContext(request, {})
 
-	if request.method == 'POST':
-		try:
-			graph = _add_graph(request, graph={
-				'name': request.POST.get('name', None),
-				'owner_email': request.POST.get('owner_email', None),
-				'is_public': request.POST.get('is_public', None),
-				'graph_json': json.loads(request.FILES['graph_file'].read()),
-				'style_json': json.loads(request.FILES['style_file'].read()) if 'style_file' in request.FILES else None
-			})
-			context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
-		except Exception as e:
-			context['Error'] = str(e)
+    if request.method == 'POST':
+        try:
+            graph = _add_graph(request, graph={
+                'name': request.POST.get('name', None),
+                'owner_email': request.POST.get('owner_email', None),
+                'is_public': request.POST.get('is_public', None),
+                'graph_json': json.loads(request.FILES['graph_file'].read()),
+                'style_json': json.loads(request.FILES['style_file'].read()) if 'style_file' in request.FILES else None
+            })
+            context['Success'] = settings.URL_PATH + "graphs/" + str(graph['id'])
+        except Exception as e:
+            context['Error'] = str(e)
 
-		return render(request, 'upload_graph/index.html', context)
-	else:
-		return render(request, 'upload_graph/index.html', context)
+        return render(request, 'upload_graph/index.html', context)
+    else:
+        return render(request, 'upload_graph/index.html', context)
 
 
 def graphs_page(request):
-	"""
+    """
 		Wrapper view function for the following pages:
 		/graphs/
 
@@ -57,17 +58,17 @@ def graphs_page(request):
 		Notes
 		------
 	"""
-	if 'GET' == request.method:
-		context = RequestContext(request, {
-			"tags": request.GET.get('tags', '')
-		})
-		return render(request, 'graphs/index.html', context)
-	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+    if 'GET' == request.method:
+        context = RequestContext(request, {
+            "tags": request.GET.get('tags', '')
+        })
+        return render(request, 'graphs/index.html', context)
+    else:
+        raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
 def graph_page_by_name(request, email, graph_name):
-	"""
+    """
 	Redirects to the appropriate graph page. This is only for supporting older URLs.
 
 	Parameters
@@ -77,15 +78,15 @@ def graph_page_by_name(request, email, graph_name):
 	graph_name : string
 		Name of the Graph.
 	"""
-	graph = graphs.get_graph_by_name(request, owner_email=email, name=graph_name)
-	if graph is not None:
-		return redirect('/graphs/' + str(graph.id))
-	else:
-		return redirect('/')
+    graph = graphs.get_graph_by_name(request, owner_email=email, name=graph_name)
+    if graph is not None:
+        return redirect('/graphs/' + str(graph.id))
+    else:
+        return redirect('/')
 
 
 def graph_page(request, graph_id):
-	"""
+    """
 		Wrapper view for the group page. /graphs/<graph_id>
 
 		:param request: HTTP GET Request.
@@ -95,52 +96,53 @@ def graph_page(request, graph_id):
 	graph_id : string
 		Unique ID of the graph. Required
 	"""
-	context = RequestContext(request, {})
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	uid = request.session['uid'] if 'uid' in request.session else None
+    context = RequestContext(request, {})
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    uid = request.session['uid'] if 'uid' in request.session else None
 
-	context.push({"graph": _get_graph(request, graph_id)})
-	context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
-	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
-		'default_layout_id'] else None})
+    context.push({"graph": _get_graph(request, graph_id)})
+    context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
+    context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
+        'default_layout_id'] else None})
 
-	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
-		                                                                                            'default_layout_id'] is not None else None
+    default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
+                                                                                                    'default_layout_id'] is not None else None
 
-	if default_layout is not None and (default_layout.is_shared == 1 or default_layout.owner_email == uid) and request.GET.get(
-			'user_layout') is None and request.GET.get('auto_layout') is None:
-		if '?' in request.get_full_path():
-			return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
-		else:
-			return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
+    if default_layout is not None and (
+            default_layout.is_shared == 1 or default_layout.owner_email == uid) and request.GET.get(
+        'user_layout') is None and request.GET.get('auto_layout') is None:
+        if '?' in request.get_full_path():
+            return redirect(request.get_full_path() + '&user_layout=' + context["default_layout_id"])
+        else:
+            return redirect(request.get_full_path() + '?user_layout=' + context["default_layout_id"])
 
-	context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
-	context['data'] = {k: json.dumps(v, encoding='ascii') for k,v in context['graph']['graph_json']['data'].items()}
-	context['style_json_string'] = json.dumps(context['graph']['style_json'])
-	context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
-		'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
+    context['graph_json_string'] = json.dumps(context['graph']['graph_json'])
+    context['data'] = {k: json.dumps(v, encoding='ascii') for k, v in context['graph']['graph_json']['data'].items()}
+    context['style_json_string'] = json.dumps(context['graph']['style_json'])
+    context['description'] = context['graph']['graph_json']['data']['description'] if 'data' in context[
+        'graph']['graph_json'] and 'description' in context['graph']['graph_json']['data'] else ''
 
-	if 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
-		context['title'] = context['graph']['graph_json']['data']['title']
-	elif 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
-		context['title'] = context['graph']['graph_json']['data']['name']
-	else:
-		context['title'] = ''
+    if 'data' in context['graph']['graph_json'] and 'title' in context['graph']['graph_json']['data']:
+        context['title'] = context['graph']['graph_json']['data']['title']
+    elif 'data' in context['graph']['graph_json'] and 'name' in context['graph']['graph_json']['data']:
+        context['title'] = context['graph']['graph_json']['data']['name']
+    else:
+        context['title'] = ''
 
-	if uid is not None:
-		context.push({
-			"groups": [utils.serializer(group) for group in
-			           users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
-			"shared_groups":
-				_get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
-					'groups']
-		})
+    if uid is not None:
+        context.push({
+            "groups": [utils.serializer(group) for group in
+                       users.get_groups_by_member_id(request, member_id=users.get_user(request, uid).id)],
+            "shared_groups":
+                _get_graph_groups(request, graph_id, query={'limit': None, 'offset': None, 'member_email': uid})[
+                    'groups']
+        })
 
-		shared_group_ids = [group['id'] for group in context["shared_groups"]]
-		for group in context['groups']:
-			group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
+        shared_group_ids = [group['id'] for group in context["shared_groups"]]
+        for group in context['groups']:
+            group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
 
-	return render(request, 'graph/index.html', context)
+    return render(request, 'graph/index.html', context)
 
 
 '''
@@ -151,7 +153,7 @@ Graphs APIs
 @csrf_exempt
 @is_authenticated()
 def graphs_rest_api(request, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/graphs
 		/api/v1/graphs/<graph_id>
@@ -165,11 +167,11 @@ def graphs_rest_api(request, graph_id=None):
 	response : JSON Response
 
 	"""
-	return _graphs_api(request, graph_id=graph_id)
+    return _graphs_api(request, graph_id=graph_id)
 
 
 def graphs_ajax_api(request, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/ajax/graphs
 		/ajax/graphs/<graph_id>
@@ -183,12 +185,12 @@ def graphs_ajax_api(request, graph_id=None):
 	response : JSON Response
 
 	"""
-	return _graphs_api(request, graph_id=graph_id)
+    return _graphs_api(request, graph_id=graph_id)
 
 
 @csrf_exempt
 def graphs_advanced_search_ajax_api(request):
-	"""
+    """
 	Handles any request sent to following urls:
 		/ajax/graphs
 
@@ -201,51 +203,51 @@ def graphs_advanced_search_ajax_api(request):
 	response : JSON Response
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "POST":
-			querydict = QueryDict('', mutable=True)
-			querydict.update(request.GET)
-			queryparams = querydict
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST":
+            querydict = QueryDict('', mutable=True)
+            querydict.update(request.GET)
+            queryparams = querydict
 
-			# Validate search graphs API request
-			user_role = authorization.user_role(request)
-			if user_role == authorization.UserRole.LOGGED_IN:
-				if queryparams.get('owner_email', None) is None \
-						and queryparams.get('member_email', None) is None \
-						and queryparams.get('is_public', None) != '1':
-					raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
-				if queryparams.get('is_public', None) != '1':
-					if get_request_user(request) != queryparams.get('member_email', None) \
-							and get_request_user(request) != queryparams.get('owner_email', None):
-						raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
-						                 args=queryparams.get('owner_email', None))
+            # Validate search graphs API request
+            user_role = authorization.user_role(request)
+            if user_role == authorization.UserRole.LOGGED_IN:
+                if queryparams.get('owner_email', None) is None \
+                        and queryparams.get('member_email', None) is None \
+                        and queryparams.get('is_public', None) != '1':
+                    raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
+                if queryparams.get('is_public', None) != '1':
+                    if get_request_user(request) != queryparams.get('member_email', None) \
+                            and get_request_user(request) != queryparams.get('owner_email', None):
+                        raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+                                         args=queryparams.get('owner_email', None))
 
-			total, graphs_list = graphs.search_graphs1(request,
-			                                           owner_email=queryparams.get('owner_email', None),
-			                                           member_email=queryparams.get('member_email', None),
-			                                           names=list(filter(None, queryparams.getlist('names[]', []))),
-			                                           is_public=queryparams.get('is_public', None),
-			                                           nodes=list(filter(None, queryparams.getlist('nodes[]', []))),
-			                                           edges=list(filter(None, queryparams.getlist('edges[]', []))),
-			                                           tags=list(filter(None, queryparams.getlist('tags[]', []))),
-			                                           limit=queryparams.get('limit', 20),
-			                                           offset=queryparams.get('offset', 0),
-			                                           order=queryparams.get('order', 'desc'),
-			                                           sort=queryparams.get('sort', 'name'),
-			                                           query=json.loads(request.body))
+            total, graphs_list = graphs.search_graphs1(request,
+                                                       owner_email=queryparams.get('owner_email', None),
+                                                       member_email=queryparams.get('member_email', None),
+                                                       names=list(filter(None, queryparams.getlist('names[]', []))),
+                                                       is_public=queryparams.get('is_public', None),
+                                                       nodes=list(filter(None, queryparams.getlist('nodes[]', []))),
+                                                       edges=list(filter(None, queryparams.getlist('edges[]', []))),
+                                                       tags=list(filter(None, queryparams.getlist('tags[]', []))),
+                                                       limit=queryparams.get('limit', 20),
+                                                       offset=queryparams.get('offset', 0),
+                                                       order=queryparams.get('order', 'desc'),
+                                                       sort=queryparams.get('sort', 'name'),
+                                                       query=json.loads(request.body))
 
-			return HttpResponse(json.dumps({
-				'total': total,
-				'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
-	else:
-		raise BadRequest(request)
+            return HttpResponse(json.dumps({
+                'total': total,
+                'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _graphs_api(request, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/graphs
 		/graphs/<graph_id>
@@ -264,32 +266,32 @@ def _graphs_api(request, graph_id=None):
 	BadRequest: If HTTP_ACCEPT header is not set to application/json.
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and graph_id is None:
-			return HttpResponse(json.dumps(_get_graphs(request, query=request.GET)), content_type="application/json")
-		elif request.method == "GET" and graph_id is not None:
-			return HttpResponse(json.dumps(_get_graph(request, graph_id)), content_type="application/json",
-			                    status=200)
-		elif request.method == "POST" and graph_id is None:
-			return HttpResponse(json.dumps(_add_graph(request, graph=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		elif request.method == "PUT" and graph_id is not None:
-			return HttpResponse(json.dumps(_update_graph(request, graph_id, graph=json.loads(request.body))),
-			                    content_type="application/json",
-			                    status=200)
-		elif request.method == "DELETE" and graph_id is not None:
-			_delete_graph(request, graph_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted graph with id=%s" % graph_id
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and graph_id is None:
+            return HttpResponse(json.dumps(_get_graphs(request, query=request.GET)), content_type="application/json")
+        elif request.method == "GET" and graph_id is not None:
+            return HttpResponse(json.dumps(_get_graph(request, graph_id)), content_type="application/json",
+                                status=200)
+        elif request.method == "POST" and graph_id is None:
+            return HttpResponse(json.dumps(_add_graph(request, graph=json.loads(request.body))),
+                                content_type="application/json", status=201)
+        elif request.method == "PUT" and graph_id is not None:
+            return HttpResponse(json.dumps(_update_graph(request, graph_id, graph=json.loads(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and graph_id is not None:
+            _delete_graph(request, graph_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted graph with id=%s" % graph_id
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_graphs(request, query=dict()):
-	"""
+    """
 	Query Parameters
 	----------
 	owner_email : string
@@ -343,44 +345,44 @@ def _get_graphs(request, query=dict()):
 	------
 	"""
 
-	querydict = QueryDict('', mutable=True)
-	querydict.update(query)
-	query = querydict
+    querydict = QueryDict('', mutable=True)
+    querydict.update(query)
+    query = querydict
 
-	# Validate search graphs API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if query.get('owner_email', None) is None \
-				and query.get('member_email', None) is None \
-				and query.get('is_public', None) != '1':
-			raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
-		if query.get('is_public', None) != '1':
-			if get_request_user(request) != query.get('member_email', None) \
-					and get_request_user(request) != query.get('owner_email', None):
-				raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
-				                 args=query.get('owner_email', None))
+    # Validate search graphs API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if query.get('owner_email', None) is None \
+                and query.get('member_email', None) is None \
+                and query.get('is_public', None) != '1':
+            raise BadRequest(request, error_code=ErrorCodes.Validation.IsPublicNotSet)
+        if query.get('is_public', None) != '1':
+            if get_request_user(request) != query.get('member_email', None) \
+                    and get_request_user(request) != query.get('owner_email', None):
+                raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
+                                 args=query.get('owner_email', None))
 
-	total, graphs_list = graphs.search_graphs(request,
-	                                          owner_email=query.get('owner_email', None),
-	                                          member_email=query.get('member_email', None),
-	                                          names=list(filter(None, query.getlist('names[]', []))),
-	                                          is_public=query.get('is_public', None),
-	                                          nodes=list(filter(None, query.getlist('nodes[]', []))),
-	                                          edges=list(filter(None, query.getlist('edges[]', []))),
-	                                          tags=list(filter(None, query.getlist('tags[]', []))),
-	                                          limit=query.get('limit', 20),
-	                                          offset=query.get('offset', 0),
-	                                          order=query.get('order', 'desc'),
-	                                          sort=query.get('sort', 'name'))
+    total, graphs_list = graphs.search_graphs(request,
+                                              owner_email=query.get('owner_email', None),
+                                              member_email=query.get('member_email', None),
+                                              names=list(filter(None, query.getlist('names[]', []))),
+                                              is_public=query.get('is_public', None),
+                                              nodes=list(filter(None, query.getlist('nodes[]', []))),
+                                              edges=list(filter(None, query.getlist('edges[]', []))),
+                                              tags=list(filter(None, query.getlist('tags[]', []))),
+                                              limit=query.get('limit', 20),
+                                              offset=query.get('offset', 0),
+                                              order=query.get('order', 'desc'),
+                                              sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
-	}
+    return {
+        'total': total,
+        'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
+    }
 
 
 def _get_graph(request, graph_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -400,13 +402,13 @@ def _get_graph(request, graph_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	return utils.serializer(graphs.get_graph_by_id(request, graph_id))
+    return utils.serializer(graphs.get_graph_by_id(request, graph_id))
 
 
 def _add_graph(request, graph={}):
-	"""
+    """
 	Graph Parameters
 	----------
 	name : string
@@ -438,28 +440,28 @@ def _add_graph(request, graph={}):
 
 	"""
 
-	# Validate add graph API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != graph.get('owner_email', None):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
-			                 args=graph.get('owner_email', None))
-	elif user_role == authorization.UserRole.LOGGED_OFF and graph.get('owner_email', None) is not None:
-		raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
-		                 args=graph.get('owner_email', None))
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != graph.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
+                             args=graph.get('owner_email', None))
+    elif user_role == authorization.UserRole.LOGGED_OFF and graph.get('owner_email', None) is not None:
+        raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
+                         args=graph.get('owner_email', None))
 
-	return utils.serializer(graphs.add_graph(request,
-	                                         name=graph.get('name', None),
-	                                         is_public=graph.get('is_public', None),
-	                                         graph_json=graph.get('graph_json', None),
-	                                         style_json=graph.get('style_json', None),
-	                                         tags=graph.get('tags', None),
-	                                         owner_email=graph.get('owner_email', None)))
+    return utils.serializer(graphs.add_graph(request,
+                                             name=graph.get('name', None),
+                                             is_public=graph.get('is_public', None),
+                                             graph_json=graph.get('graph_json', None),
+                                             style_json=graph.get('style_json', None),
+                                             tags=graph.get('tags', None),
+                                             owner_email=graph.get('owner_email', None)))
 
 
 @is_authenticated()
 def _update_graph(request, graph_id, graph={}):
-	"""
+    """
 	Graph Parameters
 	----------
 	name : string
@@ -491,26 +493,26 @@ def _update_graph(request, graph_id, graph={}):
 	It will update the owner_email only if user has admin access otherwise user cannot update the owner email.
 
 	"""
-	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
-	user_role = authorization.user_role(request)
+    authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+    user_role = authorization.user_role(request)
 
-	if 'update_legend_format' in graph:
-	        return utils.serializer(graphs.update_graph_with_html_legend(request, graph_id=graph_id, param=graph))
+    if 'update_legend_format' in graph:
+        return utils.serializer(graphs.update_graph_with_html_legend(request, graph_id=graph_id, param=graph))
 
-	return utils.serializer(graphs.update_graph(request,
-	                                            graph_id=graph_id,
-	                                            name=graph.get('name', None),
-	                                            is_public=graph.get('is_public', None),
-	                                            graph_json=graph.get('graph_json', None),
-	                                            style_json=graph.get('style_json', None),
-	                                            owner_email=graph.get('owner_email',
-	                                                                  None) if user_role == authorization.UserRole.ADMIN else None,
-	                                            default_layout_id=graph.get('default_layout_id', None)))
+    return utils.serializer(graphs.update_graph(request,
+                                                graph_id=graph_id,
+                                                name=graph.get('name', None),
+                                                is_public=graph.get('is_public', None),
+                                                graph_json=graph.get('graph_json', None),
+                                                style_json=graph.get('style_json', None),
+                                                owner_email=graph.get('owner_email',
+                                                                      None) if user_role == authorization.UserRole.ADMIN else None,
+                                                default_layout_id=graph.get('default_layout_id', None)))
 
 
 @is_authenticated()
 def _delete_graph(request, graph_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -530,8 +532,8 @@ def _delete_graph(request, graph_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_DELETE', graph_id=graph_id)
-	graphs.delete_graph_by_id(request, graph_id)
+    authorization.validate(request, permission='GRAPH_DELETE', graph_id=graph_id)
+    graphs.delete_graph_by_id(request, graph_id)
 
 
 '''
@@ -542,7 +544,7 @@ Graph Groups APIs.
 @csrf_exempt
 @is_authenticated()
 def graph_groups_rest_api(request, graph_id, group_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/graphs/<graph_id>/groups
 		/api/v1/graphs/<graph_id>/groups/<group_id>
@@ -556,11 +558,11 @@ def graph_groups_rest_api(request, graph_id, group_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_groups_api(request, graph_id, group_id=group_id)
+    return _graph_groups_api(request, graph_id, group_id=group_id)
 
 
 def graph_groups_ajax_api(request, graph_id, group_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/graphs/<graph_id>/groups
 		/javascript/graphs/<graph_id>/groups/<group_id>
@@ -574,12 +576,12 @@ def graph_groups_ajax_api(request, graph_id, group_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_groups_api(request, graph_id, group_id=group_id)
+    return _graph_groups_api(request, graph_id, group_id=group_id)
 
 
 @is_authenticated()
 def _graph_groups_api(request, graph_id, group_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to graphs/<graph_id>/groups or graphs/<graph_id>/groups/<group_id>.
 
 	Parameters
@@ -598,30 +600,30 @@ def _graph_groups_api(request, graph_id, group_id=None):
 	BadRequest: If graph_id is missing.
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if graph_id is None:
-			raise BadRequest(request, error_code=ErrorCodes.Validation.GraphIDMissing)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if graph_id is None:
+            raise BadRequest(request, error_code=ErrorCodes.Validation.GraphIDMissing)
 
-		if request.method == "GET" and group_id is None:
-			return HttpResponse(json.dumps(_get_graph_groups(request, graph_id, query=request.GET)),
-			                    content_type="application/json")
-		elif request.method == "POST" and group_id is None:
-			return HttpResponse(json.dumps(_add_graph_group(request, graph_id, group=json.loads(request.body))),
-			                    content_type="application/json",
-			                    status=201)
-		elif request.method == "DELETE" and group_id is not None:
-			_delete_graph_group(request, graph_id, group_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+        if request.method == "GET" and group_id is None:
+            return HttpResponse(json.dumps(_get_graph_groups(request, graph_id, query=request.GET)),
+                                content_type="application/json")
+        elif request.method == "POST" and group_id is None:
+            return HttpResponse(json.dumps(_add_graph_group(request, graph_id, group=json.loads(request.body))),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "DELETE" and group_id is not None:
+            _delete_graph_group(request, graph_id, group_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _add_graph_group(request, graph_id, group={}):
-	"""
+    """
 	Body Parameters
 	----------
 	group_id : string
@@ -646,16 +648,16 @@ def _add_graph_group(request, graph_id, group={}):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
-	authorization.validate(request, permission='GROUP_SHARE', group_id=group.get('group_id', None))
+    authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+    authorization.validate(request, permission='GROUP_SHARE', group_id=group.get('group_id', None))
 
-	return utils.serializer(users.add_group_graph(request,
-	                                              graph_id=graph_id,
-	                                              group_id=group.get('group_id', None)))
+    return utils.serializer(users.add_group_graph(request,
+                                                  graph_id=graph_id,
+                                                  group_id=group.get('group_id', None)))
 
 
 def _delete_graph_group(request, graph_id, group_id):
-	"""
+    """
 	Parameters
 	----------
 	request : object
@@ -676,16 +678,16 @@ def _delete_graph_group(request, graph_id, group_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
-	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+    authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+    authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
 
-	users.delete_group_graph(request,
-	                         group_id=group_id,
-	                         graph_id=graph_id)
+    users.delete_group_graph(request,
+                             group_id=group_id,
+                             graph_id=graph_id)
 
 
 def _get_graph_groups(request, graph_id, query={}):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -729,32 +731,32 @@ def _get_graph_groups(request, graph_id, query={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	# Validate search graph groups API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if query.get('is_public', None) is not True:
-			if get_request_user(request) != query.get('member_email', None) \
-					and get_request_user(request) != query.get('owner_email', None):
-				raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGroupAccess,
-				                 args=get_request_user(request))
+    # Validate search graph groups API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if query.get('is_public', None) is not True:
+            if get_request_user(request) != query.get('member_email', None) \
+                    and get_request_user(request) != query.get('owner_email', None):
+                raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGroupAccess,
+                                 args=get_request_user(request))
 
-	total, groups = users.search_groups(request,
-	                                    graph_ids=[graph_id],
-	                                    owner_email=query.get('owner_email', None),
-	                                    member_email=query.get('member_email', None),
-	                                    name=query.get('name', None),
-	                                    description=query.get('description', None),
-	                                    limit=query.get('limit', 20),
-	                                    offset=query.get('offset', 0),
-	                                    order=query.get('order', 'desc'),
-	                                    sort=query.get('sort', 'name'))
+    total, groups = users.search_groups(request,
+                                        graph_ids=[graph_id],
+                                        owner_email=query.get('owner_email', None),
+                                        member_email=query.get('member_email', None),
+                                        name=query.get('name', None),
+                                        description=query.get('description', None),
+                                        limit=query.get('limit', 20),
+                                        offset=query.get('offset', 0),
+                                        order=query.get('order', 'desc'),
+                                        sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'groups': [utils.serializer(group) for group in groups]
-	}
+    return {
+        'total': total,
+        'groups': [utils.serializer(group) for group in groups]
+    }
 
 
 '''
@@ -765,7 +767,7 @@ Graph Layouts APIs
 @csrf_exempt
 @is_authenticated()
 def graph_layouts_rest_api(request, graph_id, layout_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/graphs/<graph_id>/layouts
 		/api/v1/graphs/<graph_id>/layouts/<layout_id>
@@ -779,11 +781,11 @@ def graph_layouts_rest_api(request, graph_id, layout_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_layouts_api(request, graph_id, layout_id=layout_id)
+    return _graph_layouts_api(request, graph_id, layout_id=layout_id)
 
 
 def graph_layouts_ajax_api(request, graph_id, layout_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/graphs/<graph_id>/layouts
 		/javascript/graphs/<graph_id>/layouts/<layout_id>
@@ -797,11 +799,11 @@ def graph_layouts_ajax_api(request, graph_id, layout_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_layouts_api(request, graph_id, layout_id=layout_id)
+    return _graph_layouts_api(request, graph_id, layout_id=layout_id)
 
 
 def _graph_layouts_api(request, graph_id, layout_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to /layouts or /layouts/<layout_id>.
 
 	Parameters
@@ -816,35 +818,35 @@ def _graph_layouts_api(request, graph_id, layout_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and layout_id is None:
-			return HttpResponse(json.dumps(_get_layouts(request, graph_id, query=request.GET)),
-			                    content_type="application/json")
-		elif request.method == "GET" and layout_id is not None:
-			return HttpResponse(json.dumps(_get_layout(request, graph_id, layout_id)),
-			                    content_type="application/json")
-		elif request.method == "POST" and layout_id is None:
-			return HttpResponse(json.dumps(_add_layout(request, graph_id, layout=json.loads(request.body))),
-			                    content_type="application/json",
-			                    status=201)
-		elif request.method == "PUT" and layout_id is not None:
-			return HttpResponse(
-				json.dumps(_update_layout(request, graph_id, layout_id, layout=json.loads(request.body))),
-				content_type="application/json",
-				status=200)
-		elif request.method == "DELETE" and layout_id is not None:
-			_delete_layout(request, graph_id, layout_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted layout with id=%s" % (layout_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and layout_id is None:
+            return HttpResponse(json.dumps(_get_layouts(request, graph_id, query=request.GET)),
+                                content_type="application/json")
+        elif request.method == "GET" and layout_id is not None:
+            return HttpResponse(json.dumps(_get_layout(request, graph_id, layout_id)),
+                                content_type="application/json")
+        elif request.method == "POST" and layout_id is None:
+            return HttpResponse(json.dumps(_add_layout(request, graph_id, layout=json.loads(request.body))),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "PUT" and layout_id is not None:
+            return HttpResponse(
+                json.dumps(_update_layout(request, graph_id, layout_id, layout=json.loads(request.body))),
+                content_type="application/json",
+                status=200)
+        elif request.method == "DELETE" and layout_id is not None:
+            _delete_layout(request, graph_id, layout_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted layout with id=%s" % (layout_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_layouts(request, graph_id, query=dict()):
-	"""
+    """
 	Query Parameters
 	----------
 	owner_email : string
@@ -880,37 +882,38 @@ def _get_layouts(request, graph_id, query=dict()):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	querydict = QueryDict('', mutable=True)
-	querydict.update(query)
-	query = querydict
+    querydict = QueryDict('', mutable=True)
+    querydict.update(query)
+    query = querydict
 
-	# Validate search layouts API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != query.get('owner_email', None) \
-				and (query.get('is_shared', None) is None or int(query.get('is_shared', 0)) != 1):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedLayoutAccess, args=get_request_user(request))
+    # Validate search layouts API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != query.get('owner_email', None) \
+                and (query.get('is_shared', None) is None or int(query.get('is_shared', 0)) != 1):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedLayoutAccess,
+                             args=get_request_user(request))
 
-	total, layouts = graphs.search_layouts(request,
-	                                       owner_email=query.get('owner_email', None),
-	                                       name=query.get('name', None),
-	                                       is_shared=query.get('is_shared', None),
-	                                       graph_id=graph_id,
-	                                       limit=query.get('limit', 20),
-	                                       offset=query.get('offset', 0),
-	                                       order=query.get('order', 'desc'),
-	                                       sort=query.get('sort', 'name'))
+    total, layouts = graphs.search_layouts(request,
+                                           owner_email=query.get('owner_email', None),
+                                           name=query.get('name', None),
+                                           is_shared=query.get('is_shared', None),
+                                           graph_id=graph_id,
+                                           limit=query.get('limit', 20),
+                                           offset=query.get('offset', 0),
+                                           order=query.get('order', 'desc'),
+                                           sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'layouts': [utils.serializer(layout) for layout in layouts]
-	}
+    return {
+        'total': total,
+        'layouts': [utils.serializer(layout) for layout in layouts]
+    }
 
 
 def _get_layout(request, graph_id, layout_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -930,14 +933,14 @@ def _get_layout(request, graph_id, layout_id):
 	------
 
 	"""
-	authorization.validate(request, permission='LAYOUT_READ', layout_id=layout_id)
+    authorization.validate(request, permission='LAYOUT_READ', layout_id=layout_id)
 
-	return utils.serializer(graphs.get_layout_by_id(request, layout_id))
+    return utils.serializer(graphs.get_layout_by_id(request, layout_id))
 
 
 @is_authenticated()
 def _add_layout(request, graph_id, layout={}):
-	"""
+    """
 	Layout Parameters
 	----------
 	name : string
@@ -967,28 +970,28 @@ def _add_layout(request, graph_id, layout={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	# Validate add graph API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != layout.get('owner_email', None):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateLayoutForOtherUser,
-			                 args=layout.get('owner_email', None))
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != layout.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateLayoutForOtherUser,
+                             args=layout.get('owner_email', None))
 
-	return utils.serializer(graphs.add_layout(request,
-	                                          owner_email=layout.get('owner_email', None),
-	                                          name=layout.get('name', None),
-	                                          graph_id=layout.get('graph_id', None),
-	                                          is_shared=layout.get('is_shared', None),
-	                                          positions_json=layout.get('positions_json', None),
-	                                          style_json=layout.get('style_json', None),
-	                                          ))
+    return utils.serializer(graphs.add_layout(request,
+                                              owner_email=layout.get('owner_email', None),
+                                              name=layout.get('name', None),
+                                              graph_id=layout.get('graph_id', None),
+                                              is_shared=layout.get('is_shared', None),
+                                              positions_json=layout.get('positions_json', None),
+                                              style_json=layout.get('style_json', None),
+                                              ))
 
 
 @is_authenticated()
 def _update_layout(request, graph_id, layout_id, layout={}):
-	"""
+    """
 	Layout Parameters
 	----------
 	name : string
@@ -1021,23 +1024,23 @@ def _update_layout(request, graph_id, layout_id, layout={}):
 	It will update the owner_email only if user has admin access otherwise user cannot update the owner email.
 
 	"""
-	authorization.validate(request, permission='LAYOUT_UPDATE', layout_id=layout_id)
-	user_role = authorization.user_role(request)
+    authorization.validate(request, permission='LAYOUT_UPDATE', layout_id=layout_id)
+    user_role = authorization.user_role(request)
 
-	return utils.serializer(graphs.update_layout(request, layout_id,
-	                                             owner_email=layout.get('owner_email',
-	                                                                    None) if user_role == authorization.UserRole.ADMIN else None,
-	                                             name=layout.get('name', None),
-	                                             graph_id=layout.get('graph_id', None),
-	                                             is_shared=layout.get('is_shared', None),
-	                                             positions_json=layout.get('positions_json', None),
-	                                             style_json=layout.get('style_json', None),
-	                                             ))
+    return utils.serializer(graphs.update_layout(request, layout_id,
+                                                 owner_email=layout.get('owner_email',
+                                                                        None) if user_role == authorization.UserRole.ADMIN else None,
+                                                 name=layout.get('name', None),
+                                                 graph_id=layout.get('graph_id', None),
+                                                 is_shared=layout.get('is_shared', None),
+                                                 positions_json=layout.get('positions_json', None),
+                                                 style_json=layout.get('style_json', None),
+                                                 ))
 
 
 @is_authenticated()
 def _delete_layout(request, graph_id, layout_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1057,15 +1060,15 @@ def _delete_layout(request, graph_id, layout_id):
 	------
 
 	"""
-	authorization.validate(request, permission='LAYOUT_DELETE', layout_id=layout_id)
+    authorization.validate(request, permission='LAYOUT_DELETE', layout_id=layout_id)
 
-	graphs.delete_layout_by_id(request, layout_id)
+    graphs.delete_layout_by_id(request, layout_id)
 
 
 @csrf_exempt
 @is_authenticated()
 def graph_nodes_rest_api(request, graph_id, node_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/graphs/<graph_id>/nodes
 		/api/v1/graphs/<graph_id>/nodes/<node_id>
@@ -1079,11 +1082,11 @@ def graph_nodes_rest_api(request, graph_id, node_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_nodes_api(request, graph_id, node_id=node_id)
+    return _graph_nodes_api(request, graph_id, node_id=node_id)
 
 
 def graph_nodes_ajax_api(request, graph_id, node_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/graphs/<graph_id>/nodes
 		/javascript/graphs/<graph_id>/nodes/<node_id>
@@ -1097,11 +1100,11 @@ def graph_nodes_ajax_api(request, graph_id, node_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_nodes_api(request, graph_id, node_id=node_id)
+    return _graph_nodes_api(request, graph_id, node_id=node_id)
 
 
 def _graph_nodes_api(request, graph_id, node_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to nodes/ or nodes/<node_id>.
 
 	Parameters
@@ -1116,30 +1119,30 @@ def _graph_nodes_api(request, graph_id, node_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and node_id is None:
-			return HttpResponse(json.dumps(_get_nodes(request, graph_id, query=request.GET)),
-			                    content_type="application/json")
-		elif request.method == "GET" and node_id is not None:
-			return HttpResponse(json.dumps(_get_node(request, graph_id, node_id)),
-			                    content_type="application/json")
-		elif request.method == "POST" and node_id is None:
-			return HttpResponse(json.dumps(_add_node(request, graph_id, node=json.loads(request.body))),
-			                    content_type="application/json",
-			                    status=201)
-		elif request.method == "DELETE" and node_id is not None:
-			_delete_node(request, graph_id, node_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted node with id=%s" % (node_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and node_id is None:
+            return HttpResponse(json.dumps(_get_nodes(request, graph_id, query=request.GET)),
+                                content_type="application/json")
+        elif request.method == "GET" and node_id is not None:
+            return HttpResponse(json.dumps(_get_node(request, graph_id, node_id)),
+                                content_type="application/json")
+        elif request.method == "POST" and node_id is None:
+            return HttpResponse(json.dumps(_add_node(request, graph_id, node=json.loads(request.body))),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "DELETE" and node_id is not None:
+            _delete_node(request, graph_id, node_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted node with id=%s" % (node_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_nodes(request, graph_id, query={}):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -1179,29 +1182,29 @@ def _get_nodes(request, graph_id, query={}):
 
 	"""
 
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	querydict = QueryDict('', mutable=True)
-	querydict.update(query)
-	query = querydict
+    querydict = QueryDict('', mutable=True)
+    querydict.update(query)
+    query = querydict
 
-	total, nodes_list = graphs.search_nodes(request,
-	                                        graph_id=graph_id,
-	                                        names=query.getlist('names[]', None),
-	                                        labels=query.getlist('labels[]', None),
-	                                        limit=query.get('limit', 20),
-	                                        offset=query.get('offset', 0),
-	                                        order=query.get('order', 'desc'),
-	                                        sort=query.get('sort', 'name'))
+    total, nodes_list = graphs.search_nodes(request,
+                                            graph_id=graph_id,
+                                            names=query.getlist('names[]', None),
+                                            labels=query.getlist('labels[]', None),
+                                            limit=query.get('limit', 20),
+                                            offset=query.get('offset', 0),
+                                            order=query.get('order', 'desc'),
+                                            sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'nodes': [utils.serializer(node) for node in nodes_list]
-	}
+    return {
+        'total': total,
+        'nodes': [utils.serializer(node) for node in nodes_list]
+    }
 
 
 def _get_node(request, graph_id, node_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1221,13 +1224,13 @@ def _get_node(request, graph_id, node_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	return utils.serializer(graphs.get_node_by_id(request, node_id))
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    return utils.serializer(graphs.get_node_by_id(request, node_id))
 
 
 @is_authenticated()
 def _add_node(request, graph_id, node={}):
-	"""
+    """
 	Node Parameters
 	----------
 	name : string
@@ -1257,17 +1260,17 @@ def _add_node(request, graph_id, node={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
-	return utils.serializer(graphs.add_node(request,
-	                                        name=node.get('name', None),
-	                                        label=node.get('label', None),
-	                                        graph_id=graph_id))
+    return utils.serializer(graphs.add_node(request,
+                                            name=node.get('name', None),
+                                            label=node.get('label', None),
+                                            graph_id=graph_id))
 
 
 @is_authenticated()
 def _delete_node(request, graph_id, node_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1287,15 +1290,15 @@ def _delete_node(request, graph_id, node_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
-	graphs.delete_node_by_id(request, node_id)
+    graphs.delete_node_by_id(request, node_id)
 
 
 @csrf_exempt
 @is_authenticated()
 def graph_edges_rest_api(request, graph_id, edge_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/graphs/<graph_id>/edges
 		/api/v1/graphs/<graph_id>/edges/<edge_id>
@@ -1309,11 +1312,11 @@ def graph_edges_rest_api(request, graph_id, edge_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_edges_api(request, graph_id, edge_id=edge_id)
+    return _graph_edges_api(request, graph_id, edge_id=edge_id)
 
 
 def graph_edges_ajax_api(request, graph_id, edge_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/graphs/<graph_id>/edges
 		/javascript/graphs/<graph_id>/edges/<edge_id>
@@ -1327,11 +1330,11 @@ def graph_edges_ajax_api(request, graph_id, edge_id=None):
 	response : JSON Response
 
 	"""
-	return _graph_edges_api(request, graph_id, edge_id=edge_id)
+    return _graph_edges_api(request, graph_id, edge_id=edge_id)
 
 
 def _graph_edges_api(request, graph_id, edge_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to edges/ or edges/<edge_id>.
 
 	Parameters
@@ -1344,30 +1347,30 @@ def _graph_edges_api(request, graph_id, edge_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and edge_id is None:
-			return HttpResponse(json.dumps(_get_edges(request, graph_id, query=request.GET)),
-			                    content_type="application/json")
-		elif request.method == "GET" and edge_id is not None:
-			return HttpResponse(json.dumps(_get_edge(request, graph_id, edge_id)),
-			                    content_type="application/json")
-		elif request.method == "POST" and edge_id is None:
-			return HttpResponse(json.dumps(_add_edge(request, graph_id, edge=json.loads(request.body))),
-			                    content_type="application/json",
-			                    status=201)
-		elif request.method == "DELETE" and edge_id is not None:
-			_delete_edge(request, graph_id, edge_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted node with id=%s" % (edge_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and edge_id is None:
+            return HttpResponse(json.dumps(_get_edges(request, graph_id, query=request.GET)),
+                                content_type="application/json")
+        elif request.method == "GET" and edge_id is not None:
+            return HttpResponse(json.dumps(_get_edge(request, graph_id, edge_id)),
+                                content_type="application/json")
+        elif request.method == "POST" and edge_id is None:
+            return HttpResponse(json.dumps(_add_edge(request, graph_id, edge=json.loads(request.body))),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "DELETE" and edge_id is not None:
+            _delete_edge(request, graph_id, edge_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted node with id=%s" % (edge_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_edges(request, graph_id, query={}):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -1406,29 +1409,29 @@ def _get_edges(request, graph_id, query={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	querydict = QueryDict('', mutable=True)
-	querydict.update(query)
-	query = querydict
+    querydict = QueryDict('', mutable=True)
+    querydict.update(query)
+    query = querydict
 
-	total, edges_list = graphs.search_edges(request,
-	                                        graph_id=graph_id,
-	                                        names=query.getlist('names[]', None),
-	                                        edges=query.getlist('edges[]', None),
-	                                        limit=query.get('limit', 20),
-	                                        offset=query.get('offset', 0),
-	                                        order=query.get('order', 'desc'),
-	                                        sort=query.get('sort', 'name'))
+    total, edges_list = graphs.search_edges(request,
+                                            graph_id=graph_id,
+                                            names=query.getlist('names[]', None),
+                                            edges=query.getlist('edges[]', None),
+                                            limit=query.get('limit', 20),
+                                            offset=query.get('offset', 0),
+                                            order=query.get('order', 'desc'),
+                                            sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'edges': [utils.serializer(edge) for edge in edges_list]
-	}
+    return {
+        'total': total,
+        'edges': [utils.serializer(edge) for edge in edges_list]
+    }
 
 
 def _get_edge(request, graph_id, edge_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1448,14 +1451,14 @@ def _get_edge(request, graph_id, edge_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	return utils.serializer(graphs.get_edge_by_id(request, edge_id))
+    return utils.serializer(graphs.get_edge_by_id(request, edge_id))
 
 
 @is_authenticated()
 def _add_edge(request, graph_id, edge={}):
-	"""
+    """
 	Edge Parameters
 	----------
 	name : string
@@ -1490,19 +1493,19 @@ def _add_edge(request, graph_id, edge={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
-	return utils.serializer(graphs.add_edge(request,
-	                                        name=edge.get('name', None),
-	                                        head_node_id=edge.get('head_node_id', None),
-	                                        tail_node_id=edge.get('tail_node_id', None),
-	                                        is_directed=edge.get('is_directed', 0),
-	                                        graph_id=graph_id))
+    return utils.serializer(graphs.add_edge(request,
+                                            name=edge.get('name', None),
+                                            head_node_id=edge.get('head_node_id', None),
+                                            tail_node_id=edge.get('tail_node_id', None),
+                                            is_directed=edge.get('is_directed', 0),
+                                            graph_id=graph_id))
 
 
 @is_authenticated()
 def _delete_edge(request, graph_id, edge_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1522,13 +1525,13 @@ def _delete_edge(request, graph_id, edge_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
+    authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 
-	graphs.delete_edge_by_id(request, edge_id)
+    graphs.delete_edge_by_id(request, edge_id)
 
 
 def view_comments(request, graph_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -1551,35 +1554,35 @@ def view_comments(request, graph_id):
 
 	"""
 
-	context = RequestContext(request, {})
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	if 'GET' == request.method:
-		try:
-			comments_list = _get_comments_by_graph_id(request, graph_id)
-			context['Success'] = 'Displaying the list of comments under this graph'
-			comments_array = []
-			for comment in comments_list['comments']:
-				comments_array.append({
-					'id': comment['id'],
-					'owner_email': comment['owner_email'] if comment['owner_email'] != None else 'Anonymous',
-					'message': comment['message']
-					})
-			context['comments'] = comments_array
-			context['graph_id'] = graph_id
-		except Exception as e:
-			context['Error'] = str(e)
-		return render(request, 'comments/index.html', context)
-	else:
-		raise MethodNotAllowed(request)
+    context = RequestContext(request, {})
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    if 'GET' == request.method:
+        try:
+            comments_list = _get_comments_by_graph_id(request, graph_id)
+            context['Success'] = 'Displaying the list of comments under this graph'
+            comments_array = []
+            for comment in comments_list['comments']:
+                comments_array.append({
+                    'id': comment['id'],
+                    'owner_email': comment['owner_email'] if comment['owner_email'] != None else 'Anonymous',
+                    'message': comment['message']
+                })
+            context['comments'] = comments_array
+            context['graph_id'] = graph_id
+        except Exception as e:
+            context['Error'] = str(e)
+        return render(request, 'comments/index.html', context)
+    else:
+        raise MethodNotAllowed(request)
 
 
 def _add_comment(request, comment={}):
-	"""
+    """
 
 	Comment Parameters
 	----------
-	message: string
-		Comment message. Required
+	text: string
+		Comment text. Required
 	edge_names : string
 		List of names of edges associated with the comment. Required
 	node_names : string
@@ -1592,8 +1595,8 @@ def _add_comment(request, comment={}):
 		Unique ID of the graph for the comment. Required
 	parent_comment_id: Integer
 		Required if the comment is a reply to a parent comment.
-	is_resolved: Integer
-		Indicates if the comment is resolved or not. Required
+	is_closed: Integer
+		Indicates if the comment is closed or not. Required
 
 
 
@@ -1619,64 +1622,64 @@ def _add_comment(request, comment={}):
 
 	"""
 
-	edge_names = comment.get('edge_names', None)
-	node_names = comment.get('node_names', None)
-	graph_id   = comment.get('graph_id', None)
-	owner_email = comment.get('owner_email', None)
-	parent_comment_id = comment.get('parent_comment_id', None)
-	edges, nodes = [], []
+    edge_names = comment.get('edge_names', None)
+    node_names = comment.get('node_names', None)
+    graph_id = comment.get('graph_id', None)
+    owner_email = comment.get('owner_email', None)
+    parent_comment_id = comment.get('parent_comment_id', None)
+    edges, nodes = [], []
 
-	# Validate if user has permission to create a comment on this graph.
-	if graph_id != None:
-		uid = request.session['uid'] if 'uid' in request.session else None
-		if uid == None:
-			raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToCreateComment)
-		authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    # Validate if user has permission to create a comment on this graph.
+    if graph_id != None:
+        uid = request.session['uid'] if 'uid' in request.session else None
+        if uid == None:
+            raise BadRequest(request, error_code=ErrorCodes.Validation.UserNotAuthorizedToCreateComment)
+        authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	# Reply comments cannot be added to already resolved comment.
-	if parent_comment_id != None:
-		parent_comment = comments.get_comment_by_id(request, parent_comment_id)
-		if parent_comment == None:
-			raise BadRequest(request, error_code=ErrorCodes.Validation.ParentCommentDoesNotExist)
-		elif utils.serializer(parent_comment)['is_resolved'] == 1:
-			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotReplyToResolvedComment)
+    # Reply comments cannot be added to already resolved comment.
+    if parent_comment_id != None:
+        parent_comment = comments.get_comment_by_id(request, parent_comment_id)
+        if parent_comment == None:
+            raise BadRequest(request, error_code=ErrorCodes.Validation.ParentCommentDoesNotExist)
+        elif utils.serializer(parent_comment)['is_closed'] == 1:
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotReplyToResolvedComment)
 
-	if len(edge_names) == 0:
-		edge_names = None
-	if len(node_names) == 0:
-		node_names = None
+    if len(edge_names) == 0:
+        edge_names = None
+    if len(node_names) == 0:
+        node_names = None
 
-	if edge_names != None and graph_id != None:
-		for edge_name in edge_names:
-			edge_id = utils.serializer(graphs.get_edge_by_name(request, graph_id, edge_name))['id']
-			if edge_id != None:
-				edges.append(edge_id)
+    if edge_names != None and graph_id != None:
+        for edge_name in edge_names:
+            edge_id = utils.serializer(graphs.get_edge_by_name(request, graph_id, edge_name))['id']
+            if edge_id != None:
+                edges.append(edge_id)
 
-	if node_names != None and graph_id != None:
-		for node_name in node_names:
-			node_id = utils.serializer(graphs.get_node_by_name(request, graph_id, node_name))['id']
-			if node_id != None:
-				nodes.append(node_id)
+    if node_names != None and graph_id != None:
+        for node_name in node_names:
+            node_id = utils.serializer(graphs.get_node_by_name(request, graph_id, node_name))['id']
+            if node_id != None:
+                nodes.append(node_id)
 
-	if len(edges) == 0:
-		edges = None
+    if len(edges) == 0:
+        edges = None
 
-	if len(nodes) == 0:
-		nodes = None
+    if len(nodes) == 0:
+        nodes = None
 
-	return utils.serializer(comments.add_comment(request,
-		                                         message=comment.get('message', None),
-		                                         graph_id=comment.get('graph_id', None),
-		                                         is_resolved=comment.get('is_resolved', None),
-		                                         edges=edges,
-		                                         nodes=nodes,
-		                                         layout_id=comment.get('layout', None),
-		                                         parent_comment_id=parent_comment_id,
-		                                         owner_email=owner_email))
+    return utils.serializer(comments.add_comment(request,
+                                                 text=comment.get('text', None),
+                                                 graph_id=comment.get('graph_id', None),
+                                                 is_closed=comment.get('is_closed', None),
+                                                 edges=edges,
+                                                 nodes=nodes,
+                                                 layout_id=comment.get('layout', None),
+                                                 parent_comment_id=parent_comment_id,
+                                                 owner_email=owner_email))
 
 
 def _get_comments_by_graph_id(request, graph_id):
-	"""
+    """
 	
 	Parameters
 	----------
@@ -1689,7 +1692,7 @@ def _get_comments_by_graph_id(request, graph_id):
 	-------
 	total : integer
 		Number of comments associated with the graph_id.
-	groups : List of Groups.
+	comments : List of Comments.
 		List of Comment Objects associated with the graph_id.
 
 	Raises
@@ -1699,36 +1702,26 @@ def _get_comments_by_graph_id(request, graph_id):
 	------
 
 	"""
-	#Validate if user has permission to read the comments.
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
+    # Validate if user has permission to read the comments.
+    authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
-	total, comments_list = comments.get_comment_by_graph_id(request, graph_id=graph_id)
-	comments_array = []
-	for comment in comments_list:
-		comment = utils.serializer(comment)
-		count, pinned_list = comments.get_pinned_comments(request,
-														  comment_id=comment['id'],
-														  owner_email=utils.get_request_user(request))
-		if count > 0:
-			comment['is_pinned'] = 1
-		else:
-			comment['is_pinned'] = 0
-		comments_array.append(comment)
-	return {
-		'total': len(comments_array),
-		'comments': comments_array
-	}
+    total, commentss = comments.get_comment_by_graph_id(request, graph_id=graph_id)
+    return {
+        'total': total,
+        'comments': [utils.serializer(comment) for comment in commentss]
+    }
 
-def _edit_comment(request, graph_id, comment = {}):
-	"""
+
+def _edit_comment(request, comment={}):
+    """
 	Comment Parameters
 	----------
-	message : string
-		Comment message. Required
+	text : string
+		Comment text. Required
 	comment_id : Integer
 		Unique ID of the comment for updating. Required
-	is_resolved : Integer
-		Indicates if the comment is resolved or not. Required
+	is_closed : Integer
+		Indicates if the comment is closed or not. Required
 
 
 	Parameters
@@ -1752,19 +1745,20 @@ def _edit_comment(request, graph_id, comment = {}):
 	------
 
 	"""
-	#Validate if user has permission to edit comment
-	if comment.get('message', None) != None or comment.get('is_resolved', None) == 1: 
-		authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id',None))
-	elif comment.get('is_resolved', None) == 0:
-		authorization.validate(request, permission='COMMENT_READ', comment_id=comment.get('id',None))
+    # Validate if user has permission to edit comment
+    if comment.get('text', None) != None or comment.get('is_closed', None) == 1:
+        authorization.validate(request, permission='COMMENT_UPDATE', comment_id=comment.get('id', None))
+    elif comment.get('is_closed', None) == 0:
+        authorization.validate(request, permission='COMMENT_READ', comment_id=comment.get('id', None))
 
-	return utils.serializer(comments.edit_comment(request,
-												  message=comment.get('message', None),
-												  is_resolved=comment.get('is_resolved',None),
-												  comment_id=comment.get('id', None)))
+    return utils.serializer(comments.edit_comment(request,
+                                                  text=comment.get('text', None),
+                                                  is_closed=comment.get('is_closed', None),
+                                                  comment_id=comment.get('id', None)))
 
-def _delete_comment(request, graph_id, comment = {}):
-	"""
+
+def _delete_comment(request, graph_id, comment={}):
+    """
 	Comment Parameters
 	----------
 	id : Integer
@@ -1791,31 +1785,26 @@ def _delete_comment(request, graph_id, comment = {}):
 	------
 
 	"""
-	#Validate if user has permission to delete comment 
-	authorization.validate(request, permission='COMMENT_DELETE', comment_id=comment.get('id',None))
-	return utils.serializer(comments.delete_comment(request,
-													id=comment.get('id',None)))
+    # Validate if user has permission to delete comment
+    authorization.validate(request, permission='COMMENT_DELETE', comment_id=comment.get('id', None))
+    return utils.serializer(comments.delete_comment(request,
+                                                    id=comment.get('id', None)))
 
-def _pin_comment(request, graph_id, data = {}):
-	"""
-	Data Parameters
-	----------
-	comment_id : Integer
-		Unique ID of the comment. Required
+
+def _get_comment_to_graph_by_id(request, comment):
+    """
 
 	Parameters
 	----------
-	data : dict
-		Dictionary containing the data of the comment being deleted.
-	graph_id : Integer
-		Unique ID of the graph.
+	comment : dict
+		Dictionary containing the data of the comment.
 	request : object
-		PIN Request.
+		HTTP GET Request.
 
 	Returns
 	-------
-	pin_comment : object
-		An object inserted into PinComments table.
+	comment_to_graph : comment_to_graph.
+		comment_to_graph Object
 
 	Raises
 	------
@@ -1824,31 +1813,35 @@ def _pin_comment(request, graph_id, data = {}):
 	------
 
 	"""
-	# Validate if user has permission to pin comment.
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	pin_comment = comments.pin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
-	return pin_comment.serialize()
+    # Validate if user has permission to read the comments.
 
-def _unpin_comment(request, graph_id, data = {}):
-	"""
-	Data Parameters
+    return utils.serializer(comments.get_comment_to_graph(request, comment_id=comment.get('id', None)))
+
+
+@is_authenticated()
+def _add_comment_reaction(request, reaction={}):
+    """
+	Reaction Parameters
 	----------
-	comment_id : Integer
-		Unique ID of the comment. Required
+	id : Integer
+		Unique ID of the comment.
+	content : string
+		content of the reaction.
+	owner_email : string
+		Email of the Owner of the reaction. Required
+
 
 	Parameters
 	----------
-	data : dict
-		Dictionary containing the data of the comment being deleted.
-	graph_id : Integer
-		Unique ID of the graph.
+	reaction : dict
+		Dictionary containing the data of the reaction being added.
 	request : object
-		UNPIN Request.
+		HTTP POST Request.
 
 	Returns
 	-------
-	unpin_comment : object
-		An object indicating deleted entry in PinComments table.
+	reaction : object
+		Newly created reaction object.
 
 	Raises
 	------
@@ -1857,13 +1850,93 @@ def _unpin_comment(request, graph_id, data = {}):
 	------
 
 	"""
-	# Validate if user has permission to unpin comment.
-	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
-	unpin_comment = comments.unpin_comment(request, owner_email=utils.get_request_user(request), comment_id=data.get('comment_id', None))
-	return unpin_comment.serialize()
+
+    return utils.serializer(discussions.add_comment_reaction(request, comment_id=reaction.get('comment_id', None),
+                                                             content=reaction.get('content', None),
+                                                             owner_email=reaction.get('owner_email', None)))
+
+
+@is_authenticated()
+def _delete_comment_reaction(request, reaction={}):
+    """
+	Reaction Parameters
+	----------
+	id : Integer
+		Unique ID of the comment.
+	content : string
+		content of the reaction.
+	owner_email : string
+		Email of the Owner of the reaction. Required
+
+
+	Parameters
+	----------
+	reaction : dict
+		Dictionary containing the data of the reaction being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	reaction : object
+		Newly created reaction object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    utils.serializer(discussions.delete_comment_reaction(request, comment_id=reaction.get('comment_id', None),
+                                                         content=reaction.get('content', None),
+                                                         owner_email=reaction.get('owner_email', None)))
+
+
+@is_authenticated()
+def _get_comment_reactions(request, reaction={}):
+    """
+	Reaction Parameters
+	----------
+	id : Integer
+		Unique ID of the comment.
+	content : string
+		content of the reaction.
+
+
+	Parameters
+	----------
+	reaction : dict
+		Dictionary containing the data of the reaction being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	total : integer
+		Number of reaction associated with the comment_id.
+	reactions : List of Reactions.
+		List of Reaction Objects associated with the comment_id.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    total, reactions = discussions.get_comment_reactions(request, comment_id=reaction.get('comment_id', None),
+                                                         content=reaction.get('content', None))
+
+    return {
+        'total': total,
+        'reactions': [utils.serializer(reaction) for reaction in reactions]
+    }
+
 
 def graph_comments_ajax_api(request, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/ajax/graphs/<graph_id>/comments
 
@@ -1876,10 +1949,11 @@ def graph_comments_ajax_api(request, graph_id=None):
 	response : JSON Response
 
 	"""
-	return _comments_api(request, graph_id=graph_id)
+    return _comments_api(request, graph_id=graph_id)
+
 
 def _comments_api(request, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/graphs/<graph_id>/comments
 
@@ -1897,27 +1971,36 @@ def _comments_api(request, graph_id=None):
 	BadRequest: If HTTP_ACCEPT header is not set to application/json.
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "POST":
-			return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		elif request.method == "GET" and graph_id != None:
-			return HttpResponse(json.dumps(_get_comments_by_graph_id(request, graph_id=graph_id)),
-			                    content_type="application/json", status=201)
-		elif request.method == "PUT" and graph_id != None:
-			return HttpResponse(json.dumps(_edit_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		elif request.method == "DELETE" and graph_id != None:
-			return HttpResponse(json.dumps(_delete_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		elif request.method == "PIN" and graph_id != None:
-			return HttpResponse(json.dumps(_pin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		elif request.method == "UNPIN" and graph_id != None:
-			return HttpResponse(json.dumps(_unpin_comment(request, graph_id=graph_id, data=json.loads(request.body))),
-			                    content_type="application/json", status=201)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		console.log(7)
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST":
+            return HttpResponse(json.dumps(_add_comment(request, comment=json.loads(request.body))),
+                                content_type="application/json", status=201)
+        elif request.method == "GET" and graph_id is not None:
+            return HttpResponse(json.dumps(_get_comments_by_graph_id(request, graph_id=graph_id)),
+                                content_type="application/json", status=201)
+        elif request.method == "PUT" and graph_id is not None:
+            return HttpResponse(json.dumps(_edit_comment(request, comment=json.loads(request.body))),
+                                content_type="application/json", status=201)
+        elif request.method == "DELETE" and graph_id is not None:
+            return HttpResponse(
+                json.dumps(_delete_comment(request, graph_id=graph_id, comment=json.loads(request.body))),
+                content_type="application/json", status=201)
+        elif request.method == "GET_COMMENT_TO_GRAPH":
+            return HttpResponse(json.dumps(_get_comment_to_graph_by_id(request, comment=json.loads(request.body))),
+                                content_type="application/json", status=201)
+        elif request.method == "POST_REACTION":
+            return HttpResponse(json.dumps(_add_comment_reaction(request, reaction=json.loads(request.body))),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET_REACTION":
+            return HttpResponse(json.dumps(_get_comment_reactions(request, reaction=json.loads(request.body))),
+                                content_type="application/json")
+        elif request.method == "DELETE_REACTION":
+            _delete_comment_reaction(request, reaction=json.loads(request.body))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
