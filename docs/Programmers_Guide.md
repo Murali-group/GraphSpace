@@ -34,6 +34,34 @@ The GraphSpace REST API is served over HTTP. In case you are
 
 <iframe src="http://35.163.136.54/static/api.html" style="height: 100vh;width: 100%;"></iframe>
 
+## API Authentication Token
+### Obtain Authentication Token
+To get your API authentication token, log into your GraphSpace account and navigate to your account page. Once you are there click on the **Authentication Token** tab on the top. Then you can see your authentication token value. 
+
+![Get Auth Token](_static/gifs/gs-screenshot-get-auth-token.gif)
+
+### Use Authentication Token to Access GraphSpace API
+cURL is the most used command line tool for making API calls. Here we use cURL command as an example.
+
+**GET**
+```
+curl -X GET \
+  '**YOUR GRAPHSPACE API URL**' \
+  -H 'accept: application/json' \
+  -H 'authorization: Basic **YOUR API AUTH TOKEN**' \
+  -H 'content-type: application/json' \
+```
+**POST**
+```
+curl -X POST \
+  **YOUR GRAPHSPACE API URL** \
+  -H 'accept: application/json' \
+  -H 'authorization: Basic **YOUR API AUTH TOKEN**' \
+  -H 'content-type: application/json' \
+  -d '**YOUR JSON DATA**'
+```
+
+
 
 ## graphspace-python
 

@@ -1,4 +1,5 @@
 import json
+
 from applications.users.forms import RegisterForm
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -7,6 +8,11 @@ from django.template import RequestContext
 from graphspace.utils import *
 from graphspace.exceptions import *
 
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 def home_page(request):
 	"""
@@ -157,7 +163,7 @@ def forgot_password_page(request):
 		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
 	elif 'POST' == request.method:
 		password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
-
+		logger.error(password_reset_code)
 		if password_reset_code is not None:
 			users.send_password_reset_email(request, password_reset_code)
 			context["success_message"] = "You will receive an email with link to update the password!"
@@ -218,7 +224,6 @@ def reset_password_page(request):
 def login(request):
 	"""
 		Handles login (POST) request.
-
 		:param request: HTTP Request
 	"""
 	if 'POST' == request.method:
@@ -291,3 +296,42 @@ def images(request, query):
 
 	"""
 	return redirect('/static' + request.path)
+
+
+def account_page(request):
+	"""
+	Wrapper view function for the following pages:
+		/
+		account/index.html
+
+	Parameters
+	----------
+	request : HTTP Request
+
+	Returns
+	-------
+	response : HTML Page Response
+		Rendered account home page in HTML.
+
+	Raises
+	------
+	MethodNotAllowed: If a user tries to send requests other than GET i.e., POST, PUT or UPDATE.
+
+	Notes
+	------
+
+	"""
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		auth_token = users.get_auth_token(request, request.session['uid'])
+		logger.error(auth_token)
+		if auth_token is None:
+			context['error_message'] = "Please try logging in again."
+		else:
+			context['auth_token'] = auth_token
+		return render(request, 'account/index.html', context)  # Handle GET request to auth_token page.
+	else:
+		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+

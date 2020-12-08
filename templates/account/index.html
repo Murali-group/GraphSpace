@@ -1,0 +1,48 @@
+
+
+{% extends 'base.html' %}
+{% block content %}
+    {% load staticfiles %}
+
+    <div class="container-fluid zero-padding padding-bottom-6" style="margin-top: 5px;">
+        <ul class="nav nav-tabs">
+            <li class="active text-center">
+                <a href="#user_email" data-toggle="tab">Email</a>
+            </li>
+            <li class="text-center">
+                <a href="#auth_token" data-toggle="tab">Authentication Token</a>
+            </li>
+        </ul>
+
+        <div id="myTabContent" class="tab-content container-fluid bg-white padding-top-4">
+
+            <div class="tab-pane fade in active" id="user_email">
+                {% include 'account/email.html' %}
+            </div>
+
+            <div class="tab-pane fade" id="auth_token">
+                {% include 'account/auth_token.html' %}
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <br>Powered by <a href="https://www.djangoproject.com/">Django 1.7.6</a>
+        <br><a href="http://js.cytoscape.org/">Cytoscape.js 2.5.0</a>
+    </footer>
+
+    <!-- JSON support for Groups Page -->
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/account_page.js' %}"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            accountPage.init();
+        });
+    </script>
+
+{% endblock %}

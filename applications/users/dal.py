@@ -7,12 +7,16 @@ from graphspace.utils import generate_uid
 from graphspace.wrappers import with_session
 from models import *
 
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 # TODO: Add documentation about exception raised.
 
 
 @with_session
-def add_user(db_session, email, password, is_admin):
+def add_user(db_session, email, password, auth_token, is_admin):
 	"""
 	Add a new user.
 
@@ -20,9 +24,10 @@ def add_user(db_session, email, password, is_admin):
 	:param email: User ID of the user.
 	:param password: Password of the user.
 	:param admin: 1 if user has admin access else 0.
+	:param auth_token: Auth_token of the user.
 	:return: User
 	"""
-	user = User(email=email, password=password, is_admin = is_admin)
+	user = User(email=email, password=password, auth_token=auth_token, is_admin=is_admin)
 	db_session.add(user)
 	return user
 
@@ -322,3 +327,14 @@ def find_groups(db_session, owner_email, member_email, name, description, graph_
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+@with_session
+def get_auth_token(db_session, email):
+	"""
+	Get the auth_token with given email.
+
+	:param db_session: Database session.
+	:param email: email of the user.
+	:return: User's auth_token if email exists else None.
+	"""
+	return db_session.query().filter(User.email == email).one_or_none()

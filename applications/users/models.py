@@ -17,12 +17,14 @@ class User(IDMixin, TimeStampMixin, Base):
 	:param email: Email ID of the user.
 	:param password: Password of the user.
 	:param admin: 1 if the user has admin access else 0.
+	:param auth_token: Auth_token of the user.
 	"""
 	__tablename__ = "user"
 
 	email = Column(String, nullable=False, unique=True, index=True)
 	password = Column(String, nullable=False)
 	is_admin = Column(Integer, nullable=False, default=0)
+	auth_token = Column(String, nullable=True)
 
 	password_reset_codes = relationship("PasswordResetCode", back_populates="user", cascade="all, delete-orphan")
 	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
