@@ -1,1 +1,12 @@
+{% if is_maintenance_scheduled %}
+<h1>is_maintenance_scheduled</h1>
 
+{% if maintenance_start_datetime %}
+  {{ maintenance_start_datetime }}
+{% endif %}
+
+{% if maintenance_end_datetime %}
+  {{ maintenance_end_datetime }}
+{% endif %}
+
+{% endif %}
