@@ -470,3 +470,20 @@ p.lead {
         margin-left: 0;
     }
 }
+
+/* Alerts */
+.alert {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 1px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.alert.alert-warning {
+  background-color: rgba(252, 248, 227, 1);
+  border-color: rgba(177, 161, 129, 1);
+  color: rgba(138, 109, 59, 1);
+}

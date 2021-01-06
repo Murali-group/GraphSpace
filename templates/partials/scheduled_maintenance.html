@@ -1,12 +1,9 @@
-{% if is_maintenance_scheduled %}
-<h1>is_maintenance_scheduled</h1>
+<!DOCTYPE html>
 
-{% if maintenance_start_datetime %}
-  {{ maintenance_start_datetime }}
-{% endif %}
+{% load staticfiles %}
 
-{% if maintenance_end_datetime %}
-  {{ maintenance_end_datetime }}
-{% endif %}
-
+{% if is_maintenance_scheduled and maintenance_start_datetime and maintenance_end_datetime%}
+<div class="alert alert-warning" role="alert">
+  There will be future maintenance on {{ maintenance_start_datetime }} until {{ maintenance_end_datetime }}
+</div>
 {% endif %}
