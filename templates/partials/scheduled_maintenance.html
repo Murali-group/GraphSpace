@@ -2,8 +2,11 @@
 
 {% load staticfiles %}
 
-{% if is_maintenance_scheduled and maintenance_start_datetime and maintenance_end_datetime%}
+{% if is_maintenance_scheduled == True and maintenance_start_datetime and maintenance_end_datetime%}
 <div class="alert alert-warning" role="alert">
-  There will be future maintenance on {{ maintenance_start_datetime }} until {{ maintenance_end_datetime }}
+  Please note, there will be scheduled downtime on {{ maintenance_start_datetime }} until {{ maintenance_end_datetime }}.
+  We will be using this time to update our infrastructure.
+  <p style="font-weight: bold;">Any graph updated or uploaded during the maintenance period will be lost. Please plan your work accordingly.</p>
+  We appreciate your patience and apologize for any inconvenience.
 </div>
 {% endif %}
