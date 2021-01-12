@@ -458,3 +458,17 @@ def find_edges(db_session, is_directed=None, names=None, edges=None, graph_id=No
 		query = query.limit(limit).offset(offset)
 
 	return total, query.all()
+
+@with_session
+def get_edge_by_name(db_session, graph_id, name):
+	query = db_session.query(Edge)
+	query = query.filter(Edge.graph_id == graph_id)
+	query = query.filter(Edge.name == name)
+	return query.one_or_none()
+
+@with_session
+def get_node_by_name(db_session, graph_id, name):
+	query = db_session.query(Node)
+	query = query.filter(Node.graph_id == graph_id)
+	query = query.filter(Node.name == name)
+	return query.one_or_none()

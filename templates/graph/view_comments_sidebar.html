@@ -1,0 +1,30 @@
+<!-- Sidebar -->
+<ul id="ViewCommentSideBar" class="sidebar-nav gs-sidebar-nav">
+  <li>
+    <a id="cancelViewCommentsBtn" class="btn btn-xs d-inline-block pull-left" href="#">
+    <i class="fa fa-arrow-left fa-lg"></i>
+    Back
+    </a>
+    <a id="commentAddBtn" class="btn sidebar-nav-pills pull-right" href="#editor" data-target="#AddCommentSideBar">
+          <i class="fa fa-pencil-square-o fa-lg"></i> Add Comment
+    </a>
+  </li><br><br>
+	<li class="text-center" data-intro='You can filter comments based on the graph element selected'>
+    <div id="selectFilters" style="text-align: left">
+    	<div class="form-check">
+  			<label class="form-check-label" for="allComments">
+    			<input type="radio" class="form-check-input" id="allComments" name="optradio" checked>
+    			<h7>View all comments</h7>
+  			</label>
+		  </div>
+  		<div class="form-check">
+    			<label class="form-check-label" for="filterComments">
+      			<input type="radio" class="form-check-input" id="filterComments" name="optradio">
+      			<h7>View comments related to selected graph.</h7>
+    			</label>
+  		</div>
+
+    </div>
+  </li>
+  <div id="CommentsList" style="align-content: center;width: 100%"></div>
+</ul>

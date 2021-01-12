@@ -14,6 +14,9 @@
             <li class="text-center">
                 <a href="#members" data-toggle="tab">{{ group.total_members }} Members</a>
             </li>
+            <li class="text-center">
+                <a href="#discussions" data-toggle="tab"><span id="groupDiscussionsTotal"></span> Discussions</a>
+            </li>
             {% if group.owner_email == uid %}
             <li class="text-center">
                 <a href="#update_group" data-toggle="tab">Update Group</a>
@@ -46,6 +49,10 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="discussions">
+                {% include 'group/discussions_table.html' %}
+            </div>
+
             <div class="tab-pane fade" id="update_group">
                 <div class="panel panel-default" style="max-width:400px; width:50%; margin: 0 auto;">
                     <div class="panel-body">
@@ -57,7 +64,9 @@
 
         {% include 'group/unshare_graph_modal.html' %}
         {% include 'group/remove_group_member_modal.html' %}
-
+        {% include 'group/delete_discussion_modal.html' %}
+        {% include 'group/add_discussion_modal.html' %}
+        
 
     </div>
 

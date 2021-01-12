@@ -1,6 +1,7 @@
 import json
 
 import applications.users.controllers as users
+import applications.discussions.controllers as discussions
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -14,21 +15,21 @@ from graphspace.utils import get_request_user
 
 @is_authenticated(redirect_url='/')
 def groups_page(request):
-	"""
+    """
 		Wrapper view for the groups page.
 
 		:param request: HTTP GET Request.
 	"""
-	if 'GET' == request.method:
-		context = RequestContext(request, {})
-		return render(request, 'groups/index.html', context)
-	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+    if 'GET' == request.method:
+        context = RequestContext(request, {})
+        return render(request, 'groups/index.html', context)
+    else:
+        raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
 @is_authenticated(redirect_url='/')
 def group_page(request, group_id):
-	"""
+    """
 		Wrapper view for the group page. /groups/<group_id>
 
 		:param request: HTTP GET Request.
@@ -38,18 +39,40 @@ def group_page(request, group_id):
 	group_id : string
 		Unique ID of the group. Required
 	"""
-	if 'GET' == request.method:
-		context = RequestContext(request, {})
-		context.push({
-			"group": _get_group(request, int(group_id)),
-		})
-		return render(request, 'group/index.html', context)
-	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+    if 'GET' == request.method:
+        context = RequestContext(request, {})
+        context.push({
+            "group": _get_group(request, int(group_id)),
+        })
+        return render(request, 'group/index.html', context)
+    else:
+        raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+
+
+@is_authenticated(redirect_url='/')
+def discussion_page(request, group_id, discussion_id):
+    """
+		Wrapper view for the group page. /groups/<group_id>
+
+		:param request: HTTP GET Request.
+
+	Parameters
+	----------
+	group_id : string
+		Unique ID of the group. Required
+	"""
+    if 'GET' == request.method:
+        context = RequestContext(request, {})
+        context.push({
+            "discussion": _get_discussion(request, int(discussion_id), int(group_id)),
+        })
+        return render(request, 'discussions/index.html', context)
+    else:
+        raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
 def join_group_page(request, group_id):
-	"""
+    """
 		Wrapper view for the join_group_page by invitation. /groups/<group_id>/invite/
 
 		:param request: HTTP GET Request.
@@ -59,49 +82,50 @@ def join_group_page(request, group_id):
 	group_id : string
 		Unique ID of the group. Required
 	"""
-	context = RequestContext(request, {})
+    context = RequestContext(request, {})
 
-	if 'GET' == request.method:
-		group = users.get_group_by_id(request, group_id)
-		if group is not None and group.invite_code == request.GET.get('code', None):
-			if request.session['uid'] is None:
-				context.push({
-					"group": group,
-					"invite_code": request.GET.get('code', None)
-				})
-				return render(request, 'join_group/index.html', context)
-			else:
-				try:
-					users.add_group_member(request, group_id, member_email=request.session['uid'])
-				finally:
-					return redirect('/groups/'+group_id)
-		else:
-			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
-	elif 'POST' == request.method:
+    if 'GET' == request.method:
+        group = users.get_group_by_id(request, group_id)
+        if group is not None and group.invite_code == request.GET.get('code', None):
+            if request.session['uid'] is None:
+                context.push({
+                    "group": group,
+                    "invite_code": request.GET.get('code', None)
+                })
+                return render(request, 'join_group/index.html', context)
+            else:
+                try:
+                    users.add_group_member(request, group_id, member_email=request.session['uid'])
+                finally:
+                    return redirect('/groups/' + group_id)
+        else:
+            return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
+    elif 'POST' == request.method:
 
-		group = users.get_group_by_id(request, group_id)
-		if group is not None and group.invite_code == request.POST.get('code', None):
-			try:
-				if request.session['uid'] is None:
-					user = users.register(request, username=request.POST.get('user_id', None), password=request.POST.get('password', None))
-					if user is not None:
-						request.session['uid'] = user.email
-						request.session['admin'] = user.is_admin
+        group = users.get_group_by_id(request, group_id)
+        if group is not None and group.invite_code == request.POST.get('code', None):
+            try:
+                if request.session['uid'] is None:
+                    user = users.register(request, username=request.POST.get('user_id', None),
+                                          password=request.POST.get('password', None))
+                    if user is not None:
+                        request.session['uid'] = user.email
+                        request.session['admin'] = user.is_admin
 
-					users.add_group_member(request, group_id, member_id=user.id)
+                    users.add_group_member(request, group_id, member_id=user.id)
 
-				return redirect('/groups/'+group_id)
-			except GraphSpaceError as e:
-				context.push({
-					"error_message": e.get_message(),
-					"group": group,
-					"invite_code": request.POST.get('code', None)
-				})
-				return render(request, 'join_group/index.html', context)
-		else:
-			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
-	else:
-		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
+                return redirect('/groups/' + group_id)
+            except GraphSpaceError as e:
+                context.push({
+                    "error_message": e.get_message(),
+                    "group": group,
+                    "invite_code": request.POST.get('code', None)
+                })
+                return render(request, 'join_group/index.html', context)
+        else:
+            return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
+    else:
+        raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
 
 '''
@@ -110,7 +134,7 @@ Users APIs
 
 
 def users_ajax_api(request):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/users
 
@@ -123,11 +147,11 @@ def users_ajax_api(request):
 	response : JSON Response
 
 	"""
-	return _users_api(request)
+    return _users_api(request)
 
 
 def _users_api(request):
-	"""
+    """
 	Handles any request (GET/POST) sent to /users.
 
 	Parameters
@@ -138,17 +162,17 @@ def _users_api(request):
 	-------
 
 	"""
-	if 'application/json' in request.META.get('HTTP_ACCEPT', None):
-		if request.method == "GET":
-			return HttpResponse(json.dumps(_get_users(request, query=request.GET)), content_type="application/json")
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if 'application/json' in request.META.get('HTTP_ACCEPT', None):
+        if request.method == "GET":
+            return HttpResponse(json.dumps(_get_users(request, query=request.GET)), content_type="application/json")
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_users(request, query={}):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -185,28 +209,30 @@ def _get_users(request, query={}):
 
 	"""
 
-	# Validate search graph groups API request
+    # Validate search graph groups API request
 
-	total, users_list = users.search_users(request,
-										email=query.get('email', None),
-										limit=query.get('limit', 20),
-										offset=query.get('offset', 0),
-										order=query.get('order', 'asc'),
-										sort=query.get('sort', 'email'))
+    total, users_list = users.search_users(request,
+                                           email=query.get('email', None),
+                                           limit=query.get('limit', 20),
+                                           offset=query.get('offset', 0),
+                                           order=query.get('order', 'asc'),
+                                           sort=query.get('sort', 'email'))
 
-	return {
-		'total': total,
-		'users': [utils.serializer(user) for user in users_list]
-	}
+    return {
+        'total': total,
+        'users': [utils.serializer(user) for user in users_list]
+    }
+
 
 '''
 Groups APIs
 '''
 
+
 @csrf_exempt
 @is_authenticated()
 def groups_rest_api(request, group_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/groups
 		/api/v1/groups/<group_id>
@@ -220,11 +246,11 @@ def groups_rest_api(request, group_id=None):
 	response : JSON Response
 
 	"""
-	return _groups_api(request, group_id=group_id)
+    return _groups_api(request, group_id=group_id)
 
 
 def groups_ajax_api(request, group_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/groups
 		/javascript/groups/<group_id>
@@ -238,11 +264,11 @@ def groups_ajax_api(request, group_id=None):
 	response : JSON Response
 
 	"""
-	return _groups_api(request, group_id=group_id)
+    return _groups_api(request, group_id=group_id)
 
 
 def _groups_api(request, group_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to /groups or groups/<group_id>
 
 	Parameters
@@ -253,33 +279,33 @@ def _groups_api(request, group_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and group_id is None:
-			return HttpResponse(json.dumps(_get_groups(request, query=request.GET)), content_type="application/json")
-		elif request.method == "GET" and group_id is not None:
-			return HttpResponse(json.dumps(_get_group(request, group_id)), content_type="application/json",
-								status=200)
-		elif request.method == "POST" and group_id is None:
-			return HttpResponse(json.dumps(_add_group(request, group=request.POST)), content_type="application/json",
-								status=201)
-		elif request.method == "PUT" and group_id is not None:
-			return HttpResponse(json.dumps(_update_group(request, group_id, group=QueryDict(request.body))),
-								content_type="application/json",
-								status=200)
-		elif request.method == "DELETE" and group_id is not None:
-			_delete_group(request, group_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted group with id=%s" % group_id
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and group_id is None:
+            return HttpResponse(json.dumps(_get_groups(request, query=request.GET)), content_type="application/json")
+        elif request.method == "GET" and group_id is not None:
+            return HttpResponse(json.dumps(_get_group(request, group_id)), content_type="application/json",
+                                status=200)
+        elif request.method == "POST" and group_id is None:
+            return HttpResponse(json.dumps(_add_group(request, group=request.POST)), content_type="application/json",
+                                status=201)
+        elif request.method == "PUT" and group_id is not None:
+            return HttpResponse(json.dumps(_update_group(request, group_id, group=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and group_id is not None:
+            _delete_group(request, group_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted group with id=%s" % group_id
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 @is_authenticated()
 def _add_group(request, group={}):
-	"""
+    """
 	Group Parameters
 	----------
 	name : string
@@ -310,21 +336,21 @@ def _add_group(request, group={}):
 
 	"""
 
-	# Validate add graph API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != group.get('owner_email', None):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
-							 args=group.get('owner_email', None))
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != group.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+                             args=group.get('owner_email', None))
 
-	return utils.serializer(users.add_group(request,
-											name=request.POST.get('name', None),
-											description=group.get('description', None),
-											owner_email=group.get('owner_email', None)))
+    return utils.serializer(users.add_group(request,
+                                            name=request.POST.get('name', None),
+                                            description=group.get('description', None),
+                                            owner_email=group.get('owner_email', None)))
 
 
 def _get_groups(request, query={}):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -369,32 +395,32 @@ def _get_groups(request, query={}):
 
 	"""
 
-	# Validate search graph groups API request
-	user_role = authorization.user_role(request)
-	if user_role == authorization.UserRole.LOGGED_IN:
-		if get_request_user(request) != query.get('member_email', None) \
-				and get_request_user(request) != query.get('owner_email', None):
-			raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGroupAccess,
-							 args=get_request_user(request))
+    # Validate search graph groups API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != query.get('member_email', None) \
+                and get_request_user(request) != query.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGroupAccess,
+                             args=get_request_user(request))
 
-	total, groups = users.search_groups(request,
-										owner_email=query.get('owner_email', None),
-										member_email=query.get('member_email', None),
-										name=query.get('name', None),
-										description=query.get('description', None),
-										limit=query.get('limit', 20),
-										offset=query.get('offset', 0),
-										order=query.get('order', 'desc'),
-										sort=query.get('sort', 'name'))
+    total, groups = users.search_groups(request,
+                                        owner_email=query.get('owner_email', None),
+                                        member_email=query.get('member_email', None),
+                                        name=query.get('name', None),
+                                        description=query.get('description', None),
+                                        limit=query.get('limit', 20),
+                                        offset=query.get('offset', 0),
+                                        order=query.get('order', 'desc'),
+                                        sort=query.get('sort', 'name'))
 
-	return {
-		'total': total,
-		'groups': [utils.serializer(group) for group in groups]
-	}
+    return {
+        'total': total,
+        'groups': [utils.serializer(group) for group in groups]
+    }
 
 
 def _get_group(request, group_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -415,14 +441,41 @@ def _get_group(request, group_id):
 
 	"""
 
-	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-	return utils.serializer(users.get_group_by_id(request, group_id))
+    return utils.serializer(users.get_group_by_id(request, group_id))
+
+
+def _get_discussion(request, discussion_id, group_id):
+    """
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	group: object
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
+    return utils.serializer(discussions.get_discussion_by_id(request, discussion_id))
 
 
 @is_authenticated()
 def _update_group(request, group_id, group={}):
-	"""
+    """
 	Group Parameters
 	----------
 	name : string
@@ -454,17 +507,17 @@ def _update_group(request, group_id, group={}):
 	------
 
 	"""
-	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+    authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
-	return utils.serializer(users.update_group(request, group_id=group_id,
-											   name=group.get('name', None),
-											   description=group.get('description', None),
-											   owner_email=group.get('owner_email', None)))
+    return utils.serializer(users.update_group(request, group_id=group_id,
+                                               name=group.get('name', None),
+                                               description=group.get('description', None),
+                                               owner_email=group.get('owner_email', None)))
 
 
 @is_authenticated()
 def _delete_group(request, group_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -484,19 +537,20 @@ def _delete_group(request, group_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
+    authorization.validate(request, permission='GROUP_DELETE', group_id=group_id)
 
-	users.delete_group_by_id(request, group_id)
+    users.delete_group_by_id(request, group_id)
 
 
 '''
 Group Members APIs
 '''
 
+
 @csrf_exempt
 @is_authenticated()
 def group_members_rest_api(request, group_id, member_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/groups/<group_id>/members
 		/api/v1/groups/<group_id>/members/<member_id>
@@ -510,11 +564,11 @@ def group_members_rest_api(request, group_id, member_id=None):
 	response : JSON Response
 
 	"""
-	return _group_members_api(request, group_id, member_id=member_id)
+    return _group_members_api(request, group_id, member_id=member_id)
 
 
 def group_members_ajax_api(request, group_id, member_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/groups/<group_id>/members
 		/javascript/groups/<group_id>/members/<member_id>
@@ -528,11 +582,11 @@ def group_members_ajax_api(request, group_id, member_id=None):
 	response : JSON Response
 
 	"""
-	return _group_members_api(request, group_id, member_id=member_id)
+    return _group_members_api(request, group_id, member_id=member_id)
 
 
 def _group_members_api(request, group_id, member_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to groups/<group_id>/members or groups/<group_id>/members/<member_id>.
 
 	Parameters
@@ -543,29 +597,29 @@ def _group_members_api(request, group_id, member_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if group_id is None:
-			raise Exception("Group ID is required.")
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if group_id is None:
+            raise Exception("Group ID is required.")
 
-		if request.method == "GET" and member_id is None:
-			return HttpResponse(json.dumps(_get_group_members(request, group_id)),
-								content_type="application/json")
-		elif request.method == "POST" and member_id is None:
-			return HttpResponse(json.dumps(_add_group_member(request, group_id)), content_type="application/json",
-								status=201)
-		elif request.method == "DELETE" and member_id is not None:
-			_delete_group_member(request, group_id, member_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted member with id=%s from group with id=%s" % (member_id, group_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+        if request.method == "GET" and member_id is None:
+            return HttpResponse(json.dumps(_get_group_members(request, group_id)),
+                                content_type="application/json")
+        elif request.method == "POST" and member_id is None:
+            return HttpResponse(json.dumps(_add_group_member(request, group_id)), content_type="application/json",
+                                status=201)
+        elif request.method == "DELETE" and member_id is not None:
+            _delete_group_member(request, group_id, member_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted member with id=%s from group with id=%s" % (member_id, group_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_group_members(request, group_id):
-	"""
+    """
 
 	Parameters
 	----------
@@ -585,18 +639,18 @@ def _get_group_members(request, group_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-	members = users.get_group_members(request, group_id)
-	return {
-		"members": [utils.serializer(user) for user in members],
-		"total": len(members)
-	}
+    members = users.get_group_members(request, group_id)
+    return {
+        "members": [utils.serializer(user) for user in members],
+        "total": len(members)
+    }
 
 
 @is_authenticated()
 def _add_group_member(request, group_id):
-	"""
+    """
 	Body Parameters
 	----------
 	member_id : string
@@ -622,17 +676,17 @@ def _add_group_member(request, group_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+    authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
-	return utils.serializer(users.add_group_member(request,
-												   group_id=group_id,
-												   member_id=request.POST.get('member_id', None),
-												   member_email=request.POST.get('member_email', None)))
+    return utils.serializer(users.add_group_member(request,
+                                                   group_id=group_id,
+                                                   member_id=request.POST.get('member_id', None),
+                                                   member_email=request.POST.get('member_email', None)))
 
 
 @is_authenticated()
 def _delete_group_member(request, group_id, member_id):
-	"""
+    """
 	Parameters
 	----------
 	request : object
@@ -653,21 +707,22 @@ def _delete_group_member(request, group_id, member_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
+    authorization.validate(request, permission='GROUP_UPDATE', group_id=group_id)
 
-	users.delete_group_member(request,
-							  group_id=group_id,
-							  member_id=member_id)
+    users.delete_group_member(request,
+                              group_id=group_id,
+                              member_id=member_id)
 
 
 '''
 Group Graphs APIs
 '''
 
+
 @csrf_exempt
 @is_authenticated()
 def group_graphs_rest_api(request, group_id, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/api/v1/groups/<group_id>/graphs
 		/api/v1/groups/<group_id>/graphs/<graph_id>
@@ -681,11 +736,11 @@ def group_graphs_rest_api(request, group_id, graph_id=None):
 	response : JSON Response
 
 	"""
-	return _group_graphs_api(request, group_id, graph_id=graph_id)
+    return _group_graphs_api(request, group_id, graph_id=graph_id)
 
 
 def group_graphs_ajax_api(request, group_id, graph_id=None):
-	"""
+    """
 	Handles any request sent to following urls:
 		/javascript/groups/<group_id>/graphs
 		/javascript/groups/<group_id>/graphs/<graph_id>
@@ -699,11 +754,11 @@ def group_graphs_ajax_api(request, group_id, graph_id=None):
 	response : JSON Response
 
 	"""
-	return _group_graphs_api(request, group_id, graph_id=graph_id)
+    return _group_graphs_api(request, group_id, graph_id=graph_id)
 
 
 def _group_graphs_api(request, group_id, graph_id=None):
-	"""
+    """
 	Handles any request (GET/POST) sent to groups/<group_id>/graphs or groups/<group_id>/graphs/<graph_id>.
 
 	Parameters
@@ -716,26 +771,26 @@ def _group_graphs_api(request, group_id, graph_id=None):
 	-------
 
 	"""
-	if request.META.get('HTTP_ACCEPT', None) == 'application/json':
-		if request.method == "GET" and graph_id is None:
-			return HttpResponse(json.dumps(_get_group_graphs(request, group_id)),
-								content_type="application/json")
-		elif request.method == "POST" and graph_id is None:
-			return HttpResponse(json.dumps(_add_group_graph(request, group_id)), content_type="application/json",
-								status=201)
-		elif request.method == "DELETE" and graph_id is not None:
-			_delete_group_graph(request, group_id, graph_id)
-			return HttpResponse(json.dumps({
-				"message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
-			}), content_type="application/json", status=200)
-		else:
-			raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
-	else:
-		raise BadRequest(request)
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "GET" and graph_id is None:
+            return HttpResponse(json.dumps(_get_group_graphs(request, group_id)),
+                                content_type="application/json")
+        elif request.method == "POST" and graph_id is None:
+            return HttpResponse(json.dumps(_add_group_graph(request, group_id)), content_type="application/json",
+                                status=201)
+        elif request.method == "DELETE" and graph_id is not None:
+            _delete_group_graph(request, group_id, graph_id)
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted graph with id=%s from group with id=%s" % (graph_id, group_id)
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
 
 
 def _get_group_graphs(request, group_id):
-	"""
+    """
 
 	Query Parameters
 	----------
@@ -773,29 +828,29 @@ def _get_group_graphs(request, group_id):
 	------
 
 	"""
-	authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
 
-	names = request.GET.get('names', None)
-	nodes = request.GET.get('nodes', None)
-	edges = request.GET.get('edges', None)
-	total, graphs = users.search_group_graphs(request,
-											  group_id=group_id,
-											  owner_email=request.GET.get('owner_email', None),
-											  names=names if names is None or isinstance(names, list) else [names],
-											  nodes=nodes if nodes is None or isinstance(nodes, list) else [nodes],
-											  edges=edges if edges is None or isinstance(edges, list) else [edges],
-											  limit=request.GET.get('limit', 20),
-											  offset=request.GET.get('offset', 0))
+    names = request.GET.get('names', None)
+    nodes = request.GET.get('nodes', None)
+    edges = request.GET.get('edges', None)
+    total, graphs = users.search_group_graphs(request,
+                                              group_id=group_id,
+                                              owner_email=request.GET.get('owner_email', None),
+                                              names=names if names is None or isinstance(names, list) else [names],
+                                              nodes=nodes if nodes is None or isinstance(nodes, list) else [nodes],
+                                              edges=edges if edges is None or isinstance(edges, list) else [edges],
+                                              limit=request.GET.get('limit', 20),
+                                              offset=request.GET.get('offset', 0))
 
-	return {
-		'total': total,
-		'graphs': [utils.serializer(graph) for graph in graphs]
-	}
+    return {
+        'total': total,
+        'graphs': [utils.serializer(graph) for graph in graphs]
+    }
 
 
 @is_authenticated()
 def _add_group_graph(request, group_id):
-	"""
+    """
 	Body Parameters
 	----------
 	graph_id : string
@@ -819,17 +874,17 @@ def _add_group_graph(request, group_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GRAPH_SHARE', graph_id=request.POST.get('graph_id', None))
-	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+    authorization.validate(request, permission='GRAPH_SHARE', graph_id=request.POST.get('graph_id', None))
+    authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
 
-	return utils.serializer(users.add_group_graph(request,
-												  group_id=group_id,
-												  graph_id=request.POST.get('graph_id', None)))
+    return utils.serializer(users.add_group_graph(request,
+                                                  group_id=group_id,
+                                                  graph_id=request.POST.get('graph_id', None)))
 
 
 @is_authenticated()
 def _delete_group_graph(request, group_id, graph_id):
-	"""
+    """
 	Parameters
 	----------
 	request : object
@@ -850,11 +905,579 @@ def _delete_group_graph(request, group_id, graph_id):
 	Notes
 	------
 	"""
-	authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
-	authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
+    authorization.validate(request, permission='GRAPH_SHARE', graph_id=graph_id)
+    authorization.validate(request, permission='GROUP_SHARE', group_id=group_id)
 
-	users.delete_group_graph(request,
-							 group_id=group_id,
-							 graph_id=graph_id)
+    users.delete_group_graph(request,
+                             group_id=group_id,
+                             graph_id=graph_id)
 
 
+def group_discussions_ajax_api(request, group_id, discussion_id=None):
+    """
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>#discussions
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+    return _group_discussions_api(request, group_id, discussion_id=discussion_id)
+
+
+def _group_discussions_api(request, group_id, discussion_id=None):
+    """
+	Handles any request (GET/POST) sent to /groups or groups/<group_id>#discussions
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST" and group_id is not None:
+            return HttpResponse(json.dumps(_add_discussion(request, group_id, discussion=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET" and discussion_id is None:
+            return HttpResponse(json.dumps(_get_group_discussions(request, group_id, query=request.GET)),
+                                content_type="application/json")
+        elif request.method == "PUT" and discussion_id is None:
+            return HttpResponse(json.dumps(_update_discussion(request, discussion=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and group_id is not None:
+            _delete_discussion(request, QueryDict(request.body).get('discussion_id', None))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_discussion(request, group_id, discussion={}):
+    """
+	Group Parameters
+	----------
+	group_id : Integer
+		Unique Id of group. Required
+	topic : string
+		Topic of group. Required
+	description : string
+		Topic of group. Optional
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	discussion : object
+		Newly created discussion object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != discussion.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+                             args=discussion.get('owner_email', None))
+
+    return utils.serializer(discussions.add_discussion(request, group_id=group_id,
+                                                       topic=discussion.get('topic', None),
+                                                       description=discussion.get('description', None),
+                                                       owner_email=discussion.get('owner_email', None)))
+
+
+def _get_group_discussions(request, group_id, query={}):
+    """
+
+	Query Parameters
+	----------
+	keyword : string
+		Keyword for searching of the Discussion.
+	limit : integer
+		Number of entities to return. Default value is 20.
+	offset : integer
+		Offset the list of returned entities by this number. Default value is 0.
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+
+	Returns
+	-------
+	total : integer
+		Number of discussions matching the request.
+	discussions : List of Discussions.
+		List of Discussions Objects with given limit and offset.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
+    total, discussionss = discussions.get_discussions(request,
+                                                      group_id=group_id,
+                                                      keyword=query.get('keyword', None),
+                                                      limit=query.get('limit', 20),
+                                                      offset=query.get('offset', 0),
+                                                      order=query.get('order', None),
+                                                      sort=query.get('sort', None))
+
+    return {
+        'total': total,
+        'discussions': [utils.serializer(discussion) for discussion in discussionss]
+    }
+
+
+@is_authenticated()
+def _update_discussion(request, discussion={}):
+    """
+	Group Parameters
+	----------
+	is_closed : integer
+		status of the discussion (0,1) . Optional
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being updated.
+	request : object
+		HTTP POST Request.
+	discussion_id : string
+		Unique ID of the discussion.
+
+	Returns
+	-------
+	discussion : object
+		Newly created discussion object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    return utils.serializer(discussions.update_discussion(request, discussion_id=discussion.get('discussion_id', None),
+                                                          is_closed=discussion.get('is_closed', None)))
+
+
+def _delete_discussion(request, discussion_id):
+    """
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	discussion_id : string
+		Unique ID of the discussion.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    authorization.validate(request, permission='DISCUSSION_DELETE', discussion_id=discussion_id)
+
+    discussions.delete_discussion_by_id(request, discussion_id)
+
+
+def discussion_comments_ajax_api(request, group_id, discussion_id):
+    """
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+    return _discussion_comments_api(request, group_id, discussion_id)
+
+
+def _discussion_comments_api(request, group_id, discussion_id):
+    """
+	Handles any request (GET/POST) sent to /<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST" and discussion_id is not None:
+            return HttpResponse(json.dumps(_add_discussion_comment(request, discussion_id, discussion=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET" and discussion_id is not None:
+            return HttpResponse(json.dumps(_get_discussion_comments(request, group_id, discussion_id)),
+                                content_type="application/json")
+        elif request.method == "PUT" and discussion_id is not None:
+            return HttpResponse(json.dumps(_update_discussion_comment(request, comment=QueryDict(request.body))),
+                                content_type="application/json",
+                                status=200)
+        elif request.method == "DELETE" and discussion_id is not None:
+            _delete_discussion_comment(request, QueryDict(request.body).get('comment_id', None))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_discussion_comment(request, discussion_id, discussion={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of the discussion.
+	owner_email : string
+		Email of the Owner of the discussion. Required
+
+
+	Parameters
+	----------
+	discussion : dict
+		Dictionary containing the data of the discussion being added.
+	discussion_id : string
+		Unique ID of the discussion.
+	request : object
+		HTTP POST Request.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    # Validate add graph API request
+    user_role = authorization.user_role(request)
+    if user_role == authorization.UserRole.LOGGED_IN:
+        if get_request_user(request) != discussion.get('owner_email', None):
+            raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGroupForOtherUser,
+                             args=discussion.get('owner_email', None))
+
+    return utils.serializer(discussions.add_discussion_comment(request, discussion_id=discussion_id,
+                                                               text=discussion.get('text', None),
+                                                               owner_email=discussion.get('owner_email', None)))
+
+
+def _get_discussion_comments(request, group_id, discussion_id):
+    """
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	group_id : string
+		Unique ID of the group.
+	discussion_id : string
+		Unique ID of the discussion.
+
+
+	Returns
+	-------
+	total : integer
+		Number of comments matching the request.
+	comments : List of Comments.
+		List of comments Objects.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+    authorization.validate(request, permission='GROUP_READ', group_id=group_id)
+
+    total, comments = discussions.search_comments_by_discussion_id(request, group_id=group_id,
+                                                                   discussion_id=discussion_id)
+
+    return {
+        'total': total,
+        'comments': [utils.serializer(comment) for comment in comments]
+    }
+
+
+@is_authenticated()
+def _update_discussion_comment(request, comment={}):
+    """
+	Group Parameters
+	----------
+	text : string
+		Text of comment. Required
+
+
+	Parameters
+	----------
+	request : object
+		HTTP POST Request.
+	comment_id : string
+		Unique ID of the comment.
+
+	Returns
+	-------
+	comment : object
+		Newly created comment object.
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    return utils.serializer(discussions.update_comment(request, comment_id=comment.get('comment_id', None),
+                                                       text=comment.get('text', None)))
+
+
+def _delete_discussion_comment(request, comment_id):
+    """
+
+	Parameters
+	----------
+	request : object
+		HTTP GET Request.
+	comment_id : string
+		Unique ID of the comment.
+
+	Returns
+	-------
+	None
+
+	Raises
+	------
+
+	Notes
+	------
+
+	"""
+
+    discussions.delete_comment_by_id(request, comment_id)
+
+
+def comment_reactions_ajax_api(request, group_id, discussion_id, comment_id):
+    """
+	Handles any request sent to following urls:
+		/javascript/groups/<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+	response : JSON Response
+
+	"""
+    return _comments_reactions_api(request, group_id, discussion_id, comment_id)
+
+
+def _comments_reactions_api(request, group_id, discussion_id, comment_id):
+    """
+	Handles any request (GET/POST) sent to /<group_id>#discussions/<discussion_id>
+
+	Parameters
+	----------
+	request - HTTP Request
+
+	Returns
+	-------
+
+	"""
+    if request.META.get('HTTP_ACCEPT', None) == 'application/json':
+        if request.method == "POST":
+            return HttpResponse(json.dumps(_add_comment_reaction(request, comment_id, reaction=request.POST)),
+                                content_type="application/json",
+                                status=201)
+        elif request.method == "GET":
+            return HttpResponse(json.dumps(_get_comment_reactions(request, comment_id, reaction=request.GET)),
+                                content_type="application/json")
+        elif request.method == "DELETE":
+            _delete_comment_reaction(request, comment_id, reaction=QueryDict(request.body))
+            return HttpResponse(json.dumps({
+                "message": "Successfully deleted discussion"
+            }), content_type="application/json", status=200)
+        else:
+            raise MethodNotAllowed(request)  # Handle other type of request methods like OPTIONS etc.
+    else:
+        raise BadRequest(request)
+
+
+@is_authenticated()
+def _add_comment_reaction(request, comment_id, reaction={}):
+    """
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
+    owner_email : string
+        Email of the Owner of the reaction. Required
+
+
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
+
+    Returns
+    -------
+    reaction : object
+        Newly created reaction object.
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+
+    return utils.serializer(discussions.add_comment_reaction(request, comment_id=comment_id,
+                                                             content=reaction.get('content', None),
+                                                             owner_email=reaction.get('owner_email', None)))
+
+
+@is_authenticated()
+def _delete_comment_reaction(request, comment_id, reaction={}):
+    """
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
+    owner_email : string
+        Email of the Owner of the reaction. Required
+
+
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
+
+    Returns
+    -------
+    reaction : object
+        Newly created reaction object.
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+
+    utils.serializer(discussions.delete_comment_reaction(request, comment_id=comment_id,
+                                                         content=reaction.get('content', None),
+                                                         owner_email=reaction.get('owner_email', None)))
+
+
+@is_authenticated()
+def _get_comment_reactions(request, comment_id, reaction={}):
+    """
+    Reaction Parameters
+    ----------
+    id : Integer
+        Unique ID of the comment.
+    content : string
+        content of the reaction.
+
+
+    Parameters
+    ----------
+    reaction : dict
+        Dictionary containing the data of the reaction being added.
+    request : object
+        HTTP POST Request.
+
+    Returns
+    -------
+    total : integer
+        Number of reaction associated with the comment_id.
+    reactions : List of Reactions.
+        List of Reaction Objects associated with the comment_id.
+
+    Raises
+    ------
+
+    Notes
+    ------
+
+    """
+    total, reactions = discussions.get_comment_reactions(request, comment_id=comment_id,
+                                                         content=reaction.get('content', None))
+
+    return {
+        'total': total,
+        'reactions': [utils.serializer(reaction) for reaction in reactions]
+    }

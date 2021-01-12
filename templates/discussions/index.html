@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load staticfiles %}
+
+
+
+
+
+
+
+<div class="container comment-list "  >
+
+  <br><br><br><br><br>
+            
+    <input type="text" id="DiscussionID" hidden value="{{ discussion.id }}">
+    <input type="text" id="GroupID" hidden value="{{ discussion.group_id }}">
+    <input type="text" id="DiscussionStatus" hidden value="{{ discussion.is_closed }}">
+    <input type="text" id="DiscussionCreatedAt" hidden value="{{ discussion.created_at}}">
+
+
+<div id="CommentsList"></div>
+
+{% if discussion.is_closed == 0 %}
+<div class="container-sm pb-comment-container">
+    <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <textarea placeholder="Write your comment here!" id= "CommentText" class="pb-comment-textarea"></textarea>
+                    <form class="form-inline">
+                        <button class="btn btn-success pull-right" id="CreateCommentBtn" type="button">Add Comment</button>
+                    </form>
+                </div>
+            
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+
+</div>
+  <div class="sticky discussion-header">
+    <span style="font-size: 30px;"> #{{discussion.id}} {{discussion.topic}}</span> <span style="font-size: 12px;">{{discussion.description}}</span>
+    <br>
+    <span style="font-size: 15px;"> {{discussion.owner_email}}</span>
+    <span><button type="button" class="btn btn-sm btn-default pull-right" style="float: right; margin-right: 100px;"> <- Back To Discussions</button></span>
+    
+  </div>
+
+    <script type="text/javascript" src="{% static 'js/groups_page.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+          discussionPage.init();
+        });
+    </script>
+
+{% endblock %}

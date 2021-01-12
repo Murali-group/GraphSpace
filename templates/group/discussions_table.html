@@ -1,0 +1,23 @@
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#addDiscussionForm" data-whatever="@getbootstrap">Add Discussion</button>
+
+<table id="sharedDiscussionsTable"
+       data-toggle="table"
+       data-show-refresh="true"
+       data-show-columns="false"
+       data-show-toggle="true"
+       data-ajax="groupPage.sharedDiscussionsTable.getDiscussionsSharedToGroup"
+       data-search="true"
+       data-side-pagination="server"
+       data-data-field="discussions"
+       data-pagination="true"
+       data-sort-name="name"
+       data-id-field="id"
+       data-sort-order="asc">
+    <thead>
+    <tr>
+        <th data-sortable="True" data-formatter="groupPage.sharedDiscussionsTable.discussionFormatter">Topic
+        </th>
+
+    </tr>
+    </thead>
+</table>

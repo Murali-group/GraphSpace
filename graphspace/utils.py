@@ -1,7 +1,7 @@
 import json
 import string
 import base64
-
+import re
 from django.utils.crypto import random
 
 
@@ -73,3 +73,9 @@ def cytoscapePresetLayout(csWebJson):
 
 	return json.dumps(csJson)
 
+def websocket_group_name(name):
+    """ 
+    	Django-channels only accepts alphanumerics, hyphen and period; 
+    	Remove all other symbols 
+    """
+    return re.sub('[^a-zA-Z0-9\n\.]', '-', name)
