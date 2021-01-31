@@ -111,6 +111,7 @@ TEMPLATES = [
                 'graphspace.context_processors.auth',
                 'graphspace.context_processors.static_urls',
                 'graphspace.context_processors.login_forms',
+                'graphspace.context_processors.maintenance',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -160,3 +161,6 @@ LOGGING = {
 }
 
 MAINTENANCE = False
+IS_MAINTENANCE_SCHEDULED = True if os.environ.get('IS_MAINTENANCE_SCHEDULED', "false") == "true" else False
+MAINTENANCE_START_DATETIME = os.environ.get('MAINTENANCE_START_DATETIME', None)
+MAINTENANCE_END_DATETIME = os.environ.get('MAINTENANCE_END_DATETIME', None)
