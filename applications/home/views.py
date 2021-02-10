@@ -6,7 +6,8 @@ import applications.users.controllers as users
 from django.template import RequestContext
 from graphspace.utils import *
 from graphspace.exceptions import *
-
+from graphspace.utils import generate_uid
+from django.conf import settings
 
 def home_page(request):
 	"""
@@ -225,12 +226,14 @@ def login(request):
 		request_body = json.loads(request.body)
 		user = users.authenticate_user(request, username=request_body['user_id'], password=request_body['pw'])
 
-		if user is not None:
+		if user is not None and user['user_account_status'] == 1:
 			request.session['uid'] = user['user_id']
 			request.session['admin'] = user['admin']
 			return HttpResponse(
 				json.dumps(json_success_response(200, message='%s, Welcome to GraphSpace!' % user['user_id'])),
 				content_type="application/json")
+		elif user is not None and user['user_account_status'] is not 1:
+			raise ValidationError(request, ErrorCodes.Validation.UserUnVerified)
 		else:
 			raise ValidationError(request, ErrorCodes.Validation.UserPasswordMisMatch)
 	else:
@@ -251,19 +254,53 @@ def register(request):
 		if 'user_id' in request_body and 'password' in request_body:
 			# RegisterForm is bound to POST data
 			register_form = RegisterForm(request_body)
-			if register_form.is_valid():
-				user = users.register(request, username=register_form.cleaned_data['user_id'],
-				                      password=register_form.cleaned_data['password'])
-				if user is not None:
-					request.session['uid'] = user.email
-					request.session['admin'] = user.is_admin
 
-			return HttpResponse(json.dumps(json_success_response(200, message='Registered!')),
-			                    content_type="application/json")
+			if register_form.is_valid():
+				token = generate_uid()
+				email_list_announcement = request_body['email_list_announcement']
+				email_list_user = request_body['email_list_user']
+				user = users.register(request, username=register_form.cleaned_data['user_id'],
+									  password=register_form.cleaned_data['password'], user_account_status=0, email_confirmation_code=token,
+									  email_list_announcement=email_list_announcement, email_list_user=email_list_user)
+
+				users.send_confirmation_email(request, request_body['user_id'], token, email_list_announcement, email_list_user)
+				return HttpResponse(json.dumps(json_success_response(200, message='A verification link has been sent to your email account. '+
+					   														  'Please click on the link to verify your email and continue '+
+																				  'the registration process.')),
+																	 content_type="application/json")
 		else:
 			raise BadRequest(request)
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
+
+
+def activate_account_page(request):
+	"""
+		Activate a user account
+
+		:param request: HTTP GET Request containing:
+
+		{"activation_code": <activation_code>}
+	"""
+
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
+
+	if 'GET' == request.method:
+		user = users.get_email_confirmation_code(request, request.GET.get('activation_code', None))
+		users.update_user(request, user.id, user_account_status=1, email=user.email, email_list_announcement=user.email_list_announcement, email_list_user=user.email_list_user)
+		if user is not None:
+			request.session['uid'] = user.email
+			request.session['admin'] = user.is_admin
+			request.session['email_list_announcement'] = user.email_list_announcement
+			request.session['email_list_user'] = user.email_list_user
+			announcement_list_message = 'announcements email list for GraphSpace ' + '(' + settings.ANNOUNCEMENTS_LIST + ')' if user.email_list_announcement == 1 else ''
+			user_list_message = 'users email list for GraphSpace ' + '(' + settings.USERS_LIST + ')' if user.email_list_user == 1 else ''
+			comma = ', ' if user.email_list_announcement == 1 and user.email_list_user == 1 else ''
+			context["success_message"] = 'Thank you! Your account has been activated successfully. You will also receive email confirmation(s) for the following email list(s): ' + announcement_list_message + comma + user_list_message +'.'
+			
+			return render(request, 'home/index.html', context)
+	else:
+	    raise MethodNotAllowed(request)  # Handle other type of request methods like GET, PUT, UPDATE.
 
 
 def logout(request):

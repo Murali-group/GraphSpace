@@ -28,3 +28,4 @@ elasticsearch-dsl>=5.0.0,<6.0.0
 sphinx-rtd-theme
 sphinx
 recommonmark
+mailmanclient==3.1.1

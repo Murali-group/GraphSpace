@@ -1,6 +1,26 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 {% block content %}
+{% if success_message != None %}
+    <script type="text/javascript">
+        var message = "{{ success_message }}";
+        $(function() {
+            $.notify({
+                // options
+                message: message,
+                }, {
+                // settings
+                type: 'success',
+                delay: 500000,
+                placement: {
+                    from: "top",
+                    align: "center"},
+                });
+        })
+
+    </script>
+{% endif %}
+
     <div class="container-fluid zero-padding zero-margin">
 
         <div class="content">
@@ -10,6 +30,7 @@
                     <div class="container-fluid">
                         <div class="row banner-text container-fluid">
                             <div class="col-md-12" style="text-align: center">
+
                                 <h1>Welcome to GraphSpace!</h1>
 
                                 <h2>
@@ -153,8 +174,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-8">
-                        <p >Please contact <a class="link-reset" href="http://bioinformatics.cs.vt.edu/~murali/"><b>T. M. Murali</b></a> at murali@cs.vt.edu if you have any questions
-                    about GraphSpace.</p>
+                        <p >Please contact <a class="link-reset" href="http://bioinformatics.cs.vt.edu/~murali/"><b>T. M. Murali</b></a> at murali@cs.vt.edu if you have any questions about GraphSpace. You can also consider joining the <a href="http://manual.graphspace.org/en/latest/Email_Lists_for_GraphSpace.html">graphspace-users mailing list </a>. </p>
                     </div>
                     <div class="col-md-4">
                         <a href="http://bioinformatics.cs.vt.edu/~murali/" class="pull-right">
@@ -166,4 +186,4 @@
         </div>
     </div>
 {% endblock %}
-
+ 

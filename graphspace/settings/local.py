@@ -23,6 +23,10 @@ SECRETKEY = 'None'
 # Path to GraphSPace
 PATH = "/Path_to_GraphSpace"
 
+# Email lists of graphspace
+ANNOUNCEMENTS_LIST = 'graphspace-announcements@graphspace.org'
+USERS_LIST = 'graphspace-users@graphspace.org'
+
 # SHOULD NEVER CHANGE THIS VALUE
 SECRET_KEY = 'this-is-a-secret-key-for-local-settings-only'
 

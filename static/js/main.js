@@ -61,6 +61,19 @@ var header = {
         var user_id = $("#user_id").val();
         var password = $("#password").val();
         var verify_password = $("#verify_password").val();
+        var email_list_announcement = 0;
+        var email_list_user = 0;
+        var announcement_checked = document.getElementById("email_list_announcement");
+        var user_checked = document.getElementById("email_list_user");
+
+        
+        if (announcement_checked.checked == true) {
+            email_list_announcement = 1;
+        }
+          
+        if (user_checked.checked == true) {
+            email_list_user = 1;
+        }
 
         if ($("#user_id")) {
             var reg = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -114,10 +127,17 @@ var header = {
         //POST Request to log in user
         jsonRequest('POST', "/register/", {
                 "user_id": user_id,
-                "password": password
+                "password": password,
+                "email_list_announcement": email_list_announcement,
+                "email_list_user": email_list_user
             },
             successCallback = function (response) {
-                window.location.reload();
+                $('#signupModal').modal('hide');
+                $.notify({
+                    message: response.Message
+                }, {
+                    type: 'success'
+                });
             },
             errorCallback = function (response) {
                 $.notify({
