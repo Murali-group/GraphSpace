@@ -10,8 +10,11 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 from sqlalchemy.ext.declarative import declarative_base
 
+from dotenv import load_dotenv
 import os
 from elasticsearch import Elasticsearch
+
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
@@ -111,6 +114,7 @@ TEMPLATES = [
                 'graphspace.context_processors.auth',
                 'graphspace.context_processors.static_urls',
                 'graphspace.context_processors.login_forms',
+                'graphspace.context_processors.maintenance',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -160,3 +164,6 @@ LOGGING = {
 }
 
 MAINTENANCE = False
+IS_MAINTENANCE_SCHEDULED = True if os.getenv('IS_MAINTENANCE_SCHEDULED', "false") == "true" else False
+MAINTENANCE_START_DATETIME = os.getenv('MAINTENANCE_START_DATETIME', None)
+MAINTENANCE_END_DATETIME = os.getenv('MAINTENANCE_END_DATETIME', None)

@@ -9,6 +9,13 @@ def auth(request):
 	}
 
 
+def maintenance(request):
+	return {
+		'is_maintenance_scheduled': settings.IS_MAINTENANCE_SCHEDULED,
+		'maintenance_start_datetime': settings.MAINTENANCE_START_DATETIME,
+		'maintenance_end_datetime': settings.MAINTENANCE_END_DATETIME,
+	}
+
 def static_urls(request):
 	return {
 		'url': settings.URL_PATH

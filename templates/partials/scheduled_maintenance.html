@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+
+{% load staticfiles %}
+
+{% if is_maintenance_scheduled == True and maintenance_start_datetime and maintenance_end_datetime%}
+<div class="alert alert-danger" role="alert">
+  Please note that Graphspace will be unavailable due to scheduled maintenance from {{ maintenance_start_datetime }} to {{ maintenance_end_datetime }}.
+  We will be using this time to update our infrastructure.
+  <p style="font-weight: bold;">Any graph updated or uploaded during the maintenance period will be lost. Please plan your work accordingly.</p>
+  We appreciate your patience and apologize for any inconvenience.
+</div>
+{% endif %}
