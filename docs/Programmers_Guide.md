@@ -102,5 +102,4 @@ For quick use of the GraphSpace REST APIs or if you are stuck somewhere and you 
 - Choose the Import File in the pop up window.
 ![post man collection](_static/images/rest-api/post_man_collection.jpg)
 - Provide the Authorization details for the imported requests (as Authorization details have been removed for security concern)
-- t
 
