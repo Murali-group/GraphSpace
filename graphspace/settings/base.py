@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 import os
 from elasticsearch import Elasticsearch
 
-load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 ALLOWED_HOSTS = ['*']
@@ -164,6 +163,6 @@ LOGGING = {
 }
 
 MAINTENANCE = False
-IS_MAINTENANCE_SCHEDULED = True if os.getenv('IS_MAINTENANCE_SCHEDULED', "false") == "true" else False
-MAINTENANCE_START_DATETIME = os.getenv('MAINTENANCE_START_DATETIME', None)
-MAINTENANCE_END_DATETIME = os.getenv('MAINTENANCE_END_DATETIME', None)
+IS_MAINTENANCE_SCHEDULED = False;
+MAINTENANCE_START_DATETIME = None;
+MAINTENANCE_END_DATETIME = None;
