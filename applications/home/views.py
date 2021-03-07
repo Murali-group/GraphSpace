@@ -156,13 +156,14 @@ def forgot_password_page(request):
 	if 'GET' == request.method:
 		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
 	elif 'POST' == request.method:
-		password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
+		email = request.POST.get('forgot_email', None)
 
-		if password_reset_code is not None:
+		if users.get_user(request, email) is not None:
+			password_reset_code = users.add_user_to_password_reset(request, email)
 			users.send_password_reset_email(request, password_reset_code)
 			context["success_message"] = "You will receive an email with link to update the password!"
 		else:
-			context["error_message"] = "You will receive an email with link to update the password!"
+			context["success_message"] = "You will receive an email with link to update the password!"
 		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
