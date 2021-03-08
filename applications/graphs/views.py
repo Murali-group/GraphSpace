@@ -30,9 +30,9 @@ def upload_graph_page(request):
 		except Exception as e:
 			context['Error'] = str(e)
 
-		return render(request, 'upload_graph/index.html', context)
+		return render(request, 'upload_graph/index.html', context.flatten())
 	else:
-		return render(request, 'upload_graph/index.html', context)
+		return render(request, 'upload_graph/index.html', context.flatten())
 
 
 def graphs_page(request):
@@ -60,7 +60,7 @@ def graphs_page(request):
 		context = RequestContext(request, {
 			"tags": request.GET.get('tags', '')
 		})
-		return render(request, 'graphs/index.html', context)
+		return render(request, 'graphs/index.html', context.flatten())
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -140,7 +140,7 @@ def graph_page(request, graph_id):
 		for group in context['groups']:
 			group['is_shared'] = 1 if group['id'] in shared_group_ids else 0
 
-	return render(request, 'graph/index.html', context)
+	return render(request, 'graph/index.html', context.flatten())
 
 
 '''
