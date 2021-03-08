@@ -15,7 +15,7 @@ from graphspace.wrappers import is_authenticated
 
 
 def upload_graph_page(request):
-	context = RequestContext(request, {})
+	context = {}
 
 	if request.method == 'POST':
 		try:
@@ -57,9 +57,8 @@ def graphs_page(request):
 		------
 	"""
 	if 'GET' == request.method:
-		context = RequestContext(request, {
-			"tags": request.GET.get('tags', '')
-		})
+		context = {"tags": request.GET.get('tags', '')}
+
 		return render(request, 'graphs/index.html', context)
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
@@ -94,18 +93,18 @@ def graph_page(request, graph_id):
 	graph_id : string
 		Unique ID of the graph. Required
 	"""
-	context = RequestContext(request, {})
+	context = {}
 	authorization.validate(request, permission='GRAPH_READ', graph_id=graph_id)
 
 	uid = request.session['uid'] if 'uid' in request.session else None
 
-	context.push({"graph": _get_graph(request, graph_id)})
-	context.push({"is_posted_by_public_user": 'public_user' in context["graph"]["owner_email"]})
-	context.push({"default_layout_id": str(context["graph"]['default_layout_id']) if context["graph"][
-		'default_layout_id'] else None})
+	context["graph"] = _get_graph(request, graph_id)
+	context["is_posted_by_public_user"] = 'public_user' in context["graph"]["owner_email"]
+	context["default_layout_id"] = str(context["graph"]['default_layout_id']) if context["graph"][
+		'default_layout_id'] else None
 
 	default_layout = graphs.get_layout_by_id(request, context["graph"]['default_layout_id']) if context["graph"][
-		                                                                                            'default_layout_id'] is not None else None
+		'default_layout_id'] is not None else None
 
 	if default_layout is not None and (default_layout.is_shared == 1 or default_layout.owner_email == uid) and request.GET.get(
 			'user_layout') is None and request.GET.get('auto_layout') is None:
