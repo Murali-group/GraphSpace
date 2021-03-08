@@ -31,7 +31,7 @@ def home_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		return render(request, 'home/index.html', context)  # Handle GET request to index page.
@@ -61,7 +61,7 @@ def features_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		return render(request, 'features/index.html', context)  # Handle GET request to index page.
@@ -91,7 +91,7 @@ def help_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		return render(request, 'help/index.html', context)  # Handle GET request to index page.
@@ -121,7 +121,7 @@ def about_us_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		return render(request, 'about_us/index.html', context)  # Handle GET request to index page.
@@ -151,7 +151,7 @@ def forgot_password_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
@@ -190,7 +190,7 @@ def reset_password_page(request):
 	------
 
 	"""
-	context = {}  # Checkout base.py file to see what context processors are being applied here.
+	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
 		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))
