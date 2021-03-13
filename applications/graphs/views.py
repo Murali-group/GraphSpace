@@ -494,6 +494,9 @@ def _update_graph(request, graph_id, graph={}):
 	authorization.validate(request, permission='GRAPH_UPDATE', graph_id=graph_id)
 	user_role = authorization.user_role(request)
 
+	if 'update_legend_format' in graph:
+	        return utils.serializer(graphs.update_graph_with_html_legend(request, graph_id=graph_id, param=graph))
+
 	return utils.serializer(graphs.update_graph(request,
 	                                            graph_id=graph_id,
 	                                            name=graph.get('name', None),

@@ -1,0 +1,28 @@
+<ul id="legendLabelEditorSideBar" class="sidebar-nav gs-sidebar-nav">
+    <li><p class="lead text-center">Edit Legend Label</p></li>
+    <li>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="legendLabel" class="col-sm-4 control-label">Label</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" id="legendLabel" placeholder="label"/>
+                </div>
+            </div>
+        </div>
+    </li>
+    <li>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-danger gs-full-width" onclick="graphPage.legend.legendEditor.legendLabelEditor.close(save=false);">
+                    Cancel
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <button class="btn btn-success gs-full-width" onclick="graphPage.legend.legendEditor.legendLabelEditor.close(save=true);">
+                    Ok
+                </button>
+            </div>
+        </div>
+    </li>
+</ul>
