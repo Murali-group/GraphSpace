@@ -118,7 +118,7 @@ The `Edge Object` describes an edge in the graph. An `Edge Object` typically con
 
 - required:
 
-    - `name` – text – Name of the graph. Refer to [query semantics](/Searching_Graphs.html#query-semantics) section to find how `name` attribute is used for [searching graphs]().
+    - `name` – text – Name of the graph. Refer to [query semantics](/Searching_Graphs.html#query-semantics) section to find how `name` attribute is used for [searching graphs](). The maximum allowed length of the Graph Name is 256 character long.
     - `tags` – list of strings – Used to categorize graphs. See the section on [organizing graphs using tags](/Organizing_Graphs_Using_Tags.html) for more information.
     - `description` – text – May be HTML formatted string. May be link to image hosted elsewhere. May simly be a string which contains information such as a [legend or significance of the graph](/Viewing_Graphs.html#graph-information-tab). This information is displayed in the tab called [Graph Informtaion](/Viewing_Graphs.html#graph-information-tab).
     
