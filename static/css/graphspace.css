@@ -35,6 +35,10 @@ div.container-fluid {
     width: 100%;
 }
 
+.gs-features{
+    margin-bottom:150px;
+}
+
 .zero-margin {
     margin: 0 !important;
 }
@@ -128,13 +132,36 @@ div.container-fluid {
     position: absolute;
 }
 
-#cyGraphContainer {
+#graphContainer{
     width: 100%;
-    height: 78%;
     position: absolute;
     left: 0px;
     top: 0px;
     z-index: 999;
+    background-color: white;
+}
+
+#cyGraphContainer {
+    width: 100%;
+    height: 78%;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+    z-index: 999;
+    background-color: white;
+}
+
+#cyLegendContainer{
+    width: 20%;
+    height: 0px;
+    right: 0px;
+    position: absolute;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    z-index: 999;
+    /*border-color: transparent;*/
+    /*border-left: thin solid #C0C0C0 ;*/
     background-color: white;
 }
 
@@ -319,7 +346,7 @@ ul.nav.nav-tabs > li > a:hover {
 .sidebar-nav > li > .btn-group > button.btn,
 .sidebar-nav > li > .btn-group > a.btn {
     display: block;
-    max-width: 120px;
+    max-width: 125px;
     margin: 0 auto;
     background-color: #4285F4;
     color: #fff;
@@ -412,6 +439,13 @@ p.lead {
     display: none !important;
 }
 
+.btn-group-sm > .btn, .btn-sm {
+    padding: 5px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
 @media (min-width: 768px) {
     #wrapper {
         padding-right: 250px;
@@ -431,6 +465,7 @@ p.lead {
 
     #page-content-wrapper {
         /*padding: 20px;*/
+        padding-right: 250px;
         position: relative;
     }
 
@@ -438,4 +473,41 @@ p.lead {
         position: relative;
         margin-left: 0;
     }
+}
+
+/* Alerts */
+.alert {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 1px;
+  margin-bottom: 12px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.alert.alert-success {
+  background-color: rgba(227, 253, 235, 1);
+  border-color: rgba(38, 179, 3, 1);
+  color: rgba(60, 118, 61, 1);
+}
+
+.alert.alert-info {
+  background-color: rgba(217, 237, 247, 1);
+  color: rgba(49, 112, 143, 1);
+  border-color: rgba(126, 182, 193, 1);
+}
+
+
+.alert.alert-warning {
+  background-color: rgba(252, 248, 227, 1);
+  border-color: rgba(177, 161, 129, 1);
+  color: rgba(138, 109, 59, 1);
+}
+
+.alert.alert-danger {
+  background-color: rgba(248, 215, 218, 1);
+  border-color: rgba(220, 53, 69, 1);
+  color: rgba(114, 28, 36,1);
 }
