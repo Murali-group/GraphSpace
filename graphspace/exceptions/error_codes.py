@@ -36,3 +36,5 @@ class ErrorCodes(object):
             1013, "Cannot create layout with owner email = `{0}`.")
         LayoutNameAlreadyExists = (
             1014, "Layout with name `{0}` already exists.")
+        GraphNameSize = (
+            1015, "Graph Name cannot be more than 256 characters long.")

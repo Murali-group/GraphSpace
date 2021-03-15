@@ -440,6 +440,9 @@ def _add_graph(request, graph={}):
 
 	# Validate add graph API request
 	user_role = authorization.user_role(request)
+	graph_name = graph.get('name')
+	if len(graph_name)>256: # To check if the Graph Name is within the given range(i.e maximum 256 characters long)
+		raise BadRequest(request, error_code=ErrorCodes.Validation.GraphNameSize)
 	if user_role == authorization.UserRole.LOGGED_IN:
 		if get_request_user(request) != graph.get('owner_email', None):
 			raise BadRequest(request, error_code=ErrorCodes.Validation.CannotCreateGraphForOtherUser,
