@@ -37,4 +37,4 @@ class ErrorCodes(object):
         LayoutNameAlreadyExists = (
             1014, "Layout with name `{0}` already exists.")
         GraphNameSize = (
-            1015, "Graph Name cannot be more 
+            1015, "Graph Name cannot be more than 256 characters long.")
