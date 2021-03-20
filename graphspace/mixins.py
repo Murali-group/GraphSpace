@@ -17,4 +17,4 @@ class IDMixin(object):
 
 class TimeStampMixin(object):
 	created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-	updated_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+	updated_at = Column(TIMESTAMP, server_default=func.now(), nullable=False, onupdate=func.now())
