@@ -10,6 +10,7 @@ from graphspace.wrappers import atomic_transaction
 from graphspace_python.graphs.formatter.json_formatter import CyJSFormat
 from applications.legend_formatter import convert_html_legend_1, convert_html_legend_2
 
+
 import json
 from json import dumps, loads
 
@@ -43,16 +44,28 @@ def map_attributes(attributes):
 def get_graph_by_id(request, graph_id):
 	return db.get_graph_by_id(request.db_session, graph_id)
 
+"""
+Get the list of all graphs that is shared with a group
+"""
+def get_graphs_by_group(db_session, group_id):
+	return db.get_graphs_by_group(db_session, group_id)
+
+"""
+Get a list of all users a specific graph is shared with
+"""
+def get_graphs_to_users(db_session, graph_id):
+	return db.get_graphs_to_users(db_session, graph_id)
+
 
 def is_user_authorized_to_view_graph(request, username, graph_id):
 	is_authorized = False
 
 	graph = db.get_graph_by_id(request.db_session, graph_id)
 
-	if graph is not None:  # Graph doesnt exists
+	if graph is not None:  # Graph doesnt exist
 		if graph.owner_email == username:
 			is_authorized = True
-		elif graph.is_public == 1:  # graph is public
+		elif graph.is_public == 1:  # graph is publi"""c
 			is_authorized = True
 		else:  # graph is not public
 			for group in graph.groups:
@@ -177,6 +190,7 @@ def uploadJSONFile(request, username, graphJSON, title):
 @atomic_transaction
 def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
               default_layout_id=None):
+
 	# If graph already exists for user, alert them
 	if db.get_graph(request.db_session, owner_email, name) is not None:
 		raise Exception('Graph ' + name + ' already exists for ' + owner_email + '!')
@@ -205,7 +219,12 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 	# Add graph edges
 	edge_name_to_id_map = add_graph_edges(request, new_graph.id, G.edges(data=True), node_name_to_id_map)
 
-	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=map_attributes(json.loads(new_graph.graph_json)), refresh=True)
+	# Create json body to add into elasticsearch
+	body_data = map_attributes(json.loads(new_graph.graph_json))
+	body_data["string_owner_email"] = owner_email
+	body_data["long_is_public"] = is_public
+	body_data["datetime_updated_at"] = new_graph.updated_at
+	settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=new_graph.id, body=body_data, refresh=True)
 
 	return new_graph
 
@@ -214,12 +233,15 @@ def add_graph(request, name=None, tags=None, is_public=None, graph_json=None, st
 def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, style_json=None, owner_email=None,
                  default_layout_id=None):
 	graph = {}
+	body_data = {} # JSON body that will be ued to update graph inElasticsearch
 	if name is not None:
 		graph['name'] = name
 	if owner_email is not None:
 		graph['owner_email'] = owner_email
+		body_data['string_owner_email'] = owner_email
 	if is_public is not None:
 		graph['is_public'] = is_public
+		body_data['long_is_public'] = is_public
 	if default_layout_id is not None:
 		graph['default_layout_id'] = default_layout_id if default_layout_id != 0 else None
 
@@ -241,14 +263,19 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
-		settings.ELASTIC_CLIENT.index(index="graphs", doc_type='json', id=graph_id, body=map_attributes(G.get_graph_json()), refresh=True)
+		body_data.update(map_attributes(G.get_graph_json))
 
-	return db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
+	updated_graph = db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
+	# If any information in Elasticsearch was changed
+	if bool(body_data):
+		body_data['datetime_updated_at'] = updated_graph.updated_at
+		settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
+
+	return updated_graph
 
 
 def get_graph_by_name(request, owner_email, name):
 	return db.get_graph(request.db_session, owner_email=owner_email, name=name)
-
 
 def delete_graph_by_id(request, graph_id):
 	db.update_graph(request.db_session, id=graph_id, updated_graph={'default_layout_id': None})
@@ -319,6 +346,16 @@ def search_graphs_by_group_ids(request, group_ids=None, owner_email=None, names=
 	return db.find_graphs(request.db_session, group_ids=group_ids, owner_email=owner_email, names=names, nodes=nodes,
 	                      edges=edges, tags=tags, limit=limit, offset=offset)
 
+"""
+This function call will update the long_shared_users field in elasticsearch
+whenever a user's access to a shared graph changes.
+All we do is create a join of GroupsToGraphs and GroupsToUsers, and retrieve the new list of
+users from postgres after it is updated. That is then used to update elasticsearch
+"""
+def update_shared_users_elasticsearch(request, graph_id):
+	shared_users = [user.user_id for user in db.get_graphs_to_users(request.db_session, graph_id)]
+	body_data = { 'long_shared_users': shared_users }
+	settings.ELASTIC_CLIENT.update(index="graphs", doc_type='json', id=graph_id, body={'doc': body_data}, refresh=True)
 
 def add_graph_to_group(request, group_id, graph_id):
 	if graph_id is not None:
@@ -326,57 +363,100 @@ def add_graph_to_group(request, group_id, graph_id):
 	else:
 		raise Exception("Required Parameter is missing!")
 	if graph is not None:
-		return db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
+		result = db.add_graph_to_group(request.db_session, group_id=group_id, graph_id=graph.id)
+		update_shared_users_elasticsearch(request, graph_id) # Update elasticsearch also before returning
+		return result
 	else:
 		raise Exception("Graph does not exit.")
 
-
 def delete_graph_to_group(request, group_id, graph_id):
 	db.delete_graph_to_group(request.db_session, group_id=int(group_id), graph_id=int(graph_id))
+	update_shared_users_elasticsearch(request, graph_id) # Update elasticsearch also before returning
 	return
-
 
 def search_graphs1(request, owner_email=None, names=None, nodes=None, edges=None, tags=None, member_email=None,
                    is_public=None, query=None, limit=20, offset=0, order='desc', sort='name'):
-	sort_attr = getattr(db.Graph, sort if sort is not None else 'name')
-	orber_by = getattr(db, order if order is not None else 'desc')(sort_attr)
 	is_public = int(is_public) if is_public is not None else None
 
 	if member_email is not None:
 		member_user = users.controllers.get_user(request, member_email)
-		if member_user is not None:
-			group_ids = [group.id for group in users.controllers.get_groups_by_member_id(request, member_user.id)]
-		else:
+		if member_user is None:
 			raise Exception("User with given member_email doesnt exist.")
 	else:
-		group_ids = None
+		member_user = None
 
+	# Edge searching currently not enabled
 	if edges is not None:
 		edges = [tuple(edge.split(':')) for edge in edges]
 
+	# Querying only elasticsearch. No need to go to postgres since ES has all required data
+
+	# This maps the field names from postgres to the field names in Elasticsearch.
+	# Needed for the 'sort' paramter in the query that goes into ES
+	postgres_to_elasticsearch_mapping = {
+		"name":"object_data.string_name.keyword",
+		"owner_email": "string_owner_email.keyword",
+		"is_public": "long_is_public",
+		"updated_at": "datetime_updated_at"
+	}
+
+	# Creating the query to send to Elasticsearch. Note that we no longer query
+	# postgres. All required data is stored in Elasticearch
+	query["size"] = limit
+	query["from"] = offset
+	query["_source"] = [	# Select fields to get from Elasticsearch
+		"string_owner_email", "long_is_public", "object_data.string_name",
+		"object_data.string_tags", "datetime_updated_at"
+	]
+	query["sort"] = [{	# Results need to be sorted
+		postgres_to_elasticsearch_mapping[sort] : {"order": order}
+	}]
+	added_query = {}
+
+	if owner_email != None:  # My Graphs
+		added_query["query"] = "(string_owner_email:\"" + owner_email + "\")"
+	elif member_email != None: # Shared Graphs
+		added_query["query"] = "(long_shared_users: " + str(member_user.id) + ")"
+	elif is_public != None:  # Public Graphs
+		added_query["query"] = "(long_is_public:" + str(is_public) + ")"
+
 	if 'query' in query:
-		s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
-		s.update_from_dict(query)
-		s.source(False)
-		graph_ids = [int(hit.meta.id) for hit in s.scan()]
+		# Search parameter has been provided
+		query["query"]["bool"]["must"].append({
+			"query_string": added_query		# filter by owner_email or is_public
+		})
+		query["query"]["bool"]["minimum_should_match"] = 1
+
 	else:
-		graph_ids = None
+		# No search paramter. Must list all graphs
+		query["query"] = {}
+		query["query"]["bool"] = {}
+		query["query"]["bool"]["must"] = []
+		query["query"]["bool"]["must"].append({
+			"query_string": added_query		# filter by owner_email or is_public
+		})
+		query["query"]["bool"]["minimum_should_match"] = 0
 
-	total, graphs_list = db.find_graphs(request.db_session,
-	                                    owner_email=owner_email,
-	                                    graph_ids=graph_ids,
-	                                    is_public=is_public,
-	                                    group_ids=group_ids,
-	                                    names=names,
-	                                    nodes=nodes,
-	                                    edges=edges,
-	                                    tags=tags,
-	                                    limit=limit,
-	                                    offset=offset,
-	                                    order_by=orber_by)
+	# Query elasticsearch once
+	s = Search(using=settings.ELASTIC_CLIENT, index='graphs')
+	s.update_from_dict(query)
+	response = s.execute()
 
-	return total, graphs_list
+	#Creating an array of graphs as JSON objects
+	graphs_list = []
+	for hit in s:
+		if 'string_tags' not in hit.object_data:
+			hit.object_data.string_tags = [] # tags may be empty!
+		graphs_list.append({
+			"name": hit.object_data.string_name,
+			"tags": [tag for tag in hit.object_data.string_tags],
+			"is_public": hit.long_is_public,
+			"owner_email": hit.string_owner_email,
+			"id": hit.meta.id,
+			"updated_at": hit.datetime_updated_at
+		})
 
+	return response.hits.total, graphs_list
 
 def search_graphs(request, owner_email=None, member_email=None, names=None, is_public=None, nodes=None, edges=None,
                   tags=None, limit=20, offset=0, order='desc', sort='name'):
