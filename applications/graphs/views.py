@@ -220,6 +220,8 @@ def graphs_advanced_search_ajax_api(request):
 						raise BadRequest(request, error_code=ErrorCodes.Validation.NotAllowedGraphAccess,
 						                 args=queryparams.get('owner_email', None))
 
+			# graphs_list is already a json string dump of the graph objects. JSONification is done
+			# in controllers.py
 			total, graphs_list = graphs.search_graphs1(request,
 			                                           owner_email=queryparams.get('owner_email', None),
 			                                           member_email=queryparams.get('member_email', None),
@@ -236,7 +238,7 @@ def graphs_advanced_search_ajax_api(request):
 
 			return HttpResponse(json.dumps({
 				'total': total,
-				'graphs': [utils.serializer(graph, summary=True) for graph in graphs_list]
+				'graphs': graphs_list
 			}), content_type="application/json", status=200)
 		else:
 			raise MethodNotAllowed(request)  # Handle other type of request methods like GET, OPTIONS etc.
