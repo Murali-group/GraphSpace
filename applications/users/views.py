@@ -21,7 +21,7 @@ def groups_page(request):
 	"""
 	if 'GET' == request.method:
 		context = RequestContext(request, {})
-		return render(request, 'groups/index.html', context)
+		return render(request, 'groups/index.html', context.flatten())
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -43,7 +43,7 @@ def group_page(request, group_id):
 		context.push({
 			"group": _get_group(request, int(group_id)),
 		})
-		return render(request, 'group/index.html', context)
+		return render(request, 'group/index.html', context.flatten())
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -69,7 +69,7 @@ def join_group_page(request, group_id):
 					"group": group,
 					"invite_code": request.GET.get('code', None)
 				})
-				return render(request, 'join_group/index.html', context)
+				return render(request, 'join_group/index.html', context.flatten())
 			else:
 				try:
 					users.add_group_member(request, group_id, member_email=request.session['uid'])
@@ -97,7 +97,7 @@ def join_group_page(request, group_id):
 					"group": group,
 					"invite_code": request.POST.get('code', None)
 				})
-				return render(request, 'join_group/index.html', context)
+				return render(request, 'join_group/index.html', context.flatten())
 		else:
 			return redirect('/')  # TODO: change it to signup page. Currently we dont have a signup link.
 	else:
