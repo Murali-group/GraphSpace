@@ -264,7 +264,8 @@ def update_shared_users_elasticsearch(request, group_id, graph_ids=None):
 		shared_users = [user.user_id for user in graphs.controllers.get_graphs_to_users(request.db_session, graph_id)]
 		doc = {'doc': {'long_shared_users': shared_users}}
 		update_body += json.dumps(doc) + '\n'
-	settings.ELASTIC_CLIENT.bulk(body=update_body)
+	if update_body:
+		settings.ELASTIC_CLIENT.bulk(body=update_body)
 
 def add_group_member(request, group_id, member_id=None, member_email=None):
 	if member_id is not None:

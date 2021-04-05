@@ -65,7 +65,7 @@ def is_user_authorized_to_view_graph(request, username, graph_id):
 	if graph is not None:  # Graph doesnt exist
 		if graph.owner_email == username:
 			is_authorized = True
-		elif graph.is_public == 1:  # graph is publi"""c
+		elif graph.is_public == 1:  # graph is public
 			is_authorized = True
 		else:  # graph is not public
 			for group in graph.groups:
