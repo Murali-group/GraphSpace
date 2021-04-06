@@ -164,7 +164,7 @@ def forgot_password_page(request):
 			context["success_message"] = "You will receive an email with a link to update the password!"
 		else:
 			context["error_message"] = "No account is associated with that email address"
-		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
+		return render(request, 'forgot_password/index.html', context.flatten())  # Handle POST request to forgot password page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
 
@@ -199,7 +199,7 @@ def reset_password_page(request):
 			context['error_message'] = "This password reset link is outdated. Please try resetting your password again."
 		else:
 			context['email'] = password_reset_code.email
-		return render(request, 'reset_password/index.html', context)  # Handle GET request to index page.
+		return render(request, 'reset_password/index.html', context.flatten())  # Handle GET request to index page.
 	elif 'POST' == request.method:
 		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))
 
