@@ -34,7 +34,7 @@ def home_page(request):
 	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
-		return render(request, 'home/index.html', context)  # Handle GET request to index page.
+		return render(request, 'home/index.html', context.flatten())  # Handle GET request to index page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -64,7 +64,7 @@ def features_page(request):
 	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
-		return render(request, 'features/index.html', context)  # Handle GET request to index page.
+		return render(request, 'features/index.html', context.flatten())  # Handle GET request to index page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -94,7 +94,7 @@ def help_page(request):
 	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
-		return render(request, 'help/index.html', context)  # Handle GET request to index page.
+		return render(request, 'help/index.html', context.flatten())  # Handle GET request to index page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -124,7 +124,7 @@ def about_us_page(request):
 	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
-		return render(request, 'about_us/index.html', context)  # Handle GET request to index page.
+		return render(request, 'about_us/index.html', context.flatten())  # Handle GET request to index page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like POST, PUT, UPDATE.
 
@@ -154,16 +154,17 @@ def forgot_password_page(request):
 	context = RequestContext(request)  # Checkout base.py file to see what context processors are being applied here.
 
 	if 'GET' == request.method:
-		return render(request, 'forgot_password/index.html', context)  # Handle GET request to forgot password page.
+		return render(request, 'forgot_password/index.html', context.flatten())  # Handle GET request to forgot password page.
 	elif 'POST' == request.method:
-		password_reset_code = users.add_user_to_password_reset(request, email=request.POST.get('forgot_email', None))
+		email = request.POST.get('forgot_email', None)
 
-		if password_reset_code is not None:
+		if users.get_user(request, email) is not None:
+			password_reset_code = users.add_user_to_password_reset(request, email)
 			users.send_password_reset_email(request, password_reset_code)
-			context["success_message"] = "You will receive an email with link to update the password!"
+			context["success_message"] = "You will receive an email with a link to update the password!"
 		else:
-			context["error_message"] = "You will receive an email with link to update the password!"
-		return render(request, 'forgot_password/index.html', context)  # Handle POST request to forgot password page.
+			context["error_message"] = "No account is associated with that email address"
+		return render(request, 'forgot_password/index.html', context.flatten())  # Handle POST request to forgot password page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
 
@@ -198,7 +199,7 @@ def reset_password_page(request):
 			context['error_message'] = "This password reset link is outdated. Please try resetting your password again."
 		else:
 			context['email'] = password_reset_code.email
-		return render(request, 'reset_password/index.html', context)  # Handle GET request to index page.
+		return render(request, 'reset_password/index.html', context.flatten())  # Handle GET request to index page.
 	elif 'POST' == request.method:
 		password_reset_code = users.get_password_reset_by_code(request, request.GET.get('code', None))
 
@@ -210,7 +211,7 @@ def reset_password_page(request):
 		else:
 			context['error_message'] = "This password reset link is outdated. Please try resetting your password again."
 
-		return render(request, 'reset_password/index.html', context)  # Handle POST request to forgot password page.
+		return render(request, 'reset_password/index.html', context.flatten())  # Handle POST request to forgot password page.
 	else:
 		raise MethodNotAllowed(request)  # Handle other type of request methods like PUT, UPDATE.
 
