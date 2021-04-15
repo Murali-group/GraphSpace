@@ -7,7 +7,7 @@ Then follow the steps to [run GraphSpace on Apache](https://github.com/Murali-gr
 
 >**Note**:
 >If you have an existing deployment of GraphSpace, be careful when running alembic migration scripts. Understand how to use [alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html#) and alembic commands. Migrations are not needed if you are deploying GraphSpace for the first time.
->`alembic upgrade head` will run migrations if the current *head* is the downgrade version of the latest migration script
+>`alembic upgrade head` will run migrations if the current *head* is the downgrade version of the latest migration script.
 
 ***Useful Links***
 - [How to configure Apache to run Django website](https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/modwsgi/#basic-configuration)
