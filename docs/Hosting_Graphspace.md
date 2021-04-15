@@ -12,3 +12,4 @@ Then follow the steps to [run GraphSpace on Apache](https://github.com/Murali-gr
 ***Useful Links***
 - [How to configure Apache to run Django website](https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/modwsgi/#basic-configuration)
 - [How to use Django with Apache and mod-wsgi](https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/modwsgi/)
+- [How to run migrations with Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html#)
