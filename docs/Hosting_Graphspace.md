@@ -1,4 +1,4 @@
-# Hosting a GraphSpace Server
+# Hosting GraphSpace
 
 ## How to deploy the latest Github code changes on GraphSpace server? ##
 
