@@ -119,11 +119,11 @@ def upgrade():
     es.indices.put_template(name='template_common', body=json.loads(template))
     print('put template')
 
+    #todo: change number respective to number of graphs
     total = 28299
     #total = connection.execute(graphhelper.select()).rowcount
     print('There are this many graphs to migrate: ', total)
     offset = 0
-    #offset = 24850
     count = 1
 
     graph_to_user = group_to_graph_helper.join(group_to_user_helper)
