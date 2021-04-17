@@ -107,8 +107,6 @@ def jsonify_graph_jsonstring(graph_jsonstring):
 def upgrade():
     print('starting')
     es = Elasticsearch()
-    #connection = create_engine(''.join(
-        #['postgresql://', 'danna', ':', 'Apples11', '@', 'localhost', ':', '5432', '/', 'gsbackup']), echo=False).connect()
     connection = op.get_bind()
     print(connection)
 
@@ -161,3 +159,4 @@ def updateLimitFields():
     payload = '{"index.mapping.total_fields.limit": 10000}'
     print(requests.put("http://localhost:9200/graphs/_settings", data=payload, headers=headers).text)
     print ("updated elasticsearch limit of fields to accomodate the migration")
+
