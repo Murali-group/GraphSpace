@@ -124,11 +124,22 @@ def delete_graph(db_session, id):
 def get_graph_by_id(db_session, id):
 	return db_session.query(Graph).filter(Graph.id == id).one_or_none()
 
+# Returns a list of all graph id's that have been shared with a group
+@with_session
+def get_graphs_by_group(db_session, group_id):
+	return db_session.query(GroupToGraph.graph_id).filter(and_(GroupToGraph.group_id == group_id)).all()
+
 
 @with_session
 def find_graphs(db_session, owner_email=None, group_ids=None, graph_ids=None, is_public=None, names=None, nodes=None,
                 edges=None,
                 tags=None, limit=None, offset=None, order_by=desc(Graph.updated_at)):
+
+	# This function is no longer being called by 'My Graphs' or 'Public Graphs'.
+	# It was last used in commit aea7096882d2ad0e0ec3b7ab9c0fdfa11bb4659e
+	# This is because the logic for retrieving Graphs owned by owner_email and those that are public
+	# is done solely inside elasticsearch. We no longer access the Postgres database.
+
 	query = db_session.query(Graph)
 	query = query.options(defer("graph_json")).options(defer("style_json"))
 
@@ -296,6 +307,14 @@ def get_layout(db_session, owner_email, name, graph_id):
 	return db_session.query(Layout).filter(
 		and_(Layout.owner_email == owner_email, Layout.name == name, Layout.graph_id == graph_id)).one_or_none()
 
+"""
+Returns a list of users that a graph has been shared with by
+creating a join between GroupToGraph and GroupToUser
+"""
+@with_session
+def get_graphs_to_users(db_session, graph_id):
+	return db_session.query(GroupToUser.user_id).filter(
+		and_(GroupToGraph.graph_id == graph_id, GroupToGraph.group_id == GroupToUser.group_id)).all()
 
 @with_session
 def add_graph_to_group(db_session, group_id, graph_id):
