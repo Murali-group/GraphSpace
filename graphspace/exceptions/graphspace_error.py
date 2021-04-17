@@ -24,7 +24,7 @@ class GraphSpaceError(Exception):
 		""" Try to pretty-print the exception"""
 
 		def get_uri(code):
-			return "https://www.graphspace.org/docs/errors/{0}".format(code)
+			return "http://manual.graphspace.org/en/latest/Programmers_Guide.html#error-codes"
 
 		return json.dumps({
 			"status_code": self.status,

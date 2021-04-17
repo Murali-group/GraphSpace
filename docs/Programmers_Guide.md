@@ -33,6 +33,44 @@ The GraphSpace REST API is served over HTTP. In case you are
 
 <iframe src="http://35.163.136.54/static/api.html" style="height: 100vh;width: 100%;"></iframe>
 
+## HTTP Status Codes
+The [GraphSpace](https://graphspace.org) API attempts to return appropriate HTTP status codes for every request.</p>
+
+### Success Codes
+* ***200:*** Your request has succeeded.
+
+* ***201:*** Your request has been fulfilled and resulted in a new resource being created.
+
+### Error Codes
+* ***400:*** Bad Request! The server cannot or will not process your request due to an apparent client error (e.g., malformed request syntax, too large size, invalid request message framing, or deceptive request routing).
+
+* ***401:*** Unauthenticated! Either your authentication token is missing or invalid, or you are not allowed to access the content provided by the requested URL.
+
+* ***403:*** Unauthorized! You are not authorized to access this resource, create an account and contact resource's owner for permission to access this resource.
+
+* ***405:*** Method Not Allowed! Your request method is not supported by the resource. For example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.
+
+* ***1000:*** User with the provided email id already exists!
+
+* ***1003:*** Your Username or Password is not recognized.
+
+* ***1006:*** `is_public` is required to be set to True when `owner_email` and `member_email` are not provided.
+
+* ***1007:*** You are not authorized to access private graphs created by other users.
+
+* ***1008:*** You are not allowed to create a graph for other users.
+
+* ***1009:*** Your graph ID is missing.
+
+* ***1010:*** You are not authorized to access groups you aren't part of. Set `owner_email` or `member_email` to your email.
+
+* ***1011:*** You are not allowed to create a group for other users.
+
+* ***1012:*** You are not authorized to access layouts which are not shared. Set `owner_email` to your email or `is_shared` to 1.
+
+* ***1013:*** Cannot create the layout with your provided owner email.
+
+* ***1014:*** Layout with the provided name already exists.
 
 ## graphspace-python
 
