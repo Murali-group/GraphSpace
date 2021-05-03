@@ -473,6 +473,15 @@ var graphPage = {
 
     graphPage.cyGraph.panzoom();
 
+        //Update the parent node array
+    graphPage.cyGraph.nodes().forEach(function (ele) {
+            if (ele.data().parent != null && parent_nodes.indexOf(ele.data().parent) == -1)
+            {
+                parent_nodes.push(ele.data().parent);
+            }
+
+    });
+
     utils.initializeTabs();
 
     $( '#saveOnExitLayoutBtn' ).click( function () {
@@ -1651,44 +1660,53 @@ var graphPage = {
     nodeSelector: {
       init: function () {
         var colors = _.uniq( _.map( graphPage.cyGraph.nodes(), function ( node ) {
-          return node.style( 'background-color' );
+            //If the ode is a parent node, do not include the color of the parent node to the color option
+            if (parent_nodes.indexOf(node.data().id) == -1)
+            {
+                return node.style('background-color');
+            }
         } ) );
         $( '#selectColors' ).html( '' );
         _.each( colors, function ( color ) {
-          $( '#selectColors' ).append(
-            $( '<label>', {
-              class: "checkbox-inline zero-padding"
-            } ).css( {
-              'margin-left': '10px',
-              'margin-right': '10px'
-            } ).append(
-              $( '<input>', {
-                id: color,
-                type: 'checkbox',
-                value: color,
-                name: 'colors'
-              } ) ).append( $( '<p>', {
-              class: 'select-color-box'
-            } ).css( 'background', color ) ) );
+            if (color != null)
+            {
+                $('#selectColors').append(
+                    $('<label>', {class: "checkbox-inline zero-padding"}).css({
+                        'margin-left': '10px',
+                        'margin-right': '10px'
+                    }).append(
+                        $('<input>', {
+                            id: color,
+                            type: 'checkbox',
+                            value: color,
+                            name: 'colors'
+                        })).append($('<p>', {
+                        class: 'select-color-box'
+                    }).css('background', color)));
+            }
         } );
 
         var shapes = _.uniq( _.map( graphPage.cyGraph.nodes(), function ( node ) {
-          return node.style( 'shape' );
+            //If the node is a parent node, do not inlcude the shape of parent node to the option
+            if (parent_nodes.indexOf(node.data().id) == -1)
+            {
+                return node.style('shape');
+            }
         } ) );
         $( '#selectShapes' ).html( '' );
         _.each( shapes, function ( shape ) {
-          $( '#selectShapes' ).append(
-            $( '<label>', {
-              class: "checkbox-inline"
-            } ).css( {
-              'margin-left': '10px'
-            } ).append(
-              $( '<input>', {
-                id: shape,
-                type: 'checkbox',
-                value: shape,
-                name: 'shapes'
-              } ) ).append( _.capitalize( shape ) ) );
+            //Do not include the shape of parent node
+            if (shape != null)
+            {
+                $('#selectShapes').append(
+                    $('<label>', {class: "checkbox-inline"}).css({'margin-left': '10px'}).append(
+                        $('<input>', {
+                            id: shape,
+                            type: 'checkbox',
+                            value: shape,
+                            name: 'shapes'
+                        })).append(_.capitalize(shape)));
+            }
         } );
 
         $( 'input:checkbox[name=shapes], input:checkbox[name=colors] ' ).change( function () {
@@ -1711,7 +1729,7 @@ var graphPage = {
 
             if ( ( selectedColors.length > 0 && _.indexOf( selectedColors, node.style( 'background-color' ) ) === -1 ) || ( selectedShapes.length > 0 && _.indexOf( selectedShapes, node.style( 'shape' ) ) === -1 ) ) {
               node.unselect();
-            } else if ( selectedColors.length > 0 || selectedShapes.length > 0 ) {
+            } else if ((selectedColors.length > 0 || selectedShapes.length > 0) && parent_nodes.indexOf(node.data().id) == -1) {
               node.select();
             } else {
               node.unselect();
@@ -4493,6 +4511,8 @@ var cytoscapeGraph = {
   }
 
 };
+//vars
+var parent_nodes = [];
 
 //variables for cola
 //Different from other layout options, cola can choose options for other variables
