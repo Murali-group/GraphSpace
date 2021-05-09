@@ -462,6 +462,7 @@ var uploadGraphPage = {
 var graphPage = {
   cyGraph: undefined,
   timeout: null,
+  tagsEditor: null,
   init: function () {
     /**
      * This function is called to setup the graph page.
@@ -550,6 +551,19 @@ var graphPage = {
       $( '#inputSearchEdgesAndNodes' ).val( searchquery ).trigger( 'onkeyup' );
     }
 
+        graphPage.tagsEditor = $(".add-remove-tags").select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            width: '99%'
+        });
+
+        //adding on click event handlers to buttons used for editing graphs.
+        $('#cancel-edit-btn').click(function () {
+            $('#edit-tab').css('display','none');
+            $('#view-tab').css('display','');
+            $('#edit-desc').css('display','none');
+            $('#view-desc').css('display','');
+        });
 
     graphPage.defaultLayoutWidget.init();
   },
@@ -741,6 +755,55 @@ var graphPage = {
       )
     );
   },
+
+      updateGraphAttributesBtn: function (e, graph_id) {
+
+        //takes name,title, description and tags and updates them by sending an ajax request to server.
+        apis.graphs.update(graph_id, {
+                'name': $('#new_name').val(),
+                'title': $('#new_title').val(),
+                'description': $('#new_description').val(),
+                'tags': graphPage.tagsEditor.val()
+            },
+            successCallback = function (response) {
+                // This method is called when attributes of the graph(name, title, tags...etc) have been successfully updated.
+                $.notify({message: 'Successfully updated the graph with id=' + graph_id.toString()}, {type: 'success'});
+                location.reload();
+            },
+            errorCallback = function (xhr, status, errorThrown) {
+                // This method is called when error occurs while trying to update the graph attributes.
+                $.notify({
+                    message: xhr.responseJSON.error_message
+                }, {
+                    type: 'danger'
+                });
+
+            });
+    },
+    graphEditFormatter: function(e, title, name, description) {
+
+        //populating input tags with appropriate values before showing the edit panel.
+        $('#new_name').val(name);
+        $('#new_title').val(title);
+        $('#new_description').val(description);
+        var hyper_links = $('#Tags').children();
+        graphPage.tagsEditor.find('option').remove().end();
+        $.each(hyper_links, function(idx) {
+                var tag = $.trim(hyper_links[idx].text);
+                graphPage.tagsEditor.append(new Option(tag, tag, true, true));
+            }
+        );
+        graphPage.tagsEditor.trigger('change');
+
+        //hides view tab and displays edit tab.
+        $('#view-tab').css('display','none');
+        $('#edit-tab').css('display','');
+
+        //hides view description tab and displays edit description tab.
+        $('#view-desc').css('display','none');
+        $('#edit-desc').css('display','');
+    },
+
   onShareGraphWithPublicBtn: function ( e, graph_id ) {
 
     apis.graphs.update( graph_id, {
