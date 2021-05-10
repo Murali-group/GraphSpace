@@ -1660,7 +1660,7 @@ var graphPage = {
     nodeSelector: {
       init: function () {
         var colors = _.uniq( _.map( graphPage.cyGraph.nodes(), function ( node ) {
-            //If the ode is a parent node, do not include the color of the parent node to the color option
+            //If the node is a parent node, do not include the color of the parent node to the color option
             if (parent_nodes.indexOf(node.data().id) == -1)
             {
                 return node.style('background-color');
@@ -1668,6 +1668,7 @@ var graphPage = {
         } ) );
         $( '#selectColors' ).html( '' );
         _.each( colors, function ( color ) {
+            //We only set the color of nodes that aren't parent nodes
             if (color != null)
             {
                 $('#selectColors').append(
