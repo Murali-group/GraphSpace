@@ -263,7 +263,7 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		graph['graph_json'] = json.dumps(G.get_graph_json())
 
-		body_data.update(map_attributes(G.get_graph_json))
+		body_data.update(map_attributes(G.get_graph_json()))
 
 	updated_graph = db.update_graph(request.db_session, id=graph_id, updated_graph=graph)
 	# If any information in Elasticsearch was changed
