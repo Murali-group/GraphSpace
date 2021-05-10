@@ -30,6 +30,10 @@ def map_attributes(attributes):
 	if attributes and isinstance(attributes, dict) and DataType.forValue(attributes) == DataType.DICT:
 		for key, value in attributes.items():
 			value_type = DataType.forValue(value)
+			#If we are removing tags and left with empty dictionary, just set type to String
+			if (key == 'tags'):
+				value_type = DataType.forValue("String")
+
 			key_prefix = value_type.prefix()
 			mapped_key = key_prefix + key if not key.startswith(key_prefix) else key
 			if value_type == DataType.DICT:
@@ -254,6 +258,12 @@ def update_graph(request, graph_id, name=None, is_public=None, graph_json=None, 
 
 		if name is not None:
 			G.set_name(name)
+
+		db.remove_tags_by_graph_id(request.db_session, graph_id=graph_id)
+
+		# Add graph tags
+		for tag in G.get_tags():
+			add_graph_tag(request, graph_id, tag)
 
 		db.remove_nodes_by_graph_id(request.db_session, graph_id=graph_id)
 		# Add graph nodes
