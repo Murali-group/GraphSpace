@@ -5,8 +5,8 @@ In this section, we examine different ways to interact with an individual networ
 - [Searching within a graph](#search)
 - [Exporting a graph](#export)
 - [Changing the graph layout](#change-layout)
-- [Filtering nodes and edges](#filter-nodes-and-edges)
 - [Setting default layout](#default-layout)
+- [Filtering nodes and edges](#filter-nodes-and-edges)
 
 ## Search 
 
@@ -45,6 +45,14 @@ algorithms supported by GraphSpace through its use of [Cytoscape.js](http://js.c
 
 <!--![Change layout screenshot](_static/images/graph-page/gs-screenshot-user1-lovastatin-change-layout-panel.png) -->
 
+## Set Default Layout
+
+**Default layout** is the layout which is used by default, whenever a user visits the page for a graph. A layout can be set as a default layout for a graph only if it is shared with other users who have access to the graph. Default layout for a graph can only be set by the owner of the graph.
+
+If a layout is shared with other users who have access to the graph, user can click on the `Set as Default Layout` button to set the layout as the default layout for the graph.
+
+If a layout is set as default layout, user can click on the `Remove as Default Layout` button to unset the layout as the default layout for the graph.
+
 ## Filter nodes and edges
 
 Graph algorithms may output networks where nodes and edges can be ranked, e.g., by path index or by weight/score. GraphSpace allows each node and edge to have an integer-valued data-attribute called `k` that specifies the rank of the node or the edge. For any network that contains this attribute (and only for such networks), GraphSpace displays the "Filter nodes and edges" panel with a `Current rank` slider. Changing the value in the `Current rank` slider hides all nodes and edges whose k values are less than or equal to the value in the slider. The possible values in this slider range from 1 to the maximum value of `k` in the graph. This interface element allows the user to unveil the network gradually in real time and gain intuition about how the network expands or contracts as this threshold changes.
@@ -52,14 +60,5 @@ Graph algorithms may output networks where nodes and edges can be ranked, e.g., 
 The following example shows a user stepping through a graph using this slider. 
     
 ![Filter nodes and edges](_static/gifs/gs-screenshot-user1-wnt-pathway-reconstruction-filter-node-edges-with-caption.gif)
-
-
-## Default Layout
-
-**Default layout** is the layout which is used by default, whenever a user visits the page for a graph. A layout can be set as a default layout for a graph only if it is shared with other users who have access to the graph. Default layout for a graph can only be set by the owner of the graph.
-
-If a layout is shared with other users who have access to the graph, user can click on the `Set as Default Layout` button to set the layout as the default layout for the graph.
-
-If a layout is set as default layout, user can click on the `Remove as Default Layout` button to unset the layout as the default layout for the graph.
 
 
