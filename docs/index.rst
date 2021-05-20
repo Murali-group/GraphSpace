@@ -19,9 +19,9 @@ GraphSpace 2.0 User Manual
    Uploading_Graphs
    Viewing_Graphs
    Interacting_with_Graphs
+   Editing_Layouts
    Searching_Graphs
    Sharing_Graphs
-   Editing_Layouts
    Organizing_Graphs_Using_Tags
    Programmers_Guide
    Hosting_Graphspace
