@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  graphspace-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: graphspace:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - elasticsearch
+    environment:
+      - DJANGO_SETTINGS_MODULE=graphspace.settings
+      - DEBUG=true
+      - PYTHONUNBUFFERED=true
+    volumes:
+      - .:/code
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+
+  db:
+    image: postgres:9.6
+    mem_limit: 4g
+    environment:
+      - POSTGRES_USER=deep
+      - POSTGRES_PASSWORD=deep21
+      - POSTGRES_DB=graphspace
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:5.5.1
+    mem_limit: 4g
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+volumes:
+  elasticsearch-data:
