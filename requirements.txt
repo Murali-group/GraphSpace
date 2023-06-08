@@ -30,3 +30,4 @@ sphinx
 recommonmark
 python-dotenv==0.15.0
 lxml
+psycopg2-binary

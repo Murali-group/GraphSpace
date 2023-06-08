@@ -1,0 +1,30 @@
+version: "3.4"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: graphspace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/PostgreSQL/data
+      - ./db.sh:/docker-entrypoint-initdb.d/create_extensions.sh
+
+  graphspace:
+    restart: always
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
