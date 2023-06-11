@@ -15,6 +15,11 @@ services:
 
   graphspace:
     restart: always
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: graphspace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     stdin_open: true # docker run -i
     tty: true # docker run -t
     build:
@@ -23,6 +28,9 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    command: >
+      sh -c "python manage.py migrate --settings=graphspace.settings.local && 
+            python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.local"
     depends_on:
       - db
 

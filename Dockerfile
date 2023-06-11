@@ -7,4 +7,3 @@ COPY . /app
 RUN pip install -r requirements.txt
 RUN sh install.sh
 EXPOSE 8000
-CMD python manage.py migrate --settings=graphspace.settings.local && python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.local
