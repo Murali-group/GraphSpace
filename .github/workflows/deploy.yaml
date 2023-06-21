@@ -1,17 +1,13 @@
 name: Deploy to ECR
 
 on:
-  pull_request_target:
-    types:
-      - closed
+  [push, pull_request]
 
 jobs:
-  if_merged:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-   
+   deploy:
+    runs-on: ubuntu-latest  
     steps:
-
+    
     - name: Check out code
       uses: actions/checkout@v2
 
@@ -22,6 +18,7 @@ jobs:
       run: docker ps -a
     
     - name: Configure AWS credentials
+      if: ${{ github.ref == 'refs/heads/master' }}
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -29,6 +26,7 @@ jobs:
         aws-region: us-east-1
 
     - name: Login to Amazon ECR
+      if: ${{ github.ref == 'refs/heads/master' }}
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
       with:
@@ -36,9 +34,11 @@ jobs:
     
     - name: Set outputs
       id: vars
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
     - name: Build, tag, and push image to Amazon ECR
+      if: ${{ github.ref == 'refs/heads/master' }}
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         REGISTRY_ALIAS: ${{ secrets.AWS_REGISTRY_ALIAS }}
