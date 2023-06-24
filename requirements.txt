@@ -13,7 +13,7 @@ MarkupSafe==0.23
 networkx==1.11
 oauthlib==1.1.2
 poster==0.8.1
-psycopg2==2.6.2
+psycopg2==2.7.4
 py-bcrypt==0.4
 Pygments==2.5.2
 pytz==2016.4
@@ -29,3 +29,5 @@ sphinx-rtd-theme
 sphinx
 recommonmark
 python-dotenv==0.15.0
+lxml
+psycopg2-binary

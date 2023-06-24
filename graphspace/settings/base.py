@@ -140,7 +140,7 @@ PASSWORD_HASHERS = (
 )
 
 BASE = declarative_base()
-ELASTIC_CLIENT = Elasticsearch()
+ELASTIC_CLIENT = Elasticsearch(['elasticsearch:9200'])
 
 LOGGING = {
     'version': 1,
