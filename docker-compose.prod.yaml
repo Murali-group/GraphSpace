@@ -8,6 +8,8 @@ services:
       context: .
     ports:
       - "8000:8000"
+    env_file:
+      - ./secrets.env
     volumes:
       - .:/app
     command: >
