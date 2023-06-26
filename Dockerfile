@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 AS prod
+FROM ubuntu:18.04
 WORKDIR /app
 RUN apt-get -y update && apt-get install -y npm && apt-get install -y git
 RUN npm install bower -g

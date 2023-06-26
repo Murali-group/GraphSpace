@@ -21,7 +21,7 @@ AWSACCESSKEYID = os.environ.get('AWSACCESSKEYID')
 SECRETKEY = os.environ.get('SECRETKEYOST')
 
 # Path to GraphSPace
-PATH = os.environ.get('PATH')
+PATH = os.environ.get('PATH', '/path_to_graphspace')
 
 # SHOULD NEVER CHANGE THIS VALUE
 SECRET_KEY = os.environ.get('SECRET_KEY')
