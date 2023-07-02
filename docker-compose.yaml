@@ -36,8 +36,6 @@ services:
       context: .
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     command: >
       sh -c "python manage.py migrate --settings=graphspace.settings.local && 
             python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.local"
