@@ -6,6 +6,7 @@ RUN apt-get -y update && apt-get install -y \
     libpq-dev \
     libxml2 \
     libxslt-dev
+RUN npm install bower -g
 RUN apt-get install -y python-pip && pip install --upgrade pip
 COPY . /app
 RUN pip install -r requirements.txt
