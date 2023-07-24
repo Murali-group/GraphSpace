@@ -27,4 +27,5 @@ jobs:
       run: |
         docker tag graphspace maheshkasbe/graphspace:${{ steps.vars.outputs.sha_short }}
         docker tag graphspace maheshkasbe/graphspace:latest
-        docker push maheshkasbe/graphspace
+        docker push maheshkasbe/graphspace:latest
+        docker push maheshkasbe/graphspace:${{ steps.vars.outputs.sha_short }}
