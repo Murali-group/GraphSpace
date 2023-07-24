@@ -1,14 +1,22 @@
 name: Deploy to ECR
 
+<<<<<<< HEAD
 on:
   push: 
       [branches, pull_request]
+=======
+on: [push, pull_request]
+>>>>>>> actions-pipeline
 
 jobs:
    deploy:
     runs-on: ubuntu-latest  
     steps:
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> actions-pipeline
     - name: Check out code
       uses: actions/checkout@v2
 
@@ -17,14 +25,24 @@ jobs:
 
     - name: Show containers
       run: docker ps -a
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> actions-pipeline
     - name: Configure AWS credentials
       if: ${{ github.ref == 'refs/heads/master' }}
       uses: aws-actions/configure-aws-credentials@v1
       with:
+<<<<<<< HEAD
           # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+=======
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+>>>>>>> actions-pipeline
 
     - name: Login to Amazon ECR
       if: ${{ github.ref == 'refs/heads/master' }}
@@ -32,7 +50,11 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
       with:
           registry-type: public
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> actions-pipeline
     - name: Set outputs
       id: vars
       if: ${{ github.ref == 'refs/heads/master' }}

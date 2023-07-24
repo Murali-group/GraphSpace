@@ -36,14 +36,17 @@ AWS_URL = 'https://mechanicalturk.sandbox.amazonaws.com'
 # http://stackoverflow.com/questions/4642011/test-sending-email-without-email-server
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
+# Added enviornment variable option to run with doccker-compose file and also with local dev setup
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+<<<<<<< HEAD
         'NAME': 'test_database',
         'USER': 'adb',
         'PASSWORD': '',
         'HOST': 'localhost',
+=======
+>>>>>>> actions-pipeline
         'NAME':  os.environ.get('POSTGRES_DB', 'graphspace'),
         'USER':  os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),

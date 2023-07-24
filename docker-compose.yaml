@@ -1,7 +1,11 @@
 version: "3.4"
 services:
   db:
+<<<<<<< HEAD
     image: postgres
+=======
+    image: postgres:9.6
+>>>>>>> actions-pipeline
     restart: always
     environment:
       POSTGRES_DB: graphspace
@@ -36,8 +40,11 @@ services:
       context: .
     ports:
       - "8000:8000"
+<<<<<<< HEAD
     volumes:
       - .:/app
+=======
+>>>>>>> actions-pipeline
     command: >
       sh -c "python manage.py migrate --settings=graphspace.settings.local && 
             python manage.py runserver 0.0.0.0:8000 --settings=graphspace.settings.local"

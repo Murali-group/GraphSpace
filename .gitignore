@@ -3,7 +3,6 @@
 
 # Ignore updates to production.py,
 # It's meant to be local
-production.py
 
 # Ignore Mac DS_Store files
 .DS_Store
