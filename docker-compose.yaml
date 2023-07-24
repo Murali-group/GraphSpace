@@ -25,6 +25,7 @@ services:
 
   graphspace:
     restart: always
+    image: maheshkasbe/graphspace:latest
     environment:
       POSTGRES_HOST: db
       POSTGRES_DB: graphspace
@@ -32,8 +33,8 @@ services:
       POSTGRES_PASSWORD: postgres
     stdin_open: true # docker run -i
     tty: true # docker run -t
-    build:
-      context: .
+    # build:
+    #   context: .
     ports:
       - "8000:8000"
     command: >

@@ -24,6 +24,7 @@ jobs:
       run: docker build -t graphspace . 
 
     - name: push image 
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: |
         docker tag graphspace maheshkasbe/graphspace:${{ steps.vars.outputs.sha_short }}
         docker tag graphspace maheshkasbe/graphspace:latest
