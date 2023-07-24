@@ -30,8 +30,4 @@ sphinx
 recommonmark
 python-dotenv==0.15.0
 lxml
-<<<<<<< HEAD
 psycopg2-binary
-=======
-psycopg2-binary
->>>>>>> actions-pipeline

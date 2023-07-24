@@ -1,17 +1,6 @@
-<<<<<<< HEAD
 FROM ubuntu:18.04 AS prod
 WORKDIR /app
 RUN apt-get -y update && apt-get install -y npm && apt-get install -y git
-=======
-FROM ubuntu:18.04
-WORKDIR /app
-RUN apt-get -y update && apt-get install -y \
-    npm \
-    git \
-    libpq-dev \
-    libxml2 \
-    libxslt-dev
->>>>>>> actions-pipeline
 RUN npm install bower -g
 RUN apt-get install -y python-pip && pip install --upgrade pip
 COPY . /app
