@@ -1,4 +1,4 @@
-name: Deploy to ECR
+name: Push to ECR
 
 on: [push, pull_request]
 
