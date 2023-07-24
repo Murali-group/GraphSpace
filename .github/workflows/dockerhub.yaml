@@ -1,4 +1,4 @@
-name: Docker Build Frontend
+name: Docker Build & Push Graphspace
 
 on: [push, pull_request]
 
