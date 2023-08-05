@@ -1,7 +1,7 @@
 name: 'Auto Assign'
 on:
   pull_request_target:
-    types: [opened, ready_for_review]
+    types: [opened, ready_for_review] # Runs when the someone opens a pull request
 
 jobs:
   add-reviews:

@@ -1,5 +1,5 @@
 name: PR Labeler
-on: pull_request_target
+on: pull_request_target # Runs when the someone creates a pull request
 
 permissions:
   contents: read
