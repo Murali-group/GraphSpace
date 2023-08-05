@@ -6,7 +6,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: Renato66/auto-label@v2
+      - name: Issue Label #Labels the issue by the description of the issue 
+        uses: Renato66/auto-label@v2 
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           ignore-comments: true

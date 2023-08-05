@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: branch-label
+      - name: branch-label # Labels the Pull Request by branch name as which branch the pr is raised to
         uses: TimonVS/pr-labeler-action@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/pr-labeler.yml # optional, .github/pr-labeler.yml is the default value
       
-      - name: size-label
+      - name: size-label # Labels the Pull Request by the no of lines of code
         uses: "pascalgn/size-label-action@v0.4.2"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

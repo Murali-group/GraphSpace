@@ -31,7 +31,7 @@ jobs:
       with:
           registry-type: public
     
-    - name: Set outputs
+    - name: Set Tag
       id: vars
       if: ${{ github.ref == 'refs/heads/master' }}
       run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT

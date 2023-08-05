@@ -15,15 +15,15 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_TOKEN }}
 
-    - name: Set outputs
+    - name: Set Tag
       id: vars
       if: ${{ github.ref == 'refs/heads/master' }}
       run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
     
-    - name: create image
+    - name: Create Graphspace image
       run: docker build -t graphspace . 
 
-    - name: push image 
+    - name: Push image to Dockerhub
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
         docker tag graphspace maheshkasbe/graphspace:${{ steps.vars.outputs.sha_short }}
