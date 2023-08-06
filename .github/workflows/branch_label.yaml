@@ -14,7 +14,7 @@ jobs:
         uses: TimonVS/pr-labeler-action@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/pr_labeler.yml # optional, .github/pr-labeler.yml is the default value
+          configuration-path: .github/pr-labeler.yml # optional, .github/pr-labeler.yml is the default value
       
       - name: size-label # Labels the Pull Request by the no of lines of code
         uses: "pascalgn/size-label-action@v0.4.2"
