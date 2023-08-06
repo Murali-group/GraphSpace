@@ -1,14 +1,12 @@
 name: Push to ECR
 
-on:
-  push: 
-      [branches, pull_request]
+on: [push, pull_request] # Runs when the someone pushes changes to branch or creates a pull request
 
 jobs:
    deploy:
     runs-on: ubuntu-latest  
     steps:
-
+    
     - name: Check out code
       uses: actions/checkout@v2
 
@@ -17,14 +15,14 @@ jobs:
 
     - name: Show containers
       run: docker ps -a
-
+    
     - name: Configure AWS credentials
       if: ${{ github.ref == 'refs/heads/master' }}
       uses: aws-actions/configure-aws-credentials@v1
       with:
-          # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
       if: ${{ github.ref == 'refs/heads/master' }}
@@ -32,8 +30,8 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
       with:
           registry-type: public
-
-    - name: Set outputs
+    
+    - name: Set Tag
       id: vars
       if: ${{ github.ref == 'refs/heads/master' }}
       run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
