@@ -140,7 +140,8 @@ PASSWORD_HASHERS = (
 )
 
 BASE = declarative_base()
-ELASTIC_CLIENT = Elasticsearch()
+# for connecting with elasticsearch client using hostname and port
+ELASTIC_CLIENT = Elasticsearch(['elasticsearch:9200'])
 
 LOGGING = {
     'version': 1,

@@ -1,0 +1,48 @@
+name: Push to ECR
+
+on: [push, pull_request] # Runs when the someone pushes changes to branch or creates a pull request
+
+jobs:
+   deploy:
+    runs-on: ubuntu-latest  
+    steps:
+    
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Build the Docker-compose file
+      run: docker-compose -f "docker-compose.yaml" up -d --build
+
+    - name: Show containers
+      run: docker ps -a
+    
+    - name: Configure AWS credentials
+      if: ${{ github.ref == 'refs/heads/master' }}
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      if: ${{ github.ref == 'refs/heads/master' }}
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+          registry-type: public
+    
+    - name: Set Tag
+      id: vars
+      if: ${{ github.ref == 'refs/heads/master' }}
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Build, tag, and push image to Amazon ECR
+      if: ${{ github.ref == 'refs/heads/master' }}
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REGISTRY_ALIAS: ${{ secrets.AWS_REGISTRY_ALIAS }}
+        ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+      run: |
+        docker build -t $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG

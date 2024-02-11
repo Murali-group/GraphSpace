@@ -1,0 +1,15 @@
+version: "3.4"
+services:
+  graphspace:
+    restart: always
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./secrets.env
+    command: >
+      sh -c "python manage.py migrate && 
+              python manage.py runserver"
