@@ -35,8 +35,8 @@ div.container-fluid {
     width: 100%;
 }
 
-.gs-features{
-    margin-bottom:150px;
+.gs-features {
+    margin-bottom: 150px;
 }
 
 .zero-margin {
@@ -132,7 +132,7 @@ div.container-fluid {
     position: absolute;
 }
 
-#graphContainer{
+#graphContainer {
     width: 100%;
     position: absolute;
     left: 0px;
@@ -151,7 +151,7 @@ div.container-fluid {
     background-color: white;
 }
 
-#cyLegendContainer{
+#cyLegendContainer {
     width: 20%;
     height: 0px;
     right: 0px;
@@ -160,8 +160,6 @@ div.container-fluid {
     padding-bottom: 0px;
     padding-left: 0px;
     z-index: 999;
-    /*border-color: transparent;*/
-    /*border-left: thin solid #C0C0C0 ;*/
     background-color: white;
 }
 
@@ -180,7 +178,7 @@ div.container-fluid {
     border: none;
 }
 
-/*Navbar default*/
+/* Navbar default */
 
 .navbar-default {
     background-color: #24292e;
@@ -206,7 +204,10 @@ nav.navbar.navbar-default {
     color: white;
 }
 
-.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus, .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus,
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
     color: white;
     background-color: #000000 !important;
 }
@@ -215,7 +216,7 @@ nav.navbar.navbar-default {
     background-color: #d0d0d0 !important;
 }
 
-/* PopOver CSS*/
+/* PopOver CSS */
 
 .popover {
     z-index: 10000;
@@ -239,7 +240,7 @@ nav.navbar.navbar-default {
     display: none;
 }
 
-/* Horizontal Nav bar*/
+/* Horizontal Nav bar */
 ul.nav.nav-tabs > li {
     padding: 0 1em;
 }
@@ -280,6 +281,7 @@ ul.nav.nav-tabs > li > a:hover {
     height: 100%;
     margin-right: -250px;
     overflow-y: scroll;
+    overflow-x: hidden;
     background: transparent;
     -webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;
@@ -295,7 +297,6 @@ ul.nav.nav-tabs > li > a:hover {
 #page-content-wrapper {
     width: 100%;
     position: absolute;
-    /*padding: 15px;*/
 }
 
 #wrapper.toggled #page-content-wrapper {
@@ -315,6 +316,7 @@ ul.nav.nav-tabs > li > a:hover {
     position: absolute;
     top: 0;
     width: 250px;
+    box-sizing: border-box;
     padding: 1% 1%;
     list-style: none;
 }
@@ -356,7 +358,6 @@ ul.nav.nav-tabs > li > a:hover {
     -ms-border-radius: 2px;
     -o-border-radius: 2px;
     transition: all .4s;
-    /*margin: 0.5em;*/
     padding: .5em 0.5em;
     border-color: #ddd #ddd transparent;
     text-decoration: none;
@@ -364,12 +365,11 @@ ul.nav.nav-tabs > li > a:hover {
     touch-action: manipulation;
     border: transparent;
     box-shadow: 0 5px 11px 0 rgba(0, 0, 0, .18), 0 4px 15px 0 rgba(0, 0, 0, .15);
-
 }
 
 .sidebar-nav li .btn-group > .btn {
     box-shadow: none !important;
-    border: 0.25px solid rgba(6, 9, 21, 0.24)
+    border: 0.25px solid rgba(6, 9, 21, 0.24);
 }
 
 .sidebar-nav li a.btn:hover {
@@ -405,6 +405,19 @@ ul.nav.nav-tabs > li > a:hover {
 .sidebar-nav > .sidebar-brand a:hover {
     color: #fff;
     background: none;
+}
+
+/* Search bar fix — fills the sidebar properly now that the popover
+   markup has been removed from default_sidebar.html */
+#defaultSideBar .form-group.has-feedback {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#inputSearchEdgesAndNodes {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 2em; /* room for the glyphicon-search icon */
 }
 
 .query-builder-field {
@@ -464,7 +477,6 @@ p.lead {
     }
 
     #page-content-wrapper {
-        /*padding: 20px;*/
         padding-right: 250px;
         position: relative;
     }
@@ -477,37 +489,36 @@ p.lead {
 
 /* Alerts */
 .alert {
-  width: 100%;
-  padding: 8px 16px;
-  border-radius: 4px;
-  border-style: solid;
-  border-width: 1px;
-  margin-bottom: 12px;
-  font-size: 18px;
-  text-align: center;
+    width: 100%;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    text-align: center;
 }
 
 .alert.alert-success {
-  background-color: rgba(227, 253, 235, 1);
-  border-color: rgba(38, 179, 3, 1);
-  color: rgba(60, 118, 61, 1);
+    background-color: rgba(227, 253, 235, 1);
+    border-color: rgba(38, 179, 3, 1);
+    color: rgba(60, 118, 61, 1);
 }
 
 .alert.alert-info {
-  background-color: rgba(217, 237, 247, 1);
-  color: rgba(49, 112, 143, 1);
-  border-color: rgba(126, 182, 193, 1);
+    background-color: rgba(217, 237, 247, 1);
+    color: rgba(49, 112, 143, 1);
+    border-color: rgba(126, 182, 193, 1);
 }
 
-
 .alert.alert-warning {
-  background-color: rgba(252, 248, 227, 1);
-  border-color: rgba(177, 161, 129, 1);
-  color: rgba(138, 109, 59, 1);
+    background-color: rgba(252, 248, 227, 1);
+    border-color: rgba(177, 161, 129, 1);
+    color: rgba(138, 109, 59, 1);
 }
 
 .alert.alert-danger {
-  background-color: rgba(248, 215, 218, 1);
-  border-color: rgba(220, 53, 69, 1);
-  color: rgba(114, 28, 36,1);
+    background-color: rgba(248, 215, 218, 1);
+    border-color: rgba(220, 53, 69, 1);
+    color: rgba(114, 28, 36, 1);
 }

@@ -1,47 +1,120 @@
-<!-- Sidebar -->
-
+ 
+<ul id="changeLayoutSidebar" class="sidebar-nav gs-sidebar-nav">
+    <li></li>
+    <li>
+        <a class="btn sidebar-nav-pills" href="#" data-target="#defaultSideBar">
+            <i class="fa fa-chevron-left"></i> Back
+        </a>
+    </li>
+    <li>
+        <p class="lead text-center zero-margin">Select Layout Algorithm</p>
+    </li>
+ 
+    <span id="changeLayoutBtns">
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="circle"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                Circle
+            </button>
+        </li>
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="grid"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                Grid
+            </button>
+        </li>
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="concentric"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                Concentric
+            </button>
+        </li>
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="cose"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                Spring Embedder
+            </button>
+        </li>
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="breadthfirst"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                Tree
+            </button>
+        </li>
+        <li>
+            <button type="button"
+                    class="btn btn-xs btn-default gs-full-width select-layout-btn auto-layout"
+                    data-layout-id="cola"
+                    onclick="graphPage.onSelectLayoutBtnClick(this)">
+                cola
+            </button>
+            <a class="btn sidebar-nav-pills" href="#" data-target="#colaOption">
+                <font size="2" color="gray">&gt; cola settings</font>
+            </a>
+        </li>
+ 
+        <li id="selectSavedLayoutHeading" style="display: none;">
+            <p class="lead text-center zero-margin">Select Saved Layout</p>
+        </li>
+ 
+        <span id="userPrivateLayoutBtns"></span>
+        <span id="userSharedLayoutBtns"></span>
+    </span>
+ 
+</ul>
+ 
+<!-- Default Sidebar -->
 <ul id="defaultSideBar" class="sidebar-nav gs-sidebar-nav active">
     <li>
         <br>
     </li>
+ 
+    <!-- FIXED: removed data-toggle="popover" and all data-* popover attributes.
+         The popover duplicated the placeholder text and caused the floating
+         "Search for nodes and edges" text to appear on focus.
+         The #searchPopover div has also been removed entirely. -->
     <li>
-        <div class="form-group has-feedback" style="margin: 0 0.6em;"
-             data-target="#searchPopover" data-container="body" data-trigger="focus"
-             data-placement="top" data-toggle="popover">
+        <div class="form-group has-feedback" style="margin: 0 0.6em;">
             <input type="text" class="form-control" id="inputSearchEdgesAndNodes"
-                   aria-describedby="inputSearchEdgesAndNodes" style="border-radius: 1em;"
-                   placeholder="Search for nodes and edges" onkeyup="graphPage.onInputSearchEdgesAndNodes(this);">
-                                <span class="glyphicon glyphicon-search form-control-feedback"
-                                      aria-hidden="true"></span>
-        </div>
-        <div id="searchPopover" class="popover fade">
-            <p class="lead zero-margin zero-padding"
-               style="font-size: medium; text-align: right; ">
-                Search for nodes and edges</p>
+                   aria-describedby="inputSearchEdgesAndNodes"
+                   style="border-radius: 1em;"
+                   placeholder="Search for nodes and edges"
+                   onkeyup="graphPage.onInputSearchEdgesAndNodes(this);">
+            <span class="glyphicon glyphicon-search form-control-feedback"
+                  aria-hidden="true"></span>
         </div>
     </li>
-    <li>
-
-    </li>
-
+ 
+    <li></li>
+ 
     <li id="filterNodesEdgesSideBarBtn">
         <a class="btn sidebar-nav-pills" href="#filter_nodes_edges" data-target="#filterNodesEdgesSideBar">
             <i class="fa fa-filter fa-lg"></i> Filter nodes <br> and edges
         </a>
     </li>
-
+ 
     <li>
         <a id="toggleLegendBtn" class="btn sidebar-nav-pills" href="#" data-target="#defaultSideBar">
             Hide Legend
         </a>
     </li>
-
+ 
     <li>
         <a class="btn sidebar-nav-pills" href="#change_layout" data-target="#changeLayoutSidebar">
             Change Layout
         </a>
     </li>
-
+ 
     {% if uid %}
         <li>
             <a id="saveLayoutEditorBtn" class="btn sidebar-nav-pills" href="#" data-target="#defaultSideBar">
@@ -54,7 +127,7 @@
             </a>
         </li>
     {% endif %}
-
+ 
     {% if uid and uid == graph.owner_email %}
         <li>
             <a id="legendEditorBtn" class="btn sidebar-nav-pills" href="#legendEditor" data-target="#legendEditorSideBar">
@@ -62,15 +135,18 @@
             </a>
         </li>
         <li>
-            <a id="setDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onSetDefaultLayoutBtn()">
+            <a id="setDefaultLayoutBtn" class="btn" href="#" style="display: none"
+               onclick="graphPage.defaultLayoutWidget.onSetDefaultLayoutBtn()">
                 Set as <br>default layout
             </a>
         </li>
         <li>
-            <a id="removeDefaultLayoutBtn" class="btn" href="#" style="display: none" onclick="graphPage.defaultLayoutWidget.onRemoveDefaultLayoutBtn()">
+            <a id="removeDefaultLayoutBtn" class="btn" href="#" style="display: none"
+               onclick="graphPage.defaultLayoutWidget.onRemoveDefaultLayoutBtn()">
                 Remove as <br>default layout
             </a>
         </li>
     {% endif %}
-
+ 
 </ul>
+ 
