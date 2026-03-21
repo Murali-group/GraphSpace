@@ -1,31 +1,29 @@
-alabaster==0.7.8
-Babel==2.3.4
-decorator==4.0.10
-Django==1.11.29
-django-analytical==2.2.1
-django-braces==1.10.0
-django-cors-middleware==1.3.1
-django-oauth-toolkit==0.11.0
-docutils==0.12
-imagesize==0.7.1
-Jinja2==2.11.3
-MarkupSafe==0.23
-networkx==1.11
-oauthlib==1.1.2
-poster==0.8.1
-psycopg2==2.6.2
-py-bcrypt==0.4
-Pygments==2.5.2
-pytz==2016.4
-requests==2.20.0
-six==1.10.0
-snowballstemmer==1.2.1
-SQLAlchemy==1.3.3
-graphspace_python==0.8.2
-enum34
-elasticsearch>=5.0.0,<6.0.0
-elasticsearch-dsl>=5.0.0,<6.0.0
-sphinx-rtd-theme
-sphinx
-recommonmark
-python-dotenv==0.15.0
+alabaster==0.7.8 #A clean, responsive theme for the Sphinx documentation system
+Babel==2.3.4 # A collection of tools for internationalizing Python applications
+decorator==4.0.10 # Simplifies the usage of decorators for programmers by defining signatures.
+Django==1.11.29 # The main web framework used for the GraphSpace backend.
+django-analytical==2.2.1 # Integrates analytics services (like Google Analytics) into the Django project.
+django-braces==1.10.0 # A collection of reusable mixins for Django views.
+django-cors-middleware==1.3.1 # Handles Cross-Origin Resource Sharing (CORS) for API requests.
+django-oauth-toolkit==0.11.0 # Provides OAuth2 capabilities to Django for secure authentication.
+docutils==0.12 # Text processing system for reStructuredText (used in documentation).
+imagesize==0.7.1 # Parses image headers to get their dimensions.
+Jinja2==2.11.3 # A fast and modern templating engine for Python web development
+MarkupSafe==0.23 # Safely escapes HTML strings to prevent security issues
+networkx==1.11 # Library for creating and manipulating complex graph networks.
+oauthlib==1.1.2 # A generic implementation of the OAuth request-signing logic
+py-bcrypt==0.4 # Password hashing and encryption tool for secure storage.
+Pygments==2.5.2 # A syntax highlighting tool used for code display.
+pytz==2016.4 # World timezone definitions for handling dates and times.
+requests==2.10.0 # Enables sending HTTP requests to external web services.
+six==1.10.0 # Provides compatibility layers between Python 2 and Python 3.
+snowballstemmer==1.2.1 # A collection of stemming algorithms for natural language processing.
+SQLAlchemy==1.3.3 # SQL toolkit and Object-Relational Mapper (ORM) for the database.
+graphspace_python==0.8.2 # The official Python client for interacting with GraphSpace.
+enum34 # Backport of the Enum type for older Python versions.
+elasticsearch>=5.0.0,<6.0.0 # Search engine used for indexing and searching graph data.
+elasticsearch-dsl>=5.0.0,<6.0.0 # A high-level library to help writing Elasticsearch queries.
+sphinx-rtd-theme # Mobile-friendly theme for Sphinx documentation (Read the Docs style).
+sphinx # The main tool used to build documentation for the project.
+recommonmark # Allows writing documentation in Markdown instead of reStructuredText.
+python-dotenv==0.15.0 # Loads environment variables from a .env file for local settings.
