@@ -471,6 +471,10 @@ var graphPage = {
 
     graphPage.legend.init( style_json );
 
+    if ( typeof attributeMapping !== 'undefined' ) {
+      attributeMapping.onLayoutLoaded( style_json );
+    }
+
     graphPage.cyGraph.panzoom();
 
         //Update the parent node array
@@ -574,18 +578,22 @@ var graphPage = {
   applyUserLayout: function ( layout_id ) {
     apis.layouts.getByID( $( '#GraphID' ).val(), layout_id,
       successCallback = function ( response ) {
-        graphPage.applyLayoutStyle( JSON.parse( response[ 'style_json' ] ) );
+        var parsedStyle = JSON.parse( response[ 'style_json' ] );
+        graphPage.applyLayoutStyle( parsedStyle );
         graphPage.applyLayout( {
           name: 'preset',
           positions: JSON.parse( response[ 'positions_json' ] )
         } );
-        if ( 'legend' in JSON.parse( response[ 'style_json' ] ) ) {
-          graphPage.legend.currentLegendJSON[ 'legend' ] = JSON.parse( response[ 'style_json' ] )[ 'legend' ];
+        if ( 'legend' in parsedStyle ) {
+          graphPage.legend.currentLegendJSON[ 'legend' ] = parsedStyle[ 'legend' ];
           if ( graphPage.legend.cyLegend ) {
             graphPage.legend.cyLegend.destroy();
             graphPage.legend.resizeLegendInterfaceHeight( "0px" );
           }
           graphPage.legend.cyLegend = graphPage.legend.constructLegend();
+        }
+        if ( typeof attributeMapping !== 'undefined' ) {
+          attributeMapping.onLayoutLoaded( parsedStyle );
         }
         window.history.pushState( 'user-layout', 'Graph Page', window.location.origin + window.location.pathname + '?user_layout=' + layout_id );
         graphPage.defaultLayoutWidget.init( response[ 'is_shared' ] );
@@ -662,6 +670,31 @@ var graphPage = {
     graphPage.cyGraph.layout( layoutID );
 
   },
+  buildLayoutStyleJson: function ( cyGraph_style_json, legendSource, existingStyleJson ) {
+    legendSource = legendSource || style_json;
+    existingStyleJson = existingStyleJson || {};
+
+    var payload = {
+      "format_version": "1.0",
+      "generated_by": "graphspace-2.0.0",
+      "target_cytoscapejs_version": "~2.7",
+      "style": cyGraph_style_json,
+      "legend": legendSource[ 'legend' ]
+    };
+
+    if ( typeof attributeMapping !== 'undefined' ) {
+      var mappings = attributeMapping.getMappingsForSave();
+      if ( mappings.length > 0 ) {
+        payload.attribute_mappings = mappings;
+      } else if ( existingStyleJson.attribute_mappings ) {
+        payload.attribute_mappings = existingStyleJson.attribute_mappings;
+      }
+    } else if ( existingStyleJson.attribute_mappings ) {
+      payload.attribute_mappings = existingStyleJson.attribute_mappings;
+    }
+
+    return payload;
+  },
   saveLayout: function ( layoutName, modalNameId, callback ) {
     graphPage.cyGraph.elements().unselect();
 
@@ -705,13 +738,7 @@ var graphPage = {
           "graph_id": $( '#GraphID' ).val(),
           "name": layoutName,
           "positions_json": positions_json,
-          "style_json": {
-            "format_version": "1.0",
-            "generated_by": "graphspace-2.0.0",
-            "target_cytoscapejs_version": "~2.7",
-            "style": cyGraph_style_json,
-            "legend": style_json[ 'legend' ]
-          }
+          "style_json": graphPage.buildLayoutStyleJson( cyGraph_style_json )
         },
         successCallback = function ( response ) {
           $( modalNameId ).modal( 'toggle' );
@@ -1450,6 +1477,9 @@ var graphPage = {
       cytoscapeGraph.showGraphInformation( graphPage.cyGraph );
 
       cytoscapeGraph.contextMenu.init( graphPage.cyGraph );
+
+      attributeMapping.init();
+      attributeMapping.bindPanelEvents();
 
       graphPage.layoutEditor.undoRedoManager = new UndoManager(
         onUndo = function ( item ) {
@@ -2690,14 +2720,13 @@ var graphPage = {
             layoutData = document.getElementById( 'selectLayoutDropdown' ).value;
             layoutId = JSON.parse( layoutData ).id;
             layout_style_json = JSON.parse( layoutData ).style_json;
+            var parsedLayoutStyle = JSON.parse( layout_style_json );
             apis.layouts.update( $( '#GraphID' ).val(), layoutId, {
-                "style_json": {
-                  "format_version": "1.0",
-                  "generated_by": "graphspace-2.0.0",
-                  "target_cytoscapejs_version": "~2.7",
-                  "style": JSON.parse( layout_style_json ).style,
-                  "legend": graphPage.legend.currentLegendJSON[ 'legend' ]
-                }
+                "style_json": graphPage.buildLayoutStyleJson(
+                  parsedLayoutStyle.style,
+                  graphPage.legend.currentLegendJSON,
+                  parsedLayoutStyle
+                )
               },
               successCallback = function ( response ) {
                 graphPage.legend.saveLegendInGraph( '#saveOnExitLegendModal' );
@@ -2895,14 +2924,13 @@ var graphPage = {
     saveLegendInUserLayout: function ( layoutId, styleJSON, modalNameId, callback ) {
       graphPage.cyGraph.elements().unselect();
       graphPage.legend.cyLegend.elements().unselect();
+      var parsedStyle = JSON.parse( styleJSON );
       apis.layouts.update( $( '#GraphID' ).val(), layoutId, {
-          "style_json": {
-            "format_version": "1.0",
-            "generated_by": "graphspace-2.0.0",
-            "target_cytoscapejs_version": "~2.7",
-            "style": JSON.parse( styleJSON ).style,
-            "legend": graphPage.legend.currentLegendJSON[ 'legend' ]
-          }
+          "style_json": graphPage.buildLayoutStyleJson(
+            parsedStyle.style,
+            graphPage.legend.currentLegendJSON,
+            parsedStyle
+          )
         },
         successCallback = function ( response ) {
           $( modalNameId ).modal( 'toggle' );
@@ -2923,13 +2951,10 @@ var graphPage = {
       cyGraph_style_json = cytoscapeGraph.getStylesheet( graphPage.cyGraph );
 
       apis.graphs.update( $( '#GraphID' ).val(), {
-          "style_json": {
-            "format_version": "1.0",
-            "generated_by": "graphspace-2.0.0",
-            "target_cytoscapejs_version": "~2.7",
-            "style": cyGraph_style_json,
-            "legend": graphPage.legend.currentLegendJSON[ 'legend' ]
-          }
+          "style_json": graphPage.buildLayoutStyleJson(
+            cyGraph_style_json,
+            graphPage.legend.currentLegendJSON
+          )
         },
         successCallback = function ( response ) {
           $( modalNameId ).modal( 'toggle' );

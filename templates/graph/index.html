@@ -273,6 +273,7 @@
                         {% include 'graph/default_sidebar.html' %}
                         {% if uid %}
                             {% include 'graph/layout_editor_sidebar.html' %}
+                            {% include 'graph/attribute_mapping_sidebar.html' %}
                             {% include 'graph/legend/legend_editor_sidebar.html' %}
                         {% endif %}
                         {% include 'graph/filter_nodes_edges_sidebar.html' %}
@@ -355,6 +356,7 @@
 
     <!-- JSON support for Graph Page -->
     <script type="text/javascript" src="{% static 'js/gs_graph_stylesheet.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/attribute_mapping.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/graphs_page.js' %}"></script>
 
 

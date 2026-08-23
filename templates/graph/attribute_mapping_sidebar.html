@@ -1,0 +1,70 @@
+<ul id="attributeMappingSideBar" class="sidebar-nav gs-sidebar-nav">
+    <li>
+        <a id="backToLayoutEditorBtn" class="btn btn-xs d-inline-block" href="#">
+            <i class="fa fa-chevron-left"></i> Back
+        </a>
+    </li>
+
+    <li>
+        <p class="lead text-center">Visual Attribute Mapping</p>
+    </li>
+
+    <li>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="mappingElementType" class="col-sm-5 control-label">Element</label>
+                <div class="col-sm-7">
+                    <select id="mappingElementType" class="form-control">
+                        <option value="node">Nodes</option>
+                        <option value="edge">Edges</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mappingAttribute" class="col-sm-5 control-label">Attribute</label>
+                <div class="col-sm-7">
+                    <select id="mappingAttribute" class="form-control">
+                        <option value="">Select attribute...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mappingVisualProperty" class="col-sm-5 control-label">Visual property</label>
+                <div class="col-sm-7">
+                    <select id="mappingVisualProperty" class="form-control">
+                        <option value="">Select visual property...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mappingMappingType" class="col-sm-5 control-label">Mapping type</label>
+                <div class="col-sm-7">
+                    <select id="mappingMappingType" class="form-control">
+                        <option value="discrete">Discrete</option>
+                        <option value="continuous">Continuous</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </li>
+
+    <li id="mappingConfigSection" style="display: none;">
+        <hr class="margin-top-1 margin-bottom-1">
+        <h4 class="text-center">Mapping configuration</h4>
+        <div id="mappingConfigContent" class="form-horizontal"></div>
+    </li>
+
+    <li id="mappingActionsSection" class="text-center">
+        <a id="resetMappingBtn" class="btn btn-default btn-xs d-inline-block" href="#"
+           title="Remove applied attribute mapping styles">
+            <i class="fa fa-undo"></i> Reset
+        </a>
+        <a id="applyMappingBtn" class="btn btn-success btn-xs d-inline-block" href="#"
+           title="Apply attribute mapping to the graph">
+            <i class="fa fa-check"></i> Apply
+        </a>
+    </li>
+</ul>
